@@ -1,12 +1,11 @@
 import type { Language } from '@sk/domain/shared'
 import type { KeepsakeText } from '../lib/keepsake-rules'
-import type { CreateRow, OptionDraft } from '../lib/option-rules'
+import type { CreateRow } from '../lib/option-rules'
 
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
-import { Block } from '@/components/form-block'
 import { useLocale } from '@/contexts/locale-context'
 import { useDataClient } from '@/features/data-client'
 import { useSubmit } from '@/features/data-client/use-command'
@@ -14,7 +13,7 @@ import { useIdempotencyKey } from '@/features/stores/hooks/use-idempotency-key'
 import { keepsakesQueries } from '../api/queries'
 import { useOptionsDraft } from '../hooks/use-options-draft'
 import { LANGUAGES, nameIn, suggestSkuCode } from '../lib/keepsake-rules'
-import { createErrors, createRows, optionsBody, variantsOfRows } from '../lib/option-rules'
+import { createErrors, createRows, optionsBody, refusalText, variantsOfRows } from '../lib/option-rules'
 import { problemMessageKey, problemTypeOf, refusalsOf } from '../lib/problems'
 import { KEEPSAKE_STEPS, KEEPSAKES_PATH } from '../lib/search-params'
 import { draftStatuses } from '../lib/steps'
@@ -23,7 +22,8 @@ import { DetailsStep } from './details-step'
 import { StepEditorSkeleton } from './editor-skeleton'
 import { KeepsakeFrame } from './keepsake-frame'
 import { KeepsakeGate } from './keepsake-gate'
-import { OptionsEditor, OptionsProblems } from './option-blocks'
+import { RefusalAlert } from './option-parts'
+import { OptionsStep } from './options-step'
 import { useLeaveGuard } from './use-leave-guard'
 
 /** The steps a new keepsake goes through in the browser. Review and publish follows once the keepsake exists. */
@@ -137,7 +137,7 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
         if (problemTypeOf(error) === 'sku-code-taken')
           setFailure(t('keepsakes.problem.skuTaken'))
         else if (refusalsOf(error).length > 0)
-          draft.setProblems(refusalsOf(error))
+          draft.setServerProblems(refusalsOf(error))
         else
           setFailure(t(problemMessageKey(problemTypeOf(error))))
       },
@@ -185,17 +185,11 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
             onValue={setValue}
           />
         </div>
-        {step === 'options' && (
-          <Block id="options" title={t('keepsakes.create.options.title')}>
-            <p className="text-sm text-pretty text-muted">{t('keepsakes.create.options.hint')}</p>
-            <OptionsProblems problems={draft.problems} />
-            <OptionsEditor draft={draft} />
-          </Block>
-        )}
+        {step === 'options' && <OptionsStep draft={draft} />}
         {step === 'variants' && (
           <>
-            <CreateVariantsStep errors={found.rows} options={draft.options as OptionDraft[]} rows={rows} suggestion={suggestSkuCode(nameIn(name, language))} tried={tried} onChange={setRows} />
-            {draft.problems.length > 0 && <OptionsProblems problems={draft.problems} />}
+            <CreateVariantsStep errors={found.rows} options={draft.options} rows={rows} suggestion={suggestSkuCode(nameIn(name, language))} tried={tried} onChange={setRows} />
+            {draft.problems.length > 0 && <RefusalAlert>{draft.problems.map(problem => refusalText(t, problem)).join(' ')}</RefusalAlert>}
           </>
         )}
       </KeepsakeFrame>

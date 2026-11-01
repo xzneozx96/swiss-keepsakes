@@ -12,6 +12,20 @@ import { LANGUAGES } from './keepsake-rules'
 
 export const SWATCH = /^#[0-9a-f]{6}$/
 export const DEFAULT_SWATCH = '#888888'
+/** The API's `OPTION_NAME_MAX` and `VALUE_LABEL_MAX`, kept here so the rules pull in no schema code. */
+export const OPTION_NAME_MAX = 60
+export const VALUE_LABEL_MAX = 80
+/** The colours the picker offers by name; any other colour comes from the browser's picker. */
+export const SWATCH_PRESETS = [
+  { key: 'red', hex: '#c8102e' },
+  { key: 'black', hex: '#1a1a1a' },
+  { key: 'white', hex: '#f5f5f5' },
+  { key: 'navy', hex: '#1f3a5f' },
+  { key: 'green', hex: '#2f7d4f' },
+  { key: 'yellow', hex: '#f2c230' },
+  { key: 'brown', hex: '#8a5a2b' },
+  { key: 'grey', hex: DEFAULT_SWATCH },
+] as const
 const MAX_CODES_NAMED = 3
 const LABEL_PARTS = ' · '
 const LABEL_WORDS = /[\s·]+/
@@ -31,6 +45,8 @@ export type RefusalCode
   = | 'option-name-required' | 'value-name-required' | 'option-needs-value' | 'option-in-use' | 'value-in-use'
     | 'values-missing' | 'value-unknown' | 'combination-taken' | 'combination-duplicate' | 'no-options-one-variant'
     | 'refs-invalid' | 'code-duplicate' | 'variant-reserved' | 'variant-archived' | 'swatch-invalid'
+    // The two the control says before a save; the API never sends them.
+    | 'value-duplicate' | 'variants-missing'
 
 /** One thing that stops a save. `at` is the option ref, value ref or variant id it belongs to. */
 export interface Refusal { at: string, code: RefusalCode, params?: Record<string, string | number> }
@@ -123,9 +139,37 @@ export function optionsBody(drafts: OptionDraft[]): OptionWrite[] {
 
 export const emptyText = (): Text => ({ en: '', de: '' })
 
-/** A new option with one empty value, as N14 opens it. */
-export function newOption(ref: string, valueRef: string): OptionDraft {
-  return { ref, name: emptyText(), values: [{ ref: valueRef, label: emptyText(), swatch: null }] }
+/** A new option, with no value yet. */
+export function newOption(ref: string): OptionDraft {
+  return { ref, name: emptyText(), values: [] }
+}
+
+const VALUE_BREAK = /[,;\n]/
+const normalised = (text: string) => text.trim().toLocaleLowerCase()
+
+/** What typed or pasted text adds: "Small, Medium" or a column of lines, trimmed, with no empty one. */
+export function splitValues(input: string): string[] {
+  return input.split(VALUE_BREAK).map(part => part.trim()).filter(Boolean)
+}
+
+/** Another value of the option that already says the same, in either language, ignoring case and spaces. */
+export function duplicateValue(option: OptionDraft, text: Text, exceptRef?: string): ValueDraft | undefined {
+  const en = normalised(text.en)
+  const de = normalised(text.de)
+
+  return option.values.find(other => other.ref !== exceptRef && ((en !== '' && normalised(other.label.en) === en) || (de !== '' && normalised(other.label.de) === de)))
+}
+
+/** The list with one item moved; the same list when the move goes nowhere. */
+export function moveItem<T>(items: T[], from: number, to: number): T[] {
+  if (from === to || from < 0 || to < 0 || from >= items.length || to >= items.length)
+    return items
+  const next = [...items]
+  const [item] = next.splice(from, 1)
+
+  next.splice(to, 0, item!)
+
+  return next
 }
 
 /** A draft option as the rules read a saved one. */
@@ -241,6 +285,35 @@ function labelOfDraft(value: ValueDraft): string {
   return value.label.en.trim() || value.label.de.trim()
 }
 
+/**
+ * What the options control says before a save: the rules of `checkOptionsDraft`, with a variant that still needs a value
+ * of a new option counted once per option (`variants-missing`, at `<option ref>:assign`) instead of once per variant, and a
+ * value that an earlier value of the same option already says (`value-duplicate`). The API holds the rest of the rules,
+ * not the duplicate.
+ */
+export function checkStagedOptions(saved: ProductOption[], drafts: OptionDraft[], variants: Valued[], assigned: Record<string, Values>): Refusal[] {
+  const savedIds = new Set(saved.map(option => option.id))
+  const found = checkOptionsDraft(saved, drafts, variants, assigned).filter(refusal => refusal.code !== 'values-missing')
+  const refusals: Refusal[] = []
+
+  for (const option of drafts) {
+    const refs = new Set(option.values.filter(value => labelOfDraft(value)).map(value => value.ref))
+
+    option.values.forEach((value, index) => {
+      if (labelOfDraft(value) && duplicateValue({ ...option, values: option.values.slice(0, index) }, value.label))
+        refusals.push({ at: value.ref, code: 'value-duplicate', params: { value: labelOf(value.label), option: labelOf(option.name) } })
+    })
+    if (!savedIds.has(option.ref) && refs.size > 0) {
+      const missing = variants.filter(variant => !refs.has(assigned[variant.id]?.[option.ref] ?? '')).length
+
+      if (missing > 0)
+        refusals.push({ at: `${option.ref}:assign`, code: 'variants-missing', params: { option: labelOf(option.name), count: missing } })
+    }
+  }
+
+  return [...found, ...refusals]
+}
+
 /** The error list of a refused API save, as refusals. The path says which option, value or variant it is about. */
 export function refusalsOfProblem(errors: { path: string, code?: string, params?: Record<string, string | number> }[] | undefined): Refusal[] {
   return (errors ?? []).flatMap((error) => {
@@ -281,6 +354,8 @@ export function refusalText(t: Translate, { code, params }: Refusal): string {
     case 'code-duplicate': return t('keepsakes.refusal.codeTwice', { code: text('code') })
     case 'variant-reserved': return t('keepsakes.refusal.reserved', { code: text('code'), count: Number(params?.count ?? 0) })
     case 'variant-archived': return t('keepsakes.refusal.archived', { code: text('code') })
+    case 'value-duplicate': return t('keepsakes.refusal.valueDuplicate', { value: text('value'), option: text('option') || t('keepsakes.refusal.thisOptionInline') })
+    case 'variants-missing': return t(Number(params?.count) === 1 ? 'keepsakes.refusal.variantsMissing.one' : 'keepsakes.refusal.variantsMissing.other', { count: Number(params?.count ?? 0), option: text('option') || t('keepsakes.refusal.thisOptionInline') })
   }
 }
 

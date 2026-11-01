@@ -11,6 +11,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useKeepsake } from '../api/queries'
 import { useKeepsakeEditor } from '../hooks/use-keepsake-editor'
+import { useOptionsDraft } from '../hooks/use-options-draft'
 import { nameIn, statusOf } from '../lib/keepsake-rules'
 import { saveStatusOf } from '../lib/save-status'
 import { isKeepsakeStep, KEEPSAKE_STEPS, KEEPSAKES_PATH } from '../lib/search-params'
@@ -20,7 +21,7 @@ import { StepBodySkeleton, StepEditorSkeleton } from './editor-skeleton'
 import { KeepsakeFrame } from './keepsake-frame'
 import { KeepsakeGate } from './keepsake-gate'
 import { KeepsakeNotice } from './keepsake-notice'
-import { OptionsCard } from './options-card'
+import { OptionsStep } from './options-step'
 import { useLeaveGuard } from './use-leave-guard'
 import { VariantsCard } from './variants-card'
 
@@ -52,8 +53,10 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
   const { t, language, intlLocale } = useLocale()
   const navigate = useNavigate()
   const editor = useKeepsakeEditor({ storeId, keepsake })
+  // Held here, not in the Options step, so options that are typed but not saved stay when another step opens.
+  const options = useOptionsDraft({ saved: keepsake.options, variants: keepsake.variants })
   const [showErrors, setShowErrors] = useState(false)
-  const guard = useLeaveGuard({ isUnsaved: editor.isUnsaved, onLeave: () => void navigate({ to: KEEPSAKES_PATH }) })
+  const guard = useLeaveGuard({ isUnsaved: editor.isUnsaved || options.dirty, onLeave: () => void navigate({ to: KEEPSAKES_PATH }) })
   const { draft } = editor
   const name = nameIn(draft.name, language) || t('keepsakes.untitled')
   const statuses = stepStatuses(keepsake, KEEPSAKE_STEPS, showErrors)
@@ -145,7 +148,7 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
             onValue={next => editor.change({ name: next.name, text: next.text })}
           />
         </div>
-        {step === 'options' && <OptionsCard keepsake={keepsake} onRemove={editor.removeOption} onSave={editor.saveOptions} />}
+        {step === 'options' && <OptionsStep draft={options} onSave={editor.saveOptions} />}
         {step === 'variants' && <VariantsCard keepsake={keepsake} onCreate={editor.createVariant} onSave={editor.saveVariant} />}
         {onReview && (
           <Suspense fallback={<StepBodySkeleton />}>

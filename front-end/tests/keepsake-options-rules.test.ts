@@ -8,15 +8,19 @@ import {
   allCombinations,
   asSaved,
   checkOptionsDraft,
+  checkStagedOptions,
   checkVariantValues,
   combinationName,
   createErrors,
   createRows,
   draftOfOptions,
+  duplicateValue,
+  moveItem,
   optionsBody,
   refusalsOfProblem,
   refusalText,
   shortLabel,
+  splitValues,
   suggestCode,
   variantsUsing,
   variantTitle,
@@ -214,5 +218,74 @@ describe('[E6.2][AC52] the option label warning', () => {
 
     expect(checkText(tr(en) as never, check)).toBe('3 option names or values miss a language.')
     expect(checkText(tr(de) as never, { ...check, count: 1 })).toBe('1 Optionsname oder Wert hat keine Sprachfassung.')
+  })
+})
+
+describe('[T-007A] the option control rules', () => {
+  const colour: OptionDraft = {
+    ref: 'colour',
+    name: { en: 'Colour', de: 'Farbe' },
+    values: [{ ref: 'red', label: { en: 'Red', de: 'Rot' }, swatch: null }, { ref: 'blue', label: { en: 'Blue', de: '' }, swatch: null }],
+  }
+
+  it('[T-007A] splits typed or pasted text into values at commas, semicolons and lines, and drops the empty ones', () => {
+    expect(splitValues('Small, Medium;Large\n Extra large ,, ')).toEqual(['Small', 'Medium', 'Large', 'Extra large'])
+    expect(splitValues('  ')).toEqual([])
+  })
+
+  it('[T-007A] moves a value to a new place and leaves the list alone when the move goes nowhere', () => {
+    expect(moveItem(['a', 'b', 'c'], 0, 2)).toEqual(['b', 'c', 'a'])
+    expect(moveItem(['a', 'b', 'c'], 2, 1)).toEqual(['a', 'c', 'b'])
+    const same = ['a', 'b']
+
+    expect(moveItem(same, 0, 5)).toBe(same)
+    expect(moveItem(same, 1, 1)).toBe(same)
+  })
+
+  it('[T-007A] finds a value that already says the same, in either language, ignoring case and spaces, but not itself', () => {
+    expect(duplicateValue(colour, { en: ' red ', de: '' })?.ref).toBe('red')
+    expect(duplicateValue(colour, { en: '', de: 'ROT' })?.ref).toBe('red')
+    expect(duplicateValue(colour, { en: 'Green', de: '' })).toBeUndefined()
+    expect(duplicateValue(colour, { en: 'Red', de: '' }, 'red')).toBeUndefined()
+    expect(duplicateValue(colour, { en: '', de: '' })).toBeUndefined()
+  })
+
+  it('[T-007A] AC-2: a value twice in one option is refused at the second one, and the text names it and the option', () => {
+    const twice: OptionDraft = { ...colour, values: [...colour.values, { ref: 'again', label: { en: 'red', de: '' }, swatch: null }] }
+    const found = checkStagedOptions([], [twice], [], {})
+
+    expect(found).toEqual([{ at: 'again', code: 'value-duplicate', params: { value: 'red', option: 'Colour' } }])
+    expect(refusalText(t, found[0]!)).toBe('red is already a value of Colour. Each value is listed once.')
+    expect(refusalText((key, params) => (de[key] as string).replace('{value}', String(params?.value)).replace('{option}', String(params?.option)), found[0]!)).toBe('red ist schon ein Wert von Colour. Jeder Wert steht nur einmal in der Liste.')
+  })
+
+  it('[T-007A] AC-3: a new option on a keepsake with variants is one refusal that counts the variants, archived ones too', () => {
+    const found = checkStagedOptions(saved, [...draftOfOptions(saved), colour], variants, { 1: { colour: 'red' } })
+
+    expect(found).toEqual([{ at: 'colour:assign', code: 'variants-missing', params: { option: 'Colour', count: 2 } }])
+    expect(refusalText(t, found[0]!)).toBe('2 variants still need a value for Colour.')
+    expect(refusalText(t, { ...found[0]!, params: { option: 'Colour', count: 1 } })).toBe('1 variant still needs a value for Colour.')
+    expect(checkStagedOptions(saved, [...draftOfOptions(saved), colour], variants, { 1: { colour: 'red' }, 2: { colour: 'blue' }, 3: { colour: 'red' } })).toEqual([])
+  })
+
+  it('[T-007A] a value picked for a variant that is then removed from the option counts as missing again', () => {
+    const gone: OptionDraft = { ...colour, values: [colour.values[0]!] }
+    const found = checkStagedOptions(saved, [...draftOfOptions(saved), gone], variants, { 1: { colour: 'red' }, 2: { colour: 'red' }, 3: { colour: 'blue' } })
+
+    expect(found).toEqual([{ at: 'colour:assign', code: 'variants-missing', params: { option: 'Colour', count: 1 } }])
+  })
+
+  it('[T-007A] AC-4: the rules of the sheet still refuse a used value and a used option', () => {
+    const next = draftOfOptions(saved)
+
+    next[1]!.values = next[1]!.values.filter(v => v.ref !== 'lion')
+    expect(codes(checkStagedOptions(saved, next, variants, {}))).toEqual(['value-in-use'])
+    expect(codes(checkStagedOptions(saved, next.slice(0, 1), variants, {}))).toContain('option-in-use')
+  })
+
+  it('[T-007A] a new option has no value until one is added, and Next on a new keepsake says it needs one', () => {
+    const empty: OptionDraft = { ref: 'x', name: { en: 'Finish', de: '' }, values: [] }
+
+    expect(codes(checkStagedOptions([], [empty], [], {}))).toEqual(['option-needs-value'])
   })
 })

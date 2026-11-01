@@ -128,7 +128,7 @@ describe('[E6.1][AC55] M12 the edit screen in English', () => {
   it('[T-003] the Options step says so when there is no option', async () => {
     await openEditor('options')
 
-    expect(await screen.findByText('No options: this keepsake is sold as one variant.')).toBeInTheDocument()
+    expect(await screen.findByText('No options: this keepsake is sold as one variant. Add one if it comes in versions, like a size or a colour.')).toBeInTheDocument()
   })
 
   it('[E6.1][AC55] has no engraving, sub-category, deposit, pay-later or payment-deadline field', async () => {
@@ -687,7 +687,7 @@ describe('[E6.1][i18n] M12 in German', () => {
     expect(screen.getByRole('button', { name: 'Weiter' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Zurück zu Andenken' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
-    expect(await screen.findByText('Keine Optionen: Dieses Andenken wird als eine Variante verkauft.')).toBeInTheDocument()
+    expect(await screen.findByText('Keine Optionen: Dieses Andenken wird als eine Variante verkauft. Fügen Sie eine hinzu, wenn es in Versionen kommt, etwa als Grösse oder Farbe.')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
     expect((await screen.findAllByText('Im Verkauf')).length).toBeGreaterThan(0)
     expect(document.body.textContent).not.toMatch(/keepsakes\.[a-z]|steps\.[a-z]/)

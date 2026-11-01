@@ -68,7 +68,6 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
   const unpublish = useCommand('keepsakes', 'unpublish', { meta: { success: 'keepsakes.toast.unpublished', error: keepsakeProblemKeys } })
   const saveOptions = useCommand('keepsakes', 'saveOptions', { meta: { success: 'keepsakes.optionsSheet.saved', silent: true } })
   // Removing an option from its row says nothing on success; its refusal shows beside the Options card.
-  const removeOption = useCommand('keepsakes', 'saveOptions', { meta: { silent: true } })
   const variantCommands = useVariantCommands({ storeId, id: keepsake.id })
   const [draft, setDraft] = useState(() => draftOf(keepsake))
   const [state, setState] = useState<SaveState>('saved')
@@ -204,8 +203,6 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     /** The options and the new values of the variants, in one write on the version the page holds. The typed fields save first. */
     saveOptions: (options: OptionWrite[], variantValues: { variantId: string, values: Values }[]) =>
       afterFlush(() => saveOptions.mutateAsync({ storeId, id, ifMatch: versionRef.current, idempotencyKey: crypto.randomUUID(), options, variantValues })),
-    removeOption: (options: OptionWrite[]) =>
-      afterFlush(() => removeOption.mutateAsync({ storeId, id, ifMatch: versionRef.current, idempotencyKey: crypto.randomUUID(), options, variantValues: [] })),
     isPublishing: publish.isPending || unpublish.isPending,
   }
 }
