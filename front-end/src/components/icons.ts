@@ -148,6 +148,7 @@ export { QuoteUp as QuoteIcon } from 'reicon-react'
 export { Link as LinkIcon } from 'reicon-react'
 export { GalleryAdd as PhotoAddIcon } from 'reicon-react'
 export { ImageUp as UploadIcon } from 'reicon-react'
+export { Gallery as LibraryIcon } from 'reicon-react'
 export { Undo as UndoIcon } from 'reicon-react'
 export { Redo as RedoIcon } from 'reicon-react'
 /** The long story card (M12, M13). */

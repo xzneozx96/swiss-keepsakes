@@ -10,6 +10,7 @@ import { DemoProvider } from '@/features/demo'
 import { PhotosField } from '@/features/media/components/photos-field'
 import { writeStored } from '@/lib/storage'
 import { photoId, problem, media as readyMedia, setUpHarness, state, storeId } from './keepsakes-harness'
+import { item as libraryItem, page as libraryPage } from './media-harness'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -276,5 +277,110 @@ describe('[T-002] the shared photos block', () => {
 
     await userEvent.upload(input(), file('doc.pdf', 'application/pdf'), { applyAccept: false })
     expect(await screen.findByText('Dieser Dateityp ist nicht erlaubt. Verwenden Sie ein JPEG-, PNG- oder WebP-Foto.')).toBeInTheDocument()
+  })
+})
+
+describe('[T-002] empty state and Choose from library', () => {
+  const library = [id(5), id(6), id(7)].map((mediaId, n) => libraryItem({ id: mediaId, name: `lib-${n + 1}.jpg` }))
+  let listCalls: string[]
+
+  /** The store's library: three ready photos, the upload answers of the block as they were. */
+  function serveLibrary(items = library) {
+    const uploads = state.answer
+
+    listCalls = []
+    state.answer = (call) => {
+      if (call.method === 'GET' && call.path.startsWith(`/api/store/${storeId}/media?`)) {
+        listCalls.push(call.path)
+
+        return Response.json(libraryPage(items))
+      }
+
+      return uploads(call)
+    }
+  }
+  const choice = (name: string) => screen.findByRole('checkbox', { name })
+  const openLibrary = () => userEvent.click(screen.getByRole('button', { name: 'Choose from library' }))
+  const addSelected = () => userEvent.click(screen.getByRole('button', { name: 'Add selected' }))
+
+  it('[T-002][AC-8] with no photo the empty state says what goes here and offers Upload photos and Choose from library; both stay once a photo exists', () => {
+    renderHost()
+
+    expect(screen.getByText('Nothing yet.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Upload photos' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Choose from library' })).toBeInTheDocument()
+  })
+
+  it('[T-002][AC-8] once a photo exists the empty text is gone and the two actions remain', () => {
+    renderHost({ initial: [id(0)] })
+
+    expect(screen.queryByText('Nothing yet.')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Upload photos' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Choose from library' })).toBeInTheDocument()
+  })
+
+  it('[T-002][AC-9] the sheet lists the library as checkboxes named by file; Add selected hands over the ids in the order chosen', async () => {
+    serveLibrary()
+    renderHost()
+    await openLibrary()
+    expect(screen.getByRole('button', { name: 'Add selected' })).toBeDisabled()
+    expect(await screen.findByRole('list', { name: 'Photos in the library' })).toBeInTheDocument()
+
+    await userEvent.click(await choice('lib-3.jpg'))
+    await userEvent.click(await choice('lib-1.jpg'))
+    expect(screen.getByText('2 of 12 selected')).toBeInTheDocument()
+    await addSelected()
+
+    await waitFor(() => expect(added).toEqual([id(7), id(5)]))
+    await waitFor(() => expect(screen.queryByRole('checkbox', { name: 'lib-1.jpg' })).not.toBeInTheDocument())
+    expect(names()).toEqual(['photo-7.jpg', 'photo-5.jpg'].map(name => name))
+  })
+
+  it('[T-002][AC-9] only the room that is left can be chosen: the other photos are disabled until one is cleared', async () => {
+    serveLibrary()
+    renderHost({ initial: [id(0)], max: 3 })
+    await openLibrary()
+
+    await userEvent.click(await choice('lib-1.jpg'))
+    await userEvent.click(await choice('lib-2.jpg'))
+    expect(screen.getByText('2 of 2 selected')).toBeInTheDocument()
+    expect(await choice('lib-3.jpg')).toBeDisabled()
+
+    await userEvent.click(await choice('lib-1.jpg'))
+    expect(await choice('lib-3.jpg')).toBeEnabled()
+  })
+
+  it('[T-002][AC-9] a photo the page already has is shown as chosen and cannot be chosen twice', async () => {
+    serveLibrary()
+    renderHost({ initial: [id(5)] })
+    await openLibrary()
+
+    const used = await choice('lib-1.jpg, already added')
+
+    expect(used).toBeChecked()
+    expect(used).toBeDisabled()
+    await userEvent.click(await choice('lib-2.jpg'))
+    await addSelected()
+    await waitFor(() => expect(added).toEqual([id(6)]))
+  })
+
+  it('[T-002][AC-9] a search that finds nothing says so, and an empty library says what to do', async () => {
+    serveLibrary([])
+    renderHost()
+    await openLibrary()
+
+    expect(await screen.findByText('No photos in the library yet. Upload some, then they show here.')).toBeInTheDocument()
+    expect(listCalls.length).toBeGreaterThan(0)
+  })
+
+  it('[T-002][AC-9] says its words in German', async () => {
+    writeStored('sk.language', 'de')
+    serveLibrary()
+    renderHost()
+
+    expect(screen.getByRole('button', { name: 'Fotos hochladen' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Aus der Bibliothek wählen' }))
+    expect(await choice('lib-1.jpg')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Auswahl hinzufügen' })).toBeInTheDocument()
   })
 })
