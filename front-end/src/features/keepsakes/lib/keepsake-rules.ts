@@ -1,13 +1,17 @@
 import type { Media, Product, PublishCheck } from '@sk/api-contract'
-import type { Language } from '@sk/domain/shared'
+import type { Language, RichNode } from '@sk/domain/shared'
 import type { MessageKey } from '@/i18n/en'
 
+import { isEmptyDescription } from '@sk/domain/content'
 import { formatMoney } from '@sk/domain/shared'
 
-/** What the editor holds while it is typed: a string for every language, empty when there is no text. */
+/**
+ * What the editor holds while it is typed: the name is a string for every language, empty when there is none. The
+ * description is the editor's document, or nothing when the language has no text (DESC-rich, owner 2026-11-01).
+ */
 export interface KeepsakeText {
   name: Record<Language, string>
-  text: Record<Language, string>
+  text: Record<Language, RichNode | undefined>
 }
 
 export const LANGUAGES = ['en', 'de'] as const satisfies readonly Language[]
@@ -30,16 +34,26 @@ export function textOf(value: { en?: string, de?: string }): Record<Language, st
   return { en: value.en ?? '', de: value.de ?? '' }
 }
 
+/** The description a saved keepsake holds, per language. */
+export function descriptionsOf(value: Product['text']): Record<Language, RichNode | undefined> {
+  return { en: value.en as RichNode | undefined, de: value.de as RichNode | undefined }
+}
+
+/** True when the language has words: the empty document the editor leaves behind is none. */
+export function hasDescription(doc: RichNode | undefined): boolean {
+  return !isEmptyDescription(doc)
+}
+
 /** A language is full when its name and its text are both filled in (AC30). */
 export function fullLanguages(value: KeepsakeText): Language[] {
-  return LANGUAGES.filter(language => value.name[language].trim() !== '' && value.text[language].trim() !== '')
+  return LANGUAGES.filter(language => value.name[language].trim() !== '' && hasDescription(value.text[language]))
 }
 
 export type LanguageState = 'complete' | 'missing-text' | 'missing-name' | 'not-written'
 
 export function languageState(value: KeepsakeText, language: Language): LanguageState {
   const hasName = value.name[language].trim() !== ''
-  const hasText = value.text[language].trim() !== ''
+  const hasText = hasDescription(value.text[language])
 
   if (hasName && hasText)
     return 'complete'
@@ -120,7 +134,7 @@ export function checkText(t: Translate, check: PublishCheck): string {
 
 /** The toast after a publish: "Published in English and German." */
 export function publishedText(t: Translate, published: Pick<Product, 'name' | 'text'>): string {
-  const languages = fullLanguages({ name: textOf(published.name), text: textOf(published.text) })
+  const languages = fullLanguages({ name: textOf(published.name), text: descriptionsOf(published.text) })
 
   return t('keepsakes.toast.published', { languages: languages.map(language => t(`keepsakes.language.${language}`)).join(` ${t('keepsakes.and')} `) })
 }

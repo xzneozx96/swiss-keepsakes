@@ -69,6 +69,34 @@ const StoryPhoto = Node.create({
   },
 })
 
+/**
+ * What each editor allows. `story` is the long story of a gift or tour. `text` is the description of a keepsake (owner
+ * 2026-11-01): bold, italic, both lists and links, and nothing else. The nodes a kit does not allow are switched off, not
+ * hidden, so a typed `## `, a `> ` or a pasted page cannot make a node the API would refuse.
+ */
+export type EditorKit = 'story' | 'text'
+
+export function editorExtensions(kit: EditorKit) {
+  return [
+    StarterKit.configure({
+      heading: kit === 'story' ? { levels: [3] } : false,
+      blockquote: kit === 'story' ? undefined : false,
+      code: false,
+      codeBlock: false,
+      strike: false,
+      underline: false,
+      horizontalRule: false,
+      link: {
+        openOnClick: false,
+        autolink: true,
+        defaultProtocol: 'https',
+        isAllowedUri: url => Boolean(safeHref(url)),
+      },
+    }),
+    ...(kit === 'story' ? [StoryPhoto] : []),
+  ]
+}
+
 /** The same typography as the guests' story sheet (components/rich-text.tsx). */
 const contentClass = [
   textAreaVariants({ fullWidth: true }),
@@ -195,10 +223,15 @@ export default function StoryEditor({
   label,
   value,
   onChange,
+  kit = 'story',
+  lang,
 }: {
   label: string
   value: RichNode | undefined
   onChange: (doc: RichNode | undefined) => void
+  kit?: EditorKit
+  /** The language of the text, for spell checking and screen readers. */
+  lang?: string
 }) {
   const { t } = useLocale()
   const labelId = useId()
@@ -211,23 +244,7 @@ export default function StoryEditor({
     onChangeRef.current = onChange
   })
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading: { levels: [3] },
-        code: false,
-        codeBlock: false,
-        strike: false,
-        underline: false,
-        horizontalRule: false,
-        link: {
-          openOnClick: false,
-          autolink: true,
-          defaultProtocol: 'https',
-          isAllowedUri: url => Boolean(safeHref(url)),
-        },
-      }),
-      StoryPhoto,
-    ],
+    extensions: editorExtensions(kit),
     content: value ?? '',
     shouldRerenderOnTransaction: false,
     editorProps: {
@@ -235,6 +252,7 @@ export default function StoryEditor({
         'aria-labelledby': labelId,
         'aria-multiline': 'true',
         'role': 'textbox',
+        ...(lang && { lang }),
         'class': contentClass,
       },
     },
@@ -280,13 +298,15 @@ export default function StoryEditor({
         className="flex flex-wrap items-center gap-1 rounded-2xl border border-separator p-1"
         role="toolbar"
       >
-        <ToolButton
-          icon={HeadingIcon}
-          isActive={state.heading}
-          label={t('products.editor.heading')}
-          onPress={() =>
-            editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        />
+        {kit === 'story' && (
+          <ToolButton
+            icon={HeadingIcon}
+            isActive={state.heading}
+            label={t('products.editor.heading')}
+            onPress={() =>
+              editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          />
+        )}
         <ToolButton
           icon={BoldIcon}
           isActive={state.bold}
@@ -311,28 +331,34 @@ export default function StoryEditor({
           label={t('products.editor.numbers')}
           onPress={() => editor.chain().focus().toggleOrderedList().run()}
         />
-        <ToolButton
-          icon={QuoteIcon}
-          isActive={state.blockquote}
-          label={t('products.editor.quote')}
-          onPress={() => editor.chain().focus().toggleBlockquote().run()}
-        />
+        {kit === 'story' && (
+          <ToolButton
+            icon={QuoteIcon}
+            isActive={state.blockquote}
+            label={t('products.editor.quote')}
+            onPress={() => editor.chain().focus().toggleBlockquote().run()}
+          />
+        )}
         <ToolButton
           icon={LinkIcon}
           isActive={state.link || linkOpen}
           label={t('products.editor.link')}
           onPress={() => setLinkOpen(open => !open)}
         />
-        <ToolButton
-          icon={UploadIcon}
-          label={t('products.photo.upload')}
-          onPress={upload.open}
-        />
-        <ToolButton
-          icon={PhotoAddIcon}
-          label={t('products.photo.library')}
-          onPress={() => setLibraryOpen(true)}
-        />
+        {kit === 'story' && (
+          <>
+            <ToolButton
+              icon={UploadIcon}
+              label={t('products.photo.upload')}
+              onPress={upload.open}
+            />
+            <ToolButton
+              icon={PhotoAddIcon}
+              label={t('products.photo.library')}
+              onPress={() => setLibraryOpen(true)}
+            />
+          </>
+        )}
         <ToolButton
           icon={UndoIcon}
           isDisabled={!state.canUndo}
@@ -346,7 +372,7 @@ export default function StoryEditor({
           onPress={() => editor.chain().focus().redo().run()}
         />
       </div>
-      {upload.input}
+      {kit === 'story' && upload.input}
       {upload.error && (
         <p data-visible className="field-error" role="alert">
           {upload.error}

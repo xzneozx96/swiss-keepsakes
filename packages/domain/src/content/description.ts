@@ -44,7 +44,7 @@ export function descriptionLanguages(text: LocalizedDescription | null | undefin
  * trimmed. Migration 0014 applies the same rule to the plain texts already stored. Undefined when no line has text.
  */
 export function descriptionFromPlain(text: string): { type: 'doc', content: DescriptionNode[] } | undefined {
-  const content = text.replaceAll('\r\n', '\n').split(SPLIT_PARAGRAPHS).flatMap((piece): DescriptionNode[] => {
+  const content = text.replace(/\r\n/g, '\n').split(SPLIT_PARAGRAPHS).flatMap((piece): DescriptionNode[] => {
     const lines = piece.split('\n').map(line => line.trim()).filter(line => line !== '')
 
     if (lines.length === 0)

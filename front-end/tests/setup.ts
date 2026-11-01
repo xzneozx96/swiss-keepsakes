@@ -43,3 +43,12 @@ if (!Element.prototype.getAnimations) {
 if (!Element.prototype.animate) {
   Element.prototype.animate = (() => ({ finished: Promise.resolve() })) as unknown as typeof Element.prototype.animate
 }
+
+// jsdom has no layout. ProseMirror asks a text range for its rectangles to scroll the caret into view after a
+// keystroke (the keepsake Description editor); an empty answer is enough.
+const noRects = () => ({ length: 0, item: () => null, [Symbol.iterator]: function* iterate() {} }) as unknown as DOMRectList
+
+Range.prototype.getClientRects ??= noRects
+Range.prototype.getBoundingClientRect ??= () => new DOMRect()
+Element.prototype.getClientRects ??= noRects
+document.elementFromPoint ??= () => null

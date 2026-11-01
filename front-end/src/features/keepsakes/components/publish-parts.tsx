@@ -7,7 +7,7 @@ import { Button } from '@heroui/react'
 import { useConfirm } from '@/components/confirm-dialog'
 import { StatusDangerIcon, StatusSuccessIcon, StatusWarningIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { checkText, fullLanguages, nameIn, textOf } from '../lib/keepsake-rules'
+import { checkText, descriptionsOf, fullLanguages, nameIn, textOf } from '../lib/keepsake-rules'
 import { problemMessageKey } from '../lib/problems'
 import { KeepsakeLanguageSwitch } from './basics-fields'
 
@@ -89,7 +89,7 @@ export function UnpublishButton({ actions }: { actions: PublishActions }) {
 /** The head of the publish card: the language switch (it drives the preview), the name, and what goes live. */
 export function PublishHead({ keepsake, language, onLanguage }: { keepsake: Product, language: Language, onLanguage: (language: Language) => void }) {
   const { t } = useLocale()
-  const text = { name: textOf(keepsake.name), text: textOf(keepsake.text) }
+  const text = { name: textOf(keepsake.name), text: descriptionsOf(keepsake.text) }
   const full = fullLanguages(text)
   const other = (l: Language) => (l === 'en' ? 'de' : 'en')
   const address = keepsake.slug?.[language]

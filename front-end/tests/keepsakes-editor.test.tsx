@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { en } from '@/i18n/en'
 import { writeStored } from '@/lib/storage'
-import { list, listItem, media, photoId, problem, product, productId, renderKeepsakes, setUpHarness, state, storeId, variantId, writes } from './keepsakes-harness'
+import { doc, list, listItem, media, photoId, problem, product, productId, renderKeepsakes, setUpHarness, state, storeId, variantId, writes } from './keepsakes-harness'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -160,7 +160,7 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
     await userEvent.type(field, 'Classic SD')
     expect(screen.getByText('Unsaved changes')).toBeInTheDocument()
     await waitFor(() => expect(writes()).toHaveLength(1), AUTOSAVE)
-    expect(writes()[0]).toMatchObject({ method: 'PATCH', path: detail, ifMatch: '1', body: { name: { en: 'Classic SD' }, text: { en: 'A Swiss knife.' }, photoIds: [photoId], commissionRate: 0.1 } })
+    expect(writes()[0]).toMatchObject({ method: 'PATCH', path: detail, ifMatch: '1', body: { name: { en: 'Classic SD' }, text: { en: doc('A Swiss knife.') }, photoIds: [photoId], commissionRate: 0.1 } })
     expect(writes()[0]!.key).toBeTruthy()
     await waitFor(() => expect(screen.getByText(/^Saved \d/)).toBeInTheDocument())
     await userEvent.type(field, '!')
@@ -173,9 +173,15 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
     await openEditor()
 
     await userEvent.type(await nameField(), ' II')
-    await userEvent.type(screen.getByLabelText('Description (English)'), ' Sharp.')
+    await userEvent.type(await screen.findByLabelText('Description (English)', undefined, SLOW), ' Sharp.')
     await waitFor(() => expect(writes()).toHaveLength(1), AUTOSAVE)
-    expect(writes()[0]!.body).toMatchObject({ name: { en: 'Victorinox Classic II' }, text: { en: 'A Swiss knife. Sharp.' } })
+    expect(writes()[0]!.body).toMatchObject({ name: { en: 'Victorinox Classic II' } })
+    // jsdom puts the caret at the start of the text, so the typed words come first; what matters is the document shape.
+    const saved = (writes()[0]!.body as { text: { en: { type: string, content: { type: string, content: { type: string, text: string }[] }[] } } }).text.en
+
+    expect(saved).toMatchObject({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text' }] }] })
+    expect(saved.content[0]!.content.map(node => node.text).join('')).toContain('Sharp.')
+    expect(saved.content[0]!.content.map(node => node.text).join('')).toContain('A Swiss knife.')
   })
 
   it('[E6.1][autosave] sends only the languages that have text', async () => {
@@ -184,7 +190,7 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
     await userEvent.click(screen.getByRole('tab', { name: /Deutsch/ }))
     await userEvent.type(await screen.findByLabelText('Name (Deutsch)'), 'Klassik')
     await waitFor(() => expect(writes()).toHaveLength(1), AUTOSAVE)
-    expect(writes()[0]!.body).toMatchObject({ name: { en: 'Victorinox Classic', de: 'Klassik' }, text: { en: 'A Swiss knife.' } })
+    expect(writes()[0]!.body).toMatchObject({ name: { en: 'Victorinox Classic', de: 'Klassik' }, text: { en: doc('A Swiss knife.') } })
   })
 
   it('[E6.1][412] a stale save shows the reload message, stops saving, and Reload starts again from the server copy', async () => {

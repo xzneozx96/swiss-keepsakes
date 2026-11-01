@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { IPhoneMockup } from '@/components/iphone-mockup'
 import { useLocale } from '@/contexts/locale-context'
 import { useIsWide } from '@/hooks/use-is-wide'
-import { fullLanguages, textOf } from '../lib/keepsake-rules'
+import { descriptionsOf, fullLanguages, textOf } from '../lib/keepsake-rules'
 import { KeepsakePreview } from './keepsake-preview'
 import { ChecksList, PublishHead, UnpublishButton } from './publish-parts'
 
@@ -21,7 +21,7 @@ import { ChecksList, PublishHead, UnpublishButton } from './publish-parts'
 export default function ReviewScreen({ keepsake, actions, onFix }: { keepsake: Product, actions: PublishActions, onFix: (check: PublishCheck) => void }) {
   const { t } = useLocale()
   const wide = useIsWide()
-  const first = fullLanguages({ name: textOf(keepsake.name), text: textOf(keepsake.text) })[0] ?? 'en'
+  const first = fullLanguages({ name: textOf(keepsake.name), text: descriptionsOf(keepsake.text) })[0] ?? 'en'
   const [language, setLanguage] = useState<Language>(first)
   const preview = <KeepsakePreview keepsake={keepsake} language={language} />
   const blocked = keepsake.blocking.length > 0

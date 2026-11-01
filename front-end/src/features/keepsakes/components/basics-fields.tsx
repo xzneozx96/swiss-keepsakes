@@ -1,12 +1,27 @@
 import type { Language } from '@sk/domain/shared'
 import type { KeepsakeText, LanguageState } from '../lib/keepsake-rules'
 
-import { Description, FieldError, Input, Label, TextArea, TextField } from '@heroui/react'
-import { useState } from 'react'
+import { FieldError, Input, Label, Skeleton, TextField } from '@heroui/react'
+import { descriptionLength } from '@sk/domain/content'
+import { lazy, Suspense, useState } from 'react'
 
 import { LanguageVersionSwitch } from '@/components/language-version-switch'
 import { useLocale } from '@/contexts/locale-context'
-import { fullLanguages, LANGUAGES, languageState, NAME_MAX, TEXT_MAX } from '../lib/keepsake-rules'
+import { fullLanguages, hasDescription, LANGUAGES, languageState, NAME_MAX, TEXT_MAX } from '../lib/keepsake-rules'
+
+// The description's editor is the story editor with the text kit. It loads here, never from a route (performance rule 9).
+const DescriptionEditor = lazy(() => import('@/features/merchant/products/components/story-editor'))
+
+/** The loading state has the editor's shape: a toolbar row and the text area. */
+function EditorSkeleton() {
+  return (
+    <div aria-hidden className="flex flex-col gap-2">
+      <Skeleton className="h-4 w-40 rounded-lg" />
+      <Skeleton className="h-12 w-full rounded-2xl" />
+      <Skeleton className="h-44 w-full rounded-xl" />
+    </div>
+  )
+}
 
 const tone = { 'complete': 'success', 'missing-text': 'warning', 'missing-name': 'warning', 'not-written': 'muted' } as const
 
@@ -53,6 +68,7 @@ export function BasicsFields({ value, onChange, showErrors, nameOnly = false }: 
   const { name, text } = value
   const invalid = showErrors && (nameOnly ? !LANGUAGES.some(l => name[l].trim()) : fullLanguages(value).length === 0)
   const label = t(`keepsakes.language.${language}`)
+  const count = descriptionLength(text[language])
 
   return (
     <div className="flex flex-col gap-4">
@@ -65,12 +81,23 @@ export function BasicsFields({ value, onChange, showErrors, nameOnly = false }: 
         <Input lang={language} maxLength={NAME_MAX} placeholder={t(`keepsakes.basics.name.placeholder.${language}`)} />
         <FieldError>{t(nameOnly ? 'keepsakes.create.nameRequired' : 'keepsakes.basics.nameRequired')}</FieldError>
       </TextField>
-      <TextField fullWidth isRequired={!nameOnly} isInvalid={invalid && !nameOnly && !text[language].trim()} value={text[language]} onChange={next => onChange({ ...value, text: { ...text, [language]: next } })}>
-        <Label>{t('keepsakes.basics.text', { language: label })}</Label>
-        <TextArea lang={language} maxLength={TEXT_MAX} rows={6} />
-        <Description>{t('keepsakes.basics.textHint', { count: text[language].length, max: TEXT_MAX })}</Description>
-        <FieldError>{t('keepsakes.basics.textRequired')}</FieldError>
-      </TextField>
+      <div className="flex flex-col gap-1.5">
+        <Suspense fallback={<EditorSkeleton />}>
+          {/* One editor for each language: it starts from the text of the language and keeps its own caret. */}
+          <DescriptionEditor
+            key={language}
+            kit="text"
+            label={t('keepsakes.basics.text', { language: label })}
+            lang={language}
+            value={text[language]}
+            onChange={doc => onChange({ ...value, text: { ...text, [language]: doc } })}
+          />
+        </Suspense>
+        <p className={`text-xs ${count > TEXT_MAX ? 'text-danger' : 'text-muted'}`} role={count > TEXT_MAX ? 'alert' : undefined}>
+          {t('keepsakes.basics.textHint', { count, max: TEXT_MAX })}
+        </p>
+        {invalid && !nameOnly && !hasDescription(text[language]) && <FieldError className="data-[visible=true]:block" data-visible>{t('keepsakes.basics.textRequired')}</FieldError>}
+      </div>
     </div>
   )
 }

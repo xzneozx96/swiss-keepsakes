@@ -3,6 +3,7 @@ import type { KeepsakeText } from './keepsake-rules'
 import type { OptionDraft } from './option-rules'
 
 import { readSessionStored, removeSessionStored, writeSessionStored } from '@/lib/storage'
+import { storedDescription } from './description-doc'
 
 /** The steps of a new keepsake in the browser. */
 export const DRAFT_STEPS = ['details', 'options', 'variants', 'review'] as const
@@ -32,6 +33,13 @@ function isDraft(value: unknown): value is StoredDraft {
     && DRAFT_STEPS.includes(value.step as DraftStep) && typeof value.reached === 'number'
 }
 
+/** A draft written before descriptions were rich text holds strings: they become paragraphs. */
+function withDocuments(draft: StoredDraft): StoredDraft {
+  const { text } = draft.value
+
+  return { ...draft, value: { ...draft.value, text: { en: storedDescription(text.en), de: storedDescription(text.de) } } }
+}
+
 /** The draft this browser tab kept for the store, or nothing when there is none or it cannot be read. */
 export function readDraft(storeId: string): StoredDraft | undefined {
   const raw = readSessionStored(keyOf(storeId))
@@ -41,7 +49,7 @@ export function readDraft(storeId: string): StoredDraft | undefined {
   try {
     const parsed: unknown = JSON.parse(raw)
 
-    return isDraft(parsed) ? parsed : undefined
+    return isDraft(parsed) ? withDocuments(parsed) : undefined
   }
   catch {
     return undefined

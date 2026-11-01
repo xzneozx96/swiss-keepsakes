@@ -192,7 +192,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     const router = renderKeepsakes('/store/products/gifts/new')
 
     await userEvent.type(await nameField(), 'Knife')
-    await userEvent.type(screen.getByLabelText('Description (English)'), 'A knife')
+    await userEvent.type(await screen.findByLabelText('Description (English)', undefined, SLOW), 'A knife')
     await userEvent.upload(screen.getByTestId('photo-input'), new File(['x'], 'knife.jpg', { type: 'image/jpeg' }))
     await waitFor(() => expect(state.calls.map(call => call.path)).toContain(`/api/store/${storeId}/media/confirm`), SLOW)
     await next()

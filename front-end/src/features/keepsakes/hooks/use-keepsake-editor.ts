@@ -10,7 +10,8 @@ import { useDataClient } from '@/features/data-client'
 import { useCommand } from '@/features/data-client/use-command'
 import { useLatest } from '@/hooks/use-latest'
 import { keepsakesQueries } from '../api/queries'
-import { AUTOSAVE_MS, publishedText, textOf } from '../lib/keepsake-rules'
+import { descriptionsBody, isTooLong } from '../lib/description-doc'
+import { AUTOSAVE_MS, descriptionsOf, publishedText, textOf } from '../lib/keepsake-rules'
 import { keepsakeProblemKeys, problemTypeOf, refusalsOf } from '../lib/problems'
 import { useVariantCommands } from './use-variant-commands'
 
@@ -28,7 +29,7 @@ export type Outcome = { ok: true } | { ok: false, type: string, refusals?: Refus
 export function draftOf(keepsake: Product): KeepsakeDraft {
   return {
     name: textOf(keepsake.name),
-    text: textOf(keepsake.text),
+    text: descriptionsOf(keepsake.text),
     photoIds: keepsake.photos.map(photo => photo.id),
     commission: keepsake.commissionRate,
   }
@@ -98,6 +99,12 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
         while (dirtyRef.current) {
           const sent = draftRef.current
 
+          // The API refuses a description of more than 1200 characters, and the field says so: nothing is sent until it is shorter.
+          if (isTooLong(sent.text)) {
+            setState('unsaved')
+
+            return false
+          }
           dirtyRef.current = false
           setState('saving')
           try {
@@ -107,7 +114,7 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
               ifMatch: versionRef.current,
               idempotencyKey: crypto.randomUUID(),
               name: trimmed(sent.name),
-              text: trimmed(sent.text),
+              text: descriptionsBody(sent.text),
               photoIds: sent.photoIds,
               commissionRate: sent.commission,
             }))

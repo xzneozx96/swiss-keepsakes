@@ -1,3 +1,4 @@
+import { descriptionFromPlain } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
 
 import { checkText, fullLanguages, isSkuCode, languageState, nameIn, photoSrc, statusOf, suggestSkuCode, toRappen, variantSummary } from '@/features/keepsakes/lib/keepsake-rules'
@@ -8,7 +9,7 @@ import { en } from '@/i18n/en'
 function text(name: { en?: string, de?: string }, body: { en?: string, de?: string }) {
   return {
     name: { en: name.en ?? '', de: name.de ?? '' },
-    text: { en: body.en ?? '', de: body.de ?? '' },
+    text: { en: descriptionFromPlain(body.en ?? ''), de: descriptionFromPlain(body.de ?? '') },
   }
 }
 

@@ -17,7 +17,8 @@ import { useDraftVariants } from '../hooks/use-draft-variants'
 import { useOptionsDraft } from '../hooks/use-options-draft'
 import { draftProduct, publishChecks } from '../lib/draft-product'
 import { clearDraft, DRAFT_STEPS, readDraft, writeDraft } from '../lib/draft-storage'
-import { LANGUAGES, nameIn, publishedText, suggestSkuCode } from '../lib/keepsake-rules'
+import { descriptionsBody, isTooLong } from '../lib/description-doc'
+import { hasDescription, LANGUAGES, nameIn, publishedText, suggestSkuCode } from '../lib/keepsake-rules'
 import { asSaved, optionsBody, refusalText } from '../lib/option-rules'
 import { keepsakeProblemKeys, problemMessageKey, problemTypeOf, refusalsOf } from '../lib/problems'
 import { KEEPSAKE_STEPS, KEEPSAKES_PATH } from '../lib/search-params'
@@ -35,7 +36,7 @@ import { VariantsStep } from './variants-step'
 // The mockup and the preview load when Review and publish opens, as in the saved editor.
 const ReviewScreen = lazy(() => import('./review-screen'))
 
-const empty: KeepsakeText = { name: { en: '', de: '' }, text: { en: '', de: '' } }
+const empty: KeepsakeText = { name: { en: '', de: '' }, text: { en: undefined, de: undefined } }
 
 function trimmedOf(text: Record<Language, string>) {
   return Object.fromEntries(LANGUAGES.filter(l => text[l].trim()).map(l => [l, text[l].trim()])) as Partial<Record<Language, string>>
@@ -78,9 +79,9 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
   const { variants } = held
   const incomplete = variants.filter(variant => !isComplete(options, variant.values))
   const variantsReady = variants.length > 0 && incomplete.length === 0
-  const touched = hasName || LANGUAGES.some(l => value.text[l].trim() !== '') || photoIds.length > 0 || commission > 0 || draft.options.length > 0 || variants.length > 0
+  const touched = hasName || LANGUAGES.some(l => hasDescription(value.text[l])) || photoIds.length > 0 || commission > 0 || draft.options.length > 0 || variants.length > 0
   const name = trimmedOf(value.name)
-  const body = { name, text: trimmedOf(value.text), photoIds, commissionRate: commission, options: optionsBody(draft.options), variants: variantsBody(variants) }
+  const body = { name, text: descriptionsBody(value.text), photoIds, commissionRate: commission, options: optionsBody(draft.options), variants: variantsBody(variants) }
   const key = useIdempotencyKey({ storeId, ...body })
   const checks = publishChecks({ value, photoIds, commission, options, variants })
   const cover = useMediaFile(storeId, photoIds[0] ?? null).data
@@ -117,7 +118,8 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
 
   /** The step that has to be fixed before `to` can open: a name, options that follow the rules, a variant that is whole. */
   const blockedAt = (to: number): DraftStep | undefined => {
-    if (!hasName) {
+    // A description over 1200 characters is refused by the API, so the flow stops at Details, where the counter says so.
+    if (!hasName || isTooLong(value.text)) {
       setShowErrors(true)
 
       return 'details'

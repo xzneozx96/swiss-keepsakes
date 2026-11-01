@@ -1,8 +1,11 @@
 import type { Product } from '@sk/api-contract'
 import type { Language } from '@sk/domain/shared'
 
+import { EmptyState } from '@/components/empty-state'
+import { GiftIcon } from '@/components/icons'
+import { RichText } from '@/components/rich-text'
 import { useLocale } from '@/contexts/locale-context'
-import { chf, nameIn } from '../lib/keepsake-rules'
+import { chf, descriptionsOf, hasDescription, nameIn } from '../lib/keepsake-rules'
 import { labelOf, shortLabel } from '../lib/option-rules'
 import { KeepsakePhoto } from './keepsake-photo'
 
@@ -15,8 +18,9 @@ export function KeepsakePreview({ keepsake, language }: { keepsake: Product, lan
   const { t, intlLocale } = useLocale()
   const forSale = keepsake.variants.filter(variant => variant.status === 'published')
   const name = keepsake.name[language]
-  const text = keepsake.text[language]
-  const missing = !name || !text
+  const descriptions = descriptionsOf(keepsake.text)
+  const description = descriptions[language] && hasDescription(descriptions[language]) ? descriptions[language] : descriptions[language === 'en' ? 'de' : 'en']
+  const missing = !name || !hasDescription(descriptions[language])
   const other = language === 'en' ? 'de' : 'en'
   // The first variant for sale is the one chosen. Each option shows its values as cards; a value with no variant for sale
   // next to the other chosen values is "Not sold".
@@ -36,7 +40,7 @@ export function KeepsakePreview({ keepsake, language }: { keepsake: Product, lan
         <h2 className="font-serif text-2xl text-pretty">{nameIn(keepsake.name, language) || t('keepsakes.untitled')}</h2>
         {shown !== undefined && <p className="text-lg font-semibold tabular-nums">{chf(shown, intlLocale)}</p>}
         {forSale.length === 0
-          ? <p className="text-sm text-muted">{t('keepsakes.preview.noVariant')}</p>
+          ? <EmptyState compact icon={GiftIcon} message={t('keepsakes.preview.noVariant')} />
           : keepsake.options.map(option => (
               <section key={option.id} aria-label={labelOf(option.name, language)} className="flex flex-col gap-1.5">
                 <h3 className="text-sm font-medium">{labelOf(option.name, language)}</h3>
@@ -55,7 +59,7 @@ export function KeepsakePreview({ keepsake, language }: { keepsake: Product, lan
                 </ul>
               </section>
             ))}
-        <p className="text-sm text-pretty whitespace-pre-line">{nameIn(keepsake.text, language)}</p>
+        {description && hasDescription(description) && <RichText doc={description} />}
       </div>
     </article>
   )

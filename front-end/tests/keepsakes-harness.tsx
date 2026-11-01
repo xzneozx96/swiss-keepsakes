@@ -45,13 +45,16 @@ export const media = mediaSchema.parse({
   variants: [{ width: 320, url: 'https://storage.test/media/s/p/w320.webp' }, { width: 640, url: 'https://storage.test/media/s/p/w640.webp' }],
 })
 
+/** A description document of one paragraph, as the API stores it. */
+export const doc = (text: string) => ({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] })
+
 export function product(over: Record<string, unknown> = {}) {
   return productSchema.parse({
     id: productId,
     storeId,
     status: 'draft',
     name: { en: 'Victorinox Classic' },
-    text: { en: 'A Swiss knife.' },
+    text: { en: doc('A Swiss knife.') },
     photos: [media],
     commissionRate: 0.1,
     slug: null,

@@ -1,6 +1,7 @@
 import type { Media, Product, ProductOption, ProductVariant, PublishCheck } from '@sk/api-contract'
 import type { KeepsakeText } from './keepsake-rules'
 
+import { descriptionsBody } from './description-doc'
 import { fullLanguages, LANGUAGES } from './keepsake-rules'
 
 /**
@@ -63,7 +64,7 @@ export function draftProduct({ storeId, value, photos, commission, options, vari
     storeId,
     status: 'draft',
     name: only(value.name),
-    text: only(value.text),
+    text: descriptionsBody(value.text) as Product['text'],
     photos,
     commissionRate: commission,
     slug: null,
