@@ -392,9 +392,7 @@ export function StorySheet({
       )}
       {related.candidates.length === 0
         ? (
-            <p className="text-sm">
-              {t('merchantArticles.relatedSheet.none', { language: languageName })}
-            </p>
+            <EmptyState compact icon={ExploreIcon} message={t('merchantArticles.relatedSheet.none', { language: languageName })} />
           )
         : (
             <ul className="flex flex-col divide-y divide-separator">
