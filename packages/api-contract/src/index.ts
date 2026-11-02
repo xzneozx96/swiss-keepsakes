@@ -36,6 +36,8 @@ export {
   VALUE_LABEL_MAX,
   type VariantSaveBody,
   variantSaveBodySchema,
+  type VariantsSaveBody,
+  variantsSaveBodySchema,
 } from './catalog.ts'
 export {
   type CategoryKind,

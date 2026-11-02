@@ -1,5 +1,5 @@
 import type { Tx } from '../../../platform/db/client.ts'
-import type { Localized, OptionInput, ProductOption } from '../ports.ts'
+import type { Localized, OptionInput, ProductOption, VariantInput } from '../ports.ts'
 import { sql } from 'drizzle-orm'
 
 // SQL for options, values and the values of SKUs. The deferred triggers of migration 0010 check at commit that every SKU
@@ -93,4 +93,22 @@ export async function writeSkuValues(tx: Tx, storeId: string, productId: string,
   const rows = sql.join(entries.map(([optionId, valueId]) => sql`(${skuId}, ${optionId}, ${valueId}, ${productId}, ${storeId})`), sql`, `)
 
   await tx.execute(sql`insert into catalog.sku_option_values (sku_id, option_id, value_id, product_id, store_id) values ${rows}`)
+}
+
+// Creates variants with their values: one insert for the SKUs, one for all their values. `ids` maps the refs of the
+// request to the ids that `writeOptions` gave, or an existing option or value to itself. Codes are unique in the request
+// (the rules checked), so the inserted rows are found again by code.
+export async function writeVariants(tx: Tx, storeId: string, productId: string, variants: VariantInput[], written: WrittenOptions, at: Date): Promise<void> {
+  if (variants.length === 0)
+    return
+  const rows = sql.join(variants.map(variant => sql`(${storeId}, ${variant.skuCode}, ${productId}, ${variant.priceRappen}, ${variant.status}, ${at}, ${at})`), sql`, `)
+  const skus = await tx.execute<{ id: string, sku_code: string }>(sql`
+    insert into catalog.skus (store_id, sku_code, product_id, price_rappen, status, created_at, updated_at)
+    values ${rows} returning id, sku_code`)
+  const idOfCode = new Map(skus.rows.map(row => [row.sku_code, row.id]))
+  const valueRows = variants.flatMap(variant => Object.entries(variant.values).map(([optionRef, valueRef]) =>
+    sql`(${idOfCode.get(variant.skuCode)!}, ${written.optionIds.get(optionRef)!}, ${written.valueIds.get(valueRef)!}, ${productId}, ${storeId})`))
+
+  if (valueRows.length > 0)
+    await tx.execute(sql`insert into catalog.sku_option_values (sku_id, option_id, value_id, product_id, store_id) values ${sql.join(valueRows, sql`, `)}`)
 }

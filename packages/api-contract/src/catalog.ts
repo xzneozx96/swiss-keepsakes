@@ -107,6 +107,15 @@ export const keepsakeVariantWriteSchema = z.strictObject({
   values: valueRefs.optional().meta({ description: 'The value ref of each option ref. A keepsake with no option sends none' }),
 }).meta({ id: 'KeepsakeVariantWrite', description: 'A variant to create: a code, a price and one value of each option. It is for sale' })
 
+export const optionsSaveBodySchema = z.strictObject({
+  options: optionList.meta({ description: 'Every option the keepsake should have, in order. One that is left out is deleted, if no variant uses it' }),
+  variantValues: z.array(z.strictObject({
+    variantId: z.uuid(),
+    values: valueRefs.meta({ description: 'The value ref of each option ref, for a new option or a changed value' }),
+  })).max(MAX_VARIANTS).optional().meta({ description: 'The new values of existing variants, archived ones too. A variant keeps the values it has for options that stay' }),
+  newVariants: z.array(keepsakeVariantWriteSchema).max(MAX_VARIANTS).optional().meta({ description: 'Variants to create in the same write, one per new combination, their values by the refs of this body. For sale' }),
+}).meta({ id: 'OptionsSaveBody', description: 'The options of a keepsake with the new values of its variants and the new variants, saved in one request' })
+
 // What the create flow sends: the details, the options and a variant for each combination that is sold. A name in one
 // language is required. The draft is made with those variants for sale. A keepsake with no option has one variant.
 export const productCreateBodySchema = z.strictObject({
@@ -117,14 +126,6 @@ export const productCreateBodySchema = z.strictObject({
   options: optionList.optional(),
   variants: z.array(keepsakeVariantWriteSchema).min(1).max(MAX_VARIANTS),
 }).meta({ id: 'ProductCreateBody', description: 'A new keepsake as a draft, with its options and variants' })
-
-export const optionsSaveBodySchema = z.strictObject({
-  options: optionList.meta({ description: 'Every option the keepsake should have, in order. One that is left out is deleted, if no variant uses it' }),
-  variantValues: z.array(z.strictObject({
-    variantId: z.uuid(),
-    values: valueRefs.meta({ description: 'The value ref of each option ref, for a new option or a changed value' }),
-  })).max(MAX_VARIANTS).optional().meta({ description: 'The new values of existing variants, archived ones too. A variant keeps the values it has for options that stay' }),
-}).meta({ id: 'OptionsSaveBody', description: 'The options of a keepsake with the new values of its variants, saved in one request' })
 
 export const variantCreateBodySchema = z.strictObject({
   skuCode: noNul(z.string().trim().min(1).max(60)),
@@ -146,6 +147,14 @@ export const variantSaveBodySchema = z.strictObject({
   status: z.enum(['published', 'draft', 'archived']).optional().meta({ description: 'published is for sale, draft is hidden from guests, archived keeps the variant for old orders and is final' }),
   values: valueIds.optional().meta({ description: 'The value id of every option id. Replaces the values' }),
 }).meta({ id: 'VariantSaveBody', description: 'A change to one variant' })
+
+export const variantsSaveBodySchema = z.strictObject({
+  variants: z.array(z.strictObject({
+    id: z.uuid(),
+    priceRappen: z.int().min(1).max(MAX_PRICE_RAPPEN).optional(),
+    status: z.enum(['published', 'draft', 'archived']).optional().meta({ description: 'published is for sale, draft is hidden from guests, archived is final' }),
+  })).min(1).max(MAX_VARIANTS).refine(rows => new Set(rows.map(row => row.id.toLowerCase())).size === rows.length, 'Each variant may appear once'),
+}).meta({ id: 'VariantsSaveBody', description: 'A change to several variants of one keepsake, all or nothing' })
 
 const localizedView = z.object({ en: z.string().optional(), de: z.string().optional() })
 
@@ -237,6 +246,7 @@ export type VariantCreateBody = z.infer<typeof variantCreateBodySchema>
 export type ProductOption = z.infer<typeof productOptionSchema>
 export type ProductSaveBody = z.infer<typeof productSaveBodySchema>
 export type VariantSaveBody = z.infer<typeof variantSaveBodySchema>
+export type VariantsSaveBody = z.infer<typeof variantsSaveBodySchema>
 export type ProductVariant = z.infer<typeof productVariantSchema>
 export type PublishCheck = z.infer<typeof publishCheckSchema>
 export type Product = z.infer<typeof productSchema>

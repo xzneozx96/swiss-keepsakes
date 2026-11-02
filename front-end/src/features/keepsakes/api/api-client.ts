@@ -48,6 +48,12 @@ export function createKeepsakesClient(): KeepsakesClient {
         params: { path: { storeId, productId: id, skuId: variantId } },
         body,
       })),
+    saveVariants: async ({ storeId, id, idempotencyKey, ...body }) =>
+      answer((await loadClient()).PATCH('/api/store/{storeId}/products/{productId}/variants', {
+        ...keyed(idempotencyKey),
+        params: { path: { storeId, productId: id } },
+        body,
+      })),
     saveOptions: async ({ storeId, id, ifMatch, idempotencyKey, ...body }) =>
       answer((await loadClient()).PUT('/api/store/{storeId}/products/{productId}/options', {
         ...keyed(idempotencyKey),

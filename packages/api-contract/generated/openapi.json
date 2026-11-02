@@ -5768,8 +5768,16 @@
       },
       "OptionsSaveBody": {
         "additionalProperties": false,
-        "description": "The options of a keepsake with the new values of its variants, saved in one request",
+        "description": "The options of a keepsake with the new values of its variants and the new variants, saved in one request",
         "properties": {
+          "newVariants": {
+            "description": "Variants to create in the same write, one per new combination, their values by the refs of this body. For sale",
+            "items": {
+              "$ref": "#/components/schemas/KeepsakeVariantWrite"
+            },
+            "maxItems": 300,
+            "type": "array"
+          },
           "options": {
             "description": "Every option the keepsake should have, in order. One that is left out is deleted, if no variant uses it",
             "items": {
@@ -15867,6 +15875,48 @@
           }
         },
         "type": "object"
+      },
+      "VariantsSaveBody": {
+        "additionalProperties": false,
+        "description": "A change to several variants of one keepsake, all or nothing",
+        "properties": {
+          "variants": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "priceRappen": {
+                  "maximum": 100000000,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "status": {
+                  "description": "published is for sale, draft is hidden from guests, archived is final",
+                  "enum": [
+                    "published",
+                    "draft",
+                    "archived"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id"
+              ],
+              "type": "object"
+            },
+            "maxItems": 300,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "variants"
+        ],
+        "type": "object"
       }
     }
   },
@@ -19253,7 +19303,7 @@
                 }
               }
             },
-            "description": "The options are saved with the new values of the variants, all or nothing. The row version moves",
+            "description": "The options are saved with the new values of the variants and the new variants (for sale), all or nothing. The row version moves",
             "headers": {
               "ETag": {
                 "description": "The row version, as `\"<rowVersion>\"`",
@@ -19429,6 +19479,76 @@
       }
     },
     "/api/store/{storeId}/products/{productId}/variants": {
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VariantsSaveBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "The keepsake with the price or status of every listed variant changed, all or nothing. The change is live at once and takes no row version. An archived variant, or one of another keepsake, refuses the whole request",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
       "post": {
         "parameters": [
           {

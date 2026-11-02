@@ -6,7 +6,7 @@ import { guardUseCases } from '../../src/modules/catalog/adapters/database-error
 import { createMediaDirectory } from '../../src/modules/catalog/adapters/media-directory.ts'
 import { createProductRepository } from '../../src/modules/catalog/adapters/product-repository.ts'
 import { registerCatalogRoutes } from '../../src/modules/catalog/adapters/routes.ts'
-import { makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
+import { makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
 import { createKeepsakeLinks } from '../../src/modules/content/adapters/keepsake-links.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
 import { mediaView } from '../../src/modules/content/adapters/media-view.ts'
@@ -68,6 +68,7 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
     unpublishProduct: makeUnpublishProduct(deps),
     deleteProduct: makeDeleteProduct(deps),
     saveVariant: makeSaveVariant(deps),
+    saveVariants: makeSaveVariants(deps),
     saveOptions: makeSaveOptions(deps),
     createVariant: makeCreateVariant(deps),
   })

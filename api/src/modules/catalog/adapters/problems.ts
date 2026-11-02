@@ -43,6 +43,7 @@ export function refusalMessage({ code, params }: Refusal): string {
     case 'no-options-one-variant': return `A keepsake without options has one variant only (${params?.code}). Add an option to sell more.`
     case 'refs-invalid': return 'This request names an option, a value or a variant twice, or one that is not this keepsake’s.'
     case 'code-duplicate': return `${params?.code} is used twice in this request.`
+    case 'code-taken': return `${params?.code} is already used in your shop.`
     case 'variant-reserved': return `Can’t archive ${params?.code}. ${params?.count} ${plural(Number(params?.count), 'unit is', 'units are')} reserved by open orders. Archive it once they are handed over or released.`
     case 'variant-archived': return `${params?.code} is archived and can’t be changed.`
   }

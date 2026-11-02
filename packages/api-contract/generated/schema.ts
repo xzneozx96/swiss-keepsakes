@@ -2646,7 +2646,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description The options are saved with the new values of the variants, all or nothing. The row version moves */
+                /** @description The options are saved with the new values of the variants and the new variants (for sale), all or nothing. The row version moves */
                 200: {
                     headers: {
                         /** @description The row version, as `"<rowVersion>"` */
@@ -2837,7 +2837,46 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    productId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["VariantsSaveBody"];
+                };
+            };
+            responses: {
+                /** @description The keepsake with the price or status of every listed variant changed, all or nothing. The change is live at once and takes no row version. An archived variant, or one of another keepsake, refuses the whole request */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Product"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/store/{storeId}/products/{productId}/variants/{skuId}": {
@@ -4924,8 +4963,10 @@ export interface components {
             de?: string;
             en?: string;
         };
-        /** @description The options of a keepsake with the new values of its variants, saved in one request */
+        /** @description The options of a keepsake with the new values of its variants and the new variants, saved in one request */
         OptionsSaveBody: {
+            /** @description Variants to create in the same write, one per new combination, their values by the refs of this body. For sale */
+            newVariants?: components["schemas"]["KeepsakeVariantWrite"][];
             /** @description Every option the keepsake should have, in order. One that is left out is deleted, if no variant uses it */
             options: components["schemas"]["OptionWrite"][];
             /** @description The new values of existing variants, archived ones too. A variant keeps the values it has for options that stay */
@@ -7263,6 +7304,19 @@ export interface components {
             values?: {
                 [key: string]: string;
             };
+        };
+        /** @description A change to several variants of one keepsake, all or nothing */
+        VariantsSaveBody: {
+            variants: {
+                /** Format: uuid */
+                id: string;
+                priceRappen?: number;
+                /**
+                 * @description published is for sale, draft is hidden from guests, archived is final
+                 * @enum {string}
+                 */
+                status?: "published" | "draft" | "archived";
+            }[];
         };
     };
     responses: never;

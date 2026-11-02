@@ -1,7 +1,7 @@
 import type { Tx } from '../../../platform/db/client.ts'
 import type { Localized, LocalizedDoc, OptionValue, Product, ProductChanges, ProductDoc, ProductListRow, ProductOption, ProductRepository, ProductVariant } from '../ports.ts'
 import { sql } from 'drizzle-orm'
-import { writeOptions, writeSkuValues } from './option-writes.ts'
+import { writeOptions, writeSkuValues, writeVariants } from './option-writes.ts'
 
 interface ProductRow {
   id: string
@@ -157,17 +157,7 @@ export function createProductRepository(): ProductRepository<Tx> {
         returning id`)
       const id = inserted.rows[0]!.id
       const written = await writeOptions(tx, storeId, id, [], input.options, at)
-      const rows = sql.join(input.variants.map(variant => sql`(${storeId}, ${variant.skuCode}, ${id}, ${variant.priceRappen}, ${variant.status}, ${at}, ${at})`), sql`, `)
-      const skus = await tx.execute<{ id: string, sku_code: string }>(sql`
-        insert into catalog.skus (store_id, sku_code, product_id, price_rappen, status, created_at, updated_at)
-        values ${rows} returning id, sku_code`)
-      const idOfCode = new Map(skus.rows.map(row => [row.sku_code, row.id]))
-
-      for (const variant of input.variants) {
-        const values = Object.fromEntries(Object.entries(variant.values).map(([optionRef, valueRef]) => [written.optionIds.get(optionRef)!, written.valueIds.get(valueRef)!]))
-
-        await writeSkuValues(tx, storeId, id, idOfCode.get(variant.skuCode)!, values)
-      }
+      await writeVariants(tx, storeId, id, input.variants, written, at)
       return reload(tx, { storeId, id })
     },
 
@@ -277,10 +267,35 @@ export function createProductRepository(): ProductRepository<Tx> {
         await tx.execute(sql`delete from catalog.sku_option_values where sku_id = ${entry.variantId} and option_id = any(${sql.param(optionIds)}::uuid[])`)
         await writeSkuValues(tx, product.storeId, product.id, entry.variantId, values)
       }
+      await writeVariants(tx, product.storeId, product.id, input.newVariants, written, at)
       await tx.execute(sql`
         update catalog.products set row_version = row_version + 1, updated_at = ${at}
         where store_id = ${product.storeId} and id = ${product.id}`)
       return reload(tx, product)
+    },
+
+    async saveVariants(tx, product, changes, at) {
+      // One statement for all rows. A null price or status keeps the stored one.
+      await tx.execute(sql`
+        update catalog.skus s set
+          price_rappen = coalesce(c.price_rappen, s.price_rappen),
+          status = coalesce(c.status, s.status),
+          updated_at = ${at}
+        from unnest(
+          ${sql.param(changes.map(change => change.id))}::uuid[],
+          ${sql.param(changes.map(change => change.priceRappen ?? null))}::bigint[],
+          ${sql.param(changes.map(change => change.status ?? null))}::text[]
+        ) as c(id, price_rappen, status)
+        where s.store_id = ${product.storeId} and s.product_id = ${product.id} and s.id = c.id and s.status <> 'archived'`)
+      return reload(tx, product)
+    },
+
+    async takenSkuCodes(tx, storeId, codes) {
+      if (codes.length === 0)
+        return new Set()
+      const found = await tx.execute<{ sku_code: string }>(sql`
+        select sku_code from catalog.skus where store_id = ${storeId} and sku_code = any(${sql.param(codes)}::text[])`)
+      return new Set(found.rows.map(row => row.sku_code))
     },
   }
 }

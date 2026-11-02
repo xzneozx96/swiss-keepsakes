@@ -164,6 +164,15 @@ export interface NewProduct {
 export interface OptionsSave {
   options: OptionInput[]
   variantValues: { variantId: string, values: Record<string, string> }[]
+  // Variants created in the same write. Their `values` map option refs to value refs of this save.
+  newVariants: VariantInput[]
+}
+
+// The price or status of one variant, in a batch. A left-out field stays.
+export interface VariantBatchChange {
+  id: string
+  priceRappen?: number
+  status?: VariantStatus
 }
 
 export interface VariantChanges {
@@ -188,6 +197,7 @@ export type RefusalCode
     | 'no-options-one-variant'
     | 'refs-invalid'
     | 'code-duplicate'
+    | 'code-taken'
     | 'variant-reserved'
     | 'variant-archived'
 
@@ -240,7 +250,11 @@ export interface ProductRepository<T> {
   saveVariant: (tx: T, product: Product, skuId: string, changes: VariantChanges, at: Date) => Promise<Product | undefined>
   // Adds one variant. `values` maps option ids to value ids.
   insertVariant: (tx: T, product: Product, input: VariantInput, at: Date) => Promise<Product>
-  // Writes the options, their values and order, and the new values of the variants, then bumps row_version.
+  // Updates the price or status of several variants in one statement. Archived variants are left as they are.
+  saveVariants: (tx: T, product: Product, changes: VariantBatchChange[], at: Date) => Promise<Product>
+  // Which of these codes another SKU of the shop already holds (skus_store_sku_code_key compares them exactly).
+  takenSkuCodes: (tx: T, storeId: string, codes: string[]) => Promise<Set<string>>
+  // Writes the options, their values and order, and the new values of the variants, creates the new variants, then bumps row_version.
   replaceOptions: (tx: T, product: Product, input: OptionsSave, at: Date) => Promise<Product>
 }
 

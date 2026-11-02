@@ -6,6 +6,7 @@ import { makeCreateProduct } from '../../../src/modules/catalog/application/crea
 import { makeCreateVariant } from '../../../src/modules/catalog/application/create-variant.ts'
 import { makeSaveOptions } from '../../../src/modules/catalog/application/save-options.ts'
 import { makeSaveVariant } from '../../../src/modules/catalog/application/save-variant.ts'
+import { makeSaveVariants } from '../../../src/modules/catalog/application/save-variants.ts'
 
 const storeId = '0190f0c2-0000-7000-8000-00000000000a'
 const owner: Actor = { kind: 'staff', userId: 'u1', guestId: 'g-u1', stores: new Map([[storeId, 'owner']]) }
@@ -32,12 +33,14 @@ function product(over: Partial<Product> = {}): Product {
   }
 }
 
-function setup(found: Product | undefined, reserved = new Map<string, number>()) {
+function setup(found: Product | undefined, reserved = new Map<string, number>(), taken = new Set<string>()) {
   const repo = {
     findForUpdate: vi.fn(async () => found),
     saveVariant: vi.fn(async () => found),
     insertVariant: vi.fn(async () => found!),
     replaceOptions: vi.fn(async () => found!),
+    saveVariants: vi.fn(async () => found!),
+    takenSkuCodes: vi.fn(async (_tx: null, _store: string, codes: string[]) => new Set(codes.filter(code => taken.has(code)))),
     insert: vi.fn(async () => found!),
   } as unknown as ProductRepository<null>
   const deps: CatalogDeps<null> = {
@@ -53,7 +56,7 @@ function setup(found: Product | undefined, reserved = new Map<string, number>())
 }
 
 describe('[E6.2][AC52] saving the options', () => {
-  const input = { options: [{ ref: 'size', name: { en: 'Size' }, values: [{ ref: 's', label: { en: 'Small' }, swatch: null }, { ref: 'l', label: { en: 'Large' }, swatch: null }, { ref: 'x', label: { en: 'XL' }, swatch: null }] }], variantValues: [] }
+  const input = { options: [{ ref: 'size', name: { en: 'Size' }, values: [{ ref: 's', label: { en: 'Small' }, swatch: null }, { ref: 'l', label: { en: 'Large' }, swatch: null }, { ref: 'x', label: { en: 'XL' }, swatch: null }] }], variantValues: [], newVariants: [] }
 
   it('[E6.2][AC52] writes once on the version that was opened', async () => {
     const { repo, deps } = setup(product())
@@ -77,7 +80,7 @@ describe('[E6.2][AC52] saving the options', () => {
 
   it('[E6.2][AC52] a refused save writes nothing and names the problem', async () => {
     const { repo, deps } = setup(product())
-    const refused = { options: [{ ref: 'size', name: { en: 'Size' }, values: [{ ref: 'l', label: { en: 'Large' }, swatch: null }] }], variantValues: [] }
+    const refused = { options: [{ ref: 'size', name: { en: 'Size' }, values: [{ ref: 'l', label: { en: 'Large' }, swatch: null }] }], variantValues: [], newVariants: [] }
     const result = await makeSaveOptions(deps)(owner, storeId, 'p1', 4, refused, null)
 
     expect(result).toMatchObject({ ok: false, reason: 'refused', refusals: [{ code: 'value-in-use', params: { value: 'Small', count: 1, codes: 'VX-S' } }] })
@@ -179,5 +182,74 @@ describe('[E6.2][AC52] creating a keepsake with options', () => {
 
   it('[E6.2][AC52] a variant without the value of an option is refused', async () => {
     expect(await create([{ skuCode: 'VX-S', values: {} }])).toMatchObject({ reason: 'refused', refusals: [{ code: 'values-missing' }] })
+  })
+})
+
+describe('[T-008][AC1] saving the options with new variants', () => {
+  const options = [{ ref: 'size', name: { en: 'Size' }, values: [{ ref: 's', label: { en: 'Small' }, swatch: null }, { ref: 'l', label: { en: 'Large' }, swatch: null }] }]
+  const save = (deps: CatalogDeps<null>, newVariants: { skuCode: string, values: Record<string, string> }[]) =>
+    makeSaveOptions(deps)(owner, storeId, 'p1', 4, { options, variantValues: [], newVariants: newVariants.map(v => ({ ...v, priceRappen: 3900, status: 'published' as const })) }, null)
+
+  it('[T-008][AC1] writes the options and the new variants once', async () => {
+    const { repo, deps } = setup(product())
+
+    expect((await save(deps, [{ skuCode: 'VX-L', values: { size: 'l' } }])).ok).toBe(true)
+    expect(repo.replaceOptions).toHaveBeenCalledTimes(1)
+    expect(repo.replaceOptions).toHaveBeenCalledWith(null, expect.anything(), expect.objectContaining({ newVariants: [expect.objectContaining({ skuCode: 'VX-L', status: 'published' })] }), expect.any(Date))
+  })
+
+  it('[T-008][AC2] a code of the shop is refused with the row named, and nothing is written', async () => {
+    const { repo, deps } = setup(product(), new Map(), new Set(['VX-L']))
+
+    expect(await save(deps, [{ skuCode: 'VX-L', values: { size: 'l' } }])).toMatchObject({ ok: false, reason: 'refused', refusals: [{ code: 'code-taken', path: 'newVariants.0.skuCode', params: { code: 'VX-L' } }] })
+    expect(repo.replaceOptions).not.toHaveBeenCalled()
+  })
+
+  it('[T-008][AC2] a taken combination and a bad code are refused before the database', async () => {
+    const { repo, deps } = setup(product())
+
+    expect(await save(deps, [{ skuCode: 'VX-S2', values: { size: 's' } }])).toMatchObject({ reason: 'refused', refusals: [{ code: 'combination-taken', path: 'newVariants.0.values' }] })
+    expect(await save(deps, [{ skuCode: 'VX L', values: { size: 'l' } }])).toMatchObject({ reason: 'sku-code-invalid', path: 'newVariants.0.skuCode' })
+    expect(repo.replaceOptions).not.toHaveBeenCalled()
+  })
+})
+
+describe('[T-008][AC3] changing several variants', () => {
+  const two = () => product({ variants: [variant('1', 'VX-S', { size: 's' }), variant('2', 'VX-L', { size: 'l' }), variant('3', 'VX-X', { size: 'x' }, 'archived')] })
+
+  it('[T-008][AC3] writes the price and status of all rows in one call', async () => {
+    const { repo, deps } = setup(two())
+    const changes = [{ id: '1', priceRappen: 4100 }, { id: '2', status: 'draft' as const }]
+
+    expect((await makeSaveVariants(deps)(owner, storeId, 'p1', changes, null)).ok).toBe(true)
+    expect(repo.saveVariants).toHaveBeenCalledTimes(1)
+    expect(repo.saveVariants).toHaveBeenCalledWith(null, expect.anything(), changes, expect.any(Date))
+  })
+
+  it('[T-008][AC3] an archived row refuses the whole request', async () => {
+    const { repo, deps } = setup(two())
+
+    expect(await makeSaveVariants(deps)(owner, storeId, 'p1', [{ id: '1', priceRappen: 4100 }, { id: '3', priceRappen: 100 }], null)).toMatchObject({ ok: false, reason: 'refused', refusals: [{ code: 'variant-archived', path: 'variants.1.status', params: { code: 'VX-X' } }] })
+    expect(repo.saveVariants).not.toHaveBeenCalled()
+  })
+
+  it('[T-008][AC3] a variant of another keepsake is not found, and nothing is written', async () => {
+    const { repo, deps } = setup(two())
+
+    expect(await makeSaveVariants(deps)(owner, storeId, 'p1', [{ id: '1', priceRappen: 4100 }, { id: 'elsewhere', priceRappen: 100 }], null)).toMatchObject({ ok: false, reason: 'not-found' })
+    expect(repo.saveVariants).not.toHaveBeenCalled()
+  })
+
+  it('[T-008][AC3] archiving is refused while units are reserved, with the number', async () => {
+    const { repo, deps } = setup(two(), new Map([['2', 3]]))
+
+    expect(await makeSaveVariants(deps)(owner, storeId, 'p1', [{ id: '1', status: 'archived' }, { id: '2', status: 'archived' }], null)).toMatchObject({ reason: 'refused', refusals: [{ code: 'variant-reserved', path: 'variants.1.status', params: { code: 'VX-L', count: 3 } }] })
+    expect(repo.saveVariants).not.toHaveBeenCalled()
+  })
+
+  it('[T-008][AC3] a guest is forbidden, an archived keepsake is a conflict', async () => {
+    expect(await makeSaveVariants(setup(two()).deps)(guest, storeId, 'p1', [{ id: '1' }], null)).toMatchObject({ reason: 'forbidden' })
+    expect(await makeSaveVariants(setup(product({ status: 'archived' })).deps)(owner, storeId, 'p1', [{ id: '1' }], null)).toMatchObject({ reason: 'archived' })
+    expect(await makeSaveVariants(setup(undefined).deps)(owner, storeId, 'p1', [{ id: '1' }], null)).toMatchObject({ reason: 'not-found' })
   })
 })

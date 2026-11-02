@@ -29,6 +29,7 @@ export function createFakeCatalogUseCases(): CatalogUseCases {
     publishProduct: async (_actor, storeId, productId, ifMatch) => ({ ok: true, value: detail(storeId, productId, ifMatch + 1) }),
     unpublishProduct: async (_actor, storeId, productId, ifMatch) => ({ ok: true, value: detail(storeId, productId, ifMatch + 1) }),
     saveVariant: async (_actor, storeId, productId) => ({ ok: true, value: detail(storeId, productId) }),
+    saveVariants: async (_actor, storeId, productId) => ({ ok: true, value: detail(storeId, productId) }),
     saveOptions: async (_actor, storeId, productId, ifMatch) => ({ ok: true, value: detail(storeId, productId, ifMatch + 1) }),
     createVariant: async (_actor, storeId, productId) => ({ ok: true, value: detail(storeId, productId) }),
     deleteProduct: async (_actor, _storeId, productId) => ({ ok: true, value: { id: productId, outcome: 'deleted' } }),

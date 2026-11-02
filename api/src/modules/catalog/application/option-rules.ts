@@ -182,6 +182,23 @@ export function checkOptionsSave(product: Pick<Product, 'options' | 'variants'>,
       seen.set(key, variant)
   }
 
+  // The new variants stand beside every variant that stays, archived ones included. Their values are refs of this save.
+  const pseudo: ProductOption[] = input.options.map(option => ({
+    id: option.ref,
+    name: option.name,
+    values: option.values.map(value => ({ id: value.ref, label: value.label, swatch: value.swatch })),
+  }))
+  const placed: Valued[] = finals.filter(entry => entry.complete).map(entry => ({ skuCode: entry.variant.skuCode, status: entry.variant.status, values: entry.values }))
+
+  input.newVariants.forEach((variant, index) => {
+    const path = `newVariants.${index}`
+
+    refusals.push(...checkVariantValues(pseudo, placed, variant.values, `${path}.values`, variant.skuCode))
+    if (input.newVariants.slice(0, index).some(other => other.skuCode.toLowerCase() === variant.skuCode.toLowerCase()))
+      refusals.push({ code: 'code-duplicate', path: `${path}.skuCode`, params: { code: variant.skuCode } })
+    placed.push({ skuCode: variant.skuCode, status: variant.status, values: variant.values })
+  })
+
   return refusals
 }
 
