@@ -143,7 +143,7 @@ export function PlacesScreen() {
             <div className="flex flex-col items-start gap-2 rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">
               <p>{t(places.error instanceof ApiProblem && places.error.type === 'forbidden' ? 'places.problem.forbidden' : 'places.loadFailed')}</p>
               {places.error instanceof ApiProblem && places.error.requestId && <p className="text-xs opacity-80">{t('places.requestId', { id: places.error.requestId })}</p>}
-              <Button className="min-h-11" variant="secondary" onPress={() => void places.refetch()}>{t('places.retry')}</Button>
+              <Button className="min-h-11" variant="outline" onPress={() => void places.refetch()}>{t('places.retry')}</Button>
             </div>
           )
         : (

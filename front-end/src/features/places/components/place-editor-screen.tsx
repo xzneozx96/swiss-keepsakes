@@ -44,7 +44,7 @@ export function PlaceEditorScreen({ placeId, start }: { placeId: string, start: 
     return (
       <div className="flex flex-col items-start gap-2 rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">
         <p>{t(problem?.type === 'forbidden' ? 'places.problem.forbidden' : 'places.loadFailed')}</p>
-        <Button className="min-h-11" variant="secondary" onPress={() => void place.refetch()}>{t('places.retry')}</Button>
+        <Button className="min-h-11" variant="outline" onPress={() => void place.refetch()}>{t('places.retry')}</Button>
       </div>
     )
   }

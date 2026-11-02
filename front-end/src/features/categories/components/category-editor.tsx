@@ -65,7 +65,7 @@ export function CategoryEditor({ storeId, kind, tabs }: { storeId: string | unde
             <div className="flex flex-col items-start gap-2 rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">
               <p>{t(categories.error instanceof ApiProblem && categories.error.type === 'forbidden' ? 'categories.problem.forbidden' : 'categories.loadFailed')}</p>
               {categories.error instanceof ApiProblem && categories.error.requestId && <p className="text-xs opacity-80">{t('categories.requestId', { id: categories.error.requestId })}</p>}
-              <Button className="min-h-11" variant="secondary" onPress={() => void categories.refetch()}>{t('categories.retry')}</Button>
+              <Button className="min-h-11" variant="outline" onPress={() => void categories.refetch()}>{t('categories.retry')}</Button>
             </div>
           )
         : (
