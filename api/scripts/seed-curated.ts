@@ -37,6 +37,8 @@ class SeedError extends Error {
   override name = 'SeedError'
 }
 
+const urlLike = /postgres(?:ql)?:\/\/\S+/g
+
 const trailingNumber = /-\d+$/
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -139,7 +141,8 @@ export function buildPlan(data: Data, snapshot: Snapshot): Plan {
 }
 
 // The draft of a place with every field of the record. The first photo is the cover, the others are its extra photos.
-// Null opening hours mean none are known, which the pin stores as an empty list.
+// The pin model has no span past midnight (opens < closes, closes up to 24:00), so a closing time after midnight
+// is stored as 24:00: the part after midnight is lost. Null opening hours mean none are known, which the pin stores as an empty list.
 export function placeChanges(record: PlaceRecord, categoryIds: string[], mediaIds: string[]) {
   const [cover, ...rest] = record.photos
   return {
@@ -150,7 +153,7 @@ export function placeChanges(record: PlaceRecord, categoryIds: string[], mediaId
     longitude: record.longitude,
     address: record.address,
     mapsLink: record.mapsLink,
-    weeklyHours: record.weeklyHours ?? [],
+    weeklyHours: (record.weeklyHours ?? []).map(span => ({ ...span, closes: span.closes > span.opens ? span.closes : '24:00' })),
     stayTag: record.stayTag,
     interests: record.interests,
     mustVisit: record.mustVisit,
@@ -415,10 +418,11 @@ async function run(pool: Pool, storeId: string, data: Data, plan: Plan, snapshot
 
   const mediaIdsOf = (group: string, photos: { file: string }[]) => photos.map(photo => mediaIdByFile.get(`${group}/${photo.file}`)!)
 
-  // Places: independent drafts, 4 at a time (the slug lock inside createPin keeps two titles from taking one slug).
+  // Places: one at a time. Four at a time failed once on dev with a bare error that left two drafts unpublished, and
+  // each create and publish takes the platform-wide slug lock anyway, so there is little to gain.
   const created = { places: 0, keepsakes: 0 }
   const suffixed: string[] = []
-  await mapLimit(plan.placesToCreate, 4, async ({ group, record }) => {
+  await mapLimit(plan.placesToCreate, 1, async ({ group, record }) => {
     const categoryIds = record.categories.map((slug) => {
       const id = ids.get(slug)
       if (!id)
@@ -462,7 +466,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     (error) => {
       // The error's message can quote the connection string, so only its type and code are printed.
       const { name, code, message } = error as { name?: string, code?: string, message?: string }
-      const own = error instanceof SeedError ? ` ${message}` : ''
+      const own = error instanceof SeedError ? ` ${message}` : ` ${(message ?? '').replace(urlLike, '<url>').slice(0, 400)}${(error as { cause?: { message?: string } }).cause?.message ? ` cause: ${(error as { cause: { message: string } }).cause.message.replace(urlLike, '<url>').slice(0, 300)}` : ''}`
       process.stderr.write(`The seed failed: ${name ?? 'Error'}${code ? ` ${code}` : ''}${own}\n`)
       process.exitCode = 1
     },

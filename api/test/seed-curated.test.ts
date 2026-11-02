@@ -36,6 +36,13 @@ describe('[seed-curated] the curated data maps to writes', () => {
     expect(placeChanges(unknownHours.record, [], []).weeklyHours).toEqual([])
   })
 
+  it('stores a closing time after midnight as 24:00, which the pin model allows', () => {
+    const { record } = data.places.find(p => p.record.title.en.includes('Bar Capitol'))!
+    const hours = placeChanges(record, [], []).weeklyHours
+    expect(hours[0]).toEqual({ day: 1, opens: '12:00', closes: '24:00' })
+    expect(hours.every(span => span.opens < span.closes)).toBe(true)
+  })
+
   it('maps a place without photos to no cover', () => {
     const { record } = data.places.find(p => p.record.photos.length === 0)!
     expect(placeChanges(record, [], [])).toMatchObject({ coverMediaId: null, coverAlt: {}, photos: [] })
