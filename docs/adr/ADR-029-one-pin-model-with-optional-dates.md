@@ -9,6 +9,8 @@ No new dependency, vendor or paid service. Detail is in `docs/specs/001-storytel
 
 **Amended 2026-10-28** (`docs/decisions/2026-10-28-pins-and-map-design.md`). A pin has a main photo and optional more photos, shown as a carousel in the pin details sheet. The model below stores one cover (`cover_media_id`); the extra photos need an ordered child table, which E4.2 designs. The design is in `docs/ux/pins-design.md`.
 
+**Amended 2026-11-02 (owner).** A place stores the Google Maps link the merchant pasted (`content.places.maps_link`, nullable, https, at most 2000 characters, Google Maps hosts only; migration 0015). It is a typed column like the address: live on save, not in the draft document, untouched by publish. It is separate from the one outbound link (ADR-011), which stays in `place_links`. The editor shows it after a reload and checks it against the pin (a long link is read in the browser, a short link is followed once by `GET /maps-link` when the field opens). The public pin card carries it, and the guest "Open in Google Maps" opens it, falling back to `https://www.google.com/maps/search/?api=1&query=lat,lng`. The link is not an origin or a route, so AC89 (the site never reads where the guest is) still holds.
+
 ## Context
 The map is a curated local guide: sights on a walk, photo spots, bakeries, free toilets, markets and free concerts. Most of these places have no story. The built model (`api/migrations/0008_content.sql`) gives a place a fixed type and refuses to publish a sight or restaurant without a published main story (AC43). That would force an article for every bakery. Once guest reviews and place pages are dropped, a place and an event differ in one thing, the dates. A flea market has weekly hours and could be filed either way.
 
@@ -47,3 +49,4 @@ We will keep one pin entity. Any pin can carry weekly hours and, optionally, dat
 ## History
 - 2026-10-27 proposed
 - 2026-10-27 accepted (gate G11)
+- 2026-11-02 amended (owner: a place stores its Google Maps link)
