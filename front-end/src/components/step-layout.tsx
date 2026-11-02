@@ -37,6 +37,7 @@ export function StepLayout({
   onGo,
   children,
   quietTitle = false,
+  barInFlow = false,
 }: {
   steps: StepView[]
   current: string
@@ -45,6 +46,8 @@ export function StepLayout({
   children: React.ReactNode
   /** From 1024px the step list already names the step, so its title is kept for screen readers only. */
   quietTitle?: boolean
+  /** The step bar sits in the flow at the end of the column, so no room is kept under the column for a floating one. */
+  barInFlow?: boolean
 }) {
   const { t } = useLocale()
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -96,7 +99,7 @@ export function StepLayout({
           })}
         </ol>
       </nav>
-      <div className="flex min-w-0 flex-col gap-5 pb-20 lg:gap-6 lg:pb-0">
+      <div className={`flex min-w-0 flex-col gap-5 lg:gap-6 ${barInFlow ? '' : 'pb-20 lg:pb-0'}`}>
         {sheetOpen && (
           <SheetFrame
             isOpen

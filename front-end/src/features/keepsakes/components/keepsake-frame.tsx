@@ -61,9 +61,9 @@ export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBa
         <div className="min-w-0 lg:w-80 lg:shrink-0">{languageSwitch}</div>
       </div>
       {notices}
-      <StepLayout canGo={canGo} current={current} quietTitle steps={steps} onGo={onGo}>
+      <StepLayout barInFlow canGo={canGo} current={current} quietTitle steps={steps} onGo={onGo}>
         {children}
-        <StepBar {...bar} destructive={onRemove && { label: t('keepsakes.remove.action'), onPress: onRemove }} />
+        <StepBar {...bar} inline destructive={onRemove && { label: t('keepsakes.remove.action'), onPress: onRemove }} />
       </StepLayout>
     </div>
   )
