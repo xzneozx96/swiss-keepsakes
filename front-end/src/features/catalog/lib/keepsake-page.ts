@@ -142,7 +142,7 @@ export function keepsakePage(
     sections: {
       aboutTitle: t('detail.about.title'),
       placesTitle: t('detail.places.title'),
-      dateRow: { title: t('detail.date.label'), value: atCheckout, action: '' },
+      dateRow: { title: t('detail.date.label'), action: '' },
       paymentTitle: t('detail.payment.title'),
       payment: t('detail.highlight.delivery.body'),
       cancellationTitle: t('detail.cancellation.title'),

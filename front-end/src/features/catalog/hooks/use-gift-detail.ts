@@ -377,10 +377,6 @@ export function useGiftDetail(
       placesTitle: t('detail.places.title'),
       dateRow: {
         title: t('detail.date.label'),
-        value:
-          iso && place
-            ? `${short(iso)} · ${pick(place.name)}`
-            : t('detail.date.earliest', { date: short(earliest) }),
         action: t('detail.bar.choose'),
       },
       paymentTitle: t('detail.payment.title'),

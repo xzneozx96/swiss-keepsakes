@@ -93,7 +93,8 @@ export interface GiftPageProps {
     aboutTitle: string
     placesTitle: string
     /** "Pickup date" row: earliest date, or the chosen date and place. */
-    dateRow: { title: string, value: string, action: string }
+    /** The "Pickup date" fold-out: its title and the button in it (owner 2026-11-02: no date line under the title). */
+    dateRow: { title: string, action: string }
     paymentTitle: string
     payment: string
     cancellationTitle: string
@@ -322,13 +323,8 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
             <Accordion.Item id="date">
               <Accordion.Heading>
                 <Accordion.Trigger>
-                  <span className="flex flex-1 flex-col items-start gap-0.5 text-start">
-                    <span className="font-serif text-card-title">
-                      {sections.dateRow.title}
-                    </span>
-                    <span className="text-sm font-normal text-muted">
-                      {sections.dateRow.value}
-                    </span>
+                  <span className="flex-1 text-start font-serif text-card-title">
+                    {sections.dateRow.title}
                   </span>
                   <Accordion.Indicator />
                 </Accordion.Trigger>
