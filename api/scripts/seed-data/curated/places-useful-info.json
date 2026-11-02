@@ -1,0 +1,472 @@
+[
+  {
+    "key": "public-holidays-lucerne",
+    "title": {
+      "en": "Public holidays in Lucerne",
+      "de": "Feiertage im Kanton Luzern"
+    },
+    "tip": {
+      "en": "On public holidays most shops and offices in Lucerne are closed. The shops in the railway station (Rail City) stay open, as do restaurants and the station itself. The canton observes New Year, Good Friday, Ascension, Corpus Christi, 1 August, Assumption, All Saints, 8 December, Christmas and St Stephen's Day.",
+      "de": "An Feiertagen sind die meisten Läden und Büros in Luzern geschlossen. Die Geschäfte im Bahnhof (Rail City) bleiben offen, ebenso Restaurants und der Bahnhof selbst. Der Kanton beobachtet Neujahr, Karfreitag, Auffahrt, Fronleichnam, 1. August, Mariä Himmelfahrt, Allerheiligen, 8. Dezember, Weihnachten und Stephanstag."
+    },
+    "localTip": {
+      "en": "Buy bread and milk in the station on a holiday; the shops in the old town are shut.",
+      "de": "Kaufen Sie Brot und Milch im Bahnhof: Die Läden in der Altstadt sind zu."
+    },
+    "latitude": 47.050103,
+    "longitude": 8.310224,
+    "address": "Bahnhof Luzern, Zentralstrasse 1, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050103,8.310224",
+    "weeklyHours": null,
+    "stayTag": "short_stay",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.lu.ch/verwaltung/BKD/bkd_publikationen/Schulferien",
+    "categories": [
+      "holidays"
+    ],
+    "dates": [
+      {
+        "firstDay": "2026-01-01",
+        "lastDay": "2026-01-01",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2026-04-03",
+        "lastDay": "2026-04-03",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2026-05-14",
+        "lastDay": "2026-05-14",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2026-06-04",
+        "lastDay": "2026-06-04",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2026-08-01",
+        "lastDay": "2026-08-01",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2026-08-15",
+        "lastDay": "2026-08-15",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2026-11-01",
+        "lastDay": "2026-11-01",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2026-12-08",
+        "lastDay": "2026-12-08",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2026-12-25",
+        "lastDay": "2026-12-25",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2026-12-26",
+        "lastDay": "2026-12-26",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2027-01-01",
+        "lastDay": "2027-01-01",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2027-03-26",
+        "lastDay": "2027-03-26",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2027-05-06",
+        "lastDay": "2027-05-06",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2027-05-27",
+        "lastDay": "2027-05-27",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2027-08-01",
+        "lastDay": "2027-08-01",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2027-08-15",
+        "lastDay": "2027-08-15",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2027-11-01",
+        "lastDay": "2027-11-01",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2027-12-08",
+        "lastDay": "2027-12-08",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2027-12-25",
+        "lastDay": "2027-12-25",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2027-12-26",
+        "lastDay": "2027-12-26",
+        "startTime": null,
+        "endTime": null
+      }
+    ],
+    "photos": [
+      {
+        "file": "bahnhof-luzern.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_railway_station_2022-10-01_10.jpg",
+        "author": "Leonhard Lenz",
+        "licence": "CC0",
+        "alt": {
+          "en": "The glass and concrete facade of Lucerne railway station.",
+          "de": "Glas- und Betonfassade des Luzerner Bahnhofs."
+        }
+      }
+    ],
+    "sources": [
+      "https://www.lu.ch/verwaltung/BKD/bkd_publikationen/Schulferien",
+      "https://gruezi.lu.ch/gut_zu_wissen/oeffnungszeiten_feiertage",
+      "https://www.was-luzern.ch/sites/default/files/documents/Merkblatt%20Feiertage.pdf",
+      "https://www.was-luzern.ch/feiertage",
+      "https://www.sbb.ch/de/reiseinformationen/bahnhoefe/bahnhof-finden/bahnhof-luzern/geschaefte/shop-detail.html/geo-benu-apotheke-b830",
+      "https://www.openstreetmap.org/node/206381260",
+      "https://nominatim.openstreetmap.org/search?q=Bahnhof+Luzern+Zentralstrasse+1&format=json"
+    ]
+  },
+  {
+    "key": "emergency-numbers",
+    "title": {
+      "en": "Emergency numbers",
+      "de": "Notrufnummern"
+    },
+    "tip": {
+      "en": "112 is the general emergency number in Switzerland and connects you with the police emergency centre, also from a foreign or prepaid phone. 117 is for the police, 118 for the fire service, 144 for the ambulance, 1414 for Rega air rescue and 145 for poison control (Tox Info Suisse).",
+      "de": "112 ist die allgemeine Notrufnummer der Schweiz und verbindet Sie mit der polizeilichen Notrufzentrale, auch mit ausländischer oder Prepaid-Karte. 117 ist für die Polizei, 118 für die Feuerwehr, 144 für den Sanitätsdienst, 1414 für die Rega und 145 für die Vergiftungsberatung (Tox Info Suisse)."
+    },
+    "localTip": {
+      "en": "Save 112 in your phone before you need it; it works with no credit.",
+      "de": "Speichern Sie 112 im Telefon: Der Notruf funktioniert auch ohne Guthaben."
+    },
+    "latitude": 47.048352,
+    "longitude": 8.299816,
+    "address": "Kommando Luzerner Polizei, Kasimir-Pfyffer-Strasse 26, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.048352,8.299816",
+    "weeklyHours": null,
+    "stayTag": "short_stay",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://polizei.lu.ch/Feedback_Kontakt/notrufnummern",
+    "categories": [
+      "emergency"
+    ],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://polizei.lu.ch/Feedback_Kontakt/notrufnummern",
+      "https://www.ch.ch/en/safety-and-justice/emergencies-and-danger/",
+      "https://www.ch.ch/de/sicherheit-und-recht/gefahren-und-notfalle/",
+      "https://www.toxinfo.ch/notruf-145_en",
+      "https://polizei.lu.ch/",
+      "https://www.openstreetmap.org/way/95916608",
+      "https://nominatim.openstreetmap.org/search?q=Luzerner+Polizei+Kasimir-Pfyffer-Strasse+26+Luzern&format=json"
+    ]
+  },
+  {
+    "key": "hospital-emergency-luks",
+    "title": {
+      "en": "LUKS emergency department",
+      "de": "Notfallzentrum LUKS"
+    },
+    "tip": {
+      "en": "The emergency department of the Luzerner Kantonsspital (LUKS) is always open, seven days a week. The team treats injuries and acute illnesses around the clock, and the adjacent emergency practice takes in less serious cases. Call 144 for the ambulance in a life-threatening emergency.",
+      "de": "Die Notfallstation des Luzerner Kantonsspitals (LUKS) ist rund um die Uhr geöffnet, sieben Tage pro Woche. Das Team behandelt Verletzungen und akute Erkrankungen Tag und Nacht, die vorgelagerte Notfallpraxis übernimmt leichtere Fälle. Rufen Sie bei Lebensgefahr 144 für den Sanitätsdienst."
+    },
+    "localTip": {
+      "en": "Buses 18 and 19 stop at the hospital, a short walk from the station.",
+      "de": "Die Busse 18 und 19 halten beim Spital, wenige Minuten vom Bahnhof."
+    },
+    "latitude": 47.058607,
+    "longitude": 8.297205,
+    "address": "Luzerner Kantonsspital, Spitalstrasse, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.058607,8.297205",
+    "weeklyHours": [],
+    "stayTag": "short_stay",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.luks.ch/standorte/standort-luzern/notfallzentrum",
+    "categories": [
+      "emergency"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "luks-notfallzentrum.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:LUKS_Luzern.JPG",
+        "author": "Ukoluks",
+        "licence": "CC BY-SA 4.0",
+        "alt": {
+          "en": "The Luzerner Kantonsspital building in Lucerne.",
+          "de": "Das Gebäude des Luzerner Kantonsspitals in Luzern."
+        }
+      }
+    ],
+    "sources": [
+      "https://www.luks.ch/standorte/standort-luzern/notfallzentrum",
+      "https://www.luks.ch/standorte/standort-luzern/notfallzentrum/kontakt-anreise-notfallzentrum",
+      "https://www.openstreetmap.org/way/39193494",
+      "https://nominatim.openstreetmap.org/search?q=Luzerner+Kantonsspital+Spitalstrasse+Luzern&format=json"
+    ]
+  },
+  {
+    "key": "pharmacy-bahnhof-luzern",
+    "title": {
+      "en": "Pharmacy at the station",
+      "de": "Apotheke am Bahnhof"
+    },
+    "tip": {
+      "en": "The BENU pharmacy in the Rail City shopping centre at the station is open 365 days a week: Monday to Friday 07:00 to 21:00, Saturday 08:00 to 21:00 and Sunday 09:00 to 20:00. It is the closest pharmacy to the trains. For the emergency pharmacy on call call 041 211 33 33.",
+      "de": "Die BENU-Apotheke im Einkaufszentrum Rail City am Bahnhof ist 365 Tage im Jahr geöffnet: Montag bis Freitag 07:00 bis 21:00, Samstag 08:00 bis 21:00 und Sonntag 09:00 bis 20:00. Sie ist die nächstgelegene Apotheke an den Zügen. Für die Notfallapotheke erreichen Sie 041 211 33 33."
+    },
+    "localTip": {
+      "en": "Ask for a quarter of an hour to finish your prescription before your train leaves.",
+      "de": "Verlangen Sie eine Viertelstunde für das Rezept, bevor Ihr Zug abfährt."
+    },
+    "latitude": 47.050583,
+    "longitude": 8.309397,
+    "address": "BENU Luzern Bahnhof, RailCity Zentralstrasse, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050583,8.309397",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "07:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 2,
+        "opens": "07:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 3,
+        "opens": "07:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 4,
+        "opens": "07:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 5,
+        "opens": "07:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 6,
+        "opens": "08:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 7,
+        "opens": "09:00",
+        "closes": "20:00"
+      }
+    ],
+    "stayTag": "short_stay",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.benu.ch/p/benu-luzern-bahnhof",
+    "categories": [
+      "emergency"
+    ],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.benu.ch/p/benu-luzern-bahnhof",
+      "https://www.stadtluzern.ch/politikverwaltung/stadtverwaltung/notfallnummern",
+      "https://www.openstreetmap.org/node/11883372978",
+      "https://nominatim.openstreetmap.org/search?amenity=pharmacy&viewbox=8.29,47.04,8.33,47.06&bounded=1&format=json"
+    ]
+  },
+  {
+    "key": "lake-lucerne-boats",
+    "title": {
+      "en": "Lake Lucerne boats at Bahnhofquai",
+      "de": "Vierwaldstättersee-Schiffe am Bahnhofquai"
+    },
+    "tip": {
+      "en": "The landing stages of the Schifffahrtsgesellschaft des Vierwaldstättersees (SGV) are on Bahnhofquai, right in front of the railway station. The regular boat services leave from here for Flüelen, Weggis, Vitznau and Alpnachstad, and in summer there are extra trips around the lake.",
+      "de": "Die Ländestegs der Schifffahrtsgesellschaft des Vierwaldstättersees (SGV) liegen am Bahnhofquai, direkt vor dem Bahnhof. Von hier fahren die regulären Schifffahrten nach Flüelen, Weggis, Vitznau und Alpnachstad, im Sommer zusätzlich Rundfahrten über den See."
+    },
+    "localTip": {
+      "en": "Buy the ticket online before you board; the first boats leave early in the morning.",
+      "de": "Kaufen Sie das Ticket online vor dem Einsteigen; die ersten Schiffe fahren am Morgen früh."
+    },
+    "latitude": 47.051338,
+    "longitude": 8.310118,
+    "address": "Landungssteg 1 (SGV) Bahnhofquai, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.051338,8.310118",
+    "weeklyHours": null,
+    "stayTag": "short_stay",
+    "interests": [
+      "lake-mountains"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.lakelucerne.ch/en/",
+    "categories": [
+      "boats-and-mountains"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "luzern-bahnhofquai-schiff.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Dampfschiff_Uri_in_Luzern.JPG",
+        "author": "Coronado1992",
+        "licence": "CC BY-SA 3.0",
+        "alt": {
+          "en": "The SGV steamship Uri moored at the Luzern-Bahnhofquai landing stage.",
+          "de": "Das SGV-Dampfschiff Uri am Ländesteg Luzern-Bahnhofquai."
+        }
+      }
+    ],
+    "sources": [
+      "https://www.lakelucerne.ch/en/",
+      "https://www.vierwaldstaettersee.ch/en/",
+      "https://www.openstreetmap.org/way/115606613",
+      "https://nominatim.openstreetmap.org/search?q=Bahnhofquai+Luzern&format=json"
+    ]
+  },
+  {
+    "key": "rigi-railway-vitznau",
+    "title": {
+      "en": "Rigi railway at Vitznau",
+      "de": "Rigi-Bahn in Vitznau"
+    },
+    "tip": {
+      "en": "The cogwheel railway of the Rigi Bahnen starts in Vitznau, on the shore of Lake Lucerne. Regular boats run from Lucerne to the Vitznau landing stage in about 60 minutes, and the valley station is 50 metres from the pier. The train climbs to Rigi Kulm and the Rigi summit.",
+      "de": "Die Zahnradbahn der Rigi Bahnen beginnt in Vitznau am Ufer des Vierwaldstättersees. Von Luzern fahren regelmässig Schiffe in etwa 60 Minuten zur Anlegestelle Vitznau, die Talstation liegt 50 Meter vom Steg entfernt. Der Zug fährt hinauf nach Rigi Kulm und zum Gipfel."
+    },
+    "localTip": {
+      "en": "Buy boat and railway together at the ticket office in Lucerne, it is cheaper.",
+      "de": "Kaufen Sie Schiff und Bahn zusammen am Schalter in Luzern, das ist günstiger."
+    },
+    "latitude": 47.009768,
+    "longitude": 8.483238,
+    "address": "Rigi Bahnen Talstation Vitznau, Seestrasse, 6354 Vitznau",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.009768,8.483238",
+    "weeklyHours": null,
+    "stayTag": "multi_day",
+    "interests": [
+      "lake-mountains"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.rigi.ch/en/inform/arrival",
+    "categories": [
+      "boats-and-mountains"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "rigi-bahn-vitznau.jpg",
+        "author": "Frank Nowotny",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Vitznau-Rigi-Bahn_Vitznau_Bahnhof.jpg",
+        "alt": {
+          "en": "The cogwheel train of the Vitznau-Rigi-Bahn standing at Vitznau station.",
+          "de": "Der Zahnradzug der Vitznau-Rigi-Bahn steht in der Station Vitznau."
+        }
+      }
+    ],
+    "sources": [
+      "https://www.rigi.ch/en/inform/arrival",
+      "https://www.rigi.ch/informieren/anreise/anreise-vitznau",
+      "https://www.rigi.ch/en/inform/timetables",
+      "https://www.openstreetmap.org/node/3799589984",
+      "https://nominatim.openstreetmap.org/search?q=Vitznau+Seestrasse+Rigi&format=json"
+    ]
+  },
+  {
+    "key": "pilatus-cable-car-kriens",
+    "title": {
+      "en": "Pilatus cable car at Kriens",
+      "de": "Pilatus-Seilbahn in Kriens"
+    },
+    "tip": {
+      "en": "From Lucerne railway station, bus no. 1 towards Obernau Dorf stops at «Kriens, Zentrum Pilatus», and the valley station of the Pilatus cable car is a five-minute walk away. The Golden Round Trip goes by boat to Alpnachstad, then by cogwheel railway and gondola up to Pilatus Kulm and back down to Kriens.",
+      "de": "Vom Luzerner Bahnhof fährt Bus Nr. 1 Richtung Obernau Dorf bis zur Haltestelle «Kriens, Zentrum Pilatus», die Talstation der Pilatus-Seilbahn ist fünf Minuten zu Fuss entfernt. Beim Golden Round Trip geht es mit dem Schiff nach Alpnachstad und weiter mit Zahnradbahn und Seilbahn hinauf zum Pilatus Kulm."
+    },
+    "localTip": {
+      "en": "The bus leaves from platform A and takes about 15 minutes to Kriens.",
+      "de": "Der Bus fährt ab Gleis A und braucht nach Kriens rund 15 Minuten."
+    },
+    "latitude": 47.030443,
+    "longitude": 8.277942,
+    "address": "Pilatus-Bahnen Talstation Kriens, Schlossweg 1, 6010 Kriens",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.030443,8.277942",
+    "weeklyHours": null,
+    "stayTag": "multi_day",
+    "interests": [
+      "lake-mountains"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://pilatus.ch/en/infos",
+    "categories": [
+      "boats-and-mountains"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "pilatus-talstation-kriens.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Kriens_Talstation.JPG",
+        "author": "Tilman-AB",
+        "licence": "Public domain",
+        "alt": {
+          "en": "The valley station of the Pilatus cable car in Kriens.",
+          "de": "Die Talstation der Pilatus-Seilbahn in Kriens."
+        }
+      }
+    ],
+    "sources": [
+      "https://pilatus.ch/en/infos",
+      "https://pilatus.ch/en/railway-cableways/tickets/golden-round-trip",
+      "https://www.openstreetmap.org/node/255137306",
+      "https://nominatim.openstreetmap.org/search?q=Pilatusbahn+Kriens&format=json"
+    ]
+  }
+]
