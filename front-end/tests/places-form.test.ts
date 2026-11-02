@@ -191,7 +191,7 @@ describe('[E4.2][AC68] form state', () => {
 })
 
 describe('[E4.2][AC86] the list filters', () => {
-  const item = (over: object) => ({ id: 'x', status: 'draft', title: {}, slug: null, located: true, categoryIds: [], hasDates: false, nextDate: null, stayTag: 'both', interests: [], coverMediaId: null, mainStory: null, hasPendingChanges: false, rowVersion: 1, updatedAt: '2026-10-30T10:00:00.000Z', ...over }) as PinListItem
+  const item = (over: object) => ({ id: 'x', status: 'draft', title: {}, slug: null, located: true, categoryIds: [], hasDates: false, nextDate: null, stayTag: 'both', interests: [], coverMediaId: null, cover: null, mainStory: null, hasPendingChanges: false, rowVersion: 1, updatedAt: '2026-10-30T10:00:00.000Z', ...over }) as PinListItem
   const items = [
     item({ id: 'a', status: 'published', title: { en: 'Chapel Bridge' }, slug: { en: 'chapel-bridge' }, categoryIds: ['walks'] }),
     item({ id: 'b', status: 'ended', title: { de: 'Fasnacht' }, hasDates: true, stayTag: 'short_stay' }),
