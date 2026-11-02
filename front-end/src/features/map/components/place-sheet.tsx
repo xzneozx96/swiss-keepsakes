@@ -189,21 +189,22 @@ export function PlaceSheet({ item, detail, failed = false, directions = true, on
       container={container}
       tightBottom
       footer={(
-        <>
+        // One row: the previous and next place as round buttons around the map button, which takes the rest.
+        <div className="flex w-full items-center gap-2">
           {position.count > 1 && (
-            <div className="flex gap-2">
-              <Button className="min-h-11 flex-1" isDisabled={position.index <= 0} variant="secondary" onPress={() => onStep(-1)}>
-                <ChevronLeftIcon size={18} />
-                {t('map.sheet.previous')}
-              </Button>
-              <Button className="min-h-11 flex-1" isDisabled={position.index >= position.count - 1} variant="secondary" onPress={() => onStep(1)}>
-                {t('map.sheet.next')}
-                <ChevronRightIcon size={18} />
-              </Button>
-            </div>
+            <Button isIconOnly aria-label={t('map.sheet.previous')} className="size-12 min-w-12 shrink-0" isDisabled={position.index <= 0} variant="secondary" onPress={() => onStep(-1)}>
+              <ChevronLeftIcon size={20} />
+            </Button>
           )}
-          {directions && <DirectionsLink place={detail ?? { ...item, mapsLink: null }} />}
-        </>
+          <div className="min-w-0 flex-1">
+            {directions && <DirectionsLink place={detail ?? { ...item, mapsLink: null }} />}
+          </div>
+          {position.count > 1 && (
+            <Button isIconOnly aria-label={t('map.sheet.next')} className="size-12 min-w-12 shrink-0" isDisabled={position.index >= position.count - 1} variant="secondary" onPress={() => onStep(1)}>
+              <ChevronRightIcon size={20} />
+            </Button>
+          )}
+        </div>
       )}
       isOpen={isOpen}
       title={title}

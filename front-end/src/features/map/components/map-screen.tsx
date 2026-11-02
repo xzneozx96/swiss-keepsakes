@@ -83,6 +83,8 @@ export function MapScreen({ place }: { place?: string }) {
   // The deep link is read once per value, when the places have arrived: the slug opens its card, or the notice says it is gone.
   const [handledPlace, setHandledPlace] = useState<string>()
   const [gone, setGone] = useState(false)
+  // Without a deep link the first place's card opens once the places arrive, so the map lands on a pin with its card.
+  const [firstOpened, setFirstOpened] = useState(false)
 
   const dataReady = !data.isPending && !data.isFailed
   const status = data.isFailed
@@ -107,6 +109,11 @@ export function MapScreen({ place }: { place?: string }) {
     setGone(!match)
     if (match)
       setSelectedId(match.id)
+  }
+  if (dataReady && place === undefined && !firstOpened && kept.length > 0) {
+    setFirstOpened(true)
+    if (selectedId === undefined)
+      setSelectedId(kept[0]!.id)
   }
   const deepLinkedId = handledPlace !== undefined && handledPlace === place ? ranked.find(pin => pin.slug === place)?.id : undefined
 
@@ -195,7 +202,6 @@ export function MapScreen({ place }: { place?: string }) {
       >
         <PinLayer
           followSelected
-          fit="first-load"
           dimmedIds={dimmedIds}
           pins={located}
           renderCluster={(members, zoomIn) => <PhotoCluster count={members.length} dimmed={members.every(member => dimmedIds.has(member.id))} onPress={zoomIn} />}
@@ -226,7 +232,7 @@ export function MapScreen({ place }: { place?: string }) {
       </MapView>
 
       {view === 'list' && dataReady && (
-        <div className="absolute inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom,0px)+64px)] z-[8] overflow-y-auto bg-background px-4 pt-[60px] pb-4">
+        <div className="absolute inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom,0px)+64px)] z-[8] overflow-y-auto bg-background px-4 pt-[76px] pb-4">
           {!matchesNothing && (
             <>
               <h2 className="pb-2 text-card-title font-semibold">{places}</h2>

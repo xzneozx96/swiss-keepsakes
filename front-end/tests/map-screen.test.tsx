@@ -237,7 +237,9 @@ describe('[E4.6][AC88] the filter dims on the map and filters the card row and t
     await loaded()
     await screen.findByRole('button', { name: en['map.categories'] })
 
-    expect(allPinButtons()).toHaveLength(5)
+    // The first place's card is open on load, so its pin is the pressed one.
+    expect(allPinButtons()).toHaveLength(4)
+    expect(screen.getAllByRole('button', { pressed: true }).filter(button => button.hasAttribute('data-pin-return'))).toHaveLength(1)
     expect(allPinButtons().some(button => /dimmed/.test(button.getAttribute('aria-label')!))).toBe(false)
   })
 
@@ -647,11 +649,11 @@ describe('[E4.7][AC90] the deep link /map?place=<slug>', () => {
     expect(await screen.findByText(de['map.gone'])).toBeInTheDocument()
   })
 
-  it('shows no notice and no card without the parameter', async () => {
+  it('shows no notice and opens the card of the first place without the parameter (owner, 2026-11-02)', async () => {
     await loaded()
     await screen.findByRole('button', { name: en['map.categories'] })
 
     expect(screen.queryByText(en['map.gone'])).toBeNull()
-    expect(screen.queryByRole('article')).toBeNull()
+    expect(await screen.findAllByRole('article')).not.toHaveLength(0)
   })
 })
