@@ -90,7 +90,7 @@ function DraftPin({ located, pins, cover }: { located: boolean, pins: PublicMapI
     <PinLayer
       followSelected
       pins={places}
-      renderPin={(pin, state) => <PhotoPin dimmed={false} emphasized={false} id={pin.id} label={pin.title} photoSrc={cover} selected={state.selected} onPress={noop} />}
+      renderPin={(pin, state) => <PhotoPin dimmed={false} emphasized={false} id={pin.id} label={pin.title} title={pin.title} photoSrc={cover} selected={state.selected} onPress={noop} />}
       selectedId={located ? PREVIEW_PIN_ID : undefined}
     />
   )

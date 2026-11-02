@@ -13,7 +13,8 @@ export const ADDRESS_LOOKUP_DELAY_MS = 400
  * answer for a position that is no longer the pin. It never overwrites what the merchant typed: it fills an empty
  * field, or one that still holds the address it filled itself, so a pin moved again updates it. A lookup that finds
  * nothing or fails changes nothing and shows nothing. Returns true while the field holds the filled text, so the
- * screen can say where it came from; editing the text ends that.
+ * screen can say where it came from; editing the text ends that. `looking` is true while a request is out. `fill` is the
+ * person's own tap on "Fill from the pin": it asks at once and replaces the text, and says whether it found an address.
  */
 export function useAddressFromPosition({ storeId, latitude, longitude, address, patch }: {
   storeId: string
@@ -21,7 +22,7 @@ export function useAddressFromPosition({ storeId, latitude, longitude, address, 
   longitude: number | null
   address: string
   patch: StepProps['patch']
-}): boolean {
+}): { filled: boolean, looking: boolean, fill: () => Promise<boolean> } {
   const lookup = useCommand('places', 'addressAt', { meta: { silent: true } })
   const [filled, setFilled] = useState<string | null>(null)
   const filledRef = useRef<string | null>(null)
@@ -39,6 +40,20 @@ export function useAddressFromPosition({ storeId, latitude, longitude, address, 
     patch(current => (current.address === '' || current.address === previous ? { address: found.formatted } : {}))
   })
 
+  const fill = async () => {
+    if (latitude === null || longitude === null)
+      return false
+    const found = await lookup.mutateAsync({ storeId, latitude, longitude }).catch(() => undefined)
+
+    if (!found)
+      return false
+    filledRef.current = found.formatted
+    setFilled(found.formatted)
+    patch({ address: found.formatted })
+
+    return true
+  }
+
   useEffect(() => {
     if (latitude === null || longitude === null || (latitude === openedRef.current.latitude && longitude === openedRef.current.longitude))
       return
@@ -51,5 +66,5 @@ export function useAddressFromPosition({ storeId, latitude, longitude, address, 
     }
   }, [latitude, longitude])
 
-  return filled !== null && address === filled
+  return { filled: filled !== null && address === filled, looking: lookup.isPending, fill }
 }

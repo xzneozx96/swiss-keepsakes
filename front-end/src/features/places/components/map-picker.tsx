@@ -92,9 +92,11 @@ function PickerLayers({ position, ownMoveRef, onRemove }: { position: [number, n
  * zoom, credits and loading are the shared map kit; Recenter and Remove position are two more round buttons under the
  * zoom. If the map cannot load, `onFailed` lets the step show coordinate fields instead.
  */
-export function MapPicker({ lat, lng, onPlace, onFailed, onRemove, className = 'h-72 lg:h-96' }: {
+export function MapPicker({ lat, lng, title, onPlace, onFailed, onRemove, className = 'h-72 lg:h-96' }: {
   lat: number | null
   lng: number | null
+  /** The place's current title, written above the pin; none while it is empty. */
+  title?: string
   onPlace: (position: { lat: number, lng: number }) => void
   onFailed: () => void
   /** The Remove position button; without it there is none. */
@@ -137,8 +139,9 @@ export function MapPicker({ lat, lng, onPlace, onFailed, onRemove, className = '
       <PinLayer
         draggable
         anchor="bottom"
+        labelsFromZoom={0}
         pins={pins}
-        renderPin={() => <TeardropPin describedBy="places-map-help" label={t('places.map.marker')} onKeyDown={nudge} />}
+        renderPin={() => <TeardropPin describedBy="places-map-help" label={t('places.map.marker')} title={title} onKeyDown={nudge} />}
         onMove={(_id, [along, at]) => place({ lat: round(at), lng: round(along) })}
       />
       <PickerLayers ownMoveRef={ownMoveRef} position={position} onRemove={onRemove} />

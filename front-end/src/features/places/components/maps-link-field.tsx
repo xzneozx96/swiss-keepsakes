@@ -1,12 +1,14 @@
 import type { MessageKey } from '@/i18n/en'
 
-import { Description, FieldError, Input, Label, TextField } from '@heroui/react'
+import { Button, Description, FieldError, Input, Label, Spinner, TextField } from '@heroui/react'
 import { useRef, useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useCommand } from '@/features/data-client/use-command'
 import { parseMapsLink } from '../lib/maps-link'
+import { linkToPin, movedAway } from '../lib/pin-sync'
+import { SyncWarning } from './sync-warning'
 
 type State = { status: 'idle' } | { status: 'reading' } | { status: 'moved', lat: number, lng: number } | { status: 'failed', message: MessageKey }
 
@@ -71,32 +73,64 @@ export function MapsLinkField({ storeId, position, onPosition }: {
   }
 
   const moved = state.status === 'moved' && position?.lat === state.lat && position.lng === state.lng
+  const pinLeft = state.status === 'moved' && movedAway({ lat: state.lat, lng: state.lng }, position)
   const description = state.status === 'reading' ? t('places.mapsLink.reading') : moved ? t('places.mapsLink.moved') : t('places.mapsLink.help')
 
-  return (
-    <TextField fullWidth isInvalid={state.status === 'failed'} value={value} onChange={setValue}>
-      <Label>{t('places.mapsLink.label')}</Label>
-      <Input
-        inputMode="url"
-        placeholder="https://maps.app.goo.gl/…"
-        onBlur={() => read(value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter')
-            read(value)
-        }}
-        onPaste={(event) => {
-          const pasted = event.clipboardData.getData('text')
+  // The pin is where the person put it: a link to that spot, or no link at all.
+  const linkNewPin = () => {
+    if (!position)
+      return
+    const link = linkToPin(position)
 
-          setValue(pasted)
-          event.preventDefault()
-          read(pasted)
-        }}
-      />
-      <div aria-live="polite">
-        {state.status === 'failed'
-          ? <FieldError>{t(state.message)}</FieldError>
-          : <Description className={moved ? 'text-success' : undefined}>{description}</Description>}
-      </div>
-    </TextField>
+    lastRef.current = link
+    attemptRef.current += 1
+    setValue(link)
+    setState({ status: 'moved', lat: position.lat, lng: position.lng })
+  }
+  const removeLink = () => {
+    lastRef.current = ''
+    attemptRef.current += 1
+    setValue('')
+    setState({ status: 'idle' })
+  }
+
+  return (
+    <>
+      <TextField fullWidth isInvalid={state.status === 'failed'} value={value} onChange={setValue}>
+        <Label>{t('places.mapsLink.label')}</Label>
+        <Input
+          inputMode="url"
+          placeholder="https://maps.app.goo.gl/…"
+          onBlur={() => read(value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter')
+              read(value)
+          }}
+          onPaste={(event) => {
+            const pasted = event.clipboardData.getData('text')
+
+            setValue(pasted)
+            event.preventDefault()
+            read(pasted)
+          }}
+        />
+        <div aria-live="polite">
+          {state.status === 'failed'
+            ? <FieldError>{t(state.message)}</FieldError>
+            : (
+                <Description className={`flex items-center gap-1.5 ${moved ? 'text-success' : ''}`}>
+                  {state.status === 'reading' && <Spinner size="sm" />}
+                  {description}
+                </Description>
+              )}
+        </div>
+      </TextField>
+      {pinLeft && (
+        <SyncWarning text={t('places.mapsLink.pinMoved')}>
+          <Button size="sm" variant="secondary" onPress={linkNewPin}>{t('places.mapsLink.useNew')}</Button>
+          <Button size="sm" variant="ghost" onPress={removeLink}>{t('places.mapsLink.remove')}</Button>
+        </SyncWarning>
+      )}
+    </>
   )
 }

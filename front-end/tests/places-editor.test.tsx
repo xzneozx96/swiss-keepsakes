@@ -271,21 +271,22 @@ describe('[E4.2][AC68] N17 one pattern for every field, and a card for each bloc
   const blocks = () => screen.getAllByTestId('place-block')
   const headings = () => screen.queryAllByRole('heading', { level: 3 }).map(item => item.textContent)
 
-  it('[E4.2][AC68] the map step has two cards, one location card for the link and the map, and one for the address', async () => {
+  it('[E4.2][AC68] the map step has one card: the link, the map and the address', async () => {
     await open('new')
     await heading('Place on the map')
 
-    expect(blocks()).toHaveLength(2)
+    expect(blocks()).toHaveLength(1)
     expect(headings()).toEqual(['Location on the map'])
     expect(screen.queryByRole('heading', { name: 'Address' })).not.toBeInTheDocument()
     expect(screen.getAllByText('Address')).toHaveLength(1)
     expect(screen.getByLabelText('Address')).toHaveAccessibleDescription(/One address for both languages/)
-    // A card is not collapsible.
-    expect(blocks()[1]).toContainElement(screen.getByLabelText('Address'))
+    // A card is not collapsible; the address is the last thing in the location card, below the map.
+    expect(blocks()[0]).toContainElement(screen.getByLabelText('Address'))
+    expect(screen.getByRole('button', { name: 'Place pin' }).compareDocumentPosition(screen.getByLabelText('Address')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(blocks()[0]).toContainElement(screen.getByLabelText('Google Maps link'))
     expect(blocks()[0]).toContainElement(screen.getByRole('button', { name: 'Place pin' }))
     expect(blocks()[0]).toHaveAccessibleName('Location on the map')
-    expect(screen.getByText('Paste a Google Maps link, tap the map or drag the pin.')).toBeInTheDocument()
+    expect(screen.getByText('Paste a Google Maps link, tap the map or drag the pin. The address fills from the pin.')).toBeInTheDocument()
     for (const block of blocks())
       expect(block.querySelector('[aria-expanded]')).toBeNull()
     expect(blocks()[0]).toHaveClass('rounded-3xl', 'bg-surface', 'shadow-surface')
@@ -1263,7 +1264,7 @@ describe('[E4.2][AC68] N17 position from a Google Maps link', () => {
     await open('new', { language: 'de' })
     await heading('Ort auf der Karte')
 
-    expect(screen.getByText('Fügen Sie einen Google-Maps-Link ein, tippen Sie auf die Karte oder ziehen Sie den Punkt.')).toBeInTheDocument()
+    expect(screen.getByText('Fügen Sie einen Google-Maps-Link ein, tippen Sie auf die Karte oder ziehen Sie den Punkt. Die Adresse wird vom Pin übernommen.')).toBeInTheDocument()
     await userEvent.click(screen.getByLabelText('Google-Maps-Link'))
     await userEvent.paste('https://www.google.com/maps/search/x')
     expect(await screen.findByText(/In diesem Link steht keine Position/)).toBeInTheDocument()
