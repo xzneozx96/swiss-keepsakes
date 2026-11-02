@@ -16,7 +16,6 @@ export const mapDe: Record<keyof typeof mapEn, string> = {
   'map.card.onlyIn.en': 'Nur auf Englisch',
   'map.card.onlyIn.de': 'Nur auf Deutsch',
   'map.directions': 'In Google Maps öffnen',
-  'map.directions.note': 'Öffnet Google Maps in einem neuen Tab. Wir sehen nie, wo Sie sind.',
   'map.directions.label': 'Route',
   'map.sheet.onlyIn.en': 'Dieser Ort ist nur auf Englisch beschrieben.',
   'map.sheet.onlyIn.de': 'Dieser Ort ist nur auf Deutsch beschrieben.',

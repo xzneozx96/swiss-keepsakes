@@ -101,7 +101,7 @@ describe('[E4.6][AC42] the map card', () => {
     expect(picture.parentElement!.firstElementChild).toBe(picture)
     expect(picture.parentElement!.lastElementChild).toBe(text)
     expect(card).toHaveClass('rounded-3xl')
-    expect(within(card).getByRole('button', { name: en['map.card.next'] })).toBeInTheDocument()
+    expect(within(card).getByRole('button', { name: en['map.card.more'] })).toHaveClass('flex-1')
   })
 
   it('keeps the tour card as it was: the picture on the right, the text on top', () => {
@@ -131,7 +131,8 @@ describe('[E4.6][AC42] the map card', () => {
     }
   })
 
-  it('numbers the cards and disables the step back on the first and the step on on the last', async () => {
+  // The place card's `‹ n of m ›` steps are commented out (owner 2026-11-02: Show more takes the row); the cards still swipe.
+  it.skip('numbers the cards and disables the step back on the first and the step on on the last', async () => {
     await renderRow()
 
     expect(within(cardOf('Place 1')).getByText('1 of 3')).toBeInTheDocument()
@@ -141,7 +142,7 @@ describe('[E4.6][AC42] the map card', () => {
     expect(within(cardOf('Place 3')).getByRole('button', { name: en['map.card.next'] })).toBeDisabled()
   })
 
-  it('opens the next card with the step button and keeps focus on the same button there, then on the other at the end', async () => {
+  it.skip('opens the next card with the step button and keeps focus on the same button there, then on the other at the end', async () => {
     await renderRow()
     await userEvent.click(within(cardOf('Place 1')).getByRole('button', { name: en['map.card.next'] }))
 
@@ -171,7 +172,7 @@ describe('[E4.6][AC42] the map card', () => {
     await renderRow({ onClose })
     await userEvent.click(screen.getByRole('button', { name: en['map.card.close'] }))
     expect(onClose).toHaveBeenCalledTimes(1)
-    await userEvent.click(within(cardOf('Place 1')).getByRole('button', { name: en['map.card.next'] }))
+    within(cardOf('Place 1')).getByRole('button', { name: en['map.card.more'] }).focus()
     await userEvent.keyboard('{Escape}')
 
     expect(onClose).toHaveBeenCalledTimes(2)

@@ -23,15 +23,16 @@ export interface CardExtras {
 /**
  * The card of one pin (N03): a thumbnail slot on the left that is always there (the place icon when there is no
  * photo), the title, the first category and the next date (or the language notice) and the tip (two lines) beside it,
- * centred against the picture, `‹ n of m ›`, Show more (the details sheet) and the Google Maps button. No price, no
- * booking or payment button, no review summary.
+ * centred against the picture, Show more (the details sheet, full width) and the Google Maps button. No price, no
+ * booking or payment button, no review summary. The `‹ n of m ›` steps are commented out (owner 2026-11-02): the cards
+ * still swipe, and Show more takes the row.
  */
-function PlaceCard({ pin, active, photoSrc, extras, nav, directions, onMore }: {
+function PlaceCard({ pin, active, photoSrc, extras, /* nav, */ directions, onMore }: {
   pin: PublicMapItem
   active: boolean
   photoSrc?: string
   extras?: CardExtras
-  nav: React.ComponentProps<typeof MapCard>['nav']
+  // nav: React.ComponentProps<typeof MapCard>['nav']
   directions: boolean
   onMore?: (pin: PublicMapItem) => void
 }) {
@@ -48,7 +49,7 @@ function PlaceCard({ pin, active, photoSrc, extras, nav, directions, onMore }: {
     <MapCard
       action={(
         <>
-          {onMore && <Button className="min-h-11" size="sm" variant="secondary" onPress={() => onMore(pin)}>{t('map.card.more')}</Button>}
+          {onMore && <Button className="min-h-11 flex-1" size="sm" variant="secondary" onPress={() => onMore(pin)}>{t('map.card.more')}</Button>}
           {directions && <DirectionsLink icon="filled" place={{ latitude: pin.latitude, longitude: pin.longitude, mapsLink: extras?.mapsLink ?? null }} />}
         </>
       )}
@@ -56,7 +57,7 @@ function PlaceCard({ pin, active, photoSrc, extras, nav, directions, onMore }: {
       eyebrow={[notice, extras?.categories?.[0], date].filter(Boolean).join(' · ')}
       id={pin.id}
       layout="pin"
-      nav={nav}
+      // nav={nav}
       text={extras?.tip?.text}
       textLang={extras?.tip?.language}
       thumb={<MapThumb className="size-full" iconSize={32} src={photoSrc} />}
@@ -106,7 +107,7 @@ export function PlaceCardRow({
       bottom={bottom}
       items={pins}
       label={t(pins.length === 1 ? 'map.places.one' : 'map.places.other', { count: pins.length })}
-      renderCard={(pin, { active, nav }) => <PlaceCard active={active} directions={directions} extras={extrasOf?.(pin)} nav={nav} photoSrc={photoOf?.(pin)} pin={pin} onMore={onMore} />}
+      renderCard={(pin, { active /* , nav */ }) => <PlaceCard active={active} directions={directions} extras={extrasOf?.(pin)} /* nav={nav} */ photoSrc={photoOf?.(pin)} pin={pin} onMore={onMore} />}
       selectedId={selectedId}
       onClose={onClose}
       onSelect={onSelect}

@@ -202,12 +202,7 @@ export function PlaceSheet({ item, detail, failed = false, directions = true, on
               </Button>
             </div>
           )}
-          {directions && (
-            <>
-              <DirectionsLink place={detail ?? { ...item, mapsLink: null }} />
-              <p className="text-center text-xs text-muted">{t('map.directions.note')}</p>
-            </>
-          )}
+          {directions && <DirectionsLink place={detail ?? { ...item, mapsLink: null }} />}
         </>
       )}
       isOpen={isOpen}

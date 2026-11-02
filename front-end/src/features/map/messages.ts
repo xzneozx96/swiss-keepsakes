@@ -15,7 +15,6 @@ export const mapEn = {
   'map.card.onlyIn.en': 'Only in English',
   'map.card.onlyIn.de': 'Only in German',
   'map.directions': 'Open in Google Maps',
-  'map.directions.note': 'Opens Google Maps in a new tab. We never see where you are.',
   'map.directions.label': 'Directions',
   'map.sheet.onlyIn.en': 'This place is only described in English.',
   'map.sheet.onlyIn.de': 'This place is only described in German.',

@@ -81,7 +81,8 @@ export function MapCardClose({ floating = false, onClose }: { floating?: boolean
  * The card of one place or stop over a map, in one of two looks. `tour` (the default, the tour route map's card): an
  * eyebrow, a serif title (one line), a text (two lines at most), the picture on the right. `pin` (the guest map's
  * place card, as it was before the kit): the picture on the left, the title, the eyebrow and the text beside it,
- * centred against the picture. Both end with `‹ n of m ›` and one action. A card in a row takes the
+ * centred against the picture. Both end with `‹ n of m ›` (when given) and one action; without the steps
+ * the action starts at the left, so it can take the row. A card in a row takes the
  * height of the tallest, and the buttons sit on its bottom edge. `active: false` takes the buttons out of the tab
  * order (a card that is in the row but not open). `onClose` puts the ✕ over the card's top right: a row has its own.
  */
@@ -154,7 +155,7 @@ export function MapCard({
       {(nav || action) && (
         <div className="flex items-center gap-1" inert={!active}>
           {nav && <MapCardNav {...nav} />}
-          <span className="flex-1" />
+          {nav && <span className="flex-1" />}
           {action}
         </div>
       )}
