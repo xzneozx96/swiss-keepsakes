@@ -99,11 +99,11 @@ export function VariantRow({ variant, options, held, isSelected, onSelect, onPri
         {options.length > 0 ? <RowChips options={options} values={variant.values} /> : <span className="truncate font-medium">{variant.skuCode}</span>}
         <span className="truncate font-mono text-xs text-muted">{variant.skuCode}</span>
       </div>
-      <div className="col-start-3 flex items-center gap-2 sm:col-start-4">
+      <div className="col-start-3 flex min-w-0 items-center gap-3 sm:contents">
         <PriceInput key={variant.priceRappen} label={t('keepsakes.variants.priceOf', { name: title })} priceRappen={variant.priceRappen} onSave={onPrice} />
+        <StatusText tone={forSale ? 'success' : 'neutral'}>{t(forSale ? 'keepsakes.variants.onSale' : 'keepsakes.variant.status.hidden')}</StatusText>
+        <Button aria-label={t('keepsakes.variants.editVariant', { name: title })} className="ms-auto justify-self-end max-lg:h-11" size="sm" variant="tertiary" onPress={onEdit}>{t('keepsakes.variant.edit')}</Button>
       </div>
-      <StatusText tone={forSale ? 'success' : 'neutral'}>{t(forSale ? 'keepsakes.variants.onSale' : 'keepsakes.variant.status.hidden')}</StatusText>
-      <Button aria-label={t('keepsakes.variants.editVariant', { name: title })} className="justify-self-end max-lg:h-11" size="sm" variant="tertiary" onPress={onEdit}>{t('keepsakes.variant.edit')}</Button>
     </li>
   )
 }
