@@ -4,7 +4,7 @@ import type { OptionDraft, Values } from './option-rules'
 import { allCombinations, asSaved, labelOf, suggestCode } from './option-rules'
 
 /** What an options save creates for a combination: the API's `KeepsakeVariantWrite`, its values as refs of the save. */
-export interface NewVariant { skuCode: string | null, priceRappen: number, values: Values }
+export interface NewVariant { skuCode: string | null, /** A photo chosen for a row that is still to come. */ mediaId?: string | null, priceRappen: number, values: Values }
 
 export interface OptionsPlan {
   /** The value that each existing variant takes of a new option: the first one, so the variant stays a combination. */

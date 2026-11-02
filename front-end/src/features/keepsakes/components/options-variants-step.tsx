@@ -1,9 +1,11 @@
 import type { ProductVariant } from '@sk/api-contract'
 import type { Language } from '@sk/domain/shared'
+import type { RefObject } from 'react'
+import type { OptionsStepHandle } from '../hooks/use-held-options'
 import type { OptionsDraftState } from '../hooks/use-options-draft'
 import type { VariantActions } from '../lib/variant-actions'
 
-import { useState } from 'react'
+import { useImperativeHandle, useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { useLocale } from '@/contexts/locale-context'
@@ -17,6 +19,8 @@ import { OptionsBlock } from './options-block'
 import { PriceCard } from './price-card'
 import { VariantsBlock } from './variants-block'
 
+const NONE: ReadonlySet<string> = new Set()
+
 /**
  * The merged step, Options and variants, for a saved keepsake and for a new one (`held`: it all stays in the browser until
  * Create keepsake). One column of blocks: the Price card while the keepsake has no options, the Options block, and the
@@ -27,7 +31,7 @@ import { VariantsBlock } from './variants-block'
  * code, or while the merchant has switched it on (a choice kept here, as no code exists yet to show it). Turning it off asks
  * first, then clears every code in one request. Archived variants keep theirs: the switch does not count them.
  */
-export function OptionsAndVariantsStep({ storeId, keepsakeId, draft, language, held, variants, committed, actions, photoIds, showErrors }: {
+export function OptionsAndVariantsStep({ storeId, keepsakeId, draft, language, held, toCome = NONE, handle, variants, committed, actions, photoIds, showErrors }: {
   storeId: string
   /** The saved keepsake's id; its own option names are not suggested for it. */
   keepsakeId?: string
@@ -35,6 +39,10 @@ export function OptionsAndVariantsStep({ storeId, keepsakeId, draft, language, h
   /** The version the editor's switch has chosen. */
   language: Language
   held: boolean
+  /** The rows that a saved keepsake's held options will create: each is held like the rows of a new keepsake. */
+  toCome?: ReadonlySet<string>
+  /** Lets the editor ask whether an option is open and open one that a refused save names. */
+  handle?: RefObject<OptionsStepHandle | null>
   /** Every variant, archived ones too. */
   variants: ProductVariant[]
   committed: ReadonlySet<string>
@@ -54,7 +62,8 @@ export function OptionsAndVariantsStep({ storeId, keepsakeId, draft, language, h
   const skuOn = chosen || coded.length > 0
   // New rows start with the keepsake's code while the switch is on, and have none while it is off.
   const codeBase = skuOn ? codeBaseOf(variants, tableOptions) : null
-  const flow = useOptionsFlow({ draft, committed, variants, held, codeBase, commit: actions.commit })
+  const flow = useOptionsFlow({ draft, committed, variants, codeBase, commit: actions.commit })
+  useImperativeHandle(handle, () => ({ isOpen: () => flow.open !== undefined, edit: flow.edit }))
   const suggestions = useOptionNames(storeId, keepsakeId)
   const only = variants.find(variant => variant.status !== 'archived')
   const rows = flow.preview?.newVariants.map(made => made.values) ?? []
@@ -92,7 +101,7 @@ export function OptionsAndVariantsStep({ storeId, keepsakeId, draft, language, h
     <>
       {tableOptions.length === 0 && only && <PriceCard key={only.id} held={held} showErrors={showErrors} sku={sku} variant={only} onSave={actions.saveVariant} />}
       <OptionsBlock committed={committed} draft={draft} flow={flow} language={language} suggestions={suggestions} />
-      {(tableOptions.length > 0 || preview) && <VariantsBlock actions={actions} held={held} notSold={missingCombinations(tableOptions, variants)} options={tableOptions} ownPhotos={photoIds} preview={preview} sku={sku} storeId={storeId} variants={variants} />}
+      {(tableOptions.length > 0 || preview) && <VariantsBlock actions={actions} held={held} toCome={toCome} notSold={missingCombinations(tableOptions, variants)} options={tableOptions} ownPhotos={photoIds} preview={preview} sku={sku} storeId={storeId} variants={variants} />}
       {dialog}
     </>
   )

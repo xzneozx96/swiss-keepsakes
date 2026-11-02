@@ -14,17 +14,15 @@ interface Open { ref: string, snapshot: OptionsSnapshot, /** Added with Add opti
 
 /**
  * The one option that is open in the Options block, and what Done, Cancel and Delete do with it. Done checks the option,
- * works out what saving it brings (`planOptionsDone`) and hands the options and that plan to `commit`: a saved keepsake
- * sends them in one request, a new one applies them to the draft. Only one option is open at a time, so the variants that
+ * works out what saving it brings (`planOptionsDone`) and hands the options and that plan to `commit`, which holds them in
+ * the browser until the keepsake is saved (a new one at Create, a saved one when the step is left). Only one option is open at a time, so the variants that
  * are still to come always belong to it. `committed` holds the refs the keepsake had when the option was opened.
  */
-export function useOptionsFlow({ draft, committed, variants, held, codeBase, commit }: {
+export function useOptionsFlow({ draft, committed, variants, codeBase, commit }: {
   draft: OptionsDraftState
   committed: ReadonlySet<string>
   /** Every variant, archived ones too. */
   variants: ProductVariant[]
-  /** A new keepsake: its options stay in the draft, which has no saved copy to settle on. */
-  held: boolean
   /** The keepsake code that new variants' codes start with while the SKU switch is on ('' with none yet); null while it is off. */
   codeBase: string | null
   commit: CommitOptions
@@ -68,8 +66,6 @@ export function useOptionsFlow({ draft, committed, variants, held, codeBase, com
 
     setIsPending(false)
     if (outcome.ok) {
-      if (!held)
-        draft.settle(outcome.options)
       setOpen(undefined)
 
       return true
@@ -115,7 +111,7 @@ export function useOptionsFlow({ draft, committed, variants, held, codeBase, com
       setFailure(undefined)
       setOpen(undefined)
     },
-    /** The options in a new order, or without a deleted one, saved at once with no combination to make; true when it is saved. */
+    /** The options in a new order, or without a deleted one, held like a Done with no combination to make; true when it is held. */
     saveList: async (options: OptionDraft[]): Promise<boolean> => {
       setFailure(undefined)
       draft.replaceOptions(options)
@@ -124,12 +120,8 @@ export function useOptionsFlow({ draft, committed, variants, held, codeBase, com
 
       setIsPending(false)
       setOpen(undefined)
-      if (outcome.ok) {
-        if (!held)
-          draft.settle(outcome.options)
-
+      if (outcome.ok)
         return true
-      }
       if (outcome.refusals && outcome.refusals.length > 0)
         draft.setServerProblems(outcome.refusals)
       else

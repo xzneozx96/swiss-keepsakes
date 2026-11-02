@@ -47,7 +47,7 @@ The 2026-10-29 design (cards, with options and variants in sheets) became a step
 15. **No stock column.** Stock arrives with E6.3.
 16. **SKU codes are optional, as in Shopify (owner, 2026-11-02).**
     - A keepsake-level switch, "This keepsake has SKU codes", sits in the Price block and in the Variants block header. It is off for a new keepsake.
-    - Off: no code field anywhere (Price block, rows, variant sheet), and new variants have no code. On: the code field shows, and each row shows its code as a small mono line.
+    - Off: no code field anywhere (Price block, rows, variant sheet), and new variants have no code. On: the code field shows, and each row shows its code as a small mono line (from `lg`, in a column of its own between the values and the price).
     - New rows while it is on are prefilled with the keepsake code and the full value labels, upper case: `1.6795-XS-RED`. A clash gets `-2`. The merchant can edit every code.
     - The switch state is derived: on when any variant that is for sale or hidden has a code. A choice made before any code exists is kept in the editor. Archived variants keep their codes and do not count.
     - Turning it off asks ("Remove the SKU codes of all n variants?"), then clears the codes in one `PATCH .../variants`.
@@ -58,6 +58,17 @@ The 2026-10-29 design (cards, with options and variants in sheets) became a step
 20. **Colour swatches are removed** (owner: "redundant"): the UI, the draft logic, the contract (`swatch`), the API, and the column `catalog.product_option_values.swatch` with its CHECK (migration 0017; the dev branch held no stored swatch).
 21. **Add another option is always visible** (up to five). With an option open it runs that option's Done first; a refused Done keeps the option open and opens no second one. The "Paste a list…" helper text goes; pasting a list still works.
 22. **A variant has one photo** (owner, 2026-11-02), chosen from the keepsake's photos first, or the library with Upload a photo. `catalog.skus.media_id` is a plain id with no foreign key (ADR-013). The API refuses a file that is not an image in the store's library, and one that is retired or still processing. A photo the keepsake does not have yet joins the keepsake's photos. Keepsake photos do not count as media uses yet (open point 2 of the 2026-10-29 media decision); a variant photo does not either.
+
+### Amended on 2026-11-02, later (owner, chat)
+
+23. **Option changes are held in the browser and saved once, when the merchant leaves the step.** This amends 10 and 12. On a saved keepsake, Done, Add another option, Edit, a deleted value and a new order of the options change only the browser's draft. Done folds the option at once and sends no request.
+    - **When it saves:** one `PUT .../options` (the options, the values the saved variants take of a new option, and the new variants) runs on Next, Back, a step in the step list, or leaving the editor. A refusal keeps the merchant on the step and opens the option it names with its errors; one that names no option shows in an alert.
+    - **An option still open** when the merchant leaves asks to finish it with Done first, as a new keepsake does.
+    - **Leaving the editor** with held options asks first, with the existing leave dialog. Leave saves the options first and goes only if the save is accepted.
+    - **The step bar** says "Unsaved changes" while options are held.
+    - **Rows to come:** the combinations the held options bring show as rows to come, as for a new keepsake. They take a price, a code and a photo, which go into `newVariants`. They have no status: the API makes a new variant for sale, so the For sale and Hidden actions are off for them until the save. "Not sold" and Add back work on the draft and send nothing.
+    - **Saved variants** still save at once: price, status, code, photo and the bulk actions. A value or option that a variant uses (archived ones too) cannot be removed (ADR-017), so the options save never archives a variant.
+    - **Why:** on the dev database (Singapore) one options save took 2.1 s, and Done waited for it. The owner: make it optimistic and save once at the end, because the merchant may change their mind before it is saved.
 
 ## Rejected
 

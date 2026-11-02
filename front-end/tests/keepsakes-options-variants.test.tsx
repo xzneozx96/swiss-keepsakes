@@ -115,9 +115,11 @@ async function startOption(name: string, values: string[]) {
 }
 
 const done = () => userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Done' }))
+// Done holds the options in the browser (T-018): they are saved, in one request, when the step is left.
+const leaveStep = () => userEvent.click(screen.getByRole('button', { name: 'Next' }))
 
 describe('[T-008][AC3] a first option on a keepsake with no option', () => {
-  it('[T-008][AC3] the values make rows to come, muted, and Done saves the option with the combinations in one request', async () => {
+  it('[T-008][AC3] the values make rows to come, muted, and Done holds the option; leaving the step saves it with the combinations in one request', { timeout: 20_000 }, async () => {
     await openStep()
     await startOption('Size', ['XS', 'S', 'M', 'L'])
 
@@ -126,6 +128,13 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
     expect(screen.getAllByTestId('variant-preview')).toHaveLength(3)
     expect(writes()).toHaveLength(0)
     await done()
+
+    expect(await within(optionsBlock()).findByTestId('option-row')).toHaveTextContent('XSSML')
+    await waitFor(() => expect(rows()).toHaveLength(4))
+    expect(screen.queryByRole('region', { name: 'Price' })).not.toBeInTheDocument()
+    expect(screen.queryByTestId('variant-preview')).not.toBeInTheDocument()
+    expect(writes()).toHaveLength(0)
+    await leaveStep()
 
     await waitFor(() => expect(puts()).toHaveLength(1))
     const body = puts()[0]!.body as OptionsPut
@@ -140,16 +149,10 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
     expect(body.variantValues).toEqual([{ variantId, values: { [body.options[0]!.ref]: xs } }])
     expect(body.newVariants).toEqual([
       // The keepsake has a code (VX-1), so the SKU switch is on and the new codes are that code and the labels.
-      { skuCode: 'VX-1-S', priceRappen: 3900, values: { [body.options[0]!.ref]: s } },
-      { skuCode: 'VX-1-M', priceRappen: 3900, values: { [body.options[0]!.ref]: m } },
-      { skuCode: 'VX-1-L', priceRappen: 3900, values: { [body.options[0]!.ref]: l } },
+      { skuCode: 'VX-1-S', mediaId: null, priceRappen: 3900, values: { [body.options[0]!.ref]: s } },
+      { skuCode: 'VX-1-M', mediaId: null, priceRappen: 3900, values: { [body.options[0]!.ref]: m } },
+      { skuCode: 'VX-1-L', mediaId: null, priceRappen: 3900, values: { [body.options[0]!.ref]: l } },
     ])
-    expect(await within(optionsBlock()).findByTestId('option-row')).toHaveTextContent('Size')
-    expect(within(optionsBlock()).getByTestId('option-row')).toHaveTextContent('XSSML')
-    await waitFor(() => expect(rows()).toHaveLength(4))
-    expect(screen.queryByRole('region', { name: 'Price' })).not.toBeInTheDocument()
-    expect(screen.queryByTestId('variant-preview')).not.toBeInTheDocument()
-    expect(await screen.findByText(/^Saved \d/)).toBeInTheDocument()
   })
 
   it('[T-008] Done on an option with no name or no value is refused at the option and sends nothing', async () => {
@@ -162,102 +165,96 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
     expect(writes()).toHaveLength(0)
   })
 
-  it('[T-010] Add another option is there while an option is open and runs its Done first', async () => {
+  it('[T-010] Add another option is there while an option is open and runs its Done first, which sends nothing', async () => {
     await openStep()
     await startOption('Size', ['XS', 'S'])
     await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Add another option' }))
 
-    await waitFor(() => expect(puts()).toHaveLength(1))
-    expect((puts()[0]!.body as OptionsPut).options[0]!.name).toEqual({ en: 'Size' })
     expect(await within(optionsBlock()).findByTestId('option-row')).toHaveTextContent('Size')
     expect(await screen.findAllByLabelText('Option name in English', { selector: 'input' })).toHaveLength(1)
+    expect(writes()).toHaveLength(0)
   })
 
-  describe('a second option after the first was saved (the API gives a new option and value ids of their own)', () => {
-    let sizeIds: { option: string, values: string[] }
-
-    /** Pressing Done, or Add another option (which runs the Done of the open Size first), on a Size that has three values. */
-    async function saveSize(how: 'done' | 'add-another') {
-      await openStep()
-      await startOption('Size', ['Small', 'Medium', 'Large'])
-      if (how === 'done')
-        await done()
-      else
-        await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Add another option' }))
-      await waitFor(() => expect(puts()).toHaveLength(1))
-      expect(await within(optionsBlock()).findByTestId('option-row')).toHaveTextContent('Size')
-      sizeIds = { option: current.options[0]!.id, values: current.options[0]!.values.map(value => value.id) }
-      expect(sizeIds.option).not.toBe((puts()[0]!.body as OptionsPut).options[0]!.ref)
-    }
-
+  describe('several options held together, then saved in one request', () => {
     const typeColour = async () => {
       await userEvent.type(await screen.findByLabelText('Option name in English', { selector: 'input' }), 'Colour')
       for (const value of ['Red', 'Blue', 'Green'])
         await typeValue(value)
     }
 
-    async function expectSecondSave() {
-      await waitFor(() => expect(puts()).toHaveLength(2))
-      const body = puts()[1]!.body as OptionsPut
+    async function startSize(how: 'done' | 'add-another') {
+      await openStep()
+      await startOption('Size', ['Small', 'Medium', 'Large'])
+      if (how === 'done') {
+        await done()
+        await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Add another option' }))
+      }
+      else {
+        await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Add another option' }))
+      }
+      expect(await within(optionsBlock()).findByTestId('option-row')).toHaveTextContent('Size')
+      expect(writes()).toHaveLength(0)
+    }
+
+    async function expectOneSave() {
+      await waitFor(() => expect(puts()).toHaveLength(1))
+      const body = puts()[0]!.body as OptionsPut
       const [size, colour] = body.options
 
+      expect(writes()).toHaveLength(1)
       expect(screen.queryByText(/things? to fix/)).not.toBeInTheDocument()
-      // Size goes back under the ids the API gave it, with its values; Colour is new.
       expect(body.options).toHaveLength(2)
-      expect(size).toMatchObject({ ref: sizeIds.option, name: { en: 'Size' } })
-      expect(size!.values.map(value => value.ref)).toEqual(sizeIds.values)
+      expect(size).toMatchObject({ name: { en: 'Size' } })
       expect(size!.values.map(value => value.label.en)).toEqual(['Small', 'Medium', 'Large'])
       expect(colour!.name).toEqual({ en: 'Colour' })
       expect(colour!.values.map(value => value.label.en)).toEqual(['Red', 'Blue', 'Green'])
-      // Each of the 3 variants takes Red and keeps its Size; Blue and Green make 6 new ones.
-      expect(body.variantValues).toHaveLength(3)
-      expect(body.variantValues!.every(row => Object.keys(row.values).join() === colour!.ref && row.values[colour!.ref] === colour!.values[0]!.ref)).toBe(true)
-      expect(body.newVariants).toHaveLength(6)
+      // The saved variant takes Small and Red; the other 8 combinations are new.
+      expect(body.variantValues).toEqual([{ variantId, values: { [size!.ref]: size!.values[0]!.ref, [colour!.ref]: colour!.values[0]!.ref } }])
+      expect(body.newVariants).toHaveLength(8)
+      expect(body.newVariants!.every(made => Object.keys(made.values).length === 2)).toBe(true)
+
+      return body
     }
 
-    it('[T-010] Done on a second option keeps the first by the ids it was saved under', async () => {
-      await saveSize('done')
-      await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Add another option' }))
+    it('[T-010] Done on a second option keeps the first, and one save sends both with every combination', { timeout: 20_000 }, async () => {
+      await startSize('done')
       await typeColour()
       await done()
-      await expectSecondSave()
       await waitFor(() => expect(rows()).toHaveLength(9))
+      expect(writes()).toHaveLength(0)
+      await leaveStep()
+      await expectOneSave()
+      await waitFor(() => expect(screen.getByTestId('review-screen')).toBeInTheDocument())
     })
 
-    it('[T-010] three options in a row, each with Done or Add another option, each keeps the one before, and the rows are titled by their values', async () => {
-      await saveSize('add-another')
+    it('[T-010] Size held by Add another option is kept when the second option is done, and the rows are titled by their values', { timeout: 20_000 }, async () => {
+      await startSize('add-another')
       await typeColour()
       await done()
-      await waitFor(() => expect(puts()).toHaveLength(2))
       await waitFor(() => expect(rows()).toHaveLength(9))
       expect(rows()[0]).toHaveTextContent('SmallRed')
+      await leaveStep()
+      await expectOneSave()
+    })
+
+    it('[T-010] three options in a row each keep the one before, and the save sends them in one request', { timeout: 20_000 }, async () => {
+      await startSize('add-another')
+      await typeColour()
       await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Add another option' }))
       await userEvent.type(await screen.findByLabelText('Option name in English', { selector: 'input' }), 'Theme')
       await typeValue('Light')
       await typeValue('Dark')
       await done()
-      await waitFor(() => expect(puts()).toHaveLength(3))
-      const body = puts()[2]!.body as OptionsPut
+      await waitFor(() => expect(rows()).toHaveLength(18))
+      expect(writes()).toHaveLength(0)
+      await leaveStep()
+      await waitFor(() => expect(puts()).toHaveLength(1))
+      const body = puts()[0]!.body as OptionsPut
 
       expect(screen.queryByText(/things? to fix/)).not.toBeInTheDocument()
-      expect(body.options.map(option => option.ref).slice(0, 2)).toEqual(current.options.slice(0, 2).map(option => option.id))
-      expect(body.variantValues).toHaveLength(9)
-      expect(body.newVariants).toHaveLength(9)
-      await waitFor(() => expect(rows()).toHaveLength(18))
-    })
-
-    it('[T-010] a Size saved by Add another option is kept by its saved ids when the second option is done', async () => {
-      await saveSize('add-another')
-      await typeColour()
-      await done()
-      await expectSecondSave()
-    })
-
-    it('[T-010] a Size saved by Add another option is kept by its saved ids when Add another option saves the second', async () => {
-      await saveSize('add-another')
-      await typeColour()
-      await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Add another option' }))
-      await expectSecondSave()
+      expect(body.options.map(option => option.name.en)).toEqual(['Size', 'Colour', 'Theme'])
+      expect(body.variantValues).toHaveLength(1)
+      expect(body.newVariants).toHaveLength(17)
     })
   })
 
@@ -344,12 +341,6 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
 
     expect(await screen.findByText('4 new variants')).toBeInTheDocument()
     await done()
-    await waitFor(() => expect(puts()).toHaveLength(1))
-    const body = puts()[0]!.body as OptionsPut
-
-    expect(body.options.map(option => option.name)).toEqual([{ en: 'Size', de: 'Grösse' }, { en: 'Colour' }])
-    expect(body.variantValues).toHaveLength(4)
-    expect(body.newVariants).toHaveLength(4)
     await waitFor(() => expect(rows()).toHaveLength(8))
     const groups = within(variantsBlock()).getAllByTestId('variant-group')
 
@@ -358,6 +349,14 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     await userEvent.click(within(groups[0]!).getByRole('button', { name: /^XS/ }))
     expect(within(groups[0]!).queryAllByTestId('variant-row')).toHaveLength(0)
     expect(rows()).toHaveLength(6)
+    expect(writes()).toHaveLength(0)
+    await leaveStep()
+    await waitFor(() => expect(puts()).toHaveLength(1))
+    const body = puts()[0]!.body as OptionsPut
+
+    expect(body.options.map(option => option.name)).toEqual([{ en: 'Size', de: 'Grösse' }, { en: 'Colour' }])
+    expect(body.variantValues).toHaveLength(4)
+    expect(body.newVariants).toHaveLength(4)
   })
 
   it('[T-008][AC5] selecting a group and setting a price sends one request and the rows show the new price', async () => {
@@ -436,7 +435,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     expect(screen.getByRole('alertdialog')).toBeInTheDocument()
   })
 
-  it('[T-008][AC6] a combination that no variant holds is listed as Not sold, and Add back creates it in one request', async () => {
+  it('[T-008][AC6] a combination that no variant holds is listed as Not sold, and Add back holds it until the step is left, when it is created in one request', async () => {
     current = product({ options: [sizeOption, colourOption], variants: all.slice(1) })
     serve()
     await openStep()
@@ -446,14 +445,16 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     expect(line).toHaveTextContent('Not sold: 1')
     await userEvent.click(within(line).getByRole('button', { name: 'Add back' }))
 
+    await waitFor(() => expect(screen.queryByTestId('not-sold')).not.toBeInTheDocument())
+    expect(rows()).toHaveLength(8)
+    expect(writes()).toHaveLength(0)
+    await leaveStep()
     await waitFor(() => expect(puts()).toHaveLength(1))
     const body = puts()[0]!.body as OptionsPut
 
     expect(body.options.map(option => option.ref)).toEqual([optSize, optColour])
     expect(body.variantValues).toBeUndefined()
-    expect(body.newVariants).toEqual([{ skuCode: 'VX-XS-RED', priceRappen: 4000, values: { [optSize]: size[0]!.id, [optColour]: colour[0]!.id } }])
-    await waitFor(() => expect(screen.queryByTestId('not-sold')).not.toBeInTheDocument())
-    expect(rows()).toHaveLength(8)
+    expect(body.newVariants).toEqual([{ skuCode: 'VX-XS-RED', mediaId: null, priceRappen: 4000, values: { [optSize]: size[0]!.id, [optColour]: colour[0]!.id } }])
   })
 
   it('[T-008][AC2] a price changed in a row saves when the field is left, as one variant request, and says nothing but Saved', async () => {
@@ -482,13 +483,16 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     expect(within(optionsBlock()).getAllByText('Used by 2 variants')).toHaveLength(4)
   })
 
-  it('[T-008] a new value on an option that was there makes the combinations, and Edit then Done saves them in one request', async () => {
+  it('[T-008] a new value on an option that was there makes the combinations, and Edit then Done holds them until the step is left', async () => {
     await openStep()
     await userEvent.click(within(optionsBlock()).getAllByRole('button', { name: 'Edit' })[0]!)
     await typeValue('XL')
 
     expect(await screen.findByText('2 new variants')).toBeInTheDocument()
     await done()
+    await waitFor(() => expect(rows()).toHaveLength(10))
+    expect(writes()).toHaveLength(0)
+    await leaveStep()
 
     await waitFor(() => expect(puts()).toHaveLength(1))
     const body = puts()[0]!.body as OptionsPut
@@ -524,7 +528,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     await waitFor(() => expect(rows()).toHaveLength(7))
   })
 
-  it('[T-008] a refusal of the options save shows at the option in the merchant’s words, and the option stays open', async () => {
+  it('[T-008] a refusal of the options save shows in the merchant’s words, and the merchant stays on the step', async () => {
     serve(call => (call.method === 'PUT'
       ? Response.json({ type: 'validation-failed', status: 422, title: 'x', instance: '/x', requestId: 'r', errors: [{ path: 'newVariants.0', code: 'combination-taken', params: { code: 'VX-XL-RED', archived: 1 } }] }, { status: 422 })
       : undefined))
@@ -532,9 +536,10 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     await userEvent.click(within(optionsBlock()).getAllByRole('button', { name: 'Edit' })[0]!)
     await typeValue('XL')
     await done()
+    await leaveStep()
 
     expect(await screen.findByText(/already VX-XL-RED, archived/)).toBeInTheDocument()
-    expect(screen.getByTestId('option-editor')).toBeInTheDocument()
+    expect(screen.queryByTestId('review-screen')).not.toBeInTheDocument()
   })
 
   it('[T-008] a stale save says so and the page asks for a reload', async () => {
@@ -543,17 +548,22 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     await userEvent.click(within(optionsBlock()).getAllByRole('button', { name: 'Edit' })[0]!)
     await typeValue('XL')
     await done()
+    await leaveStep()
 
     expect(await screen.findByRole('button', { name: 'Reload' })).toBeInTheDocument()
+    expect(screen.queryByTestId('review-screen')).not.toBeInTheDocument()
   })
 
-  it('[T-008] the arrow keys on an option’s grip move it and save the new order at once, which regroups the rows', async () => {
+  it('[T-008] the arrow keys on an option’s grip move it, which regroups the rows; the new order is saved when the step is left', async () => {
     await openStep()
     const grips = within(optionsBlock()).getAllByRole('button', { name: /^Move/ })
 
     grips[1]!.focus()
     await userEvent.keyboard('{ArrowUp}')
 
+    await waitFor(() => expect(within(optionsBlock()).getAllByTestId('option-row')[0]).toHaveTextContent('Colour'))
+    expect(writes()).toHaveLength(0)
+    await leaveStep()
     await waitFor(() => expect(puts()).toHaveLength(1))
     expect((puts()[0]!.body as OptionsPut).options.map(option => option.ref)).toEqual([optColour, optSize])
     expect((puts()[0]!.body as OptionsPut).newVariants).toBeUndefined()
@@ -587,6 +597,7 @@ describe('[T-008][AC7] one language switch for the editor', () => {
     expect(within(editor).queryByLabelText(/^Add values to/)).not.toBeInTheDocument()
     await userEvent.type(within(editor).getByLabelText('German name for Small'), 'Klein')
     await done()
+    await leaveStep()
 
     await waitFor(() => expect(puts()).toHaveLength(1))
     expect((puts()[0]!.body as OptionsPut).options[0]!.values[0]!.label).toEqual({ en: 'Small', de: 'Klein' })

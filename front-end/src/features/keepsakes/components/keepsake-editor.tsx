@@ -1,25 +1,25 @@
 import type { Product, PublishCheck } from '@sk/api-contract'
 import type { Language } from '@sk/domain/shared'
+import type { OptionsStepHandle } from '../hooks/use-held-options'
 import type { KeepsakeStep } from '../lib/search-params'
-import type { VariantActions } from '../lib/variant-actions'
 
 import { Button } from '@heroui/react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useRef, useState } from 'react'
 import { EmptyState } from '@/components/empty-state'
 import { GiftIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { queryKeys } from '@/features/data-client'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useKeepsake } from '../api/queries'
+import { useHeldOptions } from '../hooks/use-held-options'
 import { useKeepsakeEditor } from '../hooks/use-keepsake-editor'
 import { useOptionsDraft } from '../hooks/use-options-draft'
 import { useRemoveKeepsake } from '../hooks/use-remove-keepsake'
-import { basePriceOf, missingNames, newVariantsFor, savedRefsOf } from '../lib/combinations'
+import { missingNames } from '../lib/combinations'
 import { nameIn, statusOf } from '../lib/keepsake-rules'
-import { draftOfOptions, optionsBody } from '../lib/option-rules'
 import { saveStatusOf } from '../lib/save-status'
 import { isKeepsakeStep, KEEPSAKE_STEPS, KEEPSAKES_PATH } from '../lib/search-params'
 import { firstBlockedStep, stepOfCard, stepStatuses } from '../lib/steps'
@@ -29,6 +29,7 @@ import { StepBodySkeleton, StepEditorSkeleton } from './editor-skeleton'
 import { KeepsakeFrame } from './keepsake-frame'
 import { KeepsakeGate } from './keepsake-gate'
 import { KeepsakeNotice } from './keepsake-notice'
+import { RefusalAlert } from './option-parts'
 import { OptionsAndVariantsStep } from './options-variants-step'
 import { useLeaveGuard } from './use-leave-guard'
 
@@ -62,12 +63,28 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
   const editor = useKeepsakeEditor({ storeId, keepsake })
   // Held here, not in the Options and variants step, so options that are typed but not saved stay when another step opens.
   const options = useOptionsDraft({ saved: keepsake.options, variants: keepsake.variants })
+  const stepRef = useRef<OptionsStepHandle | null>(null)
+  // Option changes stay in the browser while the merchant works (decision 23): one request sends them when the step or the editor is left.
+  const held = useHeldOptions({
+    keepsake,
+    draft: options,
+    handle: stepRef,
+    saveOptions: editor.commitOptions,
+    saveVariant: editor.saveVariant,
+    saveVariants: editor.saveVariants,
+    addPhoto: mediaId => editor.change(current => ({ photoIds: current.photoIds.includes(mediaId) ? current.photoIds : [...current.photoIds, mediaId] })),
+  })
   const [showErrors, setShowErrors] = useState(false)
   // The version of the text that the whole editor shows, chosen once in the head.
   const [editLanguage, setEditLanguage] = useState<Language>('en')
   const queryClient = useQueryClient()
   const remove = useRemoveKeepsake(storeId, () => void navigate({ to: KEEPSAKES_PATH }))
-  const guard = useLeaveGuard({ isUnsaved: editor.isUnsaved || options.dirty, onLeave: () => void navigate({ to: KEEPSAKES_PATH }) })
+  // Leaving saves the held options first; a refusal keeps the merchant here.
+  const leaveEditor = () => void held.save().then((saved) => {
+    if (saved)
+      void navigate({ to: KEEPSAKES_PATH })
+  })
+  const guard = useLeaveGuard({ isUnsaved: editor.isUnsaved || held.hasHeld, onLeave: leaveEditor })
   const { draft } = editor
   const name = nameIn(draft.name, language) || t('keepsakes.untitled')
   const statuses = stepStatuses(keepsake, KEEPSAKE_STEPS, showErrors)
@@ -79,6 +96,8 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
   /** Opening Review and publish saves what is typed first, so the checks and the preview are of what is on screen. */
   const go = async (id: string) => {
     if (!isKeepsakeStep(id))
+      return
+    if (step === 'options' && id !== 'options' && !(await held.save()))
       return
     if (id === 'review' && !(await editor.flush()))
       return
@@ -112,22 +131,13 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
     }
   }
 
-  const savedOptions = draftOfOptions(keepsake.options)
-  const actions: VariantActions = {
-    saveVariant: editor.saveVariant,
-    saveVariants: editor.saveVariants,
-    commit: editor.commitOptions,
-    // The options as they are saved, with the combinations that no variant holds.
-    addBack: (combinations, codeBase) => editor.commitOptions({ options: optionsBody(savedOptions), plan: { variantValues: [], newVariants: newVariantsFor(combinations, savedOptions, keepsake.variants, basePriceOf(keepsake.variants), codeBase) } }),
-    addPhoto: mediaId => editor.change(current => ({ photoIds: current.photoIds.includes(mediaId) ? current.photoIds : [...current.photoIds, mediaId] })),
-  }
-
   const summary = blocking.length
     ? { status: t(blocking.length === 1 ? 'keepsakes.checks.blocking.one' : 'keepsakes.checks.blocking.other', { count: blocking.length }), tone: 'danger' as const }
     : warnings.length
       ? { status: t('keepsakes.bar.readyWithWarnings', { count: warnings.length }), tone: 'muted' as const }
       : { status: t('keepsakes.checks.ready'), tone: 'success' as const }
-  const save = saveStatusOf(t, intlLocale, editor.state, editor.savedAt)
+  // Options that are held count as unsaved changes: the bar says so until the step is left.
+  const save = saveStatusOf(t, intlLocale, editor.state === 'saved' && held.hasHeld ? 'unsaved' : editor.state, editor.savedAt)
   const onReview = step === 'review'
   const notices = (
     <>
@@ -177,7 +187,12 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
             onValue={next => editor.change({ name: next.name, text: next.text })}
           />
         </div>
-        {step === 'options' && <OptionsAndVariantsStep actions={actions} committed={savedRefsOf(keepsake.options)} draft={options} held={false} keepsakeId={keepsake.id} language={editLanguage} photoIds={draft.photoIds} showErrors={showErrors} storeId={storeId} variants={keepsake.variants} />}
+        {step === 'options' && (
+          <>
+            <OptionsAndVariantsStep actions={held.actions} committed={held.committed} draft={options} handle={stepRef} held={false} keepsakeId={keepsake.id} language={editLanguage} photoIds={draft.photoIds} showErrors={showErrors} storeId={storeId} toCome={held.toCome} variants={held.variants} />
+            {held.notice && <RefusalAlert>{held.notice}</RefusalAlert>}
+          </>
+        )}
         {onReview && (
           <Suspense fallback={<StepBodySkeleton />}>
             <ReviewScreen actions={{ unpublish: editor.unpublish, publish: () => void publish(), isPending: editor.isPublishing }} keepsake={keepsake} onFix={jumpTo} />

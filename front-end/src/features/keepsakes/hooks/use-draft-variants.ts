@@ -24,11 +24,12 @@ const fresh = (made: { skuCode: string | null, priceRappen: number, values: Valu
 
 /**
  * The variants of a keepsake that is only in the browser, with the same changes the saved keepsake has. It always holds one
- * variant, so the Price card has something to edit. A variant keeps only the values that still exist in the options, a
- * variant that is no longer a whole combination goes, and archiving removes: there is nothing saved to keep.
+ * variant, so the Price card has something to edit, unless `withDefault` is off: a saved keepsake holds here only the rows
+ * its held options will create. A variant keeps only the values that still exist in the options, a variant that is no longer
+ * a whole combination goes, and archiving removes: there is nothing saved to keep.
  */
-export function useDraftVariants(options: OptionDraft[], initial: ProductVariant[]) {
-  const [stored, setStored] = useState(() => (initial.length > 0 ? initial : [defaultVariant()]))
+export function useDraftVariants(options: OptionDraft[], initial: ProductVariant[], withDefault = true) {
+  const [stored, setStored] = useState(() => (initial.length > 0 || !withDefault ? initial : [defaultVariant()]))
   const saved = asSaved(options)
   const variants = stored.map(variant => ({ ...variant, values: normaliseValues(saved, variant.values) }))
 
@@ -82,11 +83,13 @@ export function useDraftVariants(options: OptionDraft[], initial: ProductVariant
 
       return { ok: true }
     },
-    /** Combinations that no variant holds, made again at the price of the first variant. */
-    addBack: async (combinations: Values[], basePrice: number, codeBase: string | null): Promise<Outcome> => {
-      setStored(list => [...list, ...newVariantsFor(combinations, options, list, basePrice, codeBase).map(made => fresh(made))])
+    /** Combinations that no variant holds, made again at the price of the first variant. `others` are variants kept elsewhere, whose codes the new ones must not repeat. */
+    addBack: async (combinations: Values[], basePrice: number, codeBase: string | null, others: Pick<ProductVariant, 'skuCode'>[] = []): Promise<Outcome> => {
+      setStored(list => [...list, ...newVariantsFor(combinations, options, [...others, ...list], basePrice, codeBase).map(made => fresh(made))])
 
       return { ok: true }
     },
+    /** Forgets every variant held here, after the options were saved and the API made them. */
+    clear: () => setStored([]),
   }
 }

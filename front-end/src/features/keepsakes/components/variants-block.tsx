@@ -57,13 +57,15 @@ function ArchivedList({ variants, options }: { variants: ProductVariant[], optio
  * there are two or more, with select, bulk actions, the combinations that are not sold and the archived ones. The rows an
  * open option will bring show muted under the others (`preview`). Prices save when the field is left; Edit opens the sheet.
  */
-export function VariantsBlock({ storeId, options, variants, held, actions, preview, notSold, sku, ownPhotos }: {
+export function VariantsBlock({ storeId, options, variants, held, toCome, actions, preview, notSold, sku, ownPhotos }: {
   storeId: string
   /** The options the rows are named by: the finished ones. */
   options: ProductOption[]
   /** Every variant, archived ones too. */
   variants: ProductVariant[]
   held: boolean
+  /** Rows that are not saved yet (a saved keepsake's held options): held like the rows of a new keepsake, one by one. */
+  toCome: ReadonlySet<string>
   actions: VariantActions
   /** The rows an open option will bring, named by the options as they would be. */
   preview?: { options: ProductOption[], rows: Values[], price: number }
@@ -88,6 +90,10 @@ export function VariantsBlock({ storeId, options, variants, held, actions, previ
   const groups = options.length >= 2 ? groupByFirstOption(options, live) : []
   const ticked = live.filter(variant => selected.has(variant.id))
   const editingVariant = variants.find(variant => variant.id === editing)
+  /** A row that is only in the browser: for sale, with no status of its own, and removed rather than archived. */
+  const isHeld = (variant: ProductVariant) => held || toCome.has(variant.id)
+  const anyHeld = ticked.some(isHeld)
+  const allHeld = ticked.length > 0 && ticked.every(isHeld)
 
   const run = async (work: () => Promise<Outcome>) => {
     setFailure(undefined)
@@ -118,12 +124,13 @@ export function VariantsBlock({ storeId, options, variants, held, actions, previ
 
   /** Archiving is final, so it asks first and waits for the server inside the dialog: a refusal (units reserved) stays there. A new keepsake's rows are only removed. */
   const archive = async (rows: ProductVariant[], afterwards: () => void) => {
+    const removing = rows.every(isHeld)
     const label = rows.length === 1 ? (options.length > 0 ? variantTitle(rows[0]!.values, options, language) : rows[0]!.skuCode ?? '') : ''
 
     await confirm({
-      title: t(`keepsakes.variants.${held ? 'removeMany' : 'archiveMany'}.title.${rows.length === 1 ? 'one' : 'other'}`, { count: rows.length, name: label }),
-      body: t(`keepsakes.variants.${held ? 'removeMany' : 'archiveMany'}.body.${rows.length === 1 ? 'one' : 'other'}`, { count: rows.length }),
-      confirmLabel: t(held ? 'keepsakes.variants.remove' : 'keepsakes.variant.archive.confirm'),
+      title: t(`keepsakes.variants.${removing ? 'removeMany' : 'archiveMany'}.title.${rows.length === 1 ? 'one' : 'other'}`, { count: rows.length, name: label }),
+      body: t(`keepsakes.variants.${removing ? 'removeMany' : 'archiveMany'}.body.${rows.length === 1 ? 'one' : 'other'}`, { count: rows.length }),
+      confirmLabel: t(removing ? 'keepsakes.variants.remove' : 'keepsakes.variant.archive.confirm'),
       run: async () => {
         const outcome = rows.length === 1
           ? await actions.saveVariant(rows[0]!.id, { status: 'archived' })
@@ -140,7 +147,7 @@ export function VariantsBlock({ storeId, options, variants, held, actions, previ
   const row = (variant: ProductVariant) => (
     <VariantRow
       key={variant.id}
-      held={held}
+      held={isHeld(variant)}
       isSelected={selected.has(variant.id)}
       options={options}
       ownPhotos={ownPhotos}
@@ -262,7 +269,7 @@ export function VariantsBlock({ storeId, options, variants, held, actions, previ
         <VariantSheet
           codeBase={sku.codeBase ?? ''}
           focusSku={focusSku}
-          held={held}
+          held={isHeld(editingVariant)}
           options={options}
           ownPhotos={ownPhotos}
           skuOn={sku.isOn}
@@ -281,13 +288,13 @@ export function VariantsBlock({ storeId, options, variants, held, actions, previ
         <ActionBar
           actions={[
             { icon: PriceIcon, label: t('keepsakes.variants.bulk.setPrice'), isDisabled: isPending, onPress: () => setPricing(true) },
-            ...(held
+            ...(anyHeld
               ? []
               : [
                   { icon: ForSaleIcon, label: t('keepsakes.variant.status.published'), isDisabled: isPending, onPress: () => forTicked({ status: 'published' }) },
                   { icon: HiddenIcon, label: t('keepsakes.variant.status.hidden'), isDisabled: isPending, onPress: () => forTicked({ status: 'draft' }) },
                 ]),
-            { icon: held ? TrashIcon : ArchiveIcon, label: t(held ? 'keepsakes.variants.remove' : 'keepsakes.variant.archive'), tone: 'danger', isDisabled: isPending, onPress: () => void archive(ticked, () => setSelected(new Set())) },
+            { icon: allHeld ? TrashIcon : ArchiveIcon, label: t(allHeld ? 'keepsakes.variants.remove' : 'keepsakes.variant.archive'), tone: 'danger', isDisabled: isPending, onPress: () => void archive(ticked, () => setSelected(new Set())) },
           ]}
           count={ticked.length}
           onClear={() => {
