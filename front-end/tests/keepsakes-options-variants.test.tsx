@@ -571,7 +571,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
 })
 
 describe('[T-008][AC7] one language switch for the editor', () => {
-  it('[T-008][AC7] the switch in the head changes the Name and text card and the options to German fields with the English names beside them, and no card has tabs', async () => {
+  it('[T-008][AC7] the switch in the head changes the Name and text card and the options to German fields with the English names under them, and no card has tabs', async () => {
     current = product({
       options: [{ id: id(0xC1), name: { en: 'Size', de: 'Grösse' }, values: [{ id: id(0xC2), label: { en: 'Small' } }] }],
       variants: [{ id: variantId, skuCode: 'VX-S', mediaId: null, photo: null, priceRappen: 3900, status: 'published', values: { [id(0xC1)]: id(0xC2) } }],

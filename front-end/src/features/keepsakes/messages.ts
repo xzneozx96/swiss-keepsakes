@@ -170,7 +170,7 @@ export const keepsakesEn = {
   'keepsakes.options.removeValue': 'Remove {name}',
   'keepsakes.options.move': 'Move {name}. Position {position} of {count}. Use the up and down arrow keys.',
   'keepsakes.options.moved': '{name} moved to position {position} of {count}.',
-  'keepsakes.options.germanValues.hint': 'One list of values for both languages. Give each one its German name.',
+  'keepsakes.options.english': 'English:',
   'keepsakes.options.germanValues.empty': 'Add the values on the English tab first, then name them in German here.',
   'keepsakes.options.germanName.label': 'German name for {name}',
   'keepsakes.options.germanName.placeholder': 'German name',

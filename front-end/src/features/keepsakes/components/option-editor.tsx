@@ -24,14 +24,8 @@ function NameField({ draft, option, language, focusOnMount, suggestions }: { dra
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end">
-        {language === 'de' && (
-          // The same name as on the English version: its English name beside the field for its German one.
-          <div className="flex min-w-0 flex-col gap-1 sm:w-2/5">
-            <span className="text-sm font-medium">{t('keepsakes.options.name.en')}</span>
-            <span className="flex min-h-9 items-center truncate text-muted" lang="en">{option.name.en || '—'}</span>
-          </div>
-        )}
+      {/* German has the English layout: the same full-width field, with the English name as placeholder and under it. */}
+      <div className="flex min-w-0 flex-col">
         {suggestions.length === 0
           ? (
               // No other keepsake has an option name to offer: a plain field. ComboBox.InputGroup needs its Trigger as the
@@ -69,6 +63,13 @@ function NameField({ draft, option, language, focusOnMount, suggestions }: { dra
               </ComboBox>
             )}
       </div>
+      {language === 'de' && option.name.en.trim() && (
+        <p className="text-xs text-muted">
+          {t('keepsakes.options.english')}
+          {' '}
+          <span lang="en">{option.name.en}</span>
+        </p>
+      )}
       <NotesAt at={option.ref} draft={draft} only="problems" />
     </div>
   )
@@ -114,7 +115,7 @@ export function OptionEditor({ draft, option, language, autoFocusName, suggestio
         {option.values.length > 0 && <ValueList draft={draft} focused={focused} lang={language} option={option} onFocused={clearFocus} />}
         {language === 'en'
           ? <AddValue draft={draft} option={option} onAdded={setFocused} />
-          : <p className="text-xs text-pretty text-muted">{t(option.values.length > 0 ? 'keepsakes.options.germanValues.hint' : 'keepsakes.options.germanValues.empty')}</p>}
+          : option.values.length === 0 && <p className="text-xs text-pretty text-muted">{t('keepsakes.options.germanValues.empty')}</p>}
       </div>
 
       <NotesAt at={option.ref} draft={draft} only="refusal" />

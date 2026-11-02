@@ -44,13 +44,10 @@ function ValueRow({ draft, option, value, grip, lang, focused, onFocused }: { dr
         {grip}
         {lang === 'de'
           ? (
-              <>
-                {/* The same value as on the English version: its English name beside the field for its German one. */}
-                <span className="w-2/5 shrink-0 truncate px-2 text-sm text-muted" lang="en">{value.label.en || '—'}</span>
-                <TextField fullWidth aria-label={t('keepsakes.options.germanName.label', { name })} className="min-w-0 flex-1" value={value.label.de} onChange={text => draft.patchValue(option.ref, value.ref, { label: { ...value.label, de: text } })}>
-                  <Input lang="de" maxLength={VALUE_LABEL_MAX} placeholder={t('keepsakes.options.germanName.placeholder')} />
-                </TextField>
-              </>
+              // The English layout: one full-width field, the English name as its placeholder and in the line under it.
+              <TextField fullWidth aria-label={t('keepsakes.options.germanName.label', { name })} className="min-w-0 flex-1" value={value.label.de} onChange={text => draft.patchValue(option.ref, value.ref, { label: { ...value.label, de: text } })}>
+                <Input lang="de" maxLength={VALUE_LABEL_MAX} placeholder={value.label.en || t('keepsakes.options.germanName.placeholder')} />
+              </TextField>
             )
           : (
               <TextField fullWidth aria-label={t('keepsakes.options.valueName', { position: option.values.indexOf(value) + 1 })} className="min-w-0 flex-1" value={value.label.en} onChange={text => draft.patchValue(option.ref, value.ref, { label: { ...value.label, en: text } })}>
@@ -61,7 +58,19 @@ function ValueRow({ draft, option, value, grip, lang, focused, onFocused }: { dr
           <TrashIcon aria-hidden size={16} />
         </Button>
       </div>
-      {used && <p className="ps-12 text-xs text-muted lg:ps-10">{used}</p>}
+      {(used || (lang === 'de' && value.label.en)) && (
+        <p className="ps-12 text-xs text-muted lg:ps-10">
+          {lang === 'de' && value.label.en && (
+            <>
+              {t('keepsakes.options.english')}
+              {' '}
+              <span lang="en">{value.label.en}</span>
+              {used && ' · '}
+            </>
+          )}
+          {used}
+        </p>
+      )}
       <div className="ps-12 lg:ps-10">
         <NotesAt at={value.ref} draft={draft} />
       </div>

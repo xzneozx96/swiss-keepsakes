@@ -171,7 +171,7 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.options.removeValue': '{name} entfernen',
   'keepsakes.options.move': '{name} verschieben. Position {position} von {count}. Mit den Pfeiltasten nach oben und unten.',
   'keepsakes.options.moved': '{name} ist jetzt auf Position {position} von {count}.',
-  'keepsakes.options.germanValues.hint': 'Eine Liste von Werten für beide Sprachen. Geben Sie jedem seinen deutschen Namen.',
+  'keepsakes.options.english': 'Englisch:',
   'keepsakes.options.germanValues.empty': 'Fügen Sie die Werte zuerst im Tab Englisch hinzu und benennen Sie sie dann hier auf Deutsch.',
   'keepsakes.options.germanName.label': 'Deutscher Name für {name}',
   'keepsakes.options.germanName.placeholder': 'Deutscher Name',
