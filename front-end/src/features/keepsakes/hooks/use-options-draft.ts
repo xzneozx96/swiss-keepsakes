@@ -140,9 +140,9 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
     discard: () => setState(current => ({ ...current, options: savedOptions, tried: false, server: [], refusal: undefined })),
     snapshot: (): OptionsSnapshot => ({ options }),
     restore: (snapshot: OptionsSnapshot) => setState(current => ({ ...current, ...snapshot, tried: false, server: [], refusal: undefined })),
-    /** After a save: the draft is what was saved, trimmed as the API trims it, and nothing is staged any more. */
-    settle: () => setState((current) => {
-      const next = draftOfOptions(asSaved(current.options))
+    /** After a save: the draft is what was saved, under the ids the API gave (`saved`, when the API answered), trimmed as the API trims it, and nothing is staged any more. */
+    settle: (saved?: ProductOption[]) => setState((current) => {
+      const next = saved ? draftOfOptions(saved) : draftOfOptions(asSaved(current.options))
 
       return { ...current, options: next, base: JSON.stringify(next), tried: false, server: [], refusal: undefined }
     }),

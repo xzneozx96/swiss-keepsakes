@@ -69,7 +69,7 @@ export function useOptionsFlow({ draft, committed, variants, held, codeBase, com
     setIsPending(false)
     if (outcome.ok) {
       if (!held)
-        draft.settle()
+        draft.settle(outcome.options)
       setOpen(undefined)
 
       return true
@@ -126,7 +126,7 @@ export function useOptionsFlow({ draft, committed, variants, held, codeBase, com
       setOpen(undefined)
       if (outcome.ok) {
         if (!held)
-          draft.settle()
+          draft.settle(outcome.options)
 
         return true
       }

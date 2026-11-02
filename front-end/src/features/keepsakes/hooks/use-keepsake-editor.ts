@@ -1,4 +1,4 @@
-import type { OptionWrite, Product, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
+import type { OptionWrite, Product, ProductOption, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
 import type { OptionsPlan } from '../lib/combinations'
 import type { KeepsakeText } from '../lib/keepsake-rules'
 import type { Refusal } from '../lib/option-rules'
@@ -24,8 +24,8 @@ export interface KeepsakeDraft extends KeepsakeText {
 
 export type SaveState = 'saved' | 'unsaved' | 'saving' | 'stale' | 'failed'
 
-/** `refusals` are the rules the API named when it refused the save (422). */
-export type Outcome = { ok: true } | { ok: false, type: string, refusals?: Refusal[] }
+/** `refusals` are the rules the API named when it refused the save (422). `options` are the keepsake's options as the API saved them, with the ids it gave the new ones. */
+export type Outcome = { ok: true, options?: ProductOption[] } | { ok: false, type: string, refusals?: Refusal[] }
 
 export function draftOf(keepsake: Product): KeepsakeDraft {
   return {
@@ -181,9 +181,11 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     if (!(await flush()))
       return { ok: false, type: problemRef.current ?? 'unknown' }
     try {
-      accept(await run())
+      const result = await run()
 
-      return { ok: true }
+      accept(result)
+
+      return { ok: true, options: result.options }
     }
     catch (error) {
       const type = problemTypeOf(error)
