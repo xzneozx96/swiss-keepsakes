@@ -85,9 +85,13 @@ function ValueRow({ draft, option, value, grip, swatches, lang }: { draft: Optio
         {swatches && <SwatchPicker name={name} value={value.swatch} onChange={swatch => draft.patchValue(option.ref, value.ref, { swatch })} />}
         {lang === 'de'
           ? (
-              <TextField fullWidth aria-label={t('keepsakes.options.rename', { name })} className="min-w-0 flex-1" value={value.label.de} onChange={text => draft.patchValue(option.ref, value.ref, { label: { ...value.label, de: text } })}>
-                <Input lang="de" maxLength={VALUE_LABEL_MAX} placeholder={value.label.en} variant="secondary" />
-              </TextField>
+              <>
+                {/* The same value as on the English tab: its English name beside the field for its German one. */}
+                <span className="w-2/5 shrink-0 truncate px-2 text-sm text-muted" lang="en">{value.label.en || '—'}</span>
+                <TextField fullWidth aria-label={t('keepsakes.options.germanName.label', { name })} className="min-w-0 flex-1" value={value.label.de} onChange={text => draft.patchValue(option.ref, value.ref, { label: { ...value.label, de: text } })}>
+                  <Input lang="de" maxLength={VALUE_LABEL_MAX} placeholder={t('keepsakes.options.germanName.placeholder')} variant="secondary" />
+                </TextField>
+              </>
             )
           : editing
             ? (
@@ -184,30 +188,30 @@ export function ValueList({ draft, option, lang }: { draft: OptionsDraftState, o
 }
 
 /**
- * One field adds values in the language of the tab: Enter adds, a pasted list ("Small, Medium, Large") adds several, and
- * leaving the field (Tab, a click elsewhere, the other language) adds what is typed too, so nothing typed is lost. Words
- * the option has already stay in the field.
+ * One field adds values (on the English tab): Enter adds, a pasted list ("Small, Medium, Large") adds several, and leaving
+ * the field (Tab, a click elsewhere, the German tab) adds what is typed too, so nothing typed is lost. Words the option has
+ * already stay in the field.
  */
-export function AddValue({ draft, option, lang }: { draft: OptionsDraftState, option: OptionDraft, lang: 'en' | 'de' }) {
+export function AddValue({ draft, option }: { draft: OptionsDraftState, option: OptionDraft }) {
   const { t } = useLocale()
   const [text, setText] = useState('')
   const [refused, setRefused] = useState<string[]>([])
   const commit = () => {
     if (!text.trim())
       return
-    const result = draft.addValues(option.ref, text, lang)
+    const result = draft.addValues(option.ref, text)
 
     setRefused(result.refused)
     setText(result.refused.join(', '))
   }
-  // The language tabs do not take the focus on press, so switching language swaps this field (it is keyed by language)
-  // without a blur: what is still typed is added when the field goes away.
+  // The language tabs do not take the focus on press, so switching to German removes this field without a blur: what is
+  // still typed is added when the field goes away.
   const pendingRef = useRef<() => void>(undefined)
 
   useEffect(() => {
     pendingRef.current = () => {
       if (text.trim())
-        draft.addValues(option.ref, text, lang)
+        draft.addValues(option.ref, text)
     }
   })
   useEffect(() => () => pendingRef.current?.(), [])
@@ -216,7 +220,7 @@ export function AddValue({ draft, option, lang }: { draft: OptionsDraftState, op
     <div className="flex flex-col gap-1">
       <TextField fullWidth aria-label={t('keepsakes.options.addValue.label', { option: labelOf(option.name, 'en') || t('keepsakes.options.thisOption') })} value={text} onChange={(next) => { setText(next); setRefused([]) }}>
         <Input
-          lang={lang}
+          lang="en"
           placeholder={t('keepsakes.options.addValue.placeholder')}
           onBlur={commit}
           onKeyDown={(event) => {

@@ -290,12 +290,13 @@ describe('[T-007A] the Options step on a laptop: the list and the chosen option'
     await userEvent.click(within(tabs).getByRole('tab', { name: /German/ }))
     expect(within(optionDetail()).getByText('German · Not written, optional')).toBeInTheDocument()
     expect(within(optionDetail()).getByText('Left empty, German readers see the English.')).toBeInTheDocument()
-    expect(within(optionDetail()).getByPlaceholderText('Add a value and press Enter')).toHaveAttribute('lang', 'de')
+    expect(within(optionDetail()).queryByPlaceholderText('Add a value and press Enter')).not.toBeInTheDocument()
+    expect(within(optionDetail()).getByText('One list of values for both languages. Give each one its German name.')).toBeInTheDocument()
     const name = within(optionDetail()).getByLabelText('Option name in German')
 
     expect(name).toHaveAttribute('lang', 'de')
     await userEvent.type(name, 'Motiv')
-    await userEvent.type(within(optionDetail()).getByLabelText('Rename Lion Monument'), 'Löwendenkmal')
+    await userEvent.type(within(optionDetail()).getByLabelText('German name for Lion Monument'), 'Löwendenkmal')
     expect(within(optionDetail()).getByText('German · One name missing')).toBeInTheDocument()
     await userEvent.click(within(saveLine()).getByRole('button', { name: 'Save' }))
 
@@ -304,7 +305,7 @@ describe('[T-007A] the Options step on a laptop: the list and the chosen option'
     expect(optionsBody().options[1]!.values[1]!.label).toEqual({ en: 'Lion Monument', de: 'Löwendenkmal' })
   })
 
-  it('[T-007A] a value typed without Enter is added when the field is left, and a value can be added on the German tab', async () => {
+  it('[T-007A] a value typed without Enter is kept on the way to the German tab, where the same value gets its German name', async () => {
     saved()
     await openEditor('options')
     await userEvent.click(within(optionList()).getByRole('button', { name: /^Theme/ }))
@@ -313,16 +314,11 @@ describe('[T-007A] the Options step on a laptop: the list and the chosen option'
 
     await userEvent.type(within(optionDetail()).getByPlaceholderText('Add a value and press Enter'), 'Swan')
     await userEvent.click(within(tabs).getByRole('tab', { name: /German/ }))
-    await userEvent.type(within(optionDetail()).getByPlaceholderText('Add a value and press Enter'), 'Edelweiss DE{Enter}')
-    await userEvent.click(within(tabs).getByRole('tab', { name: /English/ }))
-    expect(within(optionDetail()).getByRole('button', { name: 'Rename Swan' })).toBeInTheDocument()
+    await userEvent.type(within(optionDetail()).getByLabelText('German name for Swan'), 'Schwan')
     await userEvent.click(within(saveLine()).getByRole('button', { name: 'Save' }))
 
     await waitFor(() => expect(writes()).toHaveLength(1))
-    const labels = optionsBody().options[1]!.values.map(value => value.label)
-
-    expect(labels).toContainEqual({ en: 'Swan' })
-    expect(labels).toContainEqual({ de: 'Edelweiss DE' })
+    expect(optionsBody().options[1]!.values.map(value => value.label)).toContainEqual({ en: 'Swan', de: 'Schwan' })
   })
 
   it('[T-007A] Discard changes and Save are disabled until something changed; Delete option sits in the same row', async () => {

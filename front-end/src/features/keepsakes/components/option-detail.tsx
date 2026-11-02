@@ -73,7 +73,10 @@ export function OptionDetail({ draft, option, autoFocusName = false }: { draft: 
           <span className="text-sm font-medium">{t('keepsakes.options.values')}</span>
           <span className="text-xs text-muted">{t('keepsakes.options.valuesHint')}</span>
         </div>
-        <AddValue key={lang} draft={draft} lang={lang} option={option} />
+        {/* One list of values, shared by both languages: added and ordered on the English tab, named per language. */}
+        {lang === 'en'
+          ? <AddValue draft={draft} option={option} />
+          : <p className="text-xs text-pretty text-muted">{t(option.values.length > 0 ? 'keepsakes.options.germanValues.hint' : 'keepsakes.options.germanValues.empty')}</p>}
         {option.values.length > 0 && <ValueList draft={draft} lang={lang} option={option} />}
       </div>
 
