@@ -3,7 +3,7 @@ import type { StepView } from '@/components/step-layout'
 
 import { Button } from '@heroui/react'
 
-import { BackIcon, TrashIcon } from '@/components/icons'
+import { BackIcon } from '@/components/icons'
 import { MerchantBackBar } from '@/components/layout/merchant-back-bar'
 import { StatusChip } from '@/components/status-chip'
 import { StepBar } from '@/components/step-bar'
@@ -24,7 +24,7 @@ export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBa
   canGo: (id: string) => boolean
   onGo: (id: string) => void
   onBack: () => void
-  /** Delete, in the header of a saved keepsake. Left out for a keepsake that is not saved yet. */
+  /** Delete, in the bar under the steps of a saved keepsake. Left out for a keepsake that is not saved yet. */
   onRemove?: () => void
   bar: React.ComponentProps<typeof StepBar>
   /** What sits above the steps: the stale warning, a refused save. */
@@ -52,17 +52,11 @@ export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBa
         <span className="shrink-0" data-testid="keepsake-status">
           <StatusChip tone={status.tone}>{status.label}</StatusChip>
         </span>
-        {onRemove && (
-          <Button className="ms-auto shrink-0 max-lg:min-h-11" variant="danger-soft" onPress={onRemove}>
-            <TrashIcon aria-hidden size={16} />
-            {t('keepsakes.remove.action')}
-          </Button>
-        )}
       </header>
       {notices}
       <StepLayout canGo={canGo} current={current} quietTitle steps={steps} onGo={onGo}>
         {children}
-        <StepBar {...bar} />
+        <StepBar {...bar} destructive={onRemove && { label: t('keepsakes.remove.action'), onPress: onRemove }} />
       </StepLayout>
     </div>
   )

@@ -2,7 +2,7 @@ import { Button } from '@heroui/react'
 
 import { useEffect, useState } from 'react'
 
-import { ArrowRightIcon, BackIcon, StatusSuccessIcon } from '@/components/icons'
+import { ArrowRightIcon, BackIcon, StatusSuccessIcon, TrashIcon } from '@/components/icons'
 
 import { useLocale } from '@/contexts/locale-context'
 
@@ -65,6 +65,7 @@ export function StepBar({
   onBack,
   onForward,
   secondary,
+  destructive,
   primary,
   isSaving,
   aboveTabBar = true,
@@ -74,6 +75,8 @@ export function StepBar({
   onBack?: () => void
   onForward?: () => void
   secondary?: BarAction
+  /** A destructive action, such as Delete: danger style, trash icon, icon only under 640px. Sits before the arrows. */
+  destructive?: BarAction
   /** The screen's one red action. A screen that saves by itself leaves it out. */
   primary?: BarAction
   /** A save is on its way: its two actions are off. */
@@ -89,7 +92,7 @@ export function StepBar({
       data-testid="step-bar"
       className={`fixed inset-x-3 ${aboveTabBar ? 'bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]' : 'bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]'} z-10 sm:inset-x-4 lg:sticky lg:inset-x-auto lg:bottom-6 ${keyboardOpen ? 'max-lg:hidden' : ''}`}
     >
-      <div className="flex items-center gap-2 rounded-3xl bg-surface px-3 py-2 shadow-overlay lg:px-4 lg:py-3">
+      <div className="flex items-center gap-2 rounded-2xl bg-surface px-3 py-2 shadow-surface lg:px-4 lg:py-3">
         <span
           aria-live="polite"
           className={`flex min-w-0 flex-1 items-center gap-1.5 text-xs leading-snug lg:text-sm ${tone === 'danger' ? 'text-danger' : tone === 'success' ? 'text-success' : 'text-muted'}`}
@@ -103,6 +106,31 @@ export function StepBar({
           </span>
         </span>
         <div className="flex shrink-0 items-center gap-1.5 lg:gap-2">
+          {destructive && (
+            <>
+              <Button
+                isIconOnly
+                aria-label={destructive.label}
+                className="sm:hidden"
+                isDisabled={destructive.isDisabled}
+                size="sm"
+                variant="danger-soft"
+                onPress={destructive.onPress}
+              >
+                <TrashIcon aria-hidden size={18} />
+              </Button>
+              <Button
+                className="max-sm:hidden"
+                isDisabled={destructive.isDisabled}
+                size="sm"
+                variant="danger-soft"
+                onPress={destructive.onPress}
+              >
+                <TrashIcon aria-hidden size={16} />
+                {destructive.label}
+              </Button>
+            </>
+          )}
           {onBack && (
             <Button
               isIconOnly
