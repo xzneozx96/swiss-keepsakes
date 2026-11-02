@@ -181,7 +181,7 @@ export function productInput(record: KeepsakeRecord, photoIds: string[]) {
     photoIds,
     commissionRate: 0,
     options: [],
-    variants: [{ skuCode: record.skuCode, priceRappen: Math.round(record.priceChf * 100), status: 'published' as const, values: {} }],
+    variants: [{ skuCode: record.skuCode, mediaId: null, priceRappen: Math.round(record.priceChf * 100), status: 'published' as const, values: {} }],
   }
 }
 

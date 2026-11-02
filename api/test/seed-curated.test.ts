@@ -52,7 +52,7 @@ describe('[seed-curated] the curated data maps to writes', () => {
     for (const record of data.keepsakes) {
       const input = productInput(record, ['m1'])
       expect(input.options).toEqual([])
-      expect(input.variants).toEqual([{ skuCode: record.skuCode, priceRappen: Math.round(record.priceChf * 100), status: 'published', values: {} }])
+      expect(input.variants).toEqual([{ skuCode: record.skuCode, mediaId: null, priceRappen: Math.round(record.priceChf * 100), status: 'published', values: {} }])
       expect(input.text.en.type).toBe('doc')
       expect(descriptionLength(input.text.en)).toBeLessThanOrEqual(1200)
       expect(descriptionLength(input.text.de)).toBeLessThanOrEqual(1200)
