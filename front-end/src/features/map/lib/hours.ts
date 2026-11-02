@@ -21,9 +21,31 @@ function weekdayName(day: number, locale: IntlLocale) {
 
 const hhmm = (time: string) => time.slice(0, 5)
 
+/** A span whose closing time is before its opening time closes the next morning (ADR-029); 24:00 is midnight. */
+const endsNextDay = (span: HoursSpan) => hhmm(span.closes) < hhmm(span.opens)
+
+/** The day before, Sunday wrapping to Monday. */
+const dayBefore = (day: number) => (day === 1 ? 7 : day - 1)
+
+/**
+ * Whether the place is open at `time` (`HH:MM`) on `day`: a span that started today and has not closed, or the
+ * previous day's span that runs past midnight and has not closed yet.
+ */
+export function isOpenAt(spans: readonly HoursSpan[], day: number, time: string) {
+  return spans.some((span) => {
+    const opens = hhmm(span.opens)
+    const closes = hhmm(span.closes)
+
+    if (span.day === day)
+      return endsNextDay(span) ? time >= opens : time >= opens && time < closes
+
+    return span.day === dayBefore(day) && endsNextDay(span) && time < closes
+  })
+}
+
 /**
  * The week in a few lines: days in a row with the same hours share one line ("Mon–Fri"), the line that holds today is
- * marked, and `openToday` says whether today has any span. No hours at all gives no groups.
+ * marked, and `openToday` says whether the place is open at some point today. No hours at all gives no groups.
  */
 export function hoursOfWeek(spans: readonly HoursSpan[], today: number, locale: IntlLocale, closedText: string) {
   if (spans.length === 0)
@@ -52,6 +74,7 @@ export function hoursOfWeek(spans: readonly HoursSpan[], today: number, locale: 
       today: group.today,
       closed: group.closed,
     })),
-    openToday: spans.some(span => span.day === today),
+    // Open at some point today: a span that starts today, or yesterday's that runs past midnight into the morning.
+    openToday: spans.some(span => span.day === today || (span.day === dayBefore(today) && endsNextDay(span))),
   }
 }

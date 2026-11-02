@@ -134,6 +134,13 @@
       "when": 1793768953729,
       "tag": "0018_drop_map_category_icon",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793855353729,
+      "tag": "0019_weekly_hours_cross_midnight",
+      "breakpoints": true
     }
   ]
 }

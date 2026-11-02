@@ -53,7 +53,7 @@ const weeklySpanSchema = z.strictObject({
   day: z.int().min(1).max(7).meta({ description: '1 is Monday, 7 is Sunday' }),
   opens: time,
   closes: closingTime,
-}).refine(span => span.opens < span.closes, { message: 'opens must be before closes', path: ['closes'] })
+}).refine(span => span.opens !== span.closes, { message: 'opens and closes must differ', path: ['closes'] }).meta({ description: 'A span with closes before opens closes the next morning (day 7 into day 1). 24:00 closes at midnight' })
 
 // Postgres has no year 0 and the stored dates are real ones, so a day is within 2000 to 2100.
 const pinDay = z.iso.date().refine(day => day >= '2000-01-01' && day <= '2100-12-31', 'A date from 2000 to 2100')

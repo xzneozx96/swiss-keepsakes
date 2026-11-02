@@ -269,13 +269,18 @@ describe('[E2.11][AC86] valid_weekly_hours', () => {
     '[]',
     '[{"day":1,"opens":"08:00","closes":"18:00"}]',
     '[{"day":7,"opens":"08:00","closes":"24:00"}]',
+    '[{"day":1,"opens":"00:00","closes":"24:00"}]',
+    '[{"day":5,"opens":"18:00","closes":"02:00"}]',
+    '[{"day":7,"opens":"22:00","closes":"00:00"}]',
   ])('[E2.11][AC86] accepts %s', async (value) => {
     expect(await hoursOk(value)).toBe(true)
   })
 
   it.each([
     '[{"day":8,"opens":"08:00","closes":"18:00"}]',
-    '[{"day":1,"opens":"18:00","closes":"08:00"}]',
+    '[{"day":1,"opens":"08:00","closes":"08:00"}]',
+    '[{"day":1,"opens":"00:00","closes":"00:00"}]',
+    '[{"day":1,"opens":"18:00","closes":"25:00"}]',
     '{}',
     '[{"day":1,"opens":"08:00","closes":"9:00"}]',
     '[{"day":1,"opens":"08:00","closes":"18:00","note":"x"}]',

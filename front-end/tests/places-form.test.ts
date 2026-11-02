@@ -75,12 +75,15 @@ describe('[E4.2][AC86] the date and hours rules of the form', () => {
     expect(validate({ ...emptyForm(), dates: [entry({ firstDay: '14.11.2026' })] }).count).toBe(1)
   })
 
-  it('checks weekly hours: a close at or before the open is refused and 24:00 closes at midnight', () => {
+  it('checks weekly hours: a close before the open ends the next day, equal times are refused and 24:00 closes at midnight', () => {
     const hours = (opens: string, closes: string) => Object.values(validate({ ...emptyForm(), hours: [{ key: 'a', day: 1, opens, closes }] }).hours)[0]
 
     expect(hours('09:00', '18:00')).toBeUndefined()
     expect(hours('09:00', '24:00')).toBeUndefined()
-    expect(hours('18:00', '09:00')).toBe('places.error.hoursOrder')
+    expect(hours('18:00', '02:00')).toBeUndefined()
+    expect(hours('22:00', '00:00')).toBeUndefined()
+    expect(hours('09:00', '09:00')).toBe('places.error.hoursSame')
+    expect(hours('00:00', '24:00')).toBeUndefined()
     expect(hours('', '18:00')).toBe('places.error.hoursMissing')
     expect(hours('09:00', '')).toBe('places.error.hoursMissing')
     expect(hours('09:00', '24:30')).toBe('places.error.hoursMissing')

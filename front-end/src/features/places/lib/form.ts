@@ -148,8 +148,8 @@ export function validate(form: PlaceForm): FormErrors {
   for (const span of form.hours) {
     if (!OPEN_TIME.test(span.opens) || !CLOSE_TIME.test(span.closes))
       errors.hours[span.key] = 'places.error.hoursMissing'
-    else if (span.opens >= span.closes)
-      errors.hours[span.key] = 'places.error.hoursOrder'
+    else if (span.opens === span.closes)
+      errors.hours[span.key] = 'places.error.hoursSame'
   }
   for (const date of form.dates) {
     const last = date.kind === 'day' ? date.firstDay : date.lastDay

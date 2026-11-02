@@ -76,11 +76,14 @@ describe('[E2.6] content write schemas', () => {
     expect(ok(pinWriteBodySchema, date({ firstDay: '2026-11-01', lastDay: '2026-11-01', startTime: '10:00', endTime: null }))).toBe(true)
   })
 
-  it('[E2.6] weekly hours need opens before closes', () => {
+  it('[E2.6] weekly hours may cross midnight but opens and closes must differ', () => {
     const hours = (h: Record<string, unknown>) => ({ weeklyHours: [h] })
     expect(ok(pinWriteBodySchema, hours({ day: 1, opens: '09:00', closes: '17:30' }))).toBe(true)
     expect(ok(pinWriteBodySchema, hours({ day: 1, opens: '09:00', closes: '24:00' }))).toBe(true)
-    expect(ok(pinWriteBodySchema, hours({ day: 1, opens: '17:00', closes: '09:00' }))).toBe(false)
+    expect(ok(pinWriteBodySchema, hours({ day: 5, opens: '18:00', closes: '02:00' }))).toBe(true)
+    expect(ok(pinWriteBodySchema, hours({ day: 7, opens: '22:00', closes: '00:00' }))).toBe(true)
+    expect(ok(pinWriteBodySchema, hours({ day: 1, opens: '00:00', closes: '24:00' }))).toBe(true)
+    expect(ok(pinWriteBodySchema, hours({ day: 1, opens: '00:00', closes: '00:00' }))).toBe(false)
     expect(ok(pinWriteBodySchema, hours({ day: 1, opens: '09:00', closes: '09:00' }))).toBe(false)
     expect(ok(pinWriteBodySchema, hours({ day: 8, opens: '09:00', closes: '10:00' }))).toBe(false)
     expect(ok(pinWriteBodySchema, hours({ day: 1, opens: '24:00', closes: '24:00' }))).toBe(false)

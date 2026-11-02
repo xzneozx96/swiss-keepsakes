@@ -25,6 +25,11 @@ function timeOf(minutes: number) {
   return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
 }
 
+/** A range that closes the next morning: its closing time is before its opening time (24:00 is midnight, not the next morning). */
+export function endsNextDay(range: Pick<HoursSpan, 'opens' | 'closes'>) {
+  return TIME.test(range.opens) && TIME.test(range.closes) && range.closes < range.opens
+}
+
 export function spansOf(hours: HoursSpan[], day: number) {
   return hours.filter(s => s.day === day)
 }

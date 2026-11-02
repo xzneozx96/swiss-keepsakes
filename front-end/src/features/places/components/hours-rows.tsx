@@ -6,7 +6,7 @@ import { Button, Switch } from '@heroui/react'
 
 import { PlusIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { DAYS, nextSpan, openedDay, setDay, spansOf } from '../lib/hours'
+import { DAYS, endsNextDay, nextSpan, openedDay, setDay, spansOf } from '../lib/hours'
 import { CopyHoursPopover } from './copy-hours-popover'
 import { TimeInput } from './fields'
 
@@ -22,15 +22,18 @@ function Range({ day, range, error, canRemove, onChange, onRemove }: {
   const dayName = t(`places.dayName.${day}`)
 
   return (
-    <div className="flex items-center gap-2">
-      <TimeInput compact className="w-24 shrink-0" error={error} label={t('places.hours.opens', { day: dayName })} value={range.opens} onChange={opens => onChange({ opens })} />
-      <span aria-hidden className="text-muted">–</span>
-      <TimeInput closing compact className="w-24 shrink-0" error={error} label={t('places.hours.closes', { day: dayName })} value={range.closes} onChange={closes => onChange({ closes })} />
-      {canRemove && (
-        <Button isIconOnly aria-label={t('places.hours.remove', { day: dayName, opens: range.opens, closes: range.closes })} className="max-lg:size-11" size="sm" variant="ghost" onPress={onRemove}>
-          <TrashIcon aria-hidden size={16} />
-        </Button>
-      )}
+    <div className="flex flex-col gap-0.5">
+      <div className="flex items-center gap-2">
+        <TimeInput compact className="w-24 shrink-0" error={error} label={t('places.hours.opens', { day: dayName })} value={range.opens} onChange={opens => onChange({ opens })} />
+        <span aria-hidden className="text-muted">–</span>
+        <TimeInput closing compact className="w-24 shrink-0" error={error} label={t('places.hours.closes', { day: dayName })} value={range.closes} onChange={closes => onChange({ closes })} />
+        {canRemove && (
+          <Button isIconOnly aria-label={t('places.hours.remove', { day: dayName, opens: range.opens, closes: range.closes })} className="max-lg:size-11" size="sm" variant="ghost" onPress={onRemove}>
+            <TrashIcon aria-hidden size={16} />
+          </Button>
+        )}
+      </div>
+      {endsNextDay(range) && <p className="text-sm text-muted">{t('places.hours.nextDay', { time: range.closes })}</p>}
     </div>
   )
 }

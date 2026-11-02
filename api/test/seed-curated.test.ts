@@ -36,11 +36,12 @@ describe('[seed-curated] the curated data maps to writes', () => {
     expect(placeChanges(unknownHours.record, [], []).weeklyHours).toEqual([])
   })
 
-  it('stores a closing time after midnight as 24:00, which the pin model allows', () => {
+  it('keeps a closing time after midnight as it is, which the pin model allows', () => {
     const { record } = data.places.find(p => p.record.title.en.includes('Bar Capitol'))!
     const hours = placeChanges(record, [], []).weeklyHours
-    expect(hours[0]).toEqual({ day: 1, opens: '12:00', closes: '24:00' })
-    expect(hours.every(span => span.opens < span.closes)).toBe(true)
+    const stored = record.weeklyHours!
+    expect(hours).toEqual(stored)
+    expect(hours.some(span => span.closes < span.opens)).toBe(true)
   })
 
   it('maps a place without photos to no cover', () => {

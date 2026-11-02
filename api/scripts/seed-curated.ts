@@ -140,8 +140,8 @@ export function buildPlan(data: Data, snapshot: Snapshot): Plan {
 }
 
 // The draft of a place with every field of the record. The first photo is the cover, the others are its extra photos.
-// The pin model has no span past midnight (opens < closes, closes up to 24:00), so a closing time after midnight
-// is stored as 24:00: the part after midnight is lost. Null opening hours mean none are known, which the pin stores as an empty list.
+// A closing time before the opening time runs past midnight, which the pin model keeps as it is. Null opening hours
+// mean none are known, which the pin stores as an empty list.
 export function placeChanges(record: PlaceRecord, categoryIds: string[], mediaIds: string[]) {
   const [cover, ...rest] = record.photos
   return {
@@ -152,7 +152,7 @@ export function placeChanges(record: PlaceRecord, categoryIds: string[], mediaId
     longitude: record.longitude,
     address: record.address,
     mapsLink: record.mapsLink,
-    weeklyHours: (record.weeklyHours ?? []).map(span => ({ ...span, closes: span.closes > span.opens ? span.closes : '24:00' })),
+    weeklyHours: (record.weeklyHours ?? []).map(span => ({ ...span })),
     stayTag: record.stayTag,
     interests: record.interests,
     mustVisit: record.mustVisit,

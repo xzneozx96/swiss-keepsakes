@@ -551,13 +551,18 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
     })
   })
 
-  it('[E4.2][AC86] weekly hours are written per day and a close before the open is refused under the row', async () => {
+  it('[T-013] a close before the open runs past midnight and the row says until when, and equal times are refused under the row', async () => {
     await toHours()
     await toggle('Monday')
     await typeTime('Monday opens', '1800')
-    await typeTime('Monday closes', '0900')
+    await typeTime('Monday closes', '0200')
 
-    expect(await within(dayRow('Monday')).findByText(/Closing must be after opening/)).toBeInTheDocument()
+    expect(await within(dayRow('Monday')).findByText('until 02:00 (next day)')).toBeInTheDocument()
+    expect(within(dayRow('Monday')).queryByRole('alert')).toBeNull()
+
+    await typeTime('Monday closes', '1800')
+
+    expect(await within(dayRow('Monday')).findByText(/Opening and closing must differ/)).toBeInTheDocument()
   })
 
   it('[E4.2][AC86] names the inputs Tuesday opens and Tuesday closes without drawing the label, and the switch Tuesday open', async () => {

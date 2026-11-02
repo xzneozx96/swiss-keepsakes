@@ -6789,6 +6789,7 @@
           "weeklyHours": {
             "items": {
               "additionalProperties": false,
+              "description": "A span with closes before opens closes the next morning (day 7 into day 1). 24:00 closes at midnight",
               "properties": {
                 "closes": {
                   "pattern": "^(?:(?:[01]\\d|2[0-3]):[0-5]\\d|24:00)$",
