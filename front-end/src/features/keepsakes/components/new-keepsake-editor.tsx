@@ -97,10 +97,7 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
   const review = draftProduct({ storeId, value, photos: cover ? [cover] : [], commission, options, variants, checks })
   const guard = useLeaveGuard({
     isUnsaved: touched,
-    titleKey: 'keepsakes.discard.title',
-    bodyKey: 'keepsakes.discard.body',
-    confirmKey: 'keepsakes.discard.confirm',
-    cancelKey: 'keepsakes.discard.cancel',
+    copy: 'discard',
     onLeave: () => {
       clearDraft(storeId)
       void navigate({ to: KEEPSAKES_PATH })

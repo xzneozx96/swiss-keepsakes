@@ -23,7 +23,8 @@ export function useVariantCommands({ storeId, id }: { storeId: string, id: strin
   const saveVariant = useCommand('keepsakes', 'saveVariant', {
     meta: {
       success: (result, input) => {
-        if (input.skuCode !== undefined || input.priceRappen !== undefined || input.status === undefined)
+        // A removed variant has no row left to name (deleted), so its dialog and the row leaving are the answer.
+        if (input.skuCode !== undefined || input.priceRappen !== undefined || input.status === undefined || input.status === 'removed')
           return input.skuCode && input.priceRappen !== undefined ? t('keepsakes.variant.saved', { code: input.skuCode }) : ''
         const variant = result.variants.find(row => row.id === input.variantId)
         const code = variant ? variantName(variant, result.options, language) : ''

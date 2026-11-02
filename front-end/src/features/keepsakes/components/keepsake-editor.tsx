@@ -79,12 +79,16 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
   const [editLanguage, setEditLanguage] = useState<Language>('en')
   const queryClient = useQueryClient()
   const remove = useRemoveKeepsake(storeId, () => void navigate({ to: KEEPSAKES_PATH }))
-  // Leaving saves the held options first; a refusal keeps the merchant here.
-  const leaveEditor = () => void held.save().then((saved) => {
-    if (saved)
-      void navigate({ to: KEEPSAKES_PATH })
+  // Leaving by any route saves the held options first (an option still open is finished with Done); a refusal keeps the merchant here.
+  // Edits that the autosave could not save (stale, failed) are lost on leaving, and the dialog says so.
+  const lost = editor.state === 'stale' || editor.state === 'failed'
+  const guard = useLeaveGuard({
+    isUnsaved: editor.isUnsaved || held.hasHeld,
+    copy: lost ? 'leave' : 'leaveSave',
+    blockNavigation: true,
+    onSave: () => held.save({ finishOpen: true }),
+    onLeave: () => void navigate({ to: KEEPSAKES_PATH }),
   })
-  const guard = useLeaveGuard({ isUnsaved: editor.isUnsaved || held.hasHeld, onLeave: leaveEditor })
   const { draft } = editor
   const name = nameIn(draft.name, language) || t('keepsakes.untitled')
   const statuses = stepStatuses(keepsake, KEEPSAKE_STEPS, showErrors)

@@ -95,6 +95,8 @@ export interface Harness {
   /** The test's answer for a call; return undefined to let the default answer it (/api/me). */
   answer: (call: Call) => Response | undefined
   demo: ReturnType<typeof startDemo>
+  /** The router of the last `renderKeepsakes`. */
+  router?: ReturnType<typeof createRouter>
 }
 
 export const state = {} as Harness
@@ -148,7 +150,7 @@ export async function setUpHarness() {
   await state.demo.ready
 }
 
-export function renderKeepsakes(initial: string) {
+export function renderKeepsakes(initial: string, history = createMemoryHistory({ initialEntries: [initial] })) {
   const root = createRootRoute({ component: Outlet })
   const index = createRoute({ getParentRoute: () => root, path: '/store/products', component: KeepsakeList })
   const create = createRoute({ getParentRoute: () => root, path: '/store/products/gifts/new', component: NewKeepsake })
@@ -164,7 +166,9 @@ export function renderKeepsakes(initial: string) {
       return <KeepsakeEditorScreen id={id} step={step} onStep={next => void navigate({ search: { step: next === 'details' ? undefined : next }, replace: true })} />
     },
   })
-  const router = createRouter({ routeTree: root.addChildren([index, create, edit]), history: createMemoryHistory({ initialEntries: [initial] }), disableGlobalCatchBoundary: true })
+  const router = createRouter({ routeTree: root.addChildren([index, create, edit]), history, disableGlobalCatchBoundary: true })
+
+  state.router = router as unknown as Harness['router']
 
   render(
     <QueryClientProvider client={state.demo.queryClient}>

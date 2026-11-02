@@ -5,7 +5,7 @@ import type { VariantActions } from '../lib/variant-actions'
 import type { Outcome } from './use-keepsake-editor'
 import type { OptionsDraftState } from './use-options-draft'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
 import { basePriceOf, refsOf, savedRefsOf } from '../lib/combinations'
@@ -19,6 +19,8 @@ export interface OptionsStepHandle {
   isOpen: () => boolean
   /** Opens a finished option, to show what the save refused in it. */
   edit: (ref: string) => void
+  /** Runs Done on the open option; false when it is refused (the option stays open with its errors). */
+  done: () => Promise<boolean>
 }
 
 /**
@@ -75,7 +77,7 @@ export function useHeldOptions({ keepsake, draft, handle, saveOptions, saveVaria
   }
 
   /** Sends what is held, in one request; true when nothing is held or it is saved. A refusal stays on the step. */
-  const save = async (): Promise<boolean> => {
+  const send = async (): Promise<boolean> => {
     setNotice(undefined)
     if (handle.current?.isOpen()) {
       setNotice(t('keepsakes.variants.finishOption'))
@@ -110,6 +112,37 @@ export function useHeldOptions({ keepsake, draft, handle, saveOptions, saveVaria
     }
 
     return false
+  }
+
+  // Leaving the editor finishes the open option, then saves what that Done held. The save waits for the render that holds
+  // it, so it reads the options as Done left them.
+  const [afterDone, setAfterDone] = useState(0)
+  const waitingRef = useRef<(saved: boolean) => void>(undefined)
+  const sendRef = useRef(send)
+
+  useEffect(() => {
+    sendRef.current = send
+  })
+  useEffect(() => {
+    const resolve = waitingRef.current
+
+    waitingRef.current = undefined
+    if (resolve)
+      void sendRef.current().then(resolve)
+  }, [afterDone])
+
+  const save = async ({ finishOpen = false }: { finishOpen?: boolean } = {}): Promise<boolean> => {
+    if (finishOpen && handle.current?.isOpen()) {
+      if (!(await handle.current.done()))
+        return false
+
+      return new Promise<boolean>((resolve) => {
+        waitingRef.current = resolve
+        setAfterDone(count => count + 1)
+      })
+    }
+
+    return send()
   }
 
   return { committed, variants, toCome, hasHeld, actions, save, notice }

@@ -17,9 +17,9 @@ import { VariantPhotoPicker, VariantThumb } from './variant-photo'
  * The variant sheet (N15), opened by Edit on a row of the merged step: one value of each option as chips, the photo, the
  * SKU code (only while the SKU switch is on, and optional), the price, the status and Archive. A refusal shows at its field: a duplicate combination or a missing value above the code, a
  * taken code at the code, no price at the price. A keepsake that is only in the browser has no status, and removes instead
- * of archiving. Stock is not here; it belongs to Inventory (E6.3).
+ * of deleting. Stock is not here; it belongs to Inventory (E6.3).
  */
-export function VariantSheet({ storeId, options, variants, variant, held, skuOn, codeBase, focusSku = false, ownPhotos, onSave, onAddPhoto, onArchive, onClose }: {
+export function VariantSheet({ storeId, options, variants, variant, held, skuOn, codeBase, focusSku = false, ownPhotos, onSave, onAddPhoto, onDelete, onClose }: {
   storeId: string
   options: ProductOption[]
   variants: ProductVariant[]
@@ -36,7 +36,7 @@ export function VariantSheet({ storeId, options, variants, variant, held, skuOn,
   onSave: SaveVariant
   /** A photo that the variant takes and the keepsake does not have joins the keepsake's photos. */
   onAddPhoto: (mediaId: string) => void
-  onArchive: () => void
+  onDelete: () => void
   onClose: () => void
 }) {
   const { t, language } = useLocale()
@@ -104,8 +104,8 @@ export function VariantSheet({ storeId, options, variants, variant, held, skuOn,
       isOpen
       footer={(
         <div className="flex w-full flex-1 items-center justify-between gap-2">
-          <Button className="min-h-11" isDisabled={isPending} variant="danger-soft" onPress={onArchive}>
-            {t(held ? 'keepsakes.variants.remove' : 'keepsakes.variant.archive')}
+          <Button className="min-h-11" isDisabled={isPending} variant="danger-soft" onPress={onDelete}>
+            {t(held ? 'keepsakes.variants.remove' : 'keepsakes.variants.delete')}
           </Button>
           <div className="flex items-center gap-2">
             <Button className="min-h-11" variant="tertiary" onPress={onClose}>

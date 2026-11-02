@@ -68,7 +68,17 @@ The 2026-10-29 design (cards, with options and variants in sheets) became a step
     - **The step bar** says "Unsaved changes" while options are held.
     - **Rows to come:** the combinations the held options bring show as rows to come, as for a new keepsake. They take a price, a code and a photo, which go into `newVariants`. They have no status: the API makes a new variant for sale, so the For sale and Hidden actions are off for them until the save. "Not sold" and Add back work on the draft and send nothing.
     - **Saved variants** still save at once: price, status, code, photo and the bulk actions. A value or option that a variant uses (archived ones too) cannot be removed (ADR-017), so the options save never archives a variant.
+    - **A new row has no status of its own (owner, 2026-11-02):** rows to come are always For sale. A merchant who wants one hidden sets its status on the saved row, after the save. The API does not change.
+    - **Leaving by any route (T-019):** the leave dialog says what happens, "Save your changes?" with "Your changes are saved when you leave." and the buttons Keep editing and Save and leave. It opens for the editor's Back, for a link or the sidebar and for the browser's Back (the router's blocker); a tab close or a reload gets the browser's own prompt. Save and leave runs Done on an option that is still open, then saves; a refused Done or save keeps the merchant on the page. When the autosave itself could not save (a stale or failed save), the dialog says the edits are lost instead.
     - **Why:** on the dev database (Singapore) one options save took 2.1 s, and Done waited for it. The owner: make it optimistic and save once at the end, because the merchant may change their mind before it is saved.
+
+### Amended on 2026-11-02, T-019 (owner)
+
+24. **Option and variant rows have icons, and a variant is deleted when it was never sold.**
+    - Option rows and variant rows show an Edit icon and a Delete icon (the Delete icon in the danger tone), each named after its row ("Edit Size", "Delete Size", "Delete XS / Red"). The Edit text button goes. The open option's own Delete option button stays: it deletes an option that was only just added, and a finished option is deleted from its row.
+    - Deleting a variant is the keepsake's rule (ADR-014, ADR-017 amended 2026-11-02): a variant that no order line names is deleted and its combination shows in "Not sold · Add back"; one that an order line names is archived, which is final. The confirm dialog says which will happen, and for a selection that mixes both it gives the number of each. Orders are not built, so every variant deletes until E7.1 implements `soldSkuIds`.
+    - The bulk bar's Archive and the variant sheet's Archive (left of the footer) are Delete, with the same rule.
+    - One request does it: `status: removed`, on the single and the bulk variant routes.
 
 ## Rejected
 

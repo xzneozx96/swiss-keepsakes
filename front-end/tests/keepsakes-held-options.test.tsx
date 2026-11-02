@@ -1,5 +1,6 @@
 import type { Call } from './keepsakes-harness'
 
+import { createBrowserHistory } from '@tanstack/react-router'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -159,7 +160,7 @@ describe('[T-018][AC2] one save when the merchant leaves the step', () => {
     })
     serve()
     await openStep()
-    await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Edit' }))
+    await userEvent.click(within(optionsBlock()).getByRole('button', { name: /^Edit / }))
     await userEvent.type(screen.getByLabelText(/^Add values to/), 'M')
     await done()
     await waitFor(() => expect(rows()).toHaveLength(3))
@@ -242,7 +243,7 @@ describe('[T-018][AC3] a refused save stays on the step', () => {
 })
 
 describe('[T-018][AC4] leaving the editor with held options', () => {
-  it('[T-018][AC4] asks first; Keep editing sends nothing; Leave saves the options, then goes to the list', async () => {
+  it('[T-018][AC4] asks first; Keep editing sends nothing; Save and leave saves the options, then goes to the list', async () => {
     await openStep()
     await startOption('Size', ['XS', 'S'])
     await done()
@@ -253,7 +254,7 @@ describe('[T-018][AC4] leaving the editor with held options', () => {
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
     expect(writes()).toHaveLength(0)
     await userEvent.click(screen.getByRole('button', { name: 'Back to Keepsakes' }))
-    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Leave without saving' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Save and leave' }))
 
     expect(await screen.findByTestId('keepsake-list')).toBeInTheDocument()
     expect(puts()).toHaveLength(1)
@@ -266,7 +267,7 @@ describe('[T-018][AC4] leaving the editor with held options', () => {
     await startOption('Size', ['XS', 'S'])
     await done()
     await userEvent.click(screen.getByRole('button', { name: 'Back to Keepsakes' }))
-    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Leave without saving' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Save and leave' }))
 
     await waitFor(() => expect(puts()).toHaveLength(1))
     expect(screen.queryByTestId('keepsake-list')).not.toBeInTheDocument()
@@ -274,7 +275,129 @@ describe('[T-018][AC4] leaving the editor with held options', () => {
   })
 })
 
+describe('[T-019][AC0] leaving the held options by any route', () => {
+  it('[T-019][AC0] the dialog says that the changes are saved on leaving', async () => {
+    await openStep()
+    await startOption('Size', ['XS', 'S'])
+    await done()
+    await userEvent.click(screen.getByRole('button', { name: 'Back to Keepsakes' }))
+    const dialog = await screen.findByRole('alertdialog')
+
+    expect(dialog).toHaveTextContent('Save your changes?')
+    expect(dialog).toHaveTextContent('Your changes are saved when you leave.')
+    expect(within(dialog).queryByText(/lost/)).not.toBeInTheDocument()
+  })
+
+  it('[T-019][AC0] a link to another page asks first; Keep editing stays; Save and leave sends one save, then goes', async () => {
+    await openStep()
+    const router = state.router!
+
+    await startOption('Size', ['XS', 'S'])
+    await done()
+    void router.navigate({ to: '/store/products' })
+    const dialog = await screen.findByRole('alertdialog')
+
+    expect(screen.queryByTestId('keepsake-list')).not.toBeInTheDocument()
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Keep editing' }))
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(writes()).toHaveLength(0)
+    void router.navigate({ to: '/store/products' })
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Save and leave' }))
+
+    expect(await screen.findByTestId('keepsake-list')).toBeInTheDocument()
+    expect(puts()).toHaveLength(1)
+  })
+
+  it('[T-019][AC0] browser Back asks first', async () => {
+    // Only the browser's history is asked about a Back; the memory history of the other tests runs the blocker for links only.
+    const router = renderKeepsakes('/store/products', createBrowserHistory())
+
+    await screen.findByTestId('keepsake-list', undefined, SLOW)
+    await router.navigate({ to: '/store/products/gifts/$productId', params: { productId }, search: { step: 'options' } })
+    await screen.findByRole('region', { name: 'Options' }, SLOW)
+    await startOption('Size', ['XS', 'S'])
+    await done()
+    window.history.back()
+
+    expect(await screen.findByRole('alertdialog')).toHaveTextContent('Save your changes?')
+    expect(screen.queryByTestId('keepsake-list')).not.toBeInTheDocument()
+  })
+
+  it('[T-019][AC0] changing the step of the editor asks nothing from the blocker', async () => {
+    await openStep()
+    await startOption('Size', ['XS', 'S'])
+    await done()
+    await next()
+
+    expect(await screen.findByTestId('review-screen', undefined, SLOW)).toBeInTheDocument()
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+  })
+
+  it('[T-019][AC0] closing the tab with held options asks the browser; with nothing held it does not', { timeout: 20_000 }, async () => {
+    const router = renderKeepsakes('/store/products', createBrowserHistory())
+
+    await screen.findByTestId('keepsake-list', undefined, SLOW)
+    await router.navigate({ to: '/store/products/gifts/$productId', params: { productId }, search: { step: 'options' } })
+    await screen.findByRole('region', { name: 'Options' }, SLOW)
+    const unload = () => {
+      const event = new Event('beforeunload', { cancelable: true })
+
+      window.dispatchEvent(event)
+
+      return event.defaultPrevented
+    }
+
+    expect(unload()).toBe(false)
+    await startOption('Size', ['XS', 'S'])
+    await done()
+    await waitFor(() => expect(unload()).toBe(true))
+  })
+
+  it('[T-019][AC0] Save and leave finishes an open option first and saves it with the rest', async () => {
+    await openStep()
+    await startOption('Size', ['XS', 'S'])
+    await userEvent.click(screen.getByRole('button', { name: 'Back to Keepsakes' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Save and leave' }))
+
+    expect(await screen.findByTestId('keepsake-list', undefined, SLOW)).toBeInTheDocument()
+    expect(puts()).toHaveLength(1)
+    expect((puts()[0]!.body as OptionsPut).newVariants).toHaveLength(1)
+    expect((puts()[0]!.body as OptionsPut).options[0]!.values).toHaveLength(2)
+  })
+
+  it('[T-019][AC0] a Done that is refused keeps the merchant on the open option with its errors', async () => {
+    await openStep()
+    await startOption('Size', [])
+    // The name field's suggestions are open and hide the page from the roles; Escape closes them.
+    await userEvent.keyboard('{Escape}')
+    await userEvent.click(screen.getByRole('button', { name: 'Back to Keepsakes' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Save and leave' }))
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(screen.getByTestId('keepsake-editor')).toBeInTheDocument()
+    expect(within(optionsBlock()).getByRole('button', { name: 'Done' })).toBeInTheDocument()
+    expect(writes()).toHaveLength(0)
+  })
+})
+
 describe('[T-018][AC5][AC6] rows to come', () => {
+  it('[T-019][AC2] the Delete icon of a row to come removes it with no request, and its combination is Not sold', async () => {
+    await openStep()
+    await startOption('Size', ['XS', 'S'])
+    await done()
+    // The saved variant takes XS; S is the row to come.
+    await waitFor(() => expect(rows()).toHaveLength(2))
+    await userEvent.click(within(rows()[1]!).getByRole('button', { name: 'Delete S' }))
+    const dialog = await screen.findByRole('alertdialog')
+
+    expect(dialog).toHaveTextContent('Remove S?')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove variant' }))
+
+    await waitFor(() => expect(rows()).toHaveLength(1))
+    expect(await screen.findByTestId('not-sold')).toHaveTextContent('Not sold: 1')
+    expect(writes()).toHaveLength(0)
+  })
+
   it('[T-018][AC5] removing rows to come and adding them back sends no archive, and the save carries the rows that are left', async () => {
     await openStep()
     await startOption('Size', ['XS', 'S', 'M'])

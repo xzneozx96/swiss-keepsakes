@@ -17,7 +17,7 @@ const detail = `${base}/${productId}`
 const SLOW = { timeout: 8000 }
 const id = (n: number) => `0198a000-0000-7000-8000-0000000000${n.toString(16).padStart(2, '0')}`
 
-interface Variant { id: string, skuCode: string | null, mediaId: string | null, photo: object | null, priceRappen: number, status: 'published' | 'draft' | 'archived', values: Record<string, string> }
+interface Variant { id: string, skuCode: string | null, mediaId: string | null, photo: object | null, priceRappen: number, status: 'published' | 'draft' | 'archived', values: Record<string, string>, hasOrders?: boolean }
 interface OptionBody { ref: string, name: { en?: string, de?: string }, values: { ref: string, label: { en?: string, de?: string } }[] }
 interface OptionsPut { options: OptionBody[], variantValues?: { variantId: string, values: Record<string, string> }[], newVariants?: { skuCode: string | null, priceRappen: number, values: Record<string, string> }[] }
 
@@ -63,16 +63,26 @@ function serve(extra: (call: Call) => Response | undefined = () => undefined) {
       return Response.json(current)
     }
     if (call.method === 'PATCH' && call.path === `${detail}/variants`) {
-      const rows = (call.body as { variants: { id: string, priceRappen?: number, status?: Variant['status'], skuCode?: string | null, mediaId?: string | null }[] }).variants
+      const rows = (call.body as { variants: { id: string, priceRappen?: number, status?: Variant['status'] | 'removed', skuCode?: string | null, mediaId?: string | null }[] }).variants
+      // Like the API: removed deletes a variant that no order line names and archives one that does.
+      const removed = (variant: Variant) => rows.find(r => r.id === variant.id)?.status === 'removed'
+      const changed = current.variants.filter(variant => !(removed(variant) && !variant.hasOrders)).map((variant) => { const row = rows.find(r => r.id === variant.id); return row ? { ...variant, ...(row.priceRappen !== undefined && { priceRappen: row.priceRappen }), ...(row.status && { status: row.status === 'removed' ? 'archived' as const : row.status }), ...(row.skuCode !== undefined && { skuCode: row.skuCode }), ...(row.mediaId !== undefined && { mediaId: row.mediaId, photo: row.mediaId ? media : null }) } : variant })
 
-      current = product({ ...current, variants: current.variants.map((variant) => { const row = rows.find(r => r.id === variant.id); return row ? { ...variant, ...(row.priceRappen !== undefined && { priceRappen: row.priceRappen }), ...(row.status && { status: row.status }), ...(row.skuCode !== undefined && { skuCode: row.skuCode }), ...(row.mediaId !== undefined && { mediaId: row.mediaId, photo: row.mediaId ? media : null }) } : variant }) })
+      current = product({ ...current, variants: changed })
 
       return Response.json(current)
     }
     if (call.method === 'PATCH' && call.path.startsWith(`${detail}/variants/`)) {
-      const body = call.body as Partial<Variant>
+      const body = call.body as Partial<Omit<Variant, 'status'>> & { status?: Variant['status'] | 'removed' }
 
-      current = product({ ...current, variants: current.variants.map(variant => (call.path.endsWith(variant.id) ? { ...variant, ...body, ...(body.mediaId !== undefined && { photo: body.mediaId ? media : null }) } : variant)) })
+      if (body.status === 'removed') {
+        const target = current.variants.find(variant => call.path.endsWith(variant.id))
+
+        current = product({ ...current, variants: current.variants.flatMap(variant => (variant !== target ? [variant] : target.hasOrders ? [{ ...variant, status: 'archived' as const }] : [])) })
+
+        return Response.json(current)
+      }
+      current = product({ ...current, variants: current.variants.map(variant => (call.path.endsWith(variant.id) ? { ...variant, ...body, status: body.status ?? variant.status, ...(body.mediaId !== undefined && { photo: body.mediaId ? media : null }) } : variant)) })
 
       return Response.json(current)
     }
@@ -401,37 +411,77 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     await waitFor(() => expect(within(rows()[0]!).getByText('Hidden')).toBeInTheDocument())
   })
 
-  it('[T-008][AC6] Archive asks first, then sends one request for the selection and the rows go to the archived fold', async () => {
+  it('[T-019][AC4] Delete asks first, says the variants are deleted, then sends one request; the rows go and their combinations are Not sold', async () => {
     await openStep()
 
     await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select XS / Red' }))
     await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select S / Red' }))
-    await userEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: 'Archive' }))
+    await userEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: 'Delete' }))
     const dialog = await screen.findByRole('alertdialog')
 
-    expect(dialog).toHaveTextContent('Archive 2 variants?')
+    expect(dialog).toHaveTextContent('Delete 2 variants?')
+    expect(dialog).toHaveTextContent('deleted for good')
     expect(patches()).toHaveLength(0)
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => expect(patches()).toHaveLength(1))
+    expect(patches()[0]!.body).toEqual({ variants: [{ id: all[0]!.id, status: 'removed' }, { id: all[2]!.id, status: 'removed' }] })
+    await waitFor(() => expect(rows()).toHaveLength(6))
+    expect(within(variantsBlock()).queryByText(/archived/)).not.toBeInTheDocument()
+    expect(await screen.findByTestId('not-sold')).toHaveTextContent('Not sold: 2')
+  })
+
+  it('[T-019][AC4] variants with orders are archived: the dialog says so, and they go to the archived fold', async () => {
+    current = product({ options: [sizeOption, colourOption], variants: all.map((variant, index) => (index < 2 ? { ...variant, hasOrders: true } : variant)) })
+    serve()
+    await openStep()
+
+    await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select XS / Red' }))
+    await userEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: 'Delete' }))
+    const dialog = await screen.findByRole('alertdialog')
+
+    expect(dialog).toHaveTextContent('Archive XS / Red?')
+    expect(dialog).toHaveTextContent('can’t be put back on sale')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Archive variant' }))
 
     await waitFor(() => expect(patches()).toHaveLength(1))
-    expect(patches()[0]!.body).toEqual({ variants: [{ id: all[0]!.id, status: 'archived' }, { id: all[2]!.id, status: 'archived' }] })
-    await waitFor(() => expect(rows()).toHaveLength(6))
-    expect(within(variantsBlock()).getByText('2 archived')).toBeInTheDocument()
-    // Archived keeps its combination (ADR-017): it is not "not sold" and cannot be added back.
+    expect(patches()[0]).toMatchObject({ path: `${detail}/variants/${all[0]!.id}`, body: { status: 'removed' } })
+    expect(await within(variantsBlock()).findByText('1 archived')).toBeInTheDocument()
     expect(screen.queryByTestId('not-sold')).not.toBeInTheDocument()
   })
 
-  it('[T-008] a refusal of the archive (units reserved) stays in the dialog', async () => {
+  it('[T-019][AC4] a mix of sold and unsold: one request, and the dialog says how many of each', async () => {
+    current = product({ options: [sizeOption, colourOption], variants: all.map((variant, index) => (index === 1 ? { ...variant, hasOrders: true } : variant)) })
+    serve()
+    await openStep()
+
+    await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select XS / Red' }))
+    await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select XS / Blue' }))
+    await userEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: 'Delete' }))
+    const dialog = await screen.findByRole('alertdialog')
+
+    expect(dialog).toHaveTextContent('Delete 2 variants?')
+    expect(dialog).toHaveTextContent('Deleted for good: 1. Archived because they have orders: 1.')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => expect(patches()).toHaveLength(1))
+    expect(patches()[0]!.body).toEqual({ variants: [{ id: all[0]!.id, status: 'removed' }, { id: all[1]!.id, status: 'removed' }] })
+    await waitFor(() => expect(rows()).toHaveLength(6))
+    expect(within(variantsBlock()).getByText('1 archived')).toBeInTheDocument()
+    expect(await screen.findByTestId('not-sold')).toHaveTextContent('Not sold: 1')
+  })
+
+  it('[T-008] a refusal of the delete (units reserved) stays in the dialog', async () => {
     serve(call => (call.method === 'PATCH' && call.path.startsWith(`${detail}/variants`)
       ? Response.json({ type: 'validation-failed', status: 422, title: 'x', instance: '/x', requestId: 'r', errors: [{ path: 'variants.0', code: 'variant-reserved', params: { code: 'VX-XS-RED', count: 2 } }] }, { status: 422 })
       : undefined))
     await openStep()
 
     await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select XS / Red' }))
-    await userEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: 'Archive' }))
-    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Archive variant' }))
+    await userEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: 'Delete' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete' }))
 
-    expect(await within(screen.getByRole('alertdialog')).findByText(/Can’t archive VX-XS-RED/)).toBeInTheDocument()
+    expect(await within(screen.getByRole('alertdialog')).findByText(/Can’t delete VX-XS-RED/)).toBeInTheDocument()
     expect(screen.getByRole('alertdialog')).toBeInTheDocument()
   })
 
@@ -512,20 +562,68 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     expect(writes()).toHaveLength(0)
   })
 
-  it('[T-008] Edit on a row opens the sheet, and Archive there asks first and archives that one variant', async () => {
+  it('[T-019][AC5] Edit on a row opens the sheet, and Delete in its footer asks first and deletes that one variant', async () => {
     await openStep()
     await userEvent.click(within(variantsBlock()).getByRole('button', { name: 'Edit XS / Red' }))
     const sheet = await screen.findByRole('dialog', { name: 'Edit XS / Red' })
 
-    await userEvent.click(within(sheet).getByRole('button', { name: 'Archive' }))
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Delete' }))
     const dialog = await screen.findByRole('alertdialog')
 
-    expect(dialog).toHaveTextContent('Archive XS / Red?')
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Archive variant' }))
+    expect(dialog).toHaveTextContent('Delete XS / Red?')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
     await waitFor(() => expect(patches()).toHaveLength(1))
-    expect(patches()[0]).toMatchObject({ path: `${detail}/variants/${all[0]!.id}`, body: { status: 'archived' } })
+    expect(patches()[0]).toMatchObject({ path: `${detail}/variants/${all[0]!.id}`, body: { status: 'removed' } })
     await waitFor(() => expect(rows()).toHaveLength(7))
+    expect(await screen.findByTestId('not-sold')).toHaveTextContent('Not sold: 1')
+  })
+
+  it('[T-019][AC2] a variant row has an Edit icon and a Delete icon, both named, and no Edit text button', async () => {
+    await openStep()
+    const first = rows()[0]!
+    const edit = within(first).getByRole('button', { name: 'Edit XS / Red' })
+    const remove = within(first).getByRole('button', { name: 'Delete XS / Red' })
+
+    expect(edit).toHaveTextContent('')
+    expect(remove).toHaveTextContent('')
+    expect(edit.querySelector('svg')).not.toBeNull()
+    expect(remove.querySelector('svg')).not.toBeNull()
+    expect(within(first).queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+    await userEvent.click(remove)
+
+    expect(await screen.findByRole('alertdialog')).toHaveTextContent('Delete XS / Red?')
+    expect(patches()).toHaveLength(0)
+  })
+
+  it('[T-019][AC1] an option row has an Edit icon and a Delete icon, both named after the option; Delete asks, then holds the change with no request', async () => {
+    current = product({ options: [colourOption], variants: [] })
+    serve()
+    await openStep()
+    const row = within(optionsBlock()).getByTestId('option-row')
+    const edit = within(row).getByRole('button', { name: 'Edit Colour' })
+    const remove = within(row).getByRole('button', { name: 'Delete Colour' })
+
+    expect(edit).toHaveTextContent('')
+    expect(remove).toHaveTextContent('')
+    expect(within(row).queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+    await userEvent.click(remove)
+    const dialog = await screen.findByRole('alertdialog')
+
+    expect(dialog).toHaveTextContent('Delete the option Colour?')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete option' }))
+
+    await waitFor(() => expect(within(optionsBlock()).queryByTestId('option-row')).not.toBeInTheDocument())
+    expect(writes()).toHaveLength(0)
+  })
+
+  it('[T-019][AC1] Delete on an option that variants use is refused at once, naming them', async () => {
+    await openStep()
+    await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Delete Size' }))
+
+    expect(await within(optionsBlock()).findByText(/Can’t delete Size\. Used by 8 variants/)).toBeInTheDocument()
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expect(writes()).toHaveLength(0)
   })
 
   it('[T-008] a refusal of the options save shows in the merchant’s words, and the merchant stays on the step', async () => {

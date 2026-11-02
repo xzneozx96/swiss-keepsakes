@@ -9,7 +9,7 @@ import { useState } from 'react'
 import { ActionBar } from '@/components/action-bar'
 import { useConfirm } from '@/components/confirm-dialog'
 import { Block } from '@/components/form-block'
-import { ArchiveIcon, ChevronDownIcon, ForSaleIcon, HiddenIcon, PriceIcon, ProductsIcon, TrashIcon } from '@/components/icons'
+import { ChevronDownIcon, ForSaleIcon, HiddenIcon, PriceIcon, ProductsIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { groupByFirstOption, priceRange } from '../lib/combinations'
 import { chf } from '../lib/keepsake-rules'
@@ -122,19 +122,29 @@ export function VariantsBlock({ storeId, options, variants, held, toCome, action
   const allTicked = live.length > 0 && ticked.length === live.length
   const forTicked = (patch: { priceRappen?: number, status?: 'published' | 'draft' }) => void run(() => actions.saveVariants(ticked.map(variant => ({ id: variant.id, ...patch }))))
 
-  /** Archiving is final, so it asks first and waits for the server inside the dialog: a refusal (units reserved) stays there. A new keepsake's rows are only removed. */
-  const archive = async (rows: ProductVariant[], afterwards: () => void) => {
+  /**
+   * Delete is the keepsake's rule for a variant (owner, 2026-11-02): one that no order line names is deleted and its
+   * combination goes to Not sold; one that has orders is archived, which is final. The dialog says which will happen
+   * (`hasOrders`) and waits for the server inside itself: a refusal (units reserved) stays there. Rows that are only in the
+   * browser are removed with no request.
+   */
+  const remove = async (rows: ProductVariant[], afterwards: () => void) => {
     const removing = rows.every(isHeld)
+    const archiving = rows.filter(variant => !isHeld(variant) && variant.hasOrders).length
     const label = rows.length === 1 ? (options.length > 0 ? variantTitle(rows[0]!.values, options, language) : rows[0]!.skuCode ?? '') : ''
+    const plural = rows.length === 1 ? 'one' : 'other'
+    const kind = removing ? 'removeMany' : archiving === rows.length ? 'archiveMany' : 'deleteMany'
 
     await confirm({
-      title: t(`keepsakes.variants.${removing ? 'removeMany' : 'archiveMany'}.title.${rows.length === 1 ? 'one' : 'other'}`, { count: rows.length, name: label }),
-      body: t(`keepsakes.variants.${removing ? 'removeMany' : 'archiveMany'}.body.${rows.length === 1 ? 'one' : 'other'}`, { count: rows.length }),
-      confirmLabel: t(removing ? 'keepsakes.variants.remove' : 'keepsakes.variant.archive.confirm'),
+      title: t(`keepsakes.variants.${kind}.title.${plural}`, { count: rows.length, name: label }),
+      body: archiving > 0 && archiving < rows.length
+        ? t('keepsakes.variants.deleteMixed.body', { deleted: rows.length - archiving, archived: archiving })
+        : t(`keepsakes.variants.${kind}.body.${plural}`, { count: rows.length }),
+      confirmLabel: t(removing ? 'keepsakes.variants.remove' : kind === 'archiveMany' ? 'keepsakes.variant.archive.confirm' : 'keepsakes.variants.deleteConfirm'),
       run: async () => {
         const outcome = rows.length === 1
-          ? await actions.saveVariant(rows[0]!.id, { status: 'archived' })
-          : await actions.saveVariants(rows.map(variant => ({ id: variant.id, status: 'archived' as const })))
+          ? await actions.saveVariant(rows[0]!.id, { status: 'removed' })
+          : await actions.saveVariants(rows.map(variant => ({ id: variant.id, status: 'removed' as const })))
 
         if (!outcome.ok)
           throw new Error(failureText(t, outcome))
@@ -162,7 +172,7 @@ export function VariantsBlock({ storeId, options, variants, held, toCome, action
         void run(() => actions.saveVariant(variant.id, { mediaId }))
       }}
       onPrice={rappen => void run(() => actions.saveVariant(variant.id, { priceRappen: rappen }))}
-      onRemove={() => void archive([variant], () => undefined)}
+      onRemove={() => void remove([variant], () => undefined)}
       onSelect={on => tick([variant.id], on)}
     />
   )
@@ -278,7 +288,7 @@ export function VariantsBlock({ storeId, options, variants, held, toCome, action
           variant={editingVariant}
           variants={variants}
           onAddPhoto={actions.addPhoto}
-          onArchive={() => void archive([editingVariant], () => setEditing(undefined))}
+          onDelete={() => void remove([editingVariant], () => setEditing(undefined))}
           onClose={() => setEditing(undefined)}
           onSave={actions.saveVariant}
         />
@@ -295,7 +305,7 @@ export function VariantsBlock({ storeId, options, variants, held, toCome, action
                   { icon: ForSaleIcon, label: t('keepsakes.variant.status.published'), isDisabled: isPending, onPress: () => forTicked({ status: 'published' }) },
                   { icon: HiddenIcon, label: t('keepsakes.variant.status.hidden'), isDisabled: isPending, onPress: () => forTicked({ status: 'draft' }) },
                 ]),
-            { icon: allHeld ? TrashIcon : ArchiveIcon, label: t(allHeld ? 'keepsakes.variants.remove' : 'keepsakes.variant.archive'), tone: 'danger', isDisabled: isPending, onPress: () => void archive(ticked, () => setSelected(new Set())) },
+            { icon: TrashIcon, label: t(allHeld ? 'keepsakes.variants.remove' : 'keepsakes.variants.delete'), tone: 'danger', isDisabled: isPending, onPress: () => void remove(ticked, () => setSelected(new Set())) },
           ]}
           count={ticked.length}
           onClear={() => {

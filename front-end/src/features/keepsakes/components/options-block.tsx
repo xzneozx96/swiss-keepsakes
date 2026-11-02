@@ -47,7 +47,7 @@ function OptionRow({ draft, option, grip, language, isLocked, onEdit, onDelete }
           <Button isIconOnly aria-label={t('keepsakes.variants.editVariant', { name })} className="max-lg:size-11" isDisabled={isLocked} size="sm" variant="tertiary" onPress={onEdit}>
             <EditIcon aria-hidden size={16} />
           </Button>
-          <Button isIconOnly aria-label={`${t('keepsakes.options.deleteOption')}: ${name}`} className="text-danger max-lg:size-11" isDisabled={isLocked} size="sm" variant="tertiary" onPress={onDelete}>
+          <Button isIconOnly aria-label={t('keepsakes.options.deleteNamed', { name })} className="text-danger max-lg:size-11" isDisabled={isLocked} size="sm" variant="tertiary" onPress={onDelete}>
             <TrashIcon aria-hidden size={16} />
           </Button>
         </span>

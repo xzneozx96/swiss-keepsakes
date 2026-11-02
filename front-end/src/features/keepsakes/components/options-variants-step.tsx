@@ -63,7 +63,7 @@ export function OptionsAndVariantsStep({ storeId, keepsakeId, draft, language, h
   // New rows start with the keepsake's code while the switch is on, and have none while it is off.
   const codeBase = skuOn ? codeBaseOf(variants, tableOptions) : null
   const flow = useOptionsFlow({ draft, committed, variants, codeBase, commit: actions.commit })
-  useImperativeHandle(handle, () => ({ isOpen: () => flow.open !== undefined, edit: flow.edit }))
+  useImperativeHandle(handle, () => ({ isOpen: () => flow.open !== undefined, edit: flow.edit, done: flow.done }))
   const suggestions = useOptionNames(storeId, keepsakeId)
   const only = variants.find(variant => variant.status !== 'archived')
   const rows = flow.preview?.newVariants.map(made => made.values) ?? []

@@ -4,7 +4,7 @@ import type { Values } from '../lib/option-rules'
 import { Button, Checkbox, Input } from '@heroui/react'
 import { useState } from 'react'
 
-import { ArchiveIcon, EditIcon, PhotoAddIcon } from '@/components/icons'
+import { EditIcon, PhotoAddIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { chf, toRappen } from '../lib/keepsake-rules'
 import { combinationName, shortLabel, variantTitle } from '../lib/option-rules'
@@ -89,7 +89,7 @@ export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, 
   /** A photo chosen (`isNew`: the keepsake does not have it yet) or taken off (null). */
   onPhoto: (mediaId: string | null, isNew: boolean) => void
   onEdit: (focus?: 'sku') => void
-  /** The delete icon: the block's remove rule (asks first). */
+  /** The delete icon: the block's delete rule (asks first). */
   onRemove: () => void
 }) {
   const { t, language } = useLocale()
@@ -126,8 +126,8 @@ export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, 
           <Button isIconOnly aria-label={t('keepsakes.variants.editVariant', { name: title })} className="max-lg:size-11" size="sm" variant="tertiary" onPress={() => onEdit()}>
             <EditIcon aria-hidden size={16} />
           </Button>
-          <Button isIconOnly aria-label={`${t('keepsakes.variant.archive')}: ${title}`} className="text-danger max-lg:size-11" size="sm" variant="tertiary" onPress={onRemove}>
-            <ArchiveIcon aria-hidden size={16} />
+          <Button isIconOnly aria-label={t('keepsakes.variants.deleteVariant', { name: title })} className="text-danger max-lg:size-11" size="sm" variant="tertiary" onPress={onRemove}>
+            <TrashIcon aria-hidden size={16} />
           </Button>
         </span>
       </div>

@@ -251,20 +251,20 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
 
-  it('[E6.1][autosave] Back with unsaved edits asks first, Keep editing stays, Leave goes and saves what was typed', async () => {
+  it('[E6.1][autosave] Back with unsaved edits asks first, Keep editing stays, Save and leave goes and saves what was typed', async () => {
     await openEditor()
 
     await userEvent.type(await nameField(), ' II')
     await userEvent.click(screen.getByRole('button', { name: 'Back to Keepsakes' }))
     const dialog = await screen.findByRole('alertdialog')
 
-    expect(dialog).toHaveTextContent('Leave without saving?')
-    expect(dialog).toHaveTextContent('Your last edits are not saved yet. If you leave now, they are lost.')
+    expect(dialog).toHaveTextContent('Save your changes?')
+    expect(dialog).toHaveTextContent('Your changes are saved when you leave.')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Keep editing' }))
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
     expect(screen.getByTestId('keepsake-editor')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Back to Keepsakes' }))
-    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Leave without saving' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Save and leave' }))
 
     expect(await screen.findByTestId('keepsake-list')).toBeInTheDocument()
     await waitFor(() => expect(writes()).toHaveLength(1))
