@@ -16,7 +16,6 @@ import { namedValues } from '../lib/combinations'
 import { labelOf, moveItem } from '../lib/option-rules'
 import { NotesAt } from './option-bits'
 import { OptionEditor } from './option-editor'
-import { Swatch } from './option-parts'
 import { useDeleteOption } from './use-delete-option'
 
 /** A finished option as one row: the grip, the name, its values as chips and Edit. */
@@ -33,7 +32,6 @@ function OptionRow({ draft, option, grip, language, isLocked, onEdit }: { draft:
           <ul className="flex flex-wrap gap-1.5">
             {namedValues(option).map(value => (
               <li key={value.ref} className="inline-flex h-7 max-w-full items-center gap-1.5 rounded-full bg-default px-2.5 text-xs font-medium">
-                <Swatch className="size-3" color={value.swatch} />
                 <span className="truncate">{labelOf(value.label, language)}</span>
               </li>
             ))}
@@ -50,7 +48,7 @@ function OptionRow({ draft, option, grip, language, isLocked, onEdit }: { draft:
  * The finished options in the order that groups the variants, a grip on each to change it: the arrow keys on the grip move
  * a row one step, a pointer drags it. Only the order moves; each option keeps its values.
  */
-function OptionRows({ draft, language, flow, onDelete }: { draft: OptionsDraftState, language: Language, flow: OptionsFlow, onDelete: (option: OptionDraft) => void }) {
+function OptionRows({ draft, language, flow, suggestions, onDelete }: { draft: OptionsDraftState, language: Language, flow: OptionsFlow, suggestions: { en?: string, de?: string }[], onDelete: (option: OptionDraft) => void }) {
   const { t } = useLocale()
   const listRef = useRef<HTMLOListElement>(null)
   const placeholderRef = useRef<HTMLDivElement>(null)
@@ -79,6 +77,7 @@ function OptionRows({ draft, language, flow, onDelete }: { draft: OptionsDraftSt
                     isPending={flow.isPending}
                     language={language}
                     option={flow.openOption}
+                    suggestions={suggestions.flatMap(name => name[language] ?? [])}
                     onCancel={flow.cancel}
                     onDelete={() => onDelete(option)}
                     onDone={() => void flow.done()}
@@ -124,7 +123,7 @@ function OptionRows({ draft, language, flow, onDelete }: { draft: OptionsDraftSt
  * The Options block of the merged step: what guests choose between, like size or colour. No option shows the empty state
  * with Add option. Each option is one row; the open one is the inline editor. Deleting an option asks first.
  */
-export function OptionsBlock({ draft, language, flow, committed }: { draft: OptionsDraftState, language: Language, flow: OptionsFlow, committed: ReadonlySet<string> }) {
+export function OptionsBlock({ draft, language, flow, committed, suggestions }: { draft: OptionsDraftState, language: Language, flow: OptionsFlow, committed: ReadonlySet<string>, /** The option names that the shop's other keepsakes use. */ suggestions: { en?: string, de?: string }[] }) {
   const { t } = useLocale()
   const { remove, dialog } = useDeleteOption(draft)
 
@@ -151,7 +150,7 @@ export function OptionsBlock({ draft, language, flow, committed }: { draft: Opti
           )
         : (
             <>
-              <OptionRows draft={draft} flow={flow} language={language} onDelete={onDelete} />
+              <OptionRows draft={draft} flow={flow} language={language} suggestions={suggestions} onDelete={onDelete} />
               {draft.options.length < MAX_OPTIONS && (
                 <Button className="-ms-1 self-start max-lg:h-11" isDisabled={flow.isPending} variant="ghost" onPress={() => void flow.add()}>
                   <PlusIcon aria-hidden size={16} />

@@ -13,7 +13,7 @@ Medusa gives a product options with values and links a variant to a value of eac
 ## Decision
 We will keep the options in two tables and link a SKU to values in a third.
 
-- `catalog.product_options` has a localized name and a position, and `catalog.product_option_values` has a localized label, a position and an optional colour swatch. Positions are unique per product and per option, with a deferrable key so a reorder fits one transaction.
+- `catalog.product_options` has a localized name and a position, and `catalog.product_option_values` has a localized label and a position (an optional colour swatch was dropped on 2026-11-02, see the history). Positions are unique per product and per option, with a deferrable key so a reorder fits one transaction.
 - `catalog.sku_option_values` has the key `(sku_id, option_id)`, so a SKU has at most one value per option. A composite key to the value table `(product_id, option_id, value_id)` proves the value belongs to that option and product, and a composite key to the SKU proves the SKU belongs to the same product.
 - A deferred constraint trigger runs at commit on a new SKU, on every change of its option values, and on every new or removed option of its product. It locks the product row, counts the SKU's values against the product's options, refuses a mismatch, and stores `skus.combination_key`, the option and value ids in option order. `UNIQUE (product_id, combination_key)` makes each combination unique. A product with no options has the empty key and so exactly one SKU.
 - A value that a SKU uses cannot be deleted.
@@ -40,4 +40,5 @@ We will keep the options in two tables and link a SKU to values in a third.
 ## History
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
+- 2026-11-02 amended (owner: colour swatches are redundant): `catalog.product_option_values.swatch` and its CHECK are dropped in migration 0017, and the contract and the editor have no swatch. A value is a label and a position
 - 2026-10-29 note: the keepsake catalog design (`docs/decisions/2026-10-29-keepsake-catalog-design.md`) keeps options per product. The owner considered Medusa's shared options and chose per product on 2026-10-29. Revisit this when a second product line shares values. The decision above stands

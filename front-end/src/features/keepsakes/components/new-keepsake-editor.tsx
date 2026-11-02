@@ -20,7 +20,7 @@ import { basePriceOf, missingNames, refsOf } from '../lib/combinations'
 import { descriptionsBody, isTooLong } from '../lib/description-doc'
 import { draftProduct, publishChecks } from '../lib/draft-product'
 import { clearDraft, DRAFT_STEPS, readDraft, writeDraft } from '../lib/draft-storage'
-import { hasDescription, isSkuCode, LANGUAGES, nameIn, publishedText, suggestSkuCode } from '../lib/keepsake-rules'
+import { hasDescription, isSkuCode, LANGUAGES, nameIn, publishedText } from '../lib/keepsake-rules'
 import { asSaved, optionsBody, refusalText } from '../lib/option-rules'
 import { keepsakeProblemKeys, problemMessageKey, problemTypeOf, refusalsOf } from '../lib/problems'
 import { KEEPSAKE_STEPS, KEEPSAKES_PATH } from '../lib/search-params'
@@ -84,19 +84,17 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
   const last = index === DRAFT_STEPS.length - 1
   const hasName = LANGUAGES.some(l => value.name[l].trim() !== '')
   const { variants } = held
-  const codeFallback = suggestSkuCode(nameIn(trimmedOf(value.name), language))
-  // A variant with no code of its own takes the name's: the Price card says so in the field.
-  const coded = variants.map(variant => ({ ...variant, skuCode: variant.skuCode || codeFallback }))
-  const incomplete = coded.filter(variant => !isComplete(options, variant.values) || variant.priceRappen <= 0 || !isSkuCode(variant.skuCode) || codeProblem(variant.skuCode, coded.filter(other => other.id !== variant.id)) !== undefined)
+  // A code is optional: a variant is incomplete when its code, if it has one, is not valid or is used twice.
+  const incomplete = variants.filter(variant => !isComplete(options, variant.values) || variant.priceRappen <= 0 || (variant.skuCode !== null && variant.skuCode !== '' && !isSkuCode(variant.skuCode)) || codeProblem(variant.skuCode, variants.filter(other => other.id !== variant.id)) !== undefined)
   const unfinished = draft.options.some(option => !committed.has(option.ref))
-  const variantsReady = coded.length > 0 && incomplete.length === 0 && !unfinished
-  const touched = hasName || LANGUAGES.some(l => hasDescription(value.text[l])) || photoIds.length > 0 || commission > 0 || draft.options.length > 0 || variants.some(variant => variant.priceRappen > 0 || variant.skuCode !== '')
+  const variantsReady = variants.length > 0 && incomplete.length === 0 && !unfinished
+  const touched = hasName || LANGUAGES.some(l => hasDescription(value.text[l])) || photoIds.length > 0 || commission > 0 || draft.options.length > 0 || variants.some(variant => variant.priceRappen > 0 || variant.skuCode || variant.mediaId)
   const name = trimmedOf(value.name)
-  const body = { name, text: descriptionsBody(value.text), photoIds, commissionRate: commission, options: optionsBody(draft.options), variants: variantsBody(coded) }
+  const body = { name, text: descriptionsBody(value.text), photoIds, commissionRate: commission, options: optionsBody(draft.options), variants: variantsBody(variants) }
   const key = useIdempotencyKey({ storeId, ...body })
-  const checks = publishChecks({ value, photoIds, commission, options, variants: coded })
+  const checks = publishChecks({ value, photoIds, commission, options, variants })
   const cover = useMediaFile(storeId, photoIds[0] ?? null).data
-  const review = draftProduct({ storeId, value, photos: cover ? [cover] : [], commission, options, variants: coded, checks })
+  const review = draftProduct({ storeId, value, photos: cover ? [cover] : [], commission, options, variants, checks })
   const guard = useLeaveGuard({
     isUnsaved: touched,
     titleKey: 'keepsakes.discard.title',
@@ -216,7 +214,8 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
 
       return outcome
     },
-    addBack: combinations => held.addBack(combinations, basePriceOf(variants)),
+    addBack: (combinations, codeBase) => held.addBack(combinations, basePriceOf(variants), codeBase),
+    addPhoto: mediaId => setPhotoIds(current => (current.includes(mediaId) ? current : [...current, mediaId])),
   }
   const problems = draft.problems.length > 0 && <RefusalAlert>{draft.problems.map(problem => refusalText(t, problem)).join(' ')}</RefusalAlert>
 
@@ -260,7 +259,7 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
         </div>
         {step === 'options' && (
           <>
-            <OptionsAndVariantsStep actions={actions} codeFallback={codeFallback} committed={committed} draft={draft} held language={editLanguage} showErrors={tried} variants={variants} />
+            <OptionsAndVariantsStep actions={actions} committed={committed} draft={draft} held language={editLanguage} photoIds={photoIds} showErrors={tried} storeId={storeId} variants={variants} />
             {tried && unfinished && <RefusalAlert>{t('keepsakes.variants.finishOption')}</RefusalAlert>}
             {tried && !unfinished && incomplete.length > 0 && <RefusalAlert>{t(incomplete.length === 1 ? 'keepsakes.variants.incomplete.one' : 'keepsakes.variants.incomplete.other', { count: incomplete.length })}</RefusalAlert>}
             {problems}

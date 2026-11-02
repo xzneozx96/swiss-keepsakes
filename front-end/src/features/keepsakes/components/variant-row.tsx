@@ -8,12 +8,12 @@ import { PhotoAddIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { chf, toRappen } from '../lib/keepsake-rules'
 import { combinationName, shortLabel, variantTitle } from '../lib/option-rules'
-import { Swatch } from './option-parts'
 import { StatusText } from './status-text'
+import { VariantPhotoPicker, VariantThumb } from './variant-photo'
 
 const NOT_NUMBER = /[^\d.]/g
 
-/** The photo slot of a row: the tile look of the photo block. A variant has no photo of its own yet (the API has no field for it). */
+/** The photo slot of a preview row: the tile look of the photo block. A combination that is not made yet has no photo. */
 function PhotoSlot() {
   return (
     <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-xl bg-surface-secondary text-muted">
@@ -33,7 +33,6 @@ function RowChips({ options, values, muted = false }: { options: ProductOption[]
 
         return (
           <li key={option.id} className="inline-flex h-7 max-w-full items-center gap-1.5 rounded-full bg-default px-2.5 text-xs font-medium">
-            <Swatch className="size-3" color={value?.swatch ?? null} />
             <span className="truncate">{value ? shortLabel(value.label, language) : '—'}</span>
           </li>
         )
@@ -74,18 +73,26 @@ export function PriceInput({ priceRappen, label, onSave, className = 'w-24' }: {
 }
 
 /** One variant of the table: select, photo, values, price, status and Edit. The price saves on blur. */
-export function VariantRow({ variant, options, held, isSelected, onSelect, onPrice, onEdit }: {
+export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, isSelected, onSelect, onPrice, onPhoto, onEdit }: {
+  storeId: string
   variant: ProductVariant
   options: ProductOption[]
   /** The keepsake is only in the browser: every variant is for sale. */
   held: boolean
+  /** The SKU switch is on: the code shows under the values. */
+  skuOn: boolean
+  /** The keepsake's photos, which the photo sheet offers first. */
+  ownPhotos: string[]
   isSelected: boolean
   onSelect: (selected: boolean) => void
   onPrice: (rappen: number) => void
+  /** A photo chosen (`isNew`: the keepsake does not have it yet) or taken off (null). */
+  onPhoto: (mediaId: string | null, isNew: boolean) => void
   onEdit: () => void
 }) {
   const { t, language } = useLocale()
-  const title = options.length > 0 ? variantTitle(variant.values, options, language) : variant.skuCode
+  const [picking, setPicking] = useState(false)
+  const title = options.length > 0 ? variantTitle(variant.values, options, language) : variant.skuCode ?? ''
   const forSale = held || variant.status === 'published'
 
   return (
@@ -97,16 +104,19 @@ export function VariantRow({ variant, options, held, isSelected, onSelect, onPri
           </Checkbox.Control>
         </Checkbox.Content>
       </Checkbox>
-      <PhotoSlot />
+      <button aria-label={t(variant.mediaId ? 'keepsakes.variant.photo.change' : 'keepsakes.variant.photo.add', { name: title })} className="rounded-xl outline-none focus-visible:focus-ring max-lg:size-11" type="button" onClick={() => setPicking(true)}>
+        <VariantThumb storeId={storeId} variant={variant} />
+      </button>
       <div className="flex min-w-0 flex-col gap-1">
         {options.length > 0 ? <RowChips options={options} values={variant.values} /> : <span className="truncate font-medium">{variant.skuCode}</span>}
-        <span className="truncate font-mono text-xs text-muted">{variant.skuCode}</span>
+        {skuOn && variant.skuCode && options.length > 0 && <span className="truncate font-mono text-xs text-muted">{variant.skuCode}</span>}
       </div>
       <div className="col-start-3 flex min-w-0 items-center gap-3 sm:contents">
         <PriceInput key={variant.priceRappen} label={t('keepsakes.variants.priceOf', { name: title })} priceRappen={variant.priceRappen} onSave={onPrice} />
         <StatusText tone={forSale ? 'success' : 'neutral'}>{t(forSale ? 'keepsakes.variants.onSale' : 'keepsakes.variant.status.hidden')}</StatusText>
         <Button aria-label={t('keepsakes.variants.editVariant', { name: title })} className="ms-auto justify-self-end max-lg:h-11" size="sm" variant="tertiary" onPress={onEdit}>{t('keepsakes.variant.edit')}</Button>
       </div>
+      {picking && <VariantPhotoPicker current={variant.mediaId} isOpen ownIds={ownPhotos} storeId={storeId} onChoose={(id, isNew) => onPhoto(id, isNew)} onClose={() => setPicking(false)} onRemove={() => onPhoto(null, false)} />}
     </li>
   )
 }

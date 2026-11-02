@@ -9,27 +9,28 @@ import { CashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { isSkuCode, toRappen } from '../lib/keepsake-rules'
 import { problemMessageKey } from '../lib/problems'
+import { SkuSwitch } from './sku-switch'
 
 const NOT_NUMBER = /[^\d.]/g
 
 /**
  * The Price card of a keepsake that has no options: its one variant edited in place, so the price is not hidden behind
- * another step. Price, SKU code and status each save when the field is left (a status when it is chosen). A keepsake that
- * is only in the browser has no status and may leave the code empty: the name makes one. Stock is not here; it belongs to
+ * another step. Price, SKU code and status each save when the field is left (a status when it is chosen). The SKU code is
+ * optional and shows only while the SKU switch is on. A keepsake that is only in the browser has no status. Stock is not here; it belongs to
  * Inventory (E6.3).
  */
-export function PriceCard({ variant, held, codeFallback, showErrors, onSave }: {
+export function PriceCard({ variant, held, sku, showErrors, onSave }: {
   variant: ProductVariant
   held: boolean
-  /** The code a new keepsake offers while the field is empty. */
-  codeFallback: string
+  /** The SKU switch: the code field shows while it is on. */
+  sku: { isOn: boolean, onChange: (on: boolean) => void }
   /** A Next that needed a price (new keepsake): the empty field says so. */
   showErrors: boolean
   onSave: SaveVariant
 }) {
   const { t } = useLocale()
   const [price, setPrice] = useState(variant.priceRappen > 0 ? (variant.priceRappen / 100).toFixed(2) : '')
-  const [code, setCode] = useState(variant.skuCode)
+  const [code, setCode] = useState(variant.skuCode ?? '')
   const [problem, setProblem] = useState<{ price?: string, code?: string }>({})
   const rappen = toRappen(price === '' ? undefined : Number(price))
   const priceError = problem.price ?? (showErrors && rappen === undefined ? t('keepsakes.variant.priceInvalid') : undefined)
@@ -55,27 +56,31 @@ export function PriceCard({ variant, held, codeFallback, showErrors, onSave }: {
   const leaveCode = () => {
     const trimmed = code.trim()
 
-    if (held ? trimmed !== '' && !isSkuCode(trimmed) : !trimmed || !isSkuCode(trimmed))
-      setProblem({ code: t(trimmed ? 'keepsakes.variant.codeInvalid' : 'keepsakes.variant.codeRequired') })
-    else if (trimmed !== variant.skuCode)
-      void send({ skuCode: trimmed }, 'code')
+    // A code is optional: left empty it is none.
+    if (trimmed !== '' && !isSkuCode(trimmed))
+      setProblem({ code: t('keepsakes.variant.codeInvalid') })
+    else if (trimmed !== (variant.skuCode ?? ''))
+      void send({ skuCode: trimmed || null }, 'code')
     else
       setProblem({})
   }
 
   return (
     <Block hint={t('keepsakes.price.hint')} icon={CashIcon} id="price" title={t('keepsakes.price.title')}>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <SkuSwitch isOn={sku.isOn} onChange={sku.onChange} />
+      <div className={`grid gap-4 ${sku.isOn ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
         <TextField fullWidth isInvalid={priceError !== undefined} value={price} onChange={next => setPrice(next.replace(',', '.').replace(NOT_NUMBER, ''))}>
           <Label>{t('keepsakes.variants.price')}</Label>
           <Input inputMode="decimal" placeholder="0.00" onBlur={leavePrice} />
           <FieldError>{priceError}</FieldError>
         </TextField>
-        <TextField fullWidth isInvalid={problem.code !== undefined} value={code} onChange={next => setCode(next.toUpperCase())}>
-          <Label>{t('keepsakes.variant.code')}</Label>
-          <Input className="font-mono" maxLength={60} placeholder={codeFallback || 'VX-1'} onBlur={leaveCode} />
-          <FieldError>{problem.code}</FieldError>
-        </TextField>
+        {sku.isOn && (
+          <TextField fullWidth isInvalid={problem.code !== undefined} value={code} onChange={next => setCode(next.toUpperCase())}>
+            <Label>{t('keepsakes.variant.code')}</Label>
+            <Input className="font-mono" maxLength={60} placeholder="1.6795" onBlur={leaveCode} />
+            <FieldError>{problem.code}</FieldError>
+          </TextField>
+        )}
         {!held && (
           <Select fullWidth selectedKey={variant.status === 'draft' ? 'draft' : 'published'} onSelectionChange={key => key !== null && void send({ status: key === 'draft' ? 'draft' : 'published' }, 'price')}>
             <Label>{t('keepsakes.variant.status')}</Label>

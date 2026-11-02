@@ -111,11 +111,13 @@ function PendingChoice({ item, onRetry, onRemove }: { item: PendingPhoto, onRetr
   )
 }
 
-function PickerBody({ storeId, used, selected, room, uploads, onToggle, onUpload }: {
+function PickerBody({ storeId, used, selected, room, single, uploads, onToggle, onUpload }: {
   storeId: string
   used: string[]
   selected: string[]
   room: number
+  /** One photo is chosen: an upload or a pick replaces the choice, and there is always room for it. */
+  single: boolean
   uploads: { pending: PendingPhoto[], retry: (key: string) => void, remove: (key: string) => void }
   onToggle: (id: string) => void
   onUpload: (files: File[]) => void
@@ -130,7 +132,7 @@ function PickerBody({ storeId, used, selected, room, uploads, onToggle, onUpload
   const items = list.data?.items ?? []
   const isLoading = useListLoading(list)
   const total = list.data?.total ?? 0
-  const free = room - selected.length - uploads.pending.length
+  const free = single ? 1 : room - selected.length - uploads.pending.length
 
   // The list reads a moment after the last key, so each letter does not.
   useEffect(() => {
@@ -201,14 +203,18 @@ function PickerBody({ storeId, used, selected, room, uploads, onToggle, onUpload
  * marked "already added". Upload a photo sends files through the photos field's own flow (duplicate check, request,
  * PUT, confirm): the new photo joins the grid and is chosen at once, a library duplicate the merchant chose to reuse
  * is chosen too. Add selected hands the ids to `onAdd` in the order they were chosen.
+ * With `single` one photo is chosen (a new pick replaces it, `room` is ignored) and the button reads "Use this photo": a
+ * variant takes one photo of the library.
  */
-export function LibraryPicker({ storeId, isOpen, used, room, onAdd, onClose }: {
+export function LibraryPicker({ storeId, isOpen, used, room, single = false, onAdd, onClose }: {
   storeId: string
   isOpen: boolean
   /** The photos the page already has. */
   used: string[]
   /** How many more photos the page takes. */
   room: number
+  /** Choose one photo instead of several. */
+  single?: boolean
   onAdd: (ids: string[]) => void
   onClose: () => void
 }) {
@@ -219,7 +225,7 @@ export function LibraryPicker({ storeId, isOpen, used, room, onAdd, onClose }: {
   // A finished upload is chosen; one that lands after the sheet was closed goes straight to the page, as in the field.
   const uploads = usePendingPhotos(storeId, (id) => {
     if (latest.current.isOpen)
-      setSelected(current => (current.includes(id) ? current : [...current, id]))
+      setSelected(current => (single ? [id] : current.includes(id) ? current : [...current, id]))
     else
       latest.current.onAdd([id])
   })
@@ -230,14 +236,14 @@ export function LibraryPicker({ storeId, isOpen, used, room, onAdd, onClose }: {
       return
     const reused = decision.reuse.map(({ id }) => id).filter(id => !latest.current.used.includes(id))
 
-    setSelected(current => [...current, ...reused.filter(id => !current.includes(id))])
+    setSelected(current => (single ? reused.slice(0, 1) : [...current, ...reused.filter(id => !current.includes(id))]))
     uploads.add(decision.upload)
   }
   const close = () => {
     setSelected([])
     onClose()
   }
-  const toggle = (id: string) => setSelected(current => (current.includes(id) ? current.filter(other => other !== id) : [...current, id]))
+  const toggle = (id: string) => setSelected(current => (current.includes(id) ? current.filter(other => other !== id) : single ? [id] : [...current, id]))
 
   return (
     <SheetFrame
@@ -250,17 +256,17 @@ export function LibraryPicker({ storeId, isOpen, used, room, onAdd, onClose }: {
               close()
             }}
           >
-            {t('media.library.add')}
+            {t(single ? 'media.library.choose' : 'media.library.add')}
           </Button>
           <Button variant="tertiary" onPress={close}>{t('media.library.cancel')}</Button>
         </>
       )}
       isOpen={isOpen}
-      title={t('media.library.title')}
+      title={t(single ? 'media.library.titleOne' : 'media.library.title')}
       onClose={close}
     >
-      <p aria-live="polite" className="text-sm text-muted" role="status">{t('media.library.selected', { count: selected.length, room })}</p>
-      <PickerBody room={room} selected={selected} storeId={storeId} uploads={uploads} used={used} onToggle={toggle} onUpload={files => void upload(files)} />
+      {!single && <p aria-live="polite" className="text-sm text-muted" role="status">{t('media.library.selected', { count: selected.length, room })}</p>}
+      <PickerBody room={room} selected={selected} single={single} storeId={storeId} uploads={uploads} used={used} onToggle={toggle} onUpload={files => void upload(files)} />
       {duplicates.dialog}
     </SheetFrame>
   )

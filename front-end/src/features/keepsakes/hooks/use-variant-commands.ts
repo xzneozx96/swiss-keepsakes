@@ -7,6 +7,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { useDataClient } from '@/features/data-client'
 import { useCommand } from '@/features/data-client/use-command'
 import { keepsakesQueries } from '../api/queries'
+import { variantName } from '../lib/option-rules'
 import { problemTypeOf, refusalsOf } from '../lib/problems'
 
 /**
@@ -16,15 +17,16 @@ import { problemTypeOf, refusalsOf } from '../lib/problems'
  * commands are `silent`; the bar says "Saved" for a price, so only a status and a bulk change toast.
  */
 export function useVariantCommands({ storeId, id }: { storeId: string, id: string }) {
-  const { t } = useLocale()
+  const { t, language } = useLocale()
   const client = useDataClient()
   const queryClient = useQueryClient()
   const saveVariant = useCommand('keepsakes', 'saveVariant', {
     meta: {
       success: (result, input) => {
         if (input.skuCode !== undefined || input.priceRappen !== undefined || input.status === undefined)
-          return input.skuCode !== undefined && input.priceRappen !== undefined ? t('keepsakes.variant.saved', { code: input.skuCode }) : ''
-        const code = result.variants.find(variant => variant.id === input.variantId)?.skuCode ?? ''
+          return input.skuCode && input.priceRappen !== undefined ? t('keepsakes.variant.saved', { code: input.skuCode }) : ''
+        const variant = result.variants.find(row => row.id === input.variantId)
+        const code = variant ? variantName(variant, result.options, language) : ''
 
         return t(input.status === 'draft' ? 'keepsakes.variant.toast.hidden' : input.status === 'archived' ? 'keepsakes.variant.toast.archived' : 'keepsakes.variant.toast.forSale', { code })
       },

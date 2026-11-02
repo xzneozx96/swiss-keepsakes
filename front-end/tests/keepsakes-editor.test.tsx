@@ -387,7 +387,7 @@ describe('[T-008][AC2] the Price card saves the one variant', () => {
 
   it('[T-008][AC2] a changed price saves when the field is left, with the version-free variant request, no toast, and the bar says Saved', async () => {
     const success = vi.spyOn(toast, 'success')
-    serve(call => (call.method === 'PATCH' && call.path === `${detail}/variants/${variantId}` ? Response.json(save({ variants: [{ id: variantId, skuCode: 'VX-1', priceRappen: 4500, status: 'published', values: {} }] })) : undefined))
+    serve(call => (call.method === 'PATCH' && call.path === `${detail}/variants/${variantId}` ? Response.json(save({ variants: [{ id: variantId, skuCode: 'VX-1', mediaId: null, photo: null, priceRappen: 4500, status: 'published', values: {} }] })) : undefined))
     await openEditor('options')
 
     const price = within(await screen.findByRole('region', { name: 'Price' })).getByLabelText('Price, CHF')
@@ -417,7 +417,7 @@ describe('[T-008][AC2] the Price card saves the one variant', () => {
 
   it('[T-008] the status is chosen in the card and saves at once', async () => {
     const success = vi.spyOn(toast, 'success')
-    serve(call => (call.method === 'PATCH' && call.path === `${detail}/variants/${variantId}` ? Response.json(save({ variants: [{ id: variantId, skuCode: 'VX-1', priceRappen: 3900, status: 'draft', values: {} }] })) : undefined))
+    serve(call => (call.method === 'PATCH' && call.path === `${detail}/variants/${variantId}` ? Response.json(save({ variants: [{ id: variantId, skuCode: 'VX-1', mediaId: null, photo: null, priceRappen: 3900, status: 'draft', values: {} }] })) : undefined))
     await openEditor('options')
 
     const card = await screen.findByRole('region', { name: 'Price' })
@@ -440,7 +440,7 @@ describe('[T-008][AC2] the Price card saves the one variant', () => {
     await userEvent.clear(code)
     await userEvent.type(code, 'bad code')
     await userEvent.tab()
-    expect(await screen.findByText('Letters and digits, joined by - _ or . (like VX-S-SWAN).')).toBeInTheDocument()
+    expect(await screen.findByText('Letters and digits, joined by - _ or . (like 1.6795-XS-RED).')).toBeInTheDocument()
     expect(writes()).toHaveLength(0)
     await userEvent.clear(code)
     await userEvent.type(code, 'vx-9')

@@ -10,41 +10,28 @@ import { LANGUAGES } from './keepsake-rules'
  * is the backstop (ADR-017, ADR-027).
  */
 
-export const SWATCH = /^#[0-9a-f]{6}$/
-export const DEFAULT_SWATCH = '#888888'
 /** The API's `OPTION_NAME_MAX` and `VALUE_LABEL_MAX`, kept here so the rules pull in no schema code. */
 export const OPTION_NAME_MAX = 60
 export const VALUE_LABEL_MAX = 80
-/** The colours the picker offers by name; any other colour comes from the browser's picker. */
-export const SWATCH_PRESETS = [
-  { key: 'red', hex: '#c8102e' },
-  { key: 'black', hex: '#1a1a1a' },
-  { key: 'white', hex: '#f5f5f5' },
-  { key: 'navy', hex: '#1f3a5f' },
-  { key: 'green', hex: '#2f7d4f' },
-  { key: 'yellow', hex: '#f2c230' },
-  { key: 'brown', hex: '#8a5a2b' },
-  { key: 'grey', hex: DEFAULT_SWATCH },
-] as const
 const MAX_CODES_NAMED = 3
 const LABEL_PARTS = ' · '
-const LABEL_WORDS = /[\s·]+/
-const NOT_CODE = /[^A-Z0-9-]/g
+const NOT_CODE_CHARS = /[^A-Z0-9]+/g
+const EDGE_HYPHENS = /^-+|-+$/g
 const MARKS = /[\u0300-\u036F]/g
 
 export type Values = Record<string, string>
 export type Text = Record<Language, string>
 
-export interface ValueDraft { ref: string, label: Text, swatch: string | null }
+export interface ValueDraft { ref: string, label: Text }
 export interface OptionDraft { ref: string, name: Text, values: ValueDraft[] }
 
 /** The slice of a variant that the rules read: a saved variant, or a row of the create flow. */
-export interface Valued { id: string, skuCode: string, status?: string, values: Values }
+export interface Valued { id: string, skuCode: string | null, status?: string, values: Values }
 
 export type RefusalCode
   = | 'option-name-required' | 'value-name-required' | 'option-needs-value' | 'option-in-use' | 'value-in-use'
     | 'values-missing' | 'value-unknown' | 'combination-taken' | 'combination-duplicate' | 'no-options-one-variant'
-    | 'refs-invalid' | 'code-duplicate' | 'code-taken' | 'variant-reserved' | 'variant-archived' | 'swatch-invalid'
+    | 'refs-invalid' | 'code-duplicate' | 'code-taken' | 'variant-reserved' | 'variant-archived'
     // The two the control says before a save; the API never sends them.
     | 'value-duplicate' | 'variants-missing'
 
@@ -89,16 +76,28 @@ export function combinationKey(values: Values, optionRefs: string[]): string {
   return optionRefs.map(ref => `${ref}=${values[ref] ?? ''}`).join('|')
 }
 
-/** A code suggestion from the values: "VX-S-SWAN" from the first word of each label, one letter for the first option. */
-export function suggestCode(values: Values, options: { id: string, values: { id: string, label: { en?: string, de?: string } }[] }[], prefix = 'VX'): string {
-  const parts = options.map((option, index) => {
-    const value = option.values.find(v => v.id === values[option.id])
-    const word = value ? (labelOf(value.label).normalize('NFD').replace(MARKS, '').split(LABEL_WORDS)[0] ?? '') : ''
+/** A label as a part of a code: "Light blue" becomes "LIGHT-BLUE", "Grösse" becomes "GROSSE" (an ö loses its dots). */
+export function codePart(text: string): string {
+  return text.normalize('NFD').replace(MARKS, '').toUpperCase().replace(NOT_CODE_CHARS, '-').replace(EDGE_HYPHENS, '')
+}
 
-    return index === 0 ? word.slice(0, 1) : word
+/**
+ * The code a new variant is offered while the SKU switch is on: the keepsake's code and the full value labels, upper case,
+ * joined by hyphens ("1.6795-XS-RED"). With no keepsake code yet it is the labels alone. It always passes `isSkuCode`.
+ */
+export function suggestCode(values: Values, options: { id: string, values: { id: string, label: { en?: string, de?: string } }[] }[], base = ''): string {
+  const parts = options.map((option) => {
+    const value = option.values.find(v => v.id === values[option.id])
+
+    return value ? codePart(labelOf(value.label)) : ''
   })
 
-  return [prefix, ...parts].filter(Boolean).join('-').toUpperCase().replace(NOT_CODE, '')
+  return [base, ...parts].filter(Boolean).join('-')
+}
+
+/** How a variant is named in a refusal: its code, or its values ("XS / Red") when it has none. */
+export function variantName(variant: { skuCode: string | null, values: Values }, options: ProductOption[], language: Language = 'en'): string {
+  return variant.skuCode || variantTitle(variant.values, options, language)
 }
 
 /** The variants (archived ones too) that hold this option, or this value of it. */
@@ -106,8 +105,8 @@ export function variantsUsing(variants: Valued[], optionRef: string, valueRef?: 
   return variants.filter(variant => (valueRef === undefined ? variant.values[optionRef] !== undefined : variant.values[optionRef] === valueRef))
 }
 
-function usedBy(users: Valued[]): Record<string, string | number> {
-  return { count: users.length, codes: users.slice(0, MAX_CODES_NAMED).map(user => user.skuCode).join(', '), more: Math.max(0, users.length - MAX_CODES_NAMED) }
+function usedBy(users: Valued[], options: ProductOption[]): Record<string, string | number> {
+  return { count: users.length, codes: users.slice(0, MAX_CODES_NAMED).map(user => variantName(user, options)).join(', '), more: Math.max(0, users.length - MAX_CODES_NAMED) }
 }
 
 const hasText = (text: Text) => LANGUAGES.some(language => text[language].trim() !== '')
@@ -117,7 +116,7 @@ export function draftOfOptions(options: ProductOption[]): OptionDraft[] {
   return options.map(option => ({
     ref: option.id,
     name: { en: option.name.en ?? '', de: option.name.de ?? '' },
-    values: option.values.map(value => ({ ref: value.id, label: { en: value.label.en ?? '', de: value.label.de ?? '' }, swatch: value.swatch })),
+    values: option.values.map(value => ({ ref: value.id, label: { en: value.label.en ?? '', de: value.label.de ?? '' } })),
   }))
 }
 
@@ -128,12 +127,12 @@ function trimmed(text: Text) {
   }
 }
 
-/** What the API takes: the languages that have text, and no swatch where it is off. */
+/** What the API takes: the languages that have text. */
 export function optionsBody(drafts: OptionDraft[]): OptionWrite[] {
   return drafts.map(option => ({
     ref: option.ref,
     name: trimmed(option.name),
-    values: option.values.map(value => ({ ref: value.ref, label: trimmed(value.label), swatch: value.swatch })),
+    values: option.values.map(value => ({ ref: value.ref, label: trimmed(value.label) })),
   }))
 }
 
@@ -177,7 +176,7 @@ export function asSaved(drafts: OptionDraft[]): ProductOption[] {
   return drafts.map(option => ({
     id: option.ref,
     name: trimmed(option.name),
-    values: option.values.map(value => ({ id: value.ref, label: trimmed(value.label), swatch: value.swatch })),
+    values: option.values.map(value => ({ id: value.ref, label: trimmed(value.label) })),
   }))
 }
 
@@ -186,7 +185,7 @@ export function checkVariantValues(options: ProductOption[], others: Valued[], v
   if (options.length === 0) {
     const [other] = others
 
-    return other ? [{ at, code: 'no-options-one-variant', params: { code: other.skuCode } }] : []
+    return other ? [{ at, code: 'no-options-one-variant', params: { code: variantName(other, options) } }] : []
   }
   const refusals: Refusal[] = []
 
@@ -200,7 +199,7 @@ export function checkVariantValues(options: ProductOption[], others: Valued[], v
     const twin = others.find(other => options.every(option => other.values[option.id] === values[option.id]))
 
     if (twin)
-      refusals.push({ at, code: 'combination-taken', params: { code: twin.skuCode, archived: twin.status === 'archived' ? 1 : 0 } })
+      refusals.push({ at, code: 'combination-taken', params: { code: variantName(twin, options), archived: twin.status === 'archived' ? 1 : 0 } })
   }
 
   return refusals
@@ -208,13 +207,15 @@ export function checkVariantValues(options: ProductOption[], others: Valued[], v
 
 /**
  * Can the staged options save together with the variants' new values, in one save? Each option and value needs a name
- * in English or German, a swatch is `#rrggbb`, a value or option that a variant holds is not deleted, every variant has a
+ * in English or German, a value or option that a variant holds is not deleted, every variant has a
  * value of every option (archived ones too), and no two variants share a combination.
  */
 export function checkOptionsDraft(saved: ProductOption[], drafts: OptionDraft[], variants: Valued[], assigned: Record<string, Values>): Refusal[] {
   const refusals: Refusal[] = []
   const savedIds = new Set(saved.map(option => option.id))
   const kept = new Map(drafts.map(option => [option.ref, option]))
+  // The variants are named by the options as they are staged; a value they hold is found by its ref, as saved.
+  const pseudo = asSaved(drafts)
 
   for (const option of drafts) {
     if (!hasText(option.name))
@@ -224,8 +225,6 @@ export function checkOptionsDraft(saved: ProductOption[], drafts: OptionDraft[],
     for (const value of option.values) {
       if (!hasText(value.label))
         refusals.push({ at: value.ref, code: 'value-name-required' })
-      if (value.swatch !== null && !SWATCH.test(value.swatch))
-        refusals.push({ at: value.ref, code: 'swatch-invalid' })
     }
   }
   for (const option of saved) {
@@ -235,14 +234,14 @@ export function checkOptionsDraft(saved: ProductOption[], drafts: OptionDraft[],
       const users = variantsUsing(variants, option.id)
 
       if (users.length > 0)
-        refusals.push({ at: option.id, code: 'option-in-use', params: { option: labelOf(option.name), ...usedBy(users) } })
+        refusals.push({ at: option.id, code: 'option-in-use', params: { option: labelOf(option.name), ...usedBy(users, saved) } })
       continue
     }
     for (const value of option.values.filter(v => !next.values.some(n => n.ref === v.id))) {
       const users = variantsUsing(variants, option.id, value.id)
 
       if (users.length > 0)
-        refusals.push({ at: value.id, code: 'value-in-use', params: { value: labelOf(value.label), ...usedBy(users) } })
+        refusals.push({ at: value.id, code: 'value-in-use', params: { value: labelOf(value.label), ...usedBy(users, saved) } })
     }
   }
 
@@ -258,7 +257,7 @@ export function checkOptionsDraft(saved: ProductOption[], drafts: OptionDraft[],
       if (value === undefined) {
         complete = false
         if (option.values.some(v => labelOfDraft(v)))
-          refusals.push({ at: variant.id, code: 'values-missing', params: { code: variant.skuCode, option: labelOf(option.name) } })
+          refusals.push({ at: variant.id, code: 'values-missing', params: { code: variantName(variant, pseudo), option: labelOf(option.name) } })
       }
       else if (option.values.some(v => v.ref === value)) {
         values[option.ref] = value
@@ -273,7 +272,7 @@ export function checkOptionsDraft(saved: ProductOption[], drafts: OptionDraft[],
     const twin = seen.get(key)
 
     if (twin)
-      refusals.push({ at: variant.id, code: 'combination-duplicate', params: { code: variant.skuCode, twin: twin.skuCode } })
+      refusals.push({ at: variant.id, code: 'combination-duplicate', params: { code: variantName(variant, pseudo), twin: variantName(twin, pseudo) } })
     else
       seen.set(key, variant)
   }
@@ -342,7 +341,6 @@ export function refusalText(t: Translate, { code, params }: Refusal): string {
     case 'option-name-required': return t('keepsakes.refusal.optionName')
     case 'value-name-required': return t('keepsakes.refusal.valueName')
     case 'option-needs-value': return t('keepsakes.refusal.needsValue', { option: text('option') || t('keepsakes.refusal.thisOption') })
-    case 'swatch-invalid': return t('keepsakes.refusal.swatch')
     case 'option-in-use': return t('keepsakes.refusal.optionInUse', { option: text('option'), usedBy: usedByText(t, params) })
     case 'value-in-use': return t('keepsakes.refusal.valueInUse', { value: text('value'), usedBy: usedByText(t, params) })
     case 'values-missing': return t('keepsakes.refusal.valuesMissing', { code: text('code') || t('keepsakes.refusal.aVariant'), option: text('option').toLowerCase() || t('keepsakes.refusal.aValue') })

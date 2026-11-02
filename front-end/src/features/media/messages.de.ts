@@ -147,6 +147,8 @@ export const mediaDe: Record<keyof typeof mediaEn, string> = {
   'media.library.selected': '{count} von {room} ausgewählt',
   'media.library.used': 'bereits hinzugefügt',
   'media.library.add': 'Auswahl hinzufügen',
+  'media.library.choose': 'Dieses Foto verwenden',
+  'media.library.titleOne': 'Foto auswählen',
   'media.library.upload': 'Foto hochladen',
   'media.library.remove': 'Entfernen',
   'media.library.cancel': 'Abbrechen',

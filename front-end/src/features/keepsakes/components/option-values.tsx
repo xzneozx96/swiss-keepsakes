@@ -1,67 +1,14 @@
 import type { OptionsDraftState } from '../hooks/use-options-draft'
 import type { OptionDraft, ValueDraft } from '../lib/option-rules'
 
-import { Button, Input, Popover, TextField } from '@heroui/react'
+import { Button, Input, TextField } from '@heroui/react'
 import { useEffect, useRef, useState } from 'react'
 
 import { GripIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useStopDrag } from '@/hooks/use-stop-drag'
-import { DEFAULT_SWATCH, labelOf, SWATCH_PRESETS, VALUE_LABEL_MAX, variantsUsing } from '../lib/option-rules'
+import { labelOf, VALUE_LABEL_MAX, variantsUsing } from '../lib/option-rules'
 import { NotesAt, QuietNote } from './option-bits'
-import { Swatch } from './option-parts'
-
-/** A colour for a value: eight named presets, and any colour from the browser's picker. */
-export function SwatchPicker({ value, name, onChange }: { value: string | null, name: string, onChange: (swatch: string | null) => void }) {
-  const { t } = useLocale()
-  const [isOpen, setIsOpen] = useState(false)
-
-  return (
-    <Popover isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Button isIconOnly aria-label={t(value ? 'keepsakes.options.colour.set' : 'keepsakes.options.colour.none', { name, colour: value ?? '' })} className="size-11 shrink-0 rounded-full lg:size-9" variant="ghost">
-        {value
-          ? <Swatch className="size-5" color={value} />
-          : <span aria-hidden className="size-5 rounded-full border-2 border-dashed border-muted/60" />}
-      </Button>
-      <Popover.Content className="w-60" placement="bottom start">
-        <Popover.Dialog aria-label={t('keepsakes.options.colour.of', { name })} className="flex flex-col gap-3 p-3">
-          <div className="grid grid-cols-4 gap-1">
-            {SWATCH_PRESETS.map(preset => (
-              <button
-                key={preset.hex}
-                aria-label={t(`keepsakes.swatch.${preset.key}`)}
-                aria-pressed={value === preset.hex}
-                className="grid h-11 place-items-center rounded-xl outline-none hover:bg-default focus-visible:focus-ring aria-pressed:bg-default"
-                type="button"
-                onClick={() => {
-                  onChange(preset.hex)
-                  setIsOpen(false)
-                }}
-              >
-                <Swatch className="size-6" color={preset.hex} />
-              </button>
-            ))}
-          </div>
-          <label className="flex min-h-11 items-center justify-between gap-3 text-sm">
-            {t('keepsakes.options.colour.any')}
-            <input className="size-9 cursor-pointer rounded-lg border border-separator bg-transparent p-0.5" type="color" value={value ?? DEFAULT_SWATCH} onChange={event => onChange(event.target.value.toLowerCase())} />
-          </label>
-          <Button
-            isDisabled={value === null}
-            size="sm"
-            variant="tertiary"
-            onPress={() => {
-              onChange(null)
-              setIsOpen(false)
-            }}
-          >
-            {t('keepsakes.options.colour.remove')}
-          </Button>
-        </Popover.Dialog>
-      </Popover.Content>
-    </Popover>
-  )
-}
 
 /** The caret goes to the end of the text when a row takes the focus, so typing carries on where it was. */
 function focusAtEnd(input: HTMLInputElement | null) {
@@ -72,12 +19,12 @@ function focusAtEnd(input: HTMLInputElement | null) {
 }
 
 /**
- * A value as a field in its row: the grip, the colour when swatches are on, the name and the delete icon. On the German
+ * A value as a field in its row: the grip, the name and the delete icon. On the German
  * version each value shows its English name beside the field for its German one. A value that a variant holds can't be
  * deleted: the icon is off and the row says why (ADR-027). `focused` is the value that a typed character just made, so
  * the typing goes on in its own field.
  */
-function ValueRow({ draft, option, value, grip, swatches, lang, focused, onFocused }: { draft: OptionsDraftState, option: OptionDraft, value: ValueDraft, grip: React.ReactNode, swatches: boolean, lang: 'en' | 'de', focused: string | undefined, onFocused: () => void }) {
+function ValueRow({ draft, option, value, grip, lang, focused, onFocused }: { draft: OptionsDraftState, option: OptionDraft, value: ValueDraft, grip: React.ReactNode, lang: 'en' | 'de', focused: string | undefined, onFocused: () => void }) {
   const { t } = useLocale()
   const inputRef = useRef<HTMLInputElement>(null)
   const name = labelOf(value.label, 'en') || t('keepsakes.options.valueFallback')
@@ -95,7 +42,6 @@ function ValueRow({ draft, option, value, grip, swatches, lang, focused, onFocus
     <div className="flex w-full min-w-0 flex-col">
       <div className="flex min-h-11 min-w-0 items-center gap-1">
         {grip}
-        {swatches && <SwatchPicker name={name} value={value.swatch} onChange={swatch => draft.patchValue(option.ref, value.ref, { swatch })} />}
         {lang === 'de'
           ? (
               <>
@@ -133,7 +79,6 @@ export function ValueList({ draft, option, lang, focused, onFocused }: { draft: 
   const placeholderRef = useRef<HTMLDivElement>(null)
   const refocusRef = useRef<string | null>(null)
   const [announcement, setAnnouncement] = useState('')
-  const swatches = draft.swatchesOn(option)
   const nameOf = (value: ValueDraft) => labelOf(value.label, 'en') || t('keepsakes.options.valueFallback')
 
   const moveTo = (from: number, to: number) => {
@@ -182,7 +127,6 @@ export function ValueList({ draft, option, lang, focused, onFocused }: { draft: 
                 )}
                 option={option}
                 lang={lang}
-                swatches={swatches}
                 value={value}
                 onFocused={onFocused}
               />

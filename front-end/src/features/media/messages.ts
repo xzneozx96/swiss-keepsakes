@@ -155,6 +155,8 @@ export const mediaEn = {
   'media.library.selected': '{count} of {room} selected',
   'media.library.used': 'already added',
   'media.library.add': 'Add selected',
+  'media.library.choose': 'Use this photo',
+  'media.library.titleOne': 'Choose a photo',
   'media.library.upload': 'Upload a photo',
   'media.library.remove': 'Remove',
   'media.library.cancel': 'Cancel',

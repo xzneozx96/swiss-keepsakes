@@ -39,7 +39,7 @@ export function publishChecks({ value, photoIds, commission, options, variants }
   if (labels > 0)
     warnings.push({ code: 'option-labels', card: 'options', count: labels })
   if (hidden.length > 0)
-    warnings.push({ code: 'hidden', card: 'variants', count: hidden.length, codes: hidden.map(variant => variant.skuCode) })
+    warnings.push({ code: 'hidden', card: 'variants', count: hidden.length, codes: hidden.flatMap(variant => variant.skuCode ?? []) })
   if (commission === 0)
     warnings.push({ code: 'commission-zero', card: 'commission' })
 

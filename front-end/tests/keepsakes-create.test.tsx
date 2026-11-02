@@ -42,8 +42,10 @@ async function toOptions(name = 'Knife') {
 async function setPrice(price: string, code?: string) {
   const card = screen.getByRole('region', { name: 'Price' })
 
-  if (code)
+  if (code) {
+    await userEvent.click(within(card).getByRole('switch', { name: 'This keepsake has SKU codes' }))
     await userEvent.type(within(card).getByLabelText('SKU code'), code)
+  }
   await userEvent.type(within(card).getByLabelText('Price, CHF'), price)
   await userEvent.tab()
 }
@@ -118,7 +120,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
 
     await toOptions()
     await next()
-    expect(await screen.findByText('1 variant needs a price or a code.')).toBeInTheDocument()
+    expect(await screen.findByText('1 variant needs a price or a valid code.')).toBeInTheDocument()
     expect(screen.getAllByText('Add a price above CHF 0.').length).toBeGreaterThan(0)
     expect(screen.getByText(/Step 2 of 3/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '2. Options and variants, Has errors' })).toBeInTheDocument()
@@ -139,7 +141,9 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
 
     expect(within(card).queryByRole('button', { name: /Status/ })).not.toBeInTheDocument()
     expect(within(card).getByText('A new keepsake starts with every variant on sale. Hide one after you save the keepsake.')).toBeInTheDocument()
-    expect(within(card).getByLabelText('SKU code')).toHaveAttribute('placeholder', 'KNIFE')
+    // The SKU switch is off for a new keepsake: no code field, and the variant is created with no code.
+    expect(within(card).getByRole('switch', { name: 'This keepsake has SKU codes' })).not.toBeChecked()
+    expect(within(card).queryByLabelText('SKU code')).not.toBeInTheDocument()
   })
 
   it('[T-007B] Save as draft makes a hidden draft in one request and opens the saved editor on Review and publish', async () => {
@@ -153,7 +157,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     await saveDraft()
 
     await waitFor(() => expect(writes()).toHaveLength(1))
-    expect(writes()[0]).toMatchObject({ method: 'POST', path: base, body: { name: { en: 'Knife' }, text: {}, photoIds: [], commissionRate: 0, options: [], variants: [{ skuCode: 'KNIFE', priceRappen: 3900, values: {} }] } })
+    expect(writes()[0]).toMatchObject({ method: 'POST', path: base, body: { name: { en: 'Knife' }, text: {}, photoIds: [], commissionRate: 0, options: [], variants: [{ skuCode: null, mediaId: null, priceRappen: 3900, values: {} }] } })
     expect(writes()[0]!.key).toBeTruthy()
     await waitFor(() => expect(router.state.location.pathname).toBe(`/store/products/gifts/${productId}`), SLOW)
     expect(router.state.location.search).toMatchObject({ step: 'review' })
@@ -285,9 +289,10 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     await toOptions()
     const card = screen.getByRole('region', { name: 'Price' })
 
+    await userEvent.click(within(card).getByRole('switch', { name: 'This keepsake has SKU codes' }))
     await userEvent.type(within(card).getByLabelText('SKU code'), 'bad code')
     await userEvent.tab()
-    expect(await within(card).findByText('Letters and digits, joined by - _ or . (like VX-S-SWAN).')).toBeInTheDocument()
+    expect(await within(card).findByText('Letters and digits, joined by - _ or . (like 1.6795-XS-RED).')).toBeInTheDocument()
     await userEvent.clear(within(card).getByLabelText('SKU code'))
     await userEvent.type(within(card).getByLabelText('SKU code'), 'vx-1')
     await userEvent.type(within(card).getByLabelText('Price, CHF'), '10')
@@ -421,7 +426,7 @@ describe('[E6.1][i18n] a new keepsake in German', () => {
     const card = await screen.findByRole('region', { name: 'Preis' })
 
     await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
-    expect(await screen.findByText('1 Variante braucht einen Preis oder einen Code.')).toBeInTheDocument()
+    expect(await screen.findByText('1 Variante braucht einen Preis oder einen gültigen Code.')).toBeInTheDocument()
     await userEvent.type(within(card).getByLabelText('Preis, CHF'), '39')
     await userEvent.tab()
     await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))

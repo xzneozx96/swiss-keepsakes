@@ -16,6 +16,7 @@ import { chf } from '../lib/keepsake-rules'
 import { combinationName, labelOf, refusalText, variantTitle } from '../lib/option-rules'
 import { problemMessageKey } from '../lib/problems'
 import { QuietNote } from './option-bits'
+import { SkuSwitch } from './sku-switch'
 import { PreviewRow, VariantRow } from './variant-row'
 import { VariantSheet } from './variant-sheet'
 import { VariantsBulkBar } from './variants-bulk-bar'
@@ -42,7 +43,7 @@ function ArchivedList({ variants, options }: { variants: ProductVariant[], optio
         {variants.map(variant => (
           <li key={variant.id} className="flex justify-between gap-3">
             <span className="truncate">{options.length > 0 ? combinationName(variant.values, options, language) : variant.skuCode}</span>
-            <span className="shrink-0 font-mono text-xs">{variant.skuCode}</span>
+            {variant.skuCode && <span className="shrink-0 font-mono text-xs">{variant.skuCode}</span>}
           </li>
         ))}
       </ul>
@@ -56,7 +57,8 @@ function ArchivedList({ variants, options }: { variants: ProductVariant[], optio
  * there are two or more, with select, bulk actions, the combinations that are not sold and the archived ones. The rows an
  * open option will bring show muted under the others (`preview`). Prices save when the field is left; Edit opens the sheet.
  */
-export function VariantsBlock({ options, variants, held, actions, preview, notSold }: {
+export function VariantsBlock({ storeId, options, variants, held, actions, preview, notSold, sku, ownPhotos }: {
+  storeId: string
   /** The options the rows are named by: the finished ones. */
   options: ProductOption[]
   /** Every variant, archived ones too. */
@@ -67,6 +69,10 @@ export function VariantsBlock({ options, variants, held, actions, preview, notSo
   preview?: { options: ProductOption[], rows: Values[], price: number }
   /** Combinations of the options that no variant holds. */
   notSold: Values[]
+  /** The SKU switch: on shows the codes, `codeBase` starts the codes of new rows (null while off). */
+  sku: { isOn: boolean, codeBase: string | null, onChange: (on: boolean) => void }
+  /** The keepsake's photos, which a variant's photo sheet offers first. */
+  ownPhotos: string[]
 }) {
   const { t, language, intlLocale } = useLocale()
   const { confirm, dialog } = useConfirm()
@@ -109,7 +115,7 @@ export function VariantsBlock({ options, variants, held, actions, preview, notSo
 
   /** Archiving is final, so it asks first and waits for the server inside the dialog: a refusal (units reserved) stays there. A new keepsake's rows are only removed. */
   const archive = async (rows: ProductVariant[], afterwards: () => void) => {
-    const label = rows.length === 1 ? (options.length > 0 ? variantTitle(rows[0]!.values, options, language) : rows[0]!.skuCode) : ''
+    const label = rows.length === 1 ? (options.length > 0 ? variantTitle(rows[0]!.values, options, language) : rows[0]!.skuCode ?? '') : ''
 
     await confirm({
       title: t(`keepsakes.variants.${held ? 'removeMany' : 'archiveMany'}.title.${rows.length === 1 ? 'one' : 'other'}`, { count: rows.length, name: label }),
@@ -134,8 +140,17 @@ export function VariantsBlock({ options, variants, held, actions, preview, notSo
       held={held}
       isSelected={selected.has(variant.id)}
       options={options}
+      ownPhotos={ownPhotos}
+      skuOn={sku.isOn}
+      storeId={storeId}
       variant={variant}
       onEdit={() => setEditing(variant.id)}
+      onPhoto={(mediaId, isNew) => {
+        // A photo the keepsake does not have yet joins its photos in the same go.
+        if (mediaId && isNew)
+          actions.addPhoto(mediaId)
+        void run(() => actions.saveVariant(variant.id, { mediaId }))
+      }}
       onPrice={rappen => void run(() => actions.saveVariant(variant.id, { priceRappen: rappen }))}
       onSelect={on => tick([variant.id], on)}
     />
@@ -143,6 +158,7 @@ export function VariantsBlock({ options, variants, held, actions, preview, notSo
 
   return (
     <Block hint={t('keepsakes.variants.hint')} icon={ProductsIcon} id="variants" title={t('keepsakes.variants.title')}>
+      <SkuSwitch isOn={sku.isOn} onChange={sku.onChange} />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-sm text-muted">{t(live.length === 1 ? 'keepsakes.list.variants.one' : 'keepsakes.list.variants.other', { count: live.length })}</span>
         <Check
@@ -226,17 +242,22 @@ export function VariantsBlock({ options, variants, held, actions, preview, notSo
       {notSold.length > 0 && (
         <p className="flex flex-wrap items-center gap-x-2 px-2 text-sm text-muted" data-testid="not-sold">
           <span>{t('keepsakes.variants.notSold', { count: notSold.length })}</span>
-          <Button className="max-lg:h-11" isDisabled={isPending} size="sm" variant="ghost" onPress={() => void run(() => actions.addBack(notSold))}>{t('keepsakes.variants.addBack')}</Button>
+          <Button className="max-lg:h-11" isDisabled={isPending} size="sm" variant="ghost" onPress={() => void run(() => actions.addBack(notSold, sku.codeBase))}>{t('keepsakes.variants.addBack')}</Button>
         </p>
       )}
       <ArchivedList options={options} variants={archived} />
 
       {editingVariant && (
         <VariantSheet
+          codeBase={sku.codeBase ?? ''}
           held={held}
           options={options}
+          ownPhotos={ownPhotos}
+          skuOn={sku.isOn}
+          storeId={storeId}
           variant={editingVariant}
           variants={variants}
+          onAddPhoto={actions.addPhoto}
           onArchive={() => void archive([editingVariant], () => setEditing(undefined))}
           onClose={() => setEditing(undefined)}
           onSave={actions.saveVariant}

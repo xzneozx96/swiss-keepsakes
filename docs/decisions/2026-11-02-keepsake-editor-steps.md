@@ -45,6 +45,19 @@ The 2026-10-29 design (cards, with options and variants in sheets) became a step
 13. **One EN/DE switch for the whole editor**, by the title. The tabs inside cards go.
 14. **The step bar never covers the content.**
 15. **No stock column.** Stock arrives with E6.3.
+16. **SKU codes are optional, as in Shopify (owner, 2026-11-02).**
+    - A keepsake-level switch, "This keepsake has SKU codes", sits in the Price block and in the Variants block header. It is off for a new keepsake.
+    - Off: no code field anywhere (Price block, rows, variant sheet), and new variants have no code. On: the code field shows, and each row shows its code as a small mono line.
+    - New rows while it is on are prefilled with the keepsake code and the full value labels, upper case: `1.6795-XS-RED`. A clash gets `-2`. The merchant can edit every code.
+    - The switch state is derived: on when any variant that is for sale or hidden has a code. A choice made before any code exists is kept in the editor. Archived variants keep their codes and do not count.
+    - Turning it off asks ("Remove the SKU codes of all n variants?"), then clears the codes in one `PATCH .../variants`.
+    - The code stays unique per shop when present (`UNIQUE (store_id, sku_code)`; NULLs are distinct). A refusal names a variant that has no code by its values.
+17. **Option names are suggested from the shop's other keepsakes.** The fixed Size, Colour, Theme and Material list goes. The keepsake list items carry `optionNames`, so the editor reads no extra request, and with no other option in the shop there is no list.
+18. **Bulk select is the cart's "Select all" checkbox** (checked, unchecked or indeterminate) in the Variants header. The Select dropdown goes.
+19. **The variant sheet** has no empty-state text, Status is a Select (as in the Price block), and the footer has Archive on the left with Cancel and Save on the right.
+20. **Colour swatches are removed** (owner: "redundant"): the UI, the draft logic, the contract (`swatch`), the API, and the column `catalog.product_option_values.swatch` with its CHECK (migration 0017; the dev branch held no stored swatch).
+21. **Add another option is always visible** (up to five). With an option open it runs that option's Done first; a refused Done keeps the option open and opens no second one. The "Paste a list…" helper text goes; pasting a list still works.
+22. **A variant has one photo** (owner, 2026-11-02), chosen from the keepsake's photos first, or the library with Upload a photo. `catalog.skus.media_id` is a plain id with no foreign key (ADR-013). The API refuses a file that is not an image in the store's library, and one that is retired or still processing. A photo the keepsake does not have yet joins the keepsake's photos. Keepsake photos do not count as media uses yet (open point 2 of the 2026-10-29 media decision); a variant photo does not either.
 
 ## Rejected
 

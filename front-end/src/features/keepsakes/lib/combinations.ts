@@ -4,7 +4,7 @@ import type { OptionDraft, Values } from './option-rules'
 import { allCombinations, asSaved, labelOf, suggestCode } from './option-rules'
 
 /** What an options save creates for a combination: the API's `KeepsakeVariantWrite`, its values as refs of the save. */
-export interface NewVariant { skuCode: string, priceRappen: number, values: Values }
+export interface NewVariant { skuCode: string | null, priceRappen: number, values: Values }
 
 export interface OptionsPlan {
   /** The value that each existing variant takes of a new option: the first one, so the variant stays a combination. */
@@ -45,11 +45,13 @@ export function uniqueCode(base: string, taken: Set<string>): string {
  * `committed` holds the refs the keepsake had when the editor last saved (or, for a new keepsake, when the option was last
  * finished). A new keepsake's variants all stand in `variants` with values by ref.
  */
-export function planOptionsDone({ options, committed, variants, basePrice }: {
+export function planOptionsDone({ options, committed, variants, basePrice, codeBase }: {
   options: OptionDraft[]
   committed: ReadonlySet<string>
   variants: Pick<ProductVariant, 'id' | 'skuCode' | 'status' | 'values'>[]
   basePrice: number
+  /** The keepsake code the new variants' codes start with while the SKU switch is on ('' with none yet); null while it is off. */
+  codeBase: string | null
 }): OptionsPlan {
   const refs = options.map(option => option.ref)
   const freshOptions = options.filter(option => !committed.has(option.ref) && namedValues(option).length > 0)
@@ -85,15 +87,31 @@ export function planOptionsDone({ options, committed, variants, basePrice }: {
     }
   }
 
-  return { variantValues, newVariants: newVariantsFor(created, options, variants, basePrice) }
+  return { variantValues, newVariants: newVariantsFor(created, options, variants, basePrice, codeBase) }
 }
 
-/** A variant to create for each combination: for sale at the keepsake's price, with a code made from its values and used by no other variant. */
-export function newVariantsFor(combinations: Values[], options: OptionDraft[], variants: Pick<ProductVariant, 'skuCode'>[], basePrice: number): NewVariant[] {
+/**
+ * A variant to create for each combination: for sale at the keepsake's price. With the SKU switch on (`codeBase` is a string)
+ * it has a code made from the keepsake's code and its values, used by no other variant; with it off it has none.
+ */
+export function newVariantsFor(combinations: Values[], options: OptionDraft[], variants: Pick<ProductVariant, 'skuCode'>[], basePrice: number, codeBase: string | null): NewVariant[] {
   const saved = asSaved(options)
-  const taken = new Set(variants.map(variant => variant.skuCode.toLowerCase()))
+  const taken = new Set(variants.flatMap(variant => variant.skuCode?.toLowerCase() ?? []))
 
-  return combinations.map(values => ({ skuCode: uniqueCode(suggestCode(values, saved), taken), priceRappen: basePrice, values }))
+  return combinations.map(values => ({ skuCode: codeBase === null ? null : uniqueCode(suggestCode(values, saved, codeBase), taken), priceRappen: basePrice, values }))
+}
+
+/**
+ * The keepsake code the codes of new variants start with: the code of the first variant that is for sale or hidden ("1.6795"),
+ * or '' when none has one. A first variant whose code already ends in its own values ("1.6795-XS-RED", made by this editor)
+ * gives the code without them, so a new row is "1.6795-S-RED", not "1.6795-XS-RED-S-RED".
+ */
+export function codeBaseOf(variants: Pick<ProductVariant, 'skuCode' | 'status' | 'values'>[], options: ProductOption[]): string {
+  const first = variants.find(variant => variant.status !== 'archived' && variant.skuCode)
+  const code = first?.skuCode ?? ''
+  const own = first ? suggestCode(first.values, options) : ''
+
+  return own && code.toUpperCase().endsWith(`-${own}`) ? code.slice(0, -(own.length + 1)) : code
 }
 
 /** The first variant's price, the one a new combination takes. */

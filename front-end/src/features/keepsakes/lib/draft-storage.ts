@@ -41,11 +41,14 @@ function isDraft(value: unknown): value is StoredDraft {
     && DRAFT_STEPS.includes(value.step as DraftStep) && typeof value.reached === 'number'
 }
 
-/** A draft written before descriptions were rich text holds strings: they become paragraphs. */
+/** A draft written before descriptions were rich text holds strings: they become paragraphs. Variants take the shape of today's. */
 function withDocuments(draft: StoredDraft): StoredDraft {
   const { text } = draft.value
 
-  return { ...draft, value: { ...draft.value, text: { en: storedDescription(text.en), de: storedDescription(text.de) } } }
+  // A draft written before variants had a photo has none; an empty code is none.
+  const variants = draft.variants.map(variant => ({ ...variant, skuCode: variant.skuCode || null, mediaId: variant.mediaId ?? null, photo: null }))
+
+  return { ...draft, variants, value: { ...draft.value, text: { en: storedDescription(text.en), de: storedDescription(text.de) } } }
 }
 
 /** The draft this browser tab kept for the store, or nothing when there is none or it cannot be read. */

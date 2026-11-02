@@ -9,7 +9,7 @@ import { labelOf, shortLabel } from '../lib/option-rules'
 /** The app's selected option (as the story editor's tags): a red border and the mark. */
 const ACCENT_TAG = 'group relative h-auto min-h-11 items-center justify-start gap-2 rounded-2xl border-2 border-transparent px-3 py-2 before:hidden data-[selected=true]:border-accent data-[selected=true]:bg-default data-[selected=true]:hover:bg-default-hover'
 
-/** A colour dot. The colour is data (`product_option_values.swatch`), so it is set at runtime. */
+/** A colour dot. Not used by the editor any more (swatches are gone, 2026-11-02); the lab's mock-ups still draw it. */
 export function Swatch({ color, className = 'size-4' }: { color: string | null, className?: string }) {
   return color ? <span aria-hidden className={`inline-block shrink-0 rounded-full border border-separator ${className}`} style={{ backgroundColor: color }} /> : null
 }
@@ -55,7 +55,6 @@ export function ValueChips({ option, value, onChange, small = false, hideLabel =
       <TagGroup.List className="flex flex-wrap gap-2">
         {option.values.filter(v => labelOf(v.label)).map(v => (
           <Tag key={v.id} className={`${ACCENT_TAG} ${small ? 'min-h-10 px-2.5 py-1.5 text-sm' : ''}`} id={v.id} textValue={labelOf(v.label, language)}>
-            <Swatch color={v.swatch} />
             <span className="font-medium">{labelOf(v.label, language)}</span>
             <SelectedIcon aria-hidden className="absolute -end-1 -top-1 hidden size-4.5 rounded-full bg-surface text-accent group-data-[selected=true]:block" weight="Filled" />
           </Tag>
@@ -73,7 +72,6 @@ export function ValueBadge({ option, valueId }: { option: ProductOption, valueId
   return value
     ? (
         <span className="inline-flex h-7 max-w-full items-center gap-1.5 rounded-full bg-default px-2.5 text-xs font-medium">
-          <Swatch className="size-3" color={value.swatch} />
           <span className="truncate">{shortLabel(value.label, language)}</span>
         </span>
       )

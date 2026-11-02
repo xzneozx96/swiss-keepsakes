@@ -4,12 +4,12 @@ import { describe, expect, it } from 'vitest'
 
 import { codeProblem, findTwin, isComplete, normaliseValues, variantsBody } from '@/features/keepsakes/lib/variant-rules'
 
-const value = (id: string) => ({ id, label: { en: id }, swatch: null })
+const value = (id: string) => ({ id, label: { en: id } })
 const options: ProductOption[] = [
   { id: 'size', name: { en: 'Size' }, values: [value('s'), value('m')] },
   { id: 'theme', name: { en: 'Theme' }, values: [value('bridge'), value('lion')] },
 ]
-const variant = (skuCode: string, values: Record<string, string>, status: ProductVariant['status'] = 'published'): ProductVariant => ({ id: skuCode, skuCode, priceRappen: 2900, status, values })
+const variant = (skuCode: string, values: Record<string, string>, status: ProductVariant['status'] = 'published'): ProductVariant => ({ id: skuCode, skuCode, mediaId: null, photo: null, priceRappen: 2900, status, values })
 const others = [variant('VX-M-BRIDGE', { size: 'm', theme: 'bridge' }), variant('VX-S-LION', { size: 's', theme: 'lion' }, 'archived')]
 
 describe('[T-007B] a variant against the options', () => {
@@ -35,8 +35,9 @@ describe('[T-007B] a variant against the options', () => {
 })
 
 describe('[T-007B] a code', () => {
-  it('[T-007B] is required, made of letters, digits and - _ ., and used once among the other variants', () => {
-    expect(codeProblem('  ', others)).toBe('required')
+  it('[T-010] is optional, made of letters, digits and - _ ., and used once among the other variants', () => {
+    expect(codeProblem('  ', others)).toBeUndefined()
+    expect(codeProblem(null, others)).toBeUndefined()
     expect(codeProblem('bad code', others)).toBe('invalid')
     expect(codeProblem('vx-m-bridge', others)).toBe('taken')
     expect(codeProblem('VX-L-LION', others)).toBeUndefined()
@@ -44,10 +45,14 @@ describe('[T-007B] a code', () => {
 })
 
 describe('[T-007B] what a new keepsake sends', () => {
-  it('[T-007B] is the code, the price and the values of each variant', () => {
+  it('[T-010] is the code (none when empty), the photo, the price and the values of each variant', () => {
     expect(variantsBody(others)).toEqual([
-      { skuCode: 'VX-M-BRIDGE', priceRappen: 2900, values: { size: 'm', theme: 'bridge' } },
-      { skuCode: 'VX-S-LION', priceRappen: 2900, values: { size: 's', theme: 'lion' } },
+      { skuCode: 'VX-M-BRIDGE', mediaId: null, priceRappen: 2900, values: { size: 'm', theme: 'bridge' } },
+      { skuCode: 'VX-S-LION', mediaId: null, priceRappen: 2900, values: { size: 's', theme: 'lion' } },
+    ])
+    expect(variantsBody([{ skuCode: '  ', mediaId: 'm1', priceRappen: 100, values: {} }, { skuCode: null, mediaId: null, priceRappen: 100, values: {} }])).toEqual([
+      { skuCode: null, mediaId: 'm1', priceRappen: 100, values: {} },
+      { skuCode: null, mediaId: null, priceRappen: 100, values: {} },
     ])
   })
 })

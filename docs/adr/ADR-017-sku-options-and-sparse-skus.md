@@ -13,7 +13,7 @@ A Victorinox SKU is a size, a theme and a colour, with its own stock set by the 
 ## Decision
 We will make the SKU the unit of stock, price and order.
 
-- `catalog.skus` has `sku_code` (unique per store), `product_id`, `price_rappen`, a status and the computed `combination_key` of ADR-027. A SKU row exists only for a combination that is sold. A missing combination is not selectable. A combination with stock zero is selectable in the database and unavailable on the page (AC53).
+- `catalog.skus` has `sku_code` (optional, unique per store when present; amended 2026-11-02), `product_id`, `price_rappen`, a status and the computed `combination_key` of ADR-027. A SKU row exists only for a combination that is sold. A missing combination is not selectable. A combination with stock zero is selectable in the database and unavailable on the page (AC53).
 - Stock is not on the SKU. `inventory.stock_items` has one row per SKU id (ADR-016). Holds, adjustments and order lines also use the SKU id.
 - An order line keeps the chosen options as a snapshot (a list of option and value text pairs), so a renamed option does not change an old order (ADR-023).
 - Prices are integer Rappen. Currency is not stored while the store sells in CHF only (O01).
@@ -22,6 +22,8 @@ We will make the SKU the unit of stock, price and order.
 - The merchant sees and edits each combination. Adding a colour means adding a value and then SKUs for the combinations that come in it.
 - Stock, price and orders do not depend on how options are modelled, so the option model can change without touching them.
 - **Amended 2026-11-01.** `catalog.products.status` also takes `archived` (the check in `0011_catalog` already allows it): a keepsake that has orders is archived instead of deleted, and archiving is final. It leaves its variants and SKUs as they are, so the old orders keep their SKU. A keepsake that no order references is deleted with its variants (ADR-014).
+- **Amended 2026-11-02 (owner).** The SKU code is optional: `sku_code` may be NULL, and when present it is unique per store. A variant's identity is its id and its combination, so any number of variants may have no code, and a refusal names such a variant by its values. Existing codes are kept (migration 0017).
+- **Amended 2026-11-02 (owner).** A SKU may name one photo: `catalog.skus.media_id`, a plain id with no foreign key (ADR-013). The use case checks that the file is a ready image of the store's library.
 - The page needs a query that groups SKUs by product and builds the selectors from the options, values and published SKUs.
 
 ## Assumptions
@@ -38,3 +40,4 @@ We will make the SKU the unit of stock, price and order.
 - 2026-10-26 revised after owner answer M9 (generic options)
 - 2026-10-26 accepted (gate DESIGN)
 - 2026-11-01 amended (owner: a keepsake is deleted if never sold, else archived; the product status takes `archived`)
+- 2026-11-02 amended (owner: the SKU code is optional and unique per store when present; a SKU may name one photo)

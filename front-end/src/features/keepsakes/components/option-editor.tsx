@@ -2,7 +2,7 @@ import type { Language } from '@sk/domain/shared'
 import type { OptionsDraftState } from '../hooks/use-options-draft'
 import type { OptionDraft } from '../lib/option-rules'
 
-import { Button, ComboBox, Input, Label, ListBox, Switch } from '@heroui/react'
+import { Button, ComboBox, Input, Label, ListBox } from '@heroui/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
@@ -10,16 +10,8 @@ import { OPTION_NAME_MAX, refusalText } from '../lib/option-rules'
 import { NotesAt, QuietNote } from './option-bits'
 import { AddValue, ValueList } from './option-values'
 
-/** The names the merchant is offered for an option, in both languages: the name is typed or picked in the version that is open. */
-const SUGGESTIONS = [
-  { id: 'size', en: 'Size', de: 'Grösse' },
-  { id: 'colour', en: 'Colour', de: 'Farbe' },
-  { id: 'theme', en: 'Theme', de: 'Motiv' },
-  { id: 'material', en: 'Material', de: 'Material' },
-] as const
-
-/** The option's name as a field with the suggestions under it; any other name can be typed (HeroUI ComboBox). */
-function NameField({ draft, option, language, focusOnMount }: { draft: OptionsDraftState, option: OptionDraft, language: Language, focusOnMount: boolean }) {
+/** The option's name as a field with the suggestions under it, the names the shop's other keepsakes use; any other name can be typed (HeroUI ComboBox). With no suggestion there is no list. */
+function NameField({ draft, option, language, focusOnMount, suggestions }: { draft: OptionsDraftState, option: OptionDraft, language: Language, focusOnMount: boolean, suggestions: string[] }) {
   const { t } = useLocale()
   const inputRef = useRef<HTMLInputElement>(null)
   const set = (text: string) => draft.patchName(option.ref, { ...option.name, [language]: text.slice(0, OPTION_NAME_MAX) })
@@ -45,25 +37,27 @@ function NameField({ draft, option, language, focusOnMount }: { draft: OptionsDr
           fullWidth
           className="min-w-0 flex-1"
           inputValue={option.name[language]}
-          menuTrigger="focus"
+          menuTrigger={suggestions.length > 0 ? 'focus' : 'manual'}
           onInputChange={set}
-          onSelectionChange={key => key !== null && set(SUGGESTIONS.find(suggestion => suggestion.id === key)?.[language] ?? '')}
+          onSelectionChange={key => key !== null && set(String(key))}
         >
           <Label>{t(`keepsakes.options.name.${language}`)}</Label>
           <ComboBox.InputGroup>
             <Input ref={inputRef} lang={language} maxLength={OPTION_NAME_MAX} placeholder={language === 'de' && option.name.en.trim() ? option.name.en : t('keepsakes.options.name.placeholder')} />
-            <ComboBox.Trigger />
+            {suggestions.length > 0 && <ComboBox.Trigger />}
           </ComboBox.InputGroup>
-          <ComboBox.Popover>
-            <ListBox>
-              {SUGGESTIONS.map(suggestion => (
-                <ListBox.Item key={suggestion.id} id={suggestion.id} textValue={suggestion[language]}>
-                  {suggestion[language]}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </ComboBox.Popover>
+          {suggestions.length > 0 && (
+            <ComboBox.Popover>
+              <ListBox>
+                {suggestions.map(suggestion => (
+                  <ListBox.Item key={suggestion} id={suggestion} textValue={suggestion}>
+                    {suggestion}
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </ComboBox.Popover>
+          )}
         </ComboBox>
       </div>
       <NotesAt at={option.ref} draft={draft} only="problems" />
@@ -73,14 +67,16 @@ function NameField({ draft, option, language, focusOnMount }: { draft: OptionsDr
 
 /**
  * One option that is open, inline in the Options block: its name with suggestions, its values in order with a field to add
- * another, and the colour swatches. Done checks it and folds it to one row; Delete asks first. The editor's own EN/DE
+ * another. Done checks it and folds it to one row; Delete asks first. The editor's own EN/DE
  * switch decides the version, so there are no tabs here.
  */
-export function OptionEditor({ draft, option, language, autoFocusName, isPending, failure, canCancel, onDone, onCancel, onDelete }: {
+export function OptionEditor({ draft, option, language, autoFocusName, suggestions, isPending, failure, canCancel, onDone, onCancel, onDelete }: {
   draft: OptionsDraftState
   option: OptionDraft
   language: Language
   autoFocusName: boolean
+  /** The option names that the shop's other keepsakes use, in `language`. */
+  suggestions: string[]
   isPending: boolean
   failure: string | undefined
   /** Cancel puts back what the option was when it opened; a new keepsake's first option has nothing to go back to. */
@@ -92,7 +88,6 @@ export function OptionEditor({ draft, option, language, autoFocusName, isPending
   const { t } = useLocale()
   const [focused, setFocused] = useState<string>()
   const clearFocus = useCallback(() => setFocused(undefined), [])
-  const swatches = draft.swatchesOn(option)
   const count = draft.problems.length
   // What the API refused about a new variant (a code in use, a combination that is taken) belongs to no field: it is said here.
   const own = new Set([option.ref, ...option.values.map(value => value.ref)])
@@ -100,7 +95,7 @@ export function OptionEditor({ draft, option, language, autoFocusName, isPending
 
   return (
     <div className="flex min-w-0 flex-col gap-5 rounded-2xl border border-separator p-3 lg:p-4" data-testid="option-editor">
-      <NameField focusOnMount={autoFocusName} draft={draft} language={language} option={option} />
+      <NameField focusOnMount={autoFocusName} draft={draft} language={language} option={option} suggestions={suggestions} />
 
       <div className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between gap-3">
@@ -112,15 +107,6 @@ export function OptionEditor({ draft, option, language, autoFocusName, isPending
           ? <AddValue draft={draft} option={option} onAdded={setFocused} />
           : <p className="text-xs text-pretty text-muted">{t(option.values.length > 0 ? 'keepsakes.options.germanValues.hint' : 'keepsakes.options.germanValues.empty')}</p>}
       </div>
-
-      <Switch className="min-h-11 lg:min-h-9" isSelected={swatches} onChange={on => draft.setSwatches(option.ref, on)}>
-        <Switch.Content className="items-center">
-          <Switch.Control>
-            <Switch.Thumb />
-          </Switch.Control>
-          <Label className="text-sm">{t('keepsakes.options.swatches')}</Label>
-        </Switch.Content>
-      </Switch>
 
       <NotesAt at={option.ref} draft={draft} only="refusal" />
       {draft.tried && count > 0 && <p className="text-sm text-pretty text-danger" role="alert">{t(count === 1 ? 'keepsakes.options.fix.one' : 'keepsakes.options.fix.other', { count })}</p>}

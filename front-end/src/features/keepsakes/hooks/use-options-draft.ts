@@ -3,13 +3,13 @@ import type { OptionDraft, Refusal, Text, Valued, ValueDraft, Values } from '../
 
 import { useState } from 'react'
 
-import { asSaved, checkStagedOptions, DEFAULT_SWATCH, draftOfOptions, duplicateValue, labelOf, moveItem, newOption, splitValues, VALUE_LABEL_MAX, variantsUsing } from '../lib/option-rules'
+import { asSaved, checkStagedOptions, draftOfOptions, duplicateValue, labelOf, moveItem, newOption, splitValues, VALUE_LABEL_MAX, variantName, variantsUsing } from '../lib/option-rules'
 
 /** Each variant's value of each new option, made from the draft: variant id, then option ref, then value ref. */
 type Assigned = Record<string, Values>
 
 /** What the draft holds, for an option that is cancelled to put back. */
-export interface OptionsSnapshot { options: OptionDraft[], /** Options whose swatch switch is on (the API has no flag: swatches live on the values, so an option with no value yet needs it here). */ swatchOn: Record<string, boolean> }
+export interface OptionsSnapshot { options: OptionDraft[] }
 
 interface State extends OptionsSnapshot {
   /** The saved options as JSON, to tell an edited draft from a clean one when the saved options change. */
@@ -22,7 +22,7 @@ interface State extends OptionsSnapshot {
   refusal?: Refusal
 }
 
-const usedBy = (users: Valued[]) => ({ count: users.length, codes: users.slice(0, 3).map(user => user.skuCode).join(', '), more: Math.max(0, users.length - 3) })
+const usedBy = (users: Valued[], options: ProductOption[]) => ({ count: users.length, codes: users.slice(0, 3).map(user => variantName(user, options)).join(', '), more: Math.max(0, users.length - 3) })
 
 /**
  * The options as the Options and variants step stages them, for a saved keepsake (`saved` and its `variants`) and for a new
@@ -34,11 +34,11 @@ const usedBy = (users: Valued[]) => ({ count: users.length, codes: users.slice(0
 export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOption[], variants: Valued[], /** Options to start from instead of the saved ones: a new keepsake that a reload brought back. */ initial?: OptionDraft[] }) {
   const savedOptions = draftOfOptions(saved)
   const savedJson = JSON.stringify(savedOptions)
-  const [state, setState] = useState<State>(() => ({ options: initial ?? savedOptions, swatchOn: {}, base: savedJson, tried: false, server: [] }))
+  const [state, setState] = useState<State>(() => ({ options: initial ?? savedOptions, base: savedJson, tried: false, server: [] }))
 
   // The saved options changed under the draft (a save, or the keepsake loaded again): a clean draft follows them, an edited one stays.
   if (state.base !== savedJson)
-    setState(current => ({ ...current, base: savedJson, ...(JSON.stringify(current.options) === current.base ? { options: savedOptions, swatchOn: {}, tried: false, server: [] } : {}) }))
+    setState(current => ({ ...current, base: savedJson, ...(JSON.stringify(current.options) === current.base ? { options: savedOptions, tried: false, server: [] } : {}) }))
 
   const { options } = state
   const savedRefs = new Set(saved.flatMap(option => [option.id, ...option.values.map(value => value.id)]))
@@ -47,7 +47,6 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
   const assigned = assignedFor(options)
   const found = checkStagedOptions(saved, options, variants, assigned)
   const problems = [...(state.tried ? found : found.filter(problem => problem.code === 'value-duplicate')), ...state.server]
-  const swatchesOn = (option: OptionDraft) => option.values.some(value => value.swatch !== null) || state.swatchOn[option.ref] === true
 
   const edit = (change: (list: OptionDraft[]) => OptionDraft[]) => {
     setState(current => ({ ...current, options: change(current.options), refusal: undefined, server: [] }))
@@ -62,8 +61,6 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
     problems,
     tried: state.tried,
     dirty: JSON.stringify(options) !== state.base,
-    /** The swatch switch of an option: on when a value has a colour, or when it was switched on before any value exists. */
-    swatchesOn,
     problemsAt: (at: string) => problems.filter(problem => problem.at === at),
     refusalAt: (at: string) => (state.refusal?.at === at ? state.refusal : undefined),
     isNew: (ref: string) => !savedRefs.has(ref),
@@ -83,7 +80,7 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
       const users = variantsUsing(variants, ref)
 
       if (option && savedRefs.has(ref) && users.length > 0) {
-        refuse({ at: ref, code: 'option-in-use', params: { option: labelOf(option.name), ...usedBy(users) } })
+        refuse({ at: ref, code: 'option-in-use', params: { option: labelOf(option.name), ...usedBy(users, saved) } })
 
         return false
       }
@@ -98,13 +95,11 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
       const added: ValueDraft[] = []
 
       if (option) {
-        const swatch = swatchesOn(option) ? DEFAULT_SWATCH : null
-
         for (const word of splitValues(input).map(part => part.slice(0, VALUE_LABEL_MAX))) {
           if (duplicateValue({ ...option, values: [...option.values, ...added] }, { en: word, de: '' }))
             refused.push(word)
           else
-            added.push({ ref: crypto.randomUUID(), label: { en: word, de: '' }, swatch })
+            added.push({ ref: crypto.randomUUID(), label: { en: word, de: '' } })
         }
         if (added.length > 0)
           editOption(ref, current => ({ ...current, values: [...current.values, ...added] }))
@@ -120,7 +115,7 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
       const users = variantsUsing(variants, optionRef, valueRef)
 
       if (value && savedRefs.has(valueRef) && users.length > 0) {
-        refuse({ at: valueRef, code: 'value-in-use', params: { value: labelOf(value.label), ...usedBy(users) } })
+        refuse({ at: valueRef, code: 'value-in-use', params: { value: labelOf(value.label), ...usedBy(users, saved) } })
 
         return false
       }
@@ -129,10 +124,6 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
       return true
     },
     moveValue: (optionRef: string, from: number, to: number) => editOption(optionRef, option => ({ ...option, values: moveItem(option.values, from, to) })),
-    setSwatches: (optionRef: string, on: boolean) => {
-      setState(current => ({ ...current, swatchOn: { ...current.swatchOn, [optionRef]: on } }))
-      editOption(optionRef, option => ({ ...option, values: option.values.map(value => ({ ...value, swatch: on ? value.swatch ?? DEFAULT_SWATCH : null })) }))
-    },
 
     /** Every problem the rules find, now (in `list` when given: the options as they will be once a value with no name is dropped); from here on all of them show. Empty means it can be saved. */
     check: (list?: OptionDraft[]): Refusal[] => {
@@ -146,14 +137,14 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
     /** What the API refused, in the merchant's words at the option, value or variant. */
     setServerProblems: (refusals: Refusal[]) => setState(current => ({ ...current, tried: true, server: refusals })),
     /** Back to the saved options. */
-    discard: () => setState(current => ({ ...current, options: savedOptions, swatchOn: {}, tried: false, server: [], refusal: undefined })),
-    snapshot: (): OptionsSnapshot => ({ options, swatchOn: state.swatchOn }),
+    discard: () => setState(current => ({ ...current, options: savedOptions, tried: false, server: [], refusal: undefined })),
+    snapshot: (): OptionsSnapshot => ({ options }),
     restore: (snapshot: OptionsSnapshot) => setState(current => ({ ...current, ...snapshot, tried: false, server: [], refusal: undefined })),
     /** After a save: the draft is what was saved, trimmed as the API trims it, and nothing is staged any more. */
     settle: () => setState((current) => {
       const next = draftOfOptions(asSaved(current.options))
 
-      return { ...current, options: next, base: JSON.stringify(next), swatchOn: {}, tried: false, server: [], refusal: undefined }
+      return { ...current, options: next, base: JSON.stringify(next), tried: false, server: [], refusal: undefined }
     }),
   }
 }

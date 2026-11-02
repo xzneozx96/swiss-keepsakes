@@ -26,23 +26,23 @@ export function normaliseValues(options: ProductOption[], values: Values): Value
   return Object.fromEntries(options.flatMap(option => (option.values.some(value => value.id === values[option.id]) ? [[option.id, values[option.id]!]] : [])))
 }
 
-export type CodeProblem = 'required' | 'invalid' | 'taken'
+export type CodeProblem = 'invalid' | 'taken'
 
-/** What is wrong with a code: empty, not letters and digits joined by - _ or ., or used by another variant of the keepsake. */
-export function codeProblem(code: string, others: Pick<ProductVariant, 'skuCode'>[]): CodeProblem | undefined {
-  const trimmed = code.trim()
+/** What is wrong with a code: not letters and digits joined by - _ or ., or used by another variant of the keepsake. A code is optional: none is no problem. */
+export function codeProblem(code: string | null, others: Pick<ProductVariant, 'skuCode'>[]): CodeProblem | undefined {
+  const trimmed = code?.trim()
 
   if (!trimmed)
-    return 'required'
+    return undefined
   if (!isSkuCode(trimmed))
     return 'invalid'
 
-  return others.some(other => other.skuCode.toLowerCase() === trimmed.toLowerCase()) ? 'taken' : undefined
+  return others.some(other => other.skuCode?.toLowerCase() === trimmed.toLowerCase()) ? 'taken' : undefined
 }
 
-/** The variants a new keepsake sends: code, price and values, in the order they were added. */
-export function variantsBody(variants: Pick<ProductVariant, 'skuCode' | 'priceRappen' | 'values'>[]) {
-  return variants.map(variant => ({ skuCode: variant.skuCode, priceRappen: variant.priceRappen, values: variant.values }))
+/** The variants a new keepsake sends: code (none when empty), photo, price and values, in the order they were added. */
+export function variantsBody(variants: Pick<ProductVariant, 'skuCode' | 'mediaId' | 'priceRappen' | 'values'>[]) {
+  return variants.map(variant => ({ skuCode: variant.skuCode?.trim() || null, mediaId: variant.mediaId, priceRappen: variant.priceRappen, values: variant.values }))
 }
 
 /** Every combination of the options that no variant holds, archived ones counted as taken (they keep their combination). None for a keepsake with no option. */

@@ -3,7 +3,7 @@ import type { ProductOption } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 import { missingCombinations } from '@/features/keepsakes/lib/variant-rules'
 
-const option = (id: string, values: string[]): ProductOption => ({ id, name: { en: id }, values: values.map(v => ({ id: v, label: { en: v }, swatch: null })) })
+const option = (id: string, values: string[]): ProductOption => ({ id, name: { en: id }, values: values.map(v => ({ id: v, label: { en: v } })) })
 const size = option('size', ['s', 'l'])
 const theme = option('theme', ['swan', 'lion'])
 

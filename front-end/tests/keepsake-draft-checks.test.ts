@@ -5,7 +5,7 @@ import { publishChecks } from '@/features/keepsakes/lib/draft-product'
 
 const d = (text: string) => descriptionFromPlain(text)
 const full = { name: { en: 'Knife', de: '' }, text: { en: d('A knife'), de: undefined } }
-const option = { id: 'size', name: { en: 'Size', de: 'Grösse' }, values: [{ id: 's', label: { en: 'Small', de: 'Klein' }, swatch: null }] }
+const option = { id: 'size', name: { en: 'Size', de: 'Grösse' }, values: [{ id: 's', label: { en: 'Small', de: 'Klein' } }] }
 const base = { value: full, photoIds: ['p1'], commission: 0.1, options: [option], variants: [{ skuCode: 'K-1', status: 'published' as const }] }
 
 describe('[T-007B] the publish checks of a keepsake that is only in the browser', () => {

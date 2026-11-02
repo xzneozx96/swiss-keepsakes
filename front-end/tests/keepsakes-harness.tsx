@@ -60,7 +60,7 @@ export function product(over: Record<string, unknown> = {}) {
     hasUnpublishedEdits: false,
     hasOrders: false,
     options: [],
-    variants: [{ id: variantId, skuCode: 'VX-1', priceRappen: 3900, status: 'published', values: {} }],
+    variants: [{ id: variantId, skuCode: 'VX-1', mediaId: null, photo: null, priceRappen: 3900, status: 'published', values: {} }],
     blocking: [],
     warnings: [{ code: 'other-language', card: 'basics', language: 'de' }],
     rowVersion: 1,
@@ -74,6 +74,7 @@ export function listItem(over: Record<string, unknown> = {}) {
   return {
     id: productId,
     name: { en: 'Victorinox Classic' },
+    optionNames: [],
     status: 'draft',
     hasUnpublishedEdits: false,
     hasOrders: false,

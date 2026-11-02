@@ -18,27 +18,29 @@ interface Open { ref: string, snapshot: OptionsSnapshot, /** Added with Add opti
  * sends them in one request, a new one applies them to the draft. Only one option is open at a time, so the variants that
  * are still to come always belong to it. `committed` holds the refs the keepsake had when the option was opened.
  */
-export function useOptionsFlow({ draft, committed, variants, held, commit }: {
+export function useOptionsFlow({ draft, committed, variants, held, codeBase, commit }: {
   draft: OptionsDraftState
   committed: ReadonlySet<string>
   /** Every variant, archived ones too. */
   variants: ProductVariant[]
   /** A new keepsake: its options stay in the draft, which has no saved copy to settle on. */
   held: boolean
+  /** The keepsake code that new variants' codes start with while the SKU switch is on ('' with none yet); null while it is off. */
+  codeBase: string | null
   commit: CommitOptions
 }) {
   const { t } = useLocale()
   const [open, setOpen] = useState<Open | undefined>(() => {
     const unfinished = draft.options.find(option => !committed.has(option.ref))
 
-    return unfinished && { ref: unfinished.ref, snapshot: { options: draft.options.filter(option => option.ref !== unfinished.ref), swatchOn: {} }, isNew: true }
+    return unfinished && { ref: unfinished.ref, snapshot: { options: draft.options.filter(option => option.ref !== unfinished.ref) }, isNew: true }
   })
   const [isPending, setIsPending] = useState(false)
   const [failure, setFailure] = useState<string>()
   const basePrice = basePriceOf(variants)
   const openOption = open && draft.options.find(option => option.ref === open.ref)
   // What the open option would bring, shown as rows to come before Done is pressed.
-  const preview = openOption ? planOptionsDone({ options: draft.options, committed, variants, basePrice }) : undefined
+  const preview = openOption ? planOptionsDone({ options: draft.options, committed, variants, basePrice, codeBase }) : undefined
 
   const droppingBlanks = (ref: string) => draft.options.map(option => (option.ref === ref ? { ...option, values: option.values.filter(value => labelOf(value.label) !== '' || draft.isSaved(value.ref)) } : option))
 
@@ -53,7 +55,7 @@ export function useOptionsFlow({ draft, committed, variants, held, commit }: {
     if (problems.length > 0)
       return false
     draft.replaceOptions(options)
-    const plan = planOptionsDone({ options, committed, variants, basePrice })
+    const plan = planOptionsDone({ options, committed, variants, basePrice, codeBase })
 
     // Nothing to send when the option is what the keepsake already has.
     if (!draft.isDirty(options) && plan.newVariants.length === 0 && plan.variantValues.length === 0) {

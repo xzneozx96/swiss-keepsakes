@@ -3,13 +3,14 @@ import type { OptionDraft, Valued } from '@/features/keepsakes/lib/option-rules'
 
 import { describe, expect, it } from 'vitest'
 
-import { checkText } from '@/features/keepsakes/lib/keepsake-rules'
+import { checkText, isSkuCode } from '@/features/keepsakes/lib/keepsake-rules'
 import {
   allCombinations,
   asSaved,
   checkOptionsDraft,
   checkStagedOptions,
   checkVariantValues,
+  codePart,
   combinationName,
   draftOfOptions,
   duplicateValue,
@@ -20,6 +21,7 @@ import {
   shortLabel,
   splitValues,
   suggestCode,
+  variantName,
   variantsUsing,
   variantTitle,
 } from '@/features/keepsakes/lib/option-rules'
@@ -29,12 +31,12 @@ import { en } from '@/i18n/en'
 const size: ProductOption = {
   id: 'size',
   name: { en: 'Size', de: 'Grösse' },
-  values: [{ id: 's', label: { en: 'Small · 58 mm', de: 'Klein · 58 mm' }, swatch: null }, { id: 'l', label: { en: 'Large' }, swatch: null }],
+  values: [{ id: 's', label: { en: 'Small · 58 mm', de: 'Klein · 58 mm' } }, { id: 'l', label: { en: 'Large' } }],
 }
 const theme: ProductOption = {
   id: 'theme',
   name: { en: 'Theme' },
-  values: [{ id: 'swan', label: { en: 'Swan on the lake' }, swatch: null }, { id: 'lion', label: { en: 'Lion Monument' }, swatch: null }],
+  values: [{ id: 'swan', label: { en: 'Swan on the lake' } }, { id: 'lion', label: { en: 'Lion Monument' } }],
 }
 const variant = (id: string, skuCode: string, values: Record<string, string>, status = 'published'): Valued => ({ id, skuCode, status, values })
 const t = (key: keyof typeof en, params: Record<string, string | number> = {}) => Object.entries(params).reduce((text, [k, v]) => text.split(`{${k}}`).join(String(v)), en[key] as string)
@@ -55,9 +57,22 @@ describe('[E6.2][AC52] how a combination reads', () => {
     expect(allCombinations([])).toEqual([{}])
   })
 
-  it('[E6.2][AC52] a code suggestion is one letter of the first option and the first word of the others', () => {
-    expect(suggestCode({ size: 's', theme: 'swan' }, saved)).toBe('VX-S-SWAN')
-    expect(suggestCode({ size: 'l' }, saved)).toBe('VX-L')
+  it('[T-010][AC2] a code suggestion is the keepsake code and the full labels, upper case, joined by hyphens', () => {
+    expect(suggestCode({ size: 's', theme: 'swan' }, saved, '1.6795')).toBe('1.6795-SMALL-58-MM-SWAN-ON-THE-LAKE')
+    expect(suggestCode({ size: 'l' }, saved, '1.6795')).toBe('1.6795-LARGE')
+    expect(suggestCode({ size: 'l' }, saved)).toBe('LARGE')
+    expect(isSkuCode(suggestCode({ size: 's', theme: 'swan' }, saved, '1.6795'))).toBe(true)
+  })
+
+  it('[T-010] a label becomes a part of a code: no marks, no stray characters', () => {
+    expect(codePart('Light blue')).toBe('LIGHT-BLUE')
+    expect(codePart('  Grösse (XL)! ')).toBe('GROSSE-XL')
+    expect(codePart('—')).toBe('')
+  })
+
+  it('[T-010] a variant with no code is named by its values', () => {
+    expect(variantName({ skuCode: null, values: { size: 's', theme: 'swan' } }, saved)).toBe('Small / Swan on the lake')
+    expect(variantName({ skuCode: 'VX-1', values: {} }, saved)).toBe('VX-1')
   })
 })
 
@@ -112,7 +127,7 @@ describe('[E6.2][AC52] the options sheet rules', () => {
   const colour: OptionDraft = {
     ref: 'colour',
     name: { en: 'Colour', de: '' },
-    values: [{ ref: 'red', label: { en: 'Red', de: '' }, swatch: '#c8102e' }, { ref: 'blue', label: { en: 'Blue', de: '' }, swatch: null }],
+    values: [{ ref: 'red', label: { en: 'Red', de: '' } }, { ref: 'blue', label: { en: 'Blue', de: '' } }],
   }
 
   it('[E6.2][AC52] a new option needs a value for every variant, archived ones too, and then it passes', () => {
@@ -124,13 +139,13 @@ describe('[E6.2][AC52] the options sheet rules', () => {
     expect(checkOptionsDraft(saved, [...draft(), colour], variants, { ...some, 3: { colour: 'red' } })).toEqual([])
   })
 
-  it('[E6.2][AC52] names are needed in one language, a value is needed, a swatch is #rrggbb', () => {
+  it('[E6.2][AC52] names are needed in one language and a value is needed', () => {
     const bad: OptionDraft[] = [
-      { ref: 'a', name: { en: '', de: '' }, values: [{ ref: 'v', label: { en: '', de: '' }, swatch: '#FFF' }] },
+      { ref: 'a', name: { en: '', de: '' }, values: [{ ref: 'v', label: { en: '', de: '' } }] },
       { ref: 'b', name: { en: 'Edge', de: '' }, values: [] },
     ]
 
-    expect(codes(checkOptionsDraft([], bad, [], {}))).toEqual(['option-name-required', 'value-name-required', 'swatch-invalid', 'option-needs-value'])
+    expect(codes(checkOptionsDraft([], bad, [], {}))).toEqual(['option-name-required', 'value-name-required', 'option-needs-value'])
   })
 
   it('[E6.2][AC52] two variants moved onto one combination are refused', () => {
@@ -146,10 +161,10 @@ describe('[E6.2][AC52] the options sheet rules', () => {
     expect(checkOptionsDraft([], draft([size]), only, { 1: { size: 's' } })).toEqual([])
   })
 
-  it('[E6.2][AC52] the body keeps the languages that have text, and a swatch only where it is on', () => {
-    const body = optionsBody([{ ref: 'x', name: { en: ' Colour ', de: '' }, values: [{ ref: 'y', label: { en: '', de: 'Rot' }, swatch: '#c8102e' }, { ref: 'z', label: { en: 'Blue', de: '' }, swatch: null }] }])
+  it('[E6.2][AC52] the body keeps the languages that have text, ', () => {
+    const body = optionsBody([{ ref: 'x', name: { en: ' Colour ', de: '' }, values: [{ ref: 'y', label: { en: '', de: 'Rot' } }, { ref: 'z', label: { en: 'Blue', de: '' } }] }])
 
-    expect(body).toEqual([{ ref: 'x', name: { en: 'Colour' }, values: [{ ref: 'y', label: { de: 'Rot' }, swatch: '#c8102e' }, { ref: 'z', label: { en: 'Blue' }, swatch: null }] }])
+    expect(body).toEqual([{ ref: 'x', name: { en: 'Colour' }, values: [{ ref: 'y', label: { de: 'Rot' } }, { ref: 'z', label: { en: 'Blue' } }] }])
     expect(asSaved(draftOfOptions(saved))[0]!.values[0]!.label).toEqual({ en: 'Small · 58 mm', de: 'Klein · 58 mm' })
   })
 })
@@ -186,7 +201,7 @@ describe('[T-007A] the option control rules', () => {
   const colour: OptionDraft = {
     ref: 'colour',
     name: { en: 'Colour', de: 'Farbe' },
-    values: [{ ref: 'red', label: { en: 'Red', de: 'Rot' }, swatch: null }, { ref: 'blue', label: { en: 'Blue', de: '' }, swatch: null }],
+    values: [{ ref: 'red', label: { en: 'Red', de: 'Rot' } }, { ref: 'blue', label: { en: 'Blue', de: '' } }],
   }
 
   it('[T-007A] splits typed or pasted text into values at commas, semicolons and lines, and drops the empty ones', () => {
@@ -212,7 +227,7 @@ describe('[T-007A] the option control rules', () => {
   })
 
   it('[T-007A] AC-2: a value twice in one option is refused at the second one, and the text names it and the option', () => {
-    const twice: OptionDraft = { ...colour, values: [...colour.values, { ref: 'again', label: { en: 'red', de: '' }, swatch: null }] }
+    const twice: OptionDraft = { ...colour, values: [...colour.values, { ref: 'again', label: { en: 'red', de: '' } }] }
     const found = checkStagedOptions([], [twice], [], {})
 
     expect(found).toEqual([{ at: 'again', code: 'value-duplicate', params: { value: 'red', option: 'Colour' } }])

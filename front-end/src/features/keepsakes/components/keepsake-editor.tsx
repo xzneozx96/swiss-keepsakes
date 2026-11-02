@@ -118,7 +118,8 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
     saveVariants: editor.saveVariants,
     commit: editor.commitOptions,
     // The options as they are saved, with the combinations that no variant holds.
-    addBack: combinations => editor.commitOptions({ options: optionsBody(savedOptions), plan: { variantValues: [], newVariants: newVariantsFor(combinations, savedOptions, keepsake.variants, basePriceOf(keepsake.variants)) } }),
+    addBack: (combinations, codeBase) => editor.commitOptions({ options: optionsBody(savedOptions), plan: { variantValues: [], newVariants: newVariantsFor(combinations, savedOptions, keepsake.variants, basePriceOf(keepsake.variants), codeBase) } }),
+    addPhoto: mediaId => editor.change(current => ({ photoIds: current.photoIds.includes(mediaId) ? current.photoIds : [...current.photoIds, mediaId] })),
   }
 
   const summary = blocking.length
@@ -176,7 +177,7 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
             onValue={next => editor.change({ name: next.name, text: next.text })}
           />
         </div>
-        {step === 'options' && <OptionsAndVariantsStep actions={actions} codeFallback="" committed={savedRefsOf(keepsake.options)} draft={options} held={false} language={editLanguage} showErrors={showErrors} variants={keepsake.variants} />}
+        {step === 'options' && <OptionsAndVariantsStep actions={actions} committed={savedRefsOf(keepsake.options)} draft={options} held={false} keepsakeId={keepsake.id} language={editLanguage} photoIds={draft.photoIds} showErrors={showErrors} storeId={storeId} variants={keepsake.variants} />}
         {onReview && (
           <Suspense fallback={<StepBodySkeleton />}>
             <ReviewScreen actions={{ unpublish: editor.unpublish, publish: () => void publish(), isPending: editor.isPublishing }} keepsake={keepsake} onFix={jumpTo} />

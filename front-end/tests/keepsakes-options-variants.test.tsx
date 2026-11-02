@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { writeStored } from '@/lib/storage'
-import { list, listItem, problem, product, productId, renderKeepsakes, setUpHarness, state, storeId, variantId, writes } from './keepsakes-harness'
+import { list, listItem, media, photoId, problem, product, productId, renderKeepsakes, setUpHarness, state, storeId, variantId, writes } from './keepsakes-harness'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -17,9 +17,9 @@ const detail = `${base}/${productId}`
 const SLOW = { timeout: 8000 }
 const id = (n: number) => `0198a000-0000-7000-8000-0000000000${n.toString(16).padStart(2, '0')}`
 
-interface Variant { id: string, skuCode: string, priceRappen: number, status: 'published' | 'draft' | 'archived', values: Record<string, string> }
-interface OptionBody { ref: string, name: { en?: string, de?: string }, values: { ref: string, label: { en?: string, de?: string }, swatch: string | null }[] }
-interface OptionsPut { options: OptionBody[], variantValues?: { variantId: string, values: Record<string, string> }[], newVariants?: { skuCode: string, priceRappen: number, values: Record<string, string> }[] }
+interface Variant { id: string, skuCode: string | null, mediaId: string | null, photo: object | null, priceRappen: number, status: 'published' | 'draft' | 'archived', values: Record<string, string> }
+interface OptionBody { ref: string, name: { en?: string, de?: string }, values: { ref: string, label: { en?: string, de?: string } }[] }
+interface OptionsPut { options: OptionBody[], variantValues?: { variantId: string, values: Record<string, string> }[], newVariants?: { skuCode: string | null, priceRappen: number, values: Record<string, string> }[] }
 
 let current: ReturnType<typeof product>
 
@@ -42,24 +42,24 @@ function serve(extra: (call: Call) => Response | undefined = () => undefined) {
       const body = call.body as OptionsPut
       const variants: Variant[] = [
         ...current.variants.map(variant => ({ ...variant, values: { ...variant.values, ...body.variantValues?.find(row => row.variantId === variant.id)?.values } })),
-        ...(body.newVariants ?? []).map((made, index) => ({ id: id(0xE0 + index), skuCode: made.skuCode, priceRappen: made.priceRappen, status: 'published' as const, values: made.values })),
+        ...(body.newVariants ?? []).map((made, index) => ({ id: id(0xE0 + index), skuCode: made.skuCode, mediaId: null, photo: null, priceRappen: made.priceRappen, status: 'published' as const, values: made.values })),
       ]
 
-      current = product({ ...current, options: body.options.map(option => ({ id: option.ref, name: option.name, values: option.values.map(value => ({ id: value.ref, label: value.label, swatch: value.swatch })) })), variants, rowVersion: current.rowVersion + 1 })
+      current = product({ ...current, options: body.options.map(option => ({ id: option.ref, name: option.name, values: option.values.map(value => ({ id: value.ref, label: value.label })) })), variants, rowVersion: current.rowVersion + 1 })
 
       return Response.json(current)
     }
     if (call.method === 'PATCH' && call.path === `${detail}/variants`) {
-      const rows = (call.body as { variants: { id: string, priceRappen?: number, status?: Variant['status'] }[] }).variants
+      const rows = (call.body as { variants: { id: string, priceRappen?: number, status?: Variant['status'], skuCode?: string | null, mediaId?: string | null }[] }).variants
 
-      current = product({ ...current, variants: current.variants.map((variant) => { const row = rows.find(r => r.id === variant.id); return row ? { ...variant, ...(row.priceRappen !== undefined && { priceRappen: row.priceRappen }), ...(row.status && { status: row.status }) } : variant }) })
+      current = product({ ...current, variants: current.variants.map((variant) => { const row = rows.find(r => r.id === variant.id); return row ? { ...variant, ...(row.priceRappen !== undefined && { priceRappen: row.priceRappen }), ...(row.status && { status: row.status }), ...(row.skuCode !== undefined && { skuCode: row.skuCode }), ...(row.mediaId !== undefined && { mediaId: row.mediaId, photo: row.mediaId ? media : null }) } : variant }) })
 
       return Response.json(current)
     }
     if (call.method === 'PATCH' && call.path.startsWith(`${detail}/variants/`)) {
       const body = call.body as Partial<Variant>
 
-      current = product({ ...current, variants: current.variants.map(variant => (call.path.endsWith(variant.id) ? { ...variant, ...body } : variant)) })
+      current = product({ ...current, variants: current.variants.map(variant => (call.path.endsWith(variant.id) ? { ...variant, ...body, ...(body.mediaId !== undefined && { photo: body.mediaId ? media : null }) } : variant)) })
 
       return Response.json(current)
     }
@@ -125,9 +125,10 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
 
     expect(body.variantValues).toEqual([{ variantId, values: { [body.options[0]!.ref]: xs } }])
     expect(body.newVariants).toEqual([
-      { skuCode: 'VX-S', priceRappen: 3900, values: { [body.options[0]!.ref]: s } },
-      { skuCode: 'VX-M', priceRappen: 3900, values: { [body.options[0]!.ref]: m } },
-      { skuCode: 'VX-L', priceRappen: 3900, values: { [body.options[0]!.ref]: l } },
+      // The keepsake has a code (VX-1), so the SKU switch is on and the new codes are that code and the labels.
+      { skuCode: 'VX-1-S', priceRappen: 3900, values: { [body.options[0]!.ref]: s } },
+      { skuCode: 'VX-1-M', priceRappen: 3900, values: { [body.options[0]!.ref]: m } },
+      { skuCode: 'VX-1-L', priceRappen: 3900, values: { [body.options[0]!.ref]: l } },
     ])
     expect(await within(optionsBlock()).findByTestId('option-row')).toHaveTextContent('Size')
     expect(within(optionsBlock()).getByTestId('option-row')).toHaveTextContent('XSSML')
@@ -180,12 +181,24 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
     expect(await screen.findByText('medium is already a value of Size. Each value is listed once.')).toBeInTheDocument()
   })
 
-  it('[T-008] the name offers Size, Colour, Theme and Material', async () => {
+  it('[T-010][AC4] the name offers no list while no other keepsake of the shop has an option', async () => {
+    await openStep()
+    await userEvent.click(screen.getByRole('button', { name: 'Add option' }))
+    await screen.findByRole('combobox', { name: 'Option name in English' })
+
+    // Only this keepsake is in the list, and it has no option: nothing to suggest.
+    expect(screen.queryByRole('button', { name: /Show suggestions/ })).not.toBeInTheDocument()
+  })
+
+  it('[T-010][AC4] the name offers the names that the shop\'s other keepsakes use, each once, and not this keepsake\'s own', async () => {
+    serve(call => (call.method === 'GET' && call.path === base
+      ? Response.json(list([listItem({ optionNames: [{ en: 'Own' }] }), listItem({ id: id(0x77), optionNames: [{ en: 'Size', de: 'Grösse' }, { en: 'Theme' }] }), listItem({ id: id(0x78), optionNames: [{ en: 'size' }, { en: 'Material' }] })]))
+      : undefined))
     await openStep()
     await userEvent.click(screen.getByRole('button', { name: 'Add option' }))
     await userEvent.click(await screen.findByRole('button', { name: /Show suggestions/ }))
 
-    expect((await screen.findAllByRole('option')).map(option => option.textContent)).toEqual(['Size', 'Colour', 'Theme', 'Material'])
+    expect((await screen.findAllByRole('option')).map(option => option.textContent)).toEqual(['Size', 'Theme', 'Material'])
     await userEvent.click(screen.getByRole('option', { name: 'Theme' }))
     expect(screen.getByRole('combobox', { name: 'Option name in English' })).toHaveValue('Theme')
   })
@@ -207,11 +220,11 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
 describe('[T-008] options and variants of a keepsake that has them', () => {
   const optSize = id(0xC1)
   const optColour = id(0xC4)
-  const size = ['XS', 'S', 'M', 'L'].map((label, index) => ({ id: id(0xC2 + index * 0x10), label: { en: label }, swatch: null }))
-  const colour = ['Red', 'Blue'].map((label, index) => ({ id: id(0xC5 + index * 0x10), label: { en: label }, swatch: null }))
+  const size = ['XS', 'S', 'M', 'L'].map((label, index) => ({ id: id(0xC2 + index * 0x10), label: { en: label } }))
+  const colour = ['Red', 'Blue'].map((label, index) => ({ id: id(0xC5 + index * 0x10), label: { en: label } }))
   const sizeOption = { id: optSize, name: { en: 'Size', de: 'Grösse' }, values: size.map(value => ({ ...value, label: { ...value.label, de: value.label.en } })) }
   const colourOption = { id: optColour, name: { en: 'Colour' }, values: colour }
-  const all = size.flatMap((s, i) => colour.map((c, j) => ({ id: id(0xA0 + i * 2 + j), skuCode: `VX-${s.label.en}-${c.label.en}`.toUpperCase(), priceRappen: 4000, status: 'published' as const, values: { [optSize]: s.id, [optColour]: c.id } })))
+  const all = size.flatMap((s, i) => colour.map((c, j) => ({ id: id(0xA0 + i * 2 + j), skuCode: `VX-${s.label.en}-${c.label.en}`.toUpperCase(), mediaId: null, photo: null, priceRappen: 4000, status: 'published' as const, values: { [optSize]: s.id, [optColour]: c.id } })))
 
   beforeEach(() => {
     current = product({ options: [sizeOption, colourOption], variants: all })
@@ -334,7 +347,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
 
     expect(body.options.map(option => option.ref)).toEqual([optSize, optColour])
     expect(body.variantValues).toBeUndefined()
-    expect(body.newVariants).toEqual([{ skuCode: 'VX-X-RED', priceRappen: 4000, values: { [optSize]: size[0]!.id, [optColour]: colour[0]!.id } }])
+    expect(body.newVariants).toEqual([{ skuCode: 'VX-XS-RED', priceRappen: 4000, values: { [optSize]: size[0]!.id, [optColour]: colour[0]!.id } }])
     await waitFor(() => expect(screen.queryByTestId('not-sold')).not.toBeInTheDocument())
     expect(rows()).toHaveLength(8)
   })
@@ -378,7 +391,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
 
     expect(body.variantValues).toBeUndefined()
     expect(body.newVariants!.map(made => made.values[optColour])).toEqual([colour[0]!.id, colour[1]!.id])
-    expect(body.newVariants!.map(made => made.skuCode)).toEqual(['VX-X-RED', 'VX-X-BLUE'])
+    expect(body.newVariants!.map(made => made.skuCode)).toEqual(['VX-XL-RED', 'VX-XL-BLUE'])
   })
 
   it('[T-008] an option that variants use is refused at once, naming them, and nothing is sent', async () => {
@@ -446,8 +459,8 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
 describe('[T-008][AC7] one language switch for the editor', () => {
   it('[T-008][AC7] the switch in the head changes the Name and text card and the options to German fields with the English names beside them, and no card has tabs', async () => {
     current = product({
-      options: [{ id: id(0xC1), name: { en: 'Size', de: 'Grösse' }, values: [{ id: id(0xC2), label: { en: 'Small' }, swatch: null }] }],
-      variants: [{ id: variantId, skuCode: 'VX-S', priceRappen: 3900, status: 'published', values: { [id(0xC1)]: id(0xC2) } }],
+      options: [{ id: id(0xC1), name: { en: 'Size', de: 'Grösse' }, values: [{ id: id(0xC2), label: { en: 'Small' } }] }],
+      variants: [{ id: variantId, skuCode: 'VX-S', mediaId: null, photo: null, priceRappen: 3900, status: 'published', values: { [id(0xC1)]: id(0xC2) } }],
     })
     serve()
     renderKeepsakes(`/store/products/gifts/${productId}`)
@@ -509,13 +522,13 @@ describe('[T-008][AC9] a new keepsake: the same step, held in the browser', () =
     await userEvent.click(screen.getByRole('button', { name: 'Save as draft' }))
 
     await waitFor(() => expect(writes()).toHaveLength(1))
-    const body = writes()[0]!.body as { options: OptionBody[], variants: { skuCode: string, priceRappen: number, values: Record<string, string> }[] }
+    const body = writes()[0]!.body as { options: OptionBody[], variants: { skuCode: string | null, mediaId: string | null, priceRappen: number, values: Record<string, string> }[] }
     const [ref] = body.options
 
     expect(body.options).toHaveLength(1)
     expect(body.variants).toEqual([
-      { skuCode: 'VX-S', priceRappen: 3900, values: { [ref!.ref]: ref!.values[0]!.ref } },
-      { skuCode: 'VX-M', priceRappen: 3900, values: { [ref!.ref]: ref!.values[1]!.ref } },
+      { skuCode: null, mediaId: null, priceRappen: 3900, values: { [ref!.ref]: ref!.values[0]!.ref } },
+      { skuCode: null, mediaId: null, priceRappen: 3900, values: { [ref!.ref]: ref!.values[1]!.ref } },
     ])
   })
 
@@ -605,13 +618,13 @@ describe('[E6.2][AC52] the preview', () => {
 
     current = product({
       options: [
-        { id: size, name: { en: 'Size', de: 'Grösse' }, values: [{ id: small, label: { en: 'Small', de: 'Klein' }, swatch: null }, { id: large, label: { en: 'Large', de: 'Gross' }, swatch: null }] },
-        { id: theme, name: { en: 'Theme' }, values: [{ id: swan, label: { en: 'Swan' }, swatch: null }, { id: lion, label: { en: 'Lion Monument' }, swatch: null }] },
+        { id: size, name: { en: 'Size', de: 'Grösse' }, values: [{ id: small, label: { en: 'Small', de: 'Klein' } }, { id: large, label: { en: 'Large', de: 'Gross' } }] },
+        { id: theme, name: { en: 'Theme' }, values: [{ id: swan, label: { en: 'Swan' } }, { id: lion, label: { en: 'Lion Monument' } }] },
       ],
       variants: [
-        { id: id(0xD1), skuCode: 'VX-S-SWAN', priceRappen: 3900, status: 'published', values: { [size]: small, [theme]: swan } },
-        { id: id(0xD2), skuCode: 'VX-L-SWAN', priceRappen: 4900, status: 'draft', values: { [size]: large, [theme]: swan } },
-        { id: id(0xD3), skuCode: 'VX-S-LION', priceRappen: 3900, status: 'archived', values: { [size]: small, [theme]: lion } },
+        { id: id(0xD1), skuCode: 'VX-S-SWAN', mediaId: null, photo: null, priceRappen: 3900, status: 'published', values: { [size]: small, [theme]: swan } },
+        { id: id(0xD2), skuCode: 'VX-L-SWAN', mediaId: null, photo: null, priceRappen: 4900, status: 'draft', values: { [size]: large, [theme]: swan } },
+        { id: id(0xD3), skuCode: 'VX-S-LION', mediaId: null, photo: null, priceRappen: 3900, status: 'archived', values: { [size]: small, [theme]: lion } },
       ],
       warnings: [{ code: 'option-labels', card: 'options', count: 3 }],
     })
@@ -625,5 +638,120 @@ describe('[E6.2][AC52] the preview', () => {
     expect(within(within(preview).getByRole('region', { name: 'Size' })).getByText('Not sold')).toBeInTheDocument()
     expect(within(within(preview).getByRole('region', { name: 'Theme' })).getByText('Not sold')).toBeInTheDocument()
     expect(preview).not.toHaveTextContent('VX-S-SWAN')
+  })
+})
+
+describe('[T-010] the SKU switch', () => {
+  const optSize = id(0xC1)
+  const optColour = id(0xC4)
+  const size = ['XS', 'S'].map((label, index) => ({ id: id(0xC2 + index * 0x10), label: { en: label } }))
+  const colour = ['Red', 'Blue'].map((label, index) => ({ id: id(0xC5 + index * 0x10), label: { en: label } }))
+  const options = [{ id: optSize, name: { en: 'Size' }, values: size }, { id: optColour, name: { en: 'Colour' }, values: colour }]
+  const rowsOf = (code: (s: string, c: string) => string | null) => size.flatMap((s, i) => colour.map((c, j) => ({ id: id(0xA0 + i * 2 + j), skuCode: code(s.label.en, c.label.en), mediaId: null, photo: null, priceRappen: 4000, status: 'published' as const, values: { [optSize]: s.id, [optColour]: c.id } })))
+  const sku = () => within(variantsBlock()).getByRole('switch', { name: 'This keepsake has SKU codes' })
+
+  it('[T-010][AC3] with codes it is on and the rows show them; turning it off asks, then clears every code in one request', async () => {
+    current = product({ options, variants: rowsOf((s, c) => `K-${s}-${c}`.toUpperCase()) })
+    serve()
+    await openStep()
+
+    expect(sku()).toBeChecked()
+    expect(within(rows()[0]!).getByText('K-XS-RED')).toBeInTheDocument()
+    await userEvent.click(sku())
+    const dialog = await screen.findByRole('alertdialog')
+
+    expect(dialog).toHaveTextContent('Remove the SKU codes of all 4 variants?')
+    expect(patches()).toHaveLength(0)
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove codes' }))
+
+    await waitFor(() => expect(patches()).toHaveLength(1))
+    expect(patches()[0]).toMatchObject({ path: `${detail}/variants`, body: { variants: current.variants.map(variant => ({ id: variant.id, skuCode: null })) } })
+    await waitFor(() => expect(sku()).not.toBeChecked())
+    expect(within(variantsBlock()).queryByText('K-XS-RED')).not.toBeInTheDocument()
+  })
+
+  it('[T-010][AC1] with no code it is off: the sheet has no code field, and the switch shows one', async () => {
+    current = product({ options, variants: rowsOf(() => null) })
+    serve()
+    await openStep()
+
+    expect(sku()).not.toBeChecked()
+    await userEvent.click(within(variantsBlock()).getByRole('button', { name: 'Edit XS / Red' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Edit XS / Red' })
+
+    expect(within(sheet).queryByLabelText('SKU code')).not.toBeInTheDocument()
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Cancel' }))
+    await userEvent.click(sku())
+    await userEvent.click(within(variantsBlock()).getByRole('button', { name: 'Edit XS / Red' }))
+    expect(within(await screen.findByRole('dialog', { name: 'Edit XS / Red' })).getByLabelText('SKU code')).toHaveValue('')
+    expect(patches()).toHaveLength(0)
+  })
+
+  it('[T-010][AC2] a code saved in the sheet is sent; leaving it empty sends none, and a taken one is refused at the field', async () => {
+    current = product({ options, variants: rowsOf(() => null) })
+    serve(call => (call.method === 'PATCH' && call.path.endsWith(`/variants/${id(0xA1)}`) ? problem(409, 'sku-code-taken') : undefined))
+    await openStep()
+    await userEvent.click(sku())
+    await userEvent.click(within(variantsBlock()).getByRole('button', { name: 'Edit XS / Red' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Edit XS / Red' })
+
+    await userEvent.type(within(sheet).getByLabelText('SKU code'), 'k-1')
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(patches()).toHaveLength(1))
+    expect(patches()[0]).toMatchObject({ path: `${detail}/variants/${id(0xA0)}`, body: { skuCode: 'K-1' } })
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Edit XS / Red' })).not.toBeInTheDocument())
+
+    await userEvent.click(within(variantsBlock()).getByRole('button', { name: 'Edit XS / Blue' }))
+    const second = await screen.findByRole('dialog', { name: 'Edit XS / Blue' })
+
+    await userEvent.type(within(second).getByLabelText('SKU code'), 'k-1')
+    await userEvent.click(within(second).getByRole('button', { name: 'Save' }))
+    expect(await within(second).findByText('K-1 is already used in your shop.')).toBeInTheDocument()
+  })
+})
+
+describe('[T-010] the photo of a variant', () => {
+  const optSize = id(0xC1)
+  const size = ['XS', 'S'].map((label, index) => ({ id: id(0xC2 + index * 0x10), label: { en: label } }))
+
+  beforeEach(() => {
+    current = product({ options: [{ id: optSize, name: { en: 'Size' }, values: size }], variants: size.map((s, i) => ({ id: id(0xA0 + i), skuCode: null, mediaId: null, photo: null, priceRappen: 4000, status: 'published', values: { [optSize]: s.id } })) })
+    serve()
+  })
+
+  it('[T-010][AC8] a row\'s photo slot opens the keepsake\'s photos, choosing one saves it on that variant alone, and Remove takes it off', async () => {
+    await openStep()
+    await userEvent.click(within(rows()[0]!).getByRole('button', { name: 'Add a photo of XS' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Photo of the variant' })
+
+    expect(within(sheet).getByRole('button', { name: 'Choose from library' })).toBeInTheDocument()
+    await userEvent.click(await within(sheet).findByRole('button', { name: 'photo.jpg' }))
+
+    await waitFor(() => expect(patches()).toHaveLength(1))
+    expect(patches()[0]).toMatchObject({ path: `${detail}/variants/${id(0xA0)}`, body: { mediaId: photoId } })
+    // The keepsake already has this photo: its photos are not saved again.
+    expect(writes().filter(call => call.path === detail)).toHaveLength(0)
+    await userEvent.click(await within(rows()[0]!).findByRole('button', { name: 'Change the photo of XS' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Remove photo' }))
+
+    await waitFor(() => expect(patches()).toHaveLength(2))
+    expect(patches()[1]).toMatchObject({ body: { mediaId: null } })
+    expect(within(rows()[1]!).getByRole('button', { name: 'Add a photo of S' })).toBeInTheDocument()
+  })
+
+  it('[T-010][AC8] the sheet shows the photo with Change and Remove, and Save sends the photo with the rest', async () => {
+    await openStep()
+    await userEvent.click(within(variantsBlock()).getByRole('button', { name: 'Edit XS' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Edit XS' })
+
+    expect(within(sheet).getByRole('button', { name: 'Add a photo' })).toBeInTheDocument()
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Add a photo' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'photo.jpg' }))
+    expect(await within(sheet).findByRole('button', { name: 'Change' })).toBeInTheDocument()
+    expect(within(sheet).getByRole('button', { name: 'Remove photo' })).toBeInTheDocument()
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(patches()).toHaveLength(1))
+    expect(patches()[0]!.body).toMatchObject({ mediaId: photoId })
   })
 })
