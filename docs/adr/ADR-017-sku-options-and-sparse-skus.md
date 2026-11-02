@@ -21,6 +21,7 @@ We will make the SKU the unit of stock, price and order.
 ## Consequences
 - The merchant sees and edits each combination. Adding a colour means adding a value and then SKUs for the combinations that come in it.
 - Stock, price and orders do not depend on how options are modelled, so the option model can change without touching them.
+- **Amended 2026-11-01.** `catalog.products.status` also takes `archived` (the check in `0011_catalog` already allows it): a keepsake that has orders is archived instead of deleted, and archiving is final. It leaves its variants and SKUs as they are, so the old orders keep their SKU. A keepsake that no order references is deleted with its variants (ADR-014).
 - The page needs a query that groups SKUs by product and builds the selectors from the options, values and published SKUs.
 
 ## Assumptions
@@ -36,3 +37,4 @@ We will make the SKU the unit of stock, price and order.
 - 2026-10-26 proposed
 - 2026-10-26 revised after owner answer M9 (generic options)
 - 2026-10-26 accepted (gate DESIGN)
+- 2026-11-01 amended (owner: a keepsake is deleted if never sold, else archived; the product status takes `archived`)
