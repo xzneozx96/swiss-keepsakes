@@ -187,26 +187,6 @@ export function VariantsBlock({ storeId, options, variants, held, actions, previ
           onCancel={() => setPricing(false)}
         />
       )}
-      {/* The shared floating bar of bulk selection, as in Media: count, actions, clear. */}
-      {ticked.length > 0 && (
-        <ActionBar
-          actions={[
-            { icon: PriceIcon, label: t('keepsakes.variants.bulk.setPrice'), isDisabled: isPending, onPress: () => setPricing(true) },
-            ...(held
-              ? []
-              : [
-                  { icon: ForSaleIcon, label: t('keepsakes.variant.status.published'), isDisabled: isPending, onPress: () => forTicked({ status: 'published' }) },
-                  { icon: HiddenIcon, label: t('keepsakes.variant.status.hidden'), isDisabled: isPending, onPress: () => forTicked({ status: 'draft' }) },
-                ]),
-            { icon: held ? TrashIcon : ArchiveIcon, label: t(held ? 'keepsakes.variants.remove' : 'keepsakes.variant.archive'), tone: 'danger', isDisabled: isPending, onPress: () => void archive(ticked, () => setSelected(new Set())) },
-          ]}
-          count={ticked.length}
-          onClear={() => {
-            setSelected(new Set())
-            setPricing(false)
-          }}
-        />
-      )}
       {failure && <QuietNote>{failure}</QuietNote>}
 
       {groups.length > 0
@@ -293,6 +273,26 @@ export function VariantsBlock({ storeId, options, variants, held, actions, previ
         />
       )}
       {dialog}
+      {/* The shared floating bar of bulk selection, as in Media: count, actions, clear. It goes last: its spacer keeps the bar off the last row. */}
+      {ticked.length > 0 && (
+        <ActionBar
+          actions={[
+            { icon: PriceIcon, label: t('keepsakes.variants.bulk.setPrice'), isDisabled: isPending, onPress: () => setPricing(true) },
+            ...(held
+              ? []
+              : [
+                  { icon: ForSaleIcon, label: t('keepsakes.variant.status.published'), isDisabled: isPending, onPress: () => forTicked({ status: 'published' }) },
+                  { icon: HiddenIcon, label: t('keepsakes.variant.status.hidden'), isDisabled: isPending, onPress: () => forTicked({ status: 'draft' }) },
+                ]),
+            { icon: held ? TrashIcon : ArchiveIcon, label: t(held ? 'keepsakes.variants.remove' : 'keepsakes.variant.archive'), tone: 'danger', isDisabled: isPending, onPress: () => void archive(ticked, () => setSelected(new Set())) },
+          ]}
+          count={ticked.length}
+          onClear={() => {
+            setSelected(new Set())
+            setPricing(false)
+          }}
+        />
+      )}
     </Block>
   )
 }
