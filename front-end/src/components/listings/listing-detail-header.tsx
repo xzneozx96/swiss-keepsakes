@@ -17,14 +17,14 @@ export function ListingDetailHeader({
   stats,
 }: {
   name: string
-  subtitle: string
+  subtitle?: string
   stats: ListingDetailStats
 }) {
   return (
     <>
       <header className="flex flex-col items-center gap-2 pb-6 text-center">
         <h1 className="font-serif text-title text-balance">{name}</h1>
-        <p className="text-sm text-muted">{subtitle}</p>
+        {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
       </header>
 
       {/* 2. Stats row: the laurel rating in a wider middle column, equal sides */}

@@ -202,10 +202,7 @@ export const en = {
   'detail.variant.required': 'Choose an option.',
   'detail.variant.soldOut': 'Sold out',
   'detail.variant.notForSale': 'Not on sale at the moment',
-  'detail.engraving.label': 'Engraving (optional)',
-  'detail.engraving.description':
-    'Free. Up to {max} characters, engraved by hand.',
-  'detail.engraving.counter': '{count} of {max} characters',
+  'detail.variant.notSold': 'This combination is not sold',
   'detail.quantity.label': 'Quantity',
   'detail.quantity.available': '{count} available',
   'detail.date.label': 'Pickup date',
@@ -267,17 +264,10 @@ export const en = {
   'detail.seller.visit': 'Visit shop',
   'detail.seller.contact': 'Contact',
   'detail.seller.emailSubject': 'Question about {name}',
-  'detail.highlight.engrave.title': 'Engraved by hand',
-  'detail.highlight.engrave.body':
-    'Add a name of up to {max} characters, free of charge.',
   'detail.highlight.pickup.title': 'Pick up in Luzerne',
   'detail.highlight.pickup.places': '{first} or {second}',
-  'detail.highlight.pay.title': 'Nothing to pay now',
-  'detail.highlight.pay.full':
-    'You pay in full once the seller confirms your date.',
-  'detail.highlight.pay.deposit':
-    'You pay a {percent}% deposit once the seller confirms your date.',
-  'detail.highlight.pay.later': 'You pay after pickup.',
+  'detail.highlight.delivery.title': 'Pay on delivery',
+  'detail.highlight.delivery.body': 'Nothing to pay now. You pay when you collect it.',
   'detail.about.title': 'About this keepsake',
   'detail.story.label': 'The story behind it',
   'detail.story.read': 'Read the story',

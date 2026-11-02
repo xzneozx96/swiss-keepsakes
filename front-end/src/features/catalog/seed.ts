@@ -394,12 +394,55 @@ export const products: Product[] = [
       de: 'Eine Bienenwachskerze einer Luzerner Kerzenmacherin mit zwei Postkarten vom See, in einer Kraftpapierbox.',
     },
     cancellationPolicy: standardCancellation,
+    // Two options, to try the choices in the add sheet: a sold-out and a not-on-sale combination.
+    options: [
+      {
+        id: 'size',
+        label: { en: 'Size', de: 'Grösse' },
+        values: [
+          { id: 'small', label: { en: 'Small', de: 'Klein' } },
+          { id: 'large', label: { en: 'Large', de: 'Gross' } },
+        ],
+      },
+      {
+        id: 'wax',
+        label: { en: 'Wax', de: 'Wachs' },
+        values: [
+          { id: 'natural', label: { en: 'Natural', de: 'Natur' } },
+          { id: 'red', label: { en: 'Red', de: 'Rot' } },
+        ],
+      },
+    ],
     variants: [
       {
         id: 'std',
-        label: { en: 'Standard', de: 'Standard' },
+        label: { en: 'Small · Natural', de: 'Klein · Natur' },
         price: 3400,
         stock: 8,
+        values: { size: 'small', wax: 'natural' },
+      },
+      {
+        id: 'small-red',
+        label: { en: 'Small · Red', de: 'Klein · Rot' },
+        price: 3600,
+        stock: 0,
+        values: { size: 'small', wax: 'red' },
+      },
+      {
+        id: 'large-natural',
+        label: { en: 'Large · Natural', de: 'Gross · Natur' },
+        price: 5200,
+        stock: 4,
+        notForSale: true,
+        values: { size: 'large', wax: 'natural' },
+      },
+      {
+        id: 'large-red',
+        label: { en: 'Large · Red', de: 'Gross · Rot' },
+        price: 5400,
+        stock: 3,
+        values: { size: 'large', wax: 'red' },
+        photo: 'postcards',
       },
     ],
     preparationDays: 1,

@@ -210,10 +210,7 @@ export const de: Record<MessageKey, string> = {
   'detail.variant.required': 'Wählen Sie eine Ausführung.',
   'detail.variant.soldOut': 'Ausverkauft',
   'detail.variant.notForSale': 'Zurzeit nicht im Verkauf',
-  'detail.engraving.label': 'Gravur (optional)',
-  'detail.engraving.description':
-    'Kostenlos. Bis zu {max} Zeichen, von Hand graviert.',
-  'detail.engraving.counter': '{count} von {max} Zeichen',
+  'detail.variant.notSold': 'Diese Kombination gibt es nicht',
   'detail.quantity.label': 'Anzahl',
   'detail.quantity.available': '{count} verfügbar',
   'detail.date.label': 'Abholdatum',
@@ -276,17 +273,10 @@ export const de: Record<MessageKey, string> = {
   'detail.seller.visit': 'Zum Laden',
   'detail.seller.contact': 'Kontakt',
   'detail.seller.emailSubject': 'Frage zu {name}',
-  'detail.highlight.engrave.title': 'Von Hand graviert',
-  'detail.highlight.engrave.body':
-    'Ein Name mit bis zu {max} Zeichen, kostenlos.',
   'detail.highlight.pickup.title': 'Abholen in Luzern',
   'detail.highlight.pickup.places': '{first} oder {second}',
-  'detail.highlight.pay.title': 'Jetzt nichts bezahlen',
-  'detail.highlight.pay.full':
-    'Sie bezahlen den vollen Betrag, sobald der Laden Ihr Datum bestätigt.',
-  'detail.highlight.pay.deposit':
-    'Sie leisten eine Anzahlung von {percent} %, sobald der Laden Ihr Datum bestätigt.',
-  'detail.highlight.pay.later': 'Sie bezahlen nach der Abholung.',
+  'detail.highlight.delivery.title': 'Bezahlen bei Übergabe',
+  'detail.highlight.delivery.body': 'Jetzt nichts bezahlen. Sie bezahlen bei der Abholung.',
   'detail.about.title': 'Über dieses Andenken',
   'detail.story.label': 'Die Geschichte dahinter',
   'detail.story.read': 'Geschichte lesen',

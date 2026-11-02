@@ -55,6 +55,17 @@ export interface Variant {
   stock: number
   /** The merchant has stopped selling this variant for now (spec C03 "variant not sold"). */
   notForSale?: boolean
+  /** The chosen value per option id, for a keepsake with `options`; the guest page reads it (C03). */
+  values?: Record<string, string>
+  /** Photo slug shown first in the gallery when this variant is chosen (C03). */
+  photo?: string
+}
+
+/** One choice of a keepsake with several options, e.g. Size with its values. Absent: the variants are one option. */
+export interface ProductOptionDef {
+  id: string
+  label: LocalizedText
+  values: { id: string, label: LocalizedText }[]
 }
 
 /**
@@ -76,6 +87,8 @@ export interface Product {
   story: LocalizedText
   cancellationPolicy: LocalizedText
   variants: Variant[]
+  /** Several options (Size, Colour…); each variant then names its value per option in `values`. */
+  options?: ProductOptionDef[]
   preparationDays: number
   dayMode: DayMode
   paymentPolicy: PaymentPolicy
