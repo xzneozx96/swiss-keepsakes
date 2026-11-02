@@ -398,7 +398,7 @@ describe('[E4.11][AC51] replacing a file over HTTP', () => {
       const read = async (path: string) => (await (await env.call(path)).json()) as Record<string, unknown>
       return {
         story: (await read(`/api/public/stories/${version!.slug}?lang=en`)).coverKey,
-        place: (await read(`/api/public/places/${place}?lang=en`)).photoKey,
+        place: ((await read(`/api/public/places/${place}?lang=en`)).photos as { url: string }[])[0]!.url.replace('https://media.test/', ''),
         tour: (await read(`/api/public/tours/${walk.slug}?lang=en`)).coverKey,
       }
     }

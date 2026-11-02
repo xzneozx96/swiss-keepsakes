@@ -15,7 +15,7 @@ afterAll(async () => {
   await pool.end()
 })
 
-const deps = { uow: createUnitOfWork(db), reads: createPublicReadRepository(), clock: systemClock }
+const deps = { uow: createUnitOfWork(db), reads: createPublicReadRepository(), clock: systemClock, publicUrl: key => `https://media.test/${key}` }
 const getPin = makeGetPin(deps)
 
 const slug = () => `p-${randomUUID().slice(0, 8)}`
@@ -166,15 +166,15 @@ describe('public pin reads over the database', () => {
 
     const items = await mapItems('en')
 
-    expect(items.find(i => i.id === a)).toMatchObject({ hasMainStory: true, mainStorySlug: storySlug, photoKey: key })
-    expect(items.find(i => i.id === noStory)).toMatchObject({ hasMainStory: false, mainStorySlug: null, photoKey: null })
+    expect(items.find(i => i.id === a)).toMatchObject({ hasMainStory: true, mainStorySlug: storySlug, photoUrl: `https://media.test/${key}` })
+    expect(items.find(i => i.id === noStory)).toMatchObject({ hasMainStory: false, mainStorySlug: null, photoUrl: null })
   })
 
   it('[E4.7][AC42][AC49][N03] the pin read carries the outbound link, the photos in order with their text, the main story and the other stories, and the list carries none of them', async () => {
     const store = randomUUID()
     const media = async () => (await pool.query<{ id: string, storage_key: string }>(
-      `insert into content.media (store_id, kind, storage_key, content_type, byte_size, sha256, status) values ($1, 'image', $2, 'image/jpeg', 10, repeat('a', 64), 'ready') returning id, storage_key`,
-      [store, `${store}/${randomUUID()}`],
+      `insert into content.media (store_id, kind, storage_key, content_type, byte_size, sha256, status, width, height) values ($1, 'image', $2, 'image/jpeg', 10, repeat('a', 64), 'ready', 700, 500) returning id, storage_key`,
+      [store, `${store}/${randomUUID()}/original.jpg`],
     )).rows[0]!
     const story = async (title: Record<string, string>) => {
       const { rows } = await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [store])
@@ -187,6 +187,12 @@ describe('public pin reads over the database', () => {
       }
       return rows[0]!.id
     }
+    // 700 px wide: the 320 and 640 px copies exist, the larger ones do not.
+    const shown = (key: string, alt: string | null) => ({
+      url: `https://media.test/${key}`,
+      variants: [320, 640].map(width => ({ width, url: `https://media.test/${key.replace('original.jpg', `w${width}.webp`)}` })),
+      alt,
+    })
     const [cover, second, third] = [await media(), await media(), await media()]
     const main = await story({ en: 'Main story', de: 'Hauptgeschichte' })
     const also = await story({ en: 'Also here', de: 'Auch hier' })
@@ -208,7 +214,7 @@ describe('public pin reads over the database', () => {
 
     expect(card.ok && card.value).toMatchObject({
       link: 'https://hotel.example/rooms',
-      photos: [{ key: cover.storage_key, alt: 'The cover' }, { key: third.storage_key, alt: 'Third' }, { key: second.storage_key, alt: null }],
+      photos: [shown(cover.storage_key, 'The cover'), shown(third.storage_key, 'Third'), shown(second.storage_key, null)],
       mainStory: { title: 'Main story', readMinutes: 3 },
       otherStories: [{ title: 'Also here', readMinutes: 3 }],
     })

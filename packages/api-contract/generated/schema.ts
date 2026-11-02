@@ -5443,11 +5443,23 @@ export interface components {
             longitude: number;
             mainStorySlug: string | null;
             nextDate: components["schemas"]["NextDate"];
-            photoKey: string | null;
+            /** @description The smallest copy of the cover photo; null when the pin has none */
+            photoUrl: string | null;
             slug: string | null;
             /** @enum {string} */
             stayTag: "short_stay" | "multi_day" | "both";
             title: string;
+        };
+        /** @description A photo of a pin, with its public addresses */
+        PublicPhoto: {
+            alt: string | null;
+            /** @description The original file */
+            url: string;
+            /** @description The webp copies, smallest first (320, 640, 1280, 1920 px as far as the image is wide) */
+            variants: {
+                url: string;
+                width: number;
+            }[];
         };
         /** @description The pin card */
         PublicPin: {
@@ -5483,12 +5495,8 @@ export interface components {
             nextDate: components["schemas"]["NextDate"];
             /** @description The other published stories that tag the pin, newest first */
             otherStories: components["schemas"]["PublicPinStory"][];
-            photoKey: string | null;
             /** @description Every ready photo in the merchant's order, the main photo first, with the merchant's text for it in the carried language */
-            photos: {
-                alt: string | null;
-                key: string;
-            }[];
+            photos: components["schemas"]["PublicPhoto"][];
             requestedLanguage: components["schemas"]["PublicLanguage"];
             slug: string | null;
             /** @enum {string} */

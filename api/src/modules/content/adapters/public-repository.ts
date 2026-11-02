@@ -146,12 +146,12 @@ async function loadPins(tx: Tx, pinId: string | null): Promise<PublicPinRow[]> {
          where status = 'published' and published is not null and group_id = any(${sql.param(groupIds)}::uuid[])`)).rows
   const covers = coverIds.length === 0
     ? []
-    : (await tx.execute<{ id: string, storage_key: string } & Record<string, unknown>>(sql`
-        select id, storage_key from content.media where id = any(${sql.param(coverIds)}::uuid[]) and status = 'ready'`)).rows
+    : (await tx.execute<{ id: string, storage_key: string, width: number | null } & Record<string, unknown>>(sql`
+        select id, storage_key, width from content.media where id = any(${sql.param(coverIds)}::uuid[]) and status = 'ready'`)).rows
 
   const datesOf = byPlace(dates.rows)
   const taggedOf = byPlace(tagged.rows)
-  const coverKeys = new Map(covers.map(m => [m.id, m.storage_key]))
+  const coverOf = new Map(covers.map(m => [m.id, m]))
   return pins.rows.map(row => ({
     id: row.id,
     slug: row.slug,
@@ -165,7 +165,8 @@ async function loadPins(tx: Tx, pinId: string | null): Promise<PublicPinRow[]> {
     name: row.published.name ?? {},
     tip: row.published.tip ?? {},
     firstPublishedAt: new Date(row.first_published_at),
-    photoKey: row.cover_media_id ? coverKeys.get(row.cover_media_id) ?? null : null,
+    photoKey: (row.cover_media_id && coverOf.get(row.cover_media_id)?.storage_key) || null,
+    photoWidth: (row.cover_media_id && coverOf.get(row.cover_media_id)?.width) || null,
     dates: (datesOf.get(row.id) ?? []).map(({ place_id: _placeId, ...date }) => date),
     categories: (taggedOf.get(row.id) ?? []).map(asCategory),
     parentCategories: parents.filter(p => (taggedOf.get(row.id) ?? []).some(c => c.parent_id === p.id)).map(asCategory),
@@ -191,15 +192,15 @@ async function loadPinExtras(tx: Tx, pinId: string): Promise<Pick<PublicPinDetai
   const mediaIds = [...new Set([...(own?.cover_media_id ? [own.cover_media_id] : []), ...extra.rows.map(r => r.media_id)])]
   const media = mediaIds.length === 0
     ? []
-    : (await tx.execute<{ id: string, storage_key: string } & Record<string, unknown>>(sql`
-        select id, storage_key from content.media where id = any(${sql.param(mediaIds)}::uuid[]) and status = 'ready'`)).rows
-  const keys = new Map(media.map(m => [m.id, m.storage_key]))
+    : (await tx.execute<{ id: string, storage_key: string, width: number | null } & Record<string, unknown>>(sql`
+        select id, storage_key, width from content.media where id = any(${sql.param(mediaIds)}::uuid[]) and status = 'ready'`)).rows
+  const files = new Map(media.map(m => [m.id, m]))
   const alt = (mediaId: string): Localized => (mediaId === own?.cover_media_id ? own.published.coverAlt : own?.published.photoAlt?.[mediaId]) ?? {}
   const mainStoryId = own?.main_story_group_id ?? null
 
   return {
     link: links.rows[0]?.url ?? null,
-    photos: mediaIds.flatMap(mediaId => (keys.has(mediaId) ? [{ key: keys.get(mediaId)!, alt: alt(mediaId) }] : [])),
+    photos: mediaIds.flatMap(mediaId => (files.has(mediaId) ? [{ key: files.get(mediaId)!.storage_key, width: files.get(mediaId)!.width, alt: alt(mediaId) }] : [])),
     stories: await loadStories(tx, [...new Set([...(mainStoryId ? [mainStoryId] : []), ...tagged.rows.map(r => r.group_id)])]),
     mainStoryId,
   }

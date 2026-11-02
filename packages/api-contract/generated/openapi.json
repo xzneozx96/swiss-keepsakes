@@ -7580,7 +7580,8 @@
           "nextDate": {
             "$ref": "#/components/schemas/NextDate"
           },
-          "photoKey": {
+          "photoUrl": {
+            "description": "The smallest copy of the cover photo; null when the pin has none",
             "type": [
               "string",
               "null"
@@ -7617,7 +7618,47 @@
           "nextDate",
           "hasMainStory",
           "mainStorySlug",
-          "photoKey"
+          "photoUrl"
+        ],
+        "type": "object"
+      },
+      "PublicPhoto": {
+        "description": "A photo of a pin, with its public addresses",
+        "properties": {
+          "alt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "description": "The original file",
+            "type": "string"
+          },
+          "variants": {
+            "description": "The webp copies, smallest first (320, 640, 1280, 1920 px as far as the image is wide)",
+            "items": {
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "width": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "width",
+                "url"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "url",
+          "variants",
+          "alt"
         ],
         "type": "object"
       },
@@ -7743,31 +7784,10 @@
             },
             "type": "array"
           },
-          "photoKey": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
           "photos": {
             "description": "Every ready photo in the merchant's order, the main photo first, with the merchant's text for it in the carried language",
             "items": {
-              "properties": {
-                "alt": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "key": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "key",
-                "alt"
-              ],
-              "type": "object"
+              "$ref": "#/components/schemas/PublicPhoto"
             },
             "type": "array"
           },
@@ -7833,7 +7853,6 @@
           "nextDate",
           "hasMainStory",
           "mainStorySlug",
-          "photoKey",
           "link",
           "photos",
           "mainStory",

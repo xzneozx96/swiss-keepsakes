@@ -39,6 +39,7 @@ function pin(n: number, over: Partial<PublicPinDetailRow> = {}): PublicPinDetail
     tip: { en: 'Tip', de: 'Tipp' },
     firstPublishedAt: new Date('2090-01-01T00:00:00Z'),
     photoKey: null,
+    photoWidth: null,
     dates: [],
     categories: [],
     parentCategories: [],
@@ -86,7 +87,7 @@ function setup(state: { pins: PublicPinDetailRow[], tours?: PublicTourRow[] }, s
     findPublishedTourBySlug: async (_tx, slug) => tours().find(t => Object.values(t.slug).includes(slug)),
   }
   const clock = createManualClock(new Date(start))
-  const deps = { uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) }, reads, clock }
+  const deps = { uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) }, reads, clock, publicUrl: (key: string) => `https://media.test/${key}` }
   const getMap = makeGetMap(deps)
   const getPin = makeGetPin(deps)
   const listTours = makeListTours(deps)
@@ -175,6 +176,21 @@ describe('public map list', () => {
     expect(Object.keys(byId(sub)).sort()).toEqual(Object.keys(publicMapItemSchema.shape).sort())
   })
 
+  it('[E4.7][N03] the list item carries the address of the smallest copy of the cover, the original when the width is unknown, and null without a cover', async () => {
+    const wide = pin(1, { photoKey: 's/a/o.jpg', photoWidth: 1500 })
+    const unknown = pin(2, { photoKey: 's/b/o.jpg', photoWidth: null })
+    const none = pin(3)
+    const s = setup({ pins: [wide, unknown, none] })
+
+    const { items } = await s.map('en')
+    const byId = (p: PublicPinDetailRow) => items.find(i => i.id === p.id)!
+
+    expect(byId(wide).photoUrl).toBe('https://media.test/s/a/w320.webp')
+    expect(byId(unknown).photoUrl).toBe('https://media.test/s/b/o.jpg')
+    expect(byId(none).photoUrl).toBeNull()
+    expect(JSON.stringify(items)).not.toContain('photoKey')
+  })
+
   it('[E2.12][AC88][D-5] a pin that falls back to English keeps the English main story slug, not the reader\'s language', async () => {
     const s = setup({ pins: [pin(1, { name: { en: 'Only EN' }, tip: { en: 'Tip EN' }, mainStorySlugs: { en: 'story-en', de: 'geschichte' } })] })
 
@@ -242,7 +258,7 @@ describe('public pin card', () => {
   it('[E2.12][AC88] carries the card fields, categories with their parent, and the next date', async () => {
     const parent = cat(1)
     const child = cat(2, { parentId: parent.id })
-    const p = pin(1, { categories: [child], parentCategories: [parent], dates: [date({})], address: 'Kapellbruecke', mainStorySlugs: { en: 'story-en' }, photoKey: 'k/1' })
+    const p = pin(1, { categories: [child], parentCategories: [parent], dates: [date({})], address: 'Kapellbruecke', mainStorySlugs: { en: 'story-en' } })
     const s = setup({ pins: [p] })
 
     const result = await s.pin(p.id, 'en')
@@ -257,7 +273,6 @@ describe('public pin card', () => {
       availableLanguages: ['de', 'en'],
       hasMainStory: true,
       mainStorySlug: 'story-en',
-      photoKey: 'k/1',
       nextDate: { firstDay: '2090-11-14', lastDay: '2090-11-14', startTime: null, endTime: null },
       categories: [{ id: parent.id, slug: 'cat-1', name: 'Cat 1' }, { id: child.id, slug: 'cat-2', name: 'Cat 2' }],
     })
@@ -301,14 +316,20 @@ describe('public pin card', () => {
   })
 
   it('[E4.7][N03] carries the photos in the merchant\'s order with the text for each in the carried language, null when it has none', async () => {
-    const p = pin(1, { photos: [{ key: 'k/cover', alt: { en: 'The bridge', de: 'Die Brücke' } }, { key: 'k/two', alt: { de: 'Nur deutsch' } }] })
+    const p = pin(1, { photos: [{ key: 's/cover/o.jpg', width: 1500, alt: { en: 'The bridge', de: 'Die Brücke' } }, { key: 's/two/o.jpg', width: null, alt: { de: 'Nur deutsch' } }] })
     const s = setup({ pins: [p] })
 
     const en = await s.pin(p.id, 'en')
     const de = await s.pin(p.id, 'de')
 
-    expect(en.ok && en.value.photos).toEqual([{ key: 'k/cover', alt: 'The bridge' }, { key: 'k/two', alt: null }])
-    expect(de.ok && de.value.photos).toEqual([{ key: 'k/cover', alt: 'Die Brücke' }, { key: 'k/two', alt: 'Nur deutsch' }])
+    const cover = (alt: string | null) => ({
+      url: 'https://media.test/s/cover/o.jpg',
+      variants: [320, 640, 1280].map(width => ({ width, url: `https://media.test/s/cover/w${width}.webp` })),
+      alt,
+    })
+
+    expect(en.ok && en.value.photos).toEqual([cover('The bridge'), { url: 'https://media.test/s/two/o.jpg', variants: [], alt: null }])
+    expect(de.ok && de.value.photos).toEqual([cover('Die Brücke'), { url: 'https://media.test/s/two/o.jpg', variants: [], alt: 'Nur deutsch' }])
   })
 
   it('[E4.7][AC42] carries the main story and the other stories that tag the pin, each with its reading time and no price', async () => {

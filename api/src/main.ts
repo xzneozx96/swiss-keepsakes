@@ -192,7 +192,7 @@ async function main() {
     const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), pins: pinDeps.pins, audit, clock: systemClock }
     const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit, clock: systemClock, jobs: createJobQueue(jobs.boss), graceHours: config.MEDIA_GRACE_HOURS }
     const categoryDeps = { uow, categories: createCategoryRepository(), audit, clock: systemClock }
-    const readDeps = { uow, reads: createPublicReadRepository(), clock: systemClock }
+    const readDeps = { uow, reads: createPublicReadRepository(), clock: systemClock, publicUrl: storage.publicUrl }
     const libraryDeps = { uow, library: createMediaLibrary(), keepsakes: keepsakeUses }
     const writeUseCases = guardUseCases({
       listMerchantPins: makeListMerchantPins(pinDeps),

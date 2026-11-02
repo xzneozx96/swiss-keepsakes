@@ -57,6 +57,8 @@ export interface PublicPinRow {
   firstPublishedAt: Date
   // storage_key of the cover when it is a ready media row.
   photoKey: string | null
+  // Pixel width of that cover, which decides the variants that exist.
+  photoWidth: number | null
   dates: PinDate[]
   // The categories on the pin, and the parents of those that are sub-categories.
   categories: PublicCategoryRow[]
@@ -70,7 +72,7 @@ export interface PublicPinRow {
 export interface PublicPinDetailRow extends PublicPinRow {
   link: string | null
   // The cover first, then the extra photos; only ready media.
-  photos: { key: string, alt: Localized }[]
+  photos: { key: string, width: number | null, alt: Localized }[]
   // The main story and every story whose places include this pin, each with its published versions.
   stories: PublicStoryRow[]
   mainStoryId: string | null
@@ -125,4 +127,6 @@ export interface ReadDeps<T> {
   uow: UnitOfWork<T>
   reads: PublicReadRepository<T>
   clock: Clock
+  // The public address of a storage key (the original or a variant), as the merchant views build it.
+  publicUrl: (key: string) => string
 }

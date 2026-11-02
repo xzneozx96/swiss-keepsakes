@@ -1,6 +1,6 @@
 import type { ContentLanguage, Localized, PinDate, StayTag } from '@sk/domain/content'
 import type { PublicCategoryRow, PublicPinDetailRow, PublicPinRow, PublicStoryRow, PublicStoryVersionRow, PublicTourRow } from '../read-ports.ts'
-import { isSafeLinkHref, languagesOf, STORY_BODY_LIMITS, storyBodyReadMinutes } from '@sk/domain/content'
+import { isSafeLinkHref, languagesOf, STORY_BODY_LIMITS, storyBodyReadMinutes, variantKey, variantWidthsFor } from '@sk/domain/content'
 import { pickLanguage } from './language.ts'
 import { nextDate, withParents } from './pin-dates.ts'
 
@@ -219,6 +219,9 @@ export function toPublicStory(row: PublicStoryRow, requested: ContentLanguage): 
 
 export interface PublicNextDate { firstDay: string, lastDay: string, startTime: string | null, endTime: string | null }
 
+// A photo as the public sees it: the address of the original and of each webp copy the merchant views list (320, 640, 1280, 1920 px, as far as the image is wide).
+export interface PublicPhoto { url: string, variants: { width: number, url: string }[], alt: string | null }
+
 export interface PublicPinStory { slug: string, title: string, readMinutes: number }
 
 // The fields the card and the map list share.
@@ -238,13 +241,12 @@ interface PinCore extends LanguageNotice {
   nextDate: PublicNextDate | null
   hasMainStory: boolean
   mainStorySlug: string | null
-  photoKey: string | null
 }
 
 // The pin's own read: the core plus what only a card that opens needs.
 export interface PublicPin extends PinCore {
   link: string | null
-  photos: { key: string, alt: string | null }[]
+  photos: PublicPhoto[]
   mainStory: PublicPinStory | null
   otherStories: PublicPinStory[]
 }
@@ -262,7 +264,8 @@ export interface PublicMapItem {
   nextDate: PublicNextDate | null
   hasMainStory: boolean
   mainStorySlug: string | null
-  photoKey: string | null
+  // The smallest copy of the cover, for a pin or a card thumbnail; null when the pin has no ready cover.
+  photoUrl: string | null
 }
 
 export interface PublicMap { items: PublicMapItem[] }
@@ -329,7 +332,6 @@ function toPinCore(row: PublicPinRow, requested: ContentLanguage, now: Date): Pi
     nextDate: next,
     hasMainStory: Object.keys(row.mainStorySlugs).length > 0,
     mainStorySlug: row.mainStorySlugs[info.language] ?? null,
-    photoKey: row.photoKey,
     ...info,
   }
 }
@@ -340,7 +342,11 @@ function pinStory(row: PublicStoryRow, language: ContentLanguage): PublicPinStor
   return version ? { slug: version.slug, title: str(version.published.title), readMinutes: storyBodyReadMinutes(publicBody(version)) } : null
 }
 
-export function toPublicPin(row: PublicPinDetailRow, requested: ContentLanguage, now: Date): PublicPin | null {
+function variantsOf(key: string, width: number | null, publicUrl: (key: string) => string) {
+  return width === null ? [] : variantWidthsFor(width).map(w => ({ width: w, url: publicUrl(variantKey(key, w)) }))
+}
+
+export function toPublicPin(row: PublicPinDetailRow, requested: ContentLanguage, now: Date, publicUrl: (key: string) => string): PublicPin | null {
   const core = toPinCore(row, requested, now)
   if (!core)
     return null
@@ -351,13 +357,13 @@ export function toPublicPin(row: PublicPinDetailRow, requested: ContentLanguage,
   return {
     ...core,
     link: row.link,
-    photos: row.photos.map(photo => ({ key: photo.key, alt: photo.alt[core.language] ?? null })),
+    photos: row.photos.map(photo => ({ url: publicUrl(photo.key), variants: variantsOf(photo.key, photo.width, publicUrl), alt: photo.alt[core.language] ?? null })),
     mainStory: main,
     otherStories: stories.flatMap(entry => (entry.story.id !== row.mainStoryId && entry.listed ? [entry.listed] : [])),
   }
 }
 
-export function toMapItem(row: PublicPinRow, requested: ContentLanguage, now: Date): PublicMapItem | null {
+export function toMapItem(row: PublicPinRow, requested: ContentLanguage, now: Date, publicUrl: (key: string) => string): PublicMapItem | null {
   const pin = toPinCore(row, requested, now)
   if (!pin)
     return null
@@ -375,7 +381,7 @@ export function toMapItem(row: PublicPinRow, requested: ContentLanguage, now: Da
     nextDate: pin.nextDate,
     hasMainStory: pin.hasMainStory,
     mainStorySlug: pin.mainStorySlug,
-    photoKey: pin.photoKey,
+    photoUrl: row.photoKey ? (variantsOf(row.photoKey, row.photoWidth, publicUrl)[0]?.url ?? publicUrl(row.photoKey)) : null,
   }
 }
 

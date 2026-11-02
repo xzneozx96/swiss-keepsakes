@@ -68,7 +68,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
   const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), pins: pinDeps.pins, audit: createAuditLog(writeClock), clock: writeClock }
   const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit: createAuditLog(writeClock), clock: writeClock, jobs, graceHours: 24 }
   const categoryDeps = { uow, categories, audit: createAuditLog(writeClock), clock: writeClock }
-  const readDeps = { uow, reads: createPublicReadRepository(), clock: readClock }
+  const readDeps = { uow, reads: createPublicReadRepository(), clock: readClock, publicUrl: key => `https://media.test/${key}` }
   // Content asks the catalog which files keepsakes hold, as main.ts wires it.
   const libraryDeps = { uow, library: createMediaLibrary(), keepsakes: media.keepsakes ?? createMediaUses() }
   const writeUseCases = guardUseCases({
