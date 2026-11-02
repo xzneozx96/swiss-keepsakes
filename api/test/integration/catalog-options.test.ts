@@ -997,15 +997,14 @@ describe('[T-010] the photo of a variant', () => {
     expect((await env2.postVariant(product.id, { priceRappen: 100, mediaId: second, values: { [sized.ref]: sized.values[0]!.ref } })).status).toBe(422)
   })
 
-  it('[T-010][AC8] a photo of another store, a file still processing and a retired one are refused, and nothing is written', async () => {
+  it('[T-010][AC8] a photo of another store and a retired one are refused, and nothing is written', async () => {
     const env2 = await setup({ fresh: true })
     const elsewhere = await env.readyPhoto((await setup({ fresh: true })).storeId)
-    const processing = await env.readyPhoto(env2.storeId, 'processing')
     const retired = await env.readyPhoto(env2.storeId, 'retired')
     const product = await (await env2.create({ variants: [{ priceRappen: 100 }] })).json() as View
     const only = product.variants[0]!
 
-    for (const [mediaId, type] of [[elsewhere, 'media-invalid'], [processing, 'media-processing'], [retired, 'media-retired']] as const) {
+    for (const [mediaId, type] of [[elsewhere, 'media-invalid'], [retired, 'media-retired']] as const) {
       const single = await env2.patchVariant(product.id, only.id, { mediaId })
       expect(single.status).toBe(422)
       expect(((await single.json()) as Problem).type).toBe(type)
@@ -1013,5 +1012,19 @@ describe('[T-010] the photo of a variant', () => {
       expect((await env2.create({ variants: [{ priceRappen: 100, mediaId }] })).status).toBe(422)
     }
     expect((await env2.get(product.id)).variants[0]!.mediaId).toBeNull()
+  })
+
+  it('[T-010][AC8] a photo still processing is saved on a variant, and publish waits for it', async () => {
+    const env2 = await setup({ fresh: true })
+    const processing = await env.readyPhoto(env2.storeId, 'processing')
+    const product = await (await env2.create({ variants: [{ priceRappen: 100 }] })).json() as View
+    const saved = await env2.patchVariant(product.id, product.variants[0]!.id, { mediaId: processing })
+
+    expect(saved.status).toBe(200)
+    expect(((await saved.json()) as View).variants[0]!.mediaId).toBe(processing)
+    const published = await env2.call(`${env2.products}/${product.id}/publish`, { method: 'POST', headers: { ...env2.owner.headers, 'If-Match': String(product.rowVersion) } })
+
+    expect(published.status).toBe(422)
+    expect(((await published.json()) as Problem).type).toBe('media-processing')
   })
 })

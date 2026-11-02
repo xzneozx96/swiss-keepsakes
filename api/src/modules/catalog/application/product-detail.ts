@@ -57,26 +57,8 @@ export async function photosProcessing<T>(media: MediaLookup<T>, tx: T, storeId:
   return mediaIds.length > 0 ? { reason: 'media-processing', mediaIds } : undefined
 }
 
-// The photo of a variant must be an image of this store's library and ready: a variant picks a file that is shown at once,
-// so a file the worker has not finished is refused, as is a retired one. Nothing to check when no variant names a photo.
+// The photo of a variant must be an image of this store's library and not retired. A file the worker has not finished is
+// accepted, as for a keepsake's photos (an upload is saved while the worker runs); publish refuses it (`photosProcessing`).
 export async function checkVariantPhotos<T>(media: MediaLookup<T>, tx: T, storeId: string, ids: (string | null | undefined)[]): Promise<Failure | undefined> {
-  const wanted = [...new Set(ids.flatMap(id => id ?? []))]
-
-  if (wanted.length === 0)
-    return undefined
-  const rows = new Map((await media.find(tx, storeId, wanted)).map(row => [row.id.toLowerCase(), row]))
-  const processing: string[] = []
-
-  for (const id of wanted) {
-    const row = rows.get(id.toLowerCase())
-
-    if (row?.status === 'retired')
-      return { reason: 'media-retired' }
-    if (!row || row.kind !== 'image')
-      return { reason: 'media-invalid' }
-    if (row.status !== 'ready')
-      processing.push(row.id)
-  }
-
-  return processing.length > 0 ? { reason: 'media-processing', mediaIds: processing } : undefined
+  return checkPhotos(media, tx, storeId, [...new Set(ids.flatMap(id => id ?? []))])
 }

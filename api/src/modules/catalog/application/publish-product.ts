@@ -31,7 +31,7 @@ export function makePublishProduct<T>({ uow, products, media, audit, clock, sale
       const refused = await checkPhotos(media, tx, storeId, doc.media)
       if (refused)
         return fail(refused)
-      const processing = await photosProcessing(media, tx, storeId, doc.media)
+      const processing = await photosProcessing(media, tx, storeId, [...doc.media, ...product.variants.flatMap(variant => (variant.status === 'archived' ? [] : variant.mediaId ?? []))])
       if (processing)
         return fail(processing)
       const slug = productSlug({

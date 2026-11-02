@@ -315,12 +315,11 @@ describe('[T-010] the photo of a variant', () => {
     expect(repo.insertVariant).toHaveBeenCalledTimes(1)
   })
 
-  it('[T-010] a file that is not in the library, not an image, retired or still processing is refused and nothing is written', async () => {
+  it('[T-010] a file that is not in the library, not an image or retired is refused and nothing is written', async () => {
     const cases = [
       { files: [], reason: 'media-invalid' },
       { files: [{ id: photo, kind: 'pdf' as const, status: 'ready' as const }], reason: 'media-invalid' },
       { files: [{ id: photo, kind: 'image' as const, status: 'retired' as const }], reason: 'media-retired' },
-      { files: [{ id: photo, kind: 'image' as const, status: 'processing' as const }], reason: 'media-processing' },
     ]
 
     for (const { files, reason } of cases) {
@@ -333,6 +332,15 @@ describe('[T-010] the photo of a variant', () => {
       expect(repo.saveVariant).not.toHaveBeenCalled()
       expect(repo.saveVariants).not.toHaveBeenCalled()
     }
+  })
+
+  it('[T-010] a file the worker is still processing is accepted, as for a keepsake photo', async () => {
+    const { repo, deps } = setup(product(), new Map(), new Set(), [{ id: photo, kind: 'image', status: 'processing' }])
+
+    expect((await makeCreateVariant(deps)(owner, storeId, 'p1', { ...base, mediaId: photo }, null)).ok).toBe(true)
+    expect((await makeSaveVariant(deps)(owner, storeId, 'p1', '1', { mediaId: photo }, null)).ok).toBe(true)
+    expect(repo.insertVariant).toHaveBeenCalledTimes(1)
+    expect(repo.saveVariant).toHaveBeenCalledTimes(1)
   })
 
   it('[T-010] null removes the photo without a lookup', async () => {
