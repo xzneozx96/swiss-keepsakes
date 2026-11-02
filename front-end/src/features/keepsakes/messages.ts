@@ -156,6 +156,8 @@ export const keepsakesEn = {
   'keepsakes.options.none': 'No options: this keepsake is sold as one variant. Add one if it comes in versions, like a size or a colour.',
   'keepsakes.options.add': 'Add option',
   'keepsakes.options.unnamed': 'Unnamed option',
+  'keepsakes.options.germanMissing': 'German missing',
+  'keepsakes.variants.editSku': 'Edit the SKU code of {name}',
   'keepsakes.options.thisOption': 'the option',
   'keepsakes.options.name.en': 'Option name in English',
   'keepsakes.options.name.de': 'Option name in German',

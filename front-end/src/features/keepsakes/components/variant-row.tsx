@@ -88,7 +88,7 @@ export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, 
   onPrice: (rappen: number) => void
   /** A photo chosen (`isNew`: the keepsake does not have it yet) or taken off (null). */
   onPhoto: (mediaId: string | null, isNew: boolean) => void
-  onEdit: () => void
+  onEdit: (focus?: 'sku') => void
 }) {
   const { t, language } = useLocale()
   const [picking, setPicking] = useState(false)
@@ -109,12 +109,14 @@ export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, 
       </button>
       <div className="flex min-w-0 flex-col gap-1">
         {options.length > 0 ? <RowChips options={options} values={variant.values} /> : <span className="truncate font-medium">{variant.skuCode}</span>}
-        {skuOn && variant.skuCode && options.length > 0 && <span className="truncate font-mono text-xs text-muted">{variant.skuCode}</span>}
+        {skuOn && variant.skuCode && options.length > 0 && (
+          <button aria-label={t('keepsakes.variants.editSku', { name: title })} className="min-w-0 self-start truncate rounded-md font-mono text-xs text-muted underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:focus-ring max-lg:min-h-11" type="button" onClick={() => onEdit('sku')}>{variant.skuCode}</button>
+        )}
       </div>
       <div className="col-start-3 flex min-w-0 items-center gap-3 sm:contents">
         <PriceInput key={variant.priceRappen} label={t('keepsakes.variants.priceOf', { name: title })} priceRappen={variant.priceRappen} onSave={onPrice} />
         <StatusText tone={forSale ? 'success' : 'neutral'}>{t(forSale ? 'keepsakes.variants.onSale' : 'keepsakes.variant.status.hidden')}</StatusText>
-        <Button aria-label={t('keepsakes.variants.editVariant', { name: title })} className="ms-auto justify-self-end max-lg:h-11" size="sm" variant="tertiary" onPress={onEdit}>{t('keepsakes.variant.edit')}</Button>
+        <Button aria-label={t('keepsakes.variants.editVariant', { name: title })} className="ms-auto justify-self-end max-lg:h-11" size="sm" variant="tertiary" onPress={() => onEdit()}>{t('keepsakes.variant.edit')}</Button>
       </div>
       {picking && <VariantPhotoPicker current={variant.mediaId} isOpen ownIds={ownPhotos} storeId={storeId} onChoose={(id, isNew) => onPhoto(id, isNew)} onClose={() => setPicking(false)} onRemove={() => onPhoto(null, false)} />}
     </li>

@@ -283,13 +283,14 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
     expect(await screen.findByText('medium is already a value of Size. Each value is listed once.')).toBeInTheDocument()
   })
 
-  it('[T-010][AC4] the name offers no list while no other keepsake of the shop has an option', async () => {
+  it('[T-012] while no keepsake of the shop has an option, the name offers Size, Colour and Material', async () => {
     await openStep()
     await userEvent.click(screen.getByRole('button', { name: 'Add option' }))
-    await screen.findByLabelText('Option name in English', { selector: 'input' })
+    await userEvent.click(await screen.findByRole('button', { name: /Show suggestions/ }))
 
-    // Only this keepsake is in the list, and it has no option: nothing to suggest.
-    expect(screen.queryByRole('button', { name: /Show suggestions/ })).not.toBeInTheDocument()
+    expect((await screen.findAllByRole('option')).map(option => option.textContent)).toEqual(['Size', 'Colour', 'Material'])
+    await userEvent.click(screen.getByRole('option', { name: 'Colour' }))
+    expect(screen.getByLabelText('Option name in English', { selector: 'input' })).toHaveValue('Colour')
   })
 
   it('[T-010][AC4] the name offers the names that the shop\'s other keepsakes use, each once, and not this keepsake\'s own', async () => {
@@ -300,6 +301,7 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Add option' }))
     await userEvent.click(await screen.findByRole('button', { name: /Show suggestions/ }))
 
+    // The shop has names of its own: the starters are gone.
     expect((await screen.findAllByRole('option')).map(option => option.textContent)).toEqual(['Size', 'Theme', 'Material'])
     await userEvent.click(screen.getByRole('option', { name: 'Theme' }))
     expect(screen.getByLabelText('Option name in English', { selector: 'input' })).toHaveValue('Theme')
@@ -855,5 +857,58 @@ describe('[T-010] the photo of a variant', () => {
 
     await waitFor(() => expect(patches()).toHaveLength(1))
     expect(patches()[0]!.body).toMatchObject({ mediaId: photoId })
+  })
+})
+
+describe('[T-012] the SKU line and the German marker', () => {
+  const optSize = id(0xC1)
+  const small = id(0xC2)
+  const large = id(0xD2)
+  const option = (name: { en?: string, de?: string }, labels: { en?: string, de?: string }[]) => ({ id: optSize, name, values: [{ id: small, label: labels[0]! }, { id: large, label: labels[1]! }] })
+  const variantsOf = (skuCode: string | null) => [small, large].map((value, index) => ({ id: id(0xA0 + index), skuCode: skuCode && `${skuCode}-${index}`, mediaId: null, photo: null, priceRappen: 4000, status: 'published' as const, values: { [optSize]: value } }))
+
+  it('[T-012] a row\'s SKU code opens the variant sheet with the code field focused', async () => {
+    current = product({ options: [option({ en: 'Size' }, [{ en: 'Small' }, { en: 'Large' }])], variants: variantsOf('K') })
+    serve()
+    await openStep()
+    await userEvent.click(within(rows()[0]!).getByRole('button', { name: 'Edit the SKU code of Small' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Edit Small' })
+
+    await waitFor(() => expect(within(sheet).getByLabelText('SKU code')).toHaveFocus())
+  })
+
+  it('[T-012] the Edit button opens the sheet without that focus', async () => {
+    current = product({ options: [option({ en: 'Size' }, [{ en: 'Small' }, { en: 'Large' }])], variants: variantsOf('K') })
+    serve()
+    await openStep()
+    await userEvent.click(within(rows()[0]!).getByRole('button', { name: 'Edit Small' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Edit Small' })
+
+    expect(within(sheet).getByLabelText('SKU code')).not.toHaveFocus()
+  })
+
+  it('[T-012] a folded option says German is missing when a value has no German text', async () => {
+    current = product({ options: [option({ en: 'Size', de: 'Grösse' }, [{ en: 'Small', de: 'Klein' }, { en: 'Large' }])], variants: variantsOf(null) })
+    serve()
+    await openStep()
+
+    expect(await within(await screen.findByTestId('option-row')).findByText('German missing')).toBeInTheDocument()
+  })
+
+  it('[T-012] a folded option says German is missing when its name has no German text', async () => {
+    current = product({ options: [option({ en: 'Size' }, [{ en: 'Small', de: 'Klein' }, { en: 'Large', de: 'Gross' }])], variants: variantsOf(null) })
+    serve()
+    await openStep()
+
+    expect(await within(await screen.findByTestId('option-row')).findByText('German missing')).toBeInTheDocument()
+  })
+
+  it('[T-012] a folded option with German for its name and every value shows no marker', async () => {
+    current = product({ options: [option({ en: 'Size', de: 'Grösse' }, [{ en: 'Small', de: 'Klein' }, { en: 'Large', de: 'Gross' }])], variants: variantsOf(null) })
+    serve()
+    await openStep()
+
+    expect(await screen.findByTestId('option-row')).toBeInTheDocument()
+    expect(screen.queryByText('German missing')).not.toBeInTheDocument()
   })
 })

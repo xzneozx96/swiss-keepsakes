@@ -79,6 +79,8 @@ export function VariantsBlock({ storeId, options, variants, held, actions, previ
   const [selected, setSelected] = useState<ReadonlySet<string>>(() => new Set())
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set())
   const [editing, setEditing] = useState<string>()
+  /** Set when the sheet opened from a row's SKU code: the code field takes the focus. */
+  const [focusSku, setFocusSku] = useState(false)
   const [failure, setFailure] = useState<string>()
   const [isPending, setIsPending] = useState(false)
   const live = variants.filter(variant => variant.status !== 'archived')
@@ -145,7 +147,7 @@ export function VariantsBlock({ storeId, options, variants, held, actions, previ
       skuOn={sku.isOn}
       storeId={storeId}
       variant={variant}
-      onEdit={() => setEditing(variant.id)}
+      onEdit={(focus) => { setFocusSku(focus === 'sku'); setEditing(variant.id) }}
       onPhoto={(mediaId, isNew) => {
         // A photo the keepsake does not have yet joins its photos in the same go.
         if (mediaId && isNew)
@@ -259,6 +261,7 @@ export function VariantsBlock({ storeId, options, variants, held, actions, previ
       {editingVariant && (
         <VariantSheet
           codeBase={sku.codeBase ?? ''}
+          focusSku={focusSku}
           held={held}
           options={options}
           ownPhotos={ownPhotos}

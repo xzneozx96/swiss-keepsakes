@@ -16,19 +16,25 @@ import { namedValues } from '../lib/combinations'
 import { labelOf, moveItem } from '../lib/option-rules'
 import { NotesAt } from './option-bits'
 import { OptionEditor } from './option-editor'
+import { StatusText } from './status-text'
 import { useDeleteOption } from './use-delete-option'
 
 /** A finished option as one row: the grip, the name, its values as chips and Edit. */
 function OptionRow({ draft, option, grip, language, isLocked, onEdit }: { draft: OptionsDraftState, option: OptionDraft, grip: React.ReactNode, language: Language, isLocked: boolean, onEdit: () => void }) {
   const { t } = useLocale()
   const name = labelOf(option.name, language) || t('keepsakes.options.unnamed')
+  // On the English side, a gap in the German texts would otherwise stay out of sight.
+  const germanMissing = language === 'en' && (!option.name.de?.trim() || namedValues(option).some(value => !value.label.de?.trim()))
 
   return (
     <div className="flex min-w-0 flex-col" data-testid="option-row">
       <div className="flex min-h-14 min-w-0 items-center gap-1 rounded-2xl border border-separator ps-1 pe-3">
         {grip}
         <div className="flex min-w-0 flex-1 flex-col gap-1.5 py-2">
-          <span className="truncate font-medium">{name}</span>
+          <span className="flex min-w-0 items-center gap-3">
+            <span className="truncate font-medium">{name}</span>
+            {germanMissing && <StatusText tone="warning">{t('keepsakes.options.germanMissing')}</StatusText>}
+          </span>
           <ul className="flex flex-wrap gap-1.5">
             {namedValues(option).map(value => (
               <li key={value.ref} className="inline-flex h-7 max-w-full items-center gap-1.5 rounded-full bg-default px-2.5 text-xs font-medium">

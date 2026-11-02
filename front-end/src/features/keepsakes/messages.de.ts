@@ -157,6 +157,8 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.options.none': 'Keine Optionen: Dieses Andenken wird als eine Variante verkauft. Fügen Sie eine hinzu, wenn es in Versionen kommt, etwa als Grösse oder Farbe.',
   'keepsakes.options.add': 'Option hinzufügen',
   'keepsakes.options.unnamed': 'Option ohne Namen',
+  'keepsakes.options.germanMissing': 'Deutsch fehlt',
+  'keepsakes.variants.editSku': 'SKU-Code von {name} bearbeiten',
   'keepsakes.options.thisOption': 'die Option',
   'keepsakes.options.name.en': 'Optionsname auf Englisch',
   'keepsakes.options.name.de': 'Optionsname auf Deutsch',

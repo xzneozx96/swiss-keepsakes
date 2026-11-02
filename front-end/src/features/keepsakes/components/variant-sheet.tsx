@@ -3,7 +3,7 @@ import type { Outcome } from '../hooks/use-keepsake-editor'
 import type { SaveVariant } from '../lib/variant-actions'
 
 import { Button, Description, FieldError, Form, Input, Label, ListBox, NumberField, Select, TextField } from '@heroui/react'
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
@@ -19,7 +19,7 @@ import { VariantPhotoPicker, VariantThumb } from './variant-photo'
  * taken code at the code, no price at the price. A keepsake that is only in the browser has no status, and removes instead
  * of archiving. Stock is not here; it belongs to Inventory (E6.3).
  */
-export function VariantSheet({ storeId, options, variants, variant, held, skuOn, codeBase, ownPhotos, onSave, onAddPhoto, onArchive, onClose }: {
+export function VariantSheet({ storeId, options, variants, variant, held, skuOn, codeBase, focusSku = false, ownPhotos, onSave, onAddPhoto, onArchive, onClose }: {
   storeId: string
   options: ProductOption[]
   variants: ProductVariant[]
@@ -29,6 +29,8 @@ export function VariantSheet({ storeId, options, variants, variant, held, skuOn,
   skuOn: boolean
   /** The keepsake code a suggested code starts with ('' with none). */
   codeBase: string
+  /** Opened from a row's SKU code: the code field takes the focus. */
+  focusSku?: boolean
   /** The keepsake's photos, which the photo sheet offers first. */
   ownPhotos: string[]
   onSave: SaveVariant
@@ -39,6 +41,7 @@ export function VariantSheet({ storeId, options, variants, variant, held, skuOn,
 }) {
   const { t, language } = useLocale()
   const formId = useId()
+  const codeRef = useRef<HTMLInputElement>(null)
   const [values, setValues] = useState<Record<string, string>>(variant.values)
   const [code, setCode] = useState(variant.skuCode ?? '')
   const [mediaId, setMediaId] = useState(variant.mediaId)
@@ -60,6 +63,12 @@ export function VariantSheet({ storeId, options, variants, variant, held, skuOn,
   const priceError = tried && toRappen(price) === undefined ? t('keepsakes.variant.priceInvalid') : undefined
   const suggestion = skuOn && options.length > 0 && !code && options.every(option => values[option.id]) ? suggestCode(values, options, codeBase) : ''
   const title = t('keepsakes.variant.editTitle', { name: variantTitle(variant.values, options, language) || variant.skuCode || '' })
+
+  // Opened from a row's SKU code: the code field takes the focus once, on open.
+  useEffect(() => {
+    if (focusSku)
+      codeRef.current?.focus()
+  }, [focusSku])
 
   const submit = async () => {
     setTried(true)
@@ -141,7 +150,7 @@ export function VariantSheet({ storeId, options, variants, variant, held, skuOn,
         {skuOn && (
           <TextField fullWidth isInvalid={codeError !== undefined} value={code} onChange={(next) => { setCode(next.toUpperCase()); setServer(s => ({ ...s, code: undefined })) }}>
             <Label>{t('keepsakes.variant.code')}</Label>
-            <Input className="font-mono" maxLength={60} placeholder={codeBase ? `${codeBase}-S` : '1.6795-S'} />
+            <Input ref={codeRef} className="font-mono" maxLength={60} placeholder={codeBase ? `${codeBase}-S` : '1.6795-S'} />
             {!codeError && suggestion && (
               <Description>
                 <button className="min-h-11 underline underline-offset-4 lg:min-h-0" type="button" onClick={() => setCode(suggestion)}>
