@@ -196,7 +196,7 @@ Why. Medusa models options per product and links a variant to option values (sec
 
 Amended 2026-11-02 (owner, see `docs/decisions/2026-11-02-keepsake-editor-steps.md`, items 16, 20 and 22; ADR-017 and ADR-027). Three changes to the catalog tables, all in migration 0017. First, colour swatches are removed: `catalog.product_option_values.swatch` and `product_option_values_swatch_check` are dropped, and a value is a label and a position. Second, `catalog.skus.sku_code` is nullable. It stays unique per store when present (`UNIQUE (store_id, sku_code)` treats NULLs as distinct, so any number of variants may have no code), and `skus_sku_code_check` applies only to a code that exists. The merchant turns codes on per keepsake with the switch "This keepsake has SKU codes". Third, `catalog.skus.media_id uuid` holds the variant's one optional photo. It is a plain id with no foreign key (ADR-013), and the API checks that the file is a ready image in the store's library. The DDL below, the invariant rows and the first study in section 9 still show the earlier shape and are kept as history.
 
-Open point for E7.1: `orders.order_lines.sku_code` is still `NOT NULL` in the DDL of section 4, but a variant may now have no SKU code. E7.1 must decide how the order line snapshots a variant without a code (a nullable column is the likely answer). The order line also keeps `sku_id`, so the variant stays identifiable.
+Decided for E7.1 (owner, 2026-11-02): `orders.order_lines.sku_code` becomes nullable. The DDL of section 4 still shows `NOT NULL`; E7.1's migration drops it. A line for a variant with no code stores NULL, and the line's `sku_id` and `option_values` keep the variant identifiable.
 
 ### DM-8 Two review tables, one history
 
