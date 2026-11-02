@@ -76,7 +76,7 @@ export function previewItem(form: PlaceForm, language: Language, options: { stor
     nextDate: nextDateOf(form, options.now),
     hasMainStory: hasStory,
     mainStorySlug: hasStory ? PREVIEW_STORY_SLUG : null,
-    photoKey: null,
+    photoUrl: null,
   }
 
   return { item, located }

@@ -20,9 +20,12 @@ const read: PublicPin = {
   nextDate: null,
   hasMainStory: true,
   mainStorySlug: 'story',
-  photoKey: 'store/photo',
   link: 'https://hotel.example',
-  photos: [{ key: 'store/photo', alt: 'The bridge' }],
+  photos: [
+    { url: 'https://media.test/s/a/original.jpg', variants: [320, 640, 1280].map(width => ({ width, url: `https://media.test/s/a/w${width}.webp` })), alt: 'The bridge' },
+    { url: 'https://media.test/s/b/original.jpg', variants: [{ width: 320, url: 'https://media.test/s/b/w320.webp' }], alt: null },
+    { url: 'https://media.test/s/c/original.jpg', variants: [], alt: null },
+  ],
   mainStory: { slug: 'story', title: 'The story', readMinutes: 5 },
   otherStories: [],
   language: 'en',
@@ -44,7 +47,11 @@ describe('[E4.7][N03] the pin read as the sheet shows it', () => {
     })
   })
 
-  it('leaves a photo out while the front end has no address for the media store, so the slot shows the icon', () => {
-    expect(toPlaceDetail(read).photos).toEqual([])
+  it('picks the smallest copy that is at least 800 px for the carousel, else the largest copy, else the original', () => {
+    expect(toPlaceDetail(read).photos).toEqual([
+      { src: 'https://media.test/s/a/w1280.webp', alt: 'The bridge' },
+      { src: 'https://media.test/s/b/w320.webp', alt: null },
+      { src: 'https://media.test/s/c/original.jpg', alt: null },
+    ])
   })
 })

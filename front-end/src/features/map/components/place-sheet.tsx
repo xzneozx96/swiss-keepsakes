@@ -83,7 +83,7 @@ function StoryRow({ story, main, onReadStory }: { story: PlaceStory, main: boole
 }
 
 /** The facts of a place, each only when present: next date, hours, address with the map button, website, then the stories. */
-function Facts({ detail, onReadStory }: { detail: PlaceDetail, onReadStory?: () => void }) {
+function Facts({ detail, directions, onReadStory }: { detail: PlaceDetail, directions: boolean, onReadStory?: () => void }) {
   const { t, intlLocale } = useLocale()
   const [today] = useState(() => zurichToday(new Date()))
   const date = detail.nextDate
@@ -111,7 +111,7 @@ function Facts({ detail, onReadStory }: { detail: PlaceDetail, onReadStory?: () 
             <span className="text-xs text-muted">{detail.address ? t('map.sheet.address') : t('map.directions.label')}</span>
             <span>{detail.address ?? t('map.directions')}</span>
           </span>
-          <DirectionsLink icon="quiet" place={detail} />
+          {directions && <DirectionsLink icon="quiet" place={detail} />}
         </div>
         {detail.link && host && (
           <a className={`${row} py-1 outline-none focus-visible:focus-ring`} href={detail.link} rel="noopener" target="_blank">
@@ -157,10 +157,12 @@ function SheetSkeleton() {
  * title and the directions come from the map list, so the sheet is useful at once. A story link goes to the story page,
  * or to `onReadStory` where the page stays (the place editor's preview).
  */
-export function PlaceSheet({ item, detail, failed = false, onRetry, position, onStep, isOpen, onClose, container, onReadStory }: {
+export function PlaceSheet({ item, detail, failed = false, directions = true, onRetry, position, onStep, isOpen, onClose, container, onReadStory }: {
   item: PublicMapItem
   detail?: PlaceDetail
   failed?: boolean
+  /** Off while the place has no position (the place editor's preview of a draft): there is nothing to open in Google Maps. */
+  directions?: boolean
   onRetry?: () => void
   position: { index: number, count: number }
   onStep: (delta: 1 | -1) => void
@@ -191,8 +193,12 @@ export function PlaceSheet({ item, detail, failed = false, onRetry, position, on
               </Button>
             </div>
           )}
-          <DirectionsLink place={detail ?? { ...item, mapsLink: null }} />
-          <p className="text-center text-xs text-muted">{t('map.directions.note')}</p>
+          {directions && (
+            <>
+              <DirectionsLink place={detail ?? { ...item, mapsLink: null }} />
+              <p className="text-center text-xs text-muted">{t('map.directions.note')}</p>
+            </>
+          )}
         </>
       )}
       isOpen={isOpen}
@@ -211,7 +217,7 @@ export function PlaceSheet({ item, detail, failed = false, onRetry, position, on
         <>
           {detail.photos.length > 0 && <PlacePhotos key={detail.id} photos={detail.photos} title={title} />}
           {detail.tip && <p className="text-body" lang={detail.language}>{detail.tip}</p>}
-          <Facts detail={detail} onReadStory={onReadStory} />
+          <Facts detail={detail} directions={directions} onReadStory={onReadStory} />
         </>
       )}
     </SheetFrame>

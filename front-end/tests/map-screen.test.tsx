@@ -49,7 +49,7 @@ function pin(n: number, title: string, categoryIds: string[], extra: Partial<Pub
     nextDate: null,
     hasMainStory: false,
     mainStorySlug: null,
-    photoKey: null,
+    photoUrl: null,
     ...extra,
   }
 }
@@ -398,7 +398,7 @@ describe('[E4.6][AC42] a pin opens its card', () => {
     expect(within(title.closest('article')!).getByRole('button', { name: en['map.card.more'] })).toBeInTheDocument()
   })
 
-  it('shows the place icon on the pin and on the card (no photo address yet)', async () => {
+  it('shows the place icon on the pin and on the card of a pin with no photo', async () => {
     await loaded()
     await screen.findByRole('button', { name: en['map.categories'] })
     await userEvent.click(pinButton('Hotel am See'))
@@ -407,6 +407,19 @@ describe('[E4.6][AC42] a pin opens its card', () => {
     expect(pinButton('Hotel am See').querySelector('svg')).not.toBeNull()
     expect(title.closest('article')!.querySelector('[aria-hidden] svg')).not.toBeNull()
     expect(document.querySelector('img')).toBeNull()
+  })
+
+  it('[E4.7][N03] shows the cover photo of a pin on its map pin, its card and its list row', async () => {
+    vi.mocked(fetchMapPins).mockResolvedValue(pins.map(item => (item.id === pinB.id ? { ...item, photoUrl: 'https://media.test/hotel/w320.webp' } : item)))
+    await loaded()
+    await screen.findByRole('button', { name: en['map.categories'] })
+    await userEvent.click(pinButton('Hotel am See'))
+    const title = await screen.findByRole('heading', { level: 2, name: 'Hotel am See' })
+
+    expect(pinButton('Hotel am See').querySelector('img')).toHaveAttribute('src', 'https://media.test/hotel/w320.webp')
+    expect(title.closest('article')!.querySelector('img')).toHaveAttribute('src', 'https://media.test/hotel/w320.webp')
+    await userEvent.click(screen.getByRole('button', { name: en['map.view.list'] }))
+    expect(document.querySelectorAll('img[src="https://media.test/hotel/w320.webp"]').length).toBeGreaterThan(0)
   })
 
   it('shows the next date of a pin that has dates', async () => {

@@ -203,7 +203,7 @@ export function MapScreen({ place }: { place?: string }) {
             const date = pin.nextDate ? nextDateLine(pin.nextDate, today, intlLocale, dateCopy) : undefined
             const label = [pin.title, date && `${t('map.pin.event')}, ${date}`, state.dimmed && t('map.pin.dimmed')].filter(Boolean).join(', ')
 
-            return <PhotoPin dimmed={state.dimmed} emphasized={chosenCount > 0 && !state.dimmed} id={pin.id} label={label} title={pin.title} selected={state.selected} onPress={state.select} />
+            return <PhotoPin dimmed={state.dimmed} emphasized={chosenCount > 0 && !state.dimmed} id={pin.id} label={label} photoSrc={pin.photoUrl ?? undefined} title={pin.title} selected={state.selected} onPress={state.select} />
           }}
           selectedId={openId}
           onSelect={openFromPin}
@@ -215,6 +215,7 @@ export function MapScreen({ place }: { place?: string }) {
               // Only the open card has read its pin: the others show no tip until they open, and open the position.
               ...(pin.id === openId && detail.data ? { tip: detail.data.tip ? { text: detail.data.tip, language: detail.data.language } : undefined, mapsLink: detail.data.mapsLink } : {}),
             })}
+            photoOf={pin => pin.photoUrl ?? undefined}
             pins={kept}
             selectedId={openId}
             onClose={closeCard}

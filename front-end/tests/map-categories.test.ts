@@ -31,7 +31,7 @@ function pin(n: number, categoryIds: string[]): PublicMapItem {
     nextDate: null,
     hasMainStory: false,
     mainStorySlug: null,
-    photoKey: null,
+    photoUrl: null,
   }
 }
 

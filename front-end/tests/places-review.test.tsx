@@ -133,6 +133,17 @@ describe('[E4.2][AC68] N17 the review is a phone with the guest map', () => {
     expect(within(card()).queryByText('Go early')).not.toBeInTheDocument()
   })
 
+  it('[E4.7][N03] has no Open in Google Maps on the card or in the sheet while the place has no position', async () => {
+    await openReview(draft({ latitude: null, longitude: null, address: 'Kapellbrücke 1' }))
+
+    expect(within(card()).queryByRole('link', { name: 'Open in Google Maps' })).not.toBeInTheDocument()
+    await userEvent.click(within(card()).getByRole('button', { name: 'Show more' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Chapel Bridge' })
+
+    expect(within(sheet).getByText('Kapellbrücke 1')).toBeInTheDocument()
+    expect(within(sheet).queryByRole('link', { name: 'Open in Google Maps' })).not.toBeInTheDocument()
+  })
+
   it('has no pin to draw and says why while the place has no position', async () => {
     await openReview(draft({ latitude: null, longitude: null }))
 

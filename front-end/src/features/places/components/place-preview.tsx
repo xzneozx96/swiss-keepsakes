@@ -104,6 +104,7 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
       <PlaceSheet
         container={frame ?? undefined}
         detail={detail}
+        directions={located}
         isOpen={moreOpen}
         item={item}
         position={{ index: 0, count: 1 }}

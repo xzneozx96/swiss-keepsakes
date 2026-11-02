@@ -2,8 +2,6 @@ import type { NextDate, PublicPin } from '@sk/api-contract'
 import type { Language } from '@sk/domain/shared'
 import type { HoursSpan } from './hours'
 
-import { publicMediaUrl } from './media-url'
-
 /** A story the sheet links to. */
 export interface PlaceStory {
   slug: string
@@ -36,7 +34,7 @@ export interface PlaceDetail {
   otherStories: PlaceStory[]
 }
 
-/** The pin read (`GET /api/public/places/{id}`) as the sheet shows it. A photo with no address yet is left out. */
+/** The pin read (`GET /api/public/places/{id}`) as the sheet shows it. */
 export function toPlaceDetail(pin: PublicPin): PlaceDetail {
   return {
     id: pin.id,
@@ -50,11 +48,8 @@ export function toPlaceDetail(pin: PublicPin): PlaceDetail {
     hours: pin.weeklyHours,
     nextDate: pin.nextDate,
     link: pin.link,
-    photos: pin.photos.flatMap((photo) => {
-      const src = publicMediaUrl(photo.key)
-
-      return src ? [{ src, alt: photo.alt }] : []
-    }),
+    // The carousel is as wide as a phone screen: the smallest copy that is at least 800 px, else the largest there is.
+    photos: pin.photos.map(photo => ({ src: (photo.variants.find(variant => variant.width >= 800) ?? photo.variants.at(-1))?.url ?? photo.url, alt: photo.alt })),
     mainStory: pin.mainStory,
     otherStories: pin.otherStories,
   }

@@ -24,7 +24,7 @@ const item: PublicMapItem = {
   nextDate: null,
   hasMainStory: false,
   mainStorySlug: null,
-  photoKey: null,
+  photoUrl: null,
 }
 
 const full: PlaceDetail = {
@@ -193,6 +193,16 @@ describe('[E4.7][AC89] Open in Google Maps', () => {
 
     expect(sheet.getAllByRole('link', { name: de['map.directions'] })).toHaveLength(2)
     expect(sheet.getByText(de['map.directions.note'])).toBeInTheDocument()
+  })
+})
+
+describe('[E4.7][N03] a place with no position', () => {
+  it('has no Open in Google Maps button, in the footer or on the address row, and no note about it', async () => {
+    const sheet = await open(full, { directions: false })
+
+    expect(sheet.queryByRole('link', { name: en['map.directions'] })).toBeNull()
+    expect(sheet.queryByText(en['map.directions.note'])).toBeNull()
+    expect(sheet.getByText(full.address!)).toBeInTheDocument()
   })
 })
 

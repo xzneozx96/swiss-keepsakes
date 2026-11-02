@@ -20,7 +20,7 @@ const pin: PublicMapItem = {
   nextDate: null,
   hasMainStory: false,
   mainStorySlug: null,
-  photoKey: null,
+  photoUrl: null,
 }
 
 function row(bottom?: number) {
