@@ -104,9 +104,6 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.toast.created.one': '{name} wurde als Entwurf mit 1 Variante erstellt.',
 
   'keepsakes.review.previewLabel': 'Vorschau der Andenken-Seite auf einem Handy',
-  'keepsakes.preview.shownIn': 'Angezeigt auf {other}: noch kein Text auf {language}.',
-  'keepsakes.preview.notSold': 'Wird nicht verkauft',
-  'keepsakes.preview.noVariant': 'Keine Variante ist im Verkauf.',
   'keepsakes.publish': 'Veröffentlichen',
   'keepsakes.publishChanges': 'Änderungen veröffentlichen',
   'keepsakes.unpublish': 'Andenken zurückziehen',

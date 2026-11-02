@@ -52,7 +52,8 @@ import { useScrolledPast } from '@/hooks/use-scrolled-past'
 import { photoUrl } from '@/lib/photos'
 import { PickupDateField } from './pickup-date-field'
 
-export interface GiftDetailProps {
+/** What the guest page and the editor's preview both show: the keepsake itself and the choice of its options. */
+export interface GiftPageProps {
   name: string
   photos: string[]
   galleryLabels: PhotoGalleryLabels
@@ -70,14 +71,7 @@ export interface GiftDetailProps {
     title: string
     body: string
   }[]
-  favourite: { isSaved: boolean, onToggle: () => void, label: string }
-  soldOut?: {
-    label: string
-    message: string
-    actionLabel: string
-    subcategory?: string
-  }
-  sheet: { title: string, closeLabel: string, addLabel: string }
+  sheet: { title: string, closeLabel: string }
   variant: {
     /** One choice per option; none (a single variant) = the sheet shows no choice. */
     options: ChoiceOption[]
@@ -89,23 +83,11 @@ export interface GiftDetailProps {
     onChange: (optionId: string, valueId: string) => void
     error?: string
   }
-  quantity: {
-    label: string
-    value: number
-    max: number
-    /** "4 available". */
-    hint?: string
-    onChange: (value: number) => void
-  }
-  date: PickupDateFieldProps
   /** "This is the date you request. The seller confirms before you pay." */
   note: string
   place: {
-    label: string
+    /** An empty address or hours line is not shown. */
     options: { id: string, name: string, address: string, hours: string }[]
-    value: string | null
-    onChange: (id: string) => void
-    error?: string
   }
   sections: {
     aboutTitle: string
@@ -125,6 +107,35 @@ export interface GiftDetailProps {
     summary: string
     chip: string
     addLabel: string
+  }
+}
+
+/** What only a guest has: the cart, the pickup date and place, the favourite and the way back. */
+export interface GiftShopperProps {
+  favourite: { isSaved: boolean, onToggle: () => void, label: string }
+  soldOut?: {
+    label: string
+    message: string
+    actionLabel: string
+    subcategory?: string
+  }
+  sheet: { addLabel: string }
+  quantity: {
+    label: string
+    value: number
+    max: number
+    /** "4 available". */
+    hint?: string
+    onChange: (value: number) => void
+  }
+  date: PickupDateFieldProps
+  place: {
+    label: string
+    value: string | null
+    onChange: (id: string) => void
+    error?: string
+  }
+  bar: {
     /** Set right after adding; the bar then also offers "View cart". */
     addedLabel?: string
     viewCartLabel: string
@@ -136,6 +147,14 @@ export interface GiftDetailProps {
   backLabel: string
   onBack: () => void
 }
+
+export type GiftDetailProps = GiftPageProps & GiftShopperProps
+
+/**
+ * The editor's preview of the page (E6, owner 2026-11-02): the same page, inert. No back, favourite, language or cart
+ * buttons, no links and no adding; the options can still be chosen, in a panel that stays inside the phone.
+ */
+export type GiftPreviewProps = GiftPageProps & { preview: true }
 
 const highlightIcon: Record<
   GiftDetailProps['highlights'][number]['icon'],
@@ -153,7 +172,7 @@ const highlightIcon: Record<
  * (pickup date row, cancellation policy, payment). Every choice is made in a bottom
  * sheet opened from the sticky price bar or the pickup date row.
  */
-export function GiftDetail(props: GiftDetailProps) {
+export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
   const { language } = useLocale()
   const {
     name,
@@ -163,65 +182,75 @@ export function GiftDetail(props: GiftDetailProps) {
     languageNotice,
     rating,
     highlights,
-    favourite,
-    soldOut,
     place,
     sections,
     reviews,
     bar,
-    backLabel,
-    onBack,
-    onSheetOpen,
   } = props
+  // The preview has none of the guest's parts: no back, favourite, language or cart buttons, no adding.
+  const shopper = 'preview' in props ? null : props
+  const soldOut = shopper?.soldOut
   const [photoEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
   const [sheetOpen, setSheetOpen] = useState(false)
 
   const openSheet = () => {
-    onSheetOpen()
+    shopper?.onSheetOpen()
     setSheetOpen(true)
   }
 
-  const heart = (tone: 'pill' | 'bar') => (
-    <ListingFavouriteButton favourite={favourite} tone={tone} />
+  const heart = (guest: GiftShopperProps, tone: 'pill' | 'bar') => (
+    <ListingFavouriteButton favourite={guest.favourite} tone={tone} />
   )
 
   return (
     <div className="flex flex-1 flex-col">
-      <CompactBar
-        leading={<BackButton label={backLabel} onPress={onBack} />}
-        visible={scrolledPast}
-      >
-        <span className="flex-1" />
-        {heart('bar')}
-        <LanguageButton tone="bar" />
-        <CartButton tone="bar" />
-      </CompactBar>
+      {shopper && (
+        <CompactBar
+          leading={<BackButton label={shopper.backLabel} onPress={shopper.onBack} />}
+          visible={scrolledPast}
+        >
+          <span className="flex-1" />
+          {heart(shopper, 'bar')}
+          <LanguageButton tone="bar" />
+          <CartButton tone="bar" />
+        </CompactBar>
+      )}
 
       <PhotoGallery
         className="aspect-[4/3.4]"
         labels={galleryLabels}
         photos={photos}
       >
-        <div className="pointer-events-none absolute inset-x-4 top-[calc(env(safe-area-inset-top,0px)+12px)] z-10 flex items-center gap-2 [&>*]:pointer-events-auto">
-          <BackButton label={backLabel} tone="pill" onPress={onBack} />
-          <span className="flex-1" />
-          {heart('pill')}
-          <LanguageButton tone="pill" />
-          <CartButton tone="pill" />
-        </div>
+        {shopper && (
+          <div className="pointer-events-none absolute inset-x-4 top-[calc(env(safe-area-inset-top,0px)+12px)] z-10 flex items-center gap-2 [&>*]:pointer-events-auto">
+            <BackButton label={shopper.backLabel} tone="pill" onPress={shopper.onBack} />
+            <span className="flex-1" />
+            {heart(shopper, 'pill')}
+            <LanguageButton tone="pill" />
+            <CartButton tone="pill" />
+          </div>
+        )}
       </PhotoGallery>
       <div ref={photoEnd} aria-hidden className="h-px" />
 
       <div className="relative -mt-6 flex flex-1 flex-col rounded-t-3xl bg-background px-6 pt-7 pb-4">
         {/* 1. Title (screen 36) */}
         <ListingDetailHeader name={name} />
-        <a
-          className="-mt-4 mb-6 flex items-center justify-center gap-2 self-center rounded text-sm text-muted outline-none focus-visible:focus-ring"
-          href="#gift-reviews"
-        >
-          {rating.average !== undefined && <Stars label={rating.label} rating={rating.average} size={14} />}
-          <span>{rating.summary}</span>
-        </a>
+        {shopper
+          ? (
+              <a
+                className="-mt-4 mb-6 flex items-center justify-center gap-2 self-center rounded text-sm text-muted outline-none focus-visible:focus-ring"
+                href="#gift-reviews"
+              >
+                {rating.average !== undefined && <Stars label={rating.label} rating={rating.average} size={14} />}
+                <span>{rating.summary}</span>
+              </a>
+            )
+          : (
+              <p className="-mt-4 mb-6 flex items-center justify-center gap-2 self-center text-sm text-muted">
+                <span>{rating.summary}</span>
+              </p>
+            )}
 
         {/* 4. Highlights (screen 38) */}
         <ul className="flex flex-col gap-5 border-t border-separator py-7">
@@ -279,8 +308,8 @@ export function GiftDetail(props: GiftDetailProps) {
                       <span className="font-semibold text-foreground">
                         {p.name}
                       </span>
-                      <span className="text-sm">{p.address}</span>
-                      <span className="text-sm">{p.hours}</span>
+                      {p.address && <span className="text-sm">{p.address}</span>}
+                      {p.hours && <span className="text-sm">{p.hours}</span>}
                     </li>
                   ))}
                 </ul>
@@ -306,9 +335,11 @@ export function GiftDetail(props: GiftDetailProps) {
               <Accordion.Panel>
                 <Accordion.Body className="flex flex-col items-start gap-3">
                   <p className="text-sm">{props.note}</p>
-                  <Button size="sm" variant="secondary" onPress={openSheet}>
-                    {sections.dateRow.action}
-                  </Button>
+                  {shopper && (
+                    <Button size="sm" variant="secondary" onPress={openSheet}>
+                      {sections.dateRow.action}
+                    </Button>
+                  )}
                 </Accordion.Body>
               </Accordion.Panel>
             </Accordion.Item>
@@ -377,18 +408,18 @@ export function GiftDetail(props: GiftDetailProps) {
                   aria-live="polite"
                   className="flex min-w-0 flex-1 flex-col items-start"
                 >
-                  {bar.addedLabel
+                  {shopper?.bar.addedLabel
                     ? (
                         <>
                           <span className="flex items-center gap-1.5 text-sm font-semibold text-success">
                             <StatusSuccessIcon aria-hidden size={18} />
-                            {bar.addedLabel}
+                            {shopper.bar.addedLabel}
                           </span>
                           <Link
                             className="rounded text-sm font-semibold underline underline-offset-4 outline-none focus-visible:focus-ring"
                             to="/cart"
                           >
-                            {bar.viewCartLabel}
+                            {shopper.bar.viewCartLabel}
                           </Link>
                         </>
                       )
@@ -415,8 +446,15 @@ export function GiftDetail(props: GiftDetailProps) {
             )}
       </div>
 
-      {!soldOut && (
-        <GiftSheet {...props} isOpen={sheetOpen} onOpenChange={setSheetOpen} />
+      {shopper && !soldOut && (
+        <GiftSheet {...shopper} isOpen={sheetOpen} onOpenChange={setSheetOpen} />
+      )}
+      {!shopper && sheetOpen && (
+        <PreviewSheet
+          sheet={props.sheet}
+          variant={props.variant}
+          onClose={() => setSheetOpen(false)}
+        />
       )}
     </div>
   )
@@ -455,72 +493,7 @@ function GiftSheet({
       title={sheet.title}
       onOpenChange={onOpenChange}
     >
-      {variant.options.length > 0 && (
-        <div className="flex flex-col gap-4" id="gift-variant">
-          {variant.options.map((option) => {
-            const reasons = variant.reasons[option.id] ?? {}
-            const blocked = option.values.filter(v => reasons[v.id])
-
-            return (
-              <TagGroup
-                key={option.id}
-                disabledKeys={blocked.map(v => v.id)}
-                selectedKeys={
-                  variant.chosen[option.id]
-                    ? new Set([variant.chosen[option.id]])
-                    : new Set()
-                }
-                selectionMode="single"
-                size="lg"
-                onSelectionChange={(keys: 'all' | Set<Key>) => {
-                  const [first] = keys === 'all' ? [] : [...keys]
-
-                  if (first !== undefined)
-                    variant.onChange(option.id, String(first))
-                }}
-              >
-                <Label className="text-heading">{option.label}</Label>
-                {/* Value cards: name over hint, three to a row. Chosen = red border and a
-                    check on the top edge, clear of long names (owner, round 3); the fill stays. */}
-                <TagGroup.List className="grid grid-cols-3 gap-2 pt-2">
-                  {option.values.map(v => (
-                    <Tag
-                      key={v.id}
-                      className={`group relative h-auto items-start justify-start rounded-2xl border-2 border-transparent px-2.5 py-2 before:hidden data-[selected=true]:border-accent data-[selected=true]:bg-default data-[selected=true]:hover:bg-default-hover ${reasons[v.id] ? 'line-through' : ''}`}
-                      id={v.id}
-                      textValue={v.hint ? `${v.label}, ${v.hint}` : v.label}
-                    >
-                      <span className="flex flex-col items-start leading-5">
-                        <span className="font-semibold">{v.label}</span>
-                        {v.hint && (
-                          <span className="text-xs tabular-nums opacity-80">
-                            {v.hint}
-                          </span>
-                        )}
-                      </span>
-                      <SelectedIcon
-                        aria-hidden
-                        className="absolute -end-1 -top-1 hidden size-4.5 rounded-full bg-surface text-accent group-data-[selected=true]:block"
-                        weight="Filled"
-                      />
-                    </Tag>
-                  ))}
-                </TagGroup.List>
-                {blocked.map(v => (
-                  <Description key={v.id}>
-                    {v.label}: {reasons[v.id]}
-                  </Description>
-                ))}
-              </TagGroup>
-            )
-          })}
-          {variant.error && (
-            <p data-visible className="field-error" role="alert">
-              {variant.error}
-            </p>
-          )}
-        </div>
-      )}
+      <VariantChoices variant={variant} />
 
       <QuantityStepper
         hint={quantity.hint}
@@ -565,5 +538,100 @@ function GiftSheet({
         {note}
       </p>
     </ChoiceSheet>
+  )
+}
+
+/** One choice per option, as value cards; a value that cannot be picked is struck through with its reason below. */
+function VariantChoices({ variant }: { variant: GiftPageProps['variant'] }) {
+  if (variant.options.length === 0)
+    return null
+
+  return (
+    <div className="flex flex-col gap-4" id="gift-variant">
+      {variant.options.map((option) => {
+        const reasons = variant.reasons[option.id] ?? {}
+        const blocked = option.values.filter(v => reasons[v.id])
+
+        return (
+          <TagGroup
+            key={option.id}
+            disabledKeys={blocked.map(v => v.id)}
+            selectedKeys={
+              variant.chosen[option.id]
+                ? new Set([variant.chosen[option.id]])
+                : new Set()
+            }
+            selectionMode="single"
+            size="lg"
+            onSelectionChange={(keys: 'all' | Set<Key>) => {
+              const [first] = keys === 'all' ? [] : [...keys]
+
+              if (first !== undefined)
+                variant.onChange(option.id, String(first))
+            }}
+          >
+            <Label className="text-heading">{option.label}</Label>
+            {/* Value cards: name over hint, three to a row. Chosen = red border and a
+                check on the top edge, clear of long names (owner, round 3); the fill stays. */}
+            <TagGroup.List className="grid grid-cols-3 gap-2 pt-2">
+              {option.values.map(v => (
+                <Tag
+                  key={v.id}
+                  className={`group relative h-auto items-start justify-start rounded-2xl border-2 border-transparent px-2.5 py-2 before:hidden data-[selected=true]:border-accent data-[selected=true]:bg-default data-[selected=true]:hover:bg-default-hover ${reasons[v.id] ? 'line-through' : ''}`}
+                  id={v.id}
+                  textValue={v.hint ? `${v.label}, ${v.hint}` : v.label}
+                >
+                  <span className="flex flex-col items-start leading-5">
+                    <span className="font-semibold">{v.label}</span>
+                    {v.hint && (
+                      <span className="text-xs tabular-nums opacity-80">
+                        {v.hint}
+                      </span>
+                    )}
+                  </span>
+                  <SelectedIcon
+                    aria-hidden
+                    className="absolute -end-1 -top-1 hidden size-4.5 rounded-full bg-surface text-accent group-data-[selected=true]:block"
+                    weight="Filled"
+                  />
+                </Tag>
+              ))}
+            </TagGroup.List>
+            {blocked.map(v => (
+              <Description key={v.id}>
+                {v.label}: {reasons[v.id]}
+              </Description>
+            ))}
+          </TagGroup>
+        )
+      })}
+      {variant.error && (
+        <p data-visible className="field-error" role="alert">
+          {variant.error}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/**
+ * The preview's choices, in a panel that sits at the bottom of the phone instead of a portalled sheet (which would
+ * open over the whole window, outside the mockup). Zero height and sticky, so it stays at the foot of the screen
+ * whatever the page scrolls to; the panel grows upwards from there.
+ */
+function PreviewSheet({ sheet, variant, onClose }: { sheet: GiftPageProps['sheet'], variant: GiftPageProps['variant'], onClose: () => void }) {
+  return (
+    <div className="sticky bottom-0 z-40 h-0">
+      <section
+        aria-label={sheet.title}
+        className="absolute inset-x-0 bottom-0 flex max-h-[520px] flex-col gap-5 overflow-y-auto rounded-t-3xl bg-background px-6 pt-5 pb-6 shadow-[0_-8px_32px_rgb(0_0_0/0.18)]"
+      >
+        <h2 className="font-serif text-title">{sheet.title}</h2>
+        <VariantChoices variant={variant} />
+        <Button fullWidth variant="secondary" onPress={onClose}>
+          {sheet.closeLabel}
+        </Button>
+      </section>
+    </div>
   )
 }

@@ -17,13 +17,16 @@ const bySlug = new Map(
 /** A photo uploaded in M12/M13, kept in demo data as a small JPEG, PNG or WebP data URL. */
 const UPLOADED = /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/
 
+/** A photo the API serves (a keepsake's media file, in the editor's preview): the address itself. */
+const SERVED = /^https?:\/\/\S+$/
+
 /**
  * URL for a photo slug, or undefined when the photo is not in the repo yet. An uploaded
- * photo (a data URL) is its own URL.
+ * photo (a data URL) or a served one (an https address) is its own URL.
  */
 export function photoUrl(slug: string | undefined): string | undefined {
   if (!slug)
     return undefined
 
-  return UPLOADED.test(slug) ? slug : bySlug.get(slug)
+  return UPLOADED.test(slug) || SERVED.test(slug) ? slug : bySlug.get(slug)
 }

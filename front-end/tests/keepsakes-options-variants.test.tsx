@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { writeStored } from '@/lib/storage'
-import { list, listItem, media, photoId, problem, product, productId, renderKeepsakes, setUpHarness, state, storeId, variantId, writes } from './keepsakes-harness'
+import { doc, list, listItem, media, photoId, problem, product, productId, renderKeepsakes, setUpHarness, state, storeId, variantId, writes } from './keepsakes-harness'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -716,32 +716,81 @@ describe('[T-008][i18n] the merged step in German', () => {
   })
 })
 
-describe('[E6.2][AC52] the preview', () => {
-  it('[E6.2][AC52] the preview shows a group of cards for each option, and a combination that is not for sale is Not sold', async () => {
-    const [size, small, large, theme, swan, lion] = [id(0xC1), id(0xC2), id(0xC3), id(0xC4), id(0xC5), id(0xC6)]
-
-    current = product({
-      options: [
-        { id: size, name: { en: 'Size', de: 'Grösse' }, values: [{ id: small, label: { en: 'Small', de: 'Klein' } }, { id: large, label: { en: 'Large', de: 'Gross' } }] },
-        { id: theme, name: { en: 'Theme' }, values: [{ id: swan, label: { en: 'Swan' } }, { id: lion, label: { en: 'Lion Monument' } }] },
-      ],
-      variants: [
-        { id: id(0xD1), skuCode: 'VX-S-SWAN', mediaId: null, photo: null, priceRappen: 3900, status: 'published', values: { [size]: small, [theme]: swan } },
-        { id: id(0xD2), skuCode: 'VX-L-SWAN', mediaId: null, photo: null, priceRappen: 4900, status: 'draft', values: { [size]: large, [theme]: swan } },
-        { id: id(0xD3), skuCode: 'VX-S-LION', mediaId: null, photo: null, priceRappen: 3900, status: 'archived', values: { [size]: small, [theme]: lion } },
-      ],
-      warnings: [{ code: 'option-labels', card: 'options', count: 3 }],
-    })
+describe('[E6.2][AC52][T-017] the preview is the guest page', () => {
+  const [size, small, large, theme, swan, lion] = [id(0xC1), id(0xC2), id(0xC3), id(0xC4), id(0xC5), id(0xC6)]
+  const sized = () => product({
+    name: { en: 'Swan knife', de: 'Schwanenmesser' },
+    text: { en: doc('English text.'), de: doc('Deutscher Text.') },
+    options: [
+      { id: size, name: { en: 'Size', de: 'Grösse' }, values: [{ id: small, label: { en: 'Small', de: 'Klein' } }, { id: large, label: { en: 'Large', de: 'Gross' } }] },
+      { id: theme, name: { en: 'Theme' }, values: [{ id: swan, label: { en: 'Swan' } }, { id: lion, label: { en: 'Lion Monument' } }] },
+    ],
+    variants: [
+      { id: id(0xD1), skuCode: 'VX-S-SWAN', mediaId: null, photo: null, priceRappen: 3900, status: 'published', values: { [size]: small, [theme]: swan } },
+      { id: id(0xD2), skuCode: 'VX-L-SWAN', mediaId: null, photo: null, priceRappen: 4900, status: 'draft', values: { [size]: large, [theme]: swan } },
+      { id: id(0xD3), skuCode: 'VX-S-LION', mediaId: null, photo: null, priceRappen: 4400, status: 'published', values: { [size]: small, [theme]: lion } },
+      { id: id(0xD4), skuCode: 'VX-L-LION', mediaId: null, photo: null, priceRappen: 5400, status: 'archived', values: { [size]: large, [theme]: lion } },
+    ],
+    warnings: [{ code: 'option-labels', card: 'options', count: 3 }],
+  })
+  const openPreview = async () => {
+    current = sized()
     serve()
     renderKeepsakes(`/store/products/gifts/${productId}`)
     await nameField()
     await userEvent.click(screen.getByRole('button', { name: /^3\. Review and publish/ }))
-    const preview = await screen.findByTestId('keepsake-preview', undefined, SLOW)
 
-    expect(within(preview).getByRole('region', { name: 'Size' })).toHaveTextContent('Small')
-    expect(within(within(preview).getByRole('region', { name: 'Size' })).getByText('Not sold')).toBeInTheDocument()
-    expect(within(within(preview).getByRole('region', { name: 'Theme' })).getByText('Not sold')).toBeInTheDocument()
+    return screen.findByTestId('keepsake-preview', undefined, SLOW)
+  }
+
+  it('[AC1] shows the guest page: name, New rating line, highlights, About, empty reviews, fold-outs and the price bar', async () => {
+    const preview = await openPreview()
+
+    expect(within(preview).getByRole('heading', { level: 1 })).toHaveTextContent('Swan knife')
+    expect(preview).toHaveTextContent('New · No reviews yet')
+    expect(preview).toHaveTextContent('Pay on delivery')
+    expect(within(preview).getByRole('heading', { name: 'About this keepsake' })).toBeInTheDocument()
+    expect(preview).toHaveTextContent('English text.')
+    expect(within(preview).getByRole('heading', { name: 'Reviews' })).toBeInTheDocument()
+    expect(within(preview).getByRole('button', { name: /^Where you.ll pick it up/ })).toBeInTheDocument()
+    expect(preview).toHaveTextContent(/CHF\s*39/)
     expect(preview).not.toHaveTextContent('VX-S-SWAN')
+    expect(preview.querySelector('img')).toHaveAttribute('src', media.publicUrl)
+  })
+
+  it('[AC2] the publish card\'s language switch changes the name and the description', async () => {
+    const preview = await openPreview()
+
+    await userEvent.click(within(screen.getByTestId('review-screen')).getByRole('tab', { name: /Deutsch/ }))
+
+    expect(within(preview).getByRole('heading', { level: 1 })).toHaveTextContent('Schwanenmesser')
+    expect(preview).toHaveTextContent('Deutscher Text.')
+  })
+
+  it('[AC3] options are chosen in a panel inside the preview; a combination not sold cannot be picked, and the bar follows the choice', async () => {
+    const preview = await openPreview()
+
+    await userEvent.click(within(preview).getByRole('button', { name: 'Add to cart' }))
+    const panel = within(preview).getByRole('region', { name: 'Your keepsake' })
+    const largeTag = within(panel).getByRole('row', { name: 'Large' })
+
+    expect(largeTag).toHaveAttribute('aria-disabled', 'true')
+    expect(panel).toHaveTextContent('Large: This combination is not sold')
+    await userEvent.click(within(panel).getByRole('row', { name: 'Lion Monument' }))
+
+    expect(preview).toHaveTextContent(/CHF\s*44/)
+  })
+
+  it('[AC4] nothing in the preview navigates or adds to a cart', async () => {
+    const preview = await openPreview()
+
+    expect(within(preview).queryAllByRole('link')).toHaveLength(0)
+    expect(within(preview).queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
+    expect(within(preview).queryByRole('button', { name: /favourite|save/i })).not.toBeInTheDocument()
+    expect(within(preview).queryByRole('button', { name: /language/i })).not.toBeInTheDocument()
+    await userEvent.click(within(preview).getByRole('button', { name: 'Add to cart' }))
+    expect(within(preview).queryByRole('button', { name: /^Add to cart ·/ })).not.toBeInTheDocument()
+    expect(writes().filter(call => call.path.includes('cart'))).toHaveLength(0)
   })
 })
 

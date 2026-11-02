@@ -29,6 +29,7 @@ import {
   forgetCartToast,
   trackCartToast,
 } from '../lib/cart-toast'
+import { galleryLabelsOf, noReviews } from '../lib/keepsake-page'
 import {
   chosenVariant,
   demoOptions,
@@ -256,13 +257,7 @@ export function useGiftDetail(
     name: name.text,
     // The chosen variant's photo comes first.
     photos: galleryOrder(photoSlugs, picked?.photoIndex),
-    galleryLabels: {
-      gallery: t('gallery.label', { name: name.text }),
-      photo: (n, count) => t('gallery.photo', { n, count }),
-      previous: t('gallery.previous'),
-      next: t('gallery.next'),
-      close: t('gallery.close'),
-    },
+    galleryLabels: galleryLabelsOf(t, name.text),
     description,
     languageNotice: name.isFallback
       ? t(
@@ -398,23 +393,7 @@ export function useGiftDetail(
       ),
     },
     // The demo reviews stay in the demo data; this page shows the empty state until E5.5.
-    reviews: {
-      count: 0,
-      average: 0,
-      averageText: '',
-      averageLabel: '',
-      countLabel: '',
-      distribution: [],
-      items: [],
-      title: t('detail.reviews.title'),
-      showAllLabel: '',
-      showMoreLabel: t('detail.reviews.showMore'),
-      overallLabel: t('detail.reviews.overall'),
-      sheetTitle: t('detail.reviews.listTitle', { name: name.text }),
-      closeLabel: t('detail.sheet.close'),
-      rule: t('detail.reviews.rule'),
-      empty: t('detail.reviews.none'),
-    },
+    reviews: noReviews(t, name.text),
     bar: {
       price: money(lineTotal),
       summary:

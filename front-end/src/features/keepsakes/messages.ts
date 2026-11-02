@@ -103,9 +103,6 @@ export const keepsakesEn = {
   'keepsakes.toast.created.one': '{name} created as a draft with 1 variant.',
 
   'keepsakes.review.previewLabel': 'Preview of the keepsake page on a phone',
-  'keepsakes.preview.shownIn': 'Shown in {other}: no {language} text yet.',
-  'keepsakes.preview.notSold': 'Not sold',
-  'keepsakes.preview.noVariant': 'No variant is for sale.',
   'keepsakes.publish': 'Publish',
   'keepsakes.publishChanges': 'Publish changes',
   'keepsakes.unpublish': 'Unpublish keepsake',
