@@ -143,10 +143,19 @@ function SheetSkeleton() {
   return (
     <div aria-busy className="flex flex-col gap-4" role="status">
       <span className="sr-only">{t('map.sheet.loading')}</span>
+      {/* The tip, then the hours and address rows (icon, label, value), then the Google Maps button. */}
       <Skeleton className="h-5 w-full rounded-lg" />
       <Skeleton className="h-5 w-2/3 rounded-lg" />
-      <Skeleton className="h-24 w-full rounded-2xl" />
-      <Skeleton className="h-14 w-full rounded-2xl" />
+      {[0, 1].map(row => (
+        <div key={row} className="flex items-start gap-3">
+          <Skeleton className="size-6 shrink-0 rounded-full" />
+          <div className="flex flex-1 flex-col gap-2">
+            <Skeleton className="h-4 w-1/3 rounded-lg" />
+            <Skeleton className="h-4 w-3/4 rounded-lg" />
+          </div>
+        </div>
+      ))}
+      <Skeleton className="h-12 w-full rounded-full" />
     </div>
   )
 }

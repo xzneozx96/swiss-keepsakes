@@ -25,7 +25,7 @@ function setup(stories: PublicStoryRow[], categories: PublicCategoryRow[] = []) 
     listPublishedTours: async () => [],
     findPublishedTourBySlug: async () => undefined,
   }
-  const deps = { uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) }, reads, clock: createManualClock(new Date('2026-10-27T10:00:00Z')) }
+  const deps = { uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) }, reads, clock: createManualClock(new Date('2026-10-27T10:00:00Z')), publicUrl: (key: string) => `https://media.test/${key}` }
   const listStories = makeListStories(deps)
   const getStory = makeGetStory(deps)
   const listCategories = makeListCategories(deps)

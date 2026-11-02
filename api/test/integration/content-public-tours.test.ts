@@ -14,7 +14,7 @@ afterAll(async () => {
   await pool.end()
 })
 
-const deps = { uow: createUnitOfWork(db), reads: createPublicReadRepository(), clock: systemClock, publicUrl: key => `https://media.test/${key}` }
+const deps = { uow: createUnitOfWork(db), reads: createPublicReadRepository(), clock: systemClock, publicUrl: (key: string) => `https://media.test/${key}` }
 const listTours = makeListTours(deps)
 const getTour = makeGetTour(deps)
 
