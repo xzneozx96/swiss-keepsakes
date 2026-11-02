@@ -168,6 +168,25 @@ describe('[E4.11][AC51] the media library in English', () => {
     await waitFor(() => expect(document.querySelectorAll('ul[aria-hidden="true"] li')).toHaveLength(12))
   })
 
+  it('[E4.11][AC51] a filter change keeps the toolbar and swaps the wall for tiles until the new answer arrives', async () => {
+    answerWith({
+      list: path => (path.includes('use=')
+        ? Response.json(page([item({ name: 'Sunrise.JPG' })]))
+        : new Promise<Response>(resolve => setTimeout(resolve, 900, Response.json(page([item({ id: other, name: 'Fresh.jpg' })])))) as unknown as Response),
+    })
+    renderMedia('/store/content/media?use=unused')
+
+    await screen.findByText('Sunrise.JPG')
+    await userEvent.click(screen.getByRole('button', { name: 'Clear all' }))
+
+    await waitFor(() => expect(document.querySelectorAll('ul[aria-hidden="true"] li')).toHaveLength(12))
+    expect(screen.queryByText('Sunrise.JPG')).not.toBeInTheDocument()
+    expect(document.querySelector('[aria-busy="true"]')).not.toBeNull()
+    expect(screen.getByRole('searchbox', { name: 'Search by name' })).toBeInTheDocument()
+    expect(await screen.findByText('Fresh.jpg', undefined, SLOW)).toBeInTheDocument()
+    expect(document.querySelector('[aria-busy="true"]')).toBeNull()
+  })
+
   it('[E4.11][AC51] a failed read says so', async () => {
     answerWith({ list: () => problem(500, 'internal-error') })
     renderMedia()

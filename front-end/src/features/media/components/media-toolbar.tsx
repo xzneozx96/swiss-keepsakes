@@ -46,7 +46,7 @@ export function MediaToolbar({ kind, counts, text, groups, selecting, onKind, on
         </SearchField>
         <FilterButtons groups={groups} />
         {kind === 'image' && (
-          <Button className="shrink-0 max-lg:h-11" size="sm" variant={selecting ? 'primary' : 'secondary'} onPress={onSelecting}>
+          <Button className="shrink-0 rounded-full max-lg:h-11" variant={selecting ? 'primary' : 'secondary'} onPress={onSelecting}>
             {t(selecting ? 'media.select.stop' : 'media.select.start')}
           </Button>
         )}

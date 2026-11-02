@@ -10,6 +10,7 @@ import { Pager } from '@/components/list-pagination'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { useLatest } from '@/hooks/use-latest'
+import { useListLoading } from '@/hooks/use-list-loading'
 import { useMediaList } from '../api/queries'
 import { useDuplicateCheck } from '../hooks/use-duplicate-check'
 import { usePendingPhotos } from '../hooks/use-pending-photos'
@@ -126,6 +127,7 @@ function PickerBody({ storeId, used, selected, room, uploads, onToggle, onUpload
   // A photo still being made shows too, so one uploaded here is in the grid at once.
   const list = useMediaList(storeId, { kind: 'image', q, status: 'processing,ready', page, pageSize: WALL_PAGE_SIZE })
   const items = list.data?.items ?? []
+  const isLoading = useListLoading(list)
   const total = list.data?.total ?? 0
   const free = room - selected.length - uploads.pending.length
 
@@ -174,12 +176,12 @@ function PickerBody({ storeId, used, selected, room, uploads, onToggle, onUpload
         />
       </div>
       {list.isError && !list.data && <EmptyState compact icon={SearchIcon} message={t('media.loadFailed')} />}
-      {list.isPending && <PickerSkeleton />}
-      {list.data && !items.length && !uploads.pending.length && <EmptyState compact icon={q ? SearchIcon : LibraryIcon} message={t(q ? 'media.empty.filtered' : 'media.library.empty')} />}
-      {(items.length > 0 || uploads.pending.length > 0) && (
+      {isLoading && <PickerSkeleton />}
+      {!isLoading && list.data && !items.length && !uploads.pending.length && <EmptyState compact icon={q ? SearchIcon : LibraryIcon} message={t(q ? 'media.empty.filtered' : 'media.library.empty')} />}
+      {((!isLoading && items.length > 0) || uploads.pending.length > 0) && (
         <ul aria-label={t('media.library.list')} className={GRID}>
           {uploads.pending.map(item => <PendingChoice key={item.key} item={item} onRemove={() => uploads.remove(item.key)} onRetry={() => uploads.retry(item.key)} />)}
-          {items.map((item) => {
+          {!isLoading && items.map((item) => {
             const isUsed = used.includes(item.id)
             const checked = !isUsed && selected.includes(item.id)
 
@@ -187,7 +189,7 @@ function PickerBody({ storeId, used, selected, room, uploads, onToggle, onUpload
           })}
         </ul>
       )}
-      <Pager compact pager={{ page, pages: Math.max(1, Math.ceil(total / WALL_PAGE_SIZE)), total, from: (page - 1) * WALL_PAGE_SIZE + 1, to: Math.min(page * WALL_PAGE_SIZE, total), go: setPage }} />
+      {!isLoading && <Pager compact pager={{ page, pages: Math.max(1, Math.ceil(total / WALL_PAGE_SIZE)), total, from: (page - 1) * WALL_PAGE_SIZE + 1, to: Math.min(page * WALL_PAGE_SIZE, total), go: setPage }} />}
     </div>
   )
 }

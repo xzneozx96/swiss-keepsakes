@@ -13,6 +13,7 @@ import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
 import { Pager } from '@/components/list-pagination'
 import { useLocale } from '@/contexts/locale-context'
 import { useIsWide } from '@/hooks/use-is-wide'
+import { useListLoading } from '@/hooks/use-list-loading'
 import { useMediaList } from '../api/queries'
 import { useDuplicateCheck } from '../hooks/use-duplicate-check'
 import { useMediaActions } from '../hooks/use-media-actions'
@@ -97,6 +98,8 @@ function Library({ storeId, search, onSearch }: { storeId: string, search: Media
   const [found, setFound] = useState<string[]>([])
   const list = useMediaList(storeId, { kind, q: search.q, use: use.join(',') || undefined, status: status.join(',') || undefined, page, pageSize })
   const items = list.data?.items ?? []
+  // A new filter, tab, search or page keeps the last rows on screen until the answer is late, then the skeleton takes over.
+  const isLoading = useListLoading(list)
 
   // The URL follows the search box a moment after the last key, so each letter does not read the list.
   useEffect(() => {
@@ -222,12 +225,14 @@ function Library({ storeId, search, onSearch }: { storeId: string, search: Media
       <FilterChips groups={groups} />
 
       {list.isError && !list.data && <EmptyState icon={SearchIcon} message={t('media.loadFailed')} />}
-      {list.isPending && (kind === 'image' ? <WallSkeleton /> : <ListSkeleton />)}
-      {list.data && !items.length && <EmptyState icon={noFilter ? PhotoAddIcon : SearchIcon} message={t(noFilter && !Object.values(list.data.kinds).some(Boolean) ? 'media.empty.all' : 'media.empty.filtered')} />}
-      {items.length > 0 && (kind === 'image'
-        ? <PhotoWall busyIds={actions.busyIds} foundIds={found} items={items} label={kindLabel} selected={selected} selecting={selecting} onOpen={setOpen} onToggle={toggle} />
-        : <FileList busyIds={actions.busyIds} foundIds={found} items={items} label={kindLabel} onOpen={setOpen} onReplace={actions.askReplace} onRetire={item => void retireOne(item)} />)}
-      {!list.isPending && <Pager compact={!isWide} pager={pager} />}
+      <div aria-busy={isLoading || undefined} className="flex flex-col gap-4">
+        {isLoading && (kind === 'image' ? <WallSkeleton /> : <ListSkeleton />)}
+        {!isLoading && list.data && !items.length && <EmptyState icon={noFilter ? PhotoAddIcon : SearchIcon} message={t(noFilter && !Object.values(list.data.kinds).some(Boolean) ? 'media.empty.all' : 'media.empty.filtered')} />}
+        {!isLoading && items.length > 0 && (kind === 'image'
+          ? <PhotoWall busyIds={actions.busyIds} foundIds={found} items={items} label={kindLabel} selected={selected} selecting={selecting} onOpen={setOpen} onToggle={toggle} />
+          : <FileList busyIds={actions.busyIds} foundIds={found} items={items} label={kindLabel} onOpen={setOpen} onReplace={actions.askReplace} onRetire={item => void retireOne(item)} />)}
+        {!isLoading && <Pager compact={!isWide} pager={pager} />}
+      </div>
 
       {selecting && selected.length > 0 && (
         <ActionBar
