@@ -363,7 +363,7 @@ function GroupFilter({ group }: { group: FilterGroup }) {
  */
 export function FilterButtons({ groups }: { groups: FilterGroup[] }) {
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-2">
+    <div className="flex min-w-0 flex-wrap items-center gap-2 lg:shrink-0">
       {groups.map(group => (
         <GroupFilter key={group.id} group={group} />
       ))}
