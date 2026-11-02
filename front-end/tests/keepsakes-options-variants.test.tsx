@@ -147,6 +147,27 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
     expect(writes()).toHaveLength(0)
   })
 
+  it('[T-010] Add another option is there while an option is open and runs its Done first', async () => {
+    await openStep()
+    await startOption('Size', ['XS', 'S'])
+    await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Add another option' }))
+
+    await waitFor(() => expect(puts()).toHaveLength(1))
+    expect((puts()[0]!.body as OptionsPut).options[0]!.name).toEqual({ en: 'Size' })
+    expect(await within(optionsBlock()).findByTestId('option-row')).toHaveTextContent('Size')
+    expect(await screen.findAllByRole('combobox', { name: 'Option name in English' })).toHaveLength(1)
+  })
+
+  it('[T-010] Add another option with a refused Done keeps that option open and opens no second one', async () => {
+    await openStep()
+    await userEvent.click(screen.getByRole('button', { name: 'Add option' }))
+    await userEvent.click(await within(optionsBlock()).findByRole('button', { name: 'Add another option' }))
+
+    expect(await screen.findByText('Name the option in English or German.')).toBeInTheDocument()
+    expect(screen.getAllByRole('combobox', { name: 'Option name in English' })).toHaveLength(1)
+    expect(writes()).toHaveLength(0)
+  })
+
   it('[T-008] a value typed twice is named at once, and a pasted list makes several rows', async () => {
     await openStep()
     await userEvent.click(screen.getByRole('button', { name: 'Add option' }))
@@ -222,11 +243,10 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     expect(rows()).toHaveLength(6)
   })
 
-  it('[T-008][AC5] selecting by a value and setting a price sends one request and the rows show the new price', async () => {
+  it('[T-008][AC5] selecting a group and setting a price sends one request and the rows show the new price', async () => {
     await openStep()
 
-    await userEvent.click(within(variantsBlock()).getByRole('button', { name: /^Select/ }))
-    await userEvent.click(await screen.findByRole('option', { name: 'Size: M' }))
+    await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select all M' }))
     expect(await screen.findByText('2 selected')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Set price' }))
     await userEvent.type(screen.getByLabelText('New price, CHF'), '45')
@@ -238,17 +258,19 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     expect(within(variantsBlock()).getAllByLabelText(/^Price of XS/).map(input => (input as HTMLInputElement).value)).toEqual(['40.00', '40.00'])
   })
 
-  it('[T-008] All and None tick every row or none, and a group box ticks its rows', async () => {
+  it('[T-008][AC5] the Select all box ticks every row, shows a mixed state for some, and unticks all; there is no Select menu', async () => {
     await openStep()
+    const all = () => within(variantsBlock()).getByRole('checkbox', { name: 'Select all' })
 
-    await userEvent.click(within(variantsBlock()).getByRole('button', { name: /^Select/ }))
-    await userEvent.click(await screen.findByRole('option', { name: 'All' }))
+    expect(within(variantsBlock()).queryByRole('button', { name: /^Select/ })).not.toBeInTheDocument()
+    await userEvent.click(all())
     expect(await screen.findByText('8 selected')).toBeInTheDocument()
-    await userEvent.click(within(variantsBlock()).getByRole('button', { name: /^Select/ }))
-    await userEvent.click(await screen.findByRole('option', { name: 'None' }))
+    expect(all()).toBeChecked()
+    await userEvent.click(all())
     expect(screen.queryByTestId('bulk-bar')).not.toBeInTheDocument()
     await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select all S' }))
     expect(await screen.findByText('2 selected')).toBeInTheDocument()
+    expect(all()).toBePartiallyChecked()
   })
 
   it('[T-008] Hidden and For sale change the status of the selection in one request', async () => {

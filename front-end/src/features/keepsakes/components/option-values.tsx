@@ -231,9 +231,7 @@ export function AddValue({ draft, option, onAdded }: { draft: OptionsDraftState,
           <Input lang="en" placeholder={t('keepsakes.options.addValue.placeholder')} />
         </TextField>
       </div>
-      {refused.length > 0
-        ? <QuietNote>{t(refused.length === 1 ? 'keepsakes.options.addValue.alreadyOne' : 'keepsakes.options.addValue.alreadyMany', { values: refused.join(', ') })}</QuietNote>
-        : <p className="ps-12 text-xs text-muted lg:ps-10">{t('keepsakes.options.addValue.hint')}</p>}
+      {refused.length > 0 && <QuietNote>{t(refused.length === 1 ? 'keepsakes.options.addValue.alreadyOne' : 'keepsakes.options.addValue.alreadyMany', { values: refused.join(', ') })}</QuietNote>}
     </div>
   )
 }

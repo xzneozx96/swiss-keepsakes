@@ -2,11 +2,9 @@ import type { ProductOption, ProductVariant } from '@sk/api-contract'
 import type { Outcome } from '../hooks/use-keepsake-editor'
 import type { SaveVariant } from '../lib/variant-actions'
 
-import { Button, Description, FieldError, Form, Input, Label, NumberField, Radio, RadioGroup, TextField } from '@heroui/react'
+import { Button, Description, FieldError, Form, Input, Label, ListBox, NumberField, Select, TextField } from '@heroui/react'
 import { useId, useState } from 'react'
 
-import { EmptyState } from '@/components/empty-state'
-import { OptionIcon } from '@/components/icons'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { isSkuCode, toRappen } from '../lib/keepsake-rules'
@@ -80,17 +78,19 @@ export function VariantSheet({ options, variants, variant, held, onSave, onArchi
     <SheetFrame
       isOpen
       footer={(
-        <>
-          <Button fullWidth className="min-h-11" form={formId} isPending={isPending} type="submit">
-            {t('keepsakes.variant.save')}
-          </Button>
-          <Button fullWidth className="min-h-11" variant="tertiary" onPress={onClose}>
-            {t('keepsakes.variant.cancel')}
-          </Button>
-          <Button fullWidth className="min-h-11" isDisabled={isPending} variant="danger-soft" onPress={onArchive}>
+        <div className="flex w-full flex-1 items-center justify-between gap-2">
+          <Button className="min-h-11" isDisabled={isPending} variant="danger-soft" onPress={onArchive}>
             {t(held ? 'keepsakes.variants.remove' : 'keepsakes.variant.archive')}
           </Button>
-        </>
+          <div className="flex items-center gap-2">
+            <Button className="min-h-11" variant="tertiary" onPress={onClose}>
+              {t('keepsakes.variant.cancel')}
+            </Button>
+            <Button className="min-h-11" form={formId} isPending={isPending} type="submit">
+              {t('keepsakes.variant.save')}
+            </Button>
+          </div>
+        </div>
       )}
       title={title}
       onClose={onClose}
@@ -104,16 +104,14 @@ export function VariantSheet({ options, variants, variant, held, onSave, onArchi
           void submit()
         }}
       >
-        {options.length > 0
-          ? (
-              <div className="flex flex-col gap-4">
-                {options.map(option => (
-                  <ValueChips key={option.id} option={option} value={values[option.id]} onChange={(valueId) => { setValues(v => ({ ...v, [option.id]: valueId })); setServer({}) }} />
-                ))}
-                {valuesError && <RefusalAlert>{valuesError}</RefusalAlert>}
-              </div>
-            )
-          : <EmptyState compact icon={OptionIcon} message={t('keepsakes.variant.noOptions')} />}
+        {options.length > 0 && (
+          <div className="flex flex-col gap-4">
+            {options.map(option => (
+              <ValueChips key={option.id} option={option} value={values[option.id]} onChange={(valueId) => { setValues(v => ({ ...v, [option.id]: valueId })); setServer({}) }} />
+            ))}
+            {valuesError && <RefusalAlert>{valuesError}</RefusalAlert>}
+          </div>
+        )}
         <TextField fullWidth isRequired isInvalid={codeError !== undefined} value={code} onChange={(next) => { setCode(next.toUpperCase()); setServer(s => ({ ...s, code: undefined })) }}>
           <Label>{t('keepsakes.variant.code')}</Label>
           <Input className="font-mono" maxLength={60} placeholder="VX-S-SWAN" />
@@ -135,27 +133,25 @@ export function VariantSheet({ options, variants, variant, held, onSave, onArchi
           <FieldError>{priceError}</FieldError>
         </NumberField>
         {!held && (
-          <RadioGroup aria-label={t('keepsakes.variant.status')} value={status} onChange={next => setStatus(next === 'draft' ? 'draft' : 'published')}>
+          <Select fullWidth selectedKey={status} onSelectionChange={key => key !== null && setStatus(key === 'draft' ? 'draft' : 'published')}>
             <Label>{t('keepsakes.variant.status')}</Label>
-            <Radio value="published">
-              <Radio.Control>
-                <Radio.Indicator />
-              </Radio.Control>
-              <Radio.Content>
-                <Label>{t('keepsakes.variant.status.published')}</Label>
-                <p className="text-xs text-muted">{t('keepsakes.variant.status.publishedHint')}</p>
-              </Radio.Content>
-            </Radio>
-            <Radio value="draft">
-              <Radio.Control>
-                <Radio.Indicator />
-              </Radio.Control>
-              <Radio.Content>
-                <Label>{t('keepsakes.variant.status.hidden')}</Label>
-                <p className="text-xs text-muted">{t('keepsakes.variant.status.hiddenHint')}</p>
-              </Radio.Content>
-            </Radio>
-          </RadioGroup>
+            <Select.Trigger>
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox>
+                <ListBox.Item id="published" textValue={t('keepsakes.variant.status.published')}>
+                  {t('keepsakes.variant.status.published')}
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+                <ListBox.Item id="draft" textValue={t('keepsakes.variant.status.hidden')}>
+                  {t('keepsakes.variant.status.hidden')}
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              </ListBox>
+            </Select.Popover>
+          </Select>
         )}
         {server.failure && <p className="text-sm text-danger" role="alert">{server.failure}</p>}
       </Form>

@@ -3,9 +3,10 @@ import type { Outcome } from '../hooks/use-keepsake-editor'
 import type { Values } from '../lib/option-rules'
 import type { VariantActions } from '../lib/variant-actions'
 
-import { Button, Checkbox, Label, ListBox, Select } from '@heroui/react'
+import { Button, Checkbox } from '@heroui/react'
 import { useState } from 'react'
 
+import { Check } from '@/components/check'
 import { useConfirm } from '@/components/confirm-dialog'
 import { Block } from '@/components/form-block'
 import { ChevronDownIcon, ProductsIcon } from '@/components/icons'
@@ -18,9 +19,6 @@ import { QuietNote } from './option-bits'
 import { PreviewRow, VariantRow } from './variant-row'
 import { VariantSheet } from './variant-sheet'
 import { VariantsBulkBar } from './variants-bulk-bar'
-
-const ALL = '__all__'
-const NONE = '__none__'
 
 /** What the merchant is told when a request was refused, in the words of the refusal or of the problem. */
 function failureText(t: ReturnType<typeof useLocale>['t'], outcome: Extract<Outcome, { ok: false }>) {
@@ -50,32 +48,6 @@ function ArchivedList({ variants, options }: { variants: ProductVariant[], optio
       </ul>
       <p className="mt-2 text-xs text-muted">{t('keepsakes.variants.archivedNote')}</p>
     </details>
-  )
-}
-
-/** "All", "None" and each value of each option: ticks the rows that match. Choosing leaves the field empty, as it is a menu. */
-function SelectMenu({ options, onPick }: { options: ProductOption[], onPick: (key: string) => void }) {
-  const { t, language } = useLocale()
-
-  return (
-    <Select aria-label={t('keepsakes.variants.selectMenu')} className="w-44" placeholder={t('keepsakes.variants.selectMenu')} selectedKey={null} onSelectionChange={key => key !== null && onPick(String(key))}>
-      <Label className="sr-only">{t('keepsakes.variants.selectMenu')}</Label>
-      <Select.Trigger>
-        <Select.Value />
-        <Select.Indicator />
-      </Select.Trigger>
-      <Select.Popover>
-        <ListBox>
-          <ListBox.Item id={ALL} textValue={t('keepsakes.variants.selectAll')}>{t('keepsakes.variants.selectAll')}</ListBox.Item>
-          <ListBox.Item id={NONE} textValue={t('keepsakes.variants.selectNone')}>{t('keepsakes.variants.selectNone')}</ListBox.Item>
-          {options.flatMap(option => option.values.filter(value => labelOf(value.label)).map((value) => {
-            const text = options.length > 1 ? `${labelOf(option.name, language)}: ${labelOf(value.label, language)}` : labelOf(value.label, language)
-
-            return <ListBox.Item key={`${option.id}:${value.id}`} id={`${option.id}:${value.id}`} textValue={text}>{text}</ListBox.Item>
-          }))}
-        </ListBox>
-      </Select.Popover>
-    </Select>
   )
 }
 
@@ -132,14 +104,7 @@ export function VariantsBlock({ options, variants, held, actions, preview, notSo
 
     return next
   })
-  const pick = (key: string) => {
-    if (key === ALL)
-      setSelected(new Set(live.map(variant => variant.id)))
-    else if (key === NONE)
-      setSelected(new Set())
-    else
-      setSelected(new Set(live.filter(variant => Object.entries(variant.values).some(([option, value]) => `${option}:${value}` === key)).map(variant => variant.id)))
-  }
+  const allTicked = live.length > 0 && ticked.length === live.length
   const forTicked = (patch: { priceRappen?: number, status?: 'published' | 'draft' }) => void run(() => actions.saveVariants(ticked.map(variant => ({ id: variant.id, ...patch }))))
 
   /** Archiving is final, so it asks first and waits for the server inside the dialog: a refusal (units reserved) stays there. A new keepsake's rows are only removed. */
@@ -180,7 +145,12 @@ export function VariantsBlock({ options, variants, held, actions, preview, notSo
     <Block hint={t('keepsakes.variants.hint')} icon={ProductsIcon} id="variants" title={t('keepsakes.variants.title')}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-sm text-muted">{t(live.length === 1 ? 'keepsakes.list.variants.one' : 'keepsakes.list.variants.other', { count: live.length })}</span>
-        <SelectMenu options={options} onPick={pick} />
+        <Check
+          isIndeterminate={ticked.length > 0 && !allTicked}
+          isSelected={allTicked}
+          label={t('keepsakes.variants.selectAll')}
+          onChange={on => setSelected(on ? new Set(live.map(variant => variant.id)) : new Set())}
+        />
       </div>
       {ticked.length > 0 && (
         <VariantsBulkBar

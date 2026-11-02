@@ -42,14 +42,53 @@ export function useOptionsFlow({ draft, committed, variants, held, commit }: {
 
   const droppingBlanks = (ref: string) => draft.options.map(option => (option.ref === ref ? { ...option, values: option.values.filter(value => labelOf(value.label) !== '' || draft.isSaved(value.ref)) } : option))
 
+  /** Checks the open option and saves it with the combinations it brings; true when it is done and folded. */
+  const done = async (): Promise<boolean> => {
+    if (!open)
+      return false
+    setFailure(undefined)
+    const options = droppingBlanks(open.ref)
+    const problems = draft.check(options)
+
+    if (problems.length > 0)
+      return false
+    draft.replaceOptions(options)
+    const plan = planOptionsDone({ options, committed, variants, basePrice })
+
+    // Nothing to send when the option is what the keepsake already has.
+    if (!draft.isDirty(options) && plan.newVariants.length === 0 && plan.variantValues.length === 0) {
+      setOpen(undefined)
+
+      return true
+    }
+    setIsPending(true)
+    const outcome = await commit({ options: optionsBody(options), drafts: options, plan })
+
+    setIsPending(false)
+    if (outcome.ok) {
+      if (!held)
+        draft.settle()
+      setOpen(undefined)
+
+      return true
+    }
+    if (outcome.refusals && outcome.refusals.length > 0)
+      draft.setServerProblems(outcome.refusals)
+    else
+      setFailure(t(problemMessageKey(outcome.type)))
+
+    return false
+  }
+
   return {
     open,
     openOption,
     preview,
     isPending,
     failure,
-    add: () => {
-      if (open)
+    /** With an option open, runs its Done first: a refused Done keeps it open and opens no new one. */
+    add: async () => {
+      if (open && !(await done()))
         return
       const snapshot = draft.snapshot()
 
@@ -62,43 +101,7 @@ export function useOptionsFlow({ draft, committed, variants, held, commit }: {
       setFailure(undefined)
       setOpen({ ref, snapshot: draft.snapshot(), isNew: false })
     },
-    /** Checks the open option and saves it with the combinations it brings; true when it is done and folded. */
-    done: async (): Promise<boolean> => {
-      if (!open)
-        return false
-      setFailure(undefined)
-      const options = droppingBlanks(open.ref)
-      const problems = draft.check(options)
-
-      if (problems.length > 0)
-        return false
-      draft.replaceOptions(options)
-      const plan = planOptionsDone({ options, committed, variants, basePrice })
-
-      // Nothing to send when the option is what the keepsake already has.
-      if (!draft.isDirty(options) && plan.newVariants.length === 0 && plan.variantValues.length === 0) {
-        setOpen(undefined)
-
-        return true
-      }
-      setIsPending(true)
-      const outcome = await commit({ options: optionsBody(options), drafts: options, plan })
-
-      setIsPending(false)
-      if (outcome.ok) {
-        if (!held)
-          draft.settle()
-        setOpen(undefined)
-
-        return true
-      }
-      if (outcome.refusals && outcome.refusals.length > 0)
-        draft.setServerProblems(outcome.refusals)
-      else
-        setFailure(t(problemMessageKey(outcome.type)))
-
-      return false
-    },
+    done,
     /** Puts back the option as it was when it opened; an option that was only just added goes. */
     cancel: () => {
       if (!open)

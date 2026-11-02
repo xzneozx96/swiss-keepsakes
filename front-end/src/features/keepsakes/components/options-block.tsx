@@ -143,7 +143,7 @@ export function OptionsBlock({ draft, language, flow, committed }: { draft: Opti
       {draft.options.length === 0
         ? (
             <EmptyState compact icon={OptionIcon} message={t('keepsakes.options.none')}>
-              <Button className="max-lg:h-11" onPress={flow.add}>
+              <Button className="max-lg:h-11" onPress={() => void flow.add()}>
                 <PlusIcon aria-hidden size={16} />
                 {t('keepsakes.options.add')}
               </Button>
@@ -152,8 +152,8 @@ export function OptionsBlock({ draft, language, flow, committed }: { draft: Opti
         : (
             <>
               <OptionRows draft={draft} flow={flow} language={language} onDelete={onDelete} />
-              {!flow.open && draft.options.length < MAX_OPTIONS && (
-                <Button className="-ms-1 self-start max-lg:h-11" variant="ghost" onPress={flow.add}>
+              {draft.options.length < MAX_OPTIONS && (
+                <Button className="-ms-1 self-start max-lg:h-11" isDisabled={flow.isPending} variant="ghost" onPress={() => void flow.add()}>
                   <PlusIcon aria-hidden size={16} />
                   {t('keepsakes.options.addAnother')}
                 </Button>
