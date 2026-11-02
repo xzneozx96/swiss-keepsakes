@@ -162,6 +162,7 @@ export function VariantsBlock({ storeId, options, variants, held, toCome, action
         void run(() => actions.saveVariant(variant.id, { mediaId }))
       }}
       onPrice={rappen => void run(() => actions.saveVariant(variant.id, { priceRappen: rappen }))}
+      onRemove={() => void archive([variant], () => undefined)}
       onSelect={on => tick([variant.id], on)}
     />
   )

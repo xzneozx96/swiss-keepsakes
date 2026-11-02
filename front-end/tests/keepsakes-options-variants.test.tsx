@@ -475,7 +475,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
 
   it('[T-008] a value that a variant uses cannot be deleted: its icon is off and the row says why', async () => {
     await openStep()
-    await userEvent.click(within(optionsBlock()).getAllByRole('button', { name: 'Edit' })[0]!)
+    await userEvent.click(within(optionsBlock()).getAllByRole('button', { name: /^Edit / })[0]!)
 
     const button = within(optionsBlock()).getByRole('button', { name: 'Can’t delete XS: Used by 2 variants' })
 
@@ -485,7 +485,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
 
   it('[T-008] a new value on an option that was there makes the combinations, and Edit then Done holds them until the step is left', async () => {
     await openStep()
-    await userEvent.click(within(optionsBlock()).getAllByRole('button', { name: 'Edit' })[0]!)
+    await userEvent.click(within(optionsBlock()).getAllByRole('button', { name: /^Edit / })[0]!)
     await typeValue('XL')
 
     expect(await screen.findByText('2 new variants')).toBeInTheDocument()
@@ -504,7 +504,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
 
   it('[T-008] an option that variants use is refused at once, naming them, and nothing is sent', async () => {
     await openStep()
-    await userEvent.click(within(optionsBlock()).getAllByRole('button', { name: 'Edit' })[0]!)
+    await userEvent.click(within(optionsBlock()).getAllByRole('button', { name: /^Edit / })[0]!)
     await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Delete option' }))
 
     expect(await within(optionsBlock()).findByText(/Can’t delete Size\. Used by 8 variants/)).toBeInTheDocument()
@@ -533,7 +533,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
       ? Response.json({ type: 'validation-failed', status: 422, title: 'x', instance: '/x', requestId: 'r', errors: [{ path: 'newVariants.0', code: 'combination-taken', params: { code: 'VX-XL-RED', archived: 1 } }] }, { status: 422 })
       : undefined))
     await openStep()
-    await userEvent.click(within(optionsBlock()).getAllByRole('button', { name: 'Edit' })[0]!)
+    await userEvent.click(within(optionsBlock()).getAllByRole('button', { name: /^Edit / })[0]!)
     await typeValue('XL')
     await done()
     await leaveStep()
@@ -545,7 +545,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
   it('[T-008] a stale save says so and the page asks for a reload', async () => {
     serve(call => (call.method === 'PUT' ? problem(412, 'precondition-failed') : undefined))
     await openStep()
-    await userEvent.click(within(optionsBlock()).getAllByRole('button', { name: 'Edit' })[0]!)
+    await userEvent.click(within(optionsBlock()).getAllByRole('button', { name: /^Edit / })[0]!)
     await typeValue('XL')
     await done()
     await leaveStep()
@@ -585,7 +585,7 @@ describe('[T-008][AC7] one language switch for the editor', () => {
     await userEvent.click(screen.getByRole('tab', { name: /Deutsch/ }))
     expect(await screen.findByLabelText('Name (Deutsch)')).toHaveValue('')
     await userEvent.click(screen.getByRole('button', { name: 'Next' }))
-    await userEvent.click(await within(await screen.findByRole('region', { name: 'Options' })).findByRole('button', { name: 'Edit' }))
+    await userEvent.click(await within(await screen.findByRole('region', { name: 'Options' })).findByRole('button', { name: /^Edit / }))
 
     const editor = screen.getByTestId('option-editor')
 
@@ -701,7 +701,7 @@ describe('[T-008][AC9] a new keepsake: the same step, held in the browser', () =
     await startOption('Size', ['S', 'M'])
     await done()
     await waitFor(() => expect(rows()).toHaveLength(2))
-    await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Edit' }))
+    await userEvent.click(within(optionsBlock()).getByRole('button', { name: /^Edit / }))
     await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Remove M' }))
     await done()
 

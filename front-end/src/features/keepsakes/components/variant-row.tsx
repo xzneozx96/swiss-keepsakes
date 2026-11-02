@@ -4,7 +4,7 @@ import type { Values } from '../lib/option-rules'
 import { Button, Checkbox, Input } from '@heroui/react'
 import { useState } from 'react'
 
-import { PhotoAddIcon } from '@/components/icons'
+import { ArchiveIcon, EditIcon, PhotoAddIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { chf, toRappen } from '../lib/keepsake-rules'
 import { combinationName, shortLabel, variantTitle } from '../lib/option-rules'
@@ -73,7 +73,7 @@ export function PriceInput({ priceRappen, label, onSave, className = 'w-24' }: {
 }
 
 /** One variant of the table: select, photo, values, price, status and Edit. The price saves on blur. */
-export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, isSelected, onSelect, onPrice, onPhoto, onEdit }: {
+export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, isSelected, onSelect, onPrice, onPhoto, onEdit, onRemove }: {
   storeId: string
   variant: ProductVariant
   options: ProductOption[]
@@ -89,6 +89,8 @@ export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, 
   /** A photo chosen (`isNew`: the keepsake does not have it yet) or taken off (null). */
   onPhoto: (mediaId: string | null, isNew: boolean) => void
   onEdit: (focus?: 'sku') => void
+  /** The delete icon: the block's remove rule (asks first). */
+  onRemove: () => void
 }) {
   const { t, language } = useLocale()
   const [picking, setPicking] = useState(false)
@@ -120,7 +122,14 @@ export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, 
       <div className="col-start-3 flex min-w-0 items-center gap-3 sm:contents">
         <PriceInput key={variant.priceRappen} label={t('keepsakes.variants.priceOf', { name: title })} priceRappen={variant.priceRappen} onSave={onPrice} />
         <StatusText tone={forSale ? 'success' : 'neutral'}>{t(forSale ? 'keepsakes.variants.onSale' : 'keepsakes.variant.status.hidden')}</StatusText>
-        <Button aria-label={t('keepsakes.variants.editVariant', { name: title })} className="ms-auto justify-self-end max-lg:h-11" size="sm" variant="tertiary" onPress={() => onEdit()}>{t('keepsakes.variant.edit')}</Button>
+        <span className="ms-auto flex items-center gap-1 justify-self-end">
+          <Button isIconOnly aria-label={t('keepsakes.variants.editVariant', { name: title })} className="max-lg:size-11" size="sm" variant="tertiary" onPress={() => onEdit()}>
+            <EditIcon aria-hidden size={16} />
+          </Button>
+          <Button isIconOnly aria-label={`${t('keepsakes.variant.archive')}: ${title}`} className="text-danger max-lg:size-11" size="sm" variant="tertiary" onPress={onRemove}>
+            <ArchiveIcon aria-hidden size={16} />
+          </Button>
+        </span>
       </div>
       {picking && <VariantPhotoPicker current={variant.mediaId} isOpen ownIds={ownPhotos} storeId={storeId} onChoose={(id, isNew) => onPhoto(id, isNew)} onClose={() => setPicking(false)} onRemove={() => onPhoto(null, false)} />}
     </li>

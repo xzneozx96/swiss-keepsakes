@@ -9,7 +9,7 @@ import { useRef, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 import { Block } from '@/components/form-block'
-import { GripIcon, OptionIcon, PlusIcon } from '@/components/icons'
+import { EditIcon, GripIcon, OptionIcon, PlusIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useStopDrag } from '@/hooks/use-stop-drag'
 import { namedValues } from '../lib/combinations'
@@ -19,8 +19,8 @@ import { OptionEditor } from './option-editor'
 import { StatusText } from './status-text'
 import { useDeleteOption } from './use-delete-option'
 
-/** A finished option as one row: the grip, the name, its values as chips and Edit. */
-function OptionRow({ draft, option, grip, language, isLocked, onEdit }: { draft: OptionsDraftState, option: OptionDraft, grip: React.ReactNode, language: Language, isLocked: boolean, onEdit: () => void }) {
+/** A finished option as one row: the grip, the name, its values as chips, then Edit and Delete as icons. */
+function OptionRow({ draft, option, grip, language, isLocked, onEdit, onDelete }: { draft: OptionsDraftState, option: OptionDraft, grip: React.ReactNode, language: Language, isLocked: boolean, onEdit: () => void, onDelete: () => void }) {
   const { t } = useLocale()
   const name = labelOf(option.name, language) || t('keepsakes.options.unnamed')
   // On the English side, a gap in the German texts would otherwise stay out of sight.
@@ -43,7 +43,14 @@ function OptionRow({ draft, option, grip, language, isLocked, onEdit }: { draft:
             ))}
           </ul>
         </div>
-        <Button className="shrink-0 max-lg:h-11" isDisabled={isLocked} size="sm" variant="tertiary" onPress={onEdit}>{t('keepsakes.options.edit')}</Button>
+        <span className="flex shrink-0 items-center gap-1">
+          <Button isIconOnly aria-label={t('keepsakes.variants.editVariant', { name })} className="max-lg:size-11" isDisabled={isLocked} size="sm" variant="tertiary" onPress={onEdit}>
+            <EditIcon aria-hidden size={16} />
+          </Button>
+          <Button isIconOnly aria-label={`${t('keepsakes.options.deleteOption')}: ${name}`} className="text-danger max-lg:size-11" isDisabled={isLocked} size="sm" variant="tertiary" onPress={onDelete}>
+            <TrashIcon aria-hidden size={16} />
+          </Button>
+        </span>
       </div>
       <NotesAt at={option.ref} draft={draft} />
     </div>
@@ -113,6 +120,7 @@ function OptionRows({ draft, language, flow, suggestions, onDelete }: { draft: O
                     isLocked={flow.open !== undefined}
                     language={language}
                     option={option}
+                    onDelete={() => onDelete(option)}
                     onEdit={() => flow.edit(option.ref)}
                   />
                 )}
