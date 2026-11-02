@@ -89,7 +89,7 @@ The 2026-10-29 design (cards, with options and variants in sheets) became a step
 
 ### Amended on 2026-11-02, T-020 (owner)
 
-25. **An option that variants use can be deleted when the rows stay distinct** (as in Shopify). The case that started it: Theme, Size and Colour, with three live variants that all differ only by Size, and Colour refused as "in use".
+26. **An option that variants use can be deleted when the rows stay distinct** (as in Shopify). The case that started it: Theme, Size and Colour, with three live variants that all differ only by Size, and Colour refused as "in use".
     - **The write:** deleting the option removes it, its values and its value from every variant, live and archived, in the one `PUT .../options`. It is held in the browser and saved with the step, like any option change (item 23).
     - **Allowed only when the remaining combinations stay distinct** among live and archived variants alike (ADR-017: an archived variant keeps its combination). Otherwise the save is refused with `option-drop-clash`, and the sheet names the rows that would clash, grouped ("Light / Small: 2 rows (Red, Blue)"), and says to delete all but one of each first. A sold archived row cannot be deleted, and the message says how many of the clashing rows are such.
     - **The last option** goes when exactly one variant remains; with two or more it is the same refusal ("All variants: 2 rows").
