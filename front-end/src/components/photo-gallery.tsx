@@ -24,6 +24,8 @@ interface PhotoGalleryProps {
   className?: string
   /** Overlays on the top of the gallery (back, heart, cart); positioned by the caller. */
   children?: React.ReactNode
+  /** No fullscreen viewer: a tap does nothing (the editor's preview, whose viewer would cover the whole window). */
+  noViewer?: boolean
 }
 
 const trackClass
@@ -44,6 +46,7 @@ export function PhotoGallery({
   labels,
   className = '',
   children,
+  noViewer = false,
 }: PhotoGalleryProps) {
   const [index, setIndex] = useState(0)
   const [viewerAt, setViewerAt] = useState<number | null>(null)
@@ -68,7 +71,7 @@ export function PhotoGallery({
             aria-label={labels.photo(i + 1, count)}
             className="relative size-full shrink-0 snap-center outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-inset"
             type="button"
-            onClick={() => setViewerAt(i)}
+            onClick={noViewer ? undefined : () => setViewerAt(i)}
           >
             <img
               alt=""
@@ -89,12 +92,14 @@ export function PhotoGallery({
         </span>
       )}
 
-      <PhotoViewer
-        labels={labels}
-        photos={photos}
-        startAt={viewerAt}
-        onClose={() => setViewerAt(null)}
-      />
+      {!noViewer && (
+        <PhotoViewer
+          labels={labels}
+          photos={photos}
+          startAt={viewerAt}
+          onClose={() => setViewerAt(null)}
+        />
+      )}
     </div>
   )
 }

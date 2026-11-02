@@ -219,6 +219,7 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
       <PhotoGallery
         className="aspect-[4/3.4]"
         labels={galleryLabels}
+        noViewer={!shopper}
         photos={photos}
       >
         {shopper && (
