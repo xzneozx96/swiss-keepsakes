@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { parseMapsLink } from '@/features/places/lib/maps-link'
+import { parseMapsLink, storableLink } from '@/features/places/lib/maps-link'
 
 const at = (latitude: number, longitude: number) => ({ kind: 'position', latitude, longitude })
 
@@ -60,5 +60,31 @@ describe('[E4.2][AC68] reading a Google Maps link', () => {
     expect(parseMapsLink('47.05, 8.3')).toEqual({ kind: 'unreadable' })
     expect(parseMapsLink('')).toEqual({ kind: 'unreadable' })
     expect(parseMapsLink('not a link at all')).toEqual({ kind: 'unreadable' })
+  })
+})
+
+describe('the link as it is stored', () => {
+  it.each([
+    ['https://maps.app.goo.gl/RiTbLwL8vxFxPzk38', 'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38'],
+    ['  maps.app.goo.gl/RiTbLwL8vxFxPzk38 ', 'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38'],
+    ['http://www.google.com/maps?q=47.05,8.3', 'https://www.google.com/maps?q=47.05,8.3'],
+    ['https://goo.gl/maps/abc', 'https://goo.gl/maps/abc'],
+    ['https://www.google.ch/maps/place/Kapellbr%C3%BCcke/@47.05,8.3,17z', 'https://www.google.ch/maps/place/Kapellbr%C3%BCcke/@47.05,8.3,17z'],
+  ])('keeps %j as https', (input, stored) => {
+    expect(storableLink(input)).toBe(stored)
+  })
+
+  it.each([
+    '',
+    'https://example.com/maps',
+    'https://maps.app.goo.gl/',
+    'https://goo.gl/other',
+    'https://www.google.com/search?q=maps',
+    'https://foo.google.com/maps',
+    'https://user:pw@www.google.com/maps',
+    'https://www.google.com:8443/maps',
+    `https://www.google.com/maps?q=${'x'.repeat(2000)}`,
+  ])('stores nothing for %j', (input) => {
+    expect(storableLink(input)).toBe('')
   })
 })

@@ -22,6 +22,8 @@ export interface PlaceForm {
   latitude: number | null
   longitude: number | null
   address: string
+  /** The Google Maps link of the place; empty for none. Stored with the place, live on save. */
+  mapsLink: string
   hours: HoursSpan[]
   dates: DateEntry[]
   categoryIds: string[]
@@ -64,6 +66,7 @@ export function emptyForm(withDate = false): PlaceForm {
     latitude: null,
     longitude: null,
     address: '',
+    mapsLink: '',
     hours: [],
     dates: withDate ? [emptyDate()] : [],
     categoryIds: [],
@@ -95,6 +98,7 @@ export function formOf(pin: Pin): PlaceForm {
     latitude: pin.latitude,
     longitude: pin.longitude,
     address: pin.address ?? '',
+    mapsLink: pin.mapsLink ?? '',
     hours: pin.weeklyHours.map(span => ({ key: newKey(), day: span.day, opens: span.opens, closes: span.closes })),
     dates: pin.dates.map(date => ({
       key: date.id,
@@ -194,6 +198,7 @@ export function bodyOf(form: PlaceForm): PinWriteBody {
     latitude: form.latitude,
     longitude: form.longitude,
     address: form.address.trim() === '' ? null : form.address.trim(),
+    mapsLink: form.mapsLink.trim() === '' ? null : form.mapsLink.trim(),
     weeklyHours: form.hours.map(({ day, opens, closes }) => ({ day, opens, closes })),
     stayTag: form.stayTag,
     interests: form.interests as NonNullable<PinWriteBody['interests']>,

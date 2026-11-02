@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 import { bodyOf, emptyDate, emptyForm, formOf, isDirty, photoIds, publishGaps, validate, withPhotoIds } from '@/features/places/lib/form'
 import { filterItems, isFiltered, kindOf, NO_CATEGORY, noFilters } from '@/features/places/lib/list'
+import { storableLink } from '@/features/places/lib/maps-link'
 
 const pin: Pin = {
   id: '0198a000-0000-7000-8000-000000000001',
@@ -14,6 +15,7 @@ const pin: Pin = {
   latitude: null,
   longitude: null,
   address: null,
+  mapsLink: null,
   weeklyHours: [],
   stayTag: 'both',
   interests: [],
@@ -98,6 +100,20 @@ describe('[E4.2][AC63] the outbound link in the write', () => {
     expect(bodyOf({ ...emptyForm(), outboundUrl: ' https://hotel.example/a ' }).outboundUrl).toBe('https://hotel.example/a')
     expect(bodyOf(emptyForm()).outboundUrl).toBeNull()
     expect(validate({ ...emptyForm(), outboundUrl: 'https://a b.example' }).link).toBe('places.error.linkFormat')
+  })
+})
+
+describe('the stored Google Maps link in the form', () => {
+  it('loads from the pin, is sent trimmed and null when empty, and counts as a change', () => {
+    const link = 'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38'
+
+    expect(formOf({ ...pin, mapsLink: link }).mapsLink).toBe(link)
+    expect(formOf(pin).mapsLink).toBe('')
+    expect(bodyOf({ ...emptyForm(), mapsLink: ` ${link} ` }).mapsLink).toBe(link)
+    expect(bodyOf(emptyForm()).mapsLink).toBeNull()
+    expect(isDirty({ ...emptyForm(), mapsLink: link }, emptyForm())).toBe(true)
+    for (const stored of [link, 'https://www.google.com/maps?q=47.05,8.3', 'https://goo.gl/maps/abc'])
+      expect(pinWriteBodySchema.safeParse({ mapsLink: storableLink(stored) }).success).toBe(true)
   })
 })
 

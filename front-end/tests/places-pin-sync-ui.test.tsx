@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { PlaceEditorScreen } from '@/features/places/components/place-editor-screen'
-import { installApi, renderInRouter } from './places-support'
+import { installApi, pinOf, renderInRouter, storeId, uuid } from './places-support'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -117,6 +117,89 @@ describe('the pin and the link', () => {
     expect(reading.querySelector('[role="status"], .spinner, svg')).not.toBeNull()
     release()
     await waitFor(() => expect(screen.getByText('Pin moved to the link.')).toBeInTheDocument())
+  })
+})
+
+const stored = (over = {}) => pinOf({ id: uuid(10), latitude: 47.0516, longitude: 8.3075, ...over })
+const lookups = () => api.calls.filter(call => call.path.includes('/maps-link'))
+const writes = () => api.calls.filter(call => call.method === 'PATCH' || call.method === 'POST')
+
+async function openStored(pin = stored()) {
+  api.pin = pin
+  await renderInRouter(<PlaceEditorScreen placeId={pin.id} start={undefined} />, { path: `/store/content/places/${pin.id}`, language: 'en' })
+  await screen.findByRole('heading', { name: /Place on the map$/, level: 2 })
+}
+
+describe('the link stored with the place', () => {
+  it('shows the stored link after a reload, says nothing about it, and warns when the pin then moves', async () => {
+    await openStored(stored({ mapsLink: linkAt(47.0516, 8.3075) }))
+
+    expect(linkInput()).toHaveValue(linkAt(47.0516, 8.3075))
+    expect(screen.queryByText('Pin moved to the link.')).not.toBeInTheDocument()
+    expect(linkWarning()).not.toBeInTheDocument()
+    expect(lookups()).toHaveLength(0)
+
+    await movePin()
+    expect(linkWarning()).toBeInTheDocument()
+  })
+
+  it('follows a stored short link once on open, and warns after a moved pin, with no message about the pin before', async () => {
+    api.answer = call => (call.path.includes('/maps-link') ? Response.json({ latitude: 47.0516, longitude: 8.3075 }) : undefined)
+    await openStored(stored({ mapsLink: 'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38' }))
+
+    await waitFor(() => expect(lookups()).toHaveLength(1))
+    expect(lookups()[0]).toMatchObject({ path: `/api/store/${storeId}/maps-link?url=${encodeURIComponent('https://maps.app.goo.gl/RiTbLwL8vxFxPzk38')}` })
+    expect(linkInput()).toHaveValue('https://maps.app.goo.gl/RiTbLwL8vxFxPzk38')
+    expect(screen.queryByText('Pin moved to the link.')).not.toBeInTheDocument()
+    await userEvent.click(linkInput())
+    await userEvent.tab()
+    expect(lookups()).toHaveLength(1)
+
+    await movePin()
+    await waitFor(() => expect(linkWarning()).toBeInTheDocument())
+  })
+
+  it('a stored short link that cannot be followed leaves the field quiet and the pin where it is', async () => {
+    api.answer = call => (call.path.includes('/maps-link') ? Response.json({ type: 'maps-link-unreadable', status: 422, title: 'x', instance: '/x', requestId: 'r' }, { status: 422 }) : undefined)
+    await openStored(stored({ mapsLink: 'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38' }))
+
+    await waitFor(() => expect(lookups()).toHaveLength(1))
+    await movePin()
+    expect(linkWarning()).not.toBeInTheDocument()
+    expect(linkInput()).not.toBeInvalid()
+    expect(linkInput()).toHaveValue('https://maps.app.goo.gl/RiTbLwL8vxFxPzk38')
+  })
+
+  it('saves the pasted link with the place, and the remove and new-pin links change the saved value', async () => {
+    api.answer = call => (call.path.includes('address-at') ? Response.json(bridge) : undefined)
+    await openStored()
+    await paste(linkAt(47.0516, 8.3075))
+    await userEvent.click(screen.getAllByRole('button', { name: 'Save draft' })[0]!)
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]!.body).toMatchObject({ mapsLink: linkAt(47.0516, 8.3075) })
+
+    await movePin()
+    await userEvent.click(screen.getByRole('button', { name: 'Use a link to the new pin' }))
+    await userEvent.click(screen.getAllByRole('button', { name: 'Save draft' })[0]!)
+    await waitFor(() => expect(writes()).toHaveLength(2))
+    expect(writes()[1]!.body).toMatchObject({ mapsLink: 'https://www.google.com/maps?q=47.05,8.3' })
+
+    await userEvent.click(linkInput())
+    await userEvent.clear(linkInput())
+    await userEvent.tab()
+    await userEvent.click(screen.getAllByRole('button', { name: 'Save draft' })[0]!)
+    await waitFor(() => expect(writes()).toHaveLength(3))
+    expect(writes()[2]!.body).toMatchObject({ mapsLink: null })
+  })
+
+  it('a link that is no Google Maps link is not stored, and the old one goes', async () => {
+    await openStored(stored({ mapsLink: linkAt(47.0516, 8.3075) }))
+    await userEvent.clear(linkInput())
+    await paste('https://example.com/not-maps')
+    await userEvent.click(screen.getAllByRole('button', { name: 'Save draft' })[0]!)
+
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]!.body).toMatchObject({ mapsLink: null })
   })
 })
 

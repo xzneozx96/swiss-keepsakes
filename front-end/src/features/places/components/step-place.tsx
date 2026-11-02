@@ -49,7 +49,7 @@ export function StepPlace({ form, patch, storeId }: StepProps) {
     <Block hint={t('places.map.help')} icon={OpenInMapsIcon} title={t('places.map.label')}>
       <p className="sr-only" id="places-map-help">{t('places.map.keys')}</p>
       <div className="flex flex-col gap-3">
-        <MapsLinkField position={pin} storeId={storeId} onPosition={({ lat, lng }) => patch({ latitude: lat, longitude: lng })} />
+        <MapsLinkField link={form.mapsLink} position={pin} storeId={storeId} onLink={mapsLink => patch({ mapsLink })} onPosition={({ lat, lng }) => patch({ latitude: lat, longitude: lng })} />
         {mapFailed
           ? (
               <div className="flex flex-col gap-3 rounded-2xl bg-surface-secondary p-3">

@@ -74,3 +74,33 @@ export function parseMapsLink(input: string): MapsLink {
 
   return { kind: 'unreadable' }
 }
+
+// The hosts the API accepts for a stored link (the same rule as `pinWriteBodySchema.mapsLink`): narrower than what
+// `parseMapsLink` can read, so a link the field stores never makes the save fail.
+const STORED_HOST = /^(?:(?:www|maps)\.)?google\.(?:com?\.)?[a-z]{2,3}$/i
+const MAPS_PATH = /^\/maps(?:\/|$)/
+
+/**
+ * The link as it is stored with the place: https, a Google Maps address, at most 2000 characters. `http` and a link typed
+ * without a scheme become https. Empty when the text is no such link, so the place keeps no link rather than a refused one.
+ */
+export function storableLink(input: string): string {
+  const text = input.trim()
+  let url: URL
+
+  try {
+    url = new URL(SCHEME.test(text) ? text : `https://${text}`)
+  }
+  catch {
+    return ''
+  }
+  if (url.protocol === 'http:')
+    url.protocol = 'https:'
+  if (url.protocol !== 'https:' || url.username !== '' || url.password !== '' || url.port !== '')
+    return ''
+  const host = url.hostname.toLowerCase()
+  const known = host === 'maps.app.goo.gl' ? url.pathname.length > 1 : (host === 'goo.gl' || STORED_HOST.test(host)) && MAPS_PATH.test(url.pathname)
+  const link = url.toString()
+
+  return known && link.length <= 2000 ? link : ''
+}

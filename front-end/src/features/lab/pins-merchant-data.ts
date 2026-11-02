@@ -63,6 +63,8 @@ export interface Pin {
   lat: number | null
   lng: number | null
   address: string
+  /** The Google Maps link of the place, when the merchant stored one. */
+  mapsLink?: string
   title: Localized
   tip: Localized
   photo: string
@@ -205,6 +207,7 @@ export const seedPins: Pin[] = [
     morePhotos: ['lucerne-water-tower', 'vx-chapel-bridge', 'lucerne-night'],
     lat: 47.0517,
     lng: 8.3077,
+    mapsLink: 'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38',
     title: { en: 'Chapel Bridge', de: 'Kapellbrücke' },
     tip: { en: 'Look up: the triangular paintings under the roof tell the city’s story.', de: 'Schauen Sie nach oben: Die Dreiecksbilder unter dem Dach erzählen die Stadtgeschichte.' },
     photo: 'lucerne-kapellbruecke-1200',

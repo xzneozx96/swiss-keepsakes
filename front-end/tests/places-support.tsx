@@ -48,6 +48,7 @@ export function pinOf(over: Partial<Pin> = {}): Pin {
     latitude: null,
     longitude: null,
     address: null,
+    mapsLink: null,
     weeklyHours: [],
     stayTag: 'both',
     interests: [],
