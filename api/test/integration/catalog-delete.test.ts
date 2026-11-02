@@ -68,10 +68,12 @@ async function linkFromStoryAndTour(storeId: string, productId: string) {
   await pool.query(`insert into content.tour_keepsake_links (tour_id, store_id, position, product_id) values ($1, $2, 1, $3)`, [tour, storeId, productId])
 }
 
-const links = async (productId: string) => ({
-  story: Number((await pool.query('select count(*) from content.story_keepsake_links where product_id = $1', [productId])).rows[0].count),
-  tour: Number((await pool.query('select count(*) from content.tour_keepsake_links where product_id = $1', [productId])).rows[0].count),
-})
+async function links(productId: string) {
+  return {
+    story: Number((await pool.query('select count(*) from content.story_keepsake_links where product_id = $1', [productId])).rows[0].count),
+    tour: Number((await pool.query('select count(*) from content.tour_keepsake_links where product_id = $1', [productId])).rows[0].count),
+  }
+}
 
 describe('[E6.1] removing a keepsake that was never sold', () => {
   it('[E6.1][delete] deletes it with its options, values, variants and photo list; the photo stays in the library', async () => {

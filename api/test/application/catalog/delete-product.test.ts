@@ -2,13 +2,13 @@ import type { Actor } from '@sk/domain/identity'
 import type { CatalogDeps } from '../../../src/modules/catalog/application/deps.ts'
 import type { Product, ProductRepository } from '../../../src/modules/catalog/ports.ts'
 import { describe, expect, it, vi } from 'vitest'
+import { makeCreateVariant } from '../../../src/modules/catalog/application/create-variant.ts'
 import { makeDeleteProduct } from '../../../src/modules/catalog/application/delete-product.ts'
 import { makeListProducts } from '../../../src/modules/catalog/application/list-products.ts'
 import { makePublishProduct } from '../../../src/modules/catalog/application/publish-product.ts'
 import { makeSaveOptions } from '../../../src/modules/catalog/application/save-options.ts'
 import { makeSaveProduct } from '../../../src/modules/catalog/application/save-product.ts'
 import { makeSaveVariant } from '../../../src/modules/catalog/application/save-variant.ts'
-import { makeCreateVariant } from '../../../src/modules/catalog/application/create-variant.ts'
 import { makeUnpublishProduct } from '../../../src/modules/catalog/application/unpublish-product.ts'
 
 const storeId = '0190f0c2-0000-7000-8000-00000000000a'
@@ -40,7 +40,12 @@ function setup(found: Product | undefined, sold: string[] = []) {
     remove: vi.fn(async () => {}),
     archive: vi.fn(async (_tx: null, p: Product) => ({ ...p, status: 'archived' as const, rowVersion: p.rowVersion + 1 })),
     list: vi.fn(async () => [{ id: 'p1', name: {}, status: 'published' as const, hasUnpublishedEdits: false, coverMediaId: null, variantCount: 1, soldOutCount: 0, rowVersion: 4, updatedAt: new Date() }]),
-    save: vi.fn(), publish: vi.fn(), unpublish: vi.fn(), saveVariant: vi.fn(), insertVariant: vi.fn(), replaceOptions: vi.fn(),
+    save: vi.fn(),
+    publish: vi.fn(),
+    unpublish: vi.fn(),
+    saveVariant: vi.fn(),
+    insertVariant: vi.fn(),
+    replaceOptions: vi.fn(),
   } as unknown as ProductRepository<null>
   const audit = { record: vi.fn(async () => {}) }
   const keepsakeLinks = { removeAll: vi.fn(async () => {}) }
