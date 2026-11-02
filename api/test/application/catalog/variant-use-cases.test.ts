@@ -33,13 +33,14 @@ function product(over: Partial<Product> = {}): Product {
   }
 }
 
-function setup(found: Product | undefined, reserved = new Map<string, number>(), taken = new Set<string>(), files: { id: string, kind: 'image' | 'audio' | 'pdf', status: 'processing' | 'ready' | 'retired' }[] = []) {
+function setup(found: Product | undefined, reserved = new Map<string, number>(), taken = new Set<string>(), files: { id: string, kind: 'image' | 'audio' | 'pdf', status: 'processing' | 'ready' | 'retired' }[] = [], sold = new Set<string>()) {
   const repo = {
     findForUpdate: vi.fn(async () => found),
     saveVariant: vi.fn(async () => found),
     insertVariant: vi.fn(async () => found!),
     replaceOptions: vi.fn(async () => found!),
     saveVariants: vi.fn(async () => found!),
+    removeVariants: vi.fn(async () => found!),
     takenSkuCodes: vi.fn(async (_tx: null, _store: string, codes: string[]) => new Set(codes.filter(code => taken.has(code)))),
     insert: vi.fn(async () => found!),
   } as unknown as ProductRepository<null>
@@ -51,6 +52,7 @@ function setup(found: Product | undefined, reserved = new Map<string, number>(),
     clock: { now: () => new Date('2026-10-30T08:00:00Z') },
     reservations: { reservedBySku: async () => reserved },
     keepsakeLinks: { removeAll: async () => {} },
+    sales: { soldProductIds: async () => new Set<string>(), soldSkuIds: async (_tx: null, _store: string, ids: string[]) => new Set(ids.filter(id => sold.has(id))) },
   }
   return { repo, deps }
 }
@@ -211,6 +213,71 @@ describe('[T-008][AC1] saving the options with new variants', () => {
     expect(await save(deps, [{ skuCode: 'VX-S2', mediaId: null, values: { size: 's' } }])).toMatchObject({ reason: 'refused', refusals: [{ code: 'combination-taken', path: 'newVariants.0.values' }] })
     expect(await save(deps, [{ skuCode: 'VX L', mediaId: null, values: { size: 'l' } }])).toMatchObject({ reason: 'sku-code-invalid', path: 'newVariants.0.skuCode' })
     expect(repo.replaceOptions).not.toHaveBeenCalled()
+  })
+})
+
+describe('[T-019][AC3] removing a variant: deleted if never sold, else archived', () => {
+  const two = () => product({ variants: [variant('1', 'VX-S', { size: 's' }), variant('2', 'VX-L', { size: 'l' }), variant('3', 'VX-X', { size: 'x' }, 'archived')] })
+  const sold = (...ids: string[]) => new Set(ids)
+
+  it('[T-019][AC3] a variant that no order line names is deleted, with an audit row, and nothing is archived', async () => {
+    const { repo, deps } = setup(two())
+
+    expect((await makeSaveVariant(deps)(owner, storeId, 'p1', '1', { status: 'removed' }, 'req-1')).ok).toBe(true)
+    expect(repo.removeVariants).toHaveBeenCalledWith(null, expect.anything(), ['1'])
+    expect(repo.saveVariant).not.toHaveBeenCalled()
+    expect(deps.audit.record).toHaveBeenCalledWith(null, expect.objectContaining({ entity: 'sku', entityId: '1', action: 'deleted' }))
+  })
+
+  it('[T-019][AC3] a variant that an order line names is archived, not deleted', async () => {
+    const { repo, deps } = setup(two(), new Map(), new Set(), [], sold('1'))
+
+    expect((await makeSaveVariant(deps)(owner, storeId, 'p1', '1', { status: 'removed' }, null)).ok).toBe(true)
+    expect(repo.removeVariants).not.toHaveBeenCalled()
+    expect(repo.saveVariant).toHaveBeenCalledWith(null, expect.anything(), '1', { status: 'archived' }, expect.any(Date))
+    expect(deps.audit.record).toHaveBeenCalledWith(null, expect.objectContaining({ entityId: '1', action: 'archived' }))
+  })
+
+  it('[T-019][AC3] without a sales directory nothing counts as sold', async () => {
+    const { repo, deps } = setup(two())
+
+    expect((await makeSaveVariant({ ...deps, sales: undefined })(owner, storeId, 'p1', '1', { status: 'removed' }, null)).ok).toBe(true)
+    expect(repo.removeVariants).toHaveBeenCalledTimes(1)
+  })
+
+  it('[T-019][AC3] reserved units still refuse, and an archived variant is not deleted', async () => {
+    const { repo, deps } = setup(two(), new Map([['1', 2]]))
+
+    expect(await makeSaveVariant(deps)(owner, storeId, 'p1', '1', { status: 'removed' }, null)).toMatchObject({ reason: 'refused', refusals: [{ code: 'variant-reserved', params: { code: 'VX-S', count: 2 } }] })
+    expect(await makeSaveVariant(deps)(owner, storeId, 'p1', '3', { status: 'removed' }, null)).toMatchObject({ reason: 'refused', refusals: [{ code: 'variant-archived' }] })
+    expect(repo.removeVariants).not.toHaveBeenCalled()
+  })
+
+  it('[T-019][AC4] several variants: the unsold are deleted and the sold archived, in one request', async () => {
+    const { repo, deps } = setup(two(), new Map(), new Set(), [], sold('2'))
+
+    expect((await makeSaveVariants(deps)(owner, storeId, 'p1', [{ id: '1', status: 'removed' }, { id: '2', status: 'removed' }], null)).ok).toBe(true)
+    expect(repo.removeVariants).toHaveBeenCalledWith(null, expect.anything(), ['1'])
+    expect(repo.saveVariants).toHaveBeenCalledWith(null, expect.anything(), [{ id: '2', status: 'archived' }], expect.any(Date))
+    expect(deps.audit.record).toHaveBeenCalledWith(null, expect.objectContaining({ entityId: '1', action: 'deleted' }))
+    expect(deps.audit.record).toHaveBeenCalledWith(null, expect.objectContaining({ entityId: '2', action: 'archived' }))
+  })
+
+  it('[T-019][AC4] one reserved or archived row refuses the whole request and nothing is written', async () => {
+    const { repo, deps } = setup(two(), new Map([['2', 1]]))
+
+    expect(await makeSaveVariants(deps)(owner, storeId, 'p1', [{ id: '1', status: 'removed' }, { id: '2', status: 'removed' }], null)).toMatchObject({ reason: 'refused', refusals: [{ code: 'variant-reserved', path: 'variants.1.status' }] })
+    expect(await makeSaveVariants(deps)(owner, storeId, 'p1', [{ id: '1', status: 'removed' }, { id: '3', status: 'removed' }], null)).toMatchObject({ reason: 'refused', refusals: [{ code: 'variant-archived', path: 'variants.1.status' }] })
+    expect(repo.removeVariants).not.toHaveBeenCalled()
+    expect(repo.saveVariants).not.toHaveBeenCalled()
+  })
+
+  it('[T-019][AC4] only removals: saveVariants is not called with an empty list', async () => {
+    const { repo, deps } = setup(two())
+
+    expect((await makeSaveVariants(deps)(owner, storeId, 'p1', [{ id: '1', status: 'removed' }, { id: '2', status: 'removed' }], null)).ok).toBe(true)
+    expect(repo.removeVariants).toHaveBeenCalledWith(null, expect.anything(), ['1', '2'])
+    expect(repo.saveVariants).not.toHaveBeenCalled()
   })
 })
 

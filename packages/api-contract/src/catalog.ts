@@ -150,7 +150,7 @@ export const variantSaveBodySchema = z.strictObject({
   skuCode: skuCodeWrite.meta({ description: 'A new code, or null to remove it. Left out keeps it' }),
   mediaId: mediaIdWrite,
   priceRappen: z.int().min(1).max(MAX_PRICE_RAPPEN).optional(),
-  status: z.enum(['published', 'draft', 'archived']).optional().meta({ description: 'published is for sale, draft is hidden from guests, archived keeps the variant for old orders and is final' }),
+  status: z.enum(['published', 'draft', 'archived', 'removed']).optional().meta({ description: 'published is for sale, draft is hidden from guests, archived keeps the variant for old orders and is final. removed deletes a variant that no order line names and archives one that does' }),
   values: valueIds.optional().meta({ description: 'The value id of every option id. Replaces the values' }),
 }).meta({ id: 'VariantSaveBody', description: 'A change to one variant' })
 
@@ -160,7 +160,7 @@ export const variantsSaveBodySchema = z.strictObject({
     priceRappen: z.int().min(1).max(MAX_PRICE_RAPPEN).optional(),
     skuCode: skuCodeWrite.meta({ description: 'A new code, or null to remove it. Left out keeps it' }),
     mediaId: mediaIdWrite,
-    status: z.enum(['published', 'draft', 'archived']).optional().meta({ description: 'published is for sale, draft is hidden from guests, archived is final' }),
+    status: z.enum(['published', 'draft', 'archived', 'removed']).optional().meta({ description: 'published is for sale, draft is hidden from guests, archived is final. removed deletes a variant that no order line names and archives one that does' }),
   })).min(1).max(MAX_VARIANTS).refine(rows => new Set(rows.map(row => row.id.toLowerCase())).size === rows.length, 'Each variant may appear once'),
 }).meta({ id: 'VariantsSaveBody', description: 'A change to several variants of one keepsake, all or nothing' })
 
@@ -187,6 +187,7 @@ export const productVariantSchema = z.object({
   priceRappen: z.int(),
   status: z.enum(['published', 'draft', 'archived']).meta({ description: 'published is for sale, draft is hidden from guests, archived stays for old orders' }),
   values: z.record(z.uuid(), z.uuid()).meta({ description: 'The value id of each option id. Empty for a keepsake with no option' }),
+  hasOrders: z.boolean().optional().meta({ description: 'An order line names the variant, so removing it archives instead of deleting. Left out means false; always false until the orders module is wired' }),
 }).meta({ id: 'ProductVariant', description: 'A variant (SKU) of a keepsake' })
 
 export const productOptionSchema = z.object({

@@ -10,6 +10,8 @@ export interface ProductDetail {
   variantPhotos: Map<string, MediaInfo>
   // An order line names it, so removing it archives (ADR-023). False when no sales directory is wired.
   hasOrders: boolean
+  // The variants an order line names, so removing one archives it. Empty when no sales directory is wired.
+  soldSkuIds: Set<string>
 }
 
 export interface MediaLookup<T> {
@@ -22,13 +24,14 @@ export async function describe<T>({ media, sales }: { media: MediaLookup<T>, sal
   // One lookup for the keepsake's photos and its variants' photos.
   const found = new Map((await media.find(tx, product.storeId, [...ids, ...variantIds])).map(row => [row.id.toLowerCase(), row]))
   const sold = sales ? await sales.soldProductIds(tx, product.storeId, [product.id]) : new Set<string>()
+  const soldSkuIds = sales && product.variants.length > 0 ? await sales.soldSkuIds(tx, product.storeId, product.variants.map(variant => variant.id)) : new Set<string>()
   const variantPhotos = new Map(product.variants.flatMap((variant) => {
     const photo = variant.mediaId ? found.get(variant.mediaId.toLowerCase()) : undefined
 
     return photo ? [[variant.id, photo] as const] : []
   }))
 
-  return { product, photos: ids.flatMap(id => found.get(id.toLowerCase()) ?? []), variantPhotos, hasOrders: sold.has(product.id) }
+  return { product, photos: ids.flatMap(id => found.get(id.toLowerCase()) ?? []), variantPhotos, hasOrders: sold.has(product.id), soldSkuIds }
 }
 
 // A retired file is reported before an unusable one, so the editor hears first about what it can fix by choosing

@@ -181,6 +181,13 @@ export interface VariantBatchChange {
   mediaId?: string | null
 }
 
+// What a request may ask of a variant's status: 'removed' deletes a variant that no order line names and archives one that
+// does (owner, 2026-11-02). The use cases settle it before the repository sees a status.
+export type VariantRequestStatus = VariantStatus | 'removed'
+
+export type VariantChangeRequest = Omit<VariantChanges, 'status'> & { status?: VariantRequestStatus }
+export type VariantBatchRequest = Omit<VariantBatchChange, 'status'> & { status?: VariantRequestStatus }
+
 export interface VariantChanges {
   // Left out keeps it, null clears it.
   skuCode?: string | null
@@ -225,6 +232,9 @@ export interface ReservationDirectory<T> {
 // this through the composition root (ADR-013); until then nothing is wired and no keepsake counts as sold.
 export interface SalesDirectory<T> {
   soldProductIds: (tx: T, storeId: string, productIds: string[]) => Promise<Set<string>>
+  // The same for a variant: which of these SKU ids an order line names (`orders.order_lines.sku_id`, ADR-023). A variant
+  // that none names is deleted when it is removed, one that does is archived.
+  soldSkuIds: (tx: T, storeId: string, skuIds: string[]) => Promise<Set<string>>
 }
 
 // The stories and tours that link a keepsake, by its plain id (ADR-013). The content module fills this through the
@@ -260,6 +270,8 @@ export interface ProductRepository<T> {
   insertVariant: (tx: T, product: Product, input: VariantInput, at: Date) => Promise<Product>
   // Updates the price or status of several variants in one statement. Archived variants are left as they are.
   saveVariants: (tx: T, product: Product, changes: VariantBatchChange[], at: Date) => Promise<Product>
+  // Deletes variants of the keepsake with their option values; an archived variant is left. Frees their combinations.
+  removeVariants: (tx: T, product: Product, skuIds: string[]) => Promise<Product>
   // Which of these codes another SKU of the shop already holds (skus_store_sku_code_key compares them exactly). `except`
   // lists SKU ids whose own code does not count: a bulk save may give codes to the SKUs that hold them now.
   takenSkuCodes: (tx: T, storeId: string, codes: string[], except?: string[]) => Promise<Set<string>>

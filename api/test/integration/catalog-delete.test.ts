@@ -14,7 +14,7 @@ afterAll(async () => {
 
 // The orders module is not built, so the test says which keepsakes an order line names.
 const sold = new Set<string>()
-const env = createCatalogHttp(testDatabase, { sales: { soldProductIds: async (_tx, _storeId, ids) => new Set(ids.filter(id => sold.has(id))) } })
+const env = createCatalogHttp(testDatabase, { sales: { soldProductIds: async (_tx, _storeId, ids) => new Set(ids.filter(id => sold.has(id))), soldSkuIds: async () => new Set<string>() } })
 
 const rich = (text: string) => ({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] })
 const code = () => `VX-${randomUUID().slice(0, 8).toUpperCase()}`

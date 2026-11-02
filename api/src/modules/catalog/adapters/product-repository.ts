@@ -301,6 +301,16 @@ export function createProductRepository(): ProductRepository<Tx> {
       return reload(tx, product)
     },
 
+    async removeVariants(tx, product, skuIds) {
+      const where = sql`store_id = ${product.storeId} and product_id = ${product.id} and id = any(${sql.param(skuIds)}::uuid[]) and status <> 'archived'`
+
+      await tx.execute(sql`
+        delete from catalog.sku_option_values
+         where sku_id in (select id from catalog.skus where ${where})`)
+      await tx.execute(sql`delete from catalog.skus where ${where}`)
+      return reload(tx, product)
+    },
+
     async takenSkuCodes(tx, storeId, codes, except = []) {
       if (codes.length === 0)
         return new Set()

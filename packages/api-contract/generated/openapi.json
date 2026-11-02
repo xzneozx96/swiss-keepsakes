@@ -7482,6 +7482,10 @@
       "ProductVariant": {
         "description": "A variant (SKU) of a keepsake",
         "properties": {
+          "hasOrders": {
+            "description": "An order line names the variant, so removing it archives instead of deleting. Left out means false; always false until the orders module is wired",
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "type": "string"
@@ -16044,11 +16048,12 @@
             ]
           },
           "status": {
-            "description": "published is for sale, draft is hidden from guests, archived keeps the variant for old orders and is final",
+            "description": "published is for sale, draft is hidden from guests, archived keeps the variant for old orders and is final. removed deletes a variant that no order line names and archives one that does",
             "enum": [
               "published",
               "draft",
-              "archived"
+              "archived",
+              "removed"
             ],
             "type": "string"
           },
@@ -16098,11 +16103,12 @@
                   ]
                 },
                 "status": {
-                  "description": "published is for sale, draft is hidden from guests, archived is final",
+                  "description": "published is for sale, draft is hidden from guests, archived is final. removed deletes a variant that no order line names and archives one that does",
                   "enum": [
                     "published",
                     "draft",
-                    "archived"
+                    "archived",
+                    "removed"
                   ],
                   "type": "string"
                 }
@@ -19723,7 +19729,7 @@
                 }
               }
             },
-            "description": "The keepsake with the price or status of every listed variant changed, all or nothing. The change is live at once and takes no row version. An archived variant, or one of another keepsake, refuses the whole request",
+            "description": "The keepsake with the price or status of every listed variant changed, all or nothing. The change is live at once and takes no row version. Removed deletes the variants that no order line names and archives the others. An archived variant, or one of another keepsake, refuses the whole request",
             "headers": {
               "ETag": {
                 "description": "The row version, as `\"<rowVersion>\"`",
@@ -19874,7 +19880,7 @@
                 }
               }
             },
-            "description": "The keepsake with the variant changed. The change is live at once and takes no row version. Archiving is final",
+            "description": "The keepsake with the variant changed. The change is live at once and takes no row version. Removed deletes a variant that no order line names and archives one that does. Archiving is final",
             "headers": {
               "ETag": {
                 "description": "The row version, as `\"<rowVersion>\"`",

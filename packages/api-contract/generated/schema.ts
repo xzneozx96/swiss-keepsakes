@@ -2853,7 +2853,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description The keepsake with the price or status of every listed variant changed, all or nothing. The change is live at once and takes no row version. An archived variant, or one of another keepsake, refuses the whole request */
+                /** @description The keepsake with the price or status of every listed variant changed, all or nothing. The change is live at once and takes no row version. Removed deletes the variants that no order line names and archives the others. An archived variant, or one of another keepsake, refuses the whole request */
                 200: {
                     headers: {
                         /** @description The row version, as `"<rowVersion>"` */
@@ -2909,7 +2909,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description The keepsake with the variant changed. The change is live at once and takes no row version. Archiving is final */
+                /** @description The keepsake with the variant changed. The change is live at once and takes no row version. Removed deletes a variant that no order line names and archives one that does. Archiving is final */
                 200: {
                     headers: {
                         /** @description The row version, as `"<rowVersion>"` */
@@ -5465,6 +5465,8 @@ export interface components {
         };
         /** @description A variant (SKU) of a keepsake */
         ProductVariant: {
+            /** @description An order line names the variant, so removing it archives instead of deleting. Left out means false; always false until the orders module is wired */
+            hasOrders?: boolean;
             /** Format: uuid */
             id: string;
             /**
@@ -7364,10 +7366,10 @@ export interface components {
             /** @description A new code, or null to remove it. Left out keeps it */
             skuCode?: string | null;
             /**
-             * @description published is for sale, draft is hidden from guests, archived keeps the variant for old orders and is final
+             * @description published is for sale, draft is hidden from guests, archived keeps the variant for old orders and is final. removed deletes a variant that no order line names and archives one that does
              * @enum {string}
              */
-            status?: "published" | "draft" | "archived";
+            status?: "published" | "draft" | "archived" | "removed";
             /** @description The value id of every option id. Replaces the values */
             values?: {
                 [key: string]: string;
@@ -7387,10 +7389,10 @@ export interface components {
                 /** @description A new code, or null to remove it. Left out keeps it */
                 skuCode?: string | null;
                 /**
-                 * @description published is for sale, draft is hidden from guests, archived is final
+                 * @description published is for sale, draft is hidden from guests, archived is final. removed deletes a variant that no order line names and archives one that does
                  * @enum {string}
                  */
-                status?: "published" | "draft" | "archived";
+                status?: "published" | "draft" | "archived" | "removed";
             }[];
         };
     };
