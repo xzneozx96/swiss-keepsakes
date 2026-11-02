@@ -96,7 +96,8 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
       return true
     },
     /** Adds the values in typed or pasted text at the end. Returns the words that the option already has. */
-    addValues: (ref: string, input: string) => {
+    /** Adds the words as values named in `lang`; a value may be named in one language only (the other is filled later). */
+    addValues: (ref: string, input: string, lang: 'en' | 'de' = 'en') => {
       const option = options.find(o => o.ref === ref)
       const refused: string[] = []
       const added: ValueDraft[] = []
@@ -105,10 +106,12 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
         const swatch = swatchesOn(option) ? DEFAULT_SWATCH : null
 
         for (const word of splitValues(input).map(part => part.slice(0, VALUE_LABEL_MAX))) {
-          if (duplicateValue({ ...option, values: [...option.values, ...added] }, { en: word, de: '' }))
+          const label = lang === 'en' ? { en: word, de: '' } : { en: '', de: word }
+
+          if (duplicateValue({ ...option, values: [...option.values, ...added] }, label))
             refused.push(word)
           else
-            added.push({ ref: crypto.randomUUID(), label: { en: word, de: '' }, swatch })
+            added.push({ ref: crypto.randomUUID(), label, swatch })
         }
         if (added.length > 0)
           editOption(ref, current => ({ ...current, values: [...current.values, ...added] }))

@@ -199,7 +199,6 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.options.colour.any': 'Andere Farbe',
   'keepsakes.options.colour.remove': 'Keine Farbe',
   'keepsakes.options.german.hint': 'Ohne deutschen Namen sehen deutsche Leser den englischen.',
-  'keepsakes.options.valuesInEnglish': 'Werte hier auf Englisch hinzufügen und ordnen. Hier benennen Sie sie auf Deutsch.',
   'keepsakes.options.deleteOption': 'Option löschen',
   'keepsakes.options.unsaved': 'Nicht gespeicherte Änderungen',
   'keepsakes.options.allSaved': 'Alle Änderungen gespeichert',

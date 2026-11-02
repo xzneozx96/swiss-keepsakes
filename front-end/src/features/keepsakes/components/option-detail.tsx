@@ -73,9 +73,7 @@ export function OptionDetail({ draft, option, autoFocusName = false }: { draft: 
           <span className="text-sm font-medium">{t('keepsakes.options.values')}</span>
           <span className="text-xs text-muted">{t('keepsakes.options.valuesHint')}</span>
         </div>
-        {lang === 'en'
-          ? <AddValue draft={draft} option={option} />
-          : <p className="text-xs text-pretty text-muted">{t('keepsakes.options.valuesInEnglish')}</p>}
+        <AddValue key={lang} draft={draft} lang={lang} option={option} />
         {option.values.length > 0 && <ValueList draft={draft} lang={lang} option={option} />}
       </div>
 

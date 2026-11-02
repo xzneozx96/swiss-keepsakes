@@ -198,7 +198,6 @@ export const keepsakesEn = {
   'keepsakes.options.colour.any': 'Any colour',
   'keepsakes.options.colour.remove': 'No colour',
   'keepsakes.options.german.hint': 'Left empty, German readers see the English.',
-  'keepsakes.options.valuesInEnglish': 'Add and reorder values in English. Here you name them in German.',
   'keepsakes.options.deleteOption': 'Delete option',
   'keepsakes.options.unsaved': 'Unsaved changes',
   'keepsakes.options.allSaved': 'All changes saved',

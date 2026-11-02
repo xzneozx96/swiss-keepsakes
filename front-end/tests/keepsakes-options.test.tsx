@@ -290,7 +290,7 @@ describe('[T-007A] the Options step on a laptop: the list and the chosen option'
     await userEvent.click(within(tabs).getByRole('tab', { name: /German/ }))
     expect(within(optionDetail()).getByText('German · Not written, optional')).toBeInTheDocument()
     expect(within(optionDetail()).getByText('Left empty, German readers see the English.')).toBeInTheDocument()
-    expect(within(optionDetail()).queryByPlaceholderText('Add a value and press Enter')).not.toBeInTheDocument()
+    expect(within(optionDetail()).getByPlaceholderText('Add a value and press Enter')).toHaveAttribute('lang', 'de')
     const name = within(optionDetail()).getByLabelText('Option name in German')
 
     expect(name).toHaveAttribute('lang', 'de')
@@ -302,6 +302,27 @@ describe('[T-007A] the Options step on a laptop: the list and the chosen option'
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(optionsBody().options[1]!.name).toEqual({ en: 'Theme', de: 'Motiv' })
     expect(optionsBody().options[1]!.values[1]!.label).toEqual({ en: 'Lion Monument', de: 'Löwendenkmal' })
+  })
+
+  it('[T-007A] a value typed without Enter is added when the field is left, and a value can be added on the German tab', async () => {
+    saved()
+    await openEditor('options')
+    await userEvent.click(within(optionList()).getByRole('button', { name: /^Theme/ }))
+
+    const tabs = within(optionDetail()).getByRole('tablist', { name: 'Language version' })
+
+    await userEvent.type(within(optionDetail()).getByPlaceholderText('Add a value and press Enter'), 'Swan')
+    await userEvent.click(within(tabs).getByRole('tab', { name: /German/ }))
+    await userEvent.type(within(optionDetail()).getByPlaceholderText('Add a value and press Enter'), 'Edelweiss DE{Enter}')
+    await userEvent.click(within(tabs).getByRole('tab', { name: /English/ }))
+    expect(within(optionDetail()).getByRole('button', { name: 'Rename Swan' })).toBeInTheDocument()
+    await userEvent.click(within(saveLine()).getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    const labels = optionsBody().options[1]!.values.map(value => value.label)
+
+    expect(labels).toContainEqual({ en: 'Swan' })
+    expect(labels).toContainEqual({ de: 'Edelweiss DE' })
   })
 
   it('[T-007A] Discard changes and Save are disabled until something changed; Delete option sits in the same row', async () => {

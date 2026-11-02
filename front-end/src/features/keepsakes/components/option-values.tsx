@@ -183,26 +183,42 @@ export function ValueList({ draft, option, lang }: { draft: OptionsDraftState, o
   )
 }
 
-/** One field adds values: Enter adds, a pasted list ("Small, Medium, Large") adds several, and words the option has already stay in the field. */
-export function AddValue({ draft, option }: { draft: OptionsDraftState, option: OptionDraft }) {
+/**
+ * One field adds values in the language of the tab: Enter adds, a pasted list ("Small, Medium, Large") adds several, and
+ * leaving the field (Tab, a click elsewhere, the other language) adds what is typed too, so nothing typed is lost. Words
+ * the option has already stay in the field.
+ */
+export function AddValue({ draft, option, lang }: { draft: OptionsDraftState, option: OptionDraft, lang: 'en' | 'de' }) {
   const { t } = useLocale()
   const [text, setText] = useState('')
   const [refused, setRefused] = useState<string[]>([])
   const commit = () => {
     if (!text.trim())
       return
-    const result = draft.addValues(option.ref, text)
+    const result = draft.addValues(option.ref, text, lang)
 
     setRefused(result.refused)
     setText(result.refused.join(', '))
   }
+  // The language tabs do not take the focus on press, so switching language swaps this field (it is keyed by language)
+  // without a blur: what is still typed is added when the field goes away.
+  const pendingRef = useRef<() => void>(undefined)
+
+  useEffect(() => {
+    pendingRef.current = () => {
+      if (text.trim())
+        draft.addValues(option.ref, text, lang)
+    }
+  })
+  useEffect(() => () => pendingRef.current?.(), [])
 
   return (
     <div className="flex flex-col gap-1">
       <TextField fullWidth aria-label={t('keepsakes.options.addValue.label', { option: labelOf(option.name, 'en') || t('keepsakes.options.thisOption') })} value={text} onChange={(next) => { setText(next); setRefused([]) }}>
         <Input
-          lang="en"
+          lang={lang}
           placeholder={t('keepsakes.options.addValue.placeholder')}
+          onBlur={commit}
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
               event.preventDefault()
