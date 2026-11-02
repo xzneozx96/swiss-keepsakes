@@ -121,12 +121,12 @@ function RecommendedFor({ item }: { item: PinListItem }) {
   const { t } = useLocale()
 
   return (
-    <span className="flex flex-col items-start gap-1.5">
+    // Interests are plain muted text, not chips: chips are the Categories column's look, and an interest such as
+    // "Lake and mountains" next to a category chip read as a category.
+    <span className="flex flex-col items-start gap-0.5">
       <span>{t(`places.stay.${item.stayTag}` as MessageKey)}</span>
       {item.interests.length > 0 && (
-        <span className="flex flex-wrap items-center gap-1.5">
-          {item.interests.map(id => <TagChip key={id}>{t(`places.interest.${id}` as MessageKey)}</TagChip>)}
-        </span>
+        <span className="text-xs text-muted">{item.interests.map(id => t(`places.interest.${id}` as MessageKey)).join(' · ')}</span>
       )}
     </span>
   )

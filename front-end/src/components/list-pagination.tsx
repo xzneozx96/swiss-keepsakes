@@ -110,6 +110,9 @@ export function Pager({
                 <Pagination.Item key={p}>
                   <Pagination.Link
                     aria-label={t('pagination.page', { page: p })}
+                    // HeroUI's active page is the --default grey, which nearly vanishes on the grey list backdrop; an ink pill
+                    // marks the current page on any surface (HeroUI's own link tokens, so hover and focus stay intact).
+                    className="data-[active=true]:[--pagination-link-bg-hover:var(--foreground)] data-[active=true]:[--pagination-link-bg-pressed:var(--foreground)] data-[active=true]:[--pagination-link-bg:var(--foreground)] data-[active=true]:[--pagination-link-fg:var(--background)]"
                     isActive={p === page}
                     onPress={() => go(p)}
                   >

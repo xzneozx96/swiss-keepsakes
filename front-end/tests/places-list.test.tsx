@@ -162,7 +162,7 @@ describe('[E4.2][AC68] N16 the list', () => {
     expect(within(rowOf('Blues festival')).getByText('DE fehlt')).toBeInTheDocument()
   })
 
-  it('[E4.2][AC86] Recommended for shows the stay value in words, then each interest as a chip, in English and German', async () => {
+  it('[E4.2][AC86] Recommended for shows the stay value in words, then the interests as one muted line, in English and German', async () => {
     api.items = [
       listItem({ id: uuid(11), title: { en: 'Chapel Bridge', de: 'Kapellbrücke' }, stayTag: 'short_stay', interests: ['local-activities', 'food-drink'] }),
       listItem({ id: uuid(12), title: { en: 'Old tap', de: 'Alter Brunnen' }, stayTag: 'multi_day' }),
@@ -173,8 +173,7 @@ describe('[E4.2][AC68] N16 the list', () => {
 
     const bridge = within(rowOf('Chapel Bridge'))
     expect(bridge.getByText('Short stay visitors')).toBeInTheDocument()
-    expect(bridge.getByText('Local activities')).toBeInTheDocument()
-    expect(bridge.getByText('Food and drink')).toBeInTheDocument()
+    expect(bridge.getByText('Local activities · Food and drink')).toBeInTheDocument()
     expect(within(rowOf('Old tap')).getByText('Long stay visitors')).toBeInTheDocument()
     expect(within(rowOf('Lake')).getByText('All visitors')).toBeInTheDocument()
   })
@@ -200,10 +199,12 @@ describe('[E4.2][AC68] N16 the list', () => {
     await screen.findAllByRole('link', { name: 'Blues festival' })
 
     const row = rowOf('Blues festival')
-    const chips = ['Published', 'DE missing', 'Walks', 'Food and drink'].map(text => within(row).getByText(text).closest('[data-slot="chip"]') as HTMLElement)
+    const chips = ['Published', 'DE missing', 'Walks'].map(text => within(row).getByText(text).closest('[data-slot="chip"]') as HTMLElement)
 
     for (const chip of chips)
       expect(chip).toHaveClass('chip--lg', 'chip--soft')
+    // Interests are muted text, so they don't read as categories.
+    expect(within(row).getByText('Food and drink').closest('[data-slot="chip"]')).toBeNull()
   })
 
   it('[E4.2][AC86] the categories are chips, and a pin with none says None', async () => {
