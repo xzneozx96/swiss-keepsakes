@@ -8,6 +8,7 @@ import { createProductRepository } from './modules/catalog/adapters/product-repo
 import { registerCatalogRoutes } from './modules/catalog/adapters/routes.ts'
 import { makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeUnpublishProduct } from './modules/catalog/index.ts'
 import { createAddressRegister } from './modules/content/adapters/address-register-fetch.ts'
+import { createKeepsakeLinks } from './modules/content/adapters/keepsake-links.ts'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
 import { createMapsLinks } from './modules/content/adapters/maps-link-fetch.ts'
@@ -253,6 +254,8 @@ async function main() {
       media: createMediaDirectory({ findById: (tx: Tx, storeId: string, id: string) => contentMedia.findById(tx, storeId, id), view: row => mediaView(row, storage.publicUrl) }),
       audit,
       clock: systemClock,
+      // A deleted keepsake leaves no link behind in a story or a tour (ADR-013: content owns those rows).
+      keepsakeLinks: createKeepsakeLinks(),
     }
     const catalogUseCases = guardCatalogUseCases({
       listProducts: makeListProducts(catalogDeps),

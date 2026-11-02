@@ -60,10 +60,25 @@ async function setup() {
   return { ...store, photo, created, remove, count }
 }
 
+// A story and a tour of the store that name the keepsake by its plain id (ADR-013: no foreign key).
+async function linkFromStoryAndTour(storeId: string, productId: string) {
+  const story = (await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [storeId])).rows[0]!.id
+  const tour = (await pool.query<{ id: string }>(`insert into content.tours (store_id) values ($1) returning id`, [storeId])).rows[0]!.id
+  await pool.query(`insert into content.story_keepsake_links (group_id, store_id, position, product_id) values ($1, $2, 1, $3)`, [story, storeId, productId])
+  await pool.query(`insert into content.tour_keepsake_links (tour_id, store_id, position, product_id) values ($1, $2, 1, $3)`, [tour, storeId, productId])
+}
+
+const links = async (productId: string) => ({
+  story: Number((await pool.query('select count(*) from content.story_keepsake_links where product_id = $1', [productId])).rows[0].count),
+  tour: Number((await pool.query('select count(*) from content.tour_keepsake_links where product_id = $1', [productId])).rows[0].count),
+})
+
 describe('[E6.1] removing a keepsake that was never sold', () => {
   it('[E6.1][delete] deletes it with its options, values, variants and photo list; the photo stays in the library', async () => {
-    const { created, remove, count, photo, products, owner } = await setup()
+    const { created, remove, count, photo, products, owner, storeId } = await setup()
     const product = await created(true)
+    await linkFromStoryAndTour(storeId, product.id)
+    expect(await links(product.id)).toEqual({ story: 1, tour: 1 })
     expect(await count('skus', product.id)).toBe(2)
     expect(await count('product_options', product.id)).toBe(2)
     expect(await count('product_option_values', product.id)).toBe(3)
@@ -78,6 +93,7 @@ describe('[E6.1] removing a keepsake that was never sold', () => {
     expect(Number((await pool.query('select count(*) from catalog.products where id = $1', [product.id])).rows[0].count)).toBe(0)
     expect(Number((await pool.query('select count(*) from content.media where id = $1', [photo])).rows[0].count)).toBe(1)
     expect((await env.call(`${products}/${product.id}`, { headers: owner.headers })).status).toBe(404)
+    expect(await links(product.id)).toEqual({ story: 0, tour: 0 })
     const audit = await pool.query(`select action from platform.audit_log where entity = 'product' and entity_id = $1 and action in ('deleted', 'archived')`, [product.id])
     expect(audit.rows).toEqual([{ action: 'deleted' }])
   })
@@ -117,8 +133,9 @@ describe('[E6.1] removing a keepsake that was never sold', () => {
 
 describe('[E6.1] removing a keepsake that has orders', () => {
   it('[E6.1][archive] archives it: every row stays, the list says archived, an order keeps its variant', async () => {
-    const { created, remove, count, products, owner } = await setup()
+    const { created, remove, count, products, owner, storeId } = await setup()
     const product = await created(true)
+    await linkFromStoryAndTour(storeId, product.id)
     sold.add(product.id)
 
     const listed = await (await env.call(products, { headers: owner.headers })).json() as { items: { id: string, hasOrders: boolean, rowVersion: number }[] }
@@ -132,6 +149,7 @@ describe('[E6.1] removing a keepsake that has orders', () => {
     expect(await count('skus', product.id)).toBe(2)
     expect(await count('product_options', product.id)).toBe(2)
     expect(await count('product_media', product.id)).toBe(1)
+    expect(await links(product.id)).toEqual({ story: 1, tour: 1 })
     const after = await (await env.call(`${products}/${product.id}`, { headers: owner.headers })).json() as View
     expect(after).toMatchObject({ status: 'archived', rowVersion: product.rowVersion + 1 })
     const relisted = await (await env.call(products, { headers: owner.headers })).json() as { items: { id: string, status: string }[] }

@@ -7,6 +7,7 @@ import { createMediaDirectory } from '../../src/modules/catalog/adapters/media-d
 import { createProductRepository } from '../../src/modules/catalog/adapters/product-repository.ts'
 import { registerCatalogRoutes } from '../../src/modules/catalog/adapters/routes.ts'
 import { makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
+import { createKeepsakeLinks } from '../../src/modules/content/adapters/keepsake-links.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
 import { mediaView } from '../../src/modules/content/adapters/media-view.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
@@ -54,6 +55,7 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
     media: createMediaDirectory({ findById: (tx: Tx, storeId: string, id: string) => contentMedia.findById(tx, storeId, id), view: row => mediaView(row, storage.publicUrl) }),
     audit: createAuditLog(systemClock),
     clock: systemClock,
+    keepsakeLinks: createKeepsakeLinks(),
     // The orders module is not built: a test names the sold keepsakes itself.
     ...(options.sales && { sales: options.sales }),
   }

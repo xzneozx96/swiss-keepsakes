@@ -47,6 +47,7 @@ function setup(found: Product | undefined, reserved = new Map<string, number>())
     audit: { record: vi.fn(async () => {}) },
     clock: { now: () => new Date('2026-10-30T08:00:00Z') },
     reservations: { reservedBySku: async () => reserved },
+    keepsakeLinks: { removeAll: async () => {} },
   }
   return { repo, deps }
 }

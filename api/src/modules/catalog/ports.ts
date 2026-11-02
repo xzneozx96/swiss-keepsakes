@@ -209,6 +209,12 @@ export interface SalesDirectory<T> {
   soldProductIds: (tx: T, storeId: string, productIds: string[]) => Promise<Set<string>>
 }
 
+// The stories and tours that link a keepsake, by its plain id (ADR-013). The content module fills this through the
+// composition root. A delete takes the links with it, in the same transaction; an archive keeps them.
+export interface KeepsakeLinks<T> {
+  removeAll: (tx: T, storeId: string, productId: string) => Promise<void>
+}
+
 export interface ProductRepository<T> {
   list: (tx: T, storeId: string) => Promise<ProductListRow[]>
   // An id of another store has no row.

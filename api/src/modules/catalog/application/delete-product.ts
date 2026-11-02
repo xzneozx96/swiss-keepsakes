@@ -10,9 +10,9 @@ export interface ProductRemoval {
 }
 
 // Removing a keepsake (owner decision 2026-11-01): one that no order line names is deleted for good, with its options and
-// variants (its photos stay in the library); one that has orders is archived, so its orders keep working. Archiving is
+// variants (its photos stay in the library) and the story and tour links to it; one that has orders is archived, so its orders keep working. Archiving is
 // final. Without a sales directory (the orders module is not built) nothing counts as sold.
-export function makeDeleteProduct<T>({ uow, products, audit, clock, sales }: CatalogDeps<T>) {
+export function makeDeleteProduct<T>({ uow, products, audit, clock, sales, keepsakeLinks }: CatalogDeps<T>) {
   return async (actor: Actor, storeId: string, productId: string, ifMatch: number, requestId: string | null): Promise<Result<ProductRemoval>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -39,6 +39,7 @@ export function makeDeleteProduct<T>({ uow, products, audit, clock, sales }: Cat
         })
         return ok({ id: productId, outcome: 'archived' })
       }
+      await keepsakeLinks.removeAll(tx, storeId, productId)
       await products.remove(tx, product)
       await audit.record(tx, {
         storeId,

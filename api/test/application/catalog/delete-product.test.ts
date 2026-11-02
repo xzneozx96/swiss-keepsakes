@@ -43,6 +43,7 @@ function setup(found: Product | undefined, sold: string[] = []) {
     save: vi.fn(), publish: vi.fn(), unpublish: vi.fn(), saveVariant: vi.fn(), insertVariant: vi.fn(), replaceOptions: vi.fn(),
   } as unknown as ProductRepository<null>
   const audit = { record: vi.fn(async () => {}) }
+  const keepsakeLinks = { removeAll: vi.fn(async () => {}) }
   const soldProductIds = vi.fn(async () => new Set(sold))
   const deps: CatalogDeps<null> = {
     uow: { run: work => work(null) },
@@ -51,8 +52,9 @@ function setup(found: Product | undefined, sold: string[] = []) {
     audit,
     clock: { now: () => new Date('2026-11-01T08:00:00Z') },
     sales: { soldProductIds },
+    keepsakeLinks,
   }
-  return { repo, deps, audit, soldProductIds }
+  return { repo, deps, audit, soldProductIds, keepsakeLinks }
 }
 
 describe('[E6.1] removing a keepsake', () => {
@@ -63,6 +65,17 @@ describe('[E6.1] removing a keepsake', () => {
     expect(repo.remove).toHaveBeenCalledTimes(1)
     expect(repo.archive).not.toHaveBeenCalled()
     expect(audit.record).toHaveBeenCalledWith(null, expect.objectContaining({ entity: 'product', entityId: 'p1', action: 'deleted', storeId }))
+  })
+
+  it('[E6.1] a delete also removes the story and tour links to the keepsake; an archive keeps them', async () => {
+    const deleted = setup(product())
+    const archived = setup(product(), ['p1'])
+
+    await makeDeleteProduct(deleted.deps)(owner, storeId, 'p1', 4, null)
+    await makeDeleteProduct(archived.deps)(owner, storeId, 'p1', 4, null)
+
+    expect(deleted.keepsakeLinks.removeAll).toHaveBeenCalledWith(null, storeId, 'p1')
+    expect(archived.keepsakeLinks.removeAll).not.toHaveBeenCalled()
   })
 
   it('[E6.1] archives a keepsake that has orders, and deletes nothing', async () => {
