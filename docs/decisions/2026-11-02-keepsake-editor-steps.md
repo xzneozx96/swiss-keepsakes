@@ -83,6 +83,10 @@ The 2026-10-29 design (cards, with options and variants in sheets) became a step
     - **Archived variants that were never sold can be deleted** (an earlier rule archived them): the "N archived" list has a trash icon on each of them and "Delete all never sold"; a sold archived variant stays and has no icon. `removed` on an archived variant deletes it when no order line names it, and is refused otherwise.
     - **The in-use refusals count live and archived variants apart** ("Used by 3 live (A, B, C) and 9 archived variants"); only the live ones are named, so the number agrees with the rows on screen. A value's inline note does the same.
 
+### Amended on 2026-11-02, stock (owner, for E6.3)
+
+25. **Stock is also edited in the editor, per variant, as in Shopify.** The owner checked Shopify's "Add variants" help: a product without variants takes its quantity on the product page, and with variants each variant has its own quantity, edited inline in the variants table. A quantity typed at product level only fills new variants as a start; stock is never shared. When E6.3 is built, the Price block (no options) gets a Quantity field, each variant row an inline quantity box, and a quantity typed before the variants exist fills every new row. The Inventory page N13 stays for checking and editing stock across all keepsakes. This amends the 2026-10-29 design, where stock was set only on the Inventory page (delivery plan E6.3, amended the same day).
+
 ## Rejected
 
 - **One long page for new and existing keepsakes** (Shopify). The owner kept the steps.
