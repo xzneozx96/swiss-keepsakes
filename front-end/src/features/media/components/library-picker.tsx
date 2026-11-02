@@ -18,8 +18,8 @@ import { refusalOf } from '../hooks/use-photo-upload'
 import { WALL_PAGE_SIZE } from '../lib/search-params'
 import { FileThumb } from './file-thumb'
 import { ACCEPT } from './photo-parts'
-import { ChosenMark } from './tile-mark'
-import { chosenBorder, TILE_GAPS } from './tile-style'
+import { TileMark, TileOutline } from './tile-mark'
+import { TILE_GAPS } from './tile-style'
 
 const SEARCH_DELAY_MS = 250
 const GRID = `grid grid-cols-3 ${TILE_GAPS} sm:grid-cols-4`
@@ -44,7 +44,7 @@ function TileChip({ children }: { children: string }) {
 
 /**
  * One photo as a labelled checkbox: the file name is its name for a screen reader; the tile shows the picture.
- * Chosen in this pick: the red border and tick. A photo the page already has is disabled and faded, with no accent.
+ * Choosable: an empty corner circle; chosen in this pick: the inside outline and the filled circle. A photo the page already has is disabled and faded, with no accent.
  */
 function Choice({ item, checked, disabled, used, onToggle }: { item: MediaItem, checked: boolean, disabled: boolean, used: boolean, onToggle: () => void }) {
   const { t } = useLocale()
@@ -64,12 +64,13 @@ function Choice({ item, checked, disabled, used, onToggle }: { item: MediaItem, 
           onChange={onToggle}
         />
         <span className="relative block w-full rounded-xl peer-focus-visible:focus-ring">
-          <span className={`relative block w-full overflow-hidden rounded-xl ${chosenBorder(checked)}`}>
+          <span className="relative block w-full overflow-hidden rounded-xl">
             <FileThumb className="aspect-square w-full" item={item} />
+            <TileOutline shown={checked} />
+            {!disabled && <TileMark selected={checked} />}
             {used && <TileChip>{t('media.library.used')}</TileChip>}
             {processing && <TileChip>{t('media.status.processing')}</TileChip>}
           </span>
-          {checked && <ChosenMark />}
         </span>
         <span aria-hidden className="truncate px-0.5 text-xs text-muted">{item.name}</span>
       </label>
@@ -85,7 +86,7 @@ function PendingChoice({ item, onRetry, onRemove }: { item: PendingPhoto, onRetr
   return (
     <li className="flex flex-col gap-1">
       <span className="relative block w-full">
-        <span className={`relative block w-full overflow-hidden rounded-xl ${chosenBorder(false)}`}>
+        <span className="relative block w-full overflow-hidden rounded-xl">
           <span className="relative block aspect-square w-full bg-default">
             <img alt="" className="absolute inset-0 size-full object-cover" src={item.previewUrl} />
             {!failed && (

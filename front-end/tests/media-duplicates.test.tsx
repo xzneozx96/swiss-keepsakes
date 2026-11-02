@@ -356,7 +356,7 @@ describe('[AC-dup] the Media library upload asks before it uploads a duplicate',
     await waitFor(() => expect(toasts.info).toHaveBeenCalledWith('Already in your library, not uploaded again: Kapellbruecke-Sunrise.JPG.'), SLOW)
     expect(requests(`${base}/uploads`)).toHaveLength(0)
     await waitFor(() => expect(state.calls.some(call => call.method === 'GET' && call.path.includes(`${base}?`) && call.path.includes('q=Kapellbruecke-Sunrise.JPG'))).toBe(true), SLOW)
-    await waitFor(() => expect(document.querySelector(`[data-media="${photoId}"] .border-accent`)).not.toBeNull())
+    await waitFor(() => expect(document.querySelector(`[data-media="${photoId}"] .ring-accent`)).not.toBeNull())
   })
 
   it('[AC-dup] Upload a copy uploads it, and a new file is uploaded with no question', async () => {

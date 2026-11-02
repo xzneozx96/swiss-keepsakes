@@ -336,19 +336,23 @@ describe('[T-002] empty state and Choose from library', () => {
     expect(names()).toEqual(['photo-7.jpg', 'photo-5.jpg'].map(name => name))
   })
 
-  it('[T-002][AC-9] a chosen tile has the red 2 px border and the tick; a free one has neither', async () => {
+  it('[T-002][AC-9] every choosable tile shows an empty circle; a chosen one has the inside outline and the filled circle', async () => {
     serveLibrary()
     renderHost()
     await openLibrary()
 
     const first = (await choice('lib-1.jpg')).closest('label')!
+    const second = (await choice('lib-2.jpg')).closest('label')!
 
-    expect(first.querySelector('.border-transparent')).not.toBeNull()
+    expect(first.querySelector('.rounded-full.border-2')).not.toBeNull()
+    expect(first.querySelector('.ring-accent')).toBeNull()
     expect(first.querySelector('svg')).toBeNull()
     await userEvent.click(await choice('lib-1.jpg'))
-    expect(first.querySelector('.border-2.border-accent')).not.toBeNull()
-    expect(first.querySelector('svg')).not.toBeNull()
-    expect((await choice('lib-2.jpg')).closest('label')!.querySelector('.border-accent')).toBeNull()
+    expect(first.querySelector('.ring-3.ring-accent.ring-inset')).not.toBeNull()
+    expect(first.querySelector('.rounded-full.border-2 svg')).not.toBeNull()
+    expect(second.querySelector('.ring-accent')).toBeNull()
+    expect(second.querySelector('.rounded-full.border-2')).not.toBeNull()
+    expect(second.querySelector('svg')).toBeNull()
   })
 
   /** The library as the server holds it: an upload that is confirmed joins it, still processing. */
@@ -425,7 +429,8 @@ describe('[T-002] empty state and Choose from library', () => {
     expect(used).toBeDisabled()
     expect(tile).toHaveClass('opacity-60')
     expect(within(tile).getByText('already added')).toBeInTheDocument()
-    expect(tile.querySelector('.border-accent')).toBeNull()
+    expect(tile.querySelector('.ring-accent')).toBeNull()
+    expect(tile.querySelector('.rounded-full.border-2')).toBeNull()
     expect(tile.querySelector('svg')).toBeNull()
     await userEvent.click(await choice('lib-2.jpg'))
     await addSelected()

@@ -339,7 +339,10 @@ describe('[E4.11][AC51] retiring', () => {
     renderMedia()
 
     await screen.findByRole('list', { name: 'Photos' })
+    expect(screen.getByRole('button', { name: 'Used.jpg' }).querySelector('.rounded-full.border-2')).toBeNull()
     await userEvent.click(screen.getByRole('button', { name: 'Select' }))
+    for (const name of ['Used.jpg', 'Free-one.jpg', 'Free-two.jpg'])
+      expect(screen.getByRole('button', { name: `Select ${name}` }).querySelector('.rounded-full.border-2')).not.toBeNull()
     for (const name of ['Used.jpg', 'Free-one.jpg', 'Free-two.jpg'])
       await userEvent.click(screen.getByRole('button', { name: `Select ${name}` }))
 
@@ -348,8 +351,8 @@ describe('[E4.11][AC51] retiring', () => {
     const chosen = screen.getByRole('button', { name: 'Select Used.jpg' })
 
     expect(chosen).toHaveAttribute('aria-pressed', 'true')
-    expect(chosen.querySelector('.border-2.border-accent')).not.toBeNull()
-    expect(chosen.querySelector('svg')).not.toBeNull()
+    expect(chosen.querySelector('.ring-3.ring-accent.ring-inset')).not.toBeNull()
+    expect(chosen.querySelector('.rounded-full.border-2 svg')).not.toBeNull()
     await userEvent.click(screen.getByRole('button', { name: 'Delete 2' }))
     const confirm = await screen.findByRole('alertdialog')
 
