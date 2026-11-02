@@ -105,7 +105,6 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.hours.copy': '{day}-Zeiten auf andere Tage kopieren',
   'places.hours.copyHeading': 'Diese Zeiten kopieren auf',
   'places.hours.copyAll': 'Alle Tage',
-  'places.hours.copyNone': 'Keine',
   'places.hours.copyApply': 'Anwenden',
   'places.hours.help': 'Schalten Sie einen Tag ein, um seine Zeiten einzutragen. Gäste sehen sie beim Ort.',
   'places.hours.inRange': 'Dieser Punkt hat Datumsbereiche: Die Zeiten gelten nur darin.',

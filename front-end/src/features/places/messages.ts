@@ -103,7 +103,6 @@ export const placesEn = {
   'places.hours.copy': 'Copy {day} hours to other days',
   'places.hours.copyHeading': 'Copy these hours to',
   'places.hours.copyAll': 'All days',
-  'places.hours.copyNone': 'None',
   'places.hours.copyApply': 'Apply',
   'places.hours.help': 'Turn a day on to add its hours. Guests see them with the place.',
   'places.hours.inRange': 'This pin has date ranges: the hours apply only inside them.',
