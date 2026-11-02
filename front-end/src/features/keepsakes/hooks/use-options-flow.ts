@@ -18,11 +18,13 @@ interface Open { ref: string, snapshot: OptionsSnapshot, /** Added with Add opti
  * sends them in one request, a new one applies them to the draft. Only one option is open at a time, so the variants that
  * are still to come always belong to it. `committed` holds the refs the keepsake had when the option was opened.
  */
-export function useOptionsFlow({ draft, committed, variants, commit }: {
+export function useOptionsFlow({ draft, committed, variants, held, commit }: {
   draft: OptionsDraftState
   committed: ReadonlySet<string>
   /** Every variant, archived ones too. */
   variants: ProductVariant[]
+  /** A new keepsake: its options stay in the draft, which has no saved copy to settle on. */
+  held: boolean
   commit: CommitOptions
 }) {
   const { t } = useLocale()
@@ -84,7 +86,8 @@ export function useOptionsFlow({ draft, committed, variants, commit }: {
 
       setIsPending(false)
       if (outcome.ok) {
-        draft.settle()
+        if (!held)
+          draft.settle()
         setOpen(undefined)
 
         return true
@@ -117,7 +120,8 @@ export function useOptionsFlow({ draft, committed, variants, commit }: {
       setIsPending(false)
       setOpen(undefined)
       if (outcome.ok) {
-        draft.settle()
+        if (!held)
+          draft.settle()
 
         return true
       }

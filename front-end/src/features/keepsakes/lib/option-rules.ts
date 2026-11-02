@@ -44,7 +44,7 @@ export interface Valued { id: string, skuCode: string, status?: string, values: 
 export type RefusalCode
   = | 'option-name-required' | 'value-name-required' | 'option-needs-value' | 'option-in-use' | 'value-in-use'
     | 'values-missing' | 'value-unknown' | 'combination-taken' | 'combination-duplicate' | 'no-options-one-variant'
-    | 'refs-invalid' | 'code-duplicate' | 'variant-reserved' | 'variant-archived' | 'swatch-invalid'
+    | 'refs-invalid' | 'code-duplicate' | 'code-taken' | 'variant-reserved' | 'variant-archived' | 'swatch-invalid'
     // The two the control says before a save; the API never sends them.
     | 'value-duplicate' | 'variants-missing'
 
@@ -352,6 +352,7 @@ export function refusalText(t: Translate, { code, params }: Refusal): string {
     case 'no-options-one-variant': return t('keepsakes.refusal.oneVariant', { code: text('code') })
     case 'refs-invalid': return t('keepsakes.refusal.refs')
     case 'code-duplicate': return t('keepsakes.refusal.codeTwice', { code: text('code') })
+    case 'code-taken': return t('keepsakes.variant.codeTaken', { code: text('code') })
     case 'variant-reserved': return t('keepsakes.refusal.reserved', { code: text('code'), count: Number(params?.count ?? 0) })
     case 'variant-archived': return t('keepsakes.refusal.archived', { code: text('code') })
     case 'value-duplicate': return t('keepsakes.refusal.valueDuplicate', { value: text('value'), option: text('option') || t('keepsakes.refusal.thisOptionInline') })

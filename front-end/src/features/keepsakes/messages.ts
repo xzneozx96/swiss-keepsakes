@@ -168,7 +168,7 @@ export const keepsakesEn = {
   'keepsakes.options.valuesOf': 'Values of {option}, in the order guests see them',
   'keepsakes.options.valueFallback': 'value',
   'keepsakes.options.addValue.label': 'Add values to {option}',
-  'keepsakes.options.addValue.placeholder': 'Add a value and press Enter',
+  'keepsakes.options.addValue.placeholder': 'Add another value',
   'keepsakes.options.addValue.hint': 'Paste a list to add several: Small, Medium, Large',
   'keepsakes.options.addValue.alreadyOne': '{values} is already in the list.',
   'keepsakes.options.addValue.alreadyMany': '{values} are already in the list.',

@@ -11,7 +11,7 @@ describe('[T-003] the step of a check', () => {
     ['photos', 'details'],
     ['commission', 'details'],
     ['options', 'options'],
-    ['variants', 'variants'],
+    ['variants', 'options'],
   ] as const)('[T-003] the %s card is on the %s step', (card, step) => {
     expect(stepOfCard(card)).toBe(step)
   })
@@ -24,17 +24,17 @@ describe('[T-003] the step of a check', () => {
 })
 
 describe('[T-003] the status of each step of a saved keepsake', () => {
-  const ids = ['details', 'options', 'variants'] as const
+  const ids = ['details', 'options'] as const
 
   it('[T-003] every step is done when nothing blocks publishing', () => {
-    expect(stepStatuses({ blocking: [] }, ids, false)).toEqual({ details: 'done', options: 'done', variants: 'done' })
+    expect(stepStatuses({ blocking: [] }, ids, false)).toEqual({ details: 'done', options: 'done' })
   })
 
   it('[T-003] a step with a blocking check is not started until a publish was tried, then it has errors', () => {
     const blocking = [check('photos'), check('variants', 'variant-for-sale')]
 
-    expect(stepStatuses({ blocking }, ids, false)).toEqual({ details: 'todo', options: 'done', variants: 'todo' })
-    expect(stepStatuses({ blocking }, ids, true)).toEqual({ details: 'error', options: 'done', variants: 'error' })
+    expect(stepStatuses({ blocking }, ids, false)).toEqual({ details: 'todo', options: 'todo' })
+    expect(stepStatuses({ blocking }, ids, true)).toEqual({ details: 'error', options: 'error' })
   })
 
   it('[T-003] the mark goes back to done once the check is gone', () => {
@@ -47,7 +47,7 @@ describe('[T-003] the status of each step of a new keepsake', () => {
   const start = { hasName: false, reached: 0, variantsReady: false, nameTried: false, variantsTried: false }
 
   it('[T-003] nothing is done before a name is typed', () => {
-    expect(draftStatuses(start)).toEqual({ details: 'todo', options: 'todo', variants: 'todo', review: 'todo' })
+    expect(draftStatuses(start)).toEqual({ details: 'todo', options: 'todo', review: 'todo' })
   })
 
   it('[T-003] Details is done with a name, and has errors after a Next with no name', () => {
@@ -55,14 +55,11 @@ describe('[T-003] the status of each step of a new keepsake', () => {
     expect(draftStatuses({ ...start, nameTried: true }).details).toBe('error')
   })
 
-  it('[T-003] Options is done once the person has moved past it', () => {
-    expect(draftStatuses({ ...start, hasName: true, reached: 1 }).options).toBe('todo')
-    expect(draftStatuses({ ...start, hasName: true, reached: 2 }).options).toBe('done')
-  })
-
-  it('[T-003] Variants is done when a ticked row is ready, and has errors after a Create that is not', () => {
-    expect(draftStatuses({ ...start, hasName: true, reached: 2, variantsReady: true }).variants).toBe('done')
-    expect(draftStatuses({ ...start, hasName: true, reached: 2, variantsTried: true }).variants).toBe('error')
+  it('[T-008] Options and variants is done once it was passed with every variant ready, and has errors after a Next that was not', () => {
+    expect(draftStatuses({ ...start, hasName: true, reached: 1, variantsReady: true }).options).toBe('todo')
+    expect(draftStatuses({ ...start, hasName: true, reached: 2, variantsReady: true }).options).toBe('done')
+    expect(draftStatuses({ ...start, hasName: true, reached: 2 }).options).toBe('todo')
+    expect(draftStatuses({ ...start, hasName: true, reached: 2, variantsTried: true }).options).toBe('error')
   })
 
   it('[T-003] Review and publish stays not started: the keepsake does not exist yet', () => {
@@ -70,11 +67,11 @@ describe('[T-003] the status of each step of a new keepsake', () => {
   })
 })
 
-describe('[T-004] Review and publish as the fourth step', () => {
+describe('[T-004] Review and publish as the last step', () => {
   const ids = KEEPSAKE_STEPS
 
-  it('[T-004] there are four steps and the last is Review and publish', () => {
-    expect(KEEPSAKE_STEPS).toEqual(['details', 'options', 'variants', 'review'])
+  it('[T-008] there are three steps and the last is Review and publish', () => {
+    expect(KEEPSAKE_STEPS).toEqual(['details', 'options', 'review'])
   })
 
   it('[T-004] its mark follows every check: done with none, not started with some, errors after a publish was tried', () => {
@@ -86,6 +83,7 @@ describe('[T-004] Review and publish as the fourth step', () => {
   it('[T-004] a blocked publish goes back to the first step, in order, that holds a blocking check', () => {
     expect(firstBlockedStep({ blocking: [check('variants'), check('commission')] })).toBe('details')
     expect(firstBlockedStep({ blocking: [check('variants'), check('options')] })).toBe('options')
+    expect(firstBlockedStep({ blocking: [check('variants')] })).toBe('options')
     expect(firstBlockedStep({ blocking: [] })).toBe('details')
   })
 
@@ -94,5 +92,10 @@ describe('[T-004] Review and publish as the fourth step', () => {
     expect(keepsakeSearch({ step: 'options', view: 'review' })).toEqual({ step: 'options' })
     expect(keepsakeSearch({ step: 'details' })).toEqual({ step: undefined })
     expect(keepsakeSearch({ step: 'billing', view: 'edit' })).toEqual({ step: undefined })
+  })
+
+  it('[T-008][AC1] the old ?step=variants address opens the merged step', () => {
+    expect(keepsakeSearch({ step: 'variants' })).toEqual({ step: 'options' })
+    expect(isKeepsakeStep('variants')).toBe(false)
   })
 })

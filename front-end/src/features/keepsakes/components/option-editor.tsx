@@ -6,7 +6,7 @@ import { Button, ComboBox, Input, Label, ListBox, Switch } from '@heroui/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
-import { OPTION_NAME_MAX } from '../lib/option-rules'
+import { OPTION_NAME_MAX, refusalText } from '../lib/option-rules'
 import { NotesAt, QuietNote } from './option-bits'
 import { AddValue, ValueList } from './option-values'
 
@@ -94,6 +94,9 @@ export function OptionEditor({ draft, option, language, autoFocusName, isPending
   const clearFocus = useCallback(() => setFocused(undefined), [])
   const swatches = draft.swatchesOn(option)
   const count = draft.problems.length
+  // What the API refused about a new variant (a code in use, a combination that is taken) belongs to no field: it is said here.
+  const own = new Set([option.ref, ...option.values.map(value => value.ref)])
+  const elsewhere = draft.problems.filter(problem => !own.has(problem.at))
 
   return (
     <div className="flex min-w-0 flex-col gap-5 rounded-2xl bg-surface-secondary p-3 lg:p-4" data-testid="option-editor">
@@ -121,6 +124,7 @@ export function OptionEditor({ draft, option, language, autoFocusName, isPending
 
       <NotesAt at={option.ref} draft={draft} only="refusal" />
       {draft.tried && count > 0 && <p className="text-sm text-pretty text-danger" role="alert">{t(count === 1 ? 'keepsakes.options.fix.one' : 'keepsakes.options.fix.other', { count })}</p>}
+      {elsewhere.map(problem => <QuietNote key={`${problem.code}:${problem.at}`}>{refusalText(t, problem)}</QuietNote>)}
       {failure && <QuietNote>{failure}</QuietNote>}
       <div className="flex flex-wrap items-center gap-2">
         <Button className="me-auto max-lg:h-11" isDisabled={isPending} variant="danger-soft" onPress={onDelete}>{t('keepsakes.options.deleteOption')}</Button>

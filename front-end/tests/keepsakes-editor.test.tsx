@@ -58,12 +58,6 @@ beforeEach(async () => {
 
 const nameField = () => screen.findByLabelText('Name (English)', undefined, SLOW)
 
-async function openVariantPage() {
-  renderKeepsakes(`/store/products/gifts/${productId}/variants/${variantId}`)
-
-  await screen.findByTestId('variant-page', undefined, SLOW)
-}
-
 /** The editor on a step; the controls of Details are mounted in every step (that step is only hidden), so the name field is the ready signal. */
 async function openEditor(step?: 'options' | 'variants') {
   const router = renderKeepsakes(`/store/products/gifts/${productId}${step ? `?step=${step}` : ''}`)
@@ -79,7 +73,7 @@ describe('[E6.1][AC55] M12 the edit screen in English', () => {
 
     const steps = within(screen.getByRole('navigation', { name: 'Steps' }))
 
-    expect(steps.getAllByRole('button').map(button => button.getAttribute('aria-label'))).toEqual(['1. Details, Done', '2. Options, Done', '3. Variants, Done', '4. Review and publish, Done'])
+    expect(steps.getAllByRole('button').map(button => button.getAttribute('aria-label'))).toEqual(['1. Details, Done', '2. Options and variants, Done', '3. Review and publish, Done'])
     expect(screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Name and text', 'Photos', 'Partner\'s commission rate (%)'])
     expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.id)).toEqual(['step-title'])
     expect(screen.getByRole('heading', { level: 1, name: 'Victorinox Classic' })).toBeInTheDocument()
@@ -87,16 +81,16 @@ describe('[E6.1][AC55] M12 the edit screen in English', () => {
     expect(screen.getByText(/^Saved \d/)).toBeInTheDocument()
   })
 
-  it('[T-003] shows "Step 1 of 4 · Details", a progress bar and All steps for a phone', async () => {
+  it('[T-003] shows "Step 1 of 3 · Details", a progress bar and All steps for a phone', async () => {
     await openEditor()
 
-    expect(screen.getByText(/Step 1 of 4/)).toBeInTheDocument()
+    expect(screen.getByText(/Step 1 of 3/)).toBeInTheDocument()
     expect(screen.getByRole('progressbar', { name: 'Progress through the steps' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'All steps' }))
     const sheet = await screen.findByRole('dialog', { name: 'Steps' })
 
-    await userEvent.click(within(sheet).getByRole('button', { name: /Variants/ }))
-    expect(await screen.findByRole('region', { name: 'Variants' })).toBeInTheDocument()
+    await userEvent.click(within(sheet).getByRole('button', { name: /Options and variants/ }))
+    expect(await screen.findByRole('region', { name: 'Options' })).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: 'Steps' })).not.toBeInTheDocument()
   })
 
@@ -109,19 +103,19 @@ describe('[E6.1][AC55] M12 the edit screen in English', () => {
     expect(await screen.findByRole('region', { name: 'Options' })).toBeInTheDocument()
     expect(router.state.location.search).toMatchObject({ step: 'options' })
     await userEvent.click(screen.getByRole('button', { name: 'Next' }))
-    expect(await screen.findByRole('region', { name: 'Variants' })).toBeInTheDocument()
+    expect(await screen.findByTestId('review-screen', undefined, SLOW)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Previous step' }))
     await userEvent.click(screen.getByRole('button', { name: 'Previous step' }))
     expect(router.state.location.search.step).toBeUndefined()
     expect(screen.getByRole('region', { name: 'Name and text' })).toBeVisible()
   })
 
-  it('[T-003] the step in the address opens that step, and Details is not on screen then', async () => {
+  it('[T-003][T-008][AC1] the step in the address opens that step, the old ?step=variants address opens the merged one, and Details is not on screen then', async () => {
     await openEditor('variants')
 
-    expect(await screen.findByRole('region', { name: 'Variants' })).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Options' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Price' })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Name and text' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('region', { name: 'Options' })).not.toBeInTheDocument()
     expect(screen.getByText(/^Saved \d/)).toBeInTheDocument()
   })
 
@@ -137,16 +131,16 @@ describe('[E6.1][AC55] M12 the edit screen in English', () => {
     expect(document.body.textContent).not.toMatch(/engrav|sub-?categor|deposit|pay later|payment deadline|deadline/i)
   })
 
-  it('[T-007B] shows the one variant of a keepsake with no option by its code, with its price and status, and no stock', async () => {
-    await openEditor('variants')
+  it('[T-008][AC2] shows the price of a keepsake with no option in a Price card, with its code and status, and no stock', async () => {
+    await openEditor('options')
 
-    const card = screen.getByRole('region', { name: 'Variants' })
+    const card = await screen.findByRole('region', { name: 'Price' })
 
-    expect(within(card).getByRole('button', { name: /VX-1/ })).toHaveTextContent('CHF 39.00 · On sale')
-    expect(within(card).getByText('With no options, the keepsake has exactly one variant.')).toBeInTheDocument()
-    expect(within(card).getByText('Choose a variant to change it.')).toBeInTheDocument()
-    expect(within(card).queryByRole('button', { name: 'Add variant' })).not.toBeInTheDocument()
+    expect(within(card).getByLabelText('Price, CHF')).toHaveValue('39.00')
+    expect(within(card).getByLabelText('SKU code')).toHaveValue('VX-1')
+    expect(within(card).getByRole('button', { name: /Status/ })).toHaveTextContent('For sale')
     expect(within(card).queryByText(/\d+ in stock|reserved|available/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Variants' })).not.toBeInTheDocument()
   })
 })
 
@@ -388,77 +382,92 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
   })
 })
 
-describe('[E6.1][variant] the default variant', () => {
+describe('[T-008][AC2] the Price card saves the one variant', () => {
   const save = (over: object = {}) => product({ ...current, ...over })
 
-  it('[E6.1][variant] the sheet edits the code and the price and saves them with the status', async () => {
+  it('[T-008][AC2] a changed price saves when the field is left, with the version-free variant request, no toast, and the bar says Saved', async () => {
     const success = vi.spyOn(toast, 'success')
-    serve(call => (call.method === 'PATCH' && call.path === `${detail}/variants/${variantId}` ? Response.json(save({ variants: [{ id: variantId, skuCode: 'VX-2', priceRappen: 4500, status: 'published', values: {} }] })) : undefined))
-    await openVariantPage()
+    serve(call => (call.method === 'PATCH' && call.path === `${detail}/variants/${variantId}` ? Response.json(save({ variants: [{ id: variantId, skuCode: 'VX-1', priceRappen: 4500, status: 'published', values: {} }] })) : undefined))
+    await openEditor('options')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Actions for VX-1' }))
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Edit' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Edit VX-1' })
-    const code = within(dialog).getByLabelText('SKU code')
-
-    await userEvent.clear(code)
-    await userEvent.type(code, 'vx-2')
-    const price = within(dialog).getByLabelText('Price')
+    const price = within(await screen.findByRole('region', { name: 'Price' })).getByLabelText('Price, CHF')
 
     await userEvent.clear(price)
     await userEvent.type(price, '45')
+    expect(writes()).toHaveLength(0)
     await userEvent.tab()
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }))
 
     await waitFor(() => expect(writes()).toHaveLength(1))
-    expect(writes()[0]).toMatchObject({ method: 'PATCH', path: `${detail}/variants/${variantId}`, ifMatch: null, body: { skuCode: 'VX-2', priceRappen: 4500, status: 'published' } })
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Edit VX-1' })).not.toBeInTheDocument())
-    expect(await screen.findByRole('heading', { level: 1, name: 'VX-2' })).toBeInTheDocument()
-    expect(success).toHaveBeenCalledExactlyOnceWith('VX-2 saved.')
+    expect(writes()[0]).toMatchObject({ method: 'PATCH', path: `${detail}/variants/${variantId}`, ifMatch: null, body: { priceRappen: 4500 } })
+    expect(await screen.findByText(/^Saved \d/)).toBeInTheDocument()
+    expect(success).not.toHaveBeenCalled()
+  })
+
+  it('[T-008][AC2] a price that is not above 0 is named at the field and nothing is sent', async () => {
+    await openEditor('options')
+
+    const price = within(await screen.findByRole('region', { name: 'Price' })).getByLabelText('Price, CHF')
+
+    await userEvent.clear(price)
+    await userEvent.tab()
+
+    expect(await screen.findByText('Add a price above CHF 0.')).toBeInTheDocument()
+    expect(writes()).toHaveLength(0)
+  })
+
+  it('[T-008] the status is chosen in the card and saves at once', async () => {
+    const success = vi.spyOn(toast, 'success')
+    serve(call => (call.method === 'PATCH' && call.path === `${detail}/variants/${variantId}` ? Response.json(save({ variants: [{ id: variantId, skuCode: 'VX-1', priceRappen: 3900, status: 'draft', values: {} }] })) : undefined))
+    await openEditor('options')
+
+    const card = await screen.findByRole('region', { name: 'Price' })
+
+    await userEvent.click(within(card).getByRole('button', { name: /Status/ }))
+    await userEvent.click(await screen.findByRole('option', { name: 'Hidden' }))
+
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]).toMatchObject({ method: 'PATCH', body: { status: 'draft' } })
+    await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('VX-1: hidden.'))
   })
 
   it('[E6.1][variant] a code the shop already uses is refused at the field, and a bad one before any request', async () => {
     const danger = vi.spyOn(toast, 'danger')
     serve(call => (call.method === 'PATCH' && call.path.includes('/variants/') ? problem(409, 'sku-code-taken') : undefined))
-    await openVariantPage()
+    await openEditor('options')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Actions for VX-1' }))
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Edit' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Edit VX-1' })
-    const code = within(dialog).getByLabelText('SKU code')
+    const code = within(await screen.findByRole('region', { name: 'Price' })).getByLabelText('SKU code')
 
     await userEvent.clear(code)
     await userEvent.type(code, 'bad code')
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }))
-    expect(await within(dialog).findByText('Letters and digits, joined by - _ or . (like VX-S-SWAN).')).toBeInTheDocument()
+    await userEvent.tab()
+    expect(await screen.findByText('Letters and digits, joined by - _ or . (like VX-S-SWAN).')).toBeInTheDocument()
     expect(writes()).toHaveLength(0)
     await userEvent.clear(code)
     await userEvent.type(code, 'vx-9')
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }))
+    await userEvent.tab()
 
-    expect(await within(dialog).findByText('VX-9 is already used in your shop.')).toBeInTheDocument()
-    expect(dialog).toBeInTheDocument()
+    expect(await screen.findByText('VX-9 is already used in your shop.')).toBeInTheDocument()
     expect(danger).not.toHaveBeenCalled()
   })
 })
 
 /** The step list's button for Review and publish: it saves what is typed, then opens the step. */
-const openReview = () => userEvent.click(screen.getByRole('button', { name: /^4\. Review and publish/ }))
+const openReview = () => userEvent.click(screen.getByRole('button', { name: /^3\. Review and publish/ }))
 
 /** The bar's red action; the bar is a sibling of the step body, so it is found on the page. */
 const bar = () => screen.getByTestId('step-bar')
 
-describe('[E6.1][review] Review and publish, the fourth step', () => {
-  it('[T-004] is the fourth step of the list and the header has no button for it', async () => {
+describe('[E6.1][review] Review and publish, the last step', () => {
+  it('[T-004] is the last step of the list and the header has no button for it', async () => {
     await openEditor()
 
     const steps = within(screen.getByRole('navigation', { name: 'Steps' }))
 
-    expect(steps.getAllByRole('button').map(button => button.getAttribute('aria-label')?.replace(/,.*$/, ''))).toEqual(['1. Details', '2. Options', '3. Variants', '4. Review and publish'])
+    expect(steps.getAllByRole('button').map(button => button.getAttribute('aria-label')?.replace(/,.*$/, ''))).toEqual(['1. Details', '2. Options and variants', '3. Review and publish'])
     expect(screen.queryByRole('button', { name: /^Review/ })).not.toBeInTheDocument()
   })
 
-  it('[T-004] opens from the step list, shows the preview and the checks, and Back returns to Variants', async () => {
+  it('[T-004] opens from the step list, shows the preview and the checks, and Back returns to Options and variants', async () => {
     const router = await openEditor()
 
     await openReview()
@@ -471,15 +480,15 @@ describe('[E6.1][review] Review and publish, the fourth step', () => {
     expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Previous step' }))
 
-    expect(await screen.findByRole('region', { name: 'Variants' })).toBeInTheDocument()
-    expect(router.state.location.search).toMatchObject({ step: 'variants' })
+    expect(await screen.findByRole('region', { name: 'Options' })).toBeInTheDocument()
+    expect(router.state.location.search).toMatchObject({ step: 'options' })
   })
 
   it('[T-004] the old ?view=review address opens the step', async () => {
     renderKeepsakes(`/store/products/gifts/${productId}?view=review`)
 
     expect(await screen.findByTestId('review-screen', undefined, SLOW)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^4\. Review and publish/ })).toHaveAttribute('aria-current', 'step')
+    expect(screen.getByRole('button', { name: /^3\. Review and publish/ })).toHaveAttribute('aria-current', 'step')
   })
 
   it('[T-004] saves what is typed before the step opens', async () => {
@@ -539,11 +548,11 @@ describe('[E6.1][review] Review and publish, the fourth step', () => {
     expect(await screen.findByRole('region', { name: 'Photos' })).toBeVisible()
     expect(screen.getByRole('alert')).toHaveTextContent('No photos yet. Add one to publish; the first is the cover.')
     expect(screen.getByRole('button', { name: '1. Details, Has errors' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '4. Review and publish, Has errors' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '3. Review and publish, Has errors' })).toBeInTheDocument()
     await waitFor(() => expect(document.getElementById('photos')!.contains(document.activeElement)).toBe(true))
   })
 
-  it('[T-004] Edit on a variants check opens the Variants step', async () => {
+  it('[T-004][T-008] Edit on a variants check opens the merged step', async () => {
     current = product({ blocking: [{ code: 'variant-for-sale', card: 'variants' }] })
     view.wide = true
     const router = await openEditor()
@@ -551,8 +560,8 @@ describe('[E6.1][review] Review and publish, the fourth step', () => {
     await openReview()
     await userEvent.click(within(await screen.findByTestId('review-screen', undefined, SLOW)).getByRole('button', { name: 'Edit' }))
 
-    expect(await screen.findByRole('region', { name: 'Variants' })).toBeInTheDocument()
-    expect(router.state.location.search).toMatchObject({ step: 'variants' })
+    expect(await screen.findByRole('region', { name: 'Options' })).toBeInTheDocument()
+    expect(router.state.location.search).toMatchObject({ step: 'options' })
   })
 
   it('[T-004] on a phone one bar is pinned: it says what the checks say, with Back, and the checks and Publish sit in the step', async () => {
@@ -704,15 +713,14 @@ describe('[E6.1][i18n] M12 in German', () => {
 
     await screen.findByLabelText('Name (English)', undefined, SLOW)
     await screen.findByRole('heading', { level: 3, name: 'Name und Text' }, SLOW)
-    expect(within(screen.getByRole('navigation', { name: 'Schritte' })).getAllByRole('button').map(button => button.getAttribute('aria-label'))).toEqual(['1. Details, Erledigt', '2. Optionen, Erledigt', '3. Varianten, Erledigt', '4. Prüfen und veröffentlichen, Erledigt'])
+    expect(within(screen.getByRole('navigation', { name: 'Schritte' })).getAllByRole('button').map(button => button.getAttribute('aria-label'))).toEqual(['1. Details, Erledigt', '2. Optionen und Varianten, Erledigt', '3. Prüfen und veröffentlichen, Erledigt'])
     expect(screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Name und Text', 'Fotos', 'Provisionssatz für Partner (%)'])
-    expect(screen.getByText(/Schritt 1 von 4/)).toBeInTheDocument()
+    expect(screen.getByText(/Schritt 1 von 3/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Weiter' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Zurück zu Andenken' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
     expect(await screen.findByText('Keine Optionen: Dieses Andenken wird als eine Variante verkauft. Fügen Sie eine hinzu, wenn es in Versionen kommt, etwa als Grösse oder Farbe.')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
-    expect((await screen.findAllByText('Im Verkauf')).length).toBeGreaterThan(0)
+    expect(await screen.findByRole('region', { name: 'Preis' })).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/keepsakes\.[a-z]|steps\.[a-z]/)
     expect(document.body.textContent).not.toMatch(/gravur|unterkategorie|anzahlung|später zahlen|zahlungsfrist/i)
   })

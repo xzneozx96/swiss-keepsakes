@@ -83,7 +83,7 @@ export function StepEditorSkeleton() {
       </div>
       <div className="flex min-w-0 flex-col gap-5 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start lg:gap-8">
         <div className="hidden flex-col gap-3 lg:flex">
-          {[0, 1, 2, 3].map(row => (
+          {[0, 1, 2].map(row => (
             <div key={row} className="flex items-center gap-3 p-1.5">
               <Skeleton className="size-8 shrink-0 rounded-full" />
               <div className="flex flex-col gap-1.5">

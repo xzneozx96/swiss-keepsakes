@@ -169,7 +169,7 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.options.valuesOf': 'Werte von {option}, in der Reihenfolge, in der Gäste sie sehen',
   'keepsakes.options.valueFallback': 'Wert',
   'keepsakes.options.addValue.label': 'Werte zu {option} hinzufügen',
-  'keepsakes.options.addValue.placeholder': 'Wert eingeben und Enter drücken',
+  'keepsakes.options.addValue.placeholder': 'Weiteren Wert hinzufügen',
   'keepsakes.options.addValue.hint': 'Eine Liste einfügen, um mehrere hinzuzufügen: Small, Medium, Large',
   'keepsakes.options.addValue.alreadyOne': '{values} steht schon in der Liste.',
   'keepsakes.options.addValue.alreadyMany': '{values} stehen schon in der Liste.',

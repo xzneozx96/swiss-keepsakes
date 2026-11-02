@@ -11,7 +11,6 @@ import { startDemo } from '@/features/demo/data-client'
 import { KeepsakeEditorScreen } from '@/features/keepsakes/components/keepsake-editor'
 import { KeepsakeList } from '@/features/keepsakes/components/keepsake-list'
 import { NewKeepsake } from '@/features/keepsakes/components/new-keepsake-editor'
-import { VariantScreen } from '@/features/keepsakes/components/variant-page'
 import { keepsakeSearch } from '@/features/keepsakes/lib/search-params'
 
 // jsdom has no CSS.supports, which a module of the prototype gift editor (the CommissionCard's file) calls on load.
@@ -164,16 +163,7 @@ export function renderKeepsakes(initial: string) {
       return <KeepsakeEditorScreen id={id} step={step} onStep={next => void navigate({ search: { step: next === 'details' ? undefined : next }, replace: true })} />
     },
   })
-  const variant = createRoute({
-    getParentRoute: () => root,
-    path: '/store/products/gifts/$productId/variants/$variantId',
-    component: function VariantPage() {
-      const { productId: id, variantId: variantRef } = variant.useParams()
-
-      return <VariantScreen id={id} variantId={variantRef} />
-    },
-  })
-  const router = createRouter({ routeTree: root.addChildren([index, create, edit, variant]), history: createMemoryHistory({ initialEntries: [initial] }), disableGlobalCatchBoundary: true })
+  const router = createRouter({ routeTree: root.addChildren([index, create, edit]), history: createMemoryHistory({ initialEntries: [initial] }), disableGlobalCatchBoundary: true })
 
   render(
     <QueryClientProvider client={state.demo.queryClient}>

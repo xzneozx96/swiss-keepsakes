@@ -30,7 +30,7 @@ export function OptionsAndVariantsStep({ draft, language, held, variants, commit
   /** A Next with a price or a code that is not right: the fields say so. */
   showErrors: boolean
 }) {
-  const flow = useOptionsFlow({ draft, committed, variants, commit: actions.commit })
+  const flow = useOptionsFlow({ draft, committed, variants, held, commit: actions.commit })
   // The rows are named by the finished options, with the values they had; the open option adds its own on top.
   const tableOptions = asSaved(draft.options.filter(option => committed.has(option.ref)).map(option => ({ ...option, values: option.values.filter(value => committed.has(value.ref)) })))
   const only = variants.find(variant => variant.status !== 'archived')
