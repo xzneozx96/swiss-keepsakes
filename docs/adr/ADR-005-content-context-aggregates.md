@@ -7,7 +7,7 @@ Applies to: `api/src/modules/content/`, `api/src/modules/catalog/`, `packages/do
 
 No new dependency, vendor or paid service. This decision changes the module ownership drawn in `docs/architecture/backend.md` section 4 (content, catalog) and replaces the four fixed categories of D17. The catalog keeps generic product options and category tables for future product types (owner gates M9 and M10), with no category screen in Phase 1 (ADR-021).
 
-**Amended 2026-11-02 (owner).** The Pin aggregate has no `service_type` or `food_kind`. A pin's icon is derived from its map categories: the icon of the first category that has one, a sub-category taking its parent's (ADR-030, `docs/decisions/2026-11-02-map-category-icons.md`). `must_visit` and the local tip stay on the pin. The "service type" in the Tags paragraph below is superseded.
+**Amended 2026-11-02 (owner).** The Pin aggregate has no `service_type` or `food_kind`. A map category has a Show on the home switch and no icon (an icon was added and removed on 2026-11-02; ADR-030, `docs/decisions/2026-11-02-map-category-show-on-home.md`). `must_visit` and the local tip stay on the pin. The "service type" in the Tags paragraph below is superseded.
 
 **Amended 2026-10-27 (G11).** The Pin aggregate replaces the typed Place. A pin is a place or an event with optional dates, has no fixed type, publishes without a story, has no page and takes no guest reviews. Map categories and blog categories join the content context (ADR-030). The pin model is ADR-029. Where a bullet below still says place, read pin, and the fixed type, the story rule and the review rule no longer apply. The bullets that changed are marked.
 
@@ -54,4 +54,4 @@ We will keep stories, places and tour guides in the `content` module and give ea
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
 - 2026-10-27 amended (gate G11, `docs/decisions/2026-10-27-map-pins-and-events.md`)
-- 2026-11-02 amended (owner): the pin's service type and food kind are replaced by an icon and a Show on the home switch on the map category (ADR-030, migration `0016`, built in T-009); must-visit stays on the pin
+- 2026-11-02 amended (owner): the pin's service type and food kind are replaced by a Show on the home switch on the map category (ADR-030, migration `0016`, built in T-009; the icon it also added was removed by `0018` in T-011); must-visit stays on the pin

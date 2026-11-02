@@ -1,5 +1,5 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
-import type { CategoryIcon, CategoryKind } from '@sk/api-contract'
+import type { CategoryKind } from '@sk/api-contract'
 import type { Actor } from '@sk/domain/identity'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
@@ -17,8 +17,8 @@ interface Name { en?: string | null, de?: string | null }
 // What the category routes call. main.ts builds each from the module's use cases, wrapped by guardUseCases.
 export interface CategoryUseCases {
   listMerchantCategories: (actor: Actor, storeId: string, kind: CategoryKind) => Promise<Result<CategoryRow[]>>
-  createCategory: (actor: Actor, storeId: string, kind: CategoryKind, input: { name: Name, parentId?: string | null, icon?: CategoryIcon | null, showOnHome?: boolean }, requestId: string | null) => Promise<Result<CategoryRow>>
-  saveCategory: (actor: Actor, storeId: string, kind: CategoryKind, id: string, input: { name?: Name, parentId?: string | null, icon?: CategoryIcon | null, showOnHome?: boolean }, requestId: string | null) => Promise<Result<CategoryRow>>
+  createCategory: (actor: Actor, storeId: string, kind: CategoryKind, input: { name: Name, parentId?: string | null, showOnHome?: boolean }, requestId: string | null) => Promise<Result<CategoryRow>>
+  saveCategory: (actor: Actor, storeId: string, kind: CategoryKind, id: string, input: { name?: Name, parentId?: string | null, showOnHome?: boolean }, requestId: string | null) => Promise<Result<CategoryRow>>
   reorderCategories: (actor: Actor, storeId: string, kind: CategoryKind, input: { parentId: string | null, ids: string[] }, requestId: string | null) => Promise<Result<CategoryRow[]>>
   deleteCategory: (actor: Actor, storeId: string, kind: CategoryKind, id: string, requestId: string | null) => Promise<Result<{ id: string }>>
 }

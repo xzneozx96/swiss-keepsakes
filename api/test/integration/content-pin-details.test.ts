@@ -1,5 +1,4 @@
 import { randomUUID } from 'node:crypto'
-import { categoryIcons } from '@sk/domain/content'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { createContentHttp } from './content-http.ts'
 import { count, openTestDatabase } from './support.ts'
@@ -84,14 +83,12 @@ describe('[E4.2][AC41] migration 0010: five interests in the database', () => {
 })
 
 describe('[E4.2][AC68] migration 0010: the pin columns and the photo table', () => {
-  it('[T-009b][AC3] the service and food columns of the place are gone (0016), and a category takes the 24 icons and no other', async () => {
+  it('[T-009b][AC3] the service and food columns of the place are gone (0016), and a map category has no icon column (0018) and keeps the home switch', async () => {
     const store = randomUUID()
 
     expect(await count(pool, `select count(*) from information_schema.columns where table_schema = 'content' and table_name = 'places' and column_name in ('service_type', 'food_kind')`)).toBe(0)
-    const insert = (icon: string) => pool.query(`insert into content.map_categories (store_id, name, slug, icon) values ($1, '{"en":"X"}', $2, $3)`, [store, `x-${icon}`, icon])
-    for (const icon of categoryIcons)
-      await insert(icon)
-    expect((await failure(insert('toilets'))).constraint).toBe('map_categories_icon_check')
+    expect(await count(pool, `select count(*) from information_schema.columns where table_schema = 'content' and table_name = 'map_categories' and column_name = 'icon'`)).toBe(0)
+    await pool.query(`insert into content.map_categories (store_id, name, slug) values ($1, '{"en":"X"}', 'x')`, [store])
     const { rows } = await pool.query<{ show_on_home: boolean }>(`select show_on_home from content.map_categories where store_id = $1 limit 1`, [store])
     expect(rows[0]).toEqual({ show_on_home: false })
   })
@@ -193,6 +190,30 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     const list = await env.call(staff.pins, { headers: staff.owner.headers })
     expect(list.status).toBe(200)
     expect(await list.json()).toMatchObject({ items: [{ id: pin.id, status: 'draft', title: { en: 'Tap on Weinmarkt' }, located: true, hasDates: false, nextDate: null, interests: ['local-activities', 'food-drink'], coverMediaId: cover, mainStory: null }] })
+    const { items } = await (await env.call(staff.pins, { headers: staff.owner.headers })).json() as { items: { cover: { id: string, status: string, publicUrl: string | null } | null }[] }
+    expect(items[0]!.cover).toMatchObject({ id: cover, status: 'ready', publicUrl: expect.stringMatching(/^https:\/\/storage\.test\/media\//) })
+  })
+
+  it('[T-011] the list carries the ready cover of each pin in the same read, and null for no cover, a file still processing and a retired file', async () => {
+    const staff = await env.storeWithStaff()
+    const readyCover = await image(staff.storeId)
+    const withCover = await create(staff, { title: { en: 'With cover' }, ...located, coverMediaId: readyCover })
+    const without = await create(staff, { title: { en: 'Without' }, ...located })
+    const processing = await create(staff, { title: { en: 'Processing' }, ...located })
+    const retired = await create(staff, { title: { en: 'Retired' }, ...located })
+    const processingFile = await image(staff.storeId, 'processing')
+    const retiredFile = await image(staff.storeId)
+    await pool.query(`update content.media set status = 'retired', retired_at = now() where id = $1`, [retiredFile])
+    await pool.query(`update content.places set cover_media_id = $2 where id = $1`, [processing.id, processingFile])
+    await pool.query(`update content.places set cover_media_id = $2 where id = $1`, [retired.id, retiredFile])
+
+    const { items } = await (await env.call(staff.pins, { headers: staff.owner.headers })).json() as { items: { id: string, coverMediaId: string | null, cover: { id: string } | null }[] }
+    const byId = (id: string) => items.find(item => item.id === id)!
+
+    expect(byId(withCover.id).cover).toMatchObject({ id: readyCover })
+    expect(byId(without.id)).toMatchObject({ coverMediaId: null, cover: null })
+    expect(byId(processing.id)).toMatchObject({ coverMediaId: processingFile, cover: null })
+    expect(byId(retired.id)).toMatchObject({ coverMediaId: retiredFile, cover: null })
   })
 
   it('[E4.2][AC41] five codes are accepted over HTTP, another code answers 400 and writes nothing', async () => {

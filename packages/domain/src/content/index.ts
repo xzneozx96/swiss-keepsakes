@@ -1,5 +1,4 @@
 export * from './category.ts'
-export * from './category-icon.ts'
 export * from './body.ts'
 export * from './localized.ts'
 export * from './pin.ts'

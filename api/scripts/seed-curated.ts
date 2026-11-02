@@ -1,4 +1,4 @@
-import type { CategoryIcon, Localized, WeeklySpan } from '@sk/domain/content'
+import type { Localized, WeeklySpan } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { Tx } from '../src/platform/db/client.ts'
 import { createHash } from 'node:crypto'
@@ -77,33 +77,32 @@ export interface CategorySpec {
   slug: string
   name: Required<Localized>
   parent: string | null
-  icon: CategoryIcon | null
   showOnHome: boolean
 }
 
 // The category table of SEED-common.md. A category that the store has (same slug, or the same English name) is reused
-// as it is; only the missing ones are created, parents first, with the icon of the decision of 2026-11-02.
+// as it is; only the missing ones are created, parents first.
 export const categorySpecs: CategorySpec[] = [
-  { slug: 'sights', name: { en: 'Sights', de: 'Sehenswürdigkeiten' }, parent: null, icon: null, showOnHome: false },
-  { slug: 'bridges', name: { en: 'Bridges', de: 'Brücken' }, parent: 'sights', icon: 'bridge', showOnHome: false },
-  { slug: 'churches', name: { en: 'Churches', de: 'Kirchen' }, parent: 'sights', icon: 'church', showOnHome: false },
-  { slug: 'historic-buildings', name: { en: 'Historic buildings', de: 'Historische Bauten' }, parent: 'sights', icon: 'landmark', showOnHome: false },
-  { slug: 'squares', name: { en: 'Squares', de: 'Plätze' }, parent: 'sights', icon: 'square', showOnHome: false },
-  { slug: 'monuments', name: { en: 'Monuments', de: 'Denkmäler' }, parent: 'sights', icon: 'monument', showOnHome: false },
-  { slug: 'viewpoints', name: { en: 'Viewpoints', de: 'Aussichtspunkte' }, parent: 'sights', icon: 'viewpoint', showOnHome: false },
-  { slug: 'food-and-drink', name: { en: 'Food and drink', de: 'Essen und Trinken' }, parent: null, icon: null, showOnHome: false },
-  { slug: 'chocolate', name: { en: 'Chocolate', de: 'Schokolade' }, parent: 'food-and-drink', icon: null, showOnHome: false },
-  { slug: 'cafes', name: { en: 'Cafés and bakeries', de: 'Cafés und Bäckereien' }, parent: 'food-and-drink', icon: 'cafe', showOnHome: false },
-  { slug: 'supermarkets', name: { en: 'Supermarkets', de: 'Supermärkte' }, parent: 'food-and-drink', icon: 'supermarket', showOnHome: false },
-  { slug: 'shopping', name: { en: 'Shopping', de: 'Einkaufen' }, parent: null, icon: 'shop', showOnHome: false },
-  { slug: 'department-stores', name: { en: 'Department stores', de: 'Warenhäuser' }, parent: 'shopping', icon: 'shop', showOnHome: false },
-  { slug: 'free-essentials', name: { en: 'Free essentials', de: 'Gratis und praktisch' }, parent: null, icon: null, showOnHome: false },
-  { slug: 'toilets', name: { en: 'Toilets', de: 'Toiletten' }, parent: 'free-essentials', icon: 'toilet', showOnHome: true },
-  { slug: 'water', name: { en: 'Drinking water', de: 'Trinkwasser' }, parent: 'free-essentials', icon: 'water', showOnHome: true },
-  { slug: 'useful-info', name: { en: 'Useful info', de: 'Gut zu wissen' }, parent: null, icon: 'info', showOnHome: false },
-  { slug: 'holidays', name: { en: 'Public holidays', de: 'Feiertage' }, parent: 'useful-info', icon: 'holiday', showOnHome: false },
-  { slug: 'emergency', name: { en: 'Emergency', de: 'Notfall' }, parent: 'useful-info', icon: 'emergency', showOnHome: false },
-  { slug: 'boats-and-mountains', name: { en: 'Boats and mountains', de: 'Schiff und Berge' }, parent: 'useful-info', icon: 'boat', showOnHome: false },
+  { slug: 'sights', name: { en: 'Sights', de: 'Sehenswürdigkeiten' }, parent: null, showOnHome: false },
+  { slug: 'bridges', name: { en: 'Bridges', de: 'Brücken' }, parent: 'sights', showOnHome: false },
+  { slug: 'churches', name: { en: 'Churches', de: 'Kirchen' }, parent: 'sights', showOnHome: false },
+  { slug: 'historic-buildings', name: { en: 'Historic buildings', de: 'Historische Bauten' }, parent: 'sights', showOnHome: false },
+  { slug: 'squares', name: { en: 'Squares', de: 'Plätze' }, parent: 'sights', showOnHome: false },
+  { slug: 'monuments', name: { en: 'Monuments', de: 'Denkmäler' }, parent: 'sights', showOnHome: false },
+  { slug: 'viewpoints', name: { en: 'Viewpoints', de: 'Aussichtspunkte' }, parent: 'sights', showOnHome: false },
+  { slug: 'food-and-drink', name: { en: 'Food and drink', de: 'Essen und Trinken' }, parent: null, showOnHome: false },
+  { slug: 'chocolate', name: { en: 'Chocolate', de: 'Schokolade' }, parent: 'food-and-drink', showOnHome: false },
+  { slug: 'cafes', name: { en: 'Cafés and bakeries', de: 'Cafés und Bäckereien' }, parent: 'food-and-drink', showOnHome: false },
+  { slug: 'supermarkets', name: { en: 'Supermarkets', de: 'Supermärkte' }, parent: 'food-and-drink', showOnHome: false },
+  { slug: 'shopping', name: { en: 'Shopping', de: 'Einkaufen' }, parent: null, showOnHome: false },
+  { slug: 'department-stores', name: { en: 'Department stores', de: 'Warenhäuser' }, parent: 'shopping', showOnHome: false },
+  { slug: 'free-essentials', name: { en: 'Free essentials', de: 'Gratis und praktisch' }, parent: null, showOnHome: false },
+  { slug: 'toilets', name: { en: 'Toilets', de: 'Toiletten' }, parent: 'free-essentials', showOnHome: true },
+  { slug: 'water', name: { en: 'Drinking water', de: 'Trinkwasser' }, parent: 'free-essentials', showOnHome: true },
+  { slug: 'useful-info', name: { en: 'Useful info', de: 'Gut zu wissen' }, parent: null, showOnHome: false },
+  { slug: 'holidays', name: { en: 'Public holidays', de: 'Feiertage' }, parent: 'useful-info', showOnHome: false },
+  { slug: 'emergency', name: { en: 'Emergency', de: 'Notfall' }, parent: 'useful-info', showOnHome: false },
+  { slug: 'boats-and-mountains', name: { en: 'Boats and mountains', de: 'Schiff und Berge' }, parent: 'useful-info', showOnHome: false },
 ]
 
 export interface Snapshot {
@@ -240,9 +239,9 @@ async function readSnapshot(pool: Pool, storeId: string): Promise<Snapshot> {
   }
 }
 
-async function hasIconColumns(pool: Pool): Promise<boolean> {
-  const { rows } = await pool.query<{ column_name: string }>(`select column_name from information_schema.columns where table_schema = 'content' and table_name = 'map_categories' and column_name in ('icon', 'show_on_home')`)
-  return rows.length === 2
+async function hasHomeColumn(pool: Pool): Promise<boolean> {
+  const { rows } = await pool.query<{ column_name: string }>(`select column_name from information_schema.columns where table_schema = 'content' and table_name = 'map_categories' and column_name = 'show_on_home'`)
+  return rows.length === 1
 }
 
 interface Photo { dir: string, file: string, alt: Required<Localized> }
@@ -288,13 +287,13 @@ async function main(): Promise<number> {
       if (!files.has(key))
         files.set(key, readFileSync(join(mediaDir, photo.dir, photo.file)))
     }
-    const iconColumns = await hasIconColumns(pool)
+    const homeColumn = await hasHomeColumn(pool)
     printPlan(plan, snapshot, files, dry)
-    process.stdout.write(`Icon columns (migration 0016): ${iconColumns ? 'present' : 'missing'}\n`)
+    process.stdout.write(`Home column (migration 0016): ${homeColumn ? 'present' : 'missing'}\n`)
     if (dry)
       return 0
-    // The content use cases read the icon columns, so nothing can be written until migration 0016 is applied.
-    if (!iconColumns) {
+    // The content use cases read the home column, so nothing can be written until migration 0016 is applied.
+    if (!homeColumn) {
       process.stderr.write('Migration 0016 is not applied to this database. Nothing was written.\n')
       return 3
     }
@@ -352,7 +351,7 @@ async function run(pool: Pool, storeId: string, data: Data, plan: Plan, snapshot
       ids.set(spec.slug, existing.id)
       continue
     }
-    const created = await createCategory(actor, storeId, 'map', { name: spec.name, parentId: spec.parent ? ids.get(spec.parent) ?? null : null, icon: spec.icon, showOnHome: spec.showOnHome }, null)
+    const created = await createCategory(actor, storeId, 'map', { name: spec.name, parentId: spec.parent ? ids.get(spec.parent) ?? null : null, showOnHome: spec.showOnHome }, null)
     if (!created.ok)
       throw new SeedError(`Category ${spec.slug} was refused: ${created.reason}`)
     ids.set(spec.slug, created.value.id)

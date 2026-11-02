@@ -232,42 +232,8 @@
       },
       "CategoryPatchBody": {
         "additionalProperties": false,
-        "description": "A name replaces both languages. A changed parentId appends the category last under the new parent. icon sets or clears the icon, showOnHome sets the home switch",
+        "description": "A name replaces both languages. A changed parentId appends the category last under the new parent. showOnHome sets the home switch",
         "properties": {
-          "icon": {
-            "description": "Map categories only; null clears the icon",
-            "enum": [
-              "toilet",
-              "water",
-              "wifi",
-              "transport",
-              "locker",
-              "cash",
-              "restaurant",
-              "cafe",
-              "bar",
-              "market",
-              "supermarket",
-              "shop",
-              "landmark",
-              "church",
-              "bridge",
-              "monument",
-              "museum",
-              "viewpoint",
-              "square",
-              "info",
-              "holiday",
-              "emergency",
-              "boat",
-              "mountain",
-              null
-            ],
-            "type": [
-              "string",
-              "null"
-            ]
-          },
           "name": {
             "$ref": "#/components/schemas/CategoryNameInput"
           },
@@ -289,40 +255,6 @@
         "additionalProperties": false,
         "description": "A new category, appended last among its siblings. The slug is made from the name and never changes",
         "properties": {
-          "icon": {
-            "description": "Map categories only; a blog category with an icon is 422",
-            "enum": [
-              "toilet",
-              "water",
-              "wifi",
-              "transport",
-              "locker",
-              "cash",
-              "restaurant",
-              "cafe",
-              "bar",
-              "market",
-              "supermarket",
-              "shop",
-              "landmark",
-              "church",
-              "bridge",
-              "monument",
-              "museum",
-              "viewpoint",
-              "square",
-              "info",
-              "holiday",
-              "emergency",
-              "boat",
-              "mountain",
-              null
-            ],
-            "type": [
-              "string",
-              "null"
-            ]
-          },
           "name": {
             "$ref": "#/components/schemas/CategoryNameInput"
           },
@@ -5634,40 +5566,6 @@
           "childCount": {
             "type": "integer"
           },
-          "icon": {
-            "description": "Always null for a blog category",
-            "enum": [
-              "toilet",
-              "water",
-              "wifi",
-              "transport",
-              "locker",
-              "cash",
-              "restaurant",
-              "cafe",
-              "bar",
-              "market",
-              "supermarket",
-              "shop",
-              "landmark",
-              "church",
-              "bridge",
-              "monument",
-              "museum",
-              "viewpoint",
-              "square",
-              "info",
-              "holiday",
-              "emergency",
-              "boat",
-              "mountain",
-              null
-            ],
-            "type": [
-              "string",
-              "null"
-            ]
-          },
           "id": {
             "format": "uuid",
             "type": "string"
@@ -5720,7 +5618,6 @@
           "slug",
           "name",
           "parentId",
-          "icon",
           "showOnHome",
           "position",
           "childCount",
@@ -6362,6 +6259,95 @@
             },
             "type": "array"
           },
+          "cover": {
+            "description": "The ready cover photo, with its address and resized copies. Null when the pin has none, or its file is not ready or was retired",
+            "properties": {
+              "byteSize": {
+                "type": "integer"
+              },
+              "contentType": {
+                "type": "string"
+              },
+              "height": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "image",
+                  "audio",
+                  "pdf"
+                ],
+                "type": "string"
+              },
+              "name": {
+                "description": "What the merchant sees and searches. It starts as the uploaded file name",
+                "type": "string"
+              },
+              "publicUrl": {
+                "description": "The public URL of the original. Null until the file is ready",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "processing",
+                  "ready",
+                  "retired"
+                ],
+                "type": "string"
+              },
+              "variants": {
+                "description": "Resized copies of an image. Empty until the file is ready",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "width": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "status",
+              "name",
+              "contentType",
+              "byteSize",
+              "width",
+              "height",
+              "publicUrl",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
           "coverMediaId": {
             "format": "uuid",
             "type": [
@@ -6500,6 +6486,7 @@
           "stayTag",
           "interests",
           "coverMediaId",
+          "cover",
           "mainStory",
           "rowVersion",
           "updatedAt"
@@ -7636,40 +7623,6 @@
       },
       "PublicCategory": {
         "properties": {
-          "icon": {
-            "description": "The icon of a map category (always null for a blog category)",
-            "enum": [
-              "toilet",
-              "water",
-              "wifi",
-              "transport",
-              "locker",
-              "cash",
-              "restaurant",
-              "cafe",
-              "bar",
-              "market",
-              "supermarket",
-              "shop",
-              "landmark",
-              "church",
-              "bridge",
-              "monument",
-              "museum",
-              "viewpoint",
-              "square",
-              "info",
-              "holiday",
-              "emergency",
-              "boat",
-              "mountain",
-              null
-            ],
-            "type": [
-              "string",
-              "null"
-            ]
-          },
           "id": {
             "format": "uuid",
             "type": "string"
@@ -7718,7 +7671,6 @@
           "slug",
           "name",
           "parentId",
-          "icon",
           "showOnHome",
           "position"
         ],

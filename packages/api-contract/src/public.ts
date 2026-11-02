@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { categoryIconSchema } from './categories.ts'
 import { BODY_LIST_LEVELS, listItemSchema } from './content.ts'
 
 // What the public reads return: published text in one language, media as a storage key, and no price anywhere.
@@ -194,7 +193,6 @@ export const publicCategorySchema = z.object({
   slug: z.string(),
   name: z.object({ en: z.string().nullable(), de: z.string().nullable() }),
   parentId: z.uuid().nullable(),
-  icon: categoryIconSchema.nullable().meta({ description: 'The icon of a map category (always null for a blog category)' }),
   showOnHome: z.boolean().meta({ description: 'Whether a map category is listed on the home (always false for a blog category)' }),
   position: z.int(),
 }).meta({ id: 'PublicCategory' })

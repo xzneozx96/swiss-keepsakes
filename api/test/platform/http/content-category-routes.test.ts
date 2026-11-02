@@ -44,7 +44,7 @@ describe('[E4.18][AC87] the category routes', () => {
     const response = await send(app, 'GET', `${base}/blog`)
 
     expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({ items: [{ id: fakeCategory.id, slug: 'walks', name: { en: 'Walks', de: null }, parentId: null, icon: null, showOnHome: false, position: 1, childCount: 0, useCount: 0 }] })
+    expect(await response.json()).toEqual({ items: [{ id: fakeCategory.id, slug: 'walks', name: { en: 'Walks', de: null }, parentId: null, showOnHome: false, position: 1, childCount: 0, useCount: 0 }] })
     expect(seen).toEqual([['staff', lucerne, 'blog']])
   })
 

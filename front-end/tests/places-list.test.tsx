@@ -76,6 +76,34 @@ describe('[E4.2][AC68] N16 the list', () => {
     expect(within(rowOf('Old tap')).getByText('Hidden')).toBeInTheDocument()
   })
 
+  it('[T-011] a pin row shows its cover photo, in a resized copy; a pin without one shows the place icon on the lake blue', async () => {
+    const cover = {
+      id: uuid(30),
+      kind: 'image' as const,
+      status: 'ready' as const,
+      name: 'bridge.jpg',
+      contentType: 'image/jpeg',
+      byteSize: 1000,
+      width: 2000,
+      height: 1000,
+      publicUrl: 'https://media.test/bridge.jpg',
+      variants: [{ width: 320, url: 'https://media.test/bridge-320.jpg' }, { width: 640, url: 'https://media.test/bridge-640.jpg' }],
+    }
+    api.items = [
+      listItem({ id: uuid(11), title: { en: 'Chapel Bridge' }, coverMediaId: cover.id, cover }),
+      listItem({ id: uuid(12), title: { en: 'Old tap' } }),
+    ]
+    await open()
+
+    await screen.findAllByRole('link', { name: 'Chapel Bridge' })
+    const withPhoto = rowOf('Chapel Bridge').querySelector('img')
+    const without = rowOf('Old tap')
+
+    expect(withPhoto).toHaveAttribute('src', 'https://media.test/bridge-320.jpg')
+    expect(without.querySelector('img')).toBeNull()
+    expect(without.querySelector('span.bg-\\[\\#173f52\\] svg')).not.toBeNull()
+  })
+
   it('[E4.2][AC86] the table has the columns of the list: Pin, Status, Categories, Recommended for and Last update', async () => {
     api.items = [listItem({ id: uuid(11), title: { en: 'Chapel Bridge' } })]
     await open()

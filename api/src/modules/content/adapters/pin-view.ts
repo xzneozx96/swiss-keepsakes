@@ -1,6 +1,7 @@
 import type { PinListItem, Pin as PinView, PinWriteBody } from '@sk/api-contract'
-import type { Pin, PinListEntry } from '@sk/domain/content'
-import type { PinChanges } from '../ports.ts'
+import type { Pin } from '@sk/domain/content'
+import type { MerchantPinEntry, PinChanges } from '../ports.ts'
+import { mediaView } from './media-view.ts'
 
 // The response shape of a pin: the same fields, with the dates as ISO strings.
 export function pinView(pin: Pin): PinView {
@@ -12,8 +13,8 @@ export function pinView(pin: Pin): PinView {
   }
 }
 
-export function pinListItemView(entry: PinListEntry): PinListItem {
-  return { ...entry, updatedAt: entry.updatedAt.toISOString() }
+export function pinListItemView({ cover, ...entry }: MerchantPinEntry, publicUrl: (key: string) => string): PinListItem {
+  return { ...entry, cover: cover && mediaView(cover, publicUrl), updatedAt: entry.updatedAt.toISOString() }
 }
 
 // A date's times and a photo's alt text may be left out of the body; the repository wants them as null and {}.

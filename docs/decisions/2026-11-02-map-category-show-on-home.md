@@ -1,7 +1,9 @@
-# Map categories get an icon and a "Show on the home" switch
+# Map categories get a "Show on the home" switch (the icon was removed the same day)
 
 - Date: 2026-11-02
 - Status: **decided on 2026-11-02** (owner, in chat; replaces the first T-009 design of the same day). Built as T-009 and T-009b in run `20261029-sprint7-release1`, with migration `0016_map_category_icons`.
+- **Icon removed on 2026-11-02 (owner, T-011).** The category icon (decisions 2 and 3 below) was removed the same day it was built, because nothing reads it until the home (E4.13) exists. Migration `0018_drop_map_category_icon` drops `content.map_categories.icon` and `map_categories_icon_check`. The icon list, `placeIcon`, the contract field, the Categories-page picker and the seed loader's icon step are gone. "Show on the home" stays. The icon text below is kept as history. This file was `2026-11-02-map-category-icons.md`.
+- **Also in T-011.** The merchant places table shows a cover thumbnail before the title (`cover` on the pin list item, a ready file only), falling back to the place icon on the lake blue.
 - Changes: `docs/decisions/2026-10-28-home-local-briefing.md`, `docs/adr/ADR-005-content-context-aggregates.md`, `docs/adr/ADR-030-merchant-edited-map-and-blog-categories.md`, `docs/specs/001-storytelling-pivot/data-model.md`, `docs/development-plan/delivery-plan.md`, `docs/development-plan/screen-inventory.md`, `docs/ux/pins-design.md`, `docs/ux/home-design.md` and PRD §11.1 (Vietnamese).
 - Related: brief `.factory/runs/20261029-sprint7-release1/briefs/T-009-category-roles.md`.
 

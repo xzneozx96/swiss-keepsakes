@@ -1,8 +1,9 @@
 import type { ContentLanguage, Pin, PinDate, PinDraft, PinStoryOption } from '@sk/domain/content'
 import type { Tx } from '../../../platform/db/client.ts'
-import type { PinChanges, PinListRow, PinRepository } from '../ports.ts'
+import type { MediaRecord, PinChanges, PinListRow, PinRepository } from '../ports.ts'
 import { contentLanguages } from '@sk/domain/content'
 import { sql } from 'drizzle-orm'
+import { record } from './media-repository.ts'
 
 // The document stores the title under `name`: places_published_fields_check reads published->'name'.
 interface PinDocument { name?: PinDraft['title'], tip?: PinDraft['tip'], localTip?: PinDraft['localTip'], coverAlt?: PinDraft['coverAlt'], photoAlt?: PinDraft['photoAlt'] }
@@ -164,12 +165,32 @@ interface ListRow {
   updated_at: Date
   dates: PinDate[]
   category_ids: string[]
+  cm_id: string | null
+  cm_store_id: string
+  cm_kind: MediaRecord['kind']
+  cm_storage_key: string
+  cm_content_type: string
+  cm_byte_size: string | number
+  cm_sha256: string
+  cm_width: number | null
+  cm_height: number | null
+  cm_status: MediaRecord['status']
+  cm_name: string
+  cm_file_name: string
+  cm_alt: MediaRecord['alt']
+  cm_duration_seconds: number | null
+  cm_version: number
+  cm_created_at: string | Date
 }
 
 // One query for the whole list: the dates and category ids are aggregated per pin, so a store with hundreds of pins is one round trip.
 async function listRows(tx: Tx, storeId: string): Promise<PinListRow[]> {
   const found = await tx.execute<ListRow & Record<string, unknown>>(sql`
     select p.id, p.status, p.slug, p.latitude, p.longitude, p.stay_tag, p.interests, p.cover_media_id, p.main_story_group_id,
+           cm.id as cm_id, cm.store_id as cm_store_id, cm.kind as cm_kind, cm.storage_key as cm_storage_key, cm.content_type as cm_content_type,
+           cm.byte_size as cm_byte_size, cm.sha256 as cm_sha256, cm.width as cm_width, cm.height as cm_height, cm.status as cm_status,
+           cm.name as cm_name, cm.file_name as cm_file_name, cm.alt as cm_alt, cm.duration_seconds as cm_duration_seconds,
+           cm.version as cm_version, cm.created_at as cm_created_at,
            p.draft, p.published, p.row_version, p.updated_at,
            coalesce((select jsonb_agg(jsonb_build_object('id', d.id, 'firstDay', d.first_day::text, 'lastDay', d.last_day::text,
                                                           'startTime', to_char(d.start_time, 'HH24:MI'), 'endTime', to_char(d.end_time, 'HH24:MI'))
@@ -178,6 +199,7 @@ async function listRows(tx: Tx, storeId: string): Promise<PinListRow[]> {
            coalesce((select array_agg(c.category_id::text order by c.category_id) from content.place_categories c where c.place_id = p.id), '{}'::text[]) as category_ids,
            exists (select 1 from content.story_versions v where v.group_id = p.main_story_group_id and v.status = 'published') as main_story_published
       from content.places p
+      left join content.media cm on cm.id = p.cover_media_id and cm.store_id = p.store_id and cm.status = 'ready'
      where p.store_id = ${storeId}
      order by p.updated_at desc, p.id`)
   return found.rows.map(row => ({
@@ -193,6 +215,7 @@ async function listRows(tx: Tx, storeId: string): Promise<PinListRow[]> {
     stayTag: row.stay_tag,
     interests: row.interests,
     coverMediaId: row.cover_media_id,
+    cover: row.cm_id === null ? null : record({ id: row.cm_id, store_id: row.cm_store_id, kind: row.cm_kind, storage_key: row.cm_storage_key, content_type: row.cm_content_type, byte_size: row.cm_byte_size, sha256: row.cm_sha256, width: row.cm_width, height: row.cm_height, status: row.cm_status, name: row.cm_name, file_name: row.cm_file_name, alt: row.cm_alt, duration_seconds: row.cm_duration_seconds, version: row.cm_version, created_at: row.cm_created_at }),
     mainStoryGroupId: row.main_story_group_id,
     mainStoryPublished: row.main_story_published,
     rowVersion: row.row_version,

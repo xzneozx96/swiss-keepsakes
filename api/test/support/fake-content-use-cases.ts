@@ -36,7 +36,6 @@ export const fakeCategory: CategoryRow = {
   name: { en: 'Walks' },
   slug: 'walks',
   parentId: null,
-  icon: null,
   showOnHome: false,
   position: 1,
   childCount: 0,

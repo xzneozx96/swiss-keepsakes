@@ -1,13 +1,13 @@
-import type { Pin, PinListEntry, PinStoryOption } from '@sk/domain/content'
+import type { Pin, PinStoryOption } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
-import type { PinListRow } from '../ports.ts'
+import type { MerchantPinEntry, PinListRow } from '../ports.ts'
 import type { Result } from './failure.ts'
 import type { PinDeps } from './pin-deps.ts'
 import { nextDate, pinListStatus } from '@sk/domain/content'
 import { mayManageContent } from './access.ts'
 import { fail, ok } from './failure.ts'
 
-function toEntry(row: PinListRow, now: Date): PinListEntry {
+function toEntry(row: PinListRow, now: Date): MerchantPinEntry {
   const next = nextDate(row.dates, now)
 
   return {
@@ -22,6 +22,7 @@ function toEntry(row: PinListRow, now: Date): PinListEntry {
     stayTag: row.stayTag,
     interests: row.interests,
     coverMediaId: row.coverMediaId,
+    cover: row.cover,
     mainStory: row.mainStoryGroupId ? { groupId: row.mainStoryGroupId, published: row.mainStoryPublished } : null,
     rowVersion: row.rowVersion,
     updatedAt: row.updatedAt,
@@ -30,7 +31,7 @@ function toEntry(row: PinListRow, now: Date): PinListEntry {
 
 // N16: every pin of the signed-in store. A pin whose dates are all over reads as `ended`, by the injected clock.
 export function makeListMerchantPins<T>({ uow, pins, clock }: PinDeps<T>) {
-  return async (actor: Actor, storeId: string): Promise<Result<PinListEntry[]>> => {
+  return async (actor: Actor, storeId: string): Promise<Result<MerchantPinEntry[]>> => {
     if (!mayManageContent(actor, storeId))
       return fail({ reason: 'forbidden' })
     const rows = await uow.run(tx => pins.list(tx, storeId))

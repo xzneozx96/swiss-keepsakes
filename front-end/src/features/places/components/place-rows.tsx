@@ -10,9 +10,11 @@ import { Link } from '@tanstack/react-router'
 
 import { DataTable } from '@/components/data-table'
 import { ArchiveIcon, ChevronRightIcon, EditIcon, RestoreIcon, TrashIcon } from '@/components/icons'
+import { MapThumb } from '@/components/map/map-thumb'
 import { RowActions } from '@/components/row-actions'
 import { StatusChip, TagChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
+import { photoSrc } from '@/features/keepsakes/lib/keepsake-rules'
 import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
 import { kindOf, languagesOf, STATUS_TONE, titleOf } from '../lib/list'
 import { PLACES_PATH } from '../lib/search-params'
@@ -38,6 +40,11 @@ function useNames() {
   const edited = (iso: string) => new Intl.DateTimeFormat(intlLocale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
 
   return { t, language, nameOfItem, edited }
+}
+
+/** The picture slot of a pin row: its cover, or with no photo the place icon on the lake blue. */
+function PlaceThumb({ item, className, iconSize }: { item: PinListItem, className: string, iconSize: number }) {
+  return <MapThumb className={`shrink-0 ${className}`} iconSize={iconSize} src={item.cover ? photoSrc(item.cover, 160) : undefined} />
 }
 
 function categoryNames(item: PinListItem, categories: MerchantCategory[], language: Lang) {
@@ -154,14 +161,17 @@ function Cards({ items, categories, busy, label, onAction }: PlaceRowsProps) {
     <ul aria-label={label} className="flex flex-col gap-4 lg:hidden">
       {items.map(item => (
         <li key={item.id} className="relative flex items-start gap-2 rounded-3xl bg-surface p-4 shadow-surface">
-          <Link className="flex min-w-0 flex-1 flex-col gap-2 rounded-xl outline-none focus-visible:focus-ring" to={hrefOf(item) as never}>
-            <span className="flex items-center gap-2">
-              <span className="min-w-0 text-lg leading-tight font-semibold text-pretty [overflow-wrap:anywhere]">{nameOfItem(item)}</span>
-              <ChevronRightIcon aria-hidden className="shrink-0 text-muted" size={16} />
+          <Link className="flex min-w-0 flex-1 items-start gap-3 rounded-xl outline-none focus-visible:focus-ring" to={hrefOf(item) as never}>
+            <PlaceThumb className="size-14 rounded-xl" iconSize={24} item={item} />
+            <span className="flex min-w-0 flex-1 flex-col gap-2">
+              <span className="flex items-center gap-2">
+                <span className="min-w-0 text-lg leading-tight font-semibold text-pretty [overflow-wrap:anywhere]">{nameOfItem(item)}</span>
+                <ChevronRightIcon aria-hidden className="shrink-0 text-muted" size={16} />
+              </span>
+              <Kind item={item} />
+              <Status item={item} />
+              <span className="text-xs text-muted">{categoryNames(item, categories, language).join(', ') || t('places.list.onlyAll')}</span>
             </span>
-            <Kind item={item} />
-            <Status item={item} />
-            <span className="text-xs text-muted">{categoryNames(item, categories, language).join(', ') || t('places.list.onlyAll')}</span>
           </Link>
           <RowActions actions={actionsOf(item, t).map(action => ({ ...action, isDisabled: busy && action.id !== 'edit' }))} label={t('places.row.actions', { name: nameOfItem(item) })} onAction={id => onAction(item, id)} />
         </li>
@@ -170,19 +180,22 @@ function Cards({ items, categories, busy, label, onAction }: PlaceRowsProps) {
   )
 }
 
-/** The loading cards of a phone: the shape of a card, a title line, the kind line, the chips of the status row and a fact line. */
+/** The loading cards of a phone: the shape of a card, a thumbnail, a title line, the kind line, the chips of the status row and a fact line. */
 function CardSkeleton() {
   return (
     <ul aria-hidden className="flex flex-col gap-4 lg:hidden">
       {Array.from({ length: 4 }, (_, index) => (
-        <li key={index} className="flex flex-col gap-3 rounded-3xl bg-surface p-4 shadow-surface">
-          <Skeleton className="h-6 w-2/3 rounded-lg" />
-          <Skeleton className="h-3 w-1/3 rounded-lg" />
-          <div className="flex gap-2">
-            <Skeleton className="h-7 w-24 rounded-full" />
-            <Skeleton className="h-7 w-20 rounded-full" />
+        <li key={index} className="flex items-start gap-3 rounded-3xl bg-surface p-4 shadow-surface">
+          <Skeleton className="size-14 shrink-0 rounded-xl" />
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
+            <Skeleton className="h-6 w-2/3 rounded-lg" />
+            <Skeleton className="h-3 w-1/3 rounded-lg" />
+            <div className="flex gap-2">
+              <Skeleton className="h-7 w-24 rounded-full" />
+              <Skeleton className="h-7 w-20 rounded-full" />
+            </div>
+            <Skeleton className="h-3 w-1/2 rounded-lg" />
           </div>
-          <Skeleton className="h-3 w-1/2 rounded-lg" />
         </li>
       ))}
     </ul>
@@ -198,11 +211,15 @@ export function PlaceRows(props: PlaceRowsProps) {
       id: 'pin',
       header: t('places.column.pin'),
       isRowHeader: true,
+      skeleton: 'lead',
       headerClassName: 'w-[26%] whitespace-nowrap',
       render: item => (
-        <div className="flex min-w-0 flex-col">
-          <Link className="font-semibold text-pretty [overflow-wrap:anywhere] outline-none hover:underline focus-visible:focus-ring" to={hrefOf(item) as never}>{nameOfItem(item)}</Link>
-          <Kind item={item} />
+        <div className="flex min-w-0 items-center gap-3">
+          <PlaceThumb className="size-11 rounded-lg" iconSize={20} item={item} />
+          <div className="flex min-w-0 flex-col">
+            <Link className="font-semibold text-pretty [overflow-wrap:anywhere] outline-none hover:underline focus-visible:focus-ring" to={hrefOf(item) as never}>{nameOfItem(item)}</Link>
+            <Kind item={item} />
+          </div>
         </div>
       ),
     },

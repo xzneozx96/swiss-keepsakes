@@ -1,9 +1,9 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
-import type { Pin, PinListEntry, PinStoryOption } from '@sk/domain/content'
+import type { Pin, PinStoryOption } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
-import type { PinChanges } from '../ports.ts'
+import type { MerchantPinEntry, PinChanges } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
 import { pinListSchema, pinPublishBodySchema, pinSchema, pinStoryOptionListSchema, pinWriteBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
@@ -15,7 +15,8 @@ import { acceptEmptyBody, etag, etagHeaders, json, storeParams, withIfMatch } fr
 
 // What the pin routes call. main.ts builds each from the module's use cases, wrapped by guardUseCases.
 export interface PinUseCases {
-  listMerchantPins: (actor: Actor, storeId: string) => Promise<Result<PinListEntry[]>>
+  publicUrl: (key: string) => string
+  listMerchantPins: (actor: Actor, storeId: string) => Promise<Result<MerchantPinEntry[]>>
   getMerchantPin: (actor: Actor, storeId: string, pinId: string) => Promise<Result<Pin>>
   listPinStoryOptions: (actor: Actor, storeId: string) => Promise<Result<PinStoryOption[]>>
   createPin: (actor: Actor, storeId: string, changes: PinChanges, requestId: string | null) => Promise<Result<Pin>>
@@ -107,7 +108,7 @@ export function registerPinRoutes(app: OpenAPIHono<AppEnv>, useCases: PinUseCase
     const result = await useCases.listMerchantPins(c.get('actor'), c.get('store').storeId)
     if (!result.ok)
       return problem(c, failureProblem(result))
-    return c.json({ items: result.value.map(pinListItemView) }, 200)
+    return c.json({ items: result.value.map(entry => pinListItemView(entry, useCases.publicUrl)) }, 200)
   })
 
   app.openapi(storyOptionsRoute, async (c) => {

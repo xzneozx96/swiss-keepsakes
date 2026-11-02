@@ -3784,13 +3784,8 @@ export interface components {
             /** Format: uuid */
             parentId: string | null;
         };
-        /** @description A name replaces both languages. A changed parentId appends the category last under the new parent. icon sets or clears the icon, showOnHome sets the home switch */
+        /** @description A name replaces both languages. A changed parentId appends the category last under the new parent. showOnHome sets the home switch */
         CategoryPatchBody: {
-            /**
-             * @description Map categories only; null clears the icon
-             * @enum {string|null}
-             */
-            icon?: "toilet" | "water" | "wifi" | "transport" | "locker" | "cash" | "restaurant" | "cafe" | "bar" | "market" | "supermarket" | "shop" | "landmark" | "church" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "info" | "holiday" | "emergency" | "boat" | "mountain" | null;
             name?: components["schemas"]["CategoryNameInput"];
             /** Format: uuid */
             parentId?: string | null;
@@ -3799,11 +3794,6 @@ export interface components {
         };
         /** @description A new category, appended last among its siblings. The slug is made from the name and never changes */
         CategoryWriteBody: {
-            /**
-             * @description Map categories only; a blog category with an icon is 422
-             * @enum {string|null}
-             */
-            icon?: "toilet" | "water" | "wifi" | "transport" | "locker" | "cash" | "restaurant" | "cafe" | "bar" | "market" | "supermarket" | "shop" | "landmark" | "church" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "info" | "holiday" | "emergency" | "boat" | "mountain" | null;
             name: components["schemas"]["CategoryNameInput"];
             /** Format: uuid */
             parentId?: string | null;
@@ -4934,11 +4924,6 @@ export interface components {
         };
         MerchantCategory: {
             childCount: number;
-            /**
-             * @description Always null for a blog category
-             * @enum {string|null}
-             */
-            icon: "toilet" | "water" | "wifi" | "transport" | "locker" | "cash" | "restaurant" | "cafe" | "bar" | "market" | "supermarket" | "shop" | "landmark" | "church" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "info" | "holiday" | "emergency" | "boat" | "mountain" | null;
             /** Format: uuid */
             id: string;
             name: {
@@ -5134,6 +5119,28 @@ export interface components {
         /** @description A pin as one row of the merchant list */
         PinListItem: {
             categoryIds: string[];
+            /** @description The ready cover photo, with its address and resized copies. Null when the pin has none, or its file is not ready or was retired */
+            cover: {
+                byteSize: number;
+                contentType: string;
+                height: number | null;
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "image" | "audio" | "pdf";
+                /** @description What the merchant sees and searches. It starts as the uploaded file name */
+                name: string;
+                /** @description The public URL of the original. Null until the file is ready */
+                publicUrl: string | null;
+                /** @enum {string} */
+                status: "processing" | "ready" | "retired";
+                /** @description Resized copies of an image. Empty until the file is ready */
+                variants: {
+                    url: string;
+                    width: number;
+                }[];
+                width: number | null;
+            } | null;
             /** Format: uuid */
             coverMediaId: string | null;
             hasDates: boolean;
@@ -5501,11 +5508,6 @@ export interface components {
             };
         };
         PublicCategory: {
-            /**
-             * @description The icon of a map category (always null for a blog category)
-             * @enum {string|null}
-             */
-            icon: "toilet" | "water" | "wifi" | "transport" | "locker" | "cash" | "restaurant" | "cafe" | "bar" | "market" | "supermarket" | "shop" | "landmark" | "church" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "info" | "holiday" | "emergency" | "boat" | "mountain" | null;
             /** Format: uuid */
             id: string;
             name: {

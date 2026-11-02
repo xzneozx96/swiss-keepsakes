@@ -32,14 +32,14 @@ async function admin(statement: string) {
   }
 }
 
-// A copy of api/migrations that stops after 0015, the shape the release before this one left behind.
-function folderUpTo0015(): string {
+// A copy of api/migrations that stops after migration `last`.
+function folderUpTo(last: number): string {
   const folder = mkdtempSync(join(tmpdir(), 'sk-migrations-'))
   folders.push(folder)
   cpSync(migrationsFolder, folder, { recursive: true })
   const journalPath = join(folder, 'meta', '_journal.json')
   const journal = JSON.parse(readFileSync(journalPath, 'utf8')) as { entries: { idx: number }[] }
-  journal.entries = journal.entries.filter(entry => entry.idx <= 15)
+  journal.entries = journal.entries.filter(entry => entry.idx <= last)
   writeFileSync(journalPath, JSON.stringify(journal))
   return folder
 }
@@ -50,7 +50,7 @@ async function databaseAt0015(): Promise<Pool> {
   await admin(`create database ${database}`)
   const pool = new PgPool({ connectionString: withDatabase(inject('databaseUrlUnpooled'), database), max: 1 })
   pools.push(pool)
-  await migrate(drizzle({ client: pool }), { migrationsFolder: folderUpTo0015() })
+  await migrate(drizzle({ client: pool }), { migrationsFolder: folderUpTo(15) })
   return pool
 }
 
@@ -117,7 +117,8 @@ describe('[T-009b][AC3] migration 0016 moves the place service and food kind int
     expect(before).toEqual({ service: '5', food: '2' })
     const categoriesBefore = Number((await pool.query<{ n: string }>(`select count(*) as n from content.map_categories`)).rows[0]!.n)
 
-    await migrate(drizzle({ client: pool }), { migrationsFolder })
+    // Stop at 0016: 0018 takes the icon column away again, and this part checks what 0016 did with it.
+    await migrate(drizzle({ client: pool }), { migrationsFolder: folderUpTo(16) })
 
     expect(await columns(pool, 'places')).not.toEqual(expect.arrayContaining(['service_type']))
     expect(await columns(pool, 'places')).not.toEqual(expect.arrayContaining(['food_kind']))
@@ -163,5 +164,17 @@ describe('[T-009b][AC3] migration 0016 moves the place service and food kind int
     for (const statement of sql.split('--> statement-breakpoint'))
       await pool.query(statement)
     expect(await counts()).toEqual(snapshot)
+
+    // 0018 (T-011) drops the icon and its CHECK, keeps the home switch and the rows, and runs twice.
+    await migrate(drizzle({ client: pool }), { migrationsFolder })
+    expect(await columns(pool, 'map_categories')).not.toContain('icon')
+    expect(await columns(pool, 'map_categories')).toContain('show_on_home')
+    expect((await pool.query(`select 1 from pg_constraint where conname = 'map_categories_icon_check'`)).rowCount).toBe(0)
+    expect((await pool.query<{ on_home: boolean }>(`select show_on_home as on_home from content.map_categories where id = $1`, [toilets])).rows[0]!.on_home).toBe(true)
+    const drop = readFileSync(join(migrationsFolder, '0018_drop_map_category_icon.sql'), 'utf8')
+    const kept = await counts()
+    for (const statement of drop.split('--> statement-breakpoint'))
+      await pool.query(statement)
+    expect(await counts()).toEqual(kept)
   })
 })

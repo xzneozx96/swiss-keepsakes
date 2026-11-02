@@ -33,7 +33,7 @@ let answer: ((call: Call) => Response | undefined) | undefined
 let demo: ReturnType<typeof startDemo>
 
 function category(id: string, over: Record<string, unknown> = {}) {
-  return merchantCategorySchema.parse({ id, slug: id, name: { en: 'Walks', de: 'Wanderungen' }, parentId: null, icon: null, showOnHome: false, position: 1, childCount: 0, useCount: 0, ...over })
+  return merchantCategorySchema.parse({ id, slug: id, name: { en: 'Walks', de: 'Wanderungen' }, parentId: null, showOnHome: false, position: 1, childCount: 0, useCount: 0, ...over })
 }
 
 const problem = (status: number, type: string) => Response.json(problemSchema.parse({ type, status, title: type, instance: '/x', requestId: 'req-1' }), { status })
@@ -298,8 +298,8 @@ describe('[E4.18][AC87] the category editor in English', () => {
   it('[T-011] shows "On the home" as quiet text on a map category and no icon before the name; the blog tab shows neither', async () => {
     lists.map = [
       category(walks, { name: { en: 'Free essentials', de: null } }),
-      category(hill, { name: { en: 'Toilets', de: 'Toiletten' }, icon: 'toilet', showOnHome: true }),
-      category(food, { name: { en: 'Food', de: 'Essen' }, position: 2, icon: 'restaurant' }),
+      category(hill, { name: { en: 'Toilets', de: 'Toiletten' }, showOnHome: true }),
+      category(food, { name: { en: 'Food', de: 'Essen' }, position: 2 }),
     ]
     renderScreen()
 
@@ -335,7 +335,7 @@ describe('[E4.18][AC87] the category editor in English', () => {
   })
 
   it('[T-011] a saved switch shows in the sheet again, off clears it, and a new category sends it without an icon', async () => {
-    lists.map = [category(food, { name: { en: 'Toilets', de: 'Toiletten' }, icon: 'toilet', showOnHome: true })]
+    lists.map = [category(food, { name: { en: 'Toilets', de: 'Toiletten' }, showOnHome: true })]
     renderScreen()
 
     await openMenu('Toilets', 'Edit')
