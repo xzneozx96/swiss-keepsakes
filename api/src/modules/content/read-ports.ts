@@ -48,6 +48,7 @@ export interface PublicPinRow {
   latitude: number
   longitude: number
   address: string | null
+  mapsLink: string | null
   weeklyHours: { day: number, opens: string, closes: string }[]
   stayTag: StayTag
   interests: string[]

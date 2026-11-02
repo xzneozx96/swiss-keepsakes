@@ -24,6 +24,7 @@ function pin(n: number, over: Partial<PublicPinRow> = {}): PublicPinRow {
     latitude: 47.05,
     longitude: 8.3,
     address: null,
+    mapsLink: null,
     weeklyHours: [],
     stayTag: 'both',
     interests: [],

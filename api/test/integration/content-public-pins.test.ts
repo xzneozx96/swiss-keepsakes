@@ -105,6 +105,19 @@ describe('public pin reads over the database', () => {
     expect(await getPin(randomUUID(), 'en')).toEqual({ ok: false, reason: 'not-found' })
   })
 
+  it('the public card carries the stored Google Maps link, and null when there is none', async () => {
+    const store = randomUUID()
+    const withLink = await place(store)
+    const without = await place(store)
+    await pool.query('update content.places set maps_link = $2 where id = $1', [withLink, 'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38'])
+
+    const linked = await getPin(withLink, 'en')
+    const plain = await getPin(without, 'en')
+
+    expect(linked.ok && linked.value.mapsLink).toBe('https://maps.app.goo.gl/RiTbLwL8vxFxPzk38')
+    expect(plain.ok && plain.value.mapsLink).toBeNull()
+  })
+
   it('[E2.12][AC64] a pin with English only, read as de, carries English', async () => {
     const store = randomUUID()
     const a = await place(store, { name: { en: 'Only English' } })

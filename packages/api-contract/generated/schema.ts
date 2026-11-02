@@ -5014,6 +5014,7 @@ export interface components {
             longitude: number | null;
             /** Format: uuid */
             mainStoryGroupId: string | null;
+            mapsLink: string | null;
             mustVisit: boolean;
             outboundUrl: string | null;
             photos: {
@@ -5166,6 +5167,8 @@ export interface components {
             longitude?: number | null;
             /** Format: uuid */
             mainStoryGroupId?: string | null;
+            /** @description The Google Maps link of the place (a business card link or a position link); null removes it. Live on save, like the address */
+            mapsLink?: string | null;
             mustVisit?: boolean;
             outboundUrl?: string | null;
             photos?: {
@@ -5467,6 +5470,8 @@ export interface components {
             latitude: number;
             longitude: number;
             mainStorySlug: string | null;
+            /** @description The Google Maps link the merchant stored for the place; "Open in Google Maps" opens it, else the position */
+            mapsLink: string | null;
             nextDate: components["schemas"]["NextDate"];
             photoKey: string | null;
             requestedLanguage: components["schemas"]["PublicLanguage"];

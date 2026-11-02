@@ -6029,6 +6029,12 @@
               "null"
             ]
           },
+          "mapsLink": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "mustVisit": {
             "type": "boolean"
           },
@@ -6213,6 +6219,7 @@
           "latitude",
           "longitude",
           "address",
+          "mapsLink",
           "weeklyHours",
           "stayTag",
           "interests",
@@ -6629,6 +6636,15 @@
           },
           "mainStoryGroupId": {
             "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mapsLink": {
+            "description": "The Google Maps link of the place (a business card link or a position link); null removes it. Live on save, like the address",
+            "maxLength": 2000,
+            "pattern": "^https:\\/\\/[^\\s]+$",
             "type": [
               "string",
               "null"
@@ -7679,6 +7695,13 @@
               "null"
             ]
           },
+          "mapsLink": {
+            "description": "The Google Maps link the merchant stored for the place; \"Open in Google Maps\" opens it, else the position",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "nextDate": {
             "$ref": "#/components/schemas/NextDate"
           },
@@ -7742,6 +7765,7 @@
           "latitude",
           "longitude",
           "address",
+          "mapsLink",
           "weeklyHours",
           "stayTag",
           "interests",

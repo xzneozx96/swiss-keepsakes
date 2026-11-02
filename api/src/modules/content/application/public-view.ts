@@ -227,6 +227,7 @@ export interface PublicPin extends LanguageNotice {
   latitude: number
   longitude: number
   address: string | null
+  mapsLink: string | null
   weeklyHours: { day: number, opens: string, closes: string }[]
   stayTag: StayTag
   interests: string[]
@@ -309,6 +310,7 @@ export function toPublicPin(row: PublicPinRow, requested: ContentLanguage, now: 
     latitude: row.latitude,
     longitude: row.longitude,
     address: row.address,
+    mapsLink: row.mapsLink,
     weeklyHours: row.weeklyHours,
     stayTag: row.stayTag,
     interests: row.interests,

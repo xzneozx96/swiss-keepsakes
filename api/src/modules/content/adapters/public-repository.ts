@@ -82,6 +82,7 @@ interface PinJoinRow {
   latitude: number
   longitude: number
   address: string | null
+  maps_link: string | null
   weekly_hours: PublicPinRow['weeklyHours']
   stay_tag: StayTag
   interests: string[]
@@ -108,7 +109,7 @@ function byPlace<V extends { place_id: string }>(rows: V[]) {
 // four more queries for all pins together, never one per pin.
 async function loadPins(tx: Tx, pinId: string | null): Promise<PublicPinRow[]> {
   const pins = await tx.execute<PinJoinRow & Record<string, unknown>>(sql`
-    select v.id, v.slug, v.latitude, v.longitude, v.address, v.weekly_hours, v.stay_tag, v.interests, v.published,
+    select v.id, v.slug, v.latitude, v.longitude, v.address, p.maps_link, v.weekly_hours, v.stay_tag, v.interests, v.published,
            v.cover_media_id, v.main_story_group_id, p.first_published_at
       from content.public_pins v
       join content.places p on p.id = v.id and p.status = 'published'${pinId ? sql` where v.id = ${pinId}` : sql``}
@@ -155,6 +156,7 @@ async function loadPins(tx: Tx, pinId: string | null): Promise<PublicPinRow[]> {
     latitude: row.latitude,
     longitude: row.longitude,
     address: row.address,
+    mapsLink: row.maps_link,
     weeklyHours: row.weekly_hours,
     stayTag: row.stay_tag,
     interests: row.interests,

@@ -15,6 +15,7 @@ interface PinRow {
   latitude: number | null
   longitude: number | null
   address: string | null
+  maps_link: string | null
   weekly_hours: Pin['weeklyHours']
   stay_tag: Pin['stayTag']
   interests: string[]
@@ -34,7 +35,7 @@ interface PinRow {
 // A mapped type, not the interface: execute<> wants an index signature.
 type DateRow = { [K in keyof PinDate]: PinDate[K] }
 
-const columns = sql`id, store_id, status, slug, latitude, longitude, address, weekly_hours, stay_tag, interests,
+const columns = sql`id, store_id, status, slug, latitude, longitude, address, maps_link, weekly_hours, stay_tag, interests,
   service_type, must_visit, food_kind, cover_media_id, main_story_group_id, draft, published,
   first_published_at, row_version, created_at, updated_at`
 
@@ -89,6 +90,7 @@ async function load(tx: Tx, storeId: string, pinId: string, lock: boolean): Prom
     latitude: row.latitude,
     longitude: row.longitude,
     address: row.address,
+    mapsLink: row.maps_link,
     weeklyHours: row.weekly_hours,
     stayTag: row.stay_tag,
     interests: row.interests,
@@ -224,10 +226,10 @@ export function createPinRepository(): PinRepository<Tx> {
     async insert(tx, storeId, changes, at) {
       const draft = documentOf(changes, emptyText) ?? null
       const inserted = await tx.execute<{ id: string }>(sql`
-        insert into content.places (store_id, slug, latitude, longitude, address, weekly_hours, stay_tag, interests,
+        insert into content.places (store_id, slug, latitude, longitude, address, maps_link, weekly_hours, stay_tag, interests,
                                     service_type, must_visit, food_kind, cover_media_id, main_story_group_id, draft, created_at, updated_at)
         values (${storeId}, ${json(changes.slug ?? null)}::jsonb, ${changes.latitude ?? null}, ${changes.longitude ?? null},
-                ${changes.address ?? null}, ${JSON.stringify(changes.weeklyHours ?? [])}::jsonb, ${changes.stayTag ?? 'both'},
+                ${changes.address ?? null}, ${changes.mapsLink ?? null}, ${JSON.stringify(changes.weeklyHours ?? [])}::jsonb, ${changes.stayTag ?? 'both'},
                 ${sql.param(changes.interests ?? [])}::text[], ${changes.serviceType ?? null}, ${changes.mustVisit ?? false},
                 ${changes.foodKind ?? null}, ${changes.coverMediaId ?? null},
                 ${changes.mainStoryGroupId ?? null}, ${json(draft)}::jsonb, ${at}, ${at})
@@ -248,6 +250,7 @@ export function createPinRepository(): PinRepository<Tx> {
           latitude = ${has('latitude') ? changes.latitude : pin.latitude},
           longitude = ${has('longitude') ? changes.longitude : pin.longitude},
           address = ${has('address') ? changes.address : pin.address},
+          maps_link = ${has('mapsLink') ? changes.mapsLink : pin.mapsLink},
           weekly_hours = ${JSON.stringify(changes.weeklyHours ?? pin.weeklyHours)}::jsonb,
           stay_tag = ${changes.stayTag ?? pin.stayTag},
           interests = ${sql.param(changes.interests ?? pin.interests)}::text[],

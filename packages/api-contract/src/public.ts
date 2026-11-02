@@ -108,6 +108,7 @@ export const publicPinSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   address: z.string().nullable(),
+  mapsLink: z.string().nullable().meta({ description: 'The Google Maps link the merchant stored for the place; "Open in Google Maps" opens it, else the position' }),
   weeklyHours: z.array(z.object({ day: z.int(), opens: z.string(), closes: z.string() })),
   stayTag,
   interests: z.array(z.string()),

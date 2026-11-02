@@ -208,6 +208,30 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     expect(await count(pool, `select count(*) from content.places where id = $1 and interests = '{history-culture,food-drink,lake-mountains,shopping-keepsakes,local-activities}'`, [pin.id])).toBe(1)
   })
 
+  it('a stored Google Maps link survives a reload, is replaced and removed by a save, and the database checks its shape', async () => {
+    const staff = await env.storeWithStaff()
+    const link = 'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38'
+    const pin = await create(staff, { title: { en: 'Kapellbrücke' }, latitude: 47.05165, longitude: 8.30496, mapsLink: link })
+    expect(pin).toMatchObject({ mapsLink: link })
+
+    const read = await env.call(`${staff.pins}/${pin.id}`, { headers: staff.owner.headers })
+    expect(await read.json()).toMatchObject({ mapsLink: link })
+    const saved = await patch(staff, pin.id, 1, { address: 'Kapellbrücke 1, 6004 Luzern' })
+    expect(await saved.json()).toMatchObject({ mapsLink: link })
+
+    for (const url of ['https://evil.example/maps/place', 'http://maps.app.goo.gl/abc', 'https://www.google.com/maps with space'])
+      expect((await patch(staff, pin.id, 2, { mapsLink: url })).status).toBe(400)
+    const removed = await patch(staff, pin.id, 2, { mapsLink: null })
+    expect(await removed.json()).toMatchObject({ mapsLink: null })
+
+    const store = randomUUID()
+    const insert = (url: string) => pool.query('insert into content.places (store_id, maps_link) values ($1, $2)', [store, url])
+    await insert('https://www.google.com/maps?q=47.05,8.3')
+    expect((await failure(insert('http://www.google.com/maps'))).constraint).toBe('places_maps_link_check')
+    expect((await failure(insert('https://www.google.com/maps a'))).constraint).toBe('places_maps_link_check')
+    expect((await failure(insert(`https://www.google.com/maps?q=${'x'.repeat(2000)}`))).constraint).toBe('places_maps_link_check')
+  })
+
   it('[E4.2][AC63] changing the outbound link changes what the pin shows, once, and removing it clears it', async () => {
     const staff = await env.storeWithStaff()
     const pin = await create(staff, { title: { en: 'Hotel Schweizerhof' }, outboundUrl: 'https://hotel.example/a' })

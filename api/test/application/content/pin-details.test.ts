@@ -144,6 +144,19 @@ describe('[E4.2][AC68] the pin details on create and save', () => {
     expect(third).toMatchObject({ ok: true, value: { outboundUrl: null } })
   })
 
+  it('a Google Maps link is stored with the pin, replaced by a save and removed by null', async () => {
+    const s = setup()
+    const pin = await created(s, { ...complete, mapsLink: 'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38' })
+    expect(pin.mapsLink).toBe('https://maps.app.goo.gl/RiTbLwL8vxFxPzk38')
+
+    const kept = await s.save(owner, store, pin.id, 1, { address: 'Kapellbrücke 1, 6004 Luzern' }, null)
+    expect(kept).toMatchObject({ ok: true, value: { mapsLink: 'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38' } })
+    const replaced = await s.save(owner, store, pin.id, 2, { mapsLink: 'https://www.google.com/maps?q=47.05165,8.30496' }, null)
+    expect(replaced).toMatchObject({ ok: true, value: { mapsLink: 'https://www.google.com/maps?q=47.05165,8.30496' } })
+    const removed = await s.save(owner, store, pin.id, 3, { mapsLink: null }, null)
+    expect(removed).toMatchObject({ ok: true, value: { mapsLink: null } })
+  })
+
   it('[E4.2][AC68] extra photos must be images of the store: another store, a PDF or a retired file is refused', async () => {
     const s = setup([image('m1'), image('m2'), { id: 'p1', kind: 'pdf', status: 'ready' }, { id: 'r1', kind: 'image', status: 'retired' }])
 

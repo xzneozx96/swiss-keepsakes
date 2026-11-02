@@ -188,6 +188,7 @@ describe('[E2.6] content write schemas', () => {
       latitude: 1,
       longitude: 2,
       address: null,
+      mapsLink: null,
       weeklyHours: [],
       stayTag: 'both',
       interests: [],

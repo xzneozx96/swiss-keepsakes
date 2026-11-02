@@ -174,6 +174,7 @@ export interface PinChanges {
   latitude?: number | null
   longitude?: number | null
   address?: string | null
+  mapsLink?: string | null
   weeklyHours?: WeeklySpan[]
   stayTag?: StayTag
   interests?: string[]

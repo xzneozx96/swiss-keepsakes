@@ -87,6 +87,28 @@ const pinPhotoWriteSchema = z.strictObject({
 // One plain https address with no space (ADR-011). The database checks the same.
 const outboundUrl = noNul(z.string().max(2000).regex(/^https:\/\/[^\s]+$/, 'An https address with no space'))
 
+// A Google Maps link a merchant may store on a place: the same hosts the API follows for a short link, and the pages of
+// Google Maps itself. Credentials and a port are refused. The database checks the shape only.
+const googleHost = /^(?:(?:www|maps)\.)?google\.(?:com?\.)?[a-z]{2,3}$/
+
+/** A host a Google Maps link may sit on: Google's own maps hosts and the goo.gl short-link hosts. */
+export function isGoogleMapsHost(host: string): boolean {
+  const name = host.toLowerCase()
+  return name === 'maps.app.goo.gl' || name === 'goo.gl' || googleHost.test(name)
+}
+
+/** A https link to Google Maps: `maps.app.goo.gl/<code>`, `goo.gl/maps/<code>` or `google.<cc>/maps…`. */
+export function isGoogleMapsLink(text: string): boolean {
+  const url = URL.parse(text)
+  if (!url || url.protocol !== 'https:' || url.username !== '' || url.password !== '' || url.port !== '' || !isGoogleMapsHost(url.hostname))
+    return false
+  if (url.hostname === 'maps.app.goo.gl')
+    return url.pathname.length > 1
+  return /^\/maps(?:\/|$)/.test(url.pathname)
+}
+
+const mapsLink = outboundUrl.refine(isGoogleMapsLink, 'A Google Maps link')
+
 export const pinWriteBodySchema = z.strictObject({
   title: localizedTextSchema.optional(),
   tip: localizedLongTextSchema.optional(),
@@ -95,6 +117,7 @@ export const pinWriteBodySchema = z.strictObject({
   latitude: z.number().min(-90).max(90).nullable().optional(),
   longitude: z.number().min(-180).max(180).nullable().optional(),
   address: noNul(z.string().trim().min(1).max(300)).nullable().optional(),
+  mapsLink: mapsLink.nullable().optional().meta({ description: 'The Google Maps link of the place (a business card link or a position link); null removes it. Live on save, like the address' }),
   weeklyHours: z.array(weeklySpanSchema).max(21).optional(),
   stayTag: stayTag.optional(),
   interests: interests.optional(),
@@ -120,6 +143,7 @@ export const pinSchema = z.object({
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
   address: z.string().nullable(),
+  mapsLink: z.string().nullable(),
   weeklyHours: z.array(z.object({ day: z.int(), opens: z.string(), closes: z.string() })),
   stayTag,
   interests: z.array(z.string()),

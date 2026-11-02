@@ -99,6 +99,8 @@ export {
   type MapsLinkPosition,
   mapsLinkPositionSchema,
   mapsLinkQuerySchema,
+  isGoogleMapsHost,
+  isGoogleMapsLink,
   type TourGuide,
   tourSchema,
   type TourGuideWriteBody,

@@ -1,6 +1,7 @@
-import { pinListSchema, pinSchema, pinStoryOptionListSchema, pinWriteBodySchema, storyGroupCreateBodySchema, tourWriteBodySchema } from '@sk/api-contract'
+import { isGoogleMapsHost, pinListSchema, pinSchema, pinStoryOptionListSchema, pinWriteBodySchema, storyGroupCreateBodySchema, tourWriteBodySchema } from '@sk/api-contract'
 import { interestCodes } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
+import { isGoogleMapsHost as apiIsGoogleMapsHost } from '../../src/modules/content/application/maps-link.ts'
 
 const uuid = '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d'
 const uuid2 = '4f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2e'
@@ -77,6 +78,46 @@ describe('[E4.2][AC63] the outbound link', () => {
   })
 })
 
+describe('a stored Google Maps link', () => {
+  it.each([
+    'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38',
+    'https://goo.gl/maps/abc123',
+    'https://www.google.com/maps/place/Kapellbr%C3%BCcke/@47.0516489,8.3049602,17z/data=!3d47.05!4d8.30',
+    'https://www.google.com/maps?q=47.05165,8.30496',
+    'https://www.google.ch/maps/search/?api=1&query=47.05,8.3',
+    'https://maps.google.com/maps?q=47.05,8.3',
+  ])('%s is accepted', (url) => {
+    expect(ok(pinWriteBodySchema, { mapsLink: url })).toBe(true)
+  })
+
+  it.each([
+    'http://maps.app.goo.gl/abc',
+    'https://maps.app.goo.gl/',
+    'https://goo.gl/other/abc',
+    'https://www.google.com/search?q=maps',
+    'https://evil.example/maps/place',
+    'https://www.google.com.evil.example/maps',
+    'https://user:pw@www.google.com/maps',
+    'https://www.google.com:8443/maps',
+    'https://www.google.com/maps with space',
+    'javascript:alert(1)',
+    'maps.app.goo.gl/abc',
+    '',
+    `https://www.google.com/maps?q=${'x'.repeat(2000)}`,
+  ])('%j is refused', (url) => {
+    expect(ok(pinWriteBodySchema, { mapsLink: url })).toBe(false)
+  })
+
+  it('null removes the link', () => {
+    expect(ok(pinWriteBodySchema, { mapsLink: null })).toBe(true)
+  })
+
+  it('knows the same hosts as the link reader of the API', () => {
+    for (const host of ['maps.app.goo.gl', 'goo.gl', 'www.google.com', 'maps.google.ch', 'google.co.uk', 'evil.example', 'google.com.evil.example'])
+      expect(isGoogleMapsHost(host)).toBe(apiIsGoogleMapsHost(host))
+  })
+})
+
 describe('[E4.2][AC86] a date entry', () => {
   const day = (over: object) => ({ dates: [{ firstDay: '2026-11-14', lastDay: '2026-11-14', ...over }] })
 
@@ -97,6 +138,7 @@ describe('[E4.2][AC68] the response shapes', () => {
     latitude: null,
     longitude: null,
     address: null,
+    mapsLink: null,
     weeklyHours: [],
     stayTag: 'both',
     interests: [],

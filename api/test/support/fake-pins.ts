@@ -72,6 +72,7 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
         latitude: null,
         longitude: null,
         address: null,
+        mapsLink: null,
         weeklyHours: [],
         stayTag: 'both',
         interests: [],

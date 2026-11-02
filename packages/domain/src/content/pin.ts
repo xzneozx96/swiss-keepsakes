@@ -40,6 +40,8 @@ export interface Pin {
   latitude: number | null
   longitude: number | null
   address: string | null
+  /** The Google Maps link the merchant stored: live on save, like the address. */
+  mapsLink: string | null
   weeklyHours: WeeklySpan[]
   stayTag: StayTag
   interests: string[]
