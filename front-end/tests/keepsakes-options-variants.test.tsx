@@ -95,7 +95,7 @@ const patches = () => writes().filter(call => call.method === 'PATCH')
 /** Add option, its name and its values; the open option is left open. */
 async function startOption(name: string, values: string[]) {
   await userEvent.click(screen.getAllByRole('button', { name: /^Add (another )?option$/ })[0]!)
-  await userEvent.type(await screen.findByRole('combobox', { name: 'Option name in English' }), name)
+  await userEvent.type(await screen.findByLabelText('Option name in English', { selector: 'input' }), name)
   for (const value of values)
     await typeValue(value)
 }
@@ -156,7 +156,7 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
     await waitFor(() => expect(puts()).toHaveLength(1))
     expect((puts()[0]!.body as OptionsPut).options[0]!.name).toEqual({ en: 'Size' })
     expect(await within(optionsBlock()).findByTestId('option-row')).toHaveTextContent('Size')
-    expect(await screen.findAllByRole('combobox', { name: 'Option name in English' })).toHaveLength(1)
+    expect(await screen.findAllByLabelText('Option name in English', { selector: 'input' })).toHaveLength(1)
   })
 
   it('[T-010] Add another option with a refused Done keeps that option open and opens no second one', async () => {
@@ -165,14 +165,14 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
     await userEvent.click(await within(optionsBlock()).findByRole('button', { name: 'Add another option' }))
 
     expect(await screen.findByText('Name the option in English or German.')).toBeInTheDocument()
-    expect(screen.getAllByRole('combobox', { name: 'Option name in English' })).toHaveLength(1)
+    expect(screen.getAllByLabelText('Option name in English', { selector: 'input' })).toHaveLength(1)
     expect(writes()).toHaveLength(0)
   })
 
   it('[T-008] a value typed twice is named at once, and a pasted list makes several rows', async () => {
     await openStep()
     await userEvent.click(screen.getByRole('button', { name: 'Add option' }))
-    await userEvent.type(await screen.findByRole('combobox', { name: 'Option name in English' }), 'Size')
+    await userEvent.type(await screen.findByLabelText('Option name in English', { selector: 'input' }), 'Size')
     await userEvent.click(addField())
     await userEvent.paste('Small, Medium, Large')
 
@@ -184,7 +184,7 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
   it('[T-010][AC4] the name offers no list while no other keepsake of the shop has an option', async () => {
     await openStep()
     await userEvent.click(screen.getByRole('button', { name: 'Add option' }))
-    await screen.findByRole('combobox', { name: 'Option name in English' })
+    await screen.findByLabelText('Option name in English', { selector: 'input' })
 
     // Only this keepsake is in the list, and it has no option: nothing to suggest.
     expect(screen.queryByRole('button', { name: /Show suggestions/ })).not.toBeInTheDocument()
@@ -200,7 +200,7 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
 
     expect((await screen.findAllByRole('option')).map(option => option.textContent)).toEqual(['Size', 'Theme', 'Material'])
     await userEvent.click(screen.getByRole('option', { name: 'Theme' }))
-    expect(screen.getByRole('combobox', { name: 'Option name in English' })).toHaveValue('Theme')
+    expect(screen.getByLabelText('Option name in English', { selector: 'input' })).toHaveValue('Theme')
   })
 
   it('[T-008] Cancel on an option that was only just added takes it away, and Delete asks for no confirm then', async () => {
@@ -476,7 +476,7 @@ describe('[T-008][AC7] one language switch for the editor', () => {
     const editor = screen.getByTestId('option-editor')
 
     expect(within(editor).queryByRole('tab')).not.toBeInTheDocument()
-    expect(within(editor).getByRole('combobox', { name: 'Option name in German' })).toHaveValue('Grösse')
+    expect(within(editor).getByLabelText('Option name in German', { selector: 'input' })).toHaveValue('Grösse')
     expect(within(editor).getByText('Size')).toHaveAttribute('lang', 'en')
     expect(within(editor).getByText('Small')).toHaveAttribute('lang', 'en')
     expect(within(editor).getByLabelText('German name for Small')).toHaveValue('')
@@ -603,7 +603,7 @@ describe('[T-008][i18n] the merged step in German', () => {
 
     await screen.findByRole('region', { name: 'Preis' }, SLOW)
     await userEvent.click(screen.getByRole('button', { name: 'Option hinzufügen' }))
-    await userEvent.type(await screen.findByRole('combobox', { name: 'Optionsname auf Englisch' }), 'Size')
+    await userEvent.type(await screen.findByLabelText('Optionsname auf Englisch', { selector: 'input' }), 'Size')
     await userEvent.type(screen.getByLabelText(/^Werte zu Size hinzufügen/), 'S')
     await userEvent.type(screen.getByLabelText(/^Werte zu Size hinzufügen/), 'M')
     expect(await screen.findByText('1 neue Variante')).toBeInTheDocument()

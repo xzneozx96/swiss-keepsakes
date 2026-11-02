@@ -2,7 +2,7 @@ import type { Language } from '@sk/domain/shared'
 import type { OptionsDraftState } from '../hooks/use-options-draft'
 import type { OptionDraft } from '../lib/option-rules'
 
-import { Button, ComboBox, Input, Label, ListBox } from '@heroui/react'
+import { Button, ComboBox, Input, Label, ListBox, TextField } from '@heroui/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
@@ -32,33 +32,42 @@ function NameField({ draft, option, language, focusOnMount, suggestions }: { dra
             <span className="flex min-h-9 items-center truncate text-muted" lang="en">{option.name.en || '—'}</span>
           </div>
         )}
-        <ComboBox
-          allowsCustomValue
-          fullWidth
-          className="min-w-0 flex-1"
-          inputValue={option.name[language]}
-          menuTrigger={suggestions.length > 0 ? 'focus' : 'manual'}
-          onInputChange={set}
-          onSelectionChange={key => key !== null && set(String(key))}
-        >
-          <Label>{t(`keepsakes.options.name.${language}`)}</Label>
-          <ComboBox.InputGroup>
-            <Input ref={inputRef} lang={language} maxLength={OPTION_NAME_MAX} placeholder={language === 'de' && option.name.en.trim() ? option.name.en : t('keepsakes.options.name.placeholder')} />
-            {suggestions.length > 0 && <ComboBox.Trigger />}
-          </ComboBox.InputGroup>
-          {suggestions.length > 0 && (
-            <ComboBox.Popover>
-              <ListBox>
-                {suggestions.map(suggestion => (
-                  <ListBox.Item key={suggestion} id={suggestion} textValue={suggestion}>
-                    {suggestion}
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                ))}
-              </ListBox>
-            </ComboBox.Popover>
-          )}
-        </ComboBox>
+        {suggestions.length === 0
+          ? (
+              // No other keepsake has an option name to offer: a plain field. ComboBox.InputGroup needs its Trigger as the
+              // last child, and without one it hands its slot props to the Input, which React warns about.
+              <TextField fullWidth className="min-w-0 flex-1" value={option.name[language]} onChange={set}>
+                <Label>{t(`keepsakes.options.name.${language}`)}</Label>
+                <Input ref={inputRef} lang={language} maxLength={OPTION_NAME_MAX} placeholder={language === 'de' && option.name.en.trim() ? option.name.en : t('keepsakes.options.name.placeholder')} />
+              </TextField>
+            )
+          : (
+              <ComboBox
+                allowsCustomValue
+                fullWidth
+                className="min-w-0 flex-1"
+                inputValue={option.name[language]}
+                menuTrigger="focus"
+                onInputChange={set}
+                onSelectionChange={key => key !== null && set(String(key))}
+              >
+                <Label>{t(`keepsakes.options.name.${language}`)}</Label>
+                <ComboBox.InputGroup>
+                  <Input ref={inputRef} lang={language} maxLength={OPTION_NAME_MAX} placeholder={language === 'de' && option.name.en.trim() ? option.name.en : t('keepsakes.options.name.placeholder')} />
+                  <ComboBox.Trigger />
+                </ComboBox.InputGroup>
+                <ComboBox.Popover>
+                  <ListBox>
+                    {suggestions.map(suggestion => (
+                      <ListBox.Item key={suggestion} id={suggestion} textValue={suggestion}>
+                        {suggestion}
+                        <ListBox.ItemIndicator />
+                      </ListBox.Item>
+                    ))}
+                  </ListBox>
+                </ComboBox.Popover>
+              </ComboBox>
+            )}
       </div>
       <NotesAt at={option.ref} draft={draft} only="problems" />
     </div>
