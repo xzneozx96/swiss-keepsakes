@@ -64,6 +64,33 @@ describe('category use cases', () => {
     expect(await ids(s)).toEqual(['Food:1', 'Hikes^:1'])
   })
 
+  it('[T-009b][AC4] a map category is created with an icon and the home switch, changed and cleared, and the audit trail records it', async () => {
+    const s = setup()
+    const created = await s.create(manager, store, 'map', { name: { en: 'Toilets' }, icon: 'toilet', showOnHome: true }, null)
+    expect(created).toMatchObject({ ok: true, value: { icon: 'toilet', showOnHome: true } })
+    const plain = await made(s, { en: 'Sights' })
+    expect(plain).toMatchObject({ icon: null, showOnHome: false })
+    const id = created.ok ? created.value.id : ''
+    expect(await s.save(manager, store, 'map', id, { icon: 'water' }, null)).toMatchObject({ ok: true, value: { icon: 'water', showOnHome: true, name: { en: 'Toilets' } } })
+    expect(await s.save(manager, store, 'map', id, { name: { en: 'Loos' } }, null)).toMatchObject({ ok: true, value: { icon: 'water', showOnHome: true } })
+    expect(await s.save(manager, store, 'map', id, { icon: null, showOnHome: false }, null)).toMatchObject({ ok: true, value: { icon: null, showOnHome: false } })
+    expect(s.audit.at(-1)).toMatchObject({ action: 'updated', before: { icon: 'water', showOnHome: true }, after: { icon: null, showOnHome: false } })
+    expect(s.audit[0]).toMatchObject({ action: 'created', after: { icon: 'toilet', showOnHome: true } })
+  })
+
+  it('[T-009b][AC4] a blog category has no icon and is not on the home: either one is refused, null and false are fine', async () => {
+    const s = setup()
+    expect(await s.create(manager, store, 'blog', { name: { en: 'Tips' }, icon: 'cash' }, null)).toEqual({ ok: false, reason: 'icon-map-only' })
+    expect(await s.create(manager, store, 'blog', { name: { en: 'Tips' }, showOnHome: true }, null)).toEqual({ ok: false, reason: 'show-on-home-map-only' })
+    const tips = await made(s, { en: 'Tips' }, undefined, 'blog')
+    expect(tips).toMatchObject({ icon: null, showOnHome: false })
+    expect(await s.save(manager, store, 'blog', tips.id, { icon: 'cash' }, null)).toEqual({ ok: false, reason: 'icon-map-only' })
+    expect(await s.save(manager, store, 'blog', tips.id, { showOnHome: true }, null)).toEqual({ ok: false, reason: 'show-on-home-map-only' })
+    expect(await s.save(manager, store, 'blog', tips.id, { icon: null, showOnHome: false, name: { en: 'More tips' } }, null)).toMatchObject({ ok: true, value: { icon: null, showOnHome: false } })
+    expect(failureProblem({ reason: 'icon-map-only' })).toMatchObject({ status: 422, type: 'validation-failed', errors: [{ in: 'body', path: 'icon' }] })
+    expect(failureProblem({ reason: 'show-on-home-map-only' })).toMatchObject({ status: 422, type: 'validation-failed', errors: [{ in: 'body', path: 'showOnHome' }] })
+  })
+
   it('[E4.18][AC87] the two lists are separate', async () => {
     const s = setup()
     await made(s, { en: 'Walks' }, undefined, 'map')

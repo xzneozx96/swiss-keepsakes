@@ -1,4 +1,4 @@
-import type { ContentLanguage, Localized, PinDate, StayTag } from '@sk/domain/content'
+import type { CategoryIcon, ContentLanguage, Localized, PinDate, StayTag } from '@sk/domain/content'
 import type { Clock, UnitOfWork } from './ports.ts'
 
 // What the public reads need. Rows are plain data; the use cases choose the language and shape the response.
@@ -11,6 +11,12 @@ export interface PublicCategoryRow {
   name: { en?: string, de?: string }
   parentId: string | null
   position: number
+}
+
+// A row of the public category list: map categories carry their icon and home switch, blog categories never do.
+export interface PublicCategoryListRow extends PublicCategoryRow {
+  icon: CategoryIcon | null
+  showOnHome: boolean
 }
 
 // The published story document as stored. Stored JSON is read as written and not re-validated, so every field is
@@ -113,7 +119,7 @@ export interface PublicReadRepository<T> {
   // The group whose published version has this slug in `language`, else in the other language.
   findPublishedStoryBySlug: (tx: T, slug: string, language: ContentLanguage) => Promise<PublicStoryRow | undefined>
   // Every category of the kind, in all stores, parents first, then by position.
-  listCategories: (tx: T, kind: 'map' | 'blog') => Promise<PublicCategoryRow[]>
+  listCategories: (tx: T, kind: 'map' | 'blog') => Promise<PublicCategoryListRow[]>
   // Pins in `content.public_pins` (published, and dated in the future or undated), newest first.
   listVisiblePins: (tx: T) => Promise<PublicPinRow[]>
   findVisiblePin: (tx: T, id: string) => Promise<PublicPinDetailRow | undefined>

@@ -3,7 +3,7 @@
 - Date: 2026-10-28
 - Status: **approved on 2026-10-28** (approval given in chat by the person who made the request, after eight design rounds on the lab page `/lab/home`). It replaces the interest-organised home of `docs/decisions/2026-10-28-home-by-interests.md`.
 - Changes: `docs/PRD/Swiss_keepsakes_PRD.md` (§3.3, §11.1, AC95, revision note 11), `docs/ux/home-design.md` (new), `docs/ux/search-design.md`, `docs/ux/pins-design.md`, `docs/adr/ADR-005`, `ADR-006`, `ADR-030`, `docs/development-plan/delivery-plan.md` (E4.2, E4.13), `docs/development-plan/screen-inventory.md` (S2, C01, Area 2, D12, D13)
-- Note of 2026-11-02: the service type and the food and drink kind are no longer fields of a place. They come from the place's map categories, through a home role set on the category. Must-visit stays a flag on the place. See `docs/decisions/2026-11-02-map-category-home-roles.md`.
+- Addendum of 2026-11-02 (owner): the service type and the food and drink kind (decisions 4 and 11, and "Service type on a pin" and "Food and drink kind for the icon" below) are no longer fields of a place. A map category carries an optional icon and a "Show on the home" switch, and a pin with no photo shows the icon of its first category that has one (migration `0016`, ADR-030). Must-visit stays a flag on the place. See `docs/decisions/2026-11-02-map-category-icons.md`.
 - Source: the requester's approval of the lab page `/lab/home` on 28.10.2026
 - Related: `docs/ux/home-design.md` (the full specification), `docs/decisions/2026-10-28-search-design.md`, `docs/decisions/2026-10-28-pins-and-map-design.md`
 

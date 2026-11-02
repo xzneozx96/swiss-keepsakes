@@ -1,8 +1,11 @@
+import process from 'node:process'
+
 // The ports and helpers of the real-API Playwright projects (playwright.config.ts). The API runs through
 // api/test/support/e2e-server.ts on a database of its own on the Neon development branch.
-export const SPA_PORT = 5392
-export const INBOX_PORT = 5393
-export const API_PORT = 5394
+// Each can be moved with E2E_SPA_PORT, E2E_INBOX_PORT and E2E_API_PORT, so two sessions on one machine do not share servers.
+export const SPA_PORT = Number(process.env.E2E_SPA_PORT ?? 5392)
+export const INBOX_PORT = Number(process.env.E2E_INBOX_PORT ?? 5393)
+export const API_PORT = Number(process.env.E2E_API_PORT ?? 5394)
 export const SPA_ORIGIN = `http://localhost:${SPA_PORT}`
 const inbox = `http://127.0.0.1:${INBOX_PORT}`
 

@@ -8,8 +8,6 @@ import { noNul } from './text.js'
 const language = z.enum(['en', 'de'])
 const stayTag = z.enum(['short_stay', 'multi_day', 'both'])
 const interests = z.array(z.enum(['history-culture', 'food-drink', 'lake-mountains', 'shopping-keepsakes', 'local-activities'])).max(5)
-const serviceType = z.enum(['water', 'toilets', 'connect', 'transport', 'lockers', 'cash'])
-const foodKind = z.enum(['restaurant', 'cafe-bakery', 'pub-bar', 'market'])
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const time = z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/, 'A time as HH:MM')
 const text = (max: number) => noNul(z.string().max(max))
@@ -121,9 +119,7 @@ export const pinWriteBodySchema = z.strictObject({
   weeklyHours: z.array(weeklySpanSchema).max(21).optional(),
   stayTag: stayTag.optional(),
   interests: interests.optional(),
-  serviceType: serviceType.nullable().optional(),
   mustVisit: z.boolean().optional(),
-  foodKind: foodKind.nullable().optional(),
   coverMediaId: z.uuid().nullable().optional(),
   coverAlt: localizedTextSchema.optional(),
   photos: z.array(pinPhotoWriteSchema).max(10).refine(photos => new Set(photos.map(photo => photo.mediaId.toLowerCase())).size === photos.length, 'Each photo may appear once').optional(),
@@ -147,9 +143,7 @@ export const pinSchema = z.object({
   weeklyHours: z.array(z.object({ day: z.int(), opens: z.string(), closes: z.string() })),
   stayTag,
   interests: z.array(z.string()),
-  serviceType: serviceType.nullable(),
   mustVisit: z.boolean(),
-  foodKind: foodKind.nullable(),
   coverMediaId: z.uuid().nullable(),
   photos: z.array(z.object({ mediaId: z.uuid() })),
   outboundUrl: z.string().nullable(),

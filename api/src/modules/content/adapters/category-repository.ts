@@ -8,27 +8,30 @@ interface Row {
   name: CategoryRow['name']
   slug: string
   parent_id: string | null
+  icon: CategoryRow['icon']
+  show_on_home: boolean
   position: number
   child_count: number
   use_count: number
 }
 
 // Fixed SQL fragments per list, never built from input. `links` is the table that tags pins (map) or story groups (blog).
+// `icon` and `show` are the columns of the icon and the home switch: only map categories have them.
 const tables = {
-  map: { categories: sql`content.map_categories`, links: sql`content.place_categories` },
-  blog: { categories: sql`content.blog_categories`, links: sql`content.story_categories` },
+  map: { categories: sql`content.map_categories`, links: sql`content.place_categories`, icon: sql`c.icon`, show: sql`c.show_on_home` },
+  blog: { categories: sql`content.blog_categories`, links: sql`content.story_categories`, icon: sql`null::text`, show: sql`false` },
 } as const
 
 const json = (value: unknown) => JSON.stringify(value)
 
 function toRow(row: Row): CategoryRow {
-  return { id: row.id, storeId: row.store_id, name: row.name, slug: row.slug, parentId: row.parent_id, position: row.position, childCount: row.child_count, useCount: row.use_count }
+  return { id: row.id, storeId: row.store_id, name: row.name, slug: row.slug, parentId: row.parent_id, icon: row.icon, showOnHome: row.show_on_home, position: row.position, childCount: row.child_count, useCount: row.use_count }
 }
 
 async function select(tx: Tx, storeId: string, kind: CategoryKind, id: string | null): Promise<CategoryRow[]> {
-  const { categories, links } = tables[kind]
+  const { categories, links, icon, show } = tables[kind]
   const found = await tx.execute<Row & Record<string, unknown>>(sql`
-    select c.id, c.store_id, c.name, c.slug, c.parent_id, c.position,
+    select c.id, c.store_id, c.name, c.slug, c.parent_id, ${icon} as icon, ${show} as show_on_home, c.position,
            (select count(*)::int from ${categories} k where k.store_id = c.store_id and k.parent_id = c.id) as child_count,
            (select count(*)::int from ${links} l where l.store_id = c.store_id and l.category_id = c.id) as use_count
       from ${categories} c
@@ -57,6 +60,8 @@ export function createCategoryRepository(): CategoryRepository<Tx> {
         insert into ${tables[kind].categories} (store_id, name, slug, parent_id, position, created_at, updated_at)
         values (${storeId}, ${json(input.name)}::jsonb, ${input.slug}, ${input.parentId}, ${input.position}, ${at}, ${at})
         returning id`)
+      if (kind === 'map' && (input.icon !== null || input.showOnHome))
+        await tx.execute(sql`update content.map_categories set icon = ${input.icon}, show_on_home = ${input.showOnHome} where store_id = ${storeId} and id = ${inserted.rows[0]!.id}`)
       return (await select(tx, storeId, kind, inserted.rows[0]!.id))[0]!
     },
 
@@ -69,6 +74,13 @@ export function createCategoryRepository(): CategoryRepository<Tx> {
           position = coalesce(${changes.position ?? null}::int, position),
           updated_at = ${at}
         where store_id = ${storeId} and id = ${id}`)
+      if (kind === 'map' && (changes.icon !== undefined || changes.showOnHome !== undefined)) {
+        await tx.execute(sql`
+          update content.map_categories set
+            icon = case when ${changes.icon !== undefined}::boolean then ${changes.icon ?? null}::text else icon end,
+            show_on_home = coalesce(${changes.showOnHome ?? null}::boolean, show_on_home)
+          where store_id = ${storeId} and id = ${id}`)
+      }
       return (await select(tx, storeId, kind, id))[0]!
     },
 

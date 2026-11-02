@@ -1,5 +1,5 @@
 import type { Pin, PinWriteBody } from '@sk/api-contract'
-import type { FoodKind, ServiceType, StayTag } from '@sk/domain/content'
+import type { StayTag } from '@sk/domain/content'
 import type { MessageKey } from '@/i18n/en'
 
 export type Lang = 'en' | 'de'
@@ -29,9 +29,7 @@ export interface PlaceForm {
   categoryIds: string[]
   stayTag: StayTag
   interests: string[]
-  serviceType: ServiceType | null
   mustVisit: boolean
-  foodKind: FoodKind | null
   coverMediaId: string | null
   photos: PhotoEntry[]
   outboundUrl: string
@@ -72,9 +70,7 @@ export function emptyForm(withDate = false): PlaceForm {
     categoryIds: [],
     stayTag: 'both',
     interests: [],
-    serviceType: null,
     mustVisit: false,
-    foodKind: null,
     coverMediaId: null,
     photos: [],
     outboundUrl: '',
@@ -111,9 +107,7 @@ export function formOf(pin: Pin): PlaceForm {
     categoryIds: pin.categoryIds,
     stayTag: pin.stayTag,
     interests: pin.interests,
-    serviceType: pin.serviceType,
     mustVisit: pin.mustVisit,
-    foodKind: pin.foodKind,
     ...withPhotoIds([...(pin.coverMediaId ? [pin.coverMediaId] : []), ...pin.photos.map(photo => photo.mediaId)]),
     outboundUrl: pin.outboundUrl ?? '',
     mainStoryGroupId: pin.mainStoryGroupId,
@@ -202,9 +196,7 @@ export function bodyOf(form: PlaceForm): PinWriteBody {
     weeklyHours: form.hours.map(({ day, opens, closes }) => ({ day, opens, closes })),
     stayTag: form.stayTag,
     interests: form.interests as NonNullable<PinWriteBody['interests']>,
-    serviceType: form.serviceType,
     mustVisit: form.mustVisit,
-    foodKind: form.foodKind,
     coverMediaId: form.coverMediaId,
     photos: form.photos.map(photo => ({ mediaId: photo.mediaId })),
     outboundUrl: form.outboundUrl.trim() === '' ? null : form.outboundUrl.trim(),

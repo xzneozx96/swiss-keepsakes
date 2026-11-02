@@ -3784,17 +3784,31 @@ export interface components {
             /** Format: uuid */
             parentId: string | null;
         };
-        /** @description A name replaces both languages. A changed parentId appends the category last under the new parent */
+        /** @description A name replaces both languages. A changed parentId appends the category last under the new parent. icon sets or clears the icon, showOnHome sets the home switch */
         CategoryPatchBody: {
+            /**
+             * @description Map categories only; null clears the icon
+             * @enum {string|null}
+             */
+            icon?: "toilet" | "water" | "wifi" | "transport" | "locker" | "cash" | "restaurant" | "cafe" | "bar" | "market" | "supermarket" | "shop" | "landmark" | "church" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "info" | "holiday" | "emergency" | "boat" | "mountain" | null;
             name?: components["schemas"]["CategoryNameInput"];
             /** Format: uuid */
             parentId?: string | null;
+            /** @description Map categories only */
+            showOnHome?: boolean;
         };
         /** @description A new category, appended last among its siblings. The slug is made from the name and never changes */
         CategoryWriteBody: {
+            /**
+             * @description Map categories only; a blog category with an icon is 422
+             * @enum {string|null}
+             */
+            icon?: "toilet" | "water" | "wifi" | "transport" | "locker" | "cash" | "restaurant" | "cafe" | "bar" | "market" | "supermarket" | "shop" | "landmark" | "church" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "info" | "holiday" | "emergency" | "boat" | "mountain" | null;
             name: components["schemas"]["CategoryNameInput"];
             /** Format: uuid */
             parentId?: string | null;
+            /** @description Map categories only: list it on the home's "Sorted before you unpack" row. A blog category with true is 422 */
+            showOnHome?: boolean;
         };
         /**
          * @description `pending` means the story that decides the condition is not built yet. It counts as unmet
@@ -4915,6 +4929,11 @@ export interface components {
         };
         MerchantCategory: {
             childCount: number;
+            /**
+             * @description Always null for a blog category
+             * @enum {string|null}
+             */
+            icon: "toilet" | "water" | "wifi" | "transport" | "locker" | "cash" | "restaurant" | "cafe" | "bar" | "market" | "supermarket" | "shop" | "landmark" | "church" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "info" | "holiday" | "emergency" | "boat" | "mountain" | null;
             /** Format: uuid */
             id: string;
             name: {
@@ -4924,6 +4943,8 @@ export interface components {
             /** Format: uuid */
             parentId: string | null;
             position: number;
+            /** @description Always false for a blog category */
+            showOnHome: boolean;
             slug: string;
             /** @description Pins (map) or story groups (blog) tagged with it, whatever their status */
             useCount: number;
@@ -5046,8 +5067,6 @@ export interface components {
             } | null;
             /** Format: date-time */
             firstPublishedAt: string | null;
-            /** @enum {string|null} */
-            foodKind: "restaurant" | "cafe-bakery" | "pub-bar" | "market" | null;
             /** Format: uuid */
             id: string;
             interests: string[];
@@ -5087,8 +5106,6 @@ export interface components {
                 };
             } | null;
             rowVersion: number;
-            /** @enum {string|null} */
-            serviceType: "water" | "toilets" | "connect" | "transport" | "lockers" | "cash" | null;
             slug: {
                 de?: string;
                 en?: string;
@@ -5200,8 +5217,6 @@ export interface components {
                 lastDay: string;
                 startTime?: string | null;
             }[];
-            /** @enum {string|null} */
-            foodKind?: "restaurant" | "cafe-bakery" | "pub-bar" | "market" | null;
             interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes" | "local-activities")[];
             latitude?: number | null;
             localTip?: components["schemas"]["LocalizedText"];
@@ -5217,8 +5232,6 @@ export interface components {
                 /** Format: uuid */
                 mediaId: string;
             }[];
-            /** @enum {string|null} */
-            serviceType?: "water" | "toilets" | "connect" | "transport" | "lockers" | "cash" | null;
             /**
              * @deprecated
              * @description Ignored. The server makes the slug (the map link) of each language from its title: before the first publish it follows the title, after it the slug is locked
@@ -5453,6 +5466,11 @@ export interface components {
             };
         };
         PublicCategory: {
+            /**
+             * @description The icon of a map category (always null for a blog category)
+             * @enum {string|null}
+             */
+            icon: "toilet" | "water" | "wifi" | "transport" | "locker" | "cash" | "restaurant" | "cafe" | "bar" | "market" | "supermarket" | "shop" | "landmark" | "church" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "info" | "holiday" | "emergency" | "boat" | "mountain" | null;
             /** Format: uuid */
             id: string;
             name: {
@@ -5462,6 +5480,8 @@ export interface components {
             /** Format: uuid */
             parentId: string | null;
             position: number;
+            /** @description Whether a map category is listed on the home (always false for a blog category) */
+            showOnHome: boolean;
             slug: string;
         };
         PublicCategoryList: {

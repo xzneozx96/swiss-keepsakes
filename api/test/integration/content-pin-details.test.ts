@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { categoryIcons } from '@sk/domain/content'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { createContentHttp } from './content-http.ts'
 import { count, openTestDatabase } from './support.ts'
@@ -83,22 +84,23 @@ describe('[E4.2][AC41] migration 0010: five interests in the database', () => {
 })
 
 describe('[E4.2][AC68] migration 0010: the pin columns and the photo table', () => {
-  it.each([
-    ['service_type', 'toilets', 'wifi', 'places_service_type_check'],
-    ['food_kind', 'cafe-bakery', 'cafe', 'places_food_kind_check'],
-  ])('[E4.2][AC68] %s takes its codes and refuses %s', async (column, good, bad, constraint) => {
+  it('[T-009b][AC3] the service and food columns of the place are gone (0016), and a category takes the 24 icons and no other', async () => {
     const store = randomUUID()
 
-    await pool.query(`insert into content.places (store_id, ${column}) values ($1, $2)`, [store, good])
-    expect((await failure(pool.query(`insert into content.places (store_id, ${column}) values ($1, $2)`, [store, bad]))).constraint).toBe(constraint)
-    expect(await count(pool, `select count(*) from content.places where store_id = $1 and ${column} is null`, [store])).toBe(0)
+    expect(await count(pool, `select count(*) from information_schema.columns where table_schema = 'content' and table_name = 'places' and column_name in ('service_type', 'food_kind')`)).toBe(0)
+    const insert = (icon: string) => pool.query(`insert into content.map_categories (store_id, name, slug, icon) values ($1, '{"en":"X"}', $2, $3)`, [store, `x-${icon}`, icon])
+    for (const icon of categoryIcons)
+      await insert(icon)
+    expect((await failure(insert('toilets'))).constraint).toBe('map_categories_icon_check')
+    const { rows } = await pool.query<{ show_on_home: boolean }>(`select show_on_home from content.map_categories where store_id = $1 limit 1`, [store])
+    expect(rows[0]).toEqual({ show_on_home: false })
   })
 
   it('[E4.2][AC68] must_visit defaults to false and the old free flag does not exist', async () => {
     const store = randomUUID()
-    const { rows } = await pool.query<{ must_visit: boolean, service_type: string | null, food_kind: string | null }>('insert into content.places (store_id) values ($1) returning must_visit, service_type, food_kind', [store])
+    const { rows } = await pool.query<{ must_visit: boolean }>('insert into content.places (store_id) values ($1) returning must_visit', [store])
 
-    expect(rows[0]).toEqual({ must_visit: false, service_type: null, food_kind: null })
+    expect(rows[0]).toEqual({ must_visit: false })
     expect(await count(pool, `select count(*) from information_schema.columns where table_schema = 'content' and table_name = 'places' and column_name = 'free'`)).toBe(0)
   })
 
@@ -161,9 +163,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
       tip: { en: 'Drinking water' },
       localTip: { en: 'Bring a bottle', de: 'Flasche mitbringen' },
       ...located,
-      serviceType: 'water',
       mustVisit: true,
-      foodKind: 'market',
       interests: ['local-activities', 'food-drink'],
       coverMediaId: cover,
       coverAlt: { en: 'The fountain', de: 'Der Brunnen' },
@@ -177,9 +177,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     expect(await read.json()).toMatchObject({
       id: pin.id,
       storeId: staff.storeId,
-      serviceType: 'water',
       mustVisit: true,
-      foodKind: 'market',
       interests: ['local-activities', 'food-drink'],
       coverMediaId: cover,
       photos: [{ mediaId: extra }],
@@ -270,7 +268,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     expect(await count(pool, 'select count(*) from content.media where id = any($1::uuid[])', [[a, b, c]])).toBe(3)
   })
 
-  it('[E4.2][AC68] an unknown service type, food kind or flag type answers 400', async () => {
+  it('[E4.2][AC68] the removed service type and food kind, and a wrong flag type, answer 400', async () => {
     const staff = await env.storeWithStaff()
     const pin = await create(staff, { title: { en: 'X' } })
 

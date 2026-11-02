@@ -10,14 +10,6 @@ export type PinStatus = 'draft' | 'published' | 'hidden'
  */
 export interface PinDraft { title: Localized, tip: Localized, localTip: Localized, coverAlt: Localized, photoAlt: Record<string, Localized> }
 
-/** What a service pin gives a visitor on the home's "Sorted before you unpack" row. */
-export const serviceTypes = ['water', 'toilets', 'connect', 'transport', 'lockers', 'cash'] as const
-export type ServiceType = typeof serviceTypes[number]
-
-/** The kind of a food and drink pin, which picks its icon. */
-export const foodKinds = ['restaurant', 'cafe-bakery', 'pub-bar', 'market'] as const
-export type FoodKind = typeof foodKinds[number]
-
 /** One extra photo of a pin, in the order the merchant set. The main photo is `coverMediaId`. */
 export interface PinPhoto { mediaId: string }
 
@@ -45,9 +37,7 @@ export interface Pin {
   weeklyHours: WeeklySpan[]
   stayTag: StayTag
   interests: string[]
-  serviceType: ServiceType | null
   mustVisit: boolean
-  foodKind: FoodKind | null
   coverMediaId: string | null
   photos: PinPhoto[]
   /** The pin's one outbound link (ADR-011): a plain https address. */

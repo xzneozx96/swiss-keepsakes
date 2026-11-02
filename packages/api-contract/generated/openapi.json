@@ -232,8 +232,42 @@
       },
       "CategoryPatchBody": {
         "additionalProperties": false,
-        "description": "A name replaces both languages. A changed parentId appends the category last under the new parent",
+        "description": "A name replaces both languages. A changed parentId appends the category last under the new parent. icon sets or clears the icon, showOnHome sets the home switch",
         "properties": {
+          "icon": {
+            "description": "Map categories only; null clears the icon",
+            "enum": [
+              "toilet",
+              "water",
+              "wifi",
+              "transport",
+              "locker",
+              "cash",
+              "restaurant",
+              "cafe",
+              "bar",
+              "market",
+              "supermarket",
+              "shop",
+              "landmark",
+              "church",
+              "bridge",
+              "monument",
+              "museum",
+              "viewpoint",
+              "square",
+              "info",
+              "holiday",
+              "emergency",
+              "boat",
+              "mountain",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "name": {
             "$ref": "#/components/schemas/CategoryNameInput"
           },
@@ -243,6 +277,10 @@
               "string",
               "null"
             ]
+          },
+          "showOnHome": {
+            "description": "Map categories only",
+            "type": "boolean"
           }
         },
         "type": "object"
@@ -251,6 +289,40 @@
         "additionalProperties": false,
         "description": "A new category, appended last among its siblings. The slug is made from the name and never changes",
         "properties": {
+          "icon": {
+            "description": "Map categories only; a blog category with an icon is 422",
+            "enum": [
+              "toilet",
+              "water",
+              "wifi",
+              "transport",
+              "locker",
+              "cash",
+              "restaurant",
+              "cafe",
+              "bar",
+              "market",
+              "supermarket",
+              "shop",
+              "landmark",
+              "church",
+              "bridge",
+              "monument",
+              "museum",
+              "viewpoint",
+              "square",
+              "info",
+              "holiday",
+              "emergency",
+              "boat",
+              "mountain",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "name": {
             "$ref": "#/components/schemas/CategoryNameInput"
           },
@@ -260,6 +332,10 @@
               "string",
               "null"
             ]
+          },
+          "showOnHome": {
+            "description": "Map categories only: list it on the home's \"Sorted before you unpack\" row. A blog category with true is 422",
+            "type": "boolean"
           }
         },
         "required": [
@@ -5548,6 +5624,40 @@
           "childCount": {
             "type": "integer"
           },
+          "icon": {
+            "description": "Always null for a blog category",
+            "enum": [
+              "toilet",
+              "water",
+              "wifi",
+              "transport",
+              "locker",
+              "cash",
+              "restaurant",
+              "cafe",
+              "bar",
+              "market",
+              "supermarket",
+              "shop",
+              "landmark",
+              "church",
+              "bridge",
+              "monument",
+              "museum",
+              "viewpoint",
+              "square",
+              "info",
+              "holiday",
+              "emergency",
+              "boat",
+              "mountain",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "id": {
             "format": "uuid",
             "type": "string"
@@ -5583,6 +5693,10 @@
           "position": {
             "type": "integer"
           },
+          "showOnHome": {
+            "description": "Always false for a blog category",
+            "type": "boolean"
+          },
           "slug": {
             "type": "string"
           },
@@ -5596,6 +5710,8 @@
           "slug",
           "name",
           "parentId",
+          "icon",
+          "showOnHome",
           "position",
           "childCount",
           "useCount"
@@ -5995,19 +6111,6 @@
               "null"
             ]
           },
-          "foodKind": {
-            "enum": [
-              "restaurant",
-              "cafe-bakery",
-              "pub-bar",
-              "market",
-              null
-            ],
-            "type": [
-              "string",
-              "null"
-            ]
-          },
           "id": {
             "format": "uuid",
             "type": "string"
@@ -6143,21 +6246,6 @@
           "rowVersion": {
             "type": "integer"
           },
-          "serviceType": {
-            "enum": [
-              "water",
-              "toilets",
-              "connect",
-              "transport",
-              "lockers",
-              "cash",
-              null
-            ],
-            "type": [
-              "string",
-              "null"
-            ]
-          },
           "slug": {
             "properties": {
               "de": {
@@ -6231,9 +6319,7 @@
           "weeklyHours",
           "stayTag",
           "interests",
-          "serviceType",
           "mustVisit",
-          "foodKind",
           "coverMediaId",
           "photos",
           "outboundUrl",
@@ -6596,19 +6682,6 @@
             "maxItems": 50,
             "type": "array"
           },
-          "foodKind": {
-            "enum": [
-              "restaurant",
-              "cafe-bakery",
-              "pub-bar",
-              "market",
-              null
-            ],
-            "type": [
-              "string",
-              "null"
-            ]
-          },
           "interests": {
             "items": {
               "enum": [
@@ -6688,21 +6761,6 @@
             },
             "maxItems": 10,
             "type": "array"
-          },
-          "serviceType": {
-            "enum": [
-              "water",
-              "toilets",
-              "connect",
-              "transport",
-              "lockers",
-              "cash",
-              null
-            ],
-            "type": [
-              "string",
-              "null"
-            ]
           },
           "slug": {
             "additionalProperties": false,
@@ -7464,6 +7522,40 @@
       },
       "PublicCategory": {
         "properties": {
+          "icon": {
+            "description": "The icon of a map category (always null for a blog category)",
+            "enum": [
+              "toilet",
+              "water",
+              "wifi",
+              "transport",
+              "locker",
+              "cash",
+              "restaurant",
+              "cafe",
+              "bar",
+              "market",
+              "supermarket",
+              "shop",
+              "landmark",
+              "church",
+              "bridge",
+              "monument",
+              "museum",
+              "viewpoint",
+              "square",
+              "info",
+              "holiday",
+              "emergency",
+              "boat",
+              "mountain",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "id": {
             "format": "uuid",
             "type": "string"
@@ -7499,6 +7591,10 @@
           "position": {
             "type": "integer"
           },
+          "showOnHome": {
+            "description": "Whether a map category is listed on the home (always false for a blog category)",
+            "type": "boolean"
+          },
           "slug": {
             "type": "string"
           }
@@ -7508,6 +7604,8 @@
           "slug",
           "name",
           "parentId",
+          "icon",
+          "showOnHome",
           "position"
         ],
         "type": "object"

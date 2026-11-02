@@ -1,4 +1,4 @@
-import type { ContentLanguage, FoodKind, Localized, MediaKind, Pin, PinDate, PinStoryOption, ServiceType, StayTag, StoryDraft, StoryGroup, StoryVersion, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
+import type { CategoryIcon, ContentLanguage, Localized, MediaKind, Pin, PinDate, PinStoryOption, StayTag, StoryDraft, StoryGroup, StoryVersion, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
 
 // What the content use cases need. Same shapes as the identity module's ports, copied so modules do not import
 // each other (backend/architecture.md). The platform's unit of work fits the generic shape structurally.
@@ -178,9 +178,7 @@ export interface PinChanges {
   weeklyHours?: WeeklySpan[]
   stayTag?: StayTag
   interests?: string[]
-  serviceType?: ServiceType | null
   mustVisit?: boolean
-  foodKind?: FoodKind | null
   coverMediaId?: string | null
   coverAlt?: Localized
   // The extra photos in order; the list replaces the stored one. The alt text goes to the draft, keyed by media id.
@@ -363,6 +361,9 @@ export interface CategoryRow {
   name: Localized
   slug: string
   parentId: string | null
+  // Map categories only; a blog category has no icon and is never on the home.
+  icon: CategoryIcon | null
+  showOnHome: boolean
   position: number
   childCount: number
   useCount: number
@@ -374,8 +375,8 @@ export interface CategoryRepository<T> {
   // A per store and kind advisory lock for the transaction. Every write takes it first, so two writes to one list queue up.
   lockList: (tx: T, storeId: string, kind: CategoryKind) => Promise<void>
   slugsTaken: (tx: T, storeId: string, kind: CategoryKind) => Promise<Set<string>>
-  insert: (tx: T, storeId: string, kind: CategoryKind, input: { name: Localized, slug: string, parentId: string | null, position: number }, at: Date) => Promise<CategoryRow>
-  update: (tx: T, storeId: string, kind: CategoryKind, id: string, changes: { name?: Localized, parentId?: string | null, position?: number }, at: Date) => Promise<CategoryRow>
+  insert: (tx: T, storeId: string, kind: CategoryKind, input: { name: Localized, slug: string, parentId: string | null, icon: CategoryIcon | null, showOnHome: boolean, position: number }, at: Date) => Promise<CategoryRow>
+  update: (tx: T, storeId: string, kind: CategoryKind, id: string, changes: { name?: Localized, parentId?: string | null, icon?: CategoryIcon | null, showOnHome?: boolean, position?: number }, at: Date) => Promise<CategoryRow>
   // Positions 1..n in the order given.
   setPositions: (tx: T, storeId: string, kind: CategoryKind, orderedIds: string[], at: Date) => Promise<void>
   // false when the id has no row. A link that still names the category makes the database refuse (in-use).

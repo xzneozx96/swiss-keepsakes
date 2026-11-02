@@ -62,6 +62,10 @@ export function failureProblem(failure: Failure): FailureProblem {
     case 'media-kind-mismatch': return { status: 422, type: 'media-kind-mismatch', title: 'Choose a file of the same kind as the one you replace.' }
     case 'name-missing':
       return { status: 422, type: 'validation-failed', title: 'Give the category a name in English or German.', errors: [{ in: 'body', path: 'name', message: 'Give a name in English or German' }] }
+    case 'icon-map-only':
+      return { status: 422, type: 'validation-failed', title: 'Only a map category has an icon.', errors: [{ in: 'body', path: 'icon', message: 'A blog category has no icon' }] }
+    case 'show-on-home-map-only':
+      return { status: 422, type: 'validation-failed', title: 'Only a map category can be shown on the home.', errors: [{ in: 'body', path: 'showOnHome', message: 'A blog category is not shown on the home' }] }
     case 'order-mismatch':
       return { status: 422, type: 'validation-failed', title: 'The list changed. Reload it and move the category again.', errors: [{ in: 'body', path: 'ids', message: 'Send exactly the categories that are in this group now' }] }
     case 'maps-link-unreadable': return { status: 422, type: 'maps-link-unreadable', title: 'This Google Maps link could not be read. Paste a short link such as https://maps.app.goo.gl/..., or set the pin on the map.' }

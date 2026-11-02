@@ -19,9 +19,7 @@ interface PinRow {
   weekly_hours: Pin['weeklyHours']
   stay_tag: Pin['stayTag']
   interests: string[]
-  service_type: Pin['serviceType']
   must_visit: boolean
-  food_kind: Pin['foodKind']
   cover_media_id: string | null
   main_story_group_id: string | null
   draft: PinDocument | null
@@ -36,7 +34,7 @@ interface PinRow {
 type DateRow = { [K in keyof PinDate]: PinDate[K] }
 
 const columns = sql`id, store_id, status, slug, latitude, longitude, address, maps_link, weekly_hours, stay_tag, interests,
-  service_type, must_visit, food_kind, cover_media_id, main_story_group_id, draft, published,
+  must_visit, cover_media_id, main_story_group_id, draft, published,
   first_published_at, row_version, created_at, updated_at`
 
 function toDraft(document: PinDocument | null): PinDraft | null {
@@ -94,9 +92,7 @@ async function load(tx: Tx, storeId: string, pinId: string, lock: boolean): Prom
     weeklyHours: row.weekly_hours,
     stayTag: row.stay_tag,
     interests: row.interests,
-    serviceType: row.service_type,
     mustVisit: row.must_visit,
-    foodKind: row.food_kind,
     coverMediaId: row.cover_media_id,
     photos: photos.rows,
     outboundUrl: link.rows[0]?.url ?? null,
@@ -227,11 +223,11 @@ export function createPinRepository(): PinRepository<Tx> {
       const draft = documentOf(changes, emptyText) ?? null
       const inserted = await tx.execute<{ id: string }>(sql`
         insert into content.places (store_id, slug, latitude, longitude, address, maps_link, weekly_hours, stay_tag, interests,
-                                    service_type, must_visit, food_kind, cover_media_id, main_story_group_id, draft, created_at, updated_at)
+                                    must_visit, cover_media_id, main_story_group_id, draft, created_at, updated_at)
         values (${storeId}, ${json(changes.slug ?? null)}::jsonb, ${changes.latitude ?? null}, ${changes.longitude ?? null},
                 ${changes.address ?? null}, ${changes.mapsLink ?? null}, ${JSON.stringify(changes.weeklyHours ?? [])}::jsonb, ${changes.stayTag ?? 'both'},
-                ${sql.param(changes.interests ?? [])}::text[], ${changes.serviceType ?? null}, ${changes.mustVisit ?? false},
-                ${changes.foodKind ?? null}, ${changes.coverMediaId ?? null},
+                ${sql.param(changes.interests ?? [])}::text[], ${changes.mustVisit ?? false},
+                ${changes.coverMediaId ?? null},
                 ${changes.mainStoryGroupId ?? null}, ${json(draft)}::jsonb, ${at}, ${at})
         returning id`)
       const id = inserted.rows[0]!.id
@@ -254,9 +250,7 @@ export function createPinRepository(): PinRepository<Tx> {
           weekly_hours = ${JSON.stringify(changes.weeklyHours ?? pin.weeklyHours)}::jsonb,
           stay_tag = ${changes.stayTag ?? pin.stayTag},
           interests = ${sql.param(changes.interests ?? pin.interests)}::text[],
-          service_type = ${has('serviceType') ? changes.serviceType : pin.serviceType},
           must_visit = ${changes.mustVisit ?? pin.mustVisit},
-          food_kind = ${has('foodKind') ? changes.foodKind : pin.foodKind},
           cover_media_id = ${has('coverMediaId') ? changes.coverMediaId : pin.coverMediaId},
           main_story_group_id = ${has('mainStoryGroupId') ? changes.mainStoryGroupId : pin.mainStoryGroupId},
           draft = ${draft ? JSON.stringify(draft) : pin.draft && JSON.stringify(toDocument(pin.draft))}::jsonb,

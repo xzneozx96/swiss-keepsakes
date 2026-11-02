@@ -113,6 +113,13 @@
       "when": 1793592553729,
       "tag": "0015_place_maps_link",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793596153729,
+      "tag": "0016_map_category_icons",
+      "breakpoints": true
     }
   ]
 }

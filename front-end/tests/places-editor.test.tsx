@@ -120,7 +120,7 @@ describe('[E4.2][AC68] N17 a new place', () => {
     await press('Save draft')
 
     await waitFor(() => expect(writes()).toHaveLength(1))
-    expect(writes()[0]).toMatchObject({ method: 'POST', path: `/api/store/${storeId}/pins`, key: expect.any(String), body: { title: { en: 'Chapel Bridge' }, latitude: 47.05, longitude: 8.3, interests: [], mustVisit: false, serviceType: null, foodKind: null, photos: [], dates: [], outboundUrl: null } })
+    expect(writes()[0]).toMatchObject({ method: 'POST', path: `/api/store/${storeId}/pins`, key: expect.any(String), body: { title: { en: 'Chapel Bridge' }, latitude: 47.05, longitude: 8.3, interests: [], mustVisit: false, photos: [], dates: [], outboundUrl: null } })
     await waitFor(() => expect(router.state.location.pathname).toBe(`/store/content/places/${uuid(10)}`))
     expect(success).toHaveBeenCalledExactlyOnceWith('Draft saved.')
   })
@@ -336,8 +336,10 @@ describe('[E4.2][AC68] N17 one pattern for every field, and a card for each bloc
     await heading('Place on the map')
     await nextTo('Categories and tags')
 
-    expect(blocks()).toHaveLength(4)
-    expect(headings()).toEqual(['Categories', 'Recommended for', 'Interests', 'Shown on the home'])
+    expect(blocks()).toHaveLength(3)
+    expect(headings()).toEqual(['Categories', 'Recommended for', 'Interests'])
+    expect(screen.queryByText('Shown on the home')).toBeNull()
+    expect(within(blocks()[1]!).getByRole('switch', { name: /Must-visit/ })).toBeInTheDocument()
     for (const name of ['Categories', 'Recommended for', 'Interests']) {
       const label = screen.getAllByText(name).find(element => element.tagName === 'LABEL' || element.tagName === 'SPAN')!
 
@@ -622,7 +624,7 @@ describe('[E4.2][AC41][AC68] N17 tags and the home fields', () => {
     expect(screen.getByRole('radio', { name: /Short stay visitors/ }).closest('[data-slot="radio"]')).not.toHaveAttribute('data-selected', 'true')
   })
 
-  it('[E4.2][AC41] offers the five fixed interests, and saves local-activities with the home fields', async () => {
+  it('[E4.2][AC41] offers the five fixed interests, and saves local-activities and must-visit, which sits in Recommended for', async () => {
     api.pin = pinOf({ id: uuid(10) })
     await open('new')
     await heading('Place on the map')

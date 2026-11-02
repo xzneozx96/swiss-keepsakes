@@ -27,7 +27,7 @@ function statusOf(id: StepId, form: PlaceForm, errors: FormErrors, refused: bool
     place: form.latitude !== null,
     content: form.titleEn.trim() !== '' || form.titleDe.trim() !== '',
     when: form.hours.length + form.dates.length > 0,
-    tags: form.categoryIds.length + form.interests.length > 0 || form.serviceType !== null || form.foodKind !== null || form.mustVisit,
+    tags: form.categoryIds.length + form.interests.length > 0 || form.mustVisit,
     links: form.mainStoryGroupId !== null || form.outboundUrl.trim() !== '',
     review: publishGaps(form).length === 0,
   }

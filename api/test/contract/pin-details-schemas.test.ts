@@ -29,14 +29,10 @@ describe('[E4.2][AC41] five fixed interests', () => {
 })
 
 describe('[E4.2][AC68] the home fields and photos on a pin body', () => {
-  it('[E4.2][AC68] service type and food kind accept only their codes and null', () => {
-    for (const code of ['water', 'toilets', 'connect', 'transport', 'lockers', 'cash'])
-      expect(ok(pinWriteBodySchema, { serviceType: code })).toBe(true)
-    expect(ok(pinWriteBodySchema, { serviceType: null, foodKind: null })).toBe(true)
-    expect(ok(pinWriteBodySchema, { serviceType: 'wifi' })).toBe(false)
-    for (const code of ['restaurant', 'cafe-bakery', 'pub-bar', 'market'])
-      expect(ok(pinWriteBodySchema, { foodKind: code })).toBe(true)
-    expect(ok(pinWriteBodySchema, { foodKind: 'bakery' })).toBe(false)
+  it('[T-009][AC5] service type and food kind are gone from the pin body: they come from the categories', () => {
+    expect(ok(pinWriteBodySchema, { serviceType: 'water' })).toBe(false)
+    expect(ok(pinWriteBodySchema, { foodKind: 'market' })).toBe(false)
+    expect(ok(pinWriteBodySchema, { mustVisit: true })).toBe(true)
   })
 
   it('[E4.2][AC68] must-visit is a boolean and the local tip is a short localized text', () => {
@@ -142,9 +138,7 @@ describe('[E4.2][AC68] the response shapes', () => {
     weeklyHours: [],
     stayTag: 'both',
     interests: [],
-    serviceType: null,
     mustVisit: false,
-    foodKind: null,
     coverMediaId: null,
     photos: [],
     outboundUrl: null,
@@ -161,7 +155,7 @@ describe('[E4.2][AC68] the response shapes', () => {
 
   it('[E4.2][AC68] a pin response carries the new fields and no type', () => {
     expect(ok(pinSchema, pin)).toBe(true)
-    expect(ok(pinSchema, { ...pin, serviceType: undefined })).toBe(false)
+    expect(ok(pinSchema, { ...pin, mustVisit: undefined })).toBe(false)
   })
 
   it('[E4.2][AC68] the alt text of the photos is in the draft, by media id, and a photo is only its media id', () => {

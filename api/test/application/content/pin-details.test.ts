@@ -121,17 +121,17 @@ describe('[E4.2][AC68] the pin details on create and save', () => {
     const s = setup()
     const pin = await created(s)
 
-    expect(pin).toMatchObject({ storeId: store, serviceType: null, mustVisit: false, foodKind: null, photos: [], outboundUrl: null })
+    expect(pin).toMatchObject({ storeId: store, mustVisit: false, photos: [], outboundUrl: null })
     expect('type' in pin).toBe(false)
   })
 
-  it('[E4.2][AC68] the home fields are stored and the local tip joins the draft document', async () => {
+  it('[E4.2][AC68] must-visit is stored and the local tip joins the draft document', async () => {
     const s = setup()
     const pin = await created(s)
 
-    const saved = await s.save(owner, store, pin.id, 1, { serviceType: 'water', mustVisit: true, foodKind: 'cafe-bakery', localTip: { en: 'Go before 9', de: 'Vor 9 Uhr' } }, null)
+    const saved = await s.save(owner, store, pin.id, 1, { mustVisit: true, localTip: { en: 'Go before 9', de: 'Vor 9 Uhr' } }, null)
 
-    expect(saved).toMatchObject({ ok: true, value: { serviceType: 'water', mustVisit: true, foodKind: 'cafe-bakery', draft: { title: { en: 'Chapel Bridge' }, localTip: { en: 'Go before 9', de: 'Vor 9 Uhr' } } } })
+    expect(saved).toMatchObject({ ok: true, value: { mustVisit: true, draft: { title: { en: 'Chapel Bridge' }, localTip: { en: 'Go before 9', de: 'Vor 9 Uhr' } } } })
   })
 
   it('[E4.2][AC63] changing the outbound link replaces it and null removes it', async () => {

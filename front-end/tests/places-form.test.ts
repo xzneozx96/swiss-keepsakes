@@ -19,9 +19,7 @@ const pin: Pin = {
   weeklyHours: [],
   stayTag: 'both',
   interests: [],
-  serviceType: null,
   mustVisit: false,
-  foodKind: null,
   coverMediaId: null,
   photos: [],
   outboundUrl: null,
@@ -134,7 +132,7 @@ describe('[E4.2][AC68] the write of a draft', () => {
   it('sends every field so a save replaces the lists and clears what was emptied', () => {
     const body = bodyOf({ ...emptyForm(), titleEn: ' A ', address: '  ', photos: [{ mediaId: 'm' }], coverMediaId: null })
 
-    expect(body).toMatchObject({ title: { en: 'A' }, address: null, photos: [{ mediaId: 'm' }], coverMediaId: null, categoryIds: [], dates: [], weeklyHours: [], mustVisit: false, serviceType: null, foodKind: null })
+    expect(body).toMatchObject({ title: { en: 'A' }, address: null, photos: [{ mediaId: 'm' }], coverMediaId: null, categoryIds: [], dates: [], weeklyHours: [], mustVisit: false })
   })
 
   it('turns a date entry into a write: a day has the same first and last day, a range has no times', () => {
@@ -246,8 +244,6 @@ describe('[E4.2][AC68] what the editor sends is what the API contract accepts', 
       dates: [{ ...emptyDate(), firstDay: '2026-11-14', startTime: '22:00' }, { ...emptyDate(), kind: 'range' as const, firstDay: '2026-11-09', lastDay: '2026-11-14' }],
       categoryIds: ['0198a000-0000-7000-8000-000000000020'],
       interests: ['history-culture', 'local-activities'],
-      serviceType: 'water' as const,
-      foodKind: 'cafe-bakery' as const,
       mustVisit: true,
       coverMediaId: '0198a000-0000-7000-8000-000000000040',
       photos: [{ mediaId: '0198a000-0000-7000-8000-000000000041' }],

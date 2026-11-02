@@ -48,6 +48,8 @@ export {
   categoryPatchBodySchema,
   type CategoryWriteBody,
   categoryWriteBodySchema,
+  type CategoryIcon,
+  categoryIconSchema,
   type MerchantCategory,
   type MerchantCategoryList,
   merchantCategoryListSchema,

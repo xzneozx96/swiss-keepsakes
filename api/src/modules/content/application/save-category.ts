@@ -1,4 +1,4 @@
-import type { Localized } from '@sk/domain/content'
+import type { CategoryIcon, Localized } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { CategoryKind, CategoryRow } from '../ports.ts'
 import type { CategoryDeps } from './category-deps.ts'
@@ -11,7 +11,7 @@ import { fail, ok } from './failure.ts'
 // A name replaces both languages; the slug stays. A changed parent appends the category last under the new parent
 // and closes the gap it leaves in the old group. A category named as its own parent is refused as too deep.
 export function makeSaveCategory<T>({ uow, categories, audit, clock }: CategoryDeps<T>) {
-  return async (actor: Actor, storeId: string, kind: CategoryKind, id: string, input: { name?: { en?: string | null, de?: string | null }, parentId?: string | null }, requestId: string | null): Promise<Result<CategoryRow>> => {
+  return async (actor: Actor, storeId: string, kind: CategoryKind, id: string, input: { name?: { en?: string | null, de?: string | null }, parentId?: string | null, icon?: CategoryIcon | null, showOnHome?: boolean }, requestId: string | null): Promise<Result<CategoryRow>> => {
     if (!mayManageContent(actor, storeId))
       return fail({ reason: 'forbidden' })
     let name: Localized | undefined
@@ -20,6 +20,10 @@ export function makeSaveCategory<T>({ uow, categories, audit, clock }: CategoryD
       if (!name)
         return fail({ reason: 'name-missing' })
     }
+    if (input.icon && kind !== 'map')
+      return fail({ reason: 'icon-map-only' })
+    if (input.showOnHome && kind !== 'map')
+      return fail({ reason: 'show-on-home-map-only' })
     const categoryId = id.toLowerCase()
     const parentId = input.parentId === undefined ? undefined : (input.parentId?.toLowerCase() ?? null)
     return uow.run(async (tx) => {
@@ -28,9 +32,15 @@ export function makeSaveCategory<T>({ uow, categories, audit, clock }: CategoryD
       const category = rows.find(row => row.id === categoryId)
       if (!category)
         return fail({ reason: 'not-found' })
-      const changes: { name?: Localized, parentId?: string | null, position?: number } = {}
+      const changes: { name?: Localized, parentId?: string | null, icon?: CategoryIcon | null, showOnHome?: boolean, position?: number } = {}
       if (name)
         changes.name = name
+      if (kind === 'map') {
+        if (input.icon !== undefined)
+          changes.icon = input.icon
+        if (input.showOnHome !== undefined)
+          changes.showOnHome = input.showOnHome
+      }
       let oldSiblings: CategoryRow[] | undefined
       if (parentId !== undefined && parentId !== category.parentId) {
         const target = parentId === null ? null : rows.find(row => row.id === parentId)
@@ -55,8 +65,8 @@ export function makeSaveCategory<T>({ uow, categories, audit, clock }: CategoryD
         entity: categoryEntity(kind),
         entityId: categoryId,
         action: 'updated',
-        before: { name: category.name, parentId: category.parentId, position: category.position },
-        after: { name: saved.name, parentId: saved.parentId, position: saved.position },
+        before: { name: category.name, parentId: category.parentId, icon: category.icon, showOnHome: category.showOnHome, position: category.position },
+        after: { name: saved.name, parentId: saved.parentId, icon: saved.icon, showOnHome: saved.showOnHome, position: saved.position },
         requestId,
       })
       return ok(saved)

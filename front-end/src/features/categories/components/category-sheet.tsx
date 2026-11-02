@@ -1,18 +1,21 @@
-import type { CategoryKind, MerchantCategory } from '@sk/api-contract'
+import type { CategoryIcon, CategoryKind, MerchantCategory } from '@sk/api-contract'
 import type { MessageKey } from '@/i18n/en'
 
-import { Button, Form, Input, Label, ListBox, Select, TextField } from '@heroui/react'
+import { Button, Description, Form, Input, Label, ListBox, Radio, RadioGroup, Select, Switch, TextField } from '@heroui/react'
 import { useId, useState } from 'react'
 
+import { choiceCard } from '@/components/choice-card'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useSubmit } from '@/features/data-client/use-command'
 import { useIdempotencyKey } from '@/features/stores/hooks/use-idempotency-key'
+import { categoryIconComponents, categoryIconKeys, iconLabelKey } from '../lib/category-icons'
 import { problemTypeToMessageKey } from '../lib/category-problems'
 import { nameOf } from '../lib/category-tree'
 
 const ROOT = 'root'
+const NO_ICON = 'none'
 
 /**
  * The add and edit sheet. The parent list holds the top-level categories only, never the category itself,
@@ -36,6 +39,8 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
   const [nameEn, setNameEn] = useState(category?.name.en ?? '')
   const [nameDe, setNameDe] = useState(category?.name.de ?? '')
   const [parent, setParent] = useState(initialParent ?? ROOT)
+  const [icon, setIcon] = useState<CategoryIcon | null>(category?.icon ?? null)
+  const [showOnHome, setShowOnHome] = useState(category?.showOnHome ?? false)
   const [nameMissing, setNameMissing] = useState(false)
   // Both show their refusal inline (failureKey below), so the cache stays silent on error.
   const create = useSubmit('categories', 'create', { meta: { success: () => t('categories.toast.added'), silent: true } })
@@ -47,7 +52,7 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
     ...(nameDe.trim() === '' ? {} : { de: nameDe.trim() }),
   }
   const parentId = parent === ROOT ? null : parent
-  const key = useIdempotencyKey({ storeId, kind, id: category?.id, name, parentId })
+  const key = useIdempotencyKey({ storeId, kind, id: category?.id, name, parentId, icon, showOnHome })
   const failure = error instanceof ApiProblem ? error : undefined
   const failureKey: MessageKey | undefined = error ? (failure ? problemTypeToMessageKey(failure.type) : 'categories.problem.generic') : undefined
   const parents = roots.filter(root => root.id !== category?.id)
@@ -73,11 +78,13 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
         id: category.id,
         name,
         ...(fixedAtTop || parentId === category.parentId ? {} : { parentId }),
+        ...(kind === 'map' && icon !== category.icon ? { icon } : {}),
+        ...(kind === 'map' && showOnHome !== category.showOnHome ? { showOnHome } : {}),
         idempotencyKey: key.next(),
       }, callbacks)
     }
     else {
-      create.submit({ storeId, kind, name, ...(parentId === null ? {} : { parentId }), idempotencyKey: key.next() }, callbacks)
+      create.submit({ storeId, kind, name, ...(parentId === null ? {} : { parentId }), ...(kind === 'map' && icon !== null ? { icon } : {}), ...(kind === 'map' && showOnHome ? { showOnHome } : {}), idempotencyKey: key.next() }, callbacks)
     }
   }
 
@@ -166,6 +173,56 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
                 </Select.Popover>
               </Select>
             )}
+        {kind === 'map' && (
+          <>
+            <RadioGroup
+              className="gap-2"
+              orientation="horizontal"
+              value={icon ?? NO_ICON}
+              onChange={(next) => {
+                setIcon(next === NO_ICON ? null : (next as CategoryIcon))
+                reset()
+              }}
+            >
+              <Label>{t('categories.icon.label')}</Label>
+              <div className="flex flex-wrap gap-2">
+                <Radio className={`${choiceCard} flex min-h-11 items-center px-3 py-0 text-sm`} value={NO_ICON}>
+                  <Radio.Content>{t('categories.icon.none')}</Radio.Content>
+                </Radio>
+                {categoryIconKeys.map((key) => {
+                  const Icon = categoryIconComponents[key]
+
+                  return (
+                    <Radio key={key} className={`${choiceCard} flex size-11 items-center justify-center p-0`} value={key}>
+                      <Radio.Content>
+                        <Icon aria-hidden size={20} />
+                        <Label className="sr-only">{t(iconLabelKey(key))}</Label>
+                      </Radio.Content>
+                    </Radio>
+                  )
+                })}
+              </div>
+              <Description>{t('categories.icon.hint')}</Description>
+            </RadioGroup>
+            <Switch
+              isSelected={showOnHome}
+              onChange={(next) => {
+                setShowOnHome(next)
+                reset()
+              }}
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+                <span className="flex flex-col">
+                  <Label>{t('categories.home.label')}</Label>
+                  <span className="text-xs text-muted">{t('categories.home.hint')}</span>
+                </span>
+              </Switch.Content>
+            </Switch>
+          </>
+        )}
         {failureKey && (
           <p className="rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">{t(failureKey)}</p>
         )}

@@ -1,43 +1,16 @@
 import type { StepProps } from './step-props'
-import type { MessageKey } from '@/i18n/en'
 
-import { Description, Label, ListBox, Radio, RadioGroup, Select, Switch } from '@heroui/react'
-import { foodKinds, interestCodes, serviceTypes } from '@sk/domain/content'
+import { Label, Radio, RadioGroup, Switch } from '@heroui/react'
+import { interestCodes } from '@sk/domain/content'
 
 import { choiceCard } from '@/components/choice-card'
 import { Block } from '@/components/form-block'
-import { AudienceIcon, CategoryIcon, FavouriteIcon, SparkleIcon } from '@/components/icons'
+import { AudienceIcon, CategoryIcon, FavouriteIcon } from '@/components/icons'
 import { MultiSelect } from '@/components/multi-select'
 import { useLocale } from '@/contexts/locale-context'
 import { useCategories } from '@/features/categories/api/queries'
 
-const NONE = 'none'
 const STAYS = ['short_stay', 'multi_day', 'both'] as const
-
-function Choice<T extends string>({ label, description, value, options, onChange }: { label: string, description: string, value: T | null, options: { id: T, label: string }[], onChange: (value: T | null) => void }) {
-  const { t } = useLocale()
-
-  return (
-    <Select fullWidth selectedKey={value ?? NONE} onSelectionChange={key => key !== null && onChange(key === NONE ? null : (String(key) as T))}>
-      <Label>{label}</Label>
-      <Select.Trigger>
-        <Select.Value />
-        <Select.Indicator />
-      </Select.Trigger>
-      <Description>{description}</Description>
-      <Select.Popover>
-        <ListBox>
-          {[{ id: NONE, label: t('places.review.none') }, ...options].map(option => (
-            <ListBox.Item key={option.id} id={option.id} textValue={option.label}>
-              {option.label}
-              <ListBox.ItemIndicator />
-            </ListBox.Item>
-          ))}
-        </ListBox>
-      </Select.Popover>
-    </Select>
-  )
-}
 
 function MapCategories({ form, patch, storeId }: Pick<StepProps, 'form' | 'patch' | 'storeId'>) {
   const { t, language } = useLocale()
@@ -58,7 +31,7 @@ function MapCategories({ form, patch, storeId }: Pick<StepProps, 'form' | 'patch
   )
 }
 
-/** Step 4: map categories, stay tag, the five interests, and what the home reads (service, must-visit, food and drink kind). */
+/** Step 4: map categories, who the place is recommended for (stay tag and must-visit), and the five interests. */
 export function StepTags({ form, patch, storeId }: StepProps) {
   const { t } = useLocale()
 
@@ -84,19 +57,6 @@ export function StepTags({ form, patch, storeId }: StepProps) {
             ))}
           </div>
         </RadioGroup>
-      </Block>
-      <Block hint={t('places.interests.help')} icon={FavouriteIcon} title={t('places.interests.label')}>
-        <MultiSelect
-          hideLabel
-          label={t('places.interests.label')}
-          options={interestCodes.map(code => ({ id: code, label: t(`places.interest.${code}`) }))}
-          value={form.interests}
-          onChange={interests => patch({ interests })}
-        />
-      </Block>
-      <Block icon={SparkleIcon} title={t('places.home.title')}>
-        <Choice description={t('places.service.help')} label={t('places.service.label')} options={serviceTypes.map(id => ({ id, label: t(`places.service.${id}` as MessageKey) }))} value={form.serviceType} onChange={serviceType => patch({ serviceType })} />
-        <Choice description={t('places.food.help')} label={t('places.food.label')} options={foodKinds.map(id => ({ id, label: t(`places.food.${id}` as MessageKey) }))} value={form.foodKind} onChange={foodKind => patch({ foodKind })} />
         <Switch isSelected={form.mustVisit} onChange={mustVisit => patch({ mustVisit })}>
           <Switch.Content>
             <Switch.Control>
@@ -108,6 +68,15 @@ export function StepTags({ form, patch, storeId }: StepProps) {
             </span>
           </Switch.Content>
         </Switch>
+      </Block>
+      <Block hint={t('places.interests.help')} icon={FavouriteIcon} title={t('places.interests.label')}>
+        <MultiSelect
+          hideLabel
+          label={t('places.interests.label')}
+          options={interestCodes.map(code => ({ id: code, label: t(`places.interest.${code}`) }))}
+          value={form.interests}
+          onChange={interests => patch({ interests })}
+        />
       </Block>
     </div>
   )

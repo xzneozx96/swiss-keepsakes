@@ -14,6 +14,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { useLevelDrag } from '../hooks/use-level-drag'
 import { canMove, childrenOf, displayOrder, matches, nameOf, refusalOf, siblingsOf } from '../lib/category-tree'
 import { DropSlot, Grip } from './category-drag'
+import { CategoryNameIcon } from './category-name-icon'
 
 type ActionId = 'edit' | 'add-sub' | 'up' | 'down' | 'delete'
 
@@ -137,8 +138,10 @@ export function CategoryTable({ items, kind, actions, busy, loading, query }: {
                       <span className={`-ms-2 flex items-center gap-1 ${category.parentId ? 'ps-7' : 'font-semibold'}`}>
                         {grip(category)}
                         {category.parentId && <span aria-hidden className="h-4 w-3 shrink-0 rounded-bl-md border-s-2 border-b-2 border-separator" />}
+                        <CategoryNameIcon icon={category.icon} />
                         <span className="min-w-0">
                           <span className="block [overflow-wrap:anywhere]">{nameOf(category)}</span>
+                          {category.showOnHome && <span className="block text-xs font-normal text-muted">{t('categories.home.badge')}</span>}
                           {category.name.en === null && (
                             <span className="flex items-center gap-1 text-xs font-normal text-warning-soft-foreground">
                               <StatusWarningIcon aria-hidden className="shrink-0" size={12} />

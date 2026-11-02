@@ -28,7 +28,7 @@ const env = createContentHttp({ pool, db }, undefined, undefined, {
 })
 
 type Kind = 'map' | 'blog'
-interface Category { id: string, slug: string, name: { en: string | null, de: string | null }, parentId: string | null, position: number, childCount: number, useCount: number }
+interface Category { id: string, slug: string, name: { en: string | null, de: string | null }, parentId: string | null, icon: string | null, showOnHome: boolean, position: number, childCount: number, useCount: number }
 
 const table = (kind: Kind) => kind === 'map' ? 'map_categories' : 'blog_categories'
 
@@ -256,6 +256,50 @@ describe.each(['map', 'blog'] as const)('[E4.18][AC87] the %s category list over
     expect(await count(pool, `select count(*) from content.${table(kind)} where store_id = $1`, [s.storeId])).toBe(1)
     const audit = await pool.query<{ entity: string, action: string }>('select entity, action from platform.audit_log where entity_id = $1', [created.id])
     expect(audit.rows).toEqual([{ entity: `${kind}_category`, action: 'created' }])
+  })
+
+  it('[T-009b][AC4] the icon and the home switch are set, shown again after a reload and in the public list; null and false clear them; a bad icon is 400', async () => {
+    const s = await setup()
+    if (kind === 'blog') {
+      // A blog category has neither: an icon or true is 422, and the lists say null and false.
+      expect((await s.create(kind, { name: { en: 'Tips' }, icon: 'cash' })).status).toBe(422)
+      expect((await s.create(kind, { name: { en: 'Tips' }, showOnHome: true })).status).toBe(422)
+      const tips = await s.made(kind, { name: { en: 'Tips' }, icon: null, showOnHome: false })
+      expect(tips).toMatchObject({ icon: null, showOnHome: false })
+      expect((await env.call(s.url(kind, `/${tips.id}`), { method: 'PATCH', headers: s.as, body: { icon: 'water' } })).status).toBe(422)
+      expect((await env.call(s.url(kind, `/${tips.id}`), { method: 'PATCH', headers: s.as, body: { showOnHome: true } })).status).toBe(422)
+      expect((await publicNames(kind)).get(tips.id)).toMatchObject({ icon: null, showOnHome: false })
+      return
+    }
+    const free = await s.made(kind, { name: { en: 'Free essentials' } })
+    const toilets = await s.made(kind, { name: { en: 'Toilets', de: 'Toiletten' }, parentId: free.id })
+    expect(toilets).toMatchObject({ icon: null, showOnHome: false })
+    const patch = (body: object) => env.call(s.url(kind, `/${toilets.id}`), { method: 'PATCH', headers: s.as, body })
+
+    const saved = await patch({ icon: 'toilet', showOnHome: true })
+    expect(saved.status).toBe(200)
+    expect(await saved.json()).toMatchObject({ icon: 'toilet', showOnHome: true, name: { en: 'Toilets', de: 'Toiletten' }, parentId: free.id })
+    expect((await s.list(kind)).find(c => c.id === toilets.id)).toMatchObject({ icon: 'toilet', showOnHome: true })
+    expect((await publicNames(kind)).get(toilets.id)).toMatchObject({ icon: 'toilet', showOnHome: true })
+    expect((await publicNames(kind)).get(free.id)).toMatchObject({ icon: null, showOnHome: false })
+    // A name change keeps both; each changes alone; null and false clear them.
+    expect(await (await patch({ name: { en: 'Toilets', de: 'WC' } })).json()).toMatchObject({ icon: 'toilet', showOnHome: true })
+    expect(await (await patch({ showOnHome: false })).json()).toMatchObject({ icon: 'toilet', showOnHome: false })
+    expect(await (await patch({ icon: 'water' })).json()).toMatchObject({ icon: 'water', showOnHome: false })
+    expect(await (await patch({ icon: null })).json()).toMatchObject({ icon: null, showOnHome: false })
+    expect((await patch({ icon: 'toilets' })).status).toBe(400)
+    const bakeries = await s.create(kind, { name: { en: 'Bakeries' }, icon: 'cafe', showOnHome: true })
+    expect(bakeries.status).toBe(201)
+    expect(await bakeries.json()).toMatchObject({ icon: 'cafe', showOnHome: true })
+    const audit = await pool.query<{ action: string, before: { icon: string | null, showOnHome: boolean } | null, after: { icon: string | null, showOnHome: boolean } | null }>('select action, before, after from platform.audit_log where entity_id = $1 order by id', [toilets.id])
+    expect(audit.rows.map(r => [r.action, r.before?.icon ?? null, r.after?.icon ?? null, r.after?.showOnHome ?? null])).toEqual([
+      ['created', null, null, false],
+      ['updated', null, 'toilet', true],
+      ['updated', 'toilet', 'toilet', true],
+      ['updated', 'toilet', 'toilet', false],
+      ['updated', 'toilet', 'water', false],
+      ['updated', 'water', null, false],
+    ])
   })
 
   it('[E4.18][AC87] AC-6 guest 401, no-membership and other-store staff 403 with no change, owner and manager 201', async () => {

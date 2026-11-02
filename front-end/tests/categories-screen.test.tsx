@@ -33,7 +33,7 @@ let answer: ((call: Call) => Response | undefined) | undefined
 let demo: ReturnType<typeof startDemo>
 
 function category(id: string, over: Record<string, unknown> = {}) {
-  return merchantCategorySchema.parse({ id, slug: id, name: { en: 'Walks', de: 'Wanderungen' }, parentId: null, position: 1, childCount: 0, useCount: 0, ...over })
+  return merchantCategorySchema.parse({ id, slug: id, name: { en: 'Walks', de: 'Wanderungen' }, parentId: null, icon: null, showOnHome: false, position: 1, childCount: 0, useCount: 0, ...over })
 }
 
 const problem = (status: number, type: string) => Response.json(problemSchema.parse({ type, status, title: type, instance: '/x', requestId: 'req-1' }), { status })
@@ -293,6 +293,87 @@ describe('[E4.18][AC87] the category editor in English', () => {
     await waitFor(() => expect(writes('PATCH')).toHaveLength(1))
     expect(writes('PATCH')[0].path).toBe(`${mapUrl}/${food}`)
     expect(writes('PATCH')[0].body).toEqual({ name: { en: 'Dining', de: 'Essen' } })
+  })
+
+  it('[T-009b][AC5] shows the icon before the name and "On the home" as quiet text on a map category; the blog tab shows neither', async () => {
+    lists.map = [
+      category(walks, { name: { en: 'Free essentials', de: null } }),
+      category(hill, { name: { en: 'Toilets', de: 'Toiletten' }, icon: 'toilet', showOnHome: true }),
+      category(food, { name: { en: 'Food', de: 'Essen' }, position: 2, icon: 'restaurant' }),
+    ]
+    renderScreen()
+
+    await screen.findByText('Toilets')
+    const toilets = rowOf('Toilets')
+
+    expect(within(toilets).getByText('On the home')).toHaveClass('text-muted')
+    expect(toilets.querySelector('svg.text-muted')).not.toBeNull()
+    expect(within(rowOf('Food')).queryByText('On the home')).toBeNull()
+    expect(rowOf('Food').querySelector('svg.text-muted')).not.toBeNull()
+    expect(within(rowOf('Free essentials')).queryByText('On the home')).toBeNull()
+    expect(screen.queryByRole('columnheader', { name: 'Home' })).toBeNull()
+  })
+
+  it('[T-009b][AC5] the sheet offers the 24 icons with None and a Show on the home switch, and saves what changed', async () => {
+    lists.map = [category(food, { name: { en: 'Toilets', de: 'Toiletten' } })]
+    renderScreen()
+
+    await openMenu('Toilets', 'Edit')
+    const dialog = await screen.findByRole('dialog')
+    const group = within(dialog).getByRole('radiogroup', { name: 'Icon' })
+    const radios = within(group).getAllByRole('radio')
+
+    expect(radios).toHaveLength(25)
+    expect(within(group).getByRole('radio', { name: 'None' })).toBeChecked()
+    expect(within(group).getByRole('radio', { name: 'Toilets' })).not.toBeChecked()
+    const home = within(dialog).getByRole('switch', { name: /Show on the home/ })
+
+    expect(home).not.toBeChecked()
+    expect(within(dialog).getByText(/Sorted before you unpack/)).toBeInTheDocument()
+    await userEvent.click(within(group).getByRole('radio', { name: 'Toilets' }))
+    await userEvent.click(home)
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(writes('PATCH')).toHaveLength(1))
+    expect(writes('PATCH')[0].body).toEqual({ name: { en: 'Toilets', de: 'Toiletten' }, icon: 'toilet', showOnHome: true })
+  })
+
+  it('[T-009b][AC5] a saved icon and switch show in the sheet again, None and off clear them, and a new category sends them', async () => {
+    lists.map = [category(food, { name: { en: 'Toilets', de: 'Toiletten' }, icon: 'toilet', showOnHome: true })]
+    renderScreen()
+
+    await openMenu('Toilets', 'Edit')
+    let dialog = await screen.findByRole('dialog')
+
+    expect(within(dialog).getByRole('radio', { name: 'Toilets' })).toBeChecked()
+    expect(within(dialog).getByRole('switch', { name: /Show on the home/ })).toBeChecked()
+    await userEvent.click(within(dialog).getByRole('radio', { name: 'None' }))
+    await userEvent.click(within(dialog).getByRole('switch', { name: /Show on the home/ }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(writes('PATCH')).toHaveLength(1))
+    expect(writes('PATCH')[0].body).toEqual({ name: { en: 'Toilets', de: 'Toiletten' }, icon: null, showOnHome: false })
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add' }))
+    dialog = await screen.findByRole('dialog')
+    await userEvent.type(within(dialog).getByLabelText('English name'), 'Bakeries')
+    await userEvent.click(within(dialog).getByRole('radio', { name: 'Café' }))
+    await userEvent.click(within(dialog).getByRole('switch', { name: /Show on the home/ }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add category' }))
+    await waitFor(() => expect(writes('POST')).toHaveLength(1))
+    expect(writes('POST')[0].body).toEqual({ name: { en: 'Bakeries' }, icon: 'cafe', showOnHome: true })
+  })
+
+  it('[T-009b][AC5] the blog sheet has no icon and no home switch', async () => {
+    lists.blog = [category(walks, { name: { en: 'Tips', de: 'Tipps' } })]
+    renderScreen()
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Blog categories' }))
+    await openMenu('Tips', 'Edit')
+    const dialog = await screen.findByRole('dialog')
+
+    expect(within(dialog).queryByRole('radiogroup')).toBeNull()
+    expect(within(dialog).queryByRole('switch')).toBeNull()
   })
 
   it('adds a sub-category with its parent preselected', async () => {
