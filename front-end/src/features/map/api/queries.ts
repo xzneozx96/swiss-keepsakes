@@ -2,7 +2,7 @@ import { queryOptions, useQuery } from '@tanstack/react-query'
 
 import { fromApi } from '@/features/data-client/api-transport'
 import { apiEnabled } from '@/lib/api-mode'
-import { fetchMapCategories, fetchMapPins } from './map-client'
+import { fetchMapCategories, fetchMapPin, fetchMapPins } from './map-client'
 
 type Language = 'en' | 'de'
 
@@ -13,6 +13,14 @@ export const mapQueries = {
       ...fromApi,
       queryKey: ['map', 'pins', language],
       queryFn: () => fetchMapPins(language),
+      enabled: apiEnabled,
+    }),
+  /** The details of one pin, read when its card opens (`GET /api/public/places/{id}`). */
+  pin: (id: string, language: Language) =>
+    queryOptions({
+      ...fromApi,
+      queryKey: ['map', 'pin', id, language],
+      queryFn: () => fetchMapPin(id, language),
       enabled: apiEnabled,
     }),
   categories: (language: Language) =>

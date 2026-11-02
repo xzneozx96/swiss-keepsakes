@@ -43,6 +43,7 @@ function Row({ items = pins, onClose = () => {} }: { items?: PublicMapItem[], on
       pins={items}
       selectedId={selectedId}
       onClose={onClose}
+      onMore={() => {}}
       onSelect={setSelectedId}
     />
   )
@@ -118,14 +119,16 @@ describe('[E4.6][AC42] the map card', () => {
     expect(card).toHaveClass('rounded-2xl')
   })
 
-  it('puts the first category in the eyebrow, the tip under the title and "Read the story" only on a pin with a story', async () => {
+  it('puts the first category in the eyebrow and the tip under the title; the card has Show more and the map button, and no story link (the sheet has the story)', async () => {
     await renderRow()
 
     expect(within(cardOf('Place 1')).getByText('Walks')).toBeInTheDocument()
     expect(within(cardOf('Place 1')).queryByText('Views')).toBeNull()
     expect(within(cardOf('Place 1')).getByText('Go early')).toHaveClass('line-clamp-2')
-    expect(within(cardOf('Place 1')).queryByRole('link')).toBeNull()
-    expect(within(cardOf('Place 2')).getByRole('link', { name: en['map.card.readStory'] })).toHaveAttribute('href', '/en/stories/story-two')
+    for (const title of ['Place 1', 'Place 2']) {
+      expect(within(cardOf(title)).getByRole('button', { name: en['map.card.more'] })).toBeInTheDocument()
+      expect(within(cardOf(title)).getAllByRole('link').map(link => link.getAttribute('aria-label'))).toEqual([en['map.directions']])
+    }
   })
 
   it('numbers the cards and disables the step back on the first and the step on on the last', async () => {
@@ -159,7 +162,7 @@ describe('[E4.6][AC42] the map card', () => {
     await renderRow({ items: [pin(1)] })
 
     expect(screen.queryByText('1 of 1')).toBeNull()
-    expect(within(cardOf('Place 1')).queryByRole('button')).toBeNull()
+    expect(within(cardOf('Place 1')).queryByRole('button', { name: new RegExp(`${en['map.card.previous']}|${en['map.card.next']}`) })).toBeNull()
   })
 
   it('closes with the ✕ and with Escape from inside the row', async () => {

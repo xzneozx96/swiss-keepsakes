@@ -1,13 +1,14 @@
 import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
+import type { PlaceDetail } from '@/features/map/lib/place-detail'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
+import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider, useSearch } from '@tanstack/react-router'
 import { act, configure, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
-import { fetchMapCategories, fetchMapPins } from '@/features/map/api/map-client'
+import { fetchMapCategories, fetchMapPin, fetchMapPins } from '@/features/map/api/map-client'
 import { MapScreen } from '@/features/map/components/map-screen'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
@@ -20,7 +21,7 @@ vi.mock('maplibre-gl', async () => (await import('./support/fake-maplibre')).fak
 vi.mock('maplibre-gl/dist/maplibre-gl.css', () => ({}))
 vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.mjs' }))
 vi.mock('@/lib/api-mode', () => ({ apiEnabled: true }))
-vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: vi.fn(), fetchMapCategories: vi.fn() }))
+vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: vi.fn(), fetchMapCategories: vi.fn(), fetchMapPin: vi.fn() }))
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 
@@ -61,6 +62,47 @@ const pinD = pin(4, 'Wine Market', [food.id])
 const pinE = pin(5, 'Organ Concert', [], { nextDate: { firstDay: '2026-11-07', lastDay: '2026-11-07', startTime: '18:00', endTime: '19:30' } })
 const pins = [pinA, pinB, pinC, pinD, pinE]
 
+/** What the pin read answers for a pin of the list: only the pins the tests care about have more than the basics. */
+function detailOf(item: PublicMapItem): PlaceDetail {
+  const base: PlaceDetail = {
+    id: item.id,
+    title: item.title,
+    language: item.language,
+    tip: `Tip for ${item.title}`,
+    latitude: item.latitude,
+    longitude: item.longitude,
+    address: null,
+    mapsLink: null,
+    hours: [],
+    nextDate: item.nextDate,
+    link: null,
+    photos: [],
+    mainStory: null,
+    otherStories: [],
+  }
+
+  if (item.id === pinA.id) {
+    return {
+      ...base,
+      address: 'Kapellbrücke, Luzern',
+      mapsLink: 'https://www.google.com/maps/place/Chapel+Bridge/@47.06,8.31,17z',
+      hours: [1, 2, 3, 4, 5, 6, 7].map(day => ({ day, opens: '08:00', closes: '18:00' })),
+      mainStory: { slug: 'chapel-bridge-story', title: 'The oldest wooden bridge', readMinutes: 6 },
+      otherStories: [{ slug: 'lucerne-in-a-day', title: 'Lucerne in one day', readMinutes: 4 }],
+    }
+  }
+  if (item.id === pinB.id)
+    return { ...base, link: 'https://hotel-am-see.example/rooms' }
+
+  return base
+}
+
+function MapAtRoute() {
+  const { place } = useSearch({ strict: false }) as { place?: string }
+
+  return <MapScreen place={place} />
+}
+
 function renderMap(url = '/en/map') {
   const root = createRootRoute({
     component: () => (
@@ -74,8 +116,9 @@ function renderMap(url = '/en/map') {
   const map = createRoute({
     getParentRoute: () => root,
     path: '/$lang/map',
+    validateSearch: (search: Record<string, unknown>): { place?: string } => (typeof search.place === 'string' && search.place !== '' ? { place: search.place } : {}),
     loader: ({ params }) => params.lang === 'de' ? loadDictionary('de') : undefined,
-    component: MapScreen,
+    component: MapAtRoute,
   })
   const home = createRoute({ getParentRoute: () => root, path: '/$lang', component: () => null })
   const story = createRoute({ getParentRoute: () => root, path: '/$lang/stories/$slug', component: () => null })
@@ -104,6 +147,7 @@ beforeEach(() => {
   localStorage.clear()
   vi.mocked(fetchMapPins).mockReset().mockResolvedValue(pins)
   vi.mocked(fetchMapCategories).mockReset().mockResolvedValue(categories)
+  vi.mocked(fetchMapPin).mockReset().mockImplementation(async id => detailOf(pins.find(candidate => candidate.id === id)!))
 })
 
 async function choose(...names: string[]) {
@@ -351,7 +395,7 @@ describe('[E4.6][AC42] a pin opens its card', () => {
 
     await waitFor(() => expect(title).toHaveFocus())
     expect(pinButton('Hotel am See')).toHaveAttribute('aria-pressed', 'true')
-    expect(within(title.closest('article')!).queryByRole('link', { name: en['map.card.readStory'] })).toBeNull()
+    expect(within(title.closest('article')!).getByRole('button', { name: en['map.card.more'] })).toBeInTheDocument()
   })
 
   it('shows the place icon on the pin and on the card (no photo address yet)', async () => {
@@ -363,16 +407,6 @@ describe('[E4.6][AC42] a pin opens its card', () => {
     expect(pinButton('Hotel am See').querySelector('svg')).not.toBeNull()
     expect(title.closest('article')!.querySelector('[aria-hidden] svg')).not.toBeNull()
     expect(document.querySelector('img')).toBeNull()
-  })
-
-  it('links the main story only when the pin has one', async () => {
-    await loaded()
-    await screen.findByRole('button', { name: en['map.categories'] })
-    await userEvent.click(pinButton('Chapel Bridge'))
-
-    const title = await screen.findByRole('heading', { level: 2, name: 'Chapel Bridge' })
-
-    expect(within(title.closest('article')!).getByRole('link', { name: en['map.card.readStory'] })).toHaveAttribute('href', '/en/stories/chapel-bridge-story')
   })
 
   it('shows the next date of a pin that has dates', async () => {
@@ -448,5 +482,163 @@ describe('[E4.6][AC30] German', () => {
 
     expect(within(dialog).getByRole('checkbox', { name: new RegExp(de['map.filter.all']) })).toBeInTheDocument()
     expect(fetchMapPins).toHaveBeenCalledWith('de')
+  })
+})
+
+const cardOfTitle = (title: string) => screen.getByRole('heading', { level: 2, name: title }).closest('article')!
+
+async function openCardOf(title: string) {
+  await loaded()
+  await screen.findByRole('button', { name: en['map.categories'] })
+  await userEvent.click(pinButton(title))
+  await screen.findByRole('heading', { level: 2, name: title })
+}
+
+async function openSheetOf(title: string) {
+  await openCardOf(title)
+  await userEvent.click(within(cardOfTitle(title)).getByRole('button', { name: en['map.card.more'] }))
+
+  return within(await screen.findByRole('dialog'))
+}
+
+describe('[E4.7][AC42] a pin with stories', () => {
+  it('shows the tip on the open card, and in the sheet links the main story first and lists the other stories, with no price', async () => {
+    const sheet = await openSheetOf('Chapel Bridge')
+    const stories = (await sheet.findAllByRole('link')).filter(link => link.getAttribute('href')?.includes('/stories/'))
+
+    expect(stories.map(link => link.getAttribute('href'))).toEqual(['/en/stories/chapel-bridge-story', '/en/stories/lucerne-in-a-day'])
+    expect(screen.getByRole('dialog').textContent).not.toMatch(/CHF|price|Preis/i)
+    expect(fetchMapPin).toHaveBeenCalledWith(pinA.id, 'en')
+  })
+
+  it('reads the pin once its card opens, and shows the tip on that card', async () => {
+    await openCardOf('Chapel Bridge')
+
+    expect(await within(cardOfTitle('Chapel Bridge')).findByText('Tip for Chapel Bridge')).toBeInTheDocument()
+  })
+})
+
+describe('[E4.7][AC62] a pin with no story', () => {
+  it('shows its details in the sheet and no story link or heading', async () => {
+    const sheet = await openSheetOf('Baeckerei Weinmarkt')
+
+    expect(await sheet.findByText('Tip for Baeckerei Weinmarkt')).toBeInTheDocument()
+    expect(sheet.queryByRole('heading', { name: en['map.sheet.stories'] })).toBeNull()
+    expect(sheet.queryAllByRole('link').filter(link => link.getAttribute('href')?.includes('/stories/'))).toHaveLength(0)
+  })
+})
+
+describe('[E4.7][AC49] a pin with an outbound link', () => {
+  it('shows the hotel link by its host and no booking or payment button', async () => {
+    const sheet = await openSheetOf('Hotel am See')
+
+    expect(await sheet.findByRole('link', { name: /hotel-am-see\.example/ })).toHaveAttribute('href', 'https://hotel-am-see.example/rooms')
+    expect(sheet.queryByRole('button', { name: /book|buy|pay|reserve|cart/i })).toBeNull()
+    expect(screen.queryByRole('link', { name: /book|buy|pay|reserve|cart/i })).toBeNull()
+  })
+})
+
+describe('[E4.7][AC89] Open in Google Maps', () => {
+  it('opens the position at once on the card, and the stored link once the pin has been read, in a new tab', async () => {
+    await openCardOf('Chapel Bridge')
+    const link = () => within(cardOfTitle('Chapel Bridge')).getByRole('link', { name: en['map.directions'] })
+
+    await waitFor(() => expect(link()).toHaveAttribute('href', 'https://www.google.com/maps/place/Chapel+Bridge/@47.06,8.31,17z'))
+    expect(link()).toHaveAttribute('target', '_blank')
+    expect(link().getAttribute('rel')).toContain('noreferrer')
+  })
+
+  it('opens the position, destination only, for a pin with no stored link', async () => {
+    await openCardOf('Wine Market')
+    const href = new URL(within(cardOfTitle('Wine Market')).getByRole('link', { name: en['map.directions'] }).getAttribute('href')!)
+
+    expect(href.origin + href.pathname).toBe('https://www.google.com/maps/search/')
+    expect([...href.searchParams.keys()].sort()).toEqual(['api', 'query'])
+    expect(href.searchParams.get('query')).toBe(`${pinD.latitude},${pinD.longitude}`)
+  })
+})
+
+describe('[E4.7][N03] the sheet and its Previous and Next place', () => {
+  it('steps to the next place in the card row\'s order and reads that pin', async () => {
+    const sheet = await openSheetOf('Chapel Bridge')
+
+    await userEvent.click(sheet.getByRole('button', { name: en['map.sheet.next'] }))
+
+    await waitFor(() => expect(fetchMapPin).toHaveBeenCalledWith(pinB.id, 'en'))
+    expect(await within(screen.getByRole('dialog')).findByRole('link', { name: /hotel-am-see\.example/ })).toBeInTheDocument()
+    expect(within(screen.getByRole('dialog')).getByRole('heading', { name: 'Hotel am See' })).toBeInTheDocument()
+  })
+
+  it('has Previous place disabled on the first place', async () => {
+    const sheet = await openSheetOf('Chapel Bridge')
+
+    expect(sheet.getByRole('button', { name: en['map.sheet.previous'] })).toBeDisabled()
+  })
+
+  it('says the details could not load and tries again', async () => {
+    vi.mocked(fetchMapPin).mockRejectedValueOnce(new Error('offline'))
+    const sheet = await openSheetOf('Chapel Bridge')
+
+    expect(await sheet.findByRole('alert')).toHaveTextContent(en['map.sheet.failed'])
+    await userEvent.click(sheet.getByRole('button', { name: en['map.sheet.retry'] }))
+
+    expect(await sheet.findByRole('heading', { name: en['map.sheet.stories'] })).toBeInTheDocument()
+  })
+
+  it('closes the sheet with Escape and leaves the card open', async () => {
+    await openSheetOf('Chapel Bridge')
+    await userEvent.keyboard('{Escape}')
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(screen.getByRole('heading', { level: 2, name: 'Chapel Bridge' })).toBeInTheDocument()
+  })
+
+  it('shows the card and the sheet in German', async () => {
+    vi.mocked(fetchMapPins).mockResolvedValue(pins.map(item => ({ ...item, language: 'de' as const })))
+    await loaded('/de/map')
+    await screen.findByRole('button', { name: de['map.categories'] })
+    await userEvent.click(pinButton('Chapel Bridge'))
+    await userEvent.click(within(cardOfTitle('Chapel Bridge')).getByRole('button', { name: de['map.card.more'] }))
+    const sheet = within(await screen.findByRole('dialog'))
+
+    expect(sheet.getAllByRole('link', { name: de['map.directions'] }).length).toBeGreaterThan(0)
+    expect(await sheet.findByRole('heading', { name: de['map.sheet.stories'] })).toBeInTheDocument()
+  })
+})
+
+describe('[E4.7][AC90] the deep link /map?place=<slug>', () => {
+  it('opens the map with that place\'s card showing and focus on its title', async () => {
+    await loaded('/en/map?place=pin-3')
+
+    const title = await screen.findByRole('heading', { level: 2, name: 'Baeckerei Weinmarkt' })
+
+    await waitFor(() => expect(title).toHaveFocus())
+    expect(pinButton('Baeckerei Weinmarkt')).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.queryByText(en['map.gone'])).toBeNull()
+  })
+
+  it('opens the map normally with the notice for a slug that is not on the map (hidden, ended or unknown), and the notice closes', async () => {
+    await loaded('/en/map?place=hidden-or-ended')
+
+    expect(await screen.findByText(en['map.gone'])).toBeInTheDocument()
+    expect(screen.queryByRole('article')).toBeNull()
+    expect(allPinButtons()).toHaveLength(5)
+    await userEvent.click(screen.getByRole('button', { name: en['map.gone.close'] }))
+
+    expect(screen.queryByText(en['map.gone'])).toBeNull()
+  })
+
+  it('says the notice in German', async () => {
+    await loaded('/de/map?place=weg')
+
+    expect(await screen.findByText(de['map.gone'])).toBeInTheDocument()
+  })
+
+  it('shows no notice and no card without the parameter', async () => {
+    await loaded()
+    await screen.findByRole('button', { name: en['map.categories'] })
+
+    expect(screen.queryByText(en['map.gone'])).toBeNull()
+    expect(screen.queryByRole('article')).toBeNull()
   })
 })

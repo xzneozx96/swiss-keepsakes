@@ -59,10 +59,36 @@ describe('[E4.2][AC68] N17 the review is a phone with the guest map', () => {
     await waitFor(() => expect(FakeMarker.instances).toHaveLength(1))
     expect(within(phone).getByRole('heading', { name: 'Chapel Bridge', level: 2 })).toBeInTheDocument()
     expect(within(card()).getByText(/18:00–19:30/)).toBeInTheDocument()
-    // The preview stays on its page: Read the story is a button that opens the story in a sheet in the phone.
-    expect(within(card()).getByRole('button', { name: 'Read the story' })).toBeInTheDocument()
-    expect(within(card()).queryByRole('link')).not.toBeInTheDocument()
     expect(within(FakeMarker.instances[0]!.element).getByRole('button', { pressed: true })).toBeInTheDocument()
+    // The preview stays on its page: Show more opens the place's sheet in the phone, whose story row is a button, not a link.
+    await userEvent.click(within(card()).getByRole('button', { name: 'Show more' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Chapel Bridge' })
+
+    expect(phone).toContainElement(sheet)
+    expect(within(sheet).getByRole('button', { name: /Read the story/ })).toBeInTheDocument()
+    expect(within(sheet).queryAllByRole('link').filter(link => link.getAttribute('href')?.includes('/stories/'))).toHaveLength(0)
+  })
+
+  it('[E4.7][N03][AC89] gives the card Show more and Open in Google Maps, and the sheet the draft\'s address, hours and outbound link', async () => {
+    await openReview(draft({
+      address: 'Kapellbrücke, 6003 Luzern',
+      mapsLink: 'https://maps.app.goo.gl/abc',
+      outboundUrl: 'https://hotel.example/rooms',
+      weeklyHours: [1, 2, 3, 4, 5, 6, 7].map(day => ({ day, opens: '08:00', closes: '18:00' })),
+    }))
+
+    const directions = within(card()).getByRole('link', { name: 'Open in Google Maps' })
+
+    expect(directions).toHaveAttribute('href', 'https://maps.app.goo.gl/abc')
+    expect(directions).toHaveAttribute('target', '_blank')
+    expect(directions.getAttribute('rel')).toContain('noreferrer')
+    await userEvent.click(within(card()).getByRole('button', { name: 'Show more' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Chapel Bridge' })
+
+    expect(within(sheet).getByText('Kapellbrücke, 6003 Luzern')).toBeInTheDocument()
+    expect(within(sheet).getByText('08:00–18:00')).toBeInTheDocument()
+    expect(within(sheet).getByRole('link', { name: /hotel\.example/ })).toHaveAttribute('href', 'https://hotel.example/rooms')
+    expect(within(sheet).queryByRole('button', { name: /book|buy|pay|reserve/i })).not.toBeInTheDocument()
   })
 
   it('shows the German version after the switch, and no story link when the story is not published in German', async () => {
@@ -71,7 +97,9 @@ describe('[E4.2][AC68] N17 the review is a phone with the guest map', () => {
     await userEvent.click(screen.getByRole('tab', { name: /German/ }))
 
     expect(await within(phone).findByRole('heading', { name: 'Kapellbrücke', level: 2 })).toBeInTheDocument()
-    expect(within(card()).queryByRole('button')).not.toBeInTheDocument()
+    await userEvent.click(within(card()).getByRole('button', { name: 'Mehr anzeigen' }))
+
+    expect(within(await screen.findByRole('dialog', { name: 'Kapellbrücke' })).queryByRole('button', { name: /Geschichte lesen/ })).not.toBeInTheDocument()
   })
 
   it('shows the other language\'s title and says so when the chosen language has none', async () => {

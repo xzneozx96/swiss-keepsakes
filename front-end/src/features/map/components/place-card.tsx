@@ -1,14 +1,14 @@
 import type { PublicMapItem } from '@sk/api-contract'
 import type { Language } from '@sk/domain/shared'
 
-import { Button, buttonVariants } from '@heroui/react'
-import { Link } from '@tanstack/react-router'
+import { Button } from '@heroui/react'
 
 import { MapCard, MapCardRow } from '@/components/map/map-card'
 import { MapThumb } from '@/components/map/map-thumb'
 import { useLocale } from '@/contexts/locale-context'
 import { CARD_ROW_BOTTOM } from '@/features/map/lib/layout'
 import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
+import { DirectionsLink } from './directions-link'
 
 /** The words a card shows besides the pin's own fields, when the caller has them (the guest map's category names; the place editor's preview adds the tip). */
 export interface CardExtras {
@@ -16,21 +16,24 @@ export interface CardExtras {
   tip?: { text: string, language: Language }
   /** The names of the pin's categories, the most specific first. */
   categories?: string[]
+  /** The Google Maps link the merchant stored for the place; the card's map button opens it in place of the position. */
+  mapsLink?: string | null
 }
 
 /**
- * The card of one pin (N03, the part E4.6 builds): a thumbnail slot on the left that is always there (the place icon
- * when there is no photo), the title, the first category and the next date, and the tip (two lines) beside it,
- * centred against the picture, `‹ n of m ›`, and "Read the story" when the pin has a main story. No price. The
- * details sheet, hours, address and directions are E4.7.
+ * The card of one pin (N03): a thumbnail slot on the left that is always there (the place icon when there is no
+ * photo), the title, the first category and the next date (or the language notice) and the tip (two lines) beside it,
+ * centred against the picture, `‹ n of m ›`, Show more (the details sheet) and the Google Maps button. No price, no
+ * booking or payment button, no review summary.
  */
-function PlaceCard({ pin, active, photoSrc, extras, nav, onReadStory }: {
+function PlaceCard({ pin, active, photoSrc, extras, nav, directions, onMore }: {
   pin: PublicMapItem
   active: boolean
   photoSrc?: string
   extras?: CardExtras
   nav: React.ComponentProps<typeof MapCard>['nav']
-  onReadStory?: (pin: PublicMapItem) => void
+  directions: boolean
+  onMore?: (pin: PublicMapItem) => void
 }) {
   const { t, language, intlLocale } = useLocale()
   const date = pin.nextDate
@@ -39,24 +42,18 @@ function PlaceCard({ pin, active, photoSrc, extras, nav, onReadStory }: {
         from: time => t('map.date.from', { time }),
       })
     : undefined
+  const notice = pin.language === language ? undefined : t(`map.card.onlyIn.${pin.language}`)
 
   return (
     <MapCard
-      action={pin.hasMainStory && pin.mainStorySlug
-        ? onReadStory
-          ? <Button size="sm" variant="secondary" onPress={() => onReadStory(pin)}>{t('map.card.readStory')}</Button>
-          : (
-              <Link
-                className={buttonVariants({ variant: 'secondary', size: 'sm' })}
-                params={{ lang: language, slug: pin.mainStorySlug }}
-                to="/$lang/stories/$slug"
-              >
-                {t('map.card.readStory')}
-              </Link>
-            )
-        : undefined}
+      action={(
+        <>
+          {onMore && <Button className="min-h-11" size="sm" variant="secondary" onPress={() => onMore(pin)}>{t('map.card.more')}</Button>}
+          {directions && <DirectionsLink icon="filled" place={{ latitude: pin.latitude, longitude: pin.longitude, mapsLink: extras?.mapsLink ?? null }} />}
+        </>
+      )}
       active={active}
-      eyebrow={[extras?.categories?.[0], date].filter(Boolean).join(' · ')}
+      eyebrow={[notice, extras?.categories?.[0], date].filter(Boolean).join(' · ')}
       id={pin.id}
       layout="pin"
       nav={nav}
@@ -81,7 +78,8 @@ export function PlaceCardRow({
   photoOf,
   extrasOf,
   bottom = CARD_ROW_BOTTOM,
-  onReadStory,
+  directions = true,
+  onMore,
   onSelect,
   onClose,
 }: {
@@ -93,8 +91,10 @@ export function PlaceCardRow({
   extrasOf?: (pin: PublicMapItem) => CardExtras | undefined
   /** Space under the row (px). The guest map keeps `CARD_ROW_BOTTOM`; the editor's preview has no tab bar or music button. */
   bottom?: number
-  /** Opens the story in place of the link to the story page (the place editor's preview, which stays on its page). */
-  onReadStory?: (pin: PublicMapItem) => void
+  /** Off while the place has no position (the place editor's preview of a draft): the map button would open nothing. */
+  directions?: boolean
+  /** Opens the details sheet of the pin. Without it a card has no Show more. */
+  onMore?: (pin: PublicMapItem) => void
   onSelect: (id: string) => void
   /** Without it the row has no ✕. */
   onClose?: () => void
@@ -106,7 +106,7 @@ export function PlaceCardRow({
       bottom={bottom}
       items={pins}
       label={t(pins.length === 1 ? 'map.places.one' : 'map.places.other', { count: pins.length })}
-      renderCard={(pin, { active, nav }) => <PlaceCard active={active} extras={extrasOf?.(pin)} nav={nav} photoSrc={photoOf?.(pin)} pin={pin} onReadStory={onReadStory} />}
+      renderCard={(pin, { active, nav }) => <PlaceCard active={active} directions={directions} extras={extrasOf?.(pin)} nav={nav} photoSrc={photoOf?.(pin)} pin={pin} onMore={onMore} />}
       selectedId={selectedId}
       onClose={onClose}
       onSelect={onSelect}

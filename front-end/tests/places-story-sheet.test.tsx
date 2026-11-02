@@ -76,12 +76,21 @@ function answerWith(texts: Record<string, unknown>) {
   }
 }
 
+/** The card's Show more opens the place's sheet; its story row opens the story, and the place's sheet makes room for it. */
+async function openStory(phone: HTMLElement, name: 'Read the story' | 'Geschichte lesen') {
+  await userEvent.click(await within(phone).findByRole('button', { name: /^(Show more|Mehr anzeigen)$/ }, { timeout: 10000 }))
+  const place = await screen.findByRole('dialog')
+
+  await userEvent.click(await within(place).findByRole('button', { name: new RegExp(name) }))
+  await waitFor(() => expect(place).not.toBeInTheDocument())
+}
+
 describe('[E4.2][AC68] the review opens the story in a sheet inside the phone', () => {
   it('opens the real text of the linked story in a bottom sheet over the phone, and the editor stays on its page', async () => {
     answerWith({ en: version() })
     const phone = await openReview({ en: 'A morning on the Musegg wall', de: 'Ein Morgen auf der Museggmauer' })
 
-    await userEvent.click(await within(phone).findByRole('button', { name: 'Read the story' }, { timeout: 10000 }))
+    await openStory(phone, 'Read the story')
     const sheet = await screen.findByRole('dialog', { name: 'A morning on the Musegg wall' })
 
     expect(phone).toContainElement(sheet)
@@ -98,7 +107,7 @@ describe('[E4.2][AC68] the review opens the story in a sheet inside the phone', 
     const phone = await openReview({ en: 'A morning on the Musegg wall', de: 'Ein Morgen auf der Museggmauer' })
 
     await userEvent.click(screen.getByRole('tab', { name: /German/ }))
-    await userEvent.click(await within(phone).findByRole('button', { name: 'Geschichte lesen' }, { timeout: 10000 }))
+    await openStory(phone, 'Geschichte lesen')
     const sheet = await screen.findByRole('dialog', { name: 'Ein Morgen auf der Museggmauer' })
 
     expect(await within(sheet).findByText('Die Museggmauer zieht sich den Hügel entlang.')).toBeInTheDocument()
@@ -111,7 +120,7 @@ describe('[E4.2][AC68] the review opens the story in a sheet inside the phone', 
     const phone = await openReview({ de: 'Ein Tag auf dem Pilatus' }, ['de'])
 
     await userEvent.click(screen.getByRole('tab', { name: /German/ }))
-    await userEvent.click(await within(phone).findByRole('button', { name: 'Geschichte lesen' }, { timeout: 10000 }))
+    await openStory(phone, 'Geschichte lesen')
     const sheet = await screen.findByRole('dialog', { name: 'Ein Tag auf dem Pilatus' })
 
     expect(await within(sheet).findByText('Diese Version ist ein Entwurf. Gäste sehen sie noch nicht.')).toBeInTheDocument()
@@ -121,7 +130,7 @@ describe('[E4.2][AC68] the review opens the story in a sheet inside the phone', 
     answerWith({})
     const phone = await openReview({ en: 'A story only the API knows' })
 
-    await userEvent.click(await within(phone).findByRole('button', { name: 'Read the story' }, { timeout: 10000 }))
+    await openStory(phone, 'Read the story')
     const sheet = await screen.findByRole('dialog', { name: 'A story only the API knows' })
 
     expect(await within(sheet).findByText('There is no English version of this story yet.')).toBeInTheDocument()
@@ -131,7 +140,7 @@ describe('[E4.2][AC68] the review opens the story in a sheet inside the phone', 
     api.answer = call => (call.path.includes('/versions/') ? Response.json({ type: 'about:blank', title: 'Unavailable', status: 503 }, { status: 503, headers: { 'Content-Type': 'application/problem+json' } }) : undefined)
     const phone = await openReview({ en: 'A story only the API knows' })
 
-    await userEvent.click(await within(phone).findByRole('button', { name: 'Read the story' }, { timeout: 10000 }))
+    await openStory(phone, 'Read the story')
 
     expect(await within(await screen.findByRole('dialog')).findByRole('alert')).toHaveTextContent('The story text could not be loaded.')
   })
@@ -140,14 +149,14 @@ describe('[E4.2][AC68] the review opens the story in a sheet inside the phone', 
     answerWith({ en: version() })
     const phone = await openReview({ en: 'A morning on the Musegg wall' }, ['en'])
 
-    await userEvent.click(await within(phone).findByRole('button', { name: 'Read the story' }, { timeout: 10000 }))
+    await openStory(phone, 'Read the story')
     await userEvent.click((await within(await screen.findByRole('dialog')).findAllByRole('button', { name: 'Close' })).at(-1)!)
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    await userEvent.click(await within(phone).findByRole('button', { name: 'Read the story' }, { timeout: 10000 }))
+    await openStory(phone, 'Read the story')
     await screen.findByRole('dialog')
     await userEvent.keyboard('{Escape}')
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    expect(await within(phone).findByRole('button', { name: 'Read the story' })).toBeInTheDocument()
+    expect(await within(phone).findByRole('button', { name: 'Show more' })).toBeInTheDocument()
   })
 })

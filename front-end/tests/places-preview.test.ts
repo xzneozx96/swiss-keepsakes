@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { emptyDate, emptyForm } from '@/features/places/lib/form'
-import { previewItem, tipIn, titleIn } from '@/features/places/lib/preview'
+import { previewDetail, previewItem, tipIn, titleIn } from '@/features/places/lib/preview'
 
 const now = new Date('2026-10-30T10:00:00Z')
 const base = { storyLanguages: [] as const, untitled: 'Untitled pin', now }
@@ -52,5 +52,38 @@ describe('[E4.2][AC68] the draft as the guest map\'s pin', () => {
     expect(previewItem(form, 'en', base).item.nextDate).toEqual({ firstDay: '2026-11-07', lastDay: '2026-11-07', startTime: '10:00', endTime: null })
     expect(previewItem({ ...form, dates: form.dates.slice(-1) }, 'en', base).item.nextDate).toEqual({ firstDay: '2027-01-01', lastDay: '2027-01-05', startTime: null, endTime: null })
     expect(previewItem({ ...emptyForm(), dates: [day('2026-10-01')] }, 'en', base).item.nextDate).toBeNull()
+  })
+})
+
+describe('[E4.7][N03] the draft as the details sheet', () => {
+  const detailBase = { storyTitle: 'The story', hasStory: true, photos: [], untitled: 'Untitled pin', now }
+
+  it('carries the draft\'s address, map link, hours, outbound link and tip, and drops what is empty or half typed', () => {
+    const form = {
+      ...emptyForm(),
+      titleEn: 'Chapel Bridge',
+      tipEn: 'Go early',
+      address: ' Kapellbrücke ',
+      mapsLink: ' https://maps.app.goo.gl/abc ',
+      outboundUrl: 'https://hotel.example',
+      hours: [{ key: 'a', day: 1, opens: '09:00', closes: '17:00' }, { key: 'b', day: 2, opens: '09:', closes: '17:00' }],
+    }
+
+    expect(previewDetail(form, 'en', detailBase)).toMatchObject({
+      title: 'Chapel Bridge',
+      tip: 'Go early',
+      address: 'Kapellbrücke',
+      mapsLink: 'https://maps.app.goo.gl/abc',
+      link: 'https://hotel.example',
+      hours: [{ day: 1, opens: '09:00', closes: '17:00' }],
+    })
+    expect(previewDetail(emptyForm(), 'en', detailBase)).toMatchObject({ tip: '', address: null, mapsLink: null, link: null, hours: [], mainStory: null, otherStories: [] })
+  })
+
+  it('names the chosen story only when it is published in the previewed language', () => {
+    const form = { ...emptyForm(), mainStoryGroupId: '0198a000-0000-7000-8000-000000000077' }
+
+    expect(previewDetail(form, 'en', detailBase).mainStory).toMatchObject({ title: 'The story', readMinutes: null })
+    expect(previewDetail(form, 'en', { ...detailBase, hasStory: false }).mainStory).toBeNull()
   })
 })

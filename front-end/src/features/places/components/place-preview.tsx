@@ -3,6 +3,7 @@ import type { Language } from '@sk/domain/shared'
 import type { PlaceForm } from '../lib/form'
 import type { CardExtras } from '@/features/map/components/place-card'
 
+import { useQueries } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
 import { IPhoneMockup } from '@/components/iphone-mockup'
@@ -11,12 +12,14 @@ import { PhotoPin } from '@/components/map/pin-faces'
 import { PinLayer } from '@/components/map/pin-layer'
 import { LocaleOverride, useLocale } from '@/contexts/locale-context'
 import { useCategories } from '@/features/categories/api/queries'
+import { useDataClient } from '@/features/data-client'
 import { PlaceCardRow } from '@/features/map/components/place-card'
+import { PlaceSheet } from '@/features/map/components/place-sheet'
 import { CARD_ROW_HEIGHT, CONTROLS } from '@/features/map/lib/layout'
-import { useMediaFile } from '@/features/media/api/queries'
+import { mediaQueries, useMediaFile } from '@/features/media/api/queries'
 import { useStoryOptions, useStoryVersion } from '../api/queries'
 import { photoIds } from '../lib/form'
-import { PREVIEW_PIN_ID, previewItem, tipIn } from '../lib/preview'
+import { PREVIEW_PIN_ID, previewDetail, previewItem, tipIn } from '../lib/preview'
 import { StorySheet } from './story-sheet'
 
 const NO_PINS: PublicMapItem[] = []
@@ -37,6 +40,21 @@ function useCoverSrc(storeId: string, mediaId: string | undefined) {
   return copy?.url ?? media.data?.publicUrl ?? undefined
 }
 
+/** The addresses of the draft's photos in the merchant's order, a copy wide enough for the sheet's carousel; a photo that is not ready yet is left out. */
+function usePhotoSrcs(storeId: string, ids: string[]) {
+  const client = useDataClient()
+
+  return useQueries({
+    queries: ids.map(id => mediaQueries.file(client, storeId, id)),
+    combine: results => results.flatMap((result) => {
+      const copy = result.data?.variants.find(variant => variant.width >= 800) ?? result.data?.variants.at(-1)
+      const src = copy?.url ?? result.data?.publicUrl
+
+      return src ? [{ src, alt: null }] : []
+    }),
+  })
+}
+
 /** The guest map the way a guest sees this place: its pin selected and its card open, drawn by the guest map's own parts. */
 function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: string, language: Language }) {
   const { t } = useLocale()
@@ -50,13 +68,19 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
   const extras = useMemo<CardExtras>(() => {
     const names = new Map((categories.data?.items ?? []).map(category => [category.id, category.name[language] ?? category.name[language === 'en' ? 'de' : 'en'] ?? '']))
 
-    return { tip: tipIn(form, language), categories: form.categoryIds.flatMap(id => names.get(id) || []) }
+    return { tip: tipIn(form, language), categories: form.categoryIds.flatMap(id => names.get(id) || []), mapsLink: form.mapsLink.trim() === '' ? null : form.mapsLink.trim() }
   }, [categories.data, form, language])
   const pins = useMemo(() => (located ? [item] : NO_PINS), [item, located])
   const [frame, setFrame] = useState<HTMLDivElement | null>(null)
   const [storyOpen, setStoryOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const photos = usePhotoSrcs(storeId, photoIds(form))
   const option = stories.data?.items.find(candidate => candidate.groupId === form.mainStoryGroupId)
   const storyTitle = option ? (option.title[language] ?? option.title[language === 'en' ? 'de' : 'en'] ?? '') : ''
+  const detail = useMemo(
+    () => previewDetail(form, language, { storyTitle, hasStory: storyLanguages.includes(language), photos, untitled, now }),
+    [form, language, photos, storyTitle, storyLanguages, untitled, now],
+  )
   // The story options carry no text: the sheet reads the version in the previewed language once it opens.
   const story = useStoryVersion(storeId, form.mainStoryGroupId, language, storyOpen)
 
@@ -71,12 +95,25 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
         interactive={false}
         label={t('map.heading')}
         overlay={(
-          <PlaceCardRow bottom={CARD_BOTTOM} extrasOf={() => extras} photoOf={() => cover} pins={[item]} selectedId={item.id} onReadStory={() => setStoryOpen(true)} onSelect={noop} />
+          <PlaceCardRow bottom={CARD_BOTTOM} directions={located} extrasOf={() => extras} photoOf={() => cover} pins={[item]} selectedId={item.id} onMore={() => setMoreOpen(true)} onSelect={noop} />
         )}
         view={{ center: located ? [item.longitude, item.latitude] : LUCERNE, zoom: 16, minZoom: 12, maxZoom: 18.5 }}
       >
         <DraftPin cover={cover} located={located} pins={pins} />
       </MapView>
+      <PlaceSheet
+        container={frame ?? undefined}
+        detail={detail}
+        isOpen={moreOpen}
+        item={item}
+        position={{ index: 0, count: 1 }}
+        onClose={() => setMoreOpen(false)}
+        onReadStory={() => {
+          setMoreOpen(false)
+          setStoryOpen(true)
+        }}
+        onStep={noop}
+      />
       <StorySheet container={frame} error={story.error} isOpen={storyOpen} language={language} loading={story.isPending && story.fetchStatus !== 'idle'} text={story.data} title={storyTitle || item.title} onClose={() => setStoryOpen(false)} />
     </div>
   )

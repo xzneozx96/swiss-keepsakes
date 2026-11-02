@@ -1,6 +1,7 @@
 import type { PublicMapItem } from '@sk/api-contract'
 import type { Language } from '@sk/domain/shared'
 import type { PlaceForm } from './form'
+import type { PlaceDetail } from '@/features/map/lib/place-detail'
 
 import { nextDate } from '@sk/domain/content'
 
@@ -79,4 +80,32 @@ export function previewItem(form: PlaceForm, language: Language, options: { stor
   }
 
   return { item, located }
+}
+
+/**
+ * The draft as the details sheet shows it (N03), in the language being previewed: the same facts a guest reads once the
+ * place is published. `photos` are the draft's pictures in order, already resolved to addresses. The story is the
+ * chosen one by its title: its reading time is not known here, and the other stories that tag the pin are not part of a draft.
+ */
+export function previewDetail(form: PlaceForm, language: Language, options: { storyTitle: string, hasStory: boolean, photos: PlaceDetail['photos'], untitled: string, now: Date }): PlaceDetail {
+  const { item, located } = previewItem(form, language, { storyLanguages: options.hasStory ? [language] : [], untitled: options.untitled, now: options.now })
+  const link = form.outboundUrl.trim()
+  const mapsLink = form.mapsLink.trim()
+
+  return {
+    id: item.id,
+    title: item.title,
+    language: item.language,
+    tip: tipIn(form, language)?.text ?? '',
+    latitude: located ? item.latitude : 0,
+    longitude: located ? item.longitude : 0,
+    address: form.address.trim() === '' ? null : form.address.trim(),
+    mapsLink: mapsLink === '' ? null : mapsLink,
+    hours: form.hours.flatMap(span => (TIME.test(span.opens) && TIME.test(span.closes) ? [{ day: span.day, opens: span.opens, closes: span.closes }] : [])),
+    nextDate: item.nextDate,
+    link: link === '' ? null : link,
+    photos: options.photos,
+    mainStory: item.hasMainStory && item.mainStorySlug ? { slug: item.mainStorySlug, title: options.storyTitle, readMinutes: null } : null,
+    otherStories: [],
+  }
 }
