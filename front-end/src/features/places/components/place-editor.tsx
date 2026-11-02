@@ -23,12 +23,12 @@ import { StepTags } from './step-tags'
 import { StepWhen } from './step-when'
 
 /** The status in its colour and words, the same chip as the list. */
-function StatusLine({ status }: { status: 'new' | 'draft' | 'published' | 'hidden' }) {
+function StatusLine({ status, inBar }: { status: 'new' | 'draft' | 'published' | 'hidden', inBar?: boolean }) {
   const { t } = useLocale()
   const key = status === 'new' ? 'places.publish.draft' : (`places.status.${status}` as const)
 
   return (
-    <span className="shrink-0" data-testid="places-status">
+    <span className={inBar ? 'shrink-0' : 'shrink-0 max-lg:hidden'} data-testid={inBar ? undefined : 'places-status'}>
       <StatusChip tone={STATUS_TONE[status === 'new' ? 'draft' : status]}>{t(key)}</StatusChip>
     </span>
   )
@@ -54,8 +54,9 @@ export function PlaceEditor({ storeId, initial, start }: { storeId: string, init
 
   return (
     <div className="flex min-w-0 flex-col gap-5" data-testid="place-editor">
-      <MerchantBackBar label={t('places.back')} title={title} to={PLACES_PATH as never} />
-      <header className="flex min-w-0 items-center gap-3">
+      <MerchantBackBar label={t('places.back')} status={<StatusLine inBar status={editor.pin?.status ?? 'new'} />} title={title} to={PLACES_PATH as never} />
+      {/* On phones the ← bar shows the title and the status; the header stays for screen readers only. */}
+      <header className="flex min-w-0 items-center gap-3 max-lg:sr-only">
         <Link aria-label={t('places.back')} className={`${buttonVariants({ variant: 'tertiary', isIconOnly: true })} -ms-2 hidden shrink-0 lg:inline-flex`} to={PLACES_PATH as never}>
           <BackIcon aria-hidden size={20} />
         </Link>

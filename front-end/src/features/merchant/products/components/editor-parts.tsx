@@ -114,6 +114,9 @@ export function EditorHeader({
     <header className="flex flex-col gap-3">
       <MerchantBackBar
         label={t('products.back')}
+        status={archived
+          ? <StatusChip tone="neutral">{t('products.archived')}</StatusChip>
+          : <PublishChip published={published} />}
         title={title}
         to={tab === 'gifts' ? '/store/products' : '/store/products/tours'}
       />
@@ -132,13 +135,16 @@ export function EditorHeader({
           <p className="text-sm text-muted">{subtitle}</p>
         </div>
         <div className="flex flex-wrap items-start gap-2 lg:justify-end [&_svg]:shrink-0">
-          {archived
-            ? (
-                <StatusChip tone="neutral">{t('products.archived')}</StatusChip>
-              )
-            : (
-                <PublishChip published={published} />
-              )}
+          {/* On phones the ← bar carries this first chip. */}
+          <span className="max-lg:hidden">
+            {archived
+              ? (
+                  <StatusChip tone="neutral">{t('products.archived')}</StatusChip>
+                )
+              : (
+                  <PublishChip published={published} />
+                )}
+          </span>
           {maintenance && !archived && <MaintenanceChip />}
           <LanguageChip status={languages} />
         </div>

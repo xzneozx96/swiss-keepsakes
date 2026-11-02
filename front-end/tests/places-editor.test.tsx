@@ -5,6 +5,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { MerchantBarSlotContext } from '@/components/layout/merchant-back-bar'
 import { LocaleProvider } from '@/contexts/locale-context'
 import { PlaceEditorScreen } from '@/features/places/components/place-editor-screen'
 import { StepWhen } from '@/features/places/components/step-when'
@@ -85,6 +86,22 @@ async function nextTo(step: string) {
 }
 
 describe('[E4.2][AC68] N17 a new place', () => {
+  it('on phones the status chip sits in the ← bar next to the title, and the header copy of it is hidden', async () => {
+    const slot = document.body.appendChild(document.createElement('div'))
+    await renderInRouter(
+      <MerchantBarSlotContext value={slot}>
+        <PlaceEditorScreen placeId="new" start={undefined} />
+      </MerchantBarSlotContext>,
+      { path: '/store/content/places/new' },
+    )
+
+    await heading('Place on the map')
+    expect(within(slot).getByText('Draft')).toBeInTheDocument()
+    expect(slot.querySelectorAll('[data-testid="places-status"]')).toHaveLength(0)
+    expect(screen.getByTestId('places-status')).toHaveClass('max-lg:hidden')
+    slot.remove()
+  })
+
   it('[E4.2][AC68] starts on the map step with six steps, and no type to choose', async () => {
     await open('new')
 

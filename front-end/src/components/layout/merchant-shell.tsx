@@ -278,7 +278,11 @@ const tabLink
  * Merchant dashboard frame (UX spec §3.2). Phones: bottom navigation with Dashboard,
  * Operations, Calendar and More (a sheet with the other sections). From 1024px: a sidebar.
  */
-export function MerchantShell({ children }: { children: React.ReactNode }) {
+export function MerchantShell({ children, notice }: {
+  children: React.ReactNode
+  /** A notice for every page of the area (the store-setup warning): the very top of the content column, above the phone bar. */
+  notice?: React.ReactNode
+}) {
   const { language, t } = useLocale()
   const { setRole } = useDemoActions()
   const demoRole = useDemoSelector(s => s.role)
@@ -422,6 +426,16 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="group/content flex min-w-0 flex-1 flex-col">
+        {/* The page notice sits above everything, the phone bar included; it scrolls away on phones (the
+            bar pins to the top) and sticks on desktop. It takes the width and padding of the main column;
+            a notice brings its own vertical padding, so the main column drops its top padding below it. */}
+        <div
+          data-merchant-notice=""
+          className="mx-auto w-full max-w-6xl bg-background px-4 empty:hidden lg:sticky lg:top-0 lg:z-10 lg:px-8"
+        >
+          {notice}
+        </div>
+
         {/* Phones: no shop header. Detail screens dock their ← title bar here (guest pattern). */}
         <div
           ref={setBarSlot}
@@ -434,7 +448,7 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
           className={
             pathname === '/store/calendar'
               ? 'flex w-full flex-1 flex-col'
-              : 'mx-auto w-full max-w-6xl flex-1 px-4 pt-4 pb-24 lg:px-8 lg:pt-8 lg:pb-8'
+              : 'mx-auto w-full max-w-6xl flex-1 px-4 pt-4 pb-24 group-has-[[data-merchant-notice]:not(:empty)]/content:lg:pt-0 lg:px-8 lg:pt-8 lg:pb-8'
           }
         >
           <MerchantBarSlotContext value={barSlot}>{children}</MerchantBarSlotContext>

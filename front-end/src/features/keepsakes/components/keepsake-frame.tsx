@@ -37,6 +37,7 @@ export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBa
     <div className="flex min-w-0 flex-col gap-5" data-testid="keepsake-editor">
       <MerchantBackBar
         label={t('keepsakes.back.toKeepsakes')}
+        status={<StatusChip tone={status.tone}>{status.label}</StatusChip>}
         title={title}
         to={KEEPSAKES_PATH as never}
         onClick={(event) => {
@@ -44,12 +45,13 @@ export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBa
           onBack()
         }}
       />
-      <header className="flex min-w-0 items-center gap-3">
+      {/* On phones the ← bar shows the title and the status; the header stays for screen readers only. */}
+      <header className="flex min-w-0 items-center gap-3 max-lg:sr-only">
         <Button isIconOnly aria-label={t('keepsakes.back.toKeepsakes')} className="-ms-2 hidden shrink-0 lg:inline-flex" variant="tertiary" onPress={onBack}>
           <BackIcon aria-hidden size={20} />
         </Button>
         <h1 className="min-w-0 text-title text-pretty [overflow-wrap:anywhere] max-lg:sr-only">{title}</h1>
-        <span className="shrink-0" data-testid="keepsake-status">
+        <span className="shrink-0 max-lg:hidden" data-testid="keepsake-status">
           <StatusChip tone={status.tone}>{status.label}</StatusChip>
         </span>
       </header>

@@ -48,13 +48,12 @@ const bannerClass = 'relative w-full items-start overflow-hidden rounded-xl bord
 
 /**
  * The warning banner of a page: a headline, the action that fixes it and a close button that hides
- * the banner for the rest of the browser session. It sticks to the top of the content area, so it
- * stays in sight while the page scrolls; the wrapper takes over the top padding of that area and
- * carries the page background, so no content shows through it. On a phone, a detail screen docks
- * its back bar (z-20) in the shell's sticky slot; the banner then sticks below that bar (top-14,
- * the bar's height), so the bar never covers it. The Alert is a light amber gradient (warning-soft
- * to the surface); the title and the icon keep the warning-soft text colour, 6.2:1 on the amber
- * end, higher on the paler part.
+ * the banner for the rest of the browser session. It is meant for the shell's notice slot
+ * (merchant-shell.tsx), the very top of the content column, above the phone back bar: the slot
+ * sticks on desktop and scrolls away on phones, so the bar can pin to the top. The wrapper brings
+ * the vertical padding the slot's page area would otherwise have. The Alert is a light amber
+ * gradient (warning-soft to the surface); the title and the icon keep the warning-soft text colour,
+ * 6.2:1 on the amber end, higher on the paler part.
  */
 export function WarningBanner({ title, action, closeLabel, dismissKey }: WarningBannerProps) {
   const [dismissed, setDismissed] = useState(() => dismissedIn(dismissKey))
@@ -68,7 +67,7 @@ export function WarningBanner({ title, action, closeLabel, dismissKey }: Warning
   }
 
   return (
-    <div className="sticky top-0 z-10 -mt-4 bg-background pt-4 pb-4 group-has-[[data-merchant-bar-slot]:not(:empty)]/content:max-lg:top-14 lg:-mt-8 lg:pt-8">
+    <div className="pt-4 lg:pt-8 lg:pb-4">
       <Alert className={bannerClass} status="warning">
         <div aria-hidden="true" className="pointer-events-none absolute -top-8 -right-8 size-28 rounded-full bg-(--status-warning-fill)/25 blur-2xl" />
         <Alert.Indicator className="relative" />

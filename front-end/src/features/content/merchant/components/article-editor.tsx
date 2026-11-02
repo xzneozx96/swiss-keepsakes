@@ -42,6 +42,20 @@ import { AudioSheet, PhotoSheet } from './media-sheets'
 
 type Status = 'new' | 'draft' | 'published'
 
+function ArticleStatusChip({ status }: { status: Status }) {
+  const { t } = useLocale()
+
+  return (
+    <StatusChip tone={status === 'published' ? 'success' : 'neutral'}>
+      {t(
+        status === 'published'
+          ? 'merchantArticles.status.published'
+          : 'merchantArticles.status.draft',
+      )}
+    </StatusChip>
+  )
+}
+
 function Header({ editor, status }: { editor: Editor, status: Status }) {
   const { t } = useLocale()
   const { form, stored } = editor
@@ -50,6 +64,7 @@ function Header({ editor, status }: { editor: Editor, status: Status }) {
     <header className="flex flex-col gap-3">
       <MerchantBackBar
         label={t('merchantArticles.back')}
+        status={<ArticleStatusChip status={status} />}
         title={stored?.title || t('merchantArticles.newTitle')}
         to="/store/content"
       />
@@ -76,14 +91,11 @@ function Header({ editor, status }: { editor: Editor, status: Status }) {
               })}`}
           </p>
         </div>
-        <div className="flex flex-wrap items-start gap-2 lg:justify-end [&_svg]:shrink-0">
-          <StatusChip tone={status === 'published' ? 'success' : 'neutral'}>
-            {t(
-              status === 'published'
-                ? 'merchantArticles.status.published'
-                : 'merchantArticles.status.draft',
-            )}
-          </StatusChip>
+        <div className={`flex-wrap items-start gap-2 lg:flex lg:justify-end [&_svg]:shrink-0 ${stored && !editor.otherVersion ? 'flex' : 'hidden'}`}>
+          {/* On phones the ← bar carries the status chip. */}
+          <span className="max-lg:hidden">
+            <ArticleStatusChip status={status} />
+          </span>
           {stored && !editor.otherVersion && (
             <StatusChip tone="neutral">
               {t(`merchantArticles.missing.${editor.otherLanguage}`)}
