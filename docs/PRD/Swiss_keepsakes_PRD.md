@@ -601,9 +601,9 @@ Bản đồ là tính năng quan trọng nhất của sản phẩm (chủ sản 
 - slug dùng cho liên kết bản đồ (bắt buộc);
 - **danh mục bản đồ**, không bắt buộc; điểm không có danh mục chỉ được làm nổi bật ở chip "Tất cả";
 - thẻ lưu trú và sở thích (§3.2, §3.3);
-- **loại dịch vụ** (tùy chọn, cố định: nước uống, nhà vệ sinh, SIM và Wi-Fi, giao thông, tủ gửi hành lý, tiền mặt và thẻ), kèm ghi chú EN và DE: dùng cho sáu ô tiện ích trên trang chủ (AC95). Cờ `free` thêm sáng 28/10/2026 không còn được trang chủ dùng; story E4.2 quyết giữ hay bỏ;
+- **dịch vụ của điểm** (từ 02/11/2026 không còn là trường của điểm): danh mục bản đồ có thêm **biểu tượng** (tùy chọn, một trong bộ cố định gồm nước uống, nhà vệ sinh, Wi-Fi, giao thông, tủ gửi hành lý, tiền mặt, nhà hàng, quán cà phê, quầy bar, chợ, siêu thị, cửa hàng, công trình, nhà thờ, cầu, tượng đài, bảo tàng, điểm ngắm cảnh, quảng trường, thông tin, nghỉ dưỡng, khẩn cấp, thuyền, núi) và công tắc **Hiện trên trang chủ**. Merchant đặt hai thứ này trong trang Danh mục; danh mục vẫn là danh mục bình thường, không có vai trò đặc biệt. Sáu ô tiện ích trên trang chủ (AC95) sẽ liệt kê các danh mục bật công tắc. Cờ `free` thêm sáng 28/10/2026 không còn được trang chủ dùng; story E4.2 quyết giữ hay bỏ;
 - cờ **nên xem trước** (tùy chọn) và một dòng **mẹo của người địa phương** bằng EN và DE: dùng cho thẻ trong nhóm "See these first" của trang chủ (AC95);
-- ảnh sự kiện (tùy chọn): dùng cho thẻ "This week" của trang chủ; điểm không có ảnh hiện biểu tượng theo loại (quán rượu hoặc bar, quán cà phê hoặc tiệm bánh, nhà hàng, chợ) trên nền xanh hồ, không bao giờ hiện chữ cái đầu;
+- ảnh sự kiện (tùy chọn): dùng cho thẻ "This week" của trang chủ; điểm không có ảnh hiện biểu tượng theo loại (quán rượu hoặc bar, quán cà phê hoặc tiệm bánh, nhà hàng, chợ), biểu tượng này là biểu tượng của danh mục đầu tiên của điểm có biểu tượng (danh mục con không có thì lấy của danh mục cha; không phải trường của điểm) trên nền xanh hồ, không bao giờ hiện chữ cái đầu;
 - giờ mở theo tuần (tùy chọn);
 - ngày (tùy chọn, xem dưới);
 - một bài viết chính (tùy chọn) và một liên kết ra ngoài (tùy chọn);
@@ -967,6 +967,8 @@ Mục đích sản phẩm đổi từ "bán quà và tour" sang kể chuyện c�
 *Vòng sửa 10 (28/10/2026):* trang chủ chia theo sở thích, không có công cụ chọn, và có sở thích thứ năm `local-activities` "Local activities" (`docs/decisions/2026-10-28-home-by-interests.md`, người yêu cầu duyệt 28/10/2026). Nhóm "Free and useful" theo cờ cố định `free`; mỗi mục xuất hiện một lần; thứ tự mặc định và thứ tự theo câu trả lời như trong §3.3 (§3.3, §11.1; sửa AC36, AC41, AC94; thêm AC95).
 
 *Vòng sửa 11 (28/10/2026):* trang chủ đổi từ chia theo sở thích sang "bản tóm tắt của một người địa phương", thứ tự cố định (`docs/decisions/2026-10-28-home-local-briefing.md`, người yêu cầu duyệt 28/10/2026, thay quyết định của vòng sửa 10 về bố cục trang chủ). Sở thích thứ năm `local-activities` giữ nguyên. Nhóm "Free and useful", dải "More in Lucerne" và thứ tự mặc định theo sở thích bị bỏ; cờ `free` được thay bằng loại dịch vụ, cờ nên xem trước và mẹo địa phương (§3.3, §11.1; viết lại AC95). Trang chủ có một bản đồ sống, trong nhóm ăn uống (trước đó kế hoạch chỉ có lối vào bản đồ tĩnh). Ô tìm kiếm ở đầu trang là nơi vào tìm kiếm (AC94). Đặc tả: `docs/ux/home-design.md`.
+
+*Vòng sửa 12 (02/11/2026):* loại dịch vụ và loại ăn uống không còn là trường của điểm; danh mục bản đồ có **biểu tượng** và công tắc **Hiện trên trang chủ**, một điểm không có ảnh hiện biểu tượng của danh mục đầu tiên có biểu tượng; **nên xem trước** vẫn là cờ của điểm và nằm trong khối "Recommended for" của biểu mẫu (`docs/decisions/2026-11-02-map-category-icons.md`, chủ sản phẩm quyết 02/11/2026; §11.1, ADR-030).
 
 *Mới:* mục đích và chỉ số (§1, SM-1 đến SM-3); onboarding hai bước, cá nhân hóa, danh sách sở thích cố định (§3); bản đồ tương tác, câu chuyện, review biên tập, review của khách, review lưu trú (§11.1 đến §11.5); thông tin tour miễn phí với PDF (§7.3); SKU theo kích cỡ, chủ đề, màu (§7.2); hủy trước giờ giao do merchant chỉnh (§9.4); đơn nhóm và vận hành của guide (§10.4); AC36 đến AC60; O21 đến O31.
 
