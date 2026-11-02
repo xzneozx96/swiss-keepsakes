@@ -203,7 +203,7 @@ export type RefusalCode
   = | 'option-name-required'
     | 'value-name-required'
     | 'option-needs-value'
-    | 'option-in-use'
+    | 'option-drop-clash'
     | 'value-in-use'
     | 'values-missing'
     | 'value-unknown'

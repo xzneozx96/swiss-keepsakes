@@ -114,11 +114,40 @@ describe('[E6.2][AC52] saving options with the variants', () => {
     expect(refusals[0]?.params).toMatchObject({ value: 'Small', count: 4, codes: 'VX-1, VX-2, VX-3', more: 1 })
   })
 
-  it('[E6.2][AC52] an option that variants use cannot be deleted', () => {
+  it('[T-020][AC2] an option that variants use is dropped when the rest stay distinct, archived ones included', () => {
+    const colour: ProductOption = { id: 'colour', name: { en: 'Colour' }, values: [{ id: 'red', label: { en: 'Red' } }, { id: 'blue', label: { en: 'Blue' } }] }
+    const owners = product([size, theme, colour], [
+      variant('1', 'A', { size: 's', theme: 'swan', colour: 'red' }),
+      variant('2', 'B', { size: 'l', theme: 'swan', colour: 'red' }),
+      variant('3', 'C', { size: 's', theme: 'lion', colour: 'blue' }, 'archived'),
+    ])
+
+    expect(checkOptionsSave(owners, { options: [input(size), input(theme)], variantValues: [], newVariants: [] })).toEqual([])
+  })
+
+  it('[T-020][AC2] dropping an option that makes two rows the same is refused, with the clashing groups named', () => {
     const refusals = checkOptionsSave(current, { options: [input(size)], variantValues: [], newVariants: [] })
 
-    // Without Theme, VX-S-LION and VX-S-SWAN would also be one combination: the first refusal is the one to read.
-    expect(refusals[0]).toEqual({ code: 'option-in-use', path: 'options.theme', params: { option: 'Theme', count: 2, archived: 1, codes: 'VX-S-SWAN, VX-L-SWAN', more: 0 } })
+    // VX-S-SWAN (live) and VX-S-LION (archived) are both Small without Theme; VX-L-SWAN stands alone.
+    expect(refusals).toEqual([
+      { code: 'option-drop-clash', path: 'options.theme', params: { option: 'Theme', count: 2, sold: 0, groups: JSON.stringify([{ title: 'Small', count: 2, values: ['Swan', 'Lion'] }]) } },
+    ])
+  })
+
+  it('[T-020][AC2] a clash names the archived rows that were sold, which cannot be deleted', () => {
+    const refusals = checkOptionsSave(current, { options: [input(size)], variantValues: [], newVariants: [] }, new Set(['3']))
+
+    expect(refusals[0]?.params).toMatchObject({ sold: 1 })
+  })
+
+  it('[T-020][AC3] the last option goes when one variant remains, and not when two would be the same', () => {
+    const one = product([size], [variant('1', 'A', { size: 's' })])
+    const two = product([size], [variant('1', 'A', { size: 's' }), variant('2', 'B', { size: 'l' })])
+
+    expect(checkOptionsSave(one, { options: [], variantValues: [], newVariants: [] })).toEqual([])
+    expect(checkOptionsSave(two, { options: [], variantValues: [], newVariants: [] })).toEqual([
+      { code: 'option-drop-clash', path: 'options.size', params: { option: 'Size', count: 2, sold: 0, groups: JSON.stringify([{ title: '', count: 2, values: ['Small', 'Large'] }]) } },
+    ])
   })
 
   it('[T-019][AC8] a value used by archived variants says how many are archived and names only the live ones', () => {

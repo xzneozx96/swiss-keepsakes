@@ -8,6 +8,9 @@ const MAX_CODES_NAMED = 3
 
 export const labelOf = (text: Localized): string => text.en || text.de || ''
 
+// "Small" for "Small · 58 mm Classic SD": how a value reads in a variant's title.
+const shortLabel = (text: Localized): string => labelOf(text).split(' · ')[0] ?? ''
+
 interface Valued {
   skuCode: string | null
   status?: string
@@ -42,6 +45,27 @@ function usedBy(users: ProductVariant[], options: ProductOption[]): Record<strin
   const archived = users.length - live.length
 
   return { count: live.length, ...(archived > 0 && { archived }), codes: live.slice(0, MAX_CODES_NAMED).map(user => variantName(user, options)).join(', '), more: Math.max(0, live.length - MAX_CODES_NAMED) }
+}
+
+// The rows that would become one when options go: each group is the combination they share ("Light / Small"), how many
+// rows it holds and the values of the dropped options that told them apart. `groups` is JSON so a client can say it in
+// its own words; `sold` counts the archived rows an order line names, which cannot be deleted to make room.
+function dropClash(product: Pick<Product, 'options' | 'variants'>, input: OptionsSave, dropped: ProductOption[], clashes: ProductVariant[][], sold: ReadonlySet<string>): Refusal {
+  const read = (variant: ProductVariant, options: Pick<ProductOption, 'id' | 'values'>[]) =>
+    options.map(option => shortLabel(option.values.find(value => value.id === variant.values[option.id])?.label ?? {})).filter(Boolean).join(' / ')
+  const kept = product.options.filter(option => input.options.some(next => next.ref === option.id))
+  const rows = clashes.flat()
+
+  return {
+    code: 'option-drop-clash',
+    path: `options.${dropped[0]!.id}`,
+    params: {
+      option: dropped.map(option => labelOf(option.name)).join(', '),
+      count: rows.length,
+      sold: rows.filter(row => sold.has(row.id)).length,
+      groups: JSON.stringify(clashes.map(rows => ({ title: read(rows[0]!, kept), count: rows.length, values: rows.map(row => read(row, dropped)) }))),
+    },
+  }
 }
 
 // The options as a client names them: a name and a label in at least one language, at least one value, and every ref
@@ -104,10 +128,12 @@ export function checkVariantValues(options: Pick<ProductOption, 'id' | 'name' | 
   return refusals
 }
 
-// Can these options be saved with the variants' new values, in one save? `product` is the keepsake as it is now.
-// A removed option or value that a variant uses is refused, and so is a variant that ends up without a value of
-// an option or on the same combination as another (archived variants count in every check).
-export function checkOptionsSave(product: Pick<Product, 'options' | 'variants'>, input: OptionsSave): Refusal[] {
+// Can these options be saved with the variants' new values, in one save? `product` is the keepsake as it is now, and
+// `sold` the ids of its archived variants that an order line names. A removed value that a variant uses is refused, and
+// so is a variant that ends up without a value of an option or on the same combination as another (archived variants
+// count in every check). A removed option that variants use is allowed (ADR-027, amended 2026-11-02): its value leaves
+// every variant, so it is refused only when two variants would become one combination (`option-drop-clash`).
+export function checkOptionsSave(product: Pick<Product, 'options' | 'variants'>, input: OptionsSave, sold: ReadonlySet<string> = new Set()): Refusal[] {
   const refusals = checkOptionDefinitions(input.options)
   const existingOptions = new Map(product.options.map(option => [option.id, option]))
   const existingValueOwner = new Map(product.options.flatMap(option => option.values.map(value => [value.id, option.id] as const)))
@@ -128,13 +154,8 @@ export function checkOptionsSave(product: Pick<Product, 'options' | 'variants'>,
   for (const option of product.options) {
     const next = kept.get(option.id)
 
-    if (!next) {
-      const users = usersOf(product.variants, option.id)
-
-      if (users.length > 0)
-        refusals.push({ code: 'option-in-use', path: `options.${option.id}`, params: { option: labelOf(option.name), ...usedBy(users, product.options) } })
+    if (!next)
       continue
-    }
     for (const value of option.values.filter(v => !next.values.some(n => n.ref === v.id))) {
       const users = usersOf(product.variants, option.id, value.id)
 
@@ -189,7 +210,9 @@ export function checkOptionsSave(product: Pick<Product, 'options' | 'variants'>,
     finals.push({ variant, values, complete })
   }
 
+  const dropped = product.options.filter(option => !kept.has(option.id))
   const seen = new Map<string, ProductVariant>()
+  const groups = new Map<string, ProductVariant[]>()
 
   for (const { variant, values, complete } of finals) {
     if (!complete)
@@ -197,11 +220,16 @@ export function checkOptionsSave(product: Pick<Product, 'options' | 'variants'>,
     const key = input.options.map(option => `${option.ref}:${values[option.ref]}`).join(',')
     const twin = seen.get(key)
 
-    if (twin)
+    if (twin && dropped.length > 0)
+      groups.set(key, [...(groups.get(key) ?? [twin]), variant])
+    else if (twin)
       refusals.push({ code: 'combination-duplicate', path: `variants.${variant.id}`, params: { code: variantName(variant, product.options), twin: variantName(twin, product.options) } })
     else
       seen.set(key, variant)
   }
+
+  if (groups.size > 0)
+    refusals.push(dropClash(product, input, dropped, [...groups.values()], sold))
 
   // The new variants stand beside every variant that stays, archived ones included. Their values are refs of this save.
   const pseudo: ProductOption[] = input.options.map(option => ({

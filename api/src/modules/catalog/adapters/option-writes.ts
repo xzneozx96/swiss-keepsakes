@@ -28,10 +28,14 @@ export async function writeOptions(tx: Tx, storeId: string, productId: string, e
   const keptOptions = new Set(options.map(option => option.ref))
   const keptValues = new Set(options.flatMap(option => option.values.map(value => value.ref)))
 
+  const goneOptions = existing.filter(option => !keptOptions.has(option.id)).map(option => option.id)
+  // A dropped option leaves every SKU that holds one of its values (ADR-027, amended 2026-11-02; the rules have checked that
+  // the remaining combinations stay distinct). Those rows go first: they hold the values (ON DELETE RESTRICT).
+  if (goneOptions.length > 0)
+    await tx.execute(sql`delete from catalog.sku_option_values where store_id = ${storeId} and product_id = ${productId} and option_id = any(${sql.param(goneOptions)}::uuid[])`)
   const goneValues = existing.flatMap(option => option.values.filter(value => !keptValues.has(value.id)).map(value => value.id))
   if (goneValues.length > 0)
     await tx.execute(sql`delete from catalog.product_option_values where store_id = ${storeId} and product_id = ${productId} and id = any(${sql.param(goneValues)}::uuid[])`)
-  const goneOptions = existing.filter(option => !keptOptions.has(option.id)).map(option => option.id)
   if (goneOptions.length > 0)
     await tx.execute(sql`delete from catalog.product_options where store_id = ${storeId} and product_id = ${productId} and id = any(${sql.param(goneOptions)}::uuid[])`)
 

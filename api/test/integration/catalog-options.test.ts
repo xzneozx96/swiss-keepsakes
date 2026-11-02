@@ -223,14 +223,71 @@ describe('[E6.2][AC52] changing options and values', () => {
     expect(await get(product.id)).toEqual(fresh)
   })
 
-  it('[E6.2][AC52] an option that variants use cannot be deleted', async () => {
-    const { withOptions, putOptions } = await setup()
+  it('[T-020][AC1] an option that variants use is dropped from every variant, live and archived, when the rows stay distinct', async () => {
+    const { create, putOptions, get, patchVariants } = await setup({ fresh: true })
+    const option = (ref: string, values: string[]) => ({ ref, name: { en: ref }, values: values.map(v => ({ ref: `${ref}-${v}`, label: { en: v } })) })
+    const row = (theme: string, size: string, colour: string) => ({ skuCode: code(), priceRappen: 3900, values: { theme: `theme-${theme}`, size: `size-${size}`, colour: `colour-${colour}` } })
+    const sizes = ['S', 'M', 'L']
+    const response = await create({
+      options: [option('theme', ['Light', 'Dark']), option('size', sizes), option('colour', ['Red', 'Blue'])],
+      variants: [...sizes.map(size => row('Light', size, 'Red')), ...sizes.map(size => row('Dark', size, 'Blue'))],
+    })
+    expect(response.status).toBe(201)
+    const product = await response.json() as View
+    const themeSaved = product.options.find(o => o.name.en === 'theme')!
+    const darkId = themeSaved.values.find(v => v.label.en === 'Dark')!.id
+    const dark = product.variants.filter(variant => variant.values[themeSaved.id] === darkId)
+    expect((await patchVariants(product.id, { variants: dark.map(variant => ({ id: variant.id, status: 'archived' })) })).status).toBe(200)
+    const fresh = await get(product.id)
+    const colour = fresh.options.find(o => o.name.en === 'colour')!
+
+    const saved = await putOptions(product.id, fresh.rowVersion, { options: asInput(fresh.options).filter(o => o.ref !== colour.id) })
+    expect(saved.status).toBe(200)
+    const after = await saved.json() as View
+
+    expect(after.options.map(o => o.name.en)).toEqual(['theme', 'size'])
+    expect(after.variants).toHaveLength(6)
+    expect(after.variants.filter(v => v.status === 'archived')).toHaveLength(3)
+    for (const variant of after.variants)
+      expect(Object.keys(variant.values).sort()).toEqual(after.options.map(o => o.id).sort())
+    const keys = (await pool.query<{ combination_key: string }>('select combination_key from catalog.skus where product_id = $1', [product.id])).rows.map(r => r.combination_key)
+
+    expect(new Set(keys).size).toBe(6)
+    expect(keys.every(key => !key.includes(colour.id))).toBe(true)
+    expect(Number((await pool.query('select count(*) from catalog.product_option_values where option_id = $1', [colour.id])).rows[0].count)).toBe(0)
+  })
+
+  it('[T-020][AC2] dropping an option that makes two live rows the same is refused, the groups are named, and nothing changes', async () => {
+    const { withOptions, putOptions, get } = await setup({ fresh: true })
     const product = await withOptions()
 
+    // Without Theme, Small/Swan and Small/Lion are both Small, and so are the two Large rows.
     const response = await putOptions(product.id, product.rowVersion, { options: asInput(product.options).slice(0, 1) })
 
     expect(response.status).toBe(422)
-    expect((await response.json() as Problem).errors?.[0]).toMatchObject({ code: 'option-in-use', params: { option: 'Theme', count: 4 } })
+    const [error] = (await response.json() as Problem).errors!
+    expect(error).toMatchObject({ code: 'option-drop-clash', path: `options.${product.options[1]!.id}`, params: { option: 'Theme', count: 4, sold: 0 } })
+    expect(JSON.parse(String(error!.params!.groups))).toEqual([{ title: 'Small', count: 2, values: ['Swan', 'Lion'] }, { title: 'Large', count: 2, values: ['Swan', 'Lion'] }])
+    expect(error!.message).toContain('Small: 2 rows (Swan, Lion)')
+    expect(await get(product.id)).toEqual(product)
+  })
+
+  it('[T-020][AC3] the last option goes when one variant remains, and not when two would be the same', async () => {
+    const { create, putOptions, get } = await setup({ fresh: true })
+    const one = await (await create({ options: [sizeOption], variants: [{ skuCode: code(), priceRappen: 3900, values: { size: 's' } }] })).json() as View
+    const two = await (await create({ options: [sizeOption], variants: [{ skuCode: code(), priceRappen: 3900, values: { size: 's' } }, { skuCode: code(), priceRappen: 3900, values: { size: 'l' } }] })).json() as View
+
+    const refused = await putOptions(two.id, two.rowVersion, { options: [] })
+    expect(refused.status).toBe(422)
+    expect((await refused.json() as Problem).errors?.[0]).toMatchObject({ code: 'option-drop-clash', params: { count: 2 } })
+    expect(await get(two.id)).toEqual(two)
+
+    const accepted = await putOptions(one.id, one.rowVersion, { options: [] })
+    expect(accepted.status).toBe(200)
+    const after = await accepted.json() as View
+    expect(after.options).toEqual([])
+    expect(after.variants).toHaveLength(1)
+    expect(after.variants[0]!.values).toEqual({})
   })
 
   it('[E6.2][AC52] an option with no value, or no name, is refused', async () => {

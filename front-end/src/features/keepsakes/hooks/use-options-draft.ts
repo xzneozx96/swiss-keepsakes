@@ -3,7 +3,7 @@ import type { OptionDraft, Refusal, Text, Valued, ValueDraft, Values } from '../
 
 import { useState } from 'react'
 
-import { asSaved, checkStagedOptions, draftOfOptions, duplicateValue, labelOf, moveItem, newOption, splitValues, VALUE_LABEL_MAX, variantName, variantsUsing } from '../lib/option-rules'
+import { asSaved, checkOptionsDraft, checkStagedOptions, draftOfOptions, duplicateValue, labelOf, moveItem, newOption, splitValues, VALUE_LABEL_MAX, variantName, variantsUsing } from '../lib/option-rules'
 
 /** Each variant's value of each new option, made from the draft: variant id, then option ref, then value ref. */
 type Assigned = Record<string, Values>
@@ -74,17 +74,28 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
       return option.ref
     },
     patchName: (ref: string, name: Text) => editOption(ref, option => ({ ...option, name })),
-    /** False, and a refusal at the option, when a variant of the saved keepsake still holds it. */
-    removeOption: (ref: string) => {
-      const option = options.find(o => o.ref === ref)
-      const users = variantsUsing(variants, ref)
+    /**
+     * What stops this saved option from going: two rows of the saved keepsake (archived ones too) that would become the
+     * same once its value leaves every variant (ADR-027). Nothing stops a new option, or one no variant holds.
+     */
+    dropRefusal: (ref: string): Refusal | undefined => {
+      if (!savedRefs.has(ref))
+        return undefined
+      const rest = options.filter(o => o.ref !== ref)
 
-      if (option && savedRefs.has(ref) && users.length > 0) {
-        refuse({ at: ref, code: 'option-in-use', params: { option: labelOf(option.name), ...usedBy(users, saved) } })
+      return checkOptionsDraft(saved, rest, variants, assignedFor(rest)).find(problem => problem.code === 'option-drop-clash')
+    },
+    /** False, and a refusal at the option, when the rows that stay would not be distinct; its values leave every variant otherwise. */
+    removeOption: (ref: string) => {
+      const rest = options.filter(o => o.ref !== ref)
+      const clash = savedRefs.has(ref) ? checkOptionsDraft(saved, rest, variants, assignedFor(rest)).find(problem => problem.code === 'option-drop-clash') : undefined
+
+      if (clash) {
+        refuse({ ...clash, at: ref })
 
         return false
       }
-      edit(list => list.filter(o => o.ref !== ref))
+      edit(() => rest)
 
       return true
     },

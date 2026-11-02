@@ -594,12 +594,12 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     expect(body.newVariants!.map(made => made.skuCode)).toEqual(['VX-XL-RED', 'VX-XL-BLUE'])
   })
 
-  it('[T-008] an option that variants use is refused at once, naming them, and nothing is sent', async () => {
+  it('[T-020][AC2] an option whose removal would make rows the same is refused at once, naming the groups, and nothing is sent', async () => {
     await openStep()
     await userEvent.click(within(optionsBlock()).getAllByRole('button', { name: /^Edit / })[0]!)
     await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Delete option' }))
 
-    expect(await within(optionsBlock()).findByText(/Can’t delete Size\. Used by 8 variants/)).toBeInTheDocument()
+    expect(await within(optionsBlock()).findByText(/Can’t delete Size\. These variants would become the same: Red: 4 rows \(XS, S, M, L\); Blue: 4 rows \(XS, S, M, L\)\. Delete all but one of each first\./)).toBeInTheDocument()
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(writes()).toHaveLength(0)
   })
@@ -659,13 +659,31 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     expect(writes()).toHaveLength(0)
   })
 
-  it('[T-019][AC1] Delete on an option that variants use is refused at once, naming them', async () => {
+  it('[T-019][AC1] Delete on an option whose removal would make rows the same is refused at once, naming them', async () => {
     await openStep()
     await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Delete Size' }))
 
-    expect(await within(optionsBlock()).findByText(/Can’t delete Size\. Used by 8 variants/)).toBeInTheDocument()
+    expect(await within(optionsBlock()).findByText(/Can’t delete Size\. These variants would become the same: Red: 4 rows/)).toBeInTheDocument()
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(writes()).toHaveLength(0)
+  })
+
+  it('[T-020][AC1][AC5] an option that variants use goes when the rows stay distinct: the dialog says what happens, and the change is held with no request', async () => {
+    current = product({ options: [sizeOption, colourOption], variants: all.filter(variant => variant.values[optColour] === colour[0]!.id).map((variant, index) => (index < 2 ? { ...variant, status: 'archived' as const } : variant)) })
+    serve()
+    await openStep()
+    await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Delete Colour' }))
+    const dialog = await screen.findByRole('alertdialog')
+
+    expect(dialog).toHaveTextContent('Delete Colour?')
+    expect(dialog).toHaveTextContent('Its values come off every variant: 2 variants and 2 archived ones keep their other values.')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete option' }))
+
+    await waitFor(() => expect(within(optionsBlock()).queryByRole('button', { name: 'Delete Colour' })).not.toBeInTheDocument())
+    expect(writes()).toHaveLength(0)
+    await leaveStep()
+    await waitFor(() => expect(puts()).toHaveLength(1))
+    expect((puts()[0]!.body as OptionsPut).options).toHaveLength(1)
   })
 
   it('[T-008] a refusal of the options save shows in the merchant’s words, and the merchant stays on the step', async () => {

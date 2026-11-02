@@ -28,7 +28,10 @@ export function makeSaveOptions<T>({ uow, products, media, audit, clock, sales }
       const badCode = input.newVariants.findIndex(variant => variant.skuCode !== null && !isSkuCode(variant.skuCode))
       if (badCode >= 0)
         return fail({ reason: 'sku-code-invalid', path: `newVariants.${badCode}.skuCode` })
-      const refusals = checkOptionsSave(product, input)
+      const dropping = product.options.some(option => !input.options.some(next => next.ref === option.id))
+      const archived = product.variants.filter(variant => variant.status === 'archived').map(variant => variant.id)
+      const sold = sales && dropping && archived.length > 0 ? await sales.soldSkuIds(tx, storeId, archived) : new Set<string>()
+      const refusals = checkOptionsSave(product, input, sold)
       // The shop's codes are the database's (skus_store_sku_code_key); asking first lets the answer name the row.
       const taken = await products.takenSkuCodes(tx, storeId, input.newVariants.flatMap(variant => variant.skuCode ?? []))
       input.newVariants.forEach((variant, index) => {

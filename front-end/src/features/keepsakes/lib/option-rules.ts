@@ -25,11 +25,11 @@ export type Text = Record<Language, string>
 export interface ValueDraft { ref: string, label: Text }
 export interface OptionDraft { ref: string, name: Text, values: ValueDraft[] }
 
-/** The slice of a variant that the rules read: a saved variant, or a row of the create flow. */
-export interface Valued { id: string, skuCode: string | null, status?: string, values: Values }
+/** The slice of a variant that the rules read: a saved variant, or a row of the create flow. `hasOrders`: an order line names it, so it cannot be deleted. */
+export interface Valued { id: string, skuCode: string | null, status?: string, hasOrders?: boolean, values: Values }
 
 export type RefusalCode
-  = | 'option-name-required' | 'value-name-required' | 'option-needs-value' | 'option-in-use' | 'value-in-use'
+  = | 'option-name-required' | 'value-name-required' | 'option-needs-value' | 'option-drop-clash' | 'value-in-use'
     | 'values-missing' | 'value-unknown' | 'combination-taken' | 'combination-duplicate' | 'no-options-one-variant'
     | 'refs-invalid' | 'code-duplicate' | 'code-taken' | 'variant-reserved' | 'variant-archived'
     // The two the control says before a save; the API never sends them.
@@ -234,13 +234,8 @@ export function checkOptionsDraft(saved: ProductOption[], drafts: OptionDraft[],
   for (const option of saved) {
     const next = kept.get(option.id)
 
-    if (!next) {
-      const users = variantsUsing(variants, option.id)
-
-      if (users.length > 0)
-        refusals.push({ at: option.id, code: 'option-in-use', params: { option: labelOf(option.name), ...usedBy(users, saved) } })
+    if (!next)
       continue
-    }
     for (const value of option.values.filter(v => !next.values.some(n => n.ref === v.id))) {
       const users = variantsUsing(variants, option.id, value.id)
 
@@ -249,7 +244,9 @@ export function checkOptionsDraft(saved: ProductOption[], drafts: OptionDraft[],
     }
   }
 
+  const dropped = saved.filter(option => !kept.has(option.id))
   const seen = new Map<string, Valued>()
+  const groups = new Map<string, Valued[]>()
 
   for (const variant of variants) {
     const values: Values = {}
@@ -275,13 +272,38 @@ export function checkOptionsDraft(saved: ProductOption[], drafts: OptionDraft[],
     const key = combinationKey(values, drafts.map(option => option.ref))
     const twin = seen.get(key)
 
-    if (twin)
+    if (twin && dropped.length > 0)
+      groups.set(key, [...(groups.get(key) ?? [twin]), variant])
+    else if (twin)
       refusals.push({ at: variant.id, code: 'combination-duplicate', params: { code: variantName(variant, pseudo), twin: variantName(twin, pseudo) } })
     else
       seen.set(key, variant)
   }
+  if (groups.size > 0)
+    refusals.push(dropClash(saved, drafts, dropped, [...groups.values()]))
 
   return refusals
+}
+
+/**
+ * The rows that would become one when options go, as the API says it (`option-drop-clash`): the combination they share
+ * ("Light / Small"), how many rows it holds and the values of the dropped options that told them apart. `groups` is JSON,
+ * so `refusalText` can say it in the reading language; `sold` counts the rows an order line names, which cannot be deleted.
+ */
+function dropClash(saved: ProductOption[], drafts: OptionDraft[], dropped: ProductOption[], clashes: Valued[][]): Refusal {
+  const kept = saved.filter(option => drafts.some(next => next.ref === option.id))
+  const rows = clashes.flat()
+
+  return {
+    at: dropped[0]!.id,
+    code: 'option-drop-clash',
+    params: {
+      option: dropped.map(option => labelOf(option.name)).join(', '),
+      count: rows.length,
+      sold: rows.filter(row => row.hasOrders && row.status === 'archived').length,
+      groups: JSON.stringify(clashes.map(group => ({ title: variantTitle(group[0]!.values, kept), count: group.length, values: group.map(row => variantTitle(row.values, dropped)) }))),
+    },
+  }
 }
 
 function labelOfDraft(value: ValueDraft): string {
@@ -341,6 +363,20 @@ function usedByText(t: Translate, params: Refusal['params']) {
   return t(count === 1 ? 'keepsakes.refusal.usedBy.one' : 'keepsakes.refusal.usedBy.other', { count, codes })
 }
 
+/** "Light / Small: 2 rows (Red, Blue)", one group of an `option-drop-clash`, and the rows that were sold. */
+function dropClashText(t: Translate, params: Refusal['params']) {
+  let groups: { title: string, count: number, values: string[] }[] = []
+
+  try {
+    groups = JSON.parse(String(params?.groups ?? '[]')) as typeof groups
+  }
+  catch {}
+  const lines = groups.map(group => t('keepsakes.refusal.dropGroup', { title: group.title || t('keepsakes.refusal.dropAll'), count: group.count, values: group.values.join(', ') })).join('; ')
+  const sold = Number(params?.sold ?? 0)
+
+  return t('keepsakes.refusal.optionDropClash', { option: String(params?.option ?? ''), groups: lines, sold: sold > 0 ? ` ${t(sold === 1 ? 'keepsakes.refusal.dropSold.one' : 'keepsakes.refusal.dropSold.other', { count: sold })}` : '' })
+}
+
 /** The merchant's words for a refusal, from its code and numbers. */
 export function refusalText(t: Translate, { code, params }: Refusal): string {
   const text = (name: string) => String(params?.[name] ?? '')
@@ -349,7 +385,7 @@ export function refusalText(t: Translate, { code, params }: Refusal): string {
     case 'option-name-required': return t('keepsakes.refusal.optionName')
     case 'value-name-required': return t('keepsakes.refusal.valueName')
     case 'option-needs-value': return t('keepsakes.refusal.needsValue', { option: text('option') || t('keepsakes.refusal.thisOption') })
-    case 'option-in-use': return t('keepsakes.refusal.optionInUse', { option: text('option'), usedBy: usedByText(t, params) })
+    case 'option-drop-clash': return dropClashText(t, params)
     case 'value-in-use': return t('keepsakes.refusal.valueInUse', { value: text('value'), usedBy: usedByText(t, params) })
     case 'values-missing': return t('keepsakes.refusal.valuesMissing', { code: text('code') || t('keepsakes.refusal.aVariant'), option: text('option').toLowerCase() || t('keepsakes.refusal.aValue') })
     case 'value-unknown': return t('keepsakes.refusal.valueUnknown')

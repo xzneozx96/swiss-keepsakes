@@ -32,6 +32,15 @@ function usedBy(params: Refusal['params']): string {
   return `Used by ${count} ${plural(count, 'variant', 'variants')} (${codes})`
 }
 
+// "Light / Small: 2 rows (Red, Blue)", one line per group, then what to do.
+function dropClash(params: Refusal['params']): string {
+  const groups = JSON.parse(String(params?.groups ?? '[]')) as { title: string, count: number, values: string[] }[]
+  const lines = groups.map(group => `${group.title || 'All variants'}: ${group.count} rows (${group.values.join(', ')})`).join('; ')
+  const sold = Number(params?.sold ?? 0)
+
+  return `Can’t delete ${params?.option}. These variants would become the same: ${lines}. Delete all but one of each first.${sold > 0 ? ` ${sold} of them ${plural(sold, 'was', 'were')} sold and ${plural(sold, 'stays', 'stay')} archived.` : ''}`
+}
+
 // The merchant's words for a refusal, in English. A screen translates from `code` and `params`, so this is for a client
 // that does not.
 export function refusalMessage({ code, params }: Refusal): string {
@@ -39,7 +48,7 @@ export function refusalMessage({ code, params }: Refusal): string {
     case 'option-name-required': return 'Name the option in English or German.'
     case 'value-name-required': return 'Name the value in English or German.'
     case 'option-needs-value': return `${params?.option || 'This option'} needs at least one value.`
-    case 'option-in-use': return `Can’t delete ${params?.option}. ${usedBy(params)}. Every variant has one of its values.`
+    case 'option-drop-clash': return dropClash(params)
     case 'value-in-use': return `Can’t delete ${params?.value}. ${usedBy(params)}. Archive or change those first.`
     case 'values-missing': return `${params?.code || 'A variant'} needs a ${String(params?.option || 'value').toLowerCase()}.`
     case 'value-unknown': return 'That value does not belong to this option.'

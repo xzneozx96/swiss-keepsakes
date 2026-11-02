@@ -108,23 +108,35 @@ describe('[E6.2][AC52] the options sheet rules', () => {
     expect(refusalText(t, found[0]!)).toBe('Can’t delete Lion Monument. Used only by 1 archived variant. Archive or change those first.')
   })
 
-  it('[T-019][AC8] the refusal says how many of the variants are archived, and names only the live ones', () => {
-    const withArchived = variants.map((variant, index) => (index === 0 ? { ...variant, status: 'archived' } : variant))
-    const found = checkOptionsDraft(saved, draft().slice(0, 1), withArchived, {})
+  it('[T-020][AC1] an option that variants use is dropped when the rows stay distinct, archived ones included', () => {
+    const colour: ProductOption = { id: 'colour', name: { en: 'Colour' }, values: [{ id: 'red', label: { en: 'Red' } }, { id: 'blue', label: { en: 'Blue' } }] }
+    const withColour = [variant('1', 'A', { size: 's', theme: 'swan', colour: 'red' }), variant('2', 'B', { size: 'l', theme: 'swan', colour: 'red' }), variant('3', 'C', { size: 's', theme: 'lion', colour: 'blue' }, 'archived')]
 
-    expect(found[0]).toMatchObject({ code: 'option-in-use', params: { count: 1, archived: 2, codes: 'VX-L-SWAN' } })
-    expect(refusalText(t, found[0]!)).toBe('Can’t delete Theme. Used by 1 live (VX-L-SWAN) and 2 archived variants. Every variant has one of its values.')
-    const only = checkOptionsDraft(saved, draft().slice(0, 1), variants.map(variant => ({ ...variant, status: 'archived' })), {})
-
-    expect(refusalText(t, only[0]!)).toBe('Can’t delete Theme. Used only by 3 archived variants. Every variant has one of its values.')
-    expect(refusalText(t, { at: 'x', code: 'value-in-use', params: { value: 'Lion', count: 0, archived: 1, codes: '', more: 0 } })).toBe('Can’t delete Lion. Used only by 1 archived variant. Archive or change those first.')
+    expect(checkOptionsDraft([size, theme, colour], draftOfOptions([size, theme]), withColour, {})).toEqual([])
   })
 
-  it('[E6.2][AC52] an option that variants use cannot be deleted', () => {
-    const found = checkOptionsDraft(saved, draft().slice(0, 1), variants, {})
+  it('[T-020][AC2] dropping an option that makes two rows the same is refused, naming the groups and the rows that were sold', () => {
+    const found = checkOptionsDraft(saved, draft().slice(0, 1), variants.map(v => (v.id === '3' ? { ...v, hasOrders: true } : v)), {})
 
-    expect(found[0]).toMatchObject({ at: 'theme', code: 'option-in-use', params: { option: 'Theme', count: 2, archived: 1 } })
-    expect(refusalText(t, found[0]!)).toBe('Can’t delete Theme. Used by 2 live (VX-S-SWAN, VX-L-SWAN) and 1 archived variant. Every variant has one of its values.')
+    expect(found).toEqual([{ at: 'theme', code: 'option-drop-clash', params: { option: 'Theme', count: 2, sold: 1, groups: JSON.stringify([{ title: 'Small', count: 2, values: ['Swan on the lake', 'Lion Monument'] }]) } }])
+    expect(refusalText(t, found[0]!)).toBe('Can’t delete Theme. These variants would become the same: Small: 2 rows (Swan on the lake, Lion Monument). Delete all but one of each first. 1 of them was sold and cannot be deleted.')
+  })
+
+  it('[T-020][AC3] the last option goes when one variant remains, and not when two would be the same', () => {
+    const only: OptionDraft[] = []
+
+    expect(checkOptionsDraft([size], only, [variant('1', 'A', { size: 's' })], {})).toEqual([])
+    const found = checkOptionsDraft([size], only, [variant('1', 'A', { size: 's' }), variant('2', 'B', { size: 'l' })], {})
+
+    expect(found[0]).toMatchObject({ at: 'size', code: 'option-drop-clash', params: { count: 2, groups: JSON.stringify([{ title: '', count: 2, values: ['Small', 'Large'] }]) } })
+    expect(refusalText(t, found[0]!)).toContain('All variants: 2 rows (Small, Large)')
+  })
+
+  it('[T-020][AC4] the draft refuses what the API refuses: the same code, path and numbers for the same rows', () => {
+    const apiRefusal = { path: 'options.theme', code: 'option-drop-clash', params: { option: 'Theme', count: 2, sold: 0, groups: JSON.stringify([{ title: 'Small', count: 2, values: ['Swan on the lake', 'Lion Monument'] }]) } }
+    const [fromDraft] = checkOptionsDraft(saved, draft().slice(0, 1), variants, {})
+
+    expect(refusalsOfProblem([apiRefusal])).toEqual([fromDraft])
   })
 
   it('[E6.2][AC52] says three codes at most, then how many more', () => {
@@ -186,7 +198,7 @@ describe('[E6.2][AC52] what the API says', () => {
     const found = refusalsOfProblem([
       { path: 'options.theme.values.lion', code: 'value-in-use', params: { value: 'Lion', count: 2, codes: 'A, B', more: 0 } },
       { path: 'options.theme.name', code: 'option-name-required' },
-      { path: 'options.theme', code: 'option-in-use', params: { option: 'Theme', count: 1, codes: 'A', more: 0 } },
+      { path: 'options.theme', code: 'option-drop-clash', params: { option: 'Theme', count: 2, sold: 0, groups: '[]' } },
       { path: 'variants.v1.values.colour', code: 'values-missing', params: { code: 'VX-1', option: 'Colour' } },
       { path: 'variants.v2', code: 'combination-duplicate', params: { code: 'B', twin: 'A' } },
       { path: 'values', code: 'combination-taken', params: { code: 'A', archived: 0 } },
@@ -263,12 +275,12 @@ describe('[T-007A] the option control rules', () => {
     expect(found).toEqual([{ at: 'colour:assign', code: 'variants-missing', params: { option: 'Colour', count: 1 } }])
   })
 
-  it('[T-007A] AC-4: the rules of the sheet still refuse a used value and a used option', () => {
+  it('[T-007A] AC-4: the rules of the sheet still refuse a used value, and a used option whose removal makes two rows the same', () => {
     const next = draftOfOptions(saved)
 
     next[1]!.values = next[1]!.values.filter(v => v.ref !== 'lion')
     expect(codes(checkStagedOptions(saved, next, variants, {}))).toEqual(['value-in-use'])
-    expect(codes(checkStagedOptions(saved, next.slice(0, 1), variants, {}))).toContain('option-in-use')
+    expect(codes(checkStagedOptions(saved, next.slice(0, 1), variants, {}))).toContain('option-drop-clash')
   })
 
   it('[T-007A] a new option has no value until one is added, and Next on a new keepsake says it needs one', () => {

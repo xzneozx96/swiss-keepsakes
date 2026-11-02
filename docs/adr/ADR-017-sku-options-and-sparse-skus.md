@@ -43,3 +43,4 @@ We will make the SKU the unit of stock, price and order.
 - 2026-11-01 amended (owner: a keepsake is deleted if never sold, else archived; the product status takes `archived`)
 - 2026-11-02 amended (owner: a variant is deleted if never sold, else archived)
 - 2026-11-02 amended (owner: the SKU code is optional and unique per store when present; a SKU may name one photo)
+- 2026-11-02 amended (owner, T-020; see ADR-027): when an option is removed, archived SKUs lose its value like live ones and keep the rest of their combination, which must stay distinct from every other SKU's

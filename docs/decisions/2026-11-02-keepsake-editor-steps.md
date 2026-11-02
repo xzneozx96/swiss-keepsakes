@@ -87,6 +87,16 @@ The 2026-10-29 design (cards, with options and variants in sheets) became a step
 
 25. **Stock is also edited in the editor, per variant, as in Shopify.** The owner checked Shopify's "Add variants" help: a product without variants takes its quantity on the product page, and with variants each variant has its own quantity, edited inline in the variants table. A quantity typed at product level only fills new variants as a start; stock is never shared. When E6.3 is built, the Price block (no options) gets a Quantity field, each variant row an inline quantity box, and a quantity typed before the variants exist fills every new row. The Inventory page N13 stays for checking and editing stock across all keepsakes. This amends the 2026-10-29 design, where stock was set only on the Inventory page (delivery plan E6.3, amended the same day).
 
+### Amended on 2026-11-02, T-020 (owner)
+
+25. **An option that variants use can be deleted when the rows stay distinct** (as in Shopify). The case that started it: Theme, Size and Colour, with three live variants that all differ only by Size, and Colour refused as "in use".
+    - **The write:** deleting the option removes it, its values and its value from every variant, live and archived, in the one `PUT .../options`. It is held in the browser and saved with the step, like any option change (item 23).
+    - **Allowed only when the remaining combinations stay distinct** among live and archived variants alike (ADR-017: an archived variant keeps its combination). Otherwise the save is refused with `option-drop-clash`, and the sheet names the rows that would clash, grouped ("Light / Small: 2 rows (Red, Blue)"), and says to delete all but one of each first. A sold archived row cannot be deleted, and the message says how many of the clashing rows are such.
+    - **The last option** goes when exactly one variant remains; with two or more it is the same refusal ("All variants: 2 rows").
+    - **The confirm dialog** says what happens: "Delete Colour? Its values come off every variant: 3 variants and 9 archived ones keep their other values."
+    - **A single value** that a variant uses still cannot be deleted (ADR-027).
+    - **The draft and the API agree:** `checkOptionsDraft` and `checkOptionsSave` apply the same rule with the same code and numbers. No migration: the existing triggers recompute the combination key at commit (DM-7).
+
 ## Rejected
 
 - **One long page for new and existing keepsakes** (Shopify). The owner kept the steps.
