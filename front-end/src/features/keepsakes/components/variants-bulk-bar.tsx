@@ -40,7 +40,7 @@ export function VariantsBulkBar({ count, held, isPending, onPrice, onStatus, onA
                 setText('')
               }}
             >
-              <Input aria-label={t('keepsakes.variants.bulk.priceLabel')} className="w-24 text-end tabular-nums" inputMode="decimal" placeholder="0.00" value={text} variant="secondary" onChange={event => setText(event.target.value.replace(',', '.').replace(NOT_NUMBER, ''))} />
+              <Input aria-label={t('keepsakes.variants.bulk.priceLabel')} className="w-24 text-end tabular-nums" inputMode="decimal" placeholder="0.00" value={text} onChange={event => setText(event.target.value.replace(',', '.').replace(NOT_NUMBER, ''))} />
               <Button className="max-lg:h-11" isDisabled={rappen === undefined || isPending} size="sm" type="submit">{t('keepsakes.variants.bulk.apply')}</Button>
               <Button className="max-lg:h-11" size="sm" variant="tertiary" onPress={() => setPricing(false)}>{t('keepsakes.variant.cancel')}</Button>
             </form>

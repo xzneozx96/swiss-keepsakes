@@ -26,7 +26,7 @@ function OptionRow({ draft, option, grip, language, isLocked, onEdit }: { draft:
 
   return (
     <div className="flex min-w-0 flex-col" data-testid="option-row">
-      <div className="flex min-h-14 min-w-0 items-center gap-1 rounded-2xl bg-surface-secondary px-1">
+      <div className="flex min-h-14 min-w-0 items-center gap-1 rounded-2xl border border-separator px-1">
         {grip}
         <div className="flex min-w-0 flex-1 flex-col gap-1.5 py-2">
           <span className="truncate font-medium">{name}</span>

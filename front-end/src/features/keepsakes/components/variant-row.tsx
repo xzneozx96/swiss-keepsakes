@@ -60,7 +60,6 @@ export function PriceInput({ priceRappen, label, onSave, className = 'w-24' }: {
       inputMode="decimal"
       placeholder="0.00"
       value={text}
-      variant="secondary"
       onBlur={() => {
         if (rappen !== undefined && rappen !== priceRappen)
           onSave(rappen)

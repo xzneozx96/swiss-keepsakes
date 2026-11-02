@@ -99,7 +99,7 @@ export function OptionEditor({ draft, option, language, autoFocusName, isPending
   const elsewhere = draft.problems.filter(problem => !own.has(problem.at))
 
   return (
-    <div className="flex min-w-0 flex-col gap-5 rounded-2xl bg-surface-secondary p-3 lg:p-4" data-testid="option-editor">
+    <div className="flex min-w-0 flex-col gap-5 rounded-2xl border border-separator p-3 lg:p-4" data-testid="option-editor">
       <NameField focusOnMount={autoFocusName} draft={draft} language={language} option={option} />
 
       <div className="flex flex-col gap-2">

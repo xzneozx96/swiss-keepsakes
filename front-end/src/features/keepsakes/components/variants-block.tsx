@@ -58,7 +58,7 @@ function SelectMenu({ options, onPick }: { options: ProductOption[], onPick: (ke
   const { t, language } = useLocale()
 
   return (
-    <Select aria-label={t('keepsakes.variants.selectMenu')} className="w-44" placeholder={t('keepsakes.variants.selectMenu')} selectedKey={null} variant="secondary" onSelectionChange={key => key !== null && onPick(String(key))}>
+    <Select aria-label={t('keepsakes.variants.selectMenu')} className="w-44" placeholder={t('keepsakes.variants.selectMenu')} selectedKey={null} onSelectionChange={key => key !== null && onPick(String(key))}>
       <Label className="sr-only">{t('keepsakes.variants.selectMenu')}</Label>
       <Select.Trigger>
         <Select.Value />
