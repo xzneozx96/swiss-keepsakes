@@ -3,6 +3,9 @@ import type { ReviewView } from '@/features/catalog/components/review-item'
 import { Button } from '@heroui/react'
 import { useState } from 'react'
 
+import { EmptyState } from '@/components/empty-state'
+import { RatingIcon } from '@/components/icons'
+
 import { ReviewItem } from '@/features/catalog/components/review-item'
 import { ReviewSummary } from '@/features/catalog/components/review-summary'
 import { ReviewsSheet } from '@/features/catalog/components/reviews-sheet'
@@ -48,7 +51,7 @@ export function ListingReviews({
           ? (
               <>
                 <h2 className="font-serif text-title">{reviews.title}</h2>
-                <p className="text-sm text-muted">{reviews.empty}</p>
+                <EmptyState compact icon={RatingIcon} message={reviews.empty} />
               </>
             )
           : (

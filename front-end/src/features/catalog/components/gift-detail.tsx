@@ -2,7 +2,6 @@ import type { Key } from '@heroui/react'
 import type { RichNode } from '@sk/domain/shared'
 import type { ChoiceOption, ChoiceVariant, Chosen } from '../lib/variant-choice'
 import type { PickupDateFieldProps } from './pickup-date-field'
-import type { SellerRowProps } from './seller-row'
 import type { IconComponent } from '@/components/icons'
 import type { ListingReviewsProps } from '@/components/listings/listing-reviews'
 import type { PhotoGalleryLabels } from '@/components/photo-gallery'
@@ -45,15 +44,13 @@ import {
 import { ListingReviews } from '@/components/listings/listing-reviews'
 import { PhotoGallery } from '@/components/photo-gallery'
 import { QuantityStepper } from '@/components/quantity-stepper'
+import { Stars } from '@/components/rating'
 import { RichText } from '@/components/rich-text'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
 import { photoUrl } from '@/lib/photos'
 import { PickupDateField } from './pickup-date-field'
-import { SellerRow } from './seller-row'
-
-interface Stat { value: string, label: string }
 
 export interface GiftDetailProps {
   name: string
@@ -63,16 +60,11 @@ export interface GiftDetailProps {
   description?: RichNode
   /** Shown when the product text is only in the other language (R02, AC30). */
   languageNotice?: string
-  stats: {
-    /** Earliest pickup, or "Sold out". */
-    pickup: Stat
-    /** Average rating, or "New" when there are no reviews yet. */
-    rating: Stat
-    ratingValue: number
-    hasRating: boolean
-    reviews: Stat
-  }
-  seller: SellerRowProps
+  /**
+   * One quiet line under the name: "New · No reviews yet", or the stars, average and count once ratings exist (E5.5).
+   * Owner, 2026-11-02: no pickup date and no stats row here.
+   */
+  rating: { summary: string, average?: number, label: string }
   highlights: {
     icon: 'pickup' | 'pay'
     title: string
@@ -169,8 +161,7 @@ export function GiftDetail(props: GiftDetailProps) {
     galleryLabels,
     description,
     languageNotice,
-    stats,
-    seller,
+    rating,
     highlights,
     favourite,
     soldOut,
@@ -223,15 +214,14 @@ export function GiftDetail(props: GiftDetailProps) {
 
       <div className="relative -mt-6 flex flex-1 flex-col rounded-t-3xl bg-background px-6 pt-7 pb-4">
         {/* 1. Title (screen 36) */}
-        <ListingDetailHeader
-          name={name}
-          stats={{ ...stats, primary: stats.pickup }}
-        />
-
-        {/* 3. Seller: Airbnb host row; contacts in a small sheet (Lab option B) */}
-        <section className="py-5">
-          <SellerRow {...seller} />
-        </section>
+        <ListingDetailHeader name={name} />
+        <a
+          className="-mt-4 mb-6 flex items-center justify-center gap-2 self-center rounded text-sm text-muted outline-none focus-visible:focus-ring"
+          href="#gift-reviews"
+        >
+          {rating.average !== undefined && <Stars label={rating.label} rating={rating.average} size={14} />}
+          <span>{rating.summary}</span>
+        </a>
 
         {/* 4. Highlights (screen 38) */}
         <ul className="flex flex-col gap-5 border-t border-separator py-7">

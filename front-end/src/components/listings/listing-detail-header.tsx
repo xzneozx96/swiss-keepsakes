@@ -18,7 +18,8 @@ export function ListingDetailHeader({
 }: {
   name: string
   subtitle?: string
-  stats: ListingDetailStats
+  /** The stats row (tours); the keepsake page has none. */
+  stats?: ListingDetailStats
 }) {
   return (
     <>
@@ -28,41 +29,43 @@ export function ListingDetailHeader({
       </header>
 
       {/* 2. Stats row: the laurel rating in a wider middle column, equal sides */}
-      <dl className="grid grid-cols-[1fr_1.5fr_1fr] items-center border-y border-separator py-4 text-center">
-        <div className="flex flex-col items-center gap-0.5 px-1">
-          <dd className="text-sm leading-6 font-semibold">
-            {stats.primary.value}
-          </dd>
-          <dt className="text-xs text-muted">{stats.primary.label}</dt>
-        </div>
-        <div className="flex flex-col items-center gap-0.5 border-x border-separator px-1">
-          <dt className="sr-only">{stats.rating.label}</dt>
-          <dd className="flex items-center gap-1">
-            {stats.hasRating && (
-              <Laurel className="h-12 w-[22px]" side="start" />
-            )}
-            <span className="text-[34px] leading-10 font-semibold tracking-tight tabular-nums">
-              {stats.rating.value}
-            </span>
-            {stats.hasRating && <Laurel className="h-12 w-[22px]" side="end" />}
-          </dd>
-          {stats.hasRating && (
-            <dd aria-hidden>
-              <Stars
-                label={stats.rating.label}
-                rating={stats.ratingValue}
-                size={14}
-              />
+      {stats && (
+        <dl className="grid grid-cols-[1fr_1.5fr_1fr] items-center border-y border-separator py-4 text-center">
+          <div className="flex flex-col items-center gap-0.5 px-1">
+            <dd className="text-sm leading-6 font-semibold">
+              {stats.primary.value}
             </dd>
-          )}
-        </div>
-        <div className="flex flex-col items-center gap-0.5 px-1">
-          <dd className="text-lg leading-6 font-semibold tabular-nums">
-            {stats.reviews.value}
-          </dd>
-          <dt className="text-xs text-muted">{stats.reviews.label}</dt>
-        </div>
-      </dl>
+            <dt className="text-xs text-muted">{stats.primary.label}</dt>
+          </div>
+          <div className="flex flex-col items-center gap-0.5 border-x border-separator px-1">
+            <dt className="sr-only">{stats.rating.label}</dt>
+            <dd className="flex items-center gap-1">
+              {stats.hasRating && (
+                <Laurel className="h-12 w-[22px]" side="start" />
+              )}
+              <span className="text-[34px] leading-10 font-semibold tracking-tight tabular-nums">
+                {stats.rating.value}
+              </span>
+              {stats.hasRating && <Laurel className="h-12 w-[22px]" side="end" />}
+            </dd>
+            {stats.hasRating && (
+              <dd aria-hidden>
+                <Stars
+                  label={stats.rating.label}
+                  rating={stats.ratingValue}
+                  size={14}
+                />
+              </dd>
+            )}
+          </div>
+          <div className="flex flex-col items-center gap-0.5 px-1">
+            <dd className="text-lg leading-6 font-semibold tabular-nums">
+              {stats.reviews.value}
+            </dd>
+            <dt className="text-xs text-muted">{stats.reviews.label}</dt>
+          </div>
+        </dl>
+      )}
     </>
   )
 }

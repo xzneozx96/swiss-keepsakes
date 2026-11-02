@@ -37,10 +37,7 @@ import {
   pickValue,
   valueReasons,
 } from '../lib/variant-choice'
-import { shop } from '../seed'
 import { useFavourites } from './use-favourites'
-
-const WHITESPACE = /\s/g
 
 type Field = 'variant' | 'date' | 'place'
 
@@ -274,49 +271,8 @@ export function useGiftDetail(
             : 'detail.onlyInGerman',
         )
       : undefined,
-    stats: {
-      // Sold out replaces the pickup date, as on the C02 card.
-      pickup: soldOut
-        ? { value: t('gifts.soldOut'), label: t('detail.stats.now') }
-        : { value: short(earliest), label: t('detail.stats.pickup') },
-      // Product ratings do not exist yet (E5.5): every keepsake is new, with no reviews.
-      rating: { value: t('detail.stats.new'), label: t('detail.reviews.none') },
-      ratingValue: 0,
-      hasRating: false,
-      reviews: {
-        value: '0',
-        label: t('detail.stats.reviews.other'),
-      },
-    },
-    seller: {
-      name: shop.name,
-      title: t('detail.seller.title', { shop: shop.name }),
-      sub: t('detail.seller.sub'),
-      address: pickupPlaces[0].address,
-      hours: pick(pickupPlaces[0].openingHours),
-      contacts: [
-        {
-          kind: 'call',
-          label: t('detail.seller.call'),
-          href: `tel:${shop.phone.replace(WHITESPACE, '')}`,
-        },
-        {
-          kind: 'email',
-          label: t('detail.seller.email'),
-          href: `mailto:${shop.email}?subject=${encodeURIComponent(
-            t('detail.seller.emailSubject', { name: name.text }),
-          )}`,
-        },
-        {
-          kind: 'directions',
-          label: t('detail.seller.directions'),
-          href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-            pickupPlaces[0].address,
-          )}`,
-        },
-      ],
-      visitLabel: t('detail.seller.visit'),
-    },
+    // Product ratings do not exist yet (E5.5): every keepsake is new, with no reviews.
+    rating: { summary: t('detail.rating.new'), label: t('detail.reviews.none') },
     highlights: [
       {
         icon: 'pickup' as const,
