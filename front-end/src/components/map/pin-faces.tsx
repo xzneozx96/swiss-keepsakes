@@ -3,10 +3,28 @@ import { MapThumb } from './map-thumb'
 
 import './map.css'
 
+/**
+ * The title above a pin, like a Google Maps result: small, one line, at most 140 px, on a light halo so it reads on aerial
+ * photo and street styles. It is a picture of the pin's name (the pin's button already carries it as its label), takes no
+ * pointer events, and the layer hides it at low zoom and where two labels would overlap (`pin-labels-off`, `data-label-hidden` in map.css).
+ */
+function PinLabel({ title }: { title?: string }) {
+  if (!title)
+    return null
+
+  return (
+    <span aria-hidden className="pin-label pointer-events-none absolute bottom-full left-1/2 mb-0.5 max-w-[140px] -translate-x-1/2 truncate rounded-md bg-white/85 px-1.5 py-px text-[11px] leading-4 font-semibold whitespace-nowrap text-[#1f1811] shadow-[0_1px_4px_rgb(31_24_17/0.25)]" data-pin-label>
+      {title}
+    </span>
+  )
+}
+
 /** A round photo pin (the place icon on the lake blue without a photo). A pin the filter keeps is lit and, with a filter chosen, grows; a pin outside it is dimmed, never hidden. */
-export function PhotoPin({ id, label, photoSrc, selected, dimmed, emphasized, onPress }: {
+export function PhotoPin({ id, label, title, photoSrc, selected, dimmed, emphasized, onPress }: {
   id: string
   label: string
+  /** Written above the pin when the layer shows labels. */
+  title?: string
   photoSrc?: string
   selected: boolean
   dimmed: boolean
@@ -26,6 +44,7 @@ export function PhotoPin({ id, label, photoSrc, selected, dimmed, emphasized, on
       type="button"
       onClick={onPress}
     >
+      <PinLabel title={title} />
       <MapThumb
         className={`rounded-full border-[3px] shadow-[0_4px_14px_rgb(31_24_17/0.35)] transition-[width,height] duration-200 motion-reduce:transition-none ${selected ? 'border-accent' : 'border-[#fffaf4]'} ${size}`}
         iconSize={selected ? 24 : 18}
@@ -77,8 +96,9 @@ export function NumberedPin({ id, number, label, selected, onPress }: {
 }
 
 /** A teardrop that points at the exact spot (the place picker). Its tip is the pin's anchor: use it with `anchor="bottom"`. */
-export function TeardropPin({ label, describedBy, onKeyDown }: {
+export function TeardropPin({ label, title, describedBy, onKeyDown }: {
   label: string
+  title?: string
   describedBy?: string
   onKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>) => void
 }) {
@@ -86,10 +106,11 @@ export function TeardropPin({ label, describedBy, onKeyDown }: {
     <button
       aria-describedby={describedBy}
       aria-label={label}
-      className="flex size-11 cursor-grab items-end justify-center rounded-full outline-none focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="relative flex size-11 cursor-grab items-end justify-center rounded-full outline-none focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent"
       type="button"
       onKeyDown={onKeyDown}
     >
+      <PinLabel title={title} />
       <span aria-hidden className="grid size-9 rotate-45 place-items-center rounded-full rounded-br-none bg-accent shadow-surface ring-2 ring-white">
         <span className="size-3 rounded-full bg-white" />
       </span>

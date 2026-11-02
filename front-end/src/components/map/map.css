@@ -36,3 +36,9 @@
     transition: none;
   }
 }
+
+/* The title above a pin (pin-faces.tsx): hidden below the layer's zoom and where it would overlap another one (pin-layer.tsx). */
+.pin-labels-off .pin-label,
+[data-label-hidden] .pin-label {
+  display: none;
+}

@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom'
 
 import { useLatest } from '@/hooks/use-latest'
 import { boundsOf, clusterPins } from './clusters'
+import { hiddenLabels } from './label-collisions'
 import { useMap } from './map-context'
 import { reducedMotion } from './reduced-motion'
 
@@ -64,6 +65,7 @@ export function PinLayer<P extends MapPin>({
   anchor = 'center',
   draggable = false,
   fit = false,
+  labelsFromZoom = 14,
   followSelected = false,
   renderPin,
   renderCluster,
@@ -78,6 +80,8 @@ export function PinLayer<P extends MapPin>({
   anchor?: 'center' | 'bottom'
   draggable?: boolean
   fit?: 'first-load' | false
+  /** The titles above the pins show from this zoom on (0: always). Clusters and heavily overlapping labels are hidden whatever the zoom. */
+  labelsFromZoom?: number
   followSelected?: boolean
   renderPin: (pin: P, state: PinState) => ReactNode
   /** Omit it for no clustering. */
@@ -205,6 +209,38 @@ export function PinLayer<P extends MapPin>({
       duration: reducedMotion() ? 0 : 600,
     })
   }, [map, followSelected, selectedId, present, insets, pinsRef])
+
+  // The titles above the pins: off below `labelsFromZoom`; where two overlap heavily the later one in rank order is hidden.
+  // Measured and set when the camera stops or the pins change, never per frame.
+  useEffect(() => {
+    if (!map)
+      return
+    const container = map.getContainer()
+    const declutter = () => {
+      container.classList.toggle('pin-labels-off', map.getZoom() < labelsFromZoom)
+      const boxes = []
+
+      for (const pin of pinsRef.current) {
+        const element = markersRef.current.get(pin.id)?.getElement()
+
+        element?.removeAttribute('data-label-hidden')
+        const rect = element?.querySelector('[data-pin-label]')?.getBoundingClientRect()
+
+        if (rect && rect.width > 0)
+          boxes.push({ id: pin.id, left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom })
+      }
+      for (const id of hiddenLabels(boxes))
+        markersRef.current.get(id)?.getElement().setAttribute('data-label-hidden', '')
+    }
+
+    declutter()
+    map.on('moveend', declutter)
+
+    return () => {
+      map.off('moveend', declutter)
+      container.classList.remove('pin-labels-off')
+    }
+  }, [map, labelsFromZoom, elements, groups, pins, pinsRef])
 
   function zoomTo(members: P[]) {
     map?.fitBounds(boundsOf(members.map(member => member.coordinates)), {

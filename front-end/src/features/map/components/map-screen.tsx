@@ -173,7 +173,7 @@ export function MapScreen() {
             const date = pin.nextDate ? nextDateLine(pin.nextDate, today, intlLocale, dateCopy) : undefined
             const label = [pin.title, date && `${t('map.pin.event')}, ${date}`, state.dimmed && t('map.pin.dimmed')].filter(Boolean).join(', ')
 
-            return <PhotoPin dimmed={state.dimmed} emphasized={chosenCount > 0 && !state.dimmed} id={pin.id} label={label} selected={state.selected} onPress={state.select} />
+            return <PhotoPin dimmed={state.dimmed} emphasized={chosenCount > 0 && !state.dimmed} id={pin.id} label={label} title={pin.title} selected={state.selected} onPress={state.select} />
           }}
           selectedId={openId}
           onSelect={openFromPin}
