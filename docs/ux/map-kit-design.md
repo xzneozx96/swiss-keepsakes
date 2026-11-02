@@ -1,5 +1,6 @@
 # Map kit design: one reusable map for pins and routes
 
+- Note of 2026-11-02 (owner): the guest **pin** card no longer shows `‹ n of m ›`, which is commented out in `place-card.tsx`. Show more takes the row, and `MapCard` keeps its spacer only when the steps show. The tour route card keeps its steps. Recommendation 6 and addition D below hold for the tour card only.
 - Status: **built 2026-10-30** (steps 1 to 9 of section 8, and the owner's additions below), after the owner **accepted** all 10 recommendations in section 10. Written 2026-10-30. Owner additions, same day: a blurred loading overlay on every map (A), compact map controls: a small zoom pill and round compass and fullscreen buttons with a 44 px hit area (B), the place editor review opens the story in a bottom sheet inside the phone (C), the pin card is the tour-style `MapCard` (D). Build started in the order of section 8.
 - Owner request: put the tour route map's info card, its controls and its credits position on the pin map, and "create a reusable map component to display both pins and routes, reused among different screens".
 - Read first: `AGENTS.md`, `docs/development-rules/frontend/heroui-and-styling.md` (reuse shared UI, matching skeletons), `components-and-hooks.md`, `docs/ux/pins-design.md`, ADR-006, ADR-030.

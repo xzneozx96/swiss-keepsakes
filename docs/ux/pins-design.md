@@ -1,5 +1,9 @@
 # Map and pins design: N02, N03, N16 and N17
 
+- **Amended 2026-11-02 (owner).**
+  - The guest pin card has no `‹ n of m ›` steps. They are commented out in `features/map/components/place-card.tsx`, and **Show more** takes the row beside the map button. The cards still swipe.
+  - The details sheet has no note under Open in Google Maps.
+  - In the editor N17, the "Shown on the home" block (Service, Food and drink kind) goes. The map categories carry the home role, and Must-visit moves into Recommended for (`docs/decisions/2026-11-02-map-category-home-roles.md`, being built in T-009).
 - Status: **design approved** on 2026-10-28 (chat approval of the lab page `/lab/pins` as it opens). The seven differences from the original PRD v3 were settled the same day and the PRD now matches (section 5). One is still open: whether the map credits may be folded.
 - Screens: N02 guest map, N03 pin card, N16 merchant pins list, N17 merchant pin editor. Slice S4, Track 1, stories E4.2, E4.6 and E4.7. N18 (media library) is now designed (`docs/ux/media-design.md`, approved 2026-10-29). N23 (categories) is **not designed yet**.
 - Read first: `docs/decisions/2026-10-28-pins-and-map-design.md` (what was approved and the open differences), `docs/decisions/2026-10-27-map-pins-and-events.md` (the pin model), PRD §11.1 and AC42, AC62, AC63, AC64, AC67, AC68, AC79, AC85 to AC90, `docs/adr/ADR-006-browser-personalisation-and-map-data.md`, `ADR-029-one-pin-model-with-optional-dates.md`, `ADR-030-merchant-edited-map-and-blog-categories.md`.
@@ -48,7 +52,7 @@ The card body is shared by the card row and the details sheet. Every optional fi
 | Main story | A link, only when the story has a published version in the visitor's language |
 | Other stories | The published stories that tag this pin, with reading time |
 | Outbound link | Optional, one per pin |
-| Directions | "Open in Google Maps": a link in a new tab, destination only. The note under it says "Opens Google Maps in a new tab. We never see where you are." The site never reads the visitor's location and draws no route (AC89, G9, AC67) |
+| Directions | "Open in Google Maps": a link in a new tab, destination only. (Amended 2026-11-02: no note under it; the owner found it useless.) The site never reads the visitor's location and draws no route (AC89, G9, AC67) |
 
 - **Details sheet.** "Show more" opens the place in the app's `SheetFrame`, laid out like the tour stop sheet: photo carousel, tip, facts, with **Previous place** and **Next place**.
 - Focus goes to the card title when a card opens. The sheet returns focus to where it was.

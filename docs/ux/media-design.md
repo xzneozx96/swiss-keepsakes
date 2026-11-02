@@ -1,5 +1,10 @@
 # Media library design: N18 "Photo wall"
 
+- **Amended 2026-11-01 (owner).**
+  - The removal is labelled **Delete** (DE "Löschen") everywhere, not Retire. It still retires the file: it is refused while a page uses it, and the file leaves the default list (the media list API leaves retired files out by default).
+  - Bulk delete runs inside the confirm dialog, four files at a time, and tiles leave as each answer comes.
+  - An upload first checks for a duplicate ("Already in your library", migration `0013`).
+  - Where this file says Retire, read Delete.
 - Status: **design approved** on 2026-10-29 (chat approval of the lab page `/lab/media`, option B). Upload limits are proposals, and four points are open (section 8).
 - Screen: N18, the merchant media library at `/store/content/media`. Slice S4, Track 1, story E4.11.
 - Read first: `docs/decisions/2026-10-29-media-library-design.md` (what was approved, what was rejected, the open points), `docs/adr/ADR-004-media-and-pdf-storage.md` (storage and versioned keys), `api/migrations/0008_content.sql` (`content.media`, `content.media_refs`), PRD AC32 and AC51, `docs/ux/pins-design.md` (the pins list N16 and editor N17, which use the same merchant frame).

@@ -52,3 +52,4 @@ We will keep stories, places and tour guides in the `content` module and give ea
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
 - 2026-10-27 amended (gate G11, `docs/decisions/2026-10-27-map-pins-and-events.md`)
+- 2026-11-02 note: the pin's service type and food kind are replaced by a home role on the map category; must-visit stays on the pin (`docs/decisions/2026-11-02-map-category-home-roles.md`, built in T-009)

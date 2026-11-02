@@ -14,6 +14,8 @@ Review page: https://claude.ai/artifact/PZrVtEWF73EoQw5tMCMK1V (private; source 
 
 It chooses no visual design. The owner has no reference images (O23 closed, 27.10.2026): pins and the map use the default style of the map stack. Where a row says "layout", it means content blocks and order, not look.
 
+Amended on 02.11.2026: the keepsake editor M12 has three steps (Details, Options and variants, Review and publish) for a new and an existing keepsake, with options typed in place and every combination listed as in Shopify (`docs/decisions/2026-11-02-keepsake-editor-steps.md`). The cards with the sheets N14 and N15 in the S7 row and in D16 are superseded. In the pin editor N17, the home block goes and the map categories carry the home role (`docs/decisions/2026-11-02-map-category-home-roles.md`). On the guest pin card N03, the `‹ n of m ›` steps are hidden.
+
 Amended on 29.10.2026: the media library N18 has an approved design (option B "Photo wall", `docs/decisions/2026-10-29-media-library-design.md`, `docs/ux/media-design.md`). Slice S4 lists N18 as approved and stays "Partly approved" while N23 is not designed. No verdict changed.
 
 Amended on 29.10.2026 (second): the story editor M17 has an approved design (a mix on option B, `docs/decisions/2026-10-29-story-editor-design.md`, `docs/ux/story-editor-design.md`). Slice S3 is "Partly approved" with M17 approved, because C20 is not designed. The editor has two screens, Write and Review and publish, and Details are cards on Review. The author role is gone. No verdict changed.

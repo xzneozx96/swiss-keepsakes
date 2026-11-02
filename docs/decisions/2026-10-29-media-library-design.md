@@ -1,6 +1,7 @@
 # The media library N18 is option B "Photo wall"
 
 - Date: 2026-10-29
+- Note of 2026-11-01: the owner renamed Retire to **Delete** ("Löschen") on screen. The action still retires the file and is refused while a page uses it, so decision 11 stands in substance, with the label Delete. See `docs/ux/media-design.md`.
 - Status: **approved on 2026-10-29** (approval given in chat by the person who made the request, on the lab page `/lab/media`). Four points stay open (see "Open points"). The upload limits are proposals that the merchant must confirm.
 - Changes: `docs/ux/media-design.md` (new), `docs/ux/pins-design.md`, `docs/decisions/2026-10-28-pins-and-map-design.md`, `docs/development-plan/screen-inventory.md` (S4, N18, D10, D14), `docs/development-plan/delivery-plan.md` (E4.11), `docs/specs/001-storytelling-pivot/data-model.md` (note under DM-3), `docs/adr/ADR-004-media-and-pdf-storage.md` (History line)
 - Note of 2026-10-30: the owner confirmed the upload limits (gate G-E411-LIMITS): 20 MB for a photo, 50 MB for audio (M4A is allowed) and 30 MB for a PDF. Decision 8 and open point 1 carry the answer.

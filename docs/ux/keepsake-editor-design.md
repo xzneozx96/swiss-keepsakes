@@ -1,5 +1,14 @@
 # Keepsake catalog design: M11, M12 with N14 and N15, the variant page and Inventory N13
 
+- **Amended 2026-11-02 — read this first.** The keepsake editor is no longer the card screen of sections 4 to 6, 9, 11 and 12. Since 2026-10-30 it has been one stepped editor for a new and an existing keepsake, with the place editor's layout. Since 2026-11-02 it has three steps: Details, **Options and variants** (options typed in place as in Shopify, every combination listed, unwanted ones removed, rows grouped by the first option, changes to selected rows together), and Review and publish.
+  - An existing keepsake autosaves.
+  - A new keepsake is created only at Review and publish.
+  - One EN/DE switch serves the whole editor.
+  - The Description is rich text.
+  - Delete removes a keepsake that was never sold and archives one that was.
+  - There are no options and variants sheets (N14, N15), no "Add all combinations", and no Stock step until E6.3.
+
+  Where this file disagrees, `docs/decisions/2026-11-02-keepsake-editor-steps.md` wins. The rules in sections 7, 13 and 15 still hold: sparse SKUs, the combination key, and archiving is final.
 - Status: **design approved** on 2026-10-29 (chat approval of the lab page `/lab/keepsake-editor`). Ten points are open (section 13). Prices, themes, colours and design rights are mock (O26).
 - Screens: M11 (the keepsake list, `/store/products`), M12 (the keepsake page, new and edit, `/store/products/gifts/new` and `/store/products/gifts/$productId`), N14 (the options sheet), N15 (the variants table and its sheet), the variant page, N13 (Inventory, `/store/products/inventory`) and the inventory item page. Slice S7, Track 2, stories E6.1, E6.2 and E6.3. The guest product page C03 is not part of this design.
 - Read first: `docs/decisions/2026-10-29-keepsake-catalog-design.md` (what was approved, what was rejected, the open points), `docs/ux/story-editor-design.md` (M17, whose flow M12 follows), `docs/adr/ADR-017`, `ADR-027` (options per product, the combination key), `ADR-009`, `ADR-016` (stock, held units, the CHECK), `ADR-022` (no locations), the data model `docs/specs/001-storytelling-pivot/data-model.md` (DM-7 and the catalog section), and PRD §7.0 to §7.2.
