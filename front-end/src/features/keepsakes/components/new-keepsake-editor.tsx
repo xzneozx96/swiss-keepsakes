@@ -2,6 +2,7 @@ import type { PublishCheck } from '@sk/api-contract'
 import type { Language } from '@sk/domain/shared'
 import type { DraftStep } from '../lib/draft-storage'
 import type { KeepsakeText } from '../lib/keepsake-rules'
+import type { VariantActions } from '../lib/variant-actions'
 
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
@@ -15,23 +16,24 @@ import { useIdempotencyKey } from '@/features/stores/hooks/use-idempotency-key'
 import { keepsakesQueries } from '../api/queries'
 import { useDraftVariants } from '../hooks/use-draft-variants'
 import { useOptionsDraft } from '../hooks/use-options-draft'
+import { basePriceOf, missingNames, refsOf } from '../lib/combinations'
 import { descriptionsBody, isTooLong } from '../lib/description-doc'
 import { draftProduct, publishChecks } from '../lib/draft-product'
 import { clearDraft, DRAFT_STEPS, readDraft, writeDraft } from '../lib/draft-storage'
-import { hasDescription, LANGUAGES, nameIn, publishedText, suggestSkuCode } from '../lib/keepsake-rules'
+import { hasDescription, isSkuCode, LANGUAGES, nameIn, publishedText, suggestSkuCode } from '../lib/keepsake-rules'
 import { asSaved, optionsBody, refusalText } from '../lib/option-rules'
 import { keepsakeProblemKeys, problemMessageKey, problemTypeOf, refusalsOf } from '../lib/problems'
 import { KEEPSAKE_STEPS, KEEPSAKES_PATH } from '../lib/search-params'
 import { draftStatuses, stepOfCard } from '../lib/steps'
-import { isComplete, variantsBody } from '../lib/variant-rules'
+import { codeProblem, isComplete, variantsBody } from '../lib/variant-rules'
+import { KeepsakeLanguageSwitch } from './basics-fields'
 import { DetailsStep } from './details-step'
 import { StepBodySkeleton, StepEditorSkeleton } from './editor-skeleton'
 import { KeepsakeFrame } from './keepsake-frame'
 import { KeepsakeGate } from './keepsake-gate'
 import { RefusalAlert } from './option-parts'
-import { OptionsStep } from './options-step'
+import { OptionsAndVariantsStep } from './options-variants-step'
 import { useLeaveGuard } from './use-leave-guard'
-import { VariantsStep } from './variants-step'
 
 // The mockup and the preview load when Review and publish opens, as in the saved editor.
 const ReviewScreen = lazy(() => import('./review-screen'))
@@ -43,8 +45,8 @@ function trimmedOf(text: Record<Language, string>) {
 }
 
 /**
- * A new keepsake in the stepped editor. Details, Options, Variants and Review and publish all live in the browser, and a
- * reload of the page keeps them. Nothing is saved before step 4, where the API makes a keepsake in one request (it needs
+ * A new keepsake in the stepped editor. Details, Options and variants, and Review and publish all live in the browser, and a
+ * reload of the page keeps them. Nothing is saved before step 3, where the API makes a keepsake in one request (it needs
  * at least one variant). "Save as draft" stops there; "Publish" publishes it next. Either way the saved keepsake's editor
  * opens on Review and publish.
  */
@@ -62,8 +64,13 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
   })
   const publish = useCommand('keepsakes', 'publish', { meta: { success: published => publishedText(t, published), error: keepsakeProblemKeys } })
   const draft = useOptionsDraft({ saved: [], variants: [], initial: stored?.options })
-  const options = asSaved(draft.options)
-  const held = useDraftVariants(options, stored?.variants ?? [])
+  // The options that were finished with Done: the rows are named by them, and what the open option adds is told by them.
+  const [committed, setCommitted] = useState<ReadonlySet<string>>(() => refsOf(stored?.options ?? []))
+  const finished = draft.options.filter(option => committed.has(option.ref)).map(option => ({ ...option, values: option.values.filter(value => committed.has(value.ref)) }))
+  const options = asSaved(finished)
+  const held = useDraftVariants(finished, stored?.variants ?? [])
+  // The language of the text the whole editor shows, chosen once in the head.
+  const [editLanguage, setEditLanguage] = useState<Language>('en')
   const [step, setStep] = useState<DraftStep>(stored?.step ?? 'details')
   const [reached, setReached] = useState(stored?.reached ?? 0)
   const [value, setValue] = useState(stored?.value ?? empty)
@@ -77,15 +84,19 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
   const last = index === DRAFT_STEPS.length - 1
   const hasName = LANGUAGES.some(l => value.name[l].trim() !== '')
   const { variants } = held
-  const incomplete = variants.filter(variant => !isComplete(options, variant.values))
-  const variantsReady = variants.length > 0 && incomplete.length === 0
-  const touched = hasName || LANGUAGES.some(l => hasDescription(value.text[l])) || photoIds.length > 0 || commission > 0 || draft.options.length > 0 || variants.length > 0
+  const codeFallback = suggestSkuCode(nameIn(trimmedOf(value.name), language))
+  // A variant with no code of its own takes the name's: the Price card says so in the field.
+  const coded = variants.map(variant => ({ ...variant, skuCode: variant.skuCode || codeFallback }))
+  const incomplete = coded.filter(variant => !isComplete(options, variant.values) || variant.priceRappen <= 0 || !isSkuCode(variant.skuCode) || codeProblem(variant.skuCode, coded.filter(other => other.id !== variant.id)) !== undefined)
+  const unfinished = draft.options.some(option => !committed.has(option.ref))
+  const variantsReady = coded.length > 0 && incomplete.length === 0 && !unfinished
+  const touched = hasName || LANGUAGES.some(l => hasDescription(value.text[l])) || photoIds.length > 0 || commission > 0 || draft.options.length > 0 || variants.some(variant => variant.priceRappen > 0 || variant.skuCode !== '')
   const name = trimmedOf(value.name)
-  const body = { name, text: descriptionsBody(value.text), photoIds, commissionRate: commission, options: optionsBody(draft.options), variants: variantsBody(variants) }
+  const body = { name, text: descriptionsBody(value.text), photoIds, commissionRate: commission, options: optionsBody(draft.options), variants: variantsBody(coded) }
   const key = useIdempotencyKey({ storeId, ...body })
-  const checks = publishChecks({ value, photoIds, commission, options, variants })
+  const checks = publishChecks({ value, photoIds, commission, options, variants: coded })
   const cover = useMediaFile(storeId, photoIds[0] ?? null).data
-  const review = draftProduct({ storeId, value, photos: cover ? [cover] : [], commission, options, variants, checks })
+  const review = draftProduct({ storeId, value, photos: cover ? [cover] : [], commission, options, variants: coded, checks })
   const guard = useLeaveGuard({
     isUnsaved: touched,
     titleKey: 'keepsakes.discard.title',
@@ -124,12 +135,10 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
 
       return 'details'
     }
-    if (to >= 2 && draft.check().length > 0)
-      return 'options'
-    if (to >= 3 && !variantsReady) {
+    if (to >= 2 && !variantsReady) {
       setTried(true)
 
-      return 'variants'
+      return 'options'
     }
 
     return undefined
@@ -196,6 +205,19 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
       go(id as DraftStep)
   }
   const fix = (check: PublishCheck) => open(stepOfCard(check.card) as DraftStep)
+  const actions: VariantActions = {
+    saveVariant: held.save,
+    saveVariants: held.saveMany,
+    // Done: the variants take the option's values and the new combinations are made, in the browser.
+    commit: async ({ drafts, plan }) => {
+      const outcome = await held.apply(drafts, plan)
+
+      setCommitted(refsOf(drafts))
+
+      return outcome
+    },
+    addBack: combinations => held.addBack(combinations, basePriceOf(variants)),
+  }
   const problems = draft.problems.length > 0 && <RefusalAlert>{draft.problems.map(problem => refusalText(t, problem)).join(' ')}</RefusalAlert>
 
   return (
@@ -211,6 +233,7 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
         }}
         canGo={id => (DRAFT_STEPS as readonly string[]).includes(id) && DRAFT_STEPS.indexOf(id as DraftStep) <= reached}
         current={step}
+        languageSwitch={<KeepsakeLanguageSwitch missingOptionNames={{ en: missingNames(draft.options, 'en'), de: missingNames(draft.options, 'de') }} selected={editLanguage} value={value} onChange={setEditLanguage} />}
         notices={failure && <p className="rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">{failure}</p>}
         status={{ tone: 'neutral', label: t('keepsakes.status.draft') }}
         steps={steps}
@@ -222,6 +245,7 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
         <div className="flex min-w-0 flex-col gap-5 lg:gap-6" hidden={step !== 'details'}>
           <DetailsStep
             nameOnly
+            language={editLanguage}
             commission={commission}
             photoIds={photoIds}
             showErrors={showErrors}
@@ -234,12 +258,11 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
             onValue={setValue}
           />
         </div>
-        {step === 'options' && <OptionsStep draft={draft} />}
-        {step === 'variants' && (
+        {step === 'options' && (
           <>
-            <VariantsStep held codeFallback={suggestSkuCode(nameIn(name, language))} name={nameIn(name, language) || t('keepsakes.untitled')} options={options} variants={variants} onCreate={held.create} onSave={held.save} />
-            {tried && variants.length === 0 && <RefusalAlert>{t('keepsakes.variants.addOne')}</RefusalAlert>}
-            {tried && incomplete.length > 0 && <RefusalAlert>{t(incomplete.length === 1 ? 'keepsakes.variants.incomplete.one' : 'keepsakes.variants.incomplete.other', { count: incomplete.length })}</RefusalAlert>}
+            <OptionsAndVariantsStep actions={actions} codeFallback={codeFallback} committed={committed} draft={draft} held language={editLanguage} showErrors={tried} variants={variants} />
+            {tried && unfinished && <RefusalAlert>{t('keepsakes.variants.finishOption')}</RefusalAlert>}
+            {tried && !unfinished && incomplete.length > 0 && <RefusalAlert>{t(incomplete.length === 1 ? 'keepsakes.variants.incomplete.one' : 'keepsakes.variants.incomplete.other', { count: incomplete.length })}</RefusalAlert>}
             {problems}
           </>
         )}

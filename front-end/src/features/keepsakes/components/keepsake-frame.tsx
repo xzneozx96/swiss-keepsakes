@@ -16,7 +16,7 @@ import { KEEPSAKES_PATH } from '../lib/search-params'
  * name and the status chip, the step list on the left, the step's blocks on the right and the bar under them.
  * `onBack` is the leave guard: the arrow asks first when something is not saved.
  */
-export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBack, onRemove, bar, notices, children }: {
+export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBack, onRemove, bar, notices, languageSwitch, children }: {
   title: string
   status: { tone: StatusTone, label: string }
   steps: StepView[]
@@ -29,6 +29,8 @@ export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBa
   bar: React.ComponentProps<typeof StepBar>
   /** What sits above the steps: the stale warning, a refused save. */
   notices?: React.ReactNode
+  /** The editor's one EN/DE switch, by the title: it chooses the version of every step. */
+  languageSwitch: React.ReactNode
   children: React.ReactNode
 }) {
   const { t } = useLocale()
@@ -46,15 +48,18 @@ export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBa
         }}
       />
       {/* On phones the ← bar shows the title and the status; the header stays for screen readers only. */}
-      <header className="flex min-w-0 items-center gap-3 max-lg:sr-only">
-        <Button isIconOnly aria-label={t('keepsakes.back.toKeepsakes')} className="-ms-2 hidden shrink-0 lg:inline-flex" variant="tertiary" onPress={onBack}>
-          <BackIcon aria-hidden size={20} />
-        </Button>
-        <h1 className="min-w-0 text-title text-pretty [overflow-wrap:anywhere] max-lg:sr-only">{title}</h1>
-        <span className="shrink-0 max-lg:hidden" data-testid="keepsake-status">
-          <StatusChip tone={status.tone}>{status.label}</StatusChip>
-        </span>
-      </header>
+      <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
+        <header className="flex min-w-0 items-center gap-3 max-lg:sr-only lg:flex-1">
+          <Button isIconOnly aria-label={t('keepsakes.back.toKeepsakes')} className="-ms-2 hidden shrink-0 lg:inline-flex" variant="tertiary" onPress={onBack}>
+            <BackIcon aria-hidden size={20} />
+          </Button>
+          <h1 className="min-w-0 text-title text-pretty [overflow-wrap:anywhere] max-lg:sr-only">{title}</h1>
+          <span className="shrink-0 max-lg:hidden" data-testid="keepsake-status">
+            <StatusChip tone={status.tone}>{status.label}</StatusChip>
+          </span>
+        </header>
+        <div className="min-w-0 lg:w-80 lg:shrink-0">{languageSwitch}</div>
+      </div>
       {notices}
       <StepLayout canGo={canGo} current={current} quietTitle steps={steps} onGo={onGo}>
         {children}

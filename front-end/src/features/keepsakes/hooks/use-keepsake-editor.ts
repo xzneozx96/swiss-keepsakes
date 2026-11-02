@@ -1,6 +1,7 @@
-import type { OptionWrite, Product } from '@sk/api-contract'
+import type { OptionWrite, Product, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
+import type { OptionsPlan } from '../lib/combinations'
 import type { KeepsakeText } from '../lib/keepsake-rules'
-import type { Refusal, Values } from '../lib/option-rules'
+import type { Refusal } from '../lib/option-rules'
 
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
@@ -63,8 +64,8 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     },
   })
   const unpublish = useCommand('keepsakes', 'unpublish', { meta: { success: 'keepsakes.toast.unpublished', silent: true } })
-  const saveOptions = useCommand('keepsakes', 'saveOptions', { meta: { success: 'keepsakes.optionsSheet.saved', silent: true } })
-  // Removing an option from its row says nothing on success; its refusal shows beside the Options card.
+  // The bar says "Saved" for an option that is done; its refusal shows in the Options block.
+  const saveOptions = useCommand('keepsakes', 'saveOptions', { meta: { silent: true } })
   const variantCommands = useVariantCommands({ storeId, id: keepsake.id })
   const [draft, setDraft] = useState(() => draftOf(keepsake))
   const [state, setState] = useState<SaveState>('saved')
@@ -197,6 +198,18 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     }
   }
 
+  /** A write that is not the autosave (a price, a bulk change, an option that is done) still moves the bar: Saving, then Saved with the time. */
+  async function tracked(run: () => Promise<Outcome>): Promise<Outcome> {
+    setState(current => (current === 'stale' ? current : 'saving'))
+    const outcome = await run()
+
+    if (outcome.ok)
+      setSavedAt(new Date())
+    setState(current => (current === 'stale' ? current : dirtyRef.current ? 'unsaved' : 'saved'))
+
+    return outcome
+  }
+
   return {
     draft,
     change,
@@ -209,10 +222,22 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     flush,
     publish: () => afterFlush(() => publish.mutateAsync({ storeId, id, ifMatch: versionRef.current, idempotencyKey: crypto.randomUUID() })),
     unpublish: () => afterFlush(() => unpublish.mutateAsync({ storeId, id, ifMatch: versionRef.current, idempotencyKey: crypto.randomUUID() })),
-    ...variantCommands,
-    /** The options and the new values of the variants, in one write on the version the page holds. The typed fields save first. */
-    saveOptions: (options: OptionWrite[], variantValues: { variantId: string, values: Values }[]) =>
-      afterFlush(() => saveOptions.mutateAsync({ storeId, id, ifMatch: versionRef.current, idempotencyKey: crypto.randomUUID(), options, variantValues })),
+    saveVariant: (variantId: string, body: VariantSaveBody) => tracked(() => variantCommands.saveVariant(variantId, body)),
+    saveVariants: (variants: VariantsSaveBody['variants']) => tracked(() => variantCommands.saveVariants(variants)),
+    /**
+     * The options, the values existing variants take of a new option and the new variants, in one write on the version the
+     * page holds. The typed fields save first.
+     */
+    commitOptions: ({ options, plan }: { options: OptionWrite[], plan: OptionsPlan }) =>
+      tracked(() => afterFlush(() => saveOptions.mutateAsync({
+        storeId,
+        id,
+        ifMatch: versionRef.current,
+        idempotencyKey: crypto.randomUUID(),
+        options,
+        ...(plan.variantValues.length > 0 && { variantValues: plan.variantValues }),
+        ...(plan.newVariants.length > 0 && { newVariants: plan.newVariants }),
+      }))),
     isPublishing: publish.isPending || unpublish.isPending,
   }
 }

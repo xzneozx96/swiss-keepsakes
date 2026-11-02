@@ -6,7 +6,7 @@ import { readSessionStored, removeSessionStored, writeSessionStored } from '@/li
 import { storedDescription } from './description-doc'
 
 /** The steps of a new keepsake in the browser. */
-export const DRAFT_STEPS = ['details', 'options', 'variants', 'review'] as const
+export const DRAFT_STEPS = ['details', 'options', 'review'] as const
 
 export type DraftStep = (typeof DRAFT_STEPS)[number]
 
@@ -24,6 +24,14 @@ export interface StoredDraft {
 const keyOf = (storeId: string) => `sk:new-keepsake:${storeId}`
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
+
+/** A draft written when Options and Variants were two steps: Variants is the merged step, and no step is past Review. */
+function withMergedSteps(value: unknown): unknown {
+  if (!isRecord(value))
+    return value
+
+  return { ...value, step: value.step === 'variants' ? 'options' : value.step, reached: typeof value.reached === 'number' ? Math.min(value.reached, DRAFT_STEPS.length - 1) : value.reached }
+}
 
 function isDraft(value: unknown): value is StoredDraft {
   return isRecord(value)
@@ -47,7 +55,7 @@ export function readDraft(storeId: string): StoredDraft | undefined {
   if (raw === undefined)
     return undefined
   try {
-    const parsed: unknown = JSON.parse(raw)
+    const parsed = withMergedSteps(JSON.parse(raw))
 
     return isDraft(parsed) ? withDocuments(parsed) : undefined
   }

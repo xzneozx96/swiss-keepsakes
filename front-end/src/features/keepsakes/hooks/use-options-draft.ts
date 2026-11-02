@@ -5,11 +5,11 @@ import { useState } from 'react'
 
 import { asSaved, checkStagedOptions, DEFAULT_SWATCH, draftOfOptions, duplicateValue, labelOf, moveItem, newOption, splitValues, VALUE_LABEL_MAX, variantsUsing } from '../lib/option-rules'
 
-/** Each variant's value of each option, staged until Save: variant id, then option ref, then value ref. */
+/** Each variant's value of each new option, made from the draft: variant id, then option ref, then value ref. */
 type Assigned = Record<string, Values>
 
-/** What the draft holds, for a phone sheet to put back when it is cancelled. */
-export interface OptionsSnapshot { options: OptionDraft[], assigned: Assigned, /** Options whose swatch switch is on (the API has no flag: swatches live on the values, so an option with no value yet needs it here). */ swatchOn: Record<string, boolean> }
+/** What the draft holds, for an option that is cancelled to put back. */
+export interface OptionsSnapshot { options: OptionDraft[], /** Options whose swatch switch is on (the API has no flag: swatches live on the values, so an option with no value yet needs it here). */ swatchOn: Record<string, boolean> }
 
 interface State extends OptionsSnapshot {
   /** The saved options as JSON, to tell an edited draft from a clean one when the saved options change. */
@@ -24,38 +24,36 @@ interface State extends OptionsSnapshot {
 
 const usedBy = (users: Valued[]) => ({ count: users.length, codes: users.slice(0, 3).map(user => user.skuCode).join(', '), more: Math.max(0, users.length - 3) })
 
-const without = (values: Values, key: string) => Object.fromEntries(Object.entries(values).filter(([k]) => k !== key))
-
 /**
- * The options as the Options step stages them, for a saved keepsake (`saved` and its `variants`) and for a new one
- * (nothing saved: `saved` is empty). Nothing is saved here. `problems` is what the rules say, shown after a save was tried
- * and, for a value typed twice, at once. A delete that a variant forbids is refused where it was pressed (`refusalAt`).
- * Options save whole (ADR-027), so one draft holds all of them and the values that a new option needs on each variant.
+ * The options as the Options and variants step stages them, for a saved keepsake (`saved` and its `variants`) and for a new
+ * one (nothing saved: `saved` is empty). Nothing is saved here. `problems` is what the rules say, shown after a save was
+ * tried and, for a value typed twice, at once. A delete that a variant forbids is refused where it was pressed (`refusalAt`).
+ * Options save whole (ADR-027), so one draft holds all of them. A new option goes on every existing variant as its first
+ * value (`assigned`), so the merchant is never asked for it.
  */
 export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOption[], variants: Valued[], /** Options to start from instead of the saved ones: a new keepsake that a reload brought back. */ initial?: OptionDraft[] }) {
   const savedOptions = draftOfOptions(saved)
   const savedJson = JSON.stringify(savedOptions)
-  const [state, setState] = useState<State>(() => ({ options: initial ?? savedOptions, assigned: {}, swatchOn: {}, base: savedJson, tried: false, server: [] }))
+  const [state, setState] = useState<State>(() => ({ options: initial ?? savedOptions, swatchOn: {}, base: savedJson, tried: false, server: [] }))
 
   // The saved options changed under the draft (a save, or the keepsake loaded again): a clean draft follows them, an edited one stays.
   if (state.base !== savedJson)
-    setState(current => ({ ...current, base: savedJson, ...(JSON.stringify(current.options) === current.base ? { options: savedOptions, assigned: {}, swatchOn: {}, tried: false, server: [] } : {}) }))
+    setState(current => ({ ...current, base: savedJson, ...(JSON.stringify(current.options) === current.base ? { options: savedOptions, swatchOn: {}, tried: false, server: [] } : {}) }))
 
-  const { options, assigned } = state
+  const { options } = state
   const savedRefs = new Set(saved.flatMap(option => [option.id, ...option.values.map(value => value.id)]))
+  const hasValue = (option: OptionDraft) => option.values.some(value => labelOf(value.label) !== '')
+  const assignedFor = (list: OptionDraft[]): Assigned => Object.fromEntries(variants.map(variant => [variant.id, Object.fromEntries(list.filter(option => !savedRefs.has(option.ref) && hasValue(option)).map(option => [option.ref, option.values.find(value => labelOf(value.label) !== '')!.ref]))]))
+  const assigned = assignedFor(options)
   const found = checkStagedOptions(saved, options, variants, assigned)
   const problems = [...(state.tried ? found : found.filter(problem => problem.code === 'value-duplicate')), ...state.server]
   const swatchesOn = (option: OptionDraft) => option.values.some(value => value.swatch !== null) || state.swatchOn[option.ref] === true
-  const hasValue = (option: OptionDraft) => option.values.some(value => labelOf(value.label) !== '')
 
-  const edit = (change: (list: OptionDraft[]) => OptionDraft[], clean?: (list: Assigned) => Assigned) => {
-    setState(current => ({ ...current, options: change(current.options), assigned: clean ? clean(current.assigned) : current.assigned, refusal: undefined, server: [] }))
+  const edit = (change: (list: OptionDraft[]) => OptionDraft[]) => {
+    setState(current => ({ ...current, options: change(current.options), refusal: undefined, server: [] }))
   }
   const editOption = (ref: string, change: (option: OptionDraft) => OptionDraft) => edit(list => list.map(option => (option.ref === ref ? change(option) : option)))
   const refuse = (refusal: Refusal) => setState(current => ({ ...current, refusal }))
-  const assign = (variantIds: string[], optionRef: string, valueRef: string) => {
-    setState(current => ({ ...current, server: [], assigned: { ...current.assigned, ...Object.fromEntries(variantIds.map(id => [id, { ...current.assigned[id], [optionRef]: valueRef }])) } }))
-  }
 
   return {
     options,
@@ -70,8 +68,6 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
     refusalAt: (at: string) => (state.refusal?.at === at ? state.refusal : undefined),
     isNew: (ref: string) => !savedRefs.has(ref),
     isSaved: (ref: string) => savedRefs.has(ref),
-    /** The new options that need a value on every variant: only a keepsake that has variants asks. */
-    needValues: options.filter(option => !savedRefs.has(option.ref) && variants.length > 0 && hasValue(option)),
 
     addOption: () => {
       const option = newOption(crypto.randomUUID())
@@ -91,7 +87,7 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
 
         return false
       }
-      edit(list => list.filter(o => o.ref !== ref), list => Object.fromEntries(Object.entries(list).map(([id, values]) => [id, without(values, ref)])))
+      edit(list => list.filter(o => o.ref !== ref))
 
       return true
     },
@@ -114,7 +110,7 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
           editOption(ref, current => ({ ...current, values: [...current.values, ...added] }))
       }
 
-      return { added: added.length, refused }
+      return { added: added.length, addedRefs: added.map(value => value.ref), refused }
     },
     patchValue: (optionRef: string, valueRef: string, patch: Partial<ValueDraft>) =>
       editOption(optionRef, option => ({ ...option, values: option.values.map(value => (value.ref === valueRef ? { ...value, ...patch } : value)) })),
@@ -128,10 +124,7 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
 
         return false
       }
-      edit(
-        list => list.map(option => (option.ref === optionRef ? { ...option, values: option.values.filter(v => v.ref !== valueRef) } : option)),
-        list => Object.fromEntries(Object.entries(list).map(([id, values]) => [id, values[optionRef] === valueRef ? without(values, optionRef) : values])),
-      )
+      edit(list => list.map(option => (option.ref === optionRef ? { ...option, values: option.values.filter(v => v.ref !== valueRef) } : option)))
 
       return true
     },
@@ -140,26 +133,27 @@ export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOp
       setState(current => ({ ...current, swatchOn: { ...current.swatchOn, [optionRef]: on } }))
       editOption(optionRef, option => ({ ...option, values: option.values.map(value => ({ ...value, swatch: on ? value.swatch ?? DEFAULT_SWATCH : null })) }))
     },
-    assign: (variantId: string, optionRef: string, valueRef: string) => assign([variantId], optionRef, valueRef),
-    assignAll: (optionRef: string, valueRef: string) => assign(variants.map(variant => variant.id), optionRef, valueRef),
 
-    /** Every problem the rules find, now; from here on all of them show. Empty means it can be saved. */
-    check: (): Refusal[] => {
+    /** Every problem the rules find, now (in `list` when given: the options as they will be once a value with no name is dropped); from here on all of them show. Empty means it can be saved. */
+    check: (list?: OptionDraft[]): Refusal[] => {
       setState(current => ({ ...current, tried: true }))
 
-      return found
+      return list ? checkStagedOptions(saved, list, variants, assignedFor(list)) : found
     },
+    /** Whether `list` differs from the saved options. */
+    isDirty: (list: OptionDraft[]) => JSON.stringify(list) !== state.base,
+    replaceOptions: (list: OptionDraft[]) => edit(() => list),
     /** What the API refused, in the merchant's words at the option, value or variant. */
     setServerProblems: (refusals: Refusal[]) => setState(current => ({ ...current, tried: true, server: refusals })),
     /** Back to the saved options. */
-    discard: () => setState(current => ({ ...current, options: savedOptions, assigned: {}, swatchOn: {}, tried: false, server: [], refusal: undefined })),
-    snapshot: (): OptionsSnapshot => ({ options, assigned, swatchOn: state.swatchOn }),
+    discard: () => setState(current => ({ ...current, options: savedOptions, swatchOn: {}, tried: false, server: [], refusal: undefined })),
+    snapshot: (): OptionsSnapshot => ({ options, swatchOn: state.swatchOn }),
     restore: (snapshot: OptionsSnapshot) => setState(current => ({ ...current, ...snapshot, tried: false, server: [], refusal: undefined })),
     /** After a save: the draft is what was saved, trimmed as the API trims it, and nothing is staged any more. */
     settle: () => setState((current) => {
       const next = draftOfOptions(asSaved(current.options))
 
-      return { ...current, options: next, base: JSON.stringify(next), assigned: {}, swatchOn: {}, tried: false, server: [], refusal: undefined }
+      return { ...current, options: next, base: JSON.stringify(next), swatchOn: {}, tried: false, server: [], refusal: undefined }
     }),
   }
 }

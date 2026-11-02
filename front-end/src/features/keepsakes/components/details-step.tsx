@@ -1,3 +1,4 @@
+import type { Language } from '@sk/domain/shared'
 import type { KeepsakeText } from '../lib/keepsake-rules'
 
 import { Block } from '@/components/form-block'
@@ -13,8 +14,10 @@ import { BasicsFields } from './basics-fields'
  * `showErrors` is on after a blocked publish (saved) or a Next with no name (new); a new keepsake needs a name only,
  * so its text is not marked as required (`nameOnly`).
  */
-export function DetailsStep({ storeId, value, onValue, photoIds, onPhotos, onAddPhoto, commission, onCommission, showErrors, nameOnly = false, onUploadingChange }: {
+export function DetailsStep({ storeId, language, value, onValue, photoIds, onPhotos, onAddPhoto, commission, onCommission, showErrors, nameOnly = false, onUploadingChange }: {
   storeId: string
+  /** The language the editor's switch has chosen. */
+  language: Language
   value: KeepsakeText
   onValue: (next: KeepsakeText) => void
   photoIds: string[]
@@ -33,7 +36,7 @@ export function DetailsStep({ storeId, value, onValue, photoIds, onPhotos, onAdd
   return (
     <>
       <Block icon={GiftIcon} id="basics" title={t('keepsakes.basics.title')}>
-        <BasicsFields nameOnly={nameOnly} showErrors={showErrors} value={value} onChange={onValue} />
+        <BasicsFields language={language} nameOnly={nameOnly} showErrors={showErrors} value={value} onChange={onValue} />
       </Block>
       <Block icon={PhotoAddIcon} id="photos" title={t('keepsakes.photos.title')}>
         <PhotosField

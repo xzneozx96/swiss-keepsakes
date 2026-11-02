@@ -3,7 +3,7 @@ import type { KeepsakeText, LanguageState } from '../lib/keepsake-rules'
 
 import { FieldError, Input, Label, Skeleton, TextField } from '@heroui/react'
 import { descriptionLength } from '@sk/domain/content'
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense } from 'react'
 
 import { LanguageVersionSwitch } from '@/components/language-version-switch'
 import { useLocale } from '@/contexts/locale-context'
@@ -36,11 +36,18 @@ const stateKey = {
   'not-written': 'keepsakes.state.notWritten',
 } as const satisfies Record<LanguageState, string>
 
-/** The shared language switch with each language's completeness; its tabs are labelled as the languages are named. */
-export function KeepsakeLanguageSwitch({ value, selected, onChange }: { value: KeepsakeText, selected: Language, onChange: (language: Language) => void }) {
+/**
+ * The shared language switch with each language's completeness; its tabs are labelled as the languages are named.
+ * `missingOptionNames` is how many option and value names a language still lacks: a language that is otherwise complete
+ * says so.
+ */
+export function KeepsakeLanguageSwitch({ value, selected, onChange, missingOptionNames }: { value: KeepsakeText, selected: Language, onChange: (language: Language) => void, missingOptionNames?: Record<Language, number> }) {
   const { t } = useLocale()
   const status = (language: Language) => {
     const state = languageState(value, language)
+
+    if (state === 'complete' && (missingOptionNames?.[language] ?? 0) > 0)
+      return { text: t('keepsakes.state.missingOptions'), tone: 'warning' as const }
 
     return { text: t(stateKey[state]), tone: tone[state] }
   }
@@ -57,18 +64,18 @@ export function KeepsakeLanguageSwitch({ value, selected, onChange }: { value: K
 }
 
 /**
- * Name and text for the chosen language (the Details step and the Name and text card). `showErrors` is on after a
- * blocked publish or Next: with no full language, the empty fields say what to add.
+ * Name and text for the language the editor's switch has chosen (the Details step and the Name and text card).
+ * `showErrors` is on after a blocked publish or Next: with no full language, the empty fields say what to add.
  */
-export function BasicsFields({ value, onChange, showErrors, nameOnly = false }: {
+export function BasicsFields({ value, language, onChange, showErrors, nameOnly = false }: {
   value: KeepsakeText
+  language: Language
   onChange: (next: KeepsakeText) => void
   showErrors: boolean
   /** The create flow needs a name only; the text is not required to make a draft. */
   nameOnly?: boolean
 }) {
   const { t } = useLocale()
-  const [language, setLanguage] = useState<Language>('en')
   const { name, text } = value
   const invalid = showErrors && (nameOnly ? !LANGUAGES.some(l => name[l].trim()) : fullLanguages(value).length === 0)
   const label = t(`keepsakes.language.${language}`)
@@ -76,10 +83,7 @@ export function BasicsFields({ value, onChange, showErrors, nameOnly = false }: 
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <KeepsakeLanguageSwitch selected={language} value={value} onChange={setLanguage} />
-        <p className="text-xs text-pretty text-muted">{t('keepsakes.basics.hint')}</p>
-      </div>
+      <p className="text-xs text-pretty text-muted">{t('keepsakes.basics.hint')}</p>
       <TextField fullWidth isRequired isInvalid={invalid && !name[language].trim()} value={name[language]} onChange={next => onChange({ ...value, name: { ...name, [language]: next } })}>
         <Label>{t('keepsakes.basics.name', { language: label })}</Label>
         <Input lang={language} maxLength={NAME_MAX} placeholder={t(`keepsakes.basics.name.placeholder.${language}`)} />

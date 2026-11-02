@@ -8,7 +8,7 @@ const STEP_OF_CARD = {
   photos: 'details',
   commission: 'details',
   options: 'options',
-  variants: 'variants',
+  variants: 'options',
 } as const satisfies Record<PublishCheck['card'], KeepsakeStep>
 
 export const stepOfCard = (card: PublishCheck['card']): Exclude<KeepsakeStep, 'review'> => STEP_OF_CARD[card]
@@ -17,7 +17,7 @@ export const stepOfCard = (card: PublishCheck['card']): Exclude<KeepsakeStep, 'r
 export function firstBlockedStep(keepsake: { blocking: Pick<PublishCheck, 'card'>[] }): Exclude<KeepsakeStep, 'review'> {
   const steps = keepsake.blocking.map(check => stepOfCard(check.card))
 
-  return (['details', 'options', 'variants'] as const).find(step => steps.includes(step)) ?? 'details'
+  return (['details', 'options'] as const).find(step => steps.includes(step)) ?? 'details'
 }
 
 /**
@@ -35,20 +35,20 @@ export function stepStatuses<Id extends KeepsakeStep>(keepsake: { blocking: Pick
 
 /**
  * The mark of each step of a keepsake that is only in the browser. `reached` is the index of the furthest step opened:
- * Options is done once it was passed. Review and publish is the last step of the draft; it is not marked until the keepsake exists.
+ * Options and variants is done once it was passed with every variant ready. Review and publish is the last step of the
+ * draft; it is not marked until the keepsake exists.
  */
 export function draftStatuses({ hasName, reached, variantsReady, nameTried, variantsTried }: {
   hasName: boolean
   reached: number
-  /** At least one variant, and every variant has a value of every option. */
+  /** At least one variant, each with a price and a code, and every variant has a value of every option. */
   variantsReady: boolean
   nameTried: boolean
   variantsTried: boolean
 }): Record<KeepsakeStep, StepStatus> {
   return {
     details: hasName ? 'done' : nameTried ? 'error' : 'todo',
-    options: reached > 1 ? 'done' : 'todo',
-    variants: variantsReady ? 'done' : variantsTried ? 'error' : 'todo',
+    options: variantsTried && !variantsReady ? 'error' : reached > 1 && variantsReady ? 'done' : 'todo',
     review: 'todo',
   }
 }

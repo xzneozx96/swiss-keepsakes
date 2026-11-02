@@ -1,5 +1,7 @@
 import type { Product, PublishCheck } from '@sk/api-contract'
+import type { Language } from '@sk/domain/shared'
 import type { KeepsakeStep } from '../lib/search-params'
+import type { VariantActions } from '../lib/variant-actions'
 
 import { Button } from '@heroui/react'
 import { useQueryClient } from '@tanstack/react-query'
@@ -15,18 +17,20 @@ import { useKeepsake } from '../api/queries'
 import { useKeepsakeEditor } from '../hooks/use-keepsake-editor'
 import { useOptionsDraft } from '../hooks/use-options-draft'
 import { useRemoveKeepsake } from '../hooks/use-remove-keepsake'
+import { basePriceOf, missingNames, newVariantsFor, savedRefsOf } from '../lib/combinations'
 import { nameIn, statusOf } from '../lib/keepsake-rules'
+import { draftOfOptions, optionsBody } from '../lib/option-rules'
 import { saveStatusOf } from '../lib/save-status'
 import { isKeepsakeStep, KEEPSAKE_STEPS, KEEPSAKES_PATH } from '../lib/search-params'
 import { firstBlockedStep, stepOfCard, stepStatuses } from '../lib/steps'
+import { KeepsakeLanguageSwitch } from './basics-fields'
 import { DetailsStep } from './details-step'
 import { StepBodySkeleton, StepEditorSkeleton } from './editor-skeleton'
 import { KeepsakeFrame } from './keepsake-frame'
 import { KeepsakeGate } from './keepsake-gate'
 import { KeepsakeNotice } from './keepsake-notice'
-import { OptionsStep } from './options-step'
+import { OptionsAndVariantsStep } from './options-variants-step'
 import { useLeaveGuard } from './use-leave-guard'
-import { VariantsStep } from './variants-step'
 
 // The phone mockup and the preview load when Review and publish opens, not with the first step.
 const ReviewScreen = lazy(() => import('./review-screen'))
@@ -56,9 +60,11 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
   const { t, language, intlLocale } = useLocale()
   const navigate = useNavigate()
   const editor = useKeepsakeEditor({ storeId, keepsake })
-  // Held here, not in the Options step, so options that are typed but not saved stay when another step opens.
+  // Held here, not in the Options and variants step, so options that are typed but not saved stay when another step opens.
   const options = useOptionsDraft({ saved: keepsake.options, variants: keepsake.variants })
   const [showErrors, setShowErrors] = useState(false)
+  // The version of the text that the whole editor shows, chosen once in the head.
+  const [editLanguage, setEditLanguage] = useState<Language>('en')
   const queryClient = useQueryClient()
   const remove = useRemoveKeepsake(storeId, () => void navigate({ to: KEEPSAKES_PATH }))
   const guard = useLeaveGuard({ isUnsaved: editor.isUnsaved || options.dirty, onLeave: () => void navigate({ to: KEEPSAKES_PATH }) })
@@ -106,6 +112,15 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
     }
   }
 
+  const savedOptions = draftOfOptions(keepsake.options)
+  const actions: VariantActions = {
+    saveVariant: editor.saveVariant,
+    saveVariants: editor.saveVariants,
+    commit: editor.commitOptions,
+    // The options as they are saved, with the combinations that no variant holds.
+    addBack: combinations => editor.commitOptions({ options: optionsBody(savedOptions), plan: { variantValues: [], newVariants: newVariantsFor(combinations, savedOptions, keepsake.variants, basePriceOf(keepsake.variants)) } }),
+  }
+
   const summary = blocking.length
     ? { status: t(blocking.length === 1 ? 'keepsakes.checks.blocking.one' : 'keepsakes.checks.blocking.other', { count: blocking.length }), tone: 'danger' as const }
     : warnings.length
@@ -137,6 +152,7 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
         }}
         canGo={() => true}
         current={step}
+        languageSwitch={<KeepsakeLanguageSwitch missingOptionNames={{ en: missingNames(options.options, 'en'), de: missingNames(options.options, 'de') }} selected={editLanguage} value={draft} onChange={setEditLanguage} />}
         notices={notices}
         status={{ tone: status.tone, label: t(status.key) }}
         steps={steps}
@@ -149,6 +165,7 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
         <div className="flex min-w-0 flex-col gap-5 lg:gap-6" hidden={step !== 'details'}>
           <DetailsStep
             commission={draft.commission}
+            language={editLanguage}
             photoIds={draft.photoIds}
             showErrors={showErrors}
             storeId={storeId}
@@ -159,8 +176,7 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
             onValue={next => editor.change({ name: next.name, text: next.text })}
           />
         </div>
-        {step === 'options' && <OptionsStep draft={options} onSave={editor.saveOptions} />}
-        {step === 'variants' && <VariantsStep name={name} options={keepsake.options} variants={keepsake.variants} onCreate={editor.createVariant} onAdd={editor.addVariant} onAddDone={() => void editor.refreshVariants()} onSave={editor.saveVariant} />}
+        {step === 'options' && <OptionsAndVariantsStep actions={actions} codeFallback="" committed={savedRefsOf(keepsake.options)} draft={options} held={false} language={editLanguage} showErrors={showErrors} variants={keepsake.variants} />}
         {onReview && (
           <Suspense fallback={<StepBodySkeleton />}>
             <ReviewScreen actions={{ unpublish: editor.unpublish, publish: () => void publish(), isPending: editor.isPublishing }} keepsake={keepsake} onFix={jumpTo} />

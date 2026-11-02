@@ -45,10 +45,7 @@ export function variantsBody(variants: Pick<ProductVariant, 'skuCode' | 'priceRa
   return variants.map(variant => ({ skuCode: variant.skuCode, priceRappen: variant.priceRappen, values: variant.values }))
 }
 
-/** Above this many missing combinations, "Add all combinations" asks first and names the count. */
-export const ADD_ALL_CONFIRM_ABOVE = 50
-
-/** Every combination of the options that no variant has yet, archived ones counted as taken. None for a keepsake with no option. */
+/** Every combination of the options that no variant holds, archived ones counted as taken (they keep their combination). None for a keepsake with no option. */
 export function missingCombinations(options: ProductOption[], variants: Pick<ProductVariant, 'values'>[]): Values[] {
   if (options.length === 0)
     return []

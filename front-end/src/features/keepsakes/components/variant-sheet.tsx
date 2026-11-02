@@ -1,6 +1,6 @@
-import type { Product, ProductVariant } from '@sk/api-contract'
+import type { ProductOption, ProductVariant } from '@sk/api-contract'
 import type { Outcome } from '../hooks/use-keepsake-editor'
-import type { CreateVariant, SaveVariant } from './variants-step'
+import type { SaveVariant } from '../lib/variant-actions'
 
 import { Button, Description, FieldError, Form, Input, Label, NumberField, Radio, RadioGroup, TextField } from '@heroui/react'
 import { useId, useState } from 'react'
@@ -15,31 +15,31 @@ import { problemMessageKey } from '../lib/problems'
 import { RefusalAlert, ValueChips } from './option-parts'
 
 /**
- * The variant sheet (N15): one value of each option as chips, the SKU code, the price and the status, in Create mode
- * (from the Variants card) and Edit mode (from the variant page). A refusal shows at its field: a duplicate combination
- * or a missing value above the code, a taken code at the code, no price at the price. Stock is not here; it belongs to
- * Inventory (E6.3).
+ * The variant sheet (N15), opened by Edit on a row of the merged step: one value of each option as chips, the SKU code, the
+ * price, the status and Archive. A refusal shows at its field: a duplicate combination or a missing value above the code, a
+ * taken code at the code, no price at the price. A keepsake that is only in the browser has no status, and removes instead
+ * of archiving. Stock is not here; it belongs to Inventory (E6.3).
  */
-export function VariantSheet({ keepsake, variant, onSave, onCreate, onClose }: {
-  keepsake: Product
-  /** The variant to edit. Left out, the sheet creates one. */
-  variant?: ProductVariant
+export function VariantSheet({ options, variants, variant, held, onSave, onArchive, onClose }: {
+  options: ProductOption[]
+  variants: ProductVariant[]
+  variant: ProductVariant
+  held: boolean
   onSave: SaveVariant
-  onCreate?: CreateVariant
+  onArchive: () => void
   onClose: () => void
 }) {
   const { t, language } = useLocale()
   const formId = useId()
-  const { options } = keepsake
-  const [values, setValues] = useState<Record<string, string>>(variant?.values ?? {})
-  const [code, setCode] = useState(variant?.skuCode ?? '')
-  const [price, setPrice] = useState<number | undefined>(variant ? variant.priceRappen / 100 : undefined)
-  const [status, setStatus] = useState<'published' | 'draft'>(variant?.status === 'draft' ? 'draft' : 'published')
+  const [values, setValues] = useState<Record<string, string>>(variant.values)
+  const [code, setCode] = useState(variant.skuCode)
+  const [price, setPrice] = useState<number | undefined>(variant.priceRappen > 0 ? variant.priceRappen / 100 : undefined)
+  const [status, setStatus] = useState<'published' | 'draft'>(variant.status === 'draft' ? 'draft' : 'published')
   const [tried, setTried] = useState(false)
   const [server, setServer] = useState<{ values?: string, code?: string, failure?: string }>({})
   const [isPending, setIsPending] = useState(false)
-  const others = keepsake.variants.filter(other => other.id !== variant?.id)
-  const refusals = tried ? checkVariantValues(options, others, values, 'values', variant?.skuCode ?? '') : []
+  const others = variants.filter(other => other.id !== variant.id)
+  const refusals = tried ? checkVariantValues(options, others, values, 'values', variant.skuCode) : []
   const combination = combinationName(values, options, language)
   const valuesError = refusals[0] ? variantRefusalText(t, refusals[0], combination) : server.values
   const trimmed = code.trim()
@@ -48,19 +48,17 @@ export function VariantSheet({ keepsake, variant, onSave, onCreate, onClose }: {
     : server.code
   const priceError = tried && toRappen(price) === undefined ? t('keepsakes.variant.priceInvalid') : undefined
   const suggestion = options.length > 0 && !code && options.every(option => values[option.id]) ? suggestCode(values, options) : ''
-  const title = variant ? t('keepsakes.variant.editTitle', { name: variantTitle(variant.values, options, language) || variant.skuCode }) : t('keepsakes.variant.createTitle')
+  const title = t('keepsakes.variant.editTitle', { name: variantTitle(variant.values, options, language) || variant.skuCode })
 
   const submit = async () => {
     setTried(true)
     setServer({})
     const priceRappen = toRappen(price)
 
-    if (checkVariantValues(options, others, values, 'values', variant?.skuCode ?? '').length > 0 || !trimmed || !isSkuCode(trimmed) || priceRappen === undefined)
+    if (checkVariantValues(options, others, values, 'values', variant.skuCode).length > 0 || !trimmed || !isSkuCode(trimmed) || priceRappen === undefined)
       return
     setIsPending(true)
-    const outcome: Outcome = variant
-      ? await onSave(variant.id, { skuCode: trimmed, priceRappen, status, ...(options.length > 0 && { values }) })
-      : await onCreate!({ skuCode: trimmed, priceRappen, status, ...(options.length > 0 && { values }) })
+    const outcome: Outcome = await onSave(variant.id, { skuCode: trimmed, priceRappen, ...(!held && { status }), ...(options.length > 0 && { values }) })
 
     setIsPending(false)
     if (outcome.ok) {
@@ -84,10 +82,13 @@ export function VariantSheet({ keepsake, variant, onSave, onCreate, onClose }: {
       footer={(
         <>
           <Button fullWidth className="min-h-11" form={formId} isPending={isPending} type="submit">
-            {t(variant ? 'keepsakes.variant.save' : 'keepsakes.variants.createSubmit')}
+            {t('keepsakes.variant.save')}
           </Button>
           <Button fullWidth className="min-h-11" variant="tertiary" onPress={onClose}>
             {t('keepsakes.variant.cancel')}
+          </Button>
+          <Button fullWidth className="min-h-11" isDisabled={isPending} variant="danger-soft" onPress={onArchive}>
+            {t(held ? 'keepsakes.variants.remove' : 'keepsakes.variant.archive')}
           </Button>
         </>
       )}
@@ -133,27 +134,29 @@ export function VariantSheet({ keepsake, variant, onSave, onCreate, onClose }: {
           <p className="text-xs text-muted">{t('keepsakes.variant.priceHint')}</p>
           <FieldError>{priceError}</FieldError>
         </NumberField>
-        <RadioGroup aria-label={t('keepsakes.variant.status')} value={status} onChange={next => setStatus(next === 'draft' ? 'draft' : 'published')}>
-          <Label>{t('keepsakes.variant.status')}</Label>
-          <Radio value="published">
-            <Radio.Control>
-              <Radio.Indicator />
-            </Radio.Control>
-            <Radio.Content>
-              <Label>{t('keepsakes.variant.status.published')}</Label>
-              <p className="text-xs text-muted">{t('keepsakes.variant.status.publishedHint')}</p>
-            </Radio.Content>
-          </Radio>
-          <Radio value="draft">
-            <Radio.Control>
-              <Radio.Indicator />
-            </Radio.Control>
-            <Radio.Content>
-              <Label>{t('keepsakes.variant.status.hidden')}</Label>
-              <p className="text-xs text-muted">{t('keepsakes.variant.status.hiddenHint')}</p>
-            </Radio.Content>
-          </Radio>
-        </RadioGroup>
+        {!held && (
+          <RadioGroup aria-label={t('keepsakes.variant.status')} value={status} onChange={next => setStatus(next === 'draft' ? 'draft' : 'published')}>
+            <Label>{t('keepsakes.variant.status')}</Label>
+            <Radio value="published">
+              <Radio.Control>
+                <Radio.Indicator />
+              </Radio.Control>
+              <Radio.Content>
+                <Label>{t('keepsakes.variant.status.published')}</Label>
+                <p className="text-xs text-muted">{t('keepsakes.variant.status.publishedHint')}</p>
+              </Radio.Content>
+            </Radio>
+            <Radio value="draft">
+              <Radio.Control>
+                <Radio.Indicator />
+              </Radio.Control>
+              <Radio.Content>
+                <Label>{t('keepsakes.variant.status.hidden')}</Label>
+                <p className="text-xs text-muted">{t('keepsakes.variant.status.hiddenHint')}</p>
+              </Radio.Content>
+            </Radio>
+          </RadioGroup>
+        )}
         {server.failure && <p className="text-sm text-danger" role="alert">{server.failure}</p>}
       </Form>
     </SheetFrame>
