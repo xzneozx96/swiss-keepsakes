@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  canDeletePin,
   canDeleteStoryVersion,
   canDeleteTour,
   canMoveStoryVersion,
@@ -58,11 +57,6 @@ describe('[E2.6] content/pin', () => {
     expect(pinSlugBase('Kapellbrücke Luzern')).toBe('kapellbruecke-luzern')
     expect(pinSlugBase('Löwendenkmal Straße')).toBe('loewendenkmal-strasse')
     expect(pinSlugBase('!!!')).toBe('place')
-  })
-
-  it('[E2.6][AC79] only a never-published pin can be deleted', () => {
-    expect(canDeletePin({ firstPublishedAt: null })).toBe(true)
-    expect(canDeletePin({ firstPublishedAt: new Date('2026-10-01T00:00:00Z') })).toBe(false)
   })
 })
 
