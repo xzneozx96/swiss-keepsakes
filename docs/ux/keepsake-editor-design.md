@@ -7,6 +7,12 @@
   - The Description is rich text.
   - Delete removes a keepsake that was never sold and archives one that was.
   - There are no options and variants sheets (N14, N15), no "Add all combinations", and no Stock step until E6.3.
+  - Colour swatches are removed (item 20 of the decision record). The switch "Show a colour swatch for each value", the swatch input, the swatch rule "a colour is # and six digits" and the swatch in the variant thumbnail no longer exist. Migration 0017 drops the column.
+  - The SKU code is optional (item 16). A keepsake-level switch "This keepsake has SKU codes" shows or hides the code field in the Price block, the rows and the variant sheet. It is off for a new keepsake. The code stays unique per shop when present, so the refusal "Add a SKU code." and the "Use VX-S-SWAN" hint apply only while the switch is on. New rows are prefilled from the keepsake code and the value labels, such as `1.6795-XS-RED`.
+  - Option names are suggested from the shop's other keepsakes (item 17), and the starter names Size, Colour, Theme and Material show only while the shop has none. The fixed list goes.
+  - A variant has one optional photo (item 22): chosen from the keepsake's photos first, or the library with Upload a photo. The column is `catalog.skus.media_id`.
+  - Bulk actions on selected variants (price, For sale, Hidden, Archive) use the shared ActionBar, with the cart's "Select all" checkbox in the Variants header (item 18). The options save creates the new variants (`newVariants`), and `PATCH .../variants` changes many variants in one request.
+  - The Add another option button is always visible, up to five options (item 21).
 
   Where this file disagrees, `docs/decisions/2026-11-02-keepsake-editor-steps.md` wins. The rules in sections 7, 13 and 15 still hold: sparse SKUs, the combination key, and archiving is final.
 - Status: **design approved** on 2026-10-29 (chat approval of the lab page `/lab/keepsake-editor`). Ten points are open (section 13). Prices, themes, colours and design rights are mock (O26).
