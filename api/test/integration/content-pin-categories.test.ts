@@ -202,19 +202,18 @@ describe('[E2.11][AC87] deleting a pin', () => {
     expect(await count(pool, 'select count(*) from content.place_dates where place_id = $1', [place])).toBe(0)
   })
 
-  it('[E2.11][AC87] deleting a published pin that has links is refused and keeps the links', async () => {
+  // Amended 2026-11-02 (owner, migration 0020): a published pin that nothing uses is deleted, and its own links go with it.
+  it('[E2.11][AC87] deleting a published pin takes its category links and dates with it', async () => {
     const store = randomUUID()
     const place = await draftPin(store)
     await tagPin(place, await category('map_categories', store), store)
     await pool.query(`insert into content.place_dates (place_id, store_id, first_day, last_day) values ($1, $2, '2026-11-20', '2026-11-21')`, [place, store])
     await publishPin(place)
 
-    const refused = await failure(pool.query('delete from content.places where id = $1', [place]))
+    await pool.query('delete from content.places where id = $1', [place])
 
-    expect(refused.code).toBe('23001')
-    expect(refused.message).toContain('cannot be deleted')
-    expect(await count(pool, 'select count(*) from content.places where id = $1', [place])).toBe(1)
-    expect(await count(pool, 'select count(*) from content.place_categories where place_id = $1', [place])).toBe(1)
-    expect(await count(pool, 'select count(*) from content.place_dates where place_id = $1', [place])).toBe(1)
+    expect(await count(pool, 'select count(*) from content.places where id = $1', [place])).toBe(0)
+    expect(await count(pool, 'select count(*) from content.place_categories where place_id = $1', [place])).toBe(0)
+    expect(await count(pool, 'select count(*) from content.place_dates where place_id = $1', [place])).toBe(0)
   })
 })

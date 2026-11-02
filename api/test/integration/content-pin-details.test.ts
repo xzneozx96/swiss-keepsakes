@@ -389,16 +389,18 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     expect((await failure(pool.query(`insert into content.place_dates (place_id, store_id, first_day, last_day, start_time, end_time) values ($1, $2, '2026-11-14', '2026-11-14', '22:00', '00:30')`, [pin.id, staff.storeId]))).constraint).toBe('place_dates_end_after_start_check')
   })
 
-  it('[E4.2][AC79] a draft is deleted, a published pin is refused and can be hidden, then shown again', async () => {
+  // Amended 2026-11-02 (owner, AC79): a published pin that nothing uses is deleted; hiding and showing again still work.
+  it('[E4.2][AC79] a draft and an unused published pin are deleted, and a published pin can be hidden, then shown again', async () => {
     const staff = await env.storeWithStaff()
     const draft = await create(staff, { title: { en: 'Draft' } })
     const live = await create(staff, { title: { en: 'Live' }, ...located })
+    const gone = await create(staff, { title: { en: 'Gone' }, ...located })
 
     expect((await env.call(`${staff.pins}/${draft.id}`, { method: 'DELETE', headers: { ...staff.owner.headers, 'If-Match': '1' } })).status).toBe(204)
+    expect((await env.call(`${staff.pins}/${gone.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })).status).toBe(200)
+    expect((await env.call(`${staff.pins}/${gone.id}`, { method: 'DELETE', headers: { ...staff.owner.headers, 'If-Match': '2' } })).status).toBe(204)
+    expect(await count(pool, 'select count(*) from content.places where id = $1', [gone.id])).toBe(0)
     expect((await env.call(`${staff.pins}/${live.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })).status).toBe(200)
-    const refused = await env.call(`${staff.pins}/${live.id}`, { method: 'DELETE', headers: { ...staff.owner.headers, 'If-Match': '2' } })
-    expect(refused.status).toBe(409)
-    expect(await count(pool, 'select count(*) from content.places where id = $1', [live.id])).toBe(1)
 
     const hidden = await env.call(`${staff.pins}/${live.id}/hide`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '2' } })
     expect(await hidden.json()).toMatchObject({ status: 'hidden' })
