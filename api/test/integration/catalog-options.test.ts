@@ -217,8 +217,8 @@ describe('[E6.2][AC52] changing options and values', () => {
     expect(problem.errors).toEqual([expect.objectContaining({
       code: 'value-in-use',
       path: `options.${theme.id}.values.${lion.id}`,
-      params: { value: 'Lion', count: 2, codes: users.map(u => u.skuCode).join(', '), more: 0 },
-      message: expect.stringContaining('Used by 2 variants'),
+      params: { value: 'Lion', count: 1, archived: 1, codes: users[1]!.skuCode, more: 0 },
+      message: expect.stringContaining(`Used by 1 live (${users[1]!.skuCode}) and 1 archived variant`),
     })])
     expect(await get(product.id)).toEqual(fresh)
   })

@@ -105,8 +105,12 @@ export function variantsUsing(variants: Valued[], optionRef: string, valueRef?: 
   return variants.filter(variant => (valueRef === undefined ? variant.values[optionRef] !== undefined : variant.values[optionRef] === valueRef))
 }
 
+/** The live variants are counted and named (the first few), the archived ones are counted apart: the screen lists only the live ones. */
 function usedBy(users: Valued[], options: ProductOption[]): Record<string, string | number> {
-  return { count: users.length, codes: users.slice(0, MAX_CODES_NAMED).map(user => variantName(user, options)).join(', '), more: Math.max(0, users.length - MAX_CODES_NAMED) }
+  const live = users.filter(user => user.status !== 'archived')
+  const archived = users.length - live.length
+
+  return { count: live.length, ...(archived > 0 && { archived }), codes: live.slice(0, MAX_CODES_NAMED).map(user => variantName(user, options)).join(', '), more: Math.max(0, live.length - MAX_CODES_NAMED) }
 }
 
 const hasText = (text: Text) => LANGUAGES.some(language => text[language].trim() !== '')
@@ -328,7 +332,11 @@ export function refusalsOfProblem(errors: { path: string, code?: string, params?
 function usedByText(t: Translate, params: Refusal['params']) {
   const count = Number(params?.count ?? 0)
   const more = Number(params?.more ?? 0)
+  const archived = Number(params?.archived ?? 0)
   const codes = `${params?.codes ?? ''}${more > 0 ? ` ${t('keepsakes.and')} ${more} ${t('keepsakes.more')}` : ''}`
+
+  if (archived > 0)
+    return t(`keepsakes.refusal.usedBy.${count > 0 ? 'mixed' : 'archivedOnly'}.${archived === 1 ? 'one' : 'other'}`, { count, archived, codes })
 
   return t(count === 1 ? 'keepsakes.refusal.usedBy.one' : 'keepsakes.refusal.usedBy.other', { count, codes })
 }

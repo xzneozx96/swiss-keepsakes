@@ -245,12 +245,26 @@ describe('[T-019][AC3] removing a variant: deleted if never sold, else archived'
     expect(repo.removeVariants).toHaveBeenCalledTimes(1)
   })
 
-  it('[T-019][AC3] reserved units still refuse, and an archived variant is not deleted', async () => {
+  it('[T-019][AC3] reserved units still refuse', async () => {
     const { repo, deps } = setup(two(), new Map([['1', 2]]))
 
     expect(await makeSaveVariant(deps)(owner, storeId, 'p1', '1', { status: 'removed' }, null)).toMatchObject({ reason: 'refused', refusals: [{ code: 'variant-reserved', params: { code: 'VX-S', count: 2 } }] })
-    expect(await makeSaveVariant(deps)(owner, storeId, 'p1', '3', { status: 'removed' }, null)).toMatchObject({ reason: 'refused', refusals: [{ code: 'variant-archived' }] })
     expect(repo.removeVariants).not.toHaveBeenCalled()
+  })
+
+  it('[T-019][AC7] an archived variant that no order line names is deleted; one that does stays and is refused', async () => {
+    const unsold = setup(two())
+
+    expect((await makeSaveVariant(unsold.deps)(owner, storeId, 'p1', '3', { status: 'removed' }, null)).ok).toBe(true)
+    expect(unsold.repo.removeVariants).toHaveBeenCalledWith(null, expect.anything(), ['3'])
+    expect(unsold.repo.saveVariant).not.toHaveBeenCalled()
+    const kept = setup(two(), new Map(), new Set(), [], sold('3'))
+
+    expect(await makeSaveVariant(kept.deps)(owner, storeId, 'p1', '3', { status: 'removed' }, null)).toMatchObject({ reason: 'refused', refusals: [{ code: 'variant-archived' }] })
+    expect(await makeSaveVariants(kept.deps)(owner, storeId, 'p1', [{ id: '1', status: 'removed' }, { id: '3', status: 'removed' }], null)).toMatchObject({ reason: 'refused', refusals: [{ code: 'variant-archived', path: 'variants.1.status' }] })
+    expect(kept.repo.removeVariants).not.toHaveBeenCalled()
+    // Only a removal may touch an archived variant: a price change is still refused.
+    expect(await makeSaveVariants(unsold.deps)(owner, storeId, 'p1', [{ id: '3', priceRappen: 100 }], null)).toMatchObject({ reason: 'refused', refusals: [{ code: 'variant-archived' }] })
   })
 
   it('[T-019][AC4] several variants: the unsold are deleted and the sold archived, in one request', async () => {
@@ -267,7 +281,7 @@ describe('[T-019][AC3] removing a variant: deleted if never sold, else archived'
     const { repo, deps } = setup(two(), new Map([['2', 1]]))
 
     expect(await makeSaveVariants(deps)(owner, storeId, 'p1', [{ id: '1', status: 'removed' }, { id: '2', status: 'removed' }], null)).toMatchObject({ reason: 'refused', refusals: [{ code: 'variant-reserved', path: 'variants.1.status' }] })
-    expect(await makeSaveVariants(deps)(owner, storeId, 'p1', [{ id: '1', status: 'removed' }, { id: '3', status: 'removed' }], null)).toMatchObject({ reason: 'refused', refusals: [{ code: 'variant-archived', path: 'variants.1.status' }] })
+    expect(await makeSaveVariants(deps)(owner, storeId, 'p1', [{ id: '1', priceRappen: 4000 }, { id: '3', priceRappen: 100 }], null)).toMatchObject({ reason: 'refused', refusals: [{ code: 'variant-archived', path: 'variants.1.status' }] })
     expect(repo.removeVariants).not.toHaveBeenCalled()
     expect(repo.saveVariants).not.toHaveBeenCalled()
   })

@@ -4,7 +4,7 @@ import type { Values } from '../lib/option-rules'
 import { Button, Checkbox, Input } from '@heroui/react'
 import { useState } from 'react'
 
-import { EditIcon, PhotoAddIcon, TrashIcon } from '@/components/icons'
+import { ArchiveIcon, EditIcon, PhotoAddIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { chf, toRappen } from '../lib/keepsake-rules'
 import { combinationName, shortLabel, variantTitle } from '../lib/option-rules'
@@ -89,13 +89,15 @@ export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, 
   /** A photo chosen (`isNew`: the keepsake does not have it yet) or taken off (null). */
   onPhoto: (mediaId: string | null, isNew: boolean) => void
   onEdit: (focus?: 'sku') => void
-  /** The delete icon: the block's delete rule (asks first). */
+  /** The delete icon (the archive icon for a variant that has orders): the block's delete rule, which asks first. */
   onRemove: () => void
 }) {
   const { t, language } = useLocale()
   const [picking, setPicking] = useState(false)
   const title = options.length > 0 ? variantTitle(variant.values, options, language) : variant.skuCode ?? ''
   const forSale = held || variant.status === 'published'
+  // A variant that an order line names is archived instead of deleted, and the icon says so.
+  const archives = !held && variant.hasOrders === true
   // With codes on, the code has its own cell from lg: the values cell turns into plain grid cells (`lg:contents`), so the code and the chips share the row's grid: photo, code (14rem, left-aligned, wraps at "-"), chips taking the rest, price, status, Edit.
   const codeCell = skuOn && options.length > 0
 
@@ -126,8 +128,8 @@ export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, 
           <Button isIconOnly aria-label={t('keepsakes.variants.editVariant', { name: title })} className="max-lg:size-11" size="sm" variant="tertiary" onPress={() => onEdit()}>
             <EditIcon aria-hidden size={16} />
           </Button>
-          <Button isIconOnly aria-label={t('keepsakes.variants.deleteVariant', { name: title })} className="text-danger max-lg:size-11" size="sm" variant="tertiary" onPress={onRemove}>
-            <TrashIcon aria-hidden size={16} />
+          <Button isIconOnly aria-label={t(archives ? 'keepsakes.variants.archiveVariant' : 'keepsakes.variants.deleteVariant', { name: title })} className="text-danger max-lg:size-11" size="sm" variant="tertiary" onPress={onRemove}>
+            {archives ? <ArchiveIcon aria-hidden size={16} /> : <TrashIcon aria-hidden size={16} />}
           </Button>
         </span>
       </div>

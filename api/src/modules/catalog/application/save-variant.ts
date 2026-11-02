@@ -30,17 +30,18 @@ export function makeSaveVariant<T>({ uow, products, media, audit, clock, reserva
         return fail({ reason: 'not-found' })
       if (product.status === 'archived')
         return fail({ reason: 'archived' })
-      if (variant.status === 'archived')
-        return fail({ reason: 'refused', refusals: [{ code: 'variant-archived', path: 'status', params: { code: variantName(variant, product.options) } }] })
-      // A removal changes nothing else; a sold variant is archived, an unsold one is deleted below.
+      // A removal changes nothing else; a sold variant is archived, an unsold one is deleted below. An archived variant
+      // is deleted too when no order line names it; a sold archived one stays.
       const sold = removing && sales ? (await sales.soldSkuIds(tx, storeId, [skuId])).has(skuId) : false
+      if (variant.status === 'archived' && !(removing && !sold))
+        return fail({ reason: 'refused', refusals: [{ code: 'variant-archived', path: 'status', params: { code: variantName(variant, product.options) } }] })
       const changes: VariantChanges = removing ? { status: 'archived' } : (request as VariantChanges)
       if (changes.values) {
         const refusals = checkVariantValues(product.options, product.variants.filter(v => v.id !== skuId), changes.values, 'values', (changes.skuCode === undefined ? variant.skuCode : changes.skuCode) ?? '')
         if (refusals.length > 0)
           return fail({ reason: 'refused', refusals })
       }
-      if (changes.status === 'archived' && reservations) {
+      if (changes.status === 'archived' && variant.status !== 'archived' && reservations) {
         const reserved = (await reservations.reservedBySku(tx, storeId, [skuId])).get(skuId) ?? 0
         if (reserved > 0)
           return fail({ reason: 'refused', refusals: [{ code: 'variant-reserved', path: 'status', params: { code: variantName(variant, product.options), count: reserved } }] })

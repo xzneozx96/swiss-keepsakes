@@ -99,6 +99,35 @@ describe('[T-019][AC3] removing one variant', () => {
   })
 })
 
+describe('[T-019][AC7] archived variants', () => {
+  it('[T-019][AC7] an archived variant that no order line names is deleted, in one request with another', async () => {
+    const { created, patch, rows } = await setup()
+    const product = await created()
+    const [small, medium] = product.variants
+
+    await patch(product.id, '', { variants: [{ id: small!.id, status: 'archived' }, { id: medium!.id, status: 'archived' }] })
+    expect((await rows(product.id)).filter(row => row.status === 'archived')).toHaveLength(2)
+    const response = await patch(product.id, '', { variants: [{ id: small!.id, status: 'removed' }] })
+
+    expect(response.status).toBe(200)
+    expect((await rows(product.id)).map(row => row.id)).not.toContain(small!.id)
+    expect((await patch(product.id, `/${medium!.id}`, { status: 'removed' })).status).toBe(200)
+    expect(await rows(product.id)).toHaveLength(1)
+  })
+
+  it('[T-019][AC7] an archived variant that an order line names stays', async () => {
+    const { created, patch, rows } = await setup()
+    const product = await created()
+    const [small] = product.variants
+
+    sold.add(small!.id)
+    await patch(product.id, `/${small!.id}`, { status: 'archived' })
+
+    expect((await patch(product.id, `/${small!.id}`, { status: 'removed' })).status).toBe(422)
+    expect(await rows(product.id)).toHaveLength(3)
+  })
+})
+
 describe('[T-019][AC4] removing several variants in one request', () => {
   it('[T-019][AC4] the unsold are deleted and the sold archived; one refused row writes nothing', async () => {
     const { created, patch, rows, values } = await setup()

@@ -105,7 +105,7 @@ export function VariantSheet({ storeId, options, variants, variant, held, skuOn,
       footer={(
         <div className="flex w-full flex-1 items-center justify-between gap-2">
           <Button className="min-h-11" isDisabled={isPending} variant="danger-soft" onPress={onDelete}>
-            {t(held ? 'keepsakes.variants.remove' : 'keepsakes.variants.delete')}
+            {t(held ? 'keepsakes.variants.remove' : variant.hasOrders ? 'keepsakes.variant.archive' : 'keepsakes.variants.delete')}
           </Button>
           <div className="flex items-center gap-2">
             <Button className="min-h-11" variant="tertiary" onPress={onClose}>

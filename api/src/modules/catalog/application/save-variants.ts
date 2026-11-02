@@ -38,7 +38,8 @@ export function makeSaveVariants<T>({ uow, products, media, audit, clock, reserv
       changes.forEach((change, index) => {
         const variant = byId.get(change.id)!
 
-        if (variant.status === 'archived')
+        // An archived variant may only be removed, and only when no order line names it.
+        if (variant.status === 'archived' && !(requests[index]!.status === 'removed' && deleting.has(change.id)))
           refusals.push({ code: 'variant-archived', path: `variants.${index}.status`, params: { code: variantName(variant, product.options) } })
       })
       const archiving = changes.filter(change => change.status === 'archived' && byId.get(change.id)!.status !== 'archived')

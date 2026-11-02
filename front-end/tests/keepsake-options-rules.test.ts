@@ -104,15 +104,27 @@ describe('[E6.2][AC52] the options sheet rules', () => {
     next[1]!.values = next[1]!.values.filter(v => v.ref !== 'lion')
     const found = checkOptionsDraft(saved, next, variants, {})
 
-    expect(found).toEqual([{ at: 'lion', code: 'value-in-use', params: { value: 'Lion Monument', count: 1, codes: 'VX-S-LION', more: 0 } }])
-    expect(refusalText(t, found[0]!)).toBe('Can’t delete Lion Monument. Used by 1 variant (VX-S-LION). Archive or change those first.')
+    expect(found).toEqual([{ at: 'lion', code: 'value-in-use', params: { value: 'Lion Monument', count: 0, archived: 1, codes: '', more: 0 } }])
+    expect(refusalText(t, found[0]!)).toBe('Can’t delete Lion Monument. Used only by 1 archived variant. Archive or change those first.')
+  })
+
+  it('[T-019][AC8] the refusal says how many of the variants are archived, and names only the live ones', () => {
+    const withArchived = variants.map((variant, index) => (index === 0 ? { ...variant, status: 'archived' } : variant))
+    const found = checkOptionsDraft(saved, draft().slice(0, 1), withArchived, {})
+
+    expect(found[0]).toMatchObject({ code: 'option-in-use', params: { count: 1, archived: 2, codes: 'VX-L-SWAN' } })
+    expect(refusalText(t, found[0]!)).toBe('Can’t delete Theme. Used by 1 live (VX-L-SWAN) and 2 archived variants. Every variant has one of its values.')
+    const only = checkOptionsDraft(saved, draft().slice(0, 1), variants.map(variant => ({ ...variant, status: 'archived' })), {})
+
+    expect(refusalText(t, only[0]!)).toBe('Can’t delete Theme. Used only by 3 archived variants. Every variant has one of its values.')
+    expect(refusalText(t, { at: 'x', code: 'value-in-use', params: { value: 'Lion', count: 0, archived: 1, codes: '', more: 0 } })).toBe('Can’t delete Lion. Used only by 1 archived variant. Archive or change those first.')
   })
 
   it('[E6.2][AC52] an option that variants use cannot be deleted', () => {
     const found = checkOptionsDraft(saved, draft().slice(0, 1), variants, {})
 
-    expect(found[0]).toMatchObject({ at: 'theme', code: 'option-in-use', params: { option: 'Theme', count: 3 } })
-    expect(refusalText(t, found[0]!)).toBe('Can’t delete Theme. Used by 3 variants (VX-S-SWAN, VX-L-SWAN, VX-S-LION). Every variant has one of its values.')
+    expect(found[0]).toMatchObject({ at: 'theme', code: 'option-in-use', params: { option: 'Theme', count: 2, archived: 1 } })
+    expect(refusalText(t, found[0]!)).toBe('Can’t delete Theme. Used by 2 live (VX-S-SWAN, VX-L-SWAN) and 1 archived variant. Every variant has one of its values.')
   })
 
   it('[E6.2][AC52] says three codes at most, then how many more', () => {

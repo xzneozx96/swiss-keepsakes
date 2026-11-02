@@ -28,8 +28,16 @@ function ValueRow({ draft, option, value, grip, lang, focused, onFocused }: { dr
   const { t } = useLocale()
   const inputRef = useRef<HTMLInputElement>(null)
   const name = labelOf(value.label, 'en') || t('keepsakes.options.valueFallback')
-  const users = draft.isSaved(value.ref) ? variantsUsing(draft.variants, option.ref, value.ref).length : 0
-  const used = users > 0 ? t(users === 1 ? 'keepsakes.options.valueInUse.one' : 'keepsakes.options.valueInUse.other', { count: users }) : undefined
+  const holding = draft.isSaved(value.ref) ? variantsUsing(draft.variants, option.ref, value.ref) : []
+  const users = holding.length
+  // The live variants are the ones on screen; the archived ones are counted apart.
+  const archived = holding.filter(variant => variant.status === 'archived').length
+  const live = users - archived
+  const used = users === 0
+    ? undefined
+    : archived === 0
+      ? t(users === 1 ? 'keepsakes.options.valueInUse.one' : 'keepsakes.options.valueInUse.other', { count: users })
+      : t(live > 0 ? 'keepsakes.options.valueInUse.mixed' : 'keepsakes.options.valueInUse.archivedOnly', { live, archived })
 
   useEffect(() => {
     if (focused === value.ref && lang === 'en') {

@@ -35,9 +35,13 @@ function usersOf(variants: ProductVariant[], optionId: string, valueId?: string)
   return variants.filter(variant => (valueId === undefined ? variant.values[optionId] !== undefined : variant.values[optionId] === valueId))
 }
 
-// "Used by 2 variants (A, B)": the first three codes, the number of all of them.
+// "Used by 2 live (A, B) and 3 archived variants": the live variants are counted and named (the first three codes), the
+// archived ones are counted apart, so the screen, which lists only the live ones, agrees with the number.
 function usedBy(users: ProductVariant[], options: ProductOption[]): Record<string, string | number> {
-  return { count: users.length, codes: users.slice(0, MAX_CODES_NAMED).map(user => variantName(user, options)).join(', '), more: Math.max(0, users.length - MAX_CODES_NAMED) }
+  const live = users.filter(user => user.status !== 'archived')
+  const archived = users.length - live.length
+
+  return { count: live.length, ...(archived > 0 && { archived }), codes: live.slice(0, MAX_CODES_NAMED).map(user => variantName(user, options)).join(', '), more: Math.max(0, live.length - MAX_CODES_NAMED) }
 }
 
 // The options as a client names them: a name and a label in at least one language, at least one value, and every ref

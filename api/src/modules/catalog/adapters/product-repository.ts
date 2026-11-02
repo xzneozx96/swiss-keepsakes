@@ -302,7 +302,7 @@ export function createProductRepository(): ProductRepository<Tx> {
     },
 
     async removeVariants(tx, product, skuIds) {
-      const where = sql`store_id = ${product.storeId} and product_id = ${product.id} and id = any(${sql.param(skuIds)}::uuid[]) and status <> 'archived'`
+      const where = sql`store_id = ${product.storeId} and product_id = ${product.id} and id = any(${sql.param(skuIds)}::uuid[])`
 
       await tx.execute(sql`
         delete from catalog.sku_option_values

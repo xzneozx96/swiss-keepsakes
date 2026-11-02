@@ -79,6 +79,9 @@ The 2026-10-29 design (cards, with options and variants in sheets) became a step
     - Deleting a variant is the keepsake's rule (ADR-014, ADR-017 amended 2026-11-02): a variant that no order line names is deleted and its combination shows in "Not sold · Add back"; one that an order line names is archived, which is final. The confirm dialog says which will happen, and for a selection that mixes both it gives the number of each. Orders are not built, so every variant deletes until E7.1 implements `soldSkuIds`.
     - The bulk bar's Archive and the variant sheet's Archive (left of the footer) are Delete, with the same rule.
     - One request does it: `status: removed`, on the single and the bulk variant routes.
+    - **Icons tell the two apart:** a variant that will be deleted has the trash icon ("Delete XS / Red"), one that has orders the archive icon ("Archive XS / Red"); the bulk bar and the sheet footer follow the same rule.
+    - **Archived variants that were never sold can be deleted** (an earlier rule archived them): the "N archived" list has a trash icon on each of them and "Delete all never sold"; a sold archived variant stays and has no icon. `removed` on an archived variant deletes it when no order line names it, and is refused otherwise.
+    - **The in-use refusals count live and archived variants apart** ("Used by 3 live (A, B, C) and 9 archived variants"); only the live ones are named, so the number agrees with the rows on screen. A value's inline note does the same.
 
 ## Rejected
 

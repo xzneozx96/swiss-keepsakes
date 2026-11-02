@@ -436,8 +436,10 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     serve()
     await openStep()
 
+    expect(within(rows()[0]!).queryByRole('button', { name: 'Delete XS / Red' })).not.toBeInTheDocument()
+    expect(within(rows()[0]!).getByRole('button', { name: 'Archive XS / Red' })).toBeInTheDocument()
     await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select XS / Red' }))
-    await userEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: 'Delete' }))
+    await userEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: 'Archive' }))
     const dialog = await screen.findByRole('alertdialog')
 
     expect(dialog).toHaveTextContent('Archive XS / Red?')
@@ -448,6 +450,46 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     expect(patches()[0]).toMatchObject({ path: `${detail}/variants/${all[0]!.id}`, body: { status: 'removed' } })
     expect(await within(variantsBlock()).findByText('1 archived')).toBeInTheDocument()
     expect(screen.queryByTestId('not-sold')).not.toBeInTheDocument()
+  })
+
+  it('[T-019][AC7] archived variants that were never sold have a Delete icon and a Delete all never sold; sold ones have none', async () => {
+    current = product({ options: [sizeOption, colourOption], variants: all.map((variant, index) => (index === 0 ? { ...variant, status: 'archived' as const } : index === 1 ? { ...variant, status: 'archived' as const, hasOrders: true } : index === 2 ? { ...variant, status: 'archived' as const } : variant)) })
+    serve()
+    await openStep()
+    const fold = within(variantsBlock()).getByText('3 archived').closest('details')!
+
+    await userEvent.click(within(fold).getByText('3 archived'))
+
+    expect(within(fold).getByRole('button', { name: 'Delete XS / Red' })).toBeInTheDocument()
+    expect(within(fold).getByRole('button', { name: 'Delete S / Red' })).toBeInTheDocument()
+    expect(within(fold).queryByRole('button', { name: 'Delete XS / Blue' })).not.toBeInTheDocument()
+    await userEvent.click(within(fold).getByRole('button', { name: 'Delete XS / Red' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => expect(patches()).toHaveLength(1))
+    expect(patches()[0]).toMatchObject({ path: `${detail}/variants/${all[0]!.id}`, body: { status: 'removed' } })
+    await waitFor(() => expect(within(variantsBlock()).getByText('2 archived')).toBeInTheDocument())
+    await userEvent.click(within(variantsBlock()).getByRole('button', { name: 'Delete all never sold' }))
+    const dialog = await screen.findByRole('alertdialog')
+
+    expect(dialog).toHaveTextContent('Delete S / Red?')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => expect(patches()).toHaveLength(2))
+    expect(patches()[1]).toMatchObject({ path: `${detail}/variants/${all[2]!.id}`, body: { status: 'removed' } })
+    await waitFor(() => expect(within(variantsBlock()).getByText('1 archived')).toBeInTheDocument())
+    expect(within(variantsBlock()).queryByRole('button', { name: 'Delete all never sold' })).not.toBeInTheDocument()
+  })
+
+  it('[T-019][AC8] a value that live and archived variants use says how many of each', async () => {
+    current = product({ options: [sizeOption, colourOption], variants: all.map((variant, index) => (index < 3 ? { ...variant, status: 'archived' as const } : variant)) })
+    serve()
+    await openStep()
+    await userEvent.click(within(optionsBlock()).getAllByRole('button', { name: /^Edit / })[0]!)
+
+    // XS: both its rows (Red, Blue) are archived or one is; the first two rows are XS, the third is S.
+    expect(within(optionsBlock()).getByRole('button', { name: 'Can’t delete XS: Used only by 2 archived' })).toBeInTheDocument()
+    expect(within(optionsBlock()).getByRole('button', { name: 'Can’t delete S: Used by 1 live and 1 archived' })).toBeInTheDocument()
   })
 
   it('[T-019][AC4] a mix of sold and unsold: one request, and the dialog says how many of each', async () => {

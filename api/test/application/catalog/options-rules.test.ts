@@ -103,7 +103,7 @@ describe('[E6.2][AC52] saving options with the variants', () => {
     const refusals = checkOptionsSave(current, { options: [input(size), { ...input(theme), values: [input(theme).values[0]!] }], variantValues: [], newVariants: [] })
 
     expect(refusals).toEqual([
-      { code: 'value-in-use', path: 'options.theme.values.lion', params: { value: 'Lion', count: 1, codes: 'VX-S-LION', more: 0 } },
+      { code: 'value-in-use', path: 'options.theme.values.lion', params: { value: 'Lion', count: 0, archived: 1, codes: '', more: 0 } },
     ])
   })
 
@@ -118,7 +118,14 @@ describe('[E6.2][AC52] saving options with the variants', () => {
     const refusals = checkOptionsSave(current, { options: [input(size)], variantValues: [], newVariants: [] })
 
     // Without Theme, VX-S-LION and VX-S-SWAN would also be one combination: the first refusal is the one to read.
-    expect(refusals[0]).toEqual({ code: 'option-in-use', path: 'options.theme', params: { option: 'Theme', count: 3, codes: 'VX-S-SWAN, VX-L-SWAN, VX-S-LION', more: 0 } })
+    expect(refusals[0]).toEqual({ code: 'option-in-use', path: 'options.theme', params: { option: 'Theme', count: 2, archived: 1, codes: 'VX-S-SWAN, VX-L-SWAN', more: 0 } })
+  })
+
+  it('[T-019][AC8] a value used by archived variants says how many are archived and names only the live ones', () => {
+    const lions = product([size, theme], [variant('1', 'VX-S-LION', { size: 's', theme: 'lion' }), variant('2', 'VX-L-LION', { size: 'l', theme: 'lion' }, 'archived'), variant('3', 'VX-M-LION', { size: 'l', theme: 'lion' }, 'archived')])
+    const refusals = checkOptionsSave(lions, { options: [input(size), { ...input(theme), values: [input(theme).values[0]!] }], variantValues: [], newVariants: [] })
+
+    expect(refusals[0]).toEqual({ code: 'value-in-use', path: 'options.theme.values.lion', params: { value: 'Lion', count: 1, archived: 2, codes: 'VX-S-LION', more: 0 } })
   })
 
   const colour: OptionInput = { ref: 'new-colour', name: { en: 'Colour' }, values: [{ ref: 'red', label: { en: 'Red' } }, { ref: 'blue', label: { en: 'Blue' } }] }

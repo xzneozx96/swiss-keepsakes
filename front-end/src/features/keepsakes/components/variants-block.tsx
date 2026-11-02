@@ -9,11 +9,11 @@ import { useState } from 'react'
 import { ActionBar } from '@/components/action-bar'
 import { useConfirm } from '@/components/confirm-dialog'
 import { Block } from '@/components/form-block'
-import { ChevronDownIcon, ForSaleIcon, HiddenIcon, PriceIcon, ProductsIcon, TrashIcon } from '@/components/icons'
+import { ArchiveIcon, ChevronDownIcon, ForSaleIcon, HiddenIcon, PriceIcon, ProductsIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { groupByFirstOption, priceRange } from '../lib/combinations'
 import { chf } from '../lib/keepsake-rules'
-import { combinationName, labelOf, refusalText, variantTitle } from '../lib/option-rules'
+import { labelOf, refusalText, variantTitle } from '../lib/option-rules'
 import { problemMessageKey } from '../lib/problems'
 import { QuietNote } from './option-bits'
 import { SkuSwitch } from './sku-switch'
@@ -26,12 +26,17 @@ function failureText(t: ReturnType<typeof useLocale>['t'], outcome: Extract<Outc
   return outcome.refusals && outcome.refusals.length > 0 ? outcome.refusals.map(refusal => refusalText(t, refusal)).join(' ') : t(problemMessageKey(outcome.type))
 }
 
-/** Archived variants, folded away: they stay for old orders, keep their combination and can't be put back on sale. */
-function ArchivedList({ variants, options }: { variants: ProductVariant[], options: ProductOption[] }) {
+/**
+ * Archived variants, folded away: they stay for old orders, keep their combination and can't be put back on sale. One that
+ * no order line names was archived by mistake of the old rule and can be deleted, by its icon or all together; a sold one stays.
+ */
+function ArchivedList({ variants, options, isBusy, onDelete }: { variants: ProductVariant[], options: ProductOption[], isBusy: boolean, onDelete: (rows: ProductVariant[]) => void }) {
   const { t, language } = useLocale()
 
   if (variants.length === 0)
     return null
+  const unsold = variants.filter(variant => !variant.hasOrders)
+  const nameOf = (variant: ProductVariant) => (options.length > 0 ? variantTitle(variant.values, options, language) : variant.skuCode ?? '')
 
   return (
     <details className="group px-1 text-sm">
@@ -41,12 +46,22 @@ function ArchivedList({ variants, options }: { variants: ProductVariant[], optio
       </summary>
       <ul className="mt-2 flex flex-col gap-1 text-muted">
         {variants.map(variant => (
-          <li key={variant.id} className="flex justify-between gap-3">
-            <span className="truncate">{options.length > 0 ? combinationName(variant.values, options, language) : variant.skuCode}</span>
-            {variant.skuCode && <span className="shrink-0 font-mono text-xs">{variant.skuCode}</span>}
+          <li key={variant.id} className="flex items-center justify-between gap-3">
+            <span className="truncate">{nameOf(variant)}</span>
+            <span className="flex shrink-0 items-center gap-1">
+              {variant.skuCode && <span className="font-mono text-xs">{variant.skuCode}</span>}
+              {!variant.hasOrders && (
+                <Button isIconOnly aria-label={t('keepsakes.variants.deleteVariant', { name: nameOf(variant) })} className="text-danger max-lg:size-11" isDisabled={isBusy} size="sm" variant="tertiary" onPress={() => onDelete([variant])}>
+                  <TrashIcon aria-hidden size={16} />
+                </Button>
+              )}
+            </span>
           </li>
         ))}
       </ul>
+      {unsold.length > 0 && (
+        <Button className="-ms-1 mt-1 text-danger max-lg:h-11" isDisabled={isBusy} size="sm" variant="ghost" onPress={() => onDelete(unsold)}>{t('keepsakes.variants.deleteNeverSold')}</Button>
+      )}
       <p className="mt-2 text-xs text-muted">{t('keepsakes.variants.archivedNote')}</p>
     </details>
   )
@@ -94,6 +109,8 @@ export function VariantsBlock({ storeId, options, variants, held, toCome, action
   const isHeld = (variant: ProductVariant) => held || toCome.has(variant.id)
   const anyHeld = ticked.some(isHeld)
   const allHeld = ticked.length > 0 && ticked.every(isHeld)
+  // Only variants that have orders are selected: Delete is Archive for them.
+  const allArchive = ticked.length > 0 && ticked.every(variant => !isHeld(variant) && variant.hasOrders)
 
   const run = async (work: () => Promise<Outcome>) => {
     setFailure(undefined)
@@ -274,7 +291,7 @@ export function VariantsBlock({ storeId, options, variants, held, toCome, action
           <Button className="max-lg:h-11" isDisabled={isPending} size="sm" variant="ghost" onPress={() => void run(() => actions.addBack(notSold, sku.codeBase))}>{t('keepsakes.variants.addBack')}</Button>
         </p>
       )}
-      <ArchivedList options={options} variants={archived} />
+      <ArchivedList isBusy={isPending} options={options} variants={archived} onDelete={rows => void remove(rows, () => undefined)} />
 
       {editingVariant && (
         <VariantSheet
@@ -305,7 +322,7 @@ export function VariantsBlock({ storeId, options, variants, held, toCome, action
                   { icon: ForSaleIcon, label: t('keepsakes.variant.status.published'), isDisabled: isPending, onPress: () => forTicked({ status: 'published' }) },
                   { icon: HiddenIcon, label: t('keepsakes.variant.status.hidden'), isDisabled: isPending, onPress: () => forTicked({ status: 'draft' }) },
                 ]),
-            { icon: TrashIcon, label: t(allHeld ? 'keepsakes.variants.remove' : 'keepsakes.variants.delete'), tone: 'danger', isDisabled: isPending, onPress: () => void remove(ticked, () => setSelected(new Set())) },
+            { icon: allArchive ? ArchiveIcon : TrashIcon, label: t(allHeld ? 'keepsakes.variants.remove' : allArchive ? 'keepsakes.variant.archive' : 'keepsakes.variants.delete'), tone: 'danger', isDisabled: isPending, onPress: () => void remove(ticked, () => setSelected(new Set())) },
           ]}
           count={ticked.length}
           onClear={() => {

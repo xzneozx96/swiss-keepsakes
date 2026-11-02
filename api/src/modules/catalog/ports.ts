@@ -270,7 +270,7 @@ export interface ProductRepository<T> {
   insertVariant: (tx: T, product: Product, input: VariantInput, at: Date) => Promise<Product>
   // Updates the price or status of several variants in one statement. Archived variants are left as they are.
   saveVariants: (tx: T, product: Product, changes: VariantBatchChange[], at: Date) => Promise<Product>
-  // Deletes variants of the keepsake with their option values; an archived variant is left. Frees their combinations.
+  // Deletes variants of the keepsake with their option values, archived ones too (the use case allows that only for unsold ones). Frees their combinations.
   removeVariants: (tx: T, product: Product, skuIds: string[]) => Promise<Product>
   // Which of these codes another SKU of the shop already holds (skus_store_sku_code_key compares them exactly). `except`
   // lists SKU ids whose own code does not count: a bulk save may give codes to the SKUs that hold them now.

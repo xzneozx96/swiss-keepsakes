@@ -22,7 +22,12 @@ const plural = (count: number, one: string, other: string) => (count === 1 ? one
 function usedBy(params: Refusal['params']): string {
   const count = Number(params?.count ?? 0)
   const more = Number(params?.more ?? 0)
+  const archived = Number(params?.archived ?? 0)
   const codes = `${params?.codes ?? ''}${more > 0 ? ` and ${more} more` : ''}`
+
+  // The live variants are named; the archived ones are counted apart.
+  if (archived > 0)
+    return count > 0 ? `Used by ${count} live (${codes}) and ${archived} archived ${plural(archived, 'variant', 'variants')}` : `Used only by ${archived} archived ${plural(archived, 'variant', 'variants')}`
 
   return `Used by ${count} ${plural(count, 'variant', 'variants')} (${codes})`
 }
