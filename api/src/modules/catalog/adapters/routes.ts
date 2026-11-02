@@ -152,7 +152,7 @@ function optionInput(option: OptionBody): OptionInput {
   return {
     ref: option.ref,
     name: option.name,
-    values: option.values.map(value => ({ ref: value.ref, label: value.label, swatch: value.swatch ?? null })),
+    values: option.values.map(value => ({ ref: value.ref, label: value.label })),
   }
 }
 
@@ -174,7 +174,7 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
       photoIds: photoIds ?? [],
       commissionRate: commissionRate ?? 0,
       options: (options ?? []).map(optionInput),
-      variants: variants.map(({ skuCode, priceRappen, values }) => ({ skuCode, priceRappen, status: 'published' as const, values: values ?? {} })),
+      variants: variants.map(({ skuCode, mediaId, priceRappen, values }) => ({ skuCode: skuCode ?? null, mediaId: mediaId ?? null, priceRappen, status: 'published' as const, values: values ?? {} })),
     }, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
@@ -237,9 +237,10 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
 
   app.openapi(variantRoute, async (c) => {
     const { productId, skuId } = c.req.valid('param')
-    const { skuCode, priceRappen, status, values } = c.req.valid('json')
+    const { skuCode, mediaId, priceRappen, status, values } = c.req.valid('json')
     const changes: VariantChanges = {
       ...(skuCode !== undefined && { skuCode }),
+      ...(mediaId !== undefined && { mediaId }),
       ...(priceRappen !== undefined && { priceRappen }),
       ...(status !== undefined && { status }),
       ...(values !== undefined && { values }),
@@ -252,8 +253,10 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
 
   app.openapi(variantsRoute, async (c) => {
     const { variants } = c.req.valid('json')
-    const changes: VariantBatchChange[] = variants.map(({ id, priceRappen, status }) => ({
+    const changes: VariantBatchChange[] = variants.map(({ id, priceRappen, status, skuCode, mediaId }) => ({
       id,
+      ...(skuCode !== undefined && { skuCode }),
+      ...(mediaId !== undefined && { mediaId }),
       ...(priceRappen !== undefined && { priceRappen }),
       ...(status !== undefined && { status }),
     }))
@@ -271,7 +274,7 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
     const result = await useCases.saveOptions(c.get('actor'), c.get('store').storeId, c.req.valid('param').productId, ifMatch.version, {
       options: options.map(optionInput),
       variantValues: variantValues ?? [],
-      newVariants: (newVariants ?? []).map(({ skuCode, priceRappen, values }) => ({ skuCode, priceRappen, status: 'published' as const, values: values ?? {} })),
+      newVariants: (newVariants ?? []).map(({ skuCode, mediaId, priceRappen, values }) => ({ skuCode: skuCode ?? null, mediaId: mediaId ?? null, priceRappen, status: 'published' as const, values: values ?? {} })),
     }, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
@@ -279,9 +282,10 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
   })
 
   app.openapi(createVariantRoute, async (c) => {
-    const { skuCode, priceRappen, status, values } = c.req.valid('json')
+    const { skuCode, mediaId, priceRappen, status, values } = c.req.valid('json')
     const result = await useCases.createVariant(c.get('actor'), c.get('store').storeId, c.req.valid('param').productId, {
-      skuCode,
+      skuCode: skuCode ?? null,
+      mediaId: mediaId ?? null,
       priceRappen,
       status: status ?? 'published',
       values: values ?? {},

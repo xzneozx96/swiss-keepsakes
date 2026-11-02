@@ -6,13 +6,13 @@ import type { ProductDetail } from './product-detail.ts'
 import { mayEditCatalog, staffActor } from './access.ts'
 import { fail, ok } from './failure.ts'
 import { checkOptionsSave } from './option-rules.ts'
-import { describe } from './product-detail.ts'
+import { checkVariantPhotos, describe } from './product-detail.ts'
 import { isSkuCode } from './sku-code.ts'
 
 // The options of a keepsake, the new values of its variants and its new variants, saved in one write. A save from an old
 // row version is refused (412), and so is any save that would leave a variant without a value, two variants on one
 // combination, or a value or option that a variant uses deleted (section 7 of the design). A new variant is for sale
-// and takes a combination and a code that nothing else holds. A refused save changes nothing.
+// and takes a combination and, when it has a code, a code that nothing else holds. A refused save changes nothing.
 export function makeSaveOptions<T>({ uow, products, media, audit, clock, sales }: CatalogDeps<T>) {
   return async (actor: Actor, storeId: string, productId: string, ifMatch: number, input: OptionsSave, requestId: string | null): Promise<Result<ProductDetail>> => {
     if (!mayEditCatalog(actor, storeId))
@@ -25,18 +25,21 @@ export function makeSaveOptions<T>({ uow, products, media, audit, clock, sales }
         return fail({ reason: 'stale' })
       if (product.status === 'archived')
         return fail({ reason: 'archived' })
-      const badCode = input.newVariants.findIndex(variant => !isSkuCode(variant.skuCode))
+      const badCode = input.newVariants.findIndex(variant => variant.skuCode !== null && !isSkuCode(variant.skuCode))
       if (badCode >= 0)
         return fail({ reason: 'sku-code-invalid', path: `newVariants.${badCode}.skuCode` })
       const refusals = checkOptionsSave(product, input)
       // The shop's codes are the database's (skus_store_sku_code_key); asking first lets the answer name the row.
-      const taken = await products.takenSkuCodes(tx, storeId, input.newVariants.map(variant => variant.skuCode))
+      const taken = await products.takenSkuCodes(tx, storeId, input.newVariants.flatMap(variant => variant.skuCode ?? []))
       input.newVariants.forEach((variant, index) => {
-        if (taken.has(variant.skuCode))
+        if (variant.skuCode !== null && taken.has(variant.skuCode))
           refusals.push({ code: 'code-taken', path: `newVariants.${index}.skuCode`, params: { code: variant.skuCode } })
       })
       if (refusals.length > 0)
         return fail({ reason: 'refused', refusals })
+      const photoRefused = await checkVariantPhotos(media, tx, storeId, input.newVariants.map(variant => variant.mediaId))
+      if (photoRefused)
+        return fail(photoRefused)
       const saved = await products.replaceOptions(tx, product, input, clock.now())
       await audit.record(tx, {
         storeId,

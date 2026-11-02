@@ -82,10 +82,11 @@ describe('[E6.2][AC52] the options and variants contract', () => {
     expect(Object.keys(problem.properties.errors.items.properties ?? {})).toEqual(expect.arrayContaining(['code', 'params']))
   })
 
-  it('[E6.2][AC52] a swatch is a lowercase # colour, and the status archived is a status, not a restore', () => {
+  it('[T-010] an option value has no swatch, and the status archived is a status, not a restore', () => {
     const text = JSON.stringify(document.components.schemas.OptionValueWrite)
 
-    expect(text).toContain('^#[0-9a-f]{6}$')
+    expect(text).not.toContain('swatch')
+    expect(JSON.stringify(document.components.schemas.ProductOption)).not.toContain('swatch')
     expect(JSON.stringify(document.components.schemas.VariantSaveBody)).toContain('archived')
     expect(JSON.stringify(catalogPaths)).not.toContain('restore')
   })

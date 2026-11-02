@@ -4824,6 +4824,14 @@
         "additionalProperties": false,
         "description": "A variant to create: a code, a price and one value of each option. It is for sale",
         "properties": {
+          "mediaId": {
+            "description": "The photo of the variant: a ready image of the store’s library, or null for none",
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "priceRappen": {
             "description": "The price in Rappen, above 0",
             "maximum": 100000000,
@@ -4831,10 +4839,13 @@
             "type": "integer"
           },
           "skuCode": {
-            "description": "Letters and digits joined by - _ or ., unique in the shop",
+            "description": "Letters and digits joined by - _ or ., unique in the shop. Optional: a variant may have no code",
             "maxLength": 60,
             "minLength": 1,
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "values": {
             "additionalProperties": {
@@ -4847,7 +4858,6 @@
           }
         },
         "required": [
-          "skuCode",
           "priceRappen"
         ],
         "type": "object"
@@ -5837,14 +5847,6 @@
             "maxLength": 64,
             "minLength": 1,
             "type": "string"
-          },
-          "swatch": {
-            "description": "A colour as # and six lowercase hexadecimal digits, or null for none",
-            "pattern": "^#[0-9a-f]{6}$",
-            "type": [
-              "string",
-              "null"
-            ]
           }
         },
         "required": [
@@ -7331,6 +7333,21 @@
             },
             "type": "object"
           },
+          "optionNames": {
+            "description": "The names of the keepsake’s options, in order. The editor suggests the names the shop already uses",
+            "items": {
+              "properties": {
+                "de": {
+                  "type": "string"
+                },
+                "en": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
           "rowVersion": {
             "description": "The version a removal sends as If-Match",
             "type": "integer"
@@ -7359,6 +7376,7 @@
         "required": [
           "id",
           "name",
+          "optionNames",
           "status",
           "hasUnpublishedEdits",
           "hasOrders",
@@ -7406,18 +7424,11 @@
                     }
                   },
                   "type": "object"
-                },
-                "swatch": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
                 }
               },
               "required": [
                 "id",
-                "label",
-                "swatch"
+                "label"
               ],
               "type": "object"
             },
@@ -7487,11 +7498,112 @@
             "format": "uuid",
             "type": "string"
           },
+          "mediaId": {
+            "description": "The photo of the variant, a file of the library, or null",
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "photo": {
+            "description": "The photo of the variant, ready to show. Null for none, or when the file is gone",
+            "properties": {
+              "byteSize": {
+                "type": "integer"
+              },
+              "contentType": {
+                "type": "string"
+              },
+              "height": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "image",
+                  "audio",
+                  "pdf"
+                ],
+                "type": "string"
+              },
+              "name": {
+                "description": "What the merchant sees and searches. It starts as the uploaded file name",
+                "type": "string"
+              },
+              "publicUrl": {
+                "description": "The public URL of the original. Null until the file is ready",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "processing",
+                  "ready",
+                  "retired"
+                ],
+                "type": "string"
+              },
+              "variants": {
+                "description": "Resized copies of an image. Empty until the file is ready",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "width": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "status",
+              "name",
+              "contentType",
+              "byteSize",
+              "width",
+              "height",
+              "publicUrl",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
           "priceRappen": {
             "type": "integer"
           },
           "skuCode": {
-            "type": "string"
+            "description": "Null when the variant has no code",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "status": {
             "description": "published is for sale, draft is hidden from guests, archived stays for old orders",
@@ -7514,6 +7626,8 @@
         "required": [
           "id",
           "skuCode",
+          "mediaId",
+          "photo",
           "priceRappen",
           "status",
           "values"
@@ -15907,6 +16021,14 @@
         "additionalProperties": false,
         "description": "One more variant of a keepsake",
         "properties": {
+          "mediaId": {
+            "description": "The photo of the variant: a ready image of the store’s library, or null for none",
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "priceRappen": {
             "maximum": 100000000,
             "minimum": 1,
@@ -15915,7 +16037,10 @@
           "skuCode": {
             "maxLength": 60,
             "minLength": 1,
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "status": {
             "description": "published is for sale, draft is hidden. For sale when left out",
@@ -15935,7 +16060,6 @@
           }
         },
         "required": [
-          "skuCode",
           "priceRappen"
         ],
         "type": "object"
@@ -15944,15 +16068,27 @@
         "additionalProperties": false,
         "description": "A change to one variant",
         "properties": {
+          "mediaId": {
+            "description": "The photo of the variant: a ready image of the store’s library, or null for none",
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "priceRappen": {
             "maximum": 100000000,
             "minimum": 1,
             "type": "integer"
           },
           "skuCode": {
+            "description": "A new code, or null to remove it. Left out keeps it",
             "maxLength": 60,
             "minLength": 1,
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "status": {
             "description": "published is for sale, draft is hidden from guests, archived keeps the variant for old orders and is final",
@@ -15986,10 +16122,27 @@
                   "format": "uuid",
                   "type": "string"
                 },
+                "mediaId": {
+                  "description": "The photo of the variant: a ready image of the store’s library, or null for none",
+                  "format": "uuid",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
                 "priceRappen": {
                   "maximum": 100000000,
                   "minimum": 1,
                   "type": "integer"
+                },
+                "skuCode": {
+                  "description": "A new code, or null to remove it. Left out keeps it",
+                  "maxLength": 60,
+                  "minLength": 1,
+                  "type": [
+                    "string",
+                    "null"
+                  ]
                 },
                 "status": {
                   "description": "published is for sale, draft is hidden from guests, archived is final",

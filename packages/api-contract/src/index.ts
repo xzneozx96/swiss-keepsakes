@@ -29,7 +29,6 @@ export {
   productVariantSchema,
   type PublishCheck,
   publishCheckSchema,
-  SWATCH_PATTERN,
   TEXT_MAX,
   type VariantCreateBody,
   variantCreateBodySchema,

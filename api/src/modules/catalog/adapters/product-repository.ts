@@ -18,7 +18,8 @@ interface ProductRow {
 
 interface VariantRow {
   id: string
-  sku_code: string
+  sku_code: string | null
+  media_id: string | null
   // bigint comes back from node-postgres as a string.
   price_rappen: string | number
   status: ProductVariant['status']
@@ -33,7 +34,6 @@ interface ValueRow {
   id: string
   option_id: string
   label: Localized
-  swatch: string | null
 }
 
 interface SkuValueRow {
@@ -47,6 +47,7 @@ interface ListRow {
   status: Product['status']
   draft: ProductDoc | null
   published: { name?: Localized } | null
+  option_names: Localized[]
   published_cover: string | null
   variant_count: number
   sold_out_count: number
@@ -86,17 +87,17 @@ async function load(tx: Tx, storeId: string, productId: string, lock: boolean): 
   const media = await tx.execute<{ media_id: string }>(sql`
     select media_id from catalog.product_media where store_id = ${storeId} and product_id = ${productId} order by position`)
   const variants = await tx.execute<VariantRow & Record<string, unknown>>(sql`
-    select id, sku_code, price_rappen, status from catalog.skus where store_id = ${storeId} and product_id = ${productId} order by created_at, id`)
+    select id, sku_code, media_id, price_rappen, status from catalog.skus where store_id = ${storeId} and product_id = ${productId} order by created_at, id`)
   const optionRows = await tx.execute<OptionRow & Record<string, unknown>>(sql`
     select id, name from catalog.product_options where store_id = ${storeId} and product_id = ${productId} order by position`)
   const valueRows = await tx.execute<ValueRow & Record<string, unknown>>(sql`
-    select id, option_id, label, swatch from catalog.product_option_values where store_id = ${storeId} and product_id = ${productId} order by position`)
+    select id, option_id, label from catalog.product_option_values where store_id = ${storeId} and product_id = ${productId} order by position`)
   const skuValueRows = await tx.execute<SkuValueRow & Record<string, unknown>>(sql`
     select sku_id, option_id, value_id from catalog.sku_option_values where store_id = ${storeId} and product_id = ${productId}`)
   const options: ProductOption[] = optionRows.rows.map(option => ({
     id: option.id,
     name: option.name,
-    values: valueRows.rows.filter(value => value.option_id === option.id).map((value): OptionValue => ({ id: value.id, label: value.label, swatch: value.swatch })),
+    values: valueRows.rows.filter(value => value.option_id === option.id).map((value): OptionValue => ({ id: value.id, label: value.label })),
   }))
   const valuesOf = (skuId: string) => Object.fromEntries(skuValueRows.rows.filter(row => row.sku_id === skuId).map(row => [row.option_id, row.value_id]))
   return {
@@ -109,7 +110,7 @@ async function load(tx: Tx, storeId: string, productId: string, lock: boolean): 
     publishedMedia: media.rows.map(m => m.media_id),
     commissionRate: row.commission_rate,
     options,
-    variants: variants.rows.map(v => ({ id: v.id, skuCode: v.sku_code, priceRappen: Number(v.price_rappen), status: v.status, values: valuesOf(v.id) })),
+    variants: variants.rows.map(v => ({ id: v.id, skuCode: v.sku_code, mediaId: v.media_id, priceRappen: Number(v.price_rappen), status: v.status, values: valuesOf(v.id) })),
     rowVersion: row.row_version,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
@@ -126,6 +127,7 @@ export function createProductRepository(): ProductRepository<Tx> {
       // soldOutCount is 0 until stock exists (E6.3 joins inventory.stock_items here).
       const result = await tx.execute<ListRow & Record<string, unknown>>(sql`
         select p.id, p.status, p.draft, p.published, p.row_version, p.updated_at,
+               (select coalesce(jsonb_agg(o.name order by o.position), '[]'::jsonb) from catalog.product_options o where o.product_id = p.id) as option_names,
                (select media_id from catalog.product_media m where m.product_id = p.id order by m.position limit 1) as published_cover,
                (select count(*) from catalog.skus s where s.product_id = p.id and s.status <> 'archived')::int as variant_count,
                0::int as sold_out_count
@@ -135,6 +137,7 @@ export function createProductRepository(): ProductRepository<Tx> {
       return result.rows.map((row): ProductListRow => ({
         id: row.id,
         name: (row.draft ?? row.published)?.name ?? {},
+        optionNames: row.option_names,
         status: row.status,
         hasUnpublishedEdits: row.status === 'published' && row.draft !== null,
         coverMediaId: row.draft ? row.draft.media?.[0] ?? null : row.published_cover,
@@ -231,7 +234,8 @@ export function createProductRepository(): ProductRepository<Tx> {
     async saveVariant(tx, product, skuId, changes, at) {
       const updated = await tx.execute<{ id: string }>(sql`
         update catalog.skus set
-          sku_code = coalesce(${changes.skuCode ?? null}::text, sku_code),
+          sku_code = case when ${changes.skuCode !== undefined} then ${changes.skuCode ?? null}::text else sku_code end,
+          media_id = case when ${changes.mediaId !== undefined} then ${changes.mediaId ?? null}::uuid else media_id end,
           price_rappen = coalesce(${changes.priceRappen ?? null}::bigint, price_rappen),
           status = coalesce(${changes.status ?? null}::text, status),
           updated_at = ${at}
@@ -248,8 +252,8 @@ export function createProductRepository(): ProductRepository<Tx> {
 
     async insertVariant(tx, product, input, at) {
       const inserted = await tx.execute<{ id: string }>(sql`
-        insert into catalog.skus (store_id, sku_code, product_id, price_rappen, status, created_at, updated_at)
-        values (${product.storeId}, ${input.skuCode}, ${product.id}, ${input.priceRappen}, ${input.status}, ${at}, ${at})
+        insert into catalog.skus (store_id, sku_code, media_id, product_id, price_rappen, status, created_at, updated_at)
+        values (${product.storeId}, ${input.skuCode}, ${input.mediaId}, ${product.id}, ${input.priceRappen}, ${input.status}, ${at}, ${at})
         returning id`)
       await writeSkuValues(tx, product.storeId, product.id, inserted.rows[0]!.id, input.values)
       return reload(tx, product)
@@ -275,26 +279,34 @@ export function createProductRepository(): ProductRepository<Tx> {
     },
 
     async saveVariants(tx, product, changes, at) {
-      // One statement for all rows. A null price or status keeps the stored one.
+      // One statement for all rows. A null price or status keeps the stored one; a code or photo changes only where its
+      // flag is set, so a null there clears it.
       await tx.execute(sql`
         update catalog.skus s set
           price_rappen = coalesce(c.price_rappen, s.price_rappen),
           status = coalesce(c.status, s.status),
+          sku_code = case when c.set_code then c.sku_code else s.sku_code end,
+          media_id = case when c.set_media then c.media_id else s.media_id end,
           updated_at = ${at}
         from unnest(
           ${sql.param(changes.map(change => change.id))}::uuid[],
           ${sql.param(changes.map(change => change.priceRappen ?? null))}::bigint[],
-          ${sql.param(changes.map(change => change.status ?? null))}::text[]
-        ) as c(id, price_rappen, status)
+          ${sql.param(changes.map(change => change.status ?? null))}::text[],
+          ${sql.param(changes.map(change => change.skuCode !== undefined))}::boolean[],
+          ${sql.param(changes.map(change => change.skuCode ?? null))}::text[],
+          ${sql.param(changes.map(change => change.mediaId !== undefined))}::boolean[],
+          ${sql.param(changes.map(change => change.mediaId ?? null))}::uuid[]
+        ) as c(id, price_rappen, status, set_code, sku_code, set_media, media_id)
         where s.store_id = ${product.storeId} and s.product_id = ${product.id} and s.id = c.id and s.status <> 'archived'`)
       return reload(tx, product)
     },
 
-    async takenSkuCodes(tx, storeId, codes) {
+    async takenSkuCodes(tx, storeId, codes, except = []) {
       if (codes.length === 0)
         return new Set()
       const found = await tx.execute<{ sku_code: string }>(sql`
-        select sku_code from catalog.skus where store_id = ${storeId} and sku_code = any(${sql.param(codes)}::text[])`)
+        select sku_code from catalog.skus
+         where store_id = ${storeId} and sku_code = any(${sql.param(codes)}::text[]) and id <> all(${sql.param(except)}::uuid[])`)
       return new Set(found.rows.map(row => row.sku_code))
     },
   }

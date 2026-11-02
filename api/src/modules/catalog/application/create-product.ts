@@ -7,7 +7,7 @@ import { hasText } from '@sk/domain/content'
 import { mayEditCatalog } from './access.ts'
 import { fail, ok } from './failure.ts'
 import { checkNewProduct } from './option-rules.ts'
-import { checkPhotos, describe } from './product-detail.ts'
+import { checkPhotos, checkVariantPhotos, describe } from './product-detail.ts'
 import { isSkuCode } from './sku-code.ts'
 
 export interface CreateProductInput {
@@ -19,7 +19,7 @@ export interface CreateProductInput {
   variants: VariantInput[]
 }
 
-// A new keepsake is a draft with its options and its variants for sale. It needs a name in one language, valid codes,
+// A new keepsake is a draft with its options and its variants for sale. It needs a name in one language, valid codes (a code is optional),
 // and variants that follow the option rules (one value of each option, each combination once, one variant when there
 // is no option). A code's uniqueness in the shop is skus_store_sku_code_key, which the route maps to sku-code-taken.
 export function makeCreateProduct<T>({ uow, products, media, clock, sales }: CatalogDeps<T>) {
@@ -28,7 +28,7 @@ export function makeCreateProduct<T>({ uow, products, media, clock, sales }: Cat
       return fail({ reason: 'forbidden' })
     if (!hasText(input.name))
       return fail({ reason: 'name-required' })
-    const badCode = input.variants.findIndex(variant => !isSkuCode(variant.skuCode))
+    const badCode = input.variants.findIndex(variant => variant.skuCode !== null && !isSkuCode(variant.skuCode))
     if (badCode >= 0)
       return fail({ reason: 'sku-code-invalid', path: `variants.${badCode}.skuCode` })
     const refusals = checkNewProduct(input.options, input.variants)
@@ -38,6 +38,9 @@ export function makeCreateProduct<T>({ uow, products, media, clock, sales }: Cat
       const refused = await checkPhotos(media, tx, storeId, input.photoIds)
       if (refused)
         return fail(refused)
+      const photoRefused = await checkVariantPhotos(media, tx, storeId, input.variants.map(variant => variant.mediaId))
+      if (photoRefused)
+        return fail(photoRefused)
       const product = await products.insert(tx, storeId, {
         name: input.name,
         text: input.text,

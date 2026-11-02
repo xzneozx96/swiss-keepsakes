@@ -4,7 +4,7 @@ import { fullLanguages, publishChecks, publishGaps } from '../../../src/modules/
 
 const rich = (text: string) => ({ type: 'doc' as const, content: [{ type: 'paragraph', content: text.trim() ? [{ type: 'text', text }] : [] }] })
 const photo = '0190f0c2-0000-7000-8000-0000000000e1'
-const forSale: ProductVariant = { id: 'v1', skuCode: 'VX-1', priceRappen: 3900, status: 'published', values: {} }
+const forSale: ProductVariant = { id: 'v1', skuCode: 'VX-1', mediaId: null, priceRappen: 3900, status: 'published', values: {} }
 const doc = (over: Partial<ProductDoc> = {}): ProductDoc => ({ name: { en: 'Knife' }, text: { en: rich('A knife.') }, media: [photo], ...over })
 function checks(over: { doc?: ProductDoc, variants?: ProductVariant[], options?: ProductOption[], commissionRate?: number } = {}) {
   return publishChecks({ doc: doc(), variants: [forSale], options: [], commissionRate: 0.1, ...over })
@@ -68,9 +68,16 @@ describe('[E6.1][checks] the warnings never block', () => {
   })
 
   it('[E6.1][checks] a hidden variant is listed with its code', () => {
-    const hidden: ProductVariant = { id: 'v2', skuCode: 'VX-2', priceRappen: 100, status: 'draft', values: {} }
+    const hidden: ProductVariant = { id: 'v2', skuCode: 'VX-2', mediaId: null, priceRappen: 100, status: 'draft', values: {} }
 
     expect(checks({ variants: [forSale, hidden] }).warnings).toContainEqual({ code: 'hidden', card: 'variants', count: 1, codes: ['VX-2'] })
+  })
+
+  it('[T-010] a hidden variant with no code is listed by its values', () => {
+    const hidden: ProductVariant = { id: 'v2', skuCode: null, mediaId: null, priceRappen: 100, status: 'draft', values: { o1: 'v1' } }
+    const options = [{ id: 'o1', name: { en: 'Size' }, values: [{ id: 'v0', label: { en: 'Small' } }, { id: 'v1', label: { en: 'Large' } }] }]
+
+    expect(checks({ variants: [forSale, hidden], options }).warnings).toContainEqual({ code: 'hidden', card: 'variants', count: 1, codes: ['Large'] })
   })
 
   it('[E6.1][checks] a zero commission is a warning', () => {
@@ -82,7 +89,7 @@ describe('[E6.2][AC52] option labels', () => {
   const option = (name: { en?: string, de?: string }, values: { en?: string, de?: string }[]) => ({
     id: 'o1',
     name,
-    values: values.map((label, index) => ({ id: `v${index}`, label, swatch: null })),
+    values: values.map((label, index) => ({ id: `v${index}`, label })),
   })
 
   it('[E6.2][AC52] a German label may be empty: publishing is not blocked, and a warning counts the missing labels', () => {

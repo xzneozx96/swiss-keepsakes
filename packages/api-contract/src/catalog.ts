@@ -18,7 +18,6 @@ export const MAX_VALUES = 50
 export const MAX_VARIANTS = 300
 export const OPTION_NAME_MAX = 60
 export const VALUE_LABEL_MAX = 80
-export const SWATCH_PATTERN = /^#[0-9a-f]{6}$/
 
 const language = z.enum(['en', 'de'])
 
@@ -90,7 +89,6 @@ const valueIds = z.record(z.uuid(), z.uuid()).refine(fewKeys, { message: `At mos
 export const optionValueWriteSchema = z.strictObject({
   ref: ref.meta({ description: 'The id of a value that exists, or a key you choose for a new one' }),
   label: labelSchema(VALUE_LABEL_MAX).meta({ id: 'ValueLabel', description: 'The label per language. One language is enough' }),
-  swatch: z.string().regex(SWATCH_PATTERN).nullable().optional().meta({ description: 'A colour as # and six lowercase hexadecimal digits, or null for none' }),
 }).meta({ id: 'OptionValueWrite', description: 'A value of an option' })
 
 export const optionWriteSchema = z.strictObject({
@@ -101,8 +99,14 @@ export const optionWriteSchema = z.strictObject({
 
 const optionList = z.array(optionWriteSchema).max(MAX_OPTIONS)
 
+// A SKU code is optional (owner 2026-11-02): left out or null means none. A variant may show one photo, a file of the
+// store's library that is ready.
+const skuCodeWrite = noNul(z.string().trim().min(1).max(60)).nullable().optional()
+const mediaIdWrite = z.uuid().nullable().optional().meta({ description: 'The photo of the variant: a ready image of the store’s library, or null for none' })
+
 export const keepsakeVariantWriteSchema = z.strictObject({
-  skuCode: noNul(z.string().trim().min(1).max(60)).meta({ description: 'Letters and digits joined by - _ or ., unique in the shop' }),
+  skuCode: skuCodeWrite.meta({ description: 'Letters and digits joined by - _ or ., unique in the shop. Optional: a variant may have no code' }),
+  mediaId: mediaIdWrite,
   priceRappen: z.int().min(1).max(MAX_PRICE_RAPPEN).meta({ description: 'The price in Rappen, above 0' }),
   values: valueRefs.optional().meta({ description: 'The value ref of each option ref. A keepsake with no option sends none' }),
 }).meta({ id: 'KeepsakeVariantWrite', description: 'A variant to create: a code, a price and one value of each option. It is for sale' })
@@ -128,7 +132,8 @@ export const productCreateBodySchema = z.strictObject({
 }).meta({ id: 'ProductCreateBody', description: 'A new keepsake as a draft, with its options and variants' })
 
 export const variantCreateBodySchema = z.strictObject({
-  skuCode: noNul(z.string().trim().min(1).max(60)),
+  skuCode: skuCodeWrite,
+  mediaId: mediaIdWrite,
   priceRappen: z.int().min(1).max(MAX_PRICE_RAPPEN),
   status: z.enum(['published', 'draft']).optional().meta({ description: 'published is for sale, draft is hidden. For sale when left out' }),
   values: valueIds.optional().meta({ description: 'The value id of each option id' }),
@@ -142,7 +147,8 @@ export const productSaveBodySchema = z.strictObject({
 }).meta({ id: 'ProductSaveBody', description: 'The autosave. name, text and photoIds replace the draft. commissionRate is saved live' })
 
 export const variantSaveBodySchema = z.strictObject({
-  skuCode: noNul(z.string().trim().min(1).max(60)).optional(),
+  skuCode: skuCodeWrite.meta({ description: 'A new code, or null to remove it. Left out keeps it' }),
+  mediaId: mediaIdWrite,
   priceRappen: z.int().min(1).max(MAX_PRICE_RAPPEN).optional(),
   status: z.enum(['published', 'draft', 'archived']).optional().meta({ description: 'published is for sale, draft is hidden from guests, archived keeps the variant for old orders and is final' }),
   values: valueIds.optional().meta({ description: 'The value id of every option id. Replaces the values' }),
@@ -152,6 +158,8 @@ export const variantsSaveBodySchema = z.strictObject({
   variants: z.array(z.strictObject({
     id: z.uuid(),
     priceRappen: z.int().min(1).max(MAX_PRICE_RAPPEN).optional(),
+    skuCode: skuCodeWrite.meta({ description: 'A new code, or null to remove it. Left out keeps it' }),
+    mediaId: mediaIdWrite,
     status: z.enum(['published', 'draft', 'archived']).optional().meta({ description: 'published is for sale, draft is hidden from guests, archived is final' }),
   })).min(1).max(MAX_VARIANTS).refine(rows => new Set(rows.map(row => row.id.toLowerCase())).size === rows.length, 'Each variant may appear once'),
 }).meta({ id: 'VariantsSaveBody', description: 'A change to several variants of one keepsake, all or nothing' })
@@ -173,7 +181,9 @@ const descriptionsView = z.object({ en: descriptionViewSchema.optional(), de: de
 
 export const productVariantSchema = z.object({
   id: z.uuid(),
-  skuCode: z.string(),
+  skuCode: z.string().nullable().meta({ description: 'Null when the variant has no code' }),
+  mediaId: z.uuid().nullable().meta({ description: 'The photo of the variant, a file of the library, or null' }),
+  photo: mediaSchema.nullable().meta({ description: 'The photo of the variant, ready to show. Null for none, or when the file is gone' }),
   priceRappen: z.int(),
   status: z.enum(['published', 'draft', 'archived']).meta({ description: 'published is for sale, draft is hidden from guests, archived stays for old orders' }),
   values: z.record(z.uuid(), z.uuid()).meta({ description: 'The value id of each option id. Empty for a keepsake with no option' }),
@@ -185,7 +195,6 @@ export const productOptionSchema = z.object({
   values: z.array(z.object({
     id: z.uuid(),
     label: localizedView,
-    swatch: z.string().nullable(),
   })).meta({ description: 'In the order guests see them' }),
 }).meta({ id: 'ProductOption', description: 'An option of one keepsake, such as Size or Theme' })
 
@@ -220,6 +229,7 @@ export const productSchema = z.object({
 export const productListItemSchema = z.object({
   id: z.uuid(),
   name: localizedView,
+  optionNames: z.array(localizedView).meta({ description: 'The names of the keepsake’s options, in order. The editor suggests the names the shop already uses' }),
   status: z.enum(['draft', 'published', 'archived']),
   hasUnpublishedEdits: z.boolean(),
   hasOrders: z.boolean().meta({ description: 'Removing the keepsake archives it instead of deleting it' }),

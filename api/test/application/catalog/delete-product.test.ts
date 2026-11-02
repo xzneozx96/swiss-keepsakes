@@ -26,7 +26,7 @@ function product(over: Partial<Product> = {}): Product {
     publishedMedia: ['m1'],
     commissionRate: 0,
     options: [],
-    variants: [{ id: '1', skuCode: 'VX-1', priceRappen: 3900, status: 'published', values: {} }],
+    variants: [{ id: '1', skuCode: 'VX-1', mediaId: null, priceRappen: 3900, status: 'published', values: {} }],
     rowVersion: 4,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -126,7 +126,7 @@ describe('[E6.1] an archived keepsake is final', () => {
     ['unpublish', (d: CatalogDeps<null>) => makeUnpublishProduct(d)(owner, storeId, 'p1', 4, null)],
     ['options', (d: CatalogDeps<null>) => makeSaveOptions(d)(owner, storeId, 'p1', 4, { options: [], variantValues: [], newVariants: [] }, null)],
     ['saveVariant', (d: CatalogDeps<null>) => makeSaveVariant(d)(owner, storeId, 'p1', '1', { priceRappen: 100 }, null)],
-    ['createVariant', (d: CatalogDeps<null>) => makeCreateVariant(d)(owner, storeId, 'p1', { skuCode: 'VX-2', priceRappen: 100, status: 'published', values: {} }, null)],
+    ['createVariant', (d: CatalogDeps<null>) => makeCreateVariant(d)(owner, storeId, 'p1', { skuCode: 'VX-2', mediaId: null, priceRappen: 100, status: 'published', values: {} }, null)],
   ])('[E6.1] %s is refused', async (_name, write) => {
     const { repo, deps } = archived()
 

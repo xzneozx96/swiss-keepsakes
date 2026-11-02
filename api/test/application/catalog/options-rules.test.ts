@@ -1,23 +1,23 @@
 import type { OptionInput, Product, ProductOption, ProductVariant } from '../../../src/modules/catalog/ports.ts'
 import { describe, expect, it } from 'vitest'
-import { checkNewProduct, checkOptionDefinitions, checkOptionsSave, checkVariantValues } from '../../../src/modules/catalog/application/option-rules.ts'
+import { checkNewProduct, checkOptionDefinitions, checkOptionsSave, checkVariantValues, variantName } from '../../../src/modules/catalog/application/option-rules.ts'
 
 const size: ProductOption = {
   id: 'size',
   name: { en: 'Size', de: 'Grösse' },
-  values: [{ id: 's', label: { en: 'Small' }, swatch: null }, { id: 'l', label: { en: 'Large' }, swatch: null }],
+  values: [{ id: 's', label: { en: 'Small' } }, { id: 'l', label: { en: 'Large' } }],
 }
 const theme: ProductOption = {
   id: 'theme',
   name: { en: 'Theme' },
-  values: [{ id: 'swan', label: { en: 'Swan' }, swatch: null }, { id: 'lion', label: { en: 'Lion' }, swatch: null }],
+  values: [{ id: 'swan', label: { en: 'Swan' } }, { id: 'lion', label: { en: 'Lion' } }],
 }
-const variant = (id: string, skuCode: string, values: Record<string, string>, status: ProductVariant['status'] = 'published'): ProductVariant => ({ id, skuCode, priceRappen: 3900, status, values })
+const variant = (id: string, skuCode: string, values: Record<string, string>, status: ProductVariant['status'] = 'published'): ProductVariant => ({ id, skuCode, mediaId: null, priceRappen: 3900, status, values })
 function input(option: ProductOption): OptionInput {
   return {
     ref: option.id,
     name: option.name,
-    values: option.values.map(v => ({ ref: v.id, label: v.label, swatch: v.swatch })),
+    values: option.values.map(v => ({ ref: v.id, label: v.label })),
   }
 }
 const product = (options: ProductOption[], variants: ProductVariant[]): Pick<Product, 'options' | 'variants'> => ({ options, variants })
@@ -25,12 +25,12 @@ const codes = (refusals: { code: string }[]) => refusals.map(r => r.code)
 
 describe('[E6.2][AC52] option definitions', () => {
   it('[E6.2][AC52] accepts an option named in one language only and a value with no German label', () => {
-    expect(checkOptionDefinitions([{ ref: 'a', name: { de: 'Farbe' }, values: [{ ref: 'v', label: { en: 'Red' }, swatch: null }] }])).toEqual([])
+    expect(checkOptionDefinitions([{ ref: 'a', name: { de: 'Farbe' }, values: [{ ref: 'v', label: { en: 'Red' } }] }])).toEqual([])
   })
 
   it('[E6.2][AC52] refuses a blank name, a blank value and an option with no value', () => {
     const refusals = checkOptionDefinitions([
-      { ref: 'a', name: { en: ' ' }, values: [{ ref: 'v', label: {}, swatch: null }] },
+      { ref: 'a', name: { en: ' ' }, values: [{ ref: 'v', label: {} }] },
       { ref: 'b', name: { en: 'Theme' }, values: [] },
     ])
 
@@ -42,7 +42,7 @@ describe('[E6.2][AC52] option definitions', () => {
   })
 
   it('[E6.2][AC52] refuses a ref used twice', () => {
-    const value = { ref: 'v', label: { en: 'Red' }, swatch: null }
+    const value = { ref: 'v', label: { en: 'Red' } }
 
     expect(codes(checkOptionDefinitions([{ ref: 'a', name: { en: 'A' }, values: [value, value] }]))).toEqual(['refs-invalid'])
   })
@@ -121,7 +121,7 @@ describe('[E6.2][AC52] saving options with the variants', () => {
     expect(refusals[0]).toEqual({ code: 'option-in-use', path: 'options.theme', params: { option: 'Theme', count: 3, codes: 'VX-S-SWAN, VX-L-SWAN, VX-S-LION', more: 0 } })
   })
 
-  const colour: OptionInput = { ref: 'new-colour', name: { en: 'Colour' }, values: [{ ref: 'red', label: { en: 'Red' }, swatch: '#c8102e' }, { ref: 'blue', label: { en: 'Blue' }, swatch: null }] }
+  const colour: OptionInput = { ref: 'new-colour', name: { en: 'Colour' }, values: [{ ref: 'red', label: { en: 'Red' } }, { ref: 'blue', label: { en: 'Blue' } }] }
   const withColour = [input(size), input(theme), colour]
 
   it('[E6.2][AC52] a new option needs a value for every variant, archived ones too', () => {
@@ -189,7 +189,7 @@ describe('[E6.2][AC52] saving options with the variants', () => {
   })
 
   it('[E6.2][AC52] a ref that is the id of an existing value under another option is refused', () => {
-    const stolen = { ...colour, values: [{ ref: 'swan', label: { en: 'Swan' }, swatch: null }] }
+    const stolen = { ...colour, values: [{ ref: 'swan', label: { en: 'Swan' } }] }
 
     expect(codes(checkOptionsSave(current, { options: [input(size), input(theme), stolen], variantValues: [], newVariants: [] }))).toContain('refs-invalid')
   })
@@ -202,14 +202,14 @@ describe('[E6.2][AC52] saving options with the variants', () => {
   })
 
   it('[E6.2][AC52] a value can change, and a new value can be added, order is free', () => {
-    const reordered = { ...input(size), values: [...input(size).values].reverse().concat({ ref: 'xl', label: { en: 'XL' }, swatch: null }) }
+    const reordered = { ...input(size), values: [...input(size).values].reverse().concat({ ref: 'xl', label: { en: 'XL' } }) }
 
     expect(checkOptionsSave(current, { options: [reordered, input(theme)], variantValues: [], newVariants: [] })).toEqual([])
   })
 })
 
 describe('[E6.2][AC52] a new keepsake', () => {
-  const swan = { skuCode: 'VX-1', priceRappen: 3900, status: 'published' as const }
+  const swan = { skuCode: 'VX-1', mediaId: null, priceRappen: 3900, status: 'published' as const }
 
   it('[E6.2][AC52] one variant and no option is accepted', () => {
     expect(checkNewProduct([], [{ ...swan, values: {} }])).toEqual([])
@@ -218,7 +218,7 @@ describe('[E6.2][AC52] a new keepsake', () => {
   it('[E6.2][AC52] a variant for each ticked combination is accepted', () => {
     expect(checkNewProduct([input(size), input(theme)], [
       { ...swan, values: { size: 's', theme: 'swan' } },
-      { ...swan, skuCode: 'VX-2', values: { size: 's', theme: 'lion' } },
+      { ...swan, skuCode: 'VX-2', mediaId: null, values: { size: 's', theme: 'lion' } },
     ])).toEqual([])
   })
 
@@ -237,19 +237,19 @@ describe('[E6.2][AC52] a new keepsake', () => {
   })
 
   it('[E6.2][AC52] with no option a second variant is refused', () => {
-    expect(codes(checkNewProduct([], [{ ...swan, values: {} }, { ...swan, skuCode: 'VX-2', values: {} }]))).toEqual(['no-options-one-variant'])
+    expect(codes(checkNewProduct([], [{ ...swan, values: {} }, { ...swan, skuCode: 'VX-2', mediaId: null, values: {} }]))).toEqual(['no-options-one-variant'])
   })
 })
 
 describe('[T-008][AC1] saving options with new variants', () => {
   const current = product([size], [variant('1', 'VX-S', { size: 's' }), variant('2', 'VX-L', { size: 'l' }, 'archived')])
-  const xl = { ref: 'xl', label: { en: 'XL' }, swatch: null }
+  const xl = { ref: 'xl', label: { en: 'XL' } }
   const withXl = { ...input(size), values: [...input(size).values, xl] }
-  const fresh = (skuCode: string, values: Record<string, string>) => ({ skuCode, priceRappen: 3900, status: 'published' as const, values })
+  const fresh = (skuCode: string, values: Record<string, string>) => ({ skuCode, mediaId: null, priceRappen: 3900, status: 'published' as const, values })
 
   it('[T-008][AC1] accepts a variant on a value that the same save adds, and one on a new option', () => {
     expect(checkOptionsSave(current, { options: [withXl], variantValues: [], newVariants: [fresh('VX-XL', { size: 'xl' })] })).toEqual([])
-    const colour = { ref: 'c', name: { en: 'Colour' }, values: [{ ref: 'red', label: { en: 'Red' }, swatch: null }, { ref: 'blue', label: { en: 'Blue' }, swatch: null }] }
+    const colour = { ref: 'c', name: { en: 'Colour' }, values: [{ ref: 'red', label: { en: 'Red' } }, { ref: 'blue', label: { en: 'Blue' } }] }
 
     expect(checkOptionsSave(current, {
       options: [input(size), colour],
@@ -278,5 +278,13 @@ describe('[T-008][AC1] saving options with new variants', () => {
     const single = product([], [variant('1', 'VX-ONLY', {})])
 
     expect(codes(checkOptionsSave(single, { options: [], variantValues: [], newVariants: [fresh('VX-2', {})] }))).toEqual(['no-options-one-variant'])
+  })
+})
+
+describe('[T-010] naming a variant that has no code', () => {
+  it('[T-010] the code when there is one, else the values joined by a slash', () => {
+    expect(variantName({ skuCode: 'VX-1', values: { size: 's' } }, [size, theme])).toBe('VX-1')
+    expect(variantName({ skuCode: null, values: { size: 's', theme: theme.values[0]!.id } }, [size, theme])).toBe(`Small / ${theme.values[0]!.label.en}`)
+    expect(variantName({ skuCode: null, values: {} }, [])).toBe('')
   })
 })

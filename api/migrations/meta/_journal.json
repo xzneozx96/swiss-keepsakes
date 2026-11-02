@@ -120,6 +120,13 @@
       "when": 1793596153729,
       "tag": "0016_map_category_icons",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793682553729,
+      "tag": "0017_keepsake_optional_sku_variant_photo",
+      "breakpoints": true
     }
   ]
 }

@@ -5,8 +5,8 @@ import type { Result } from './failure.ts'
 import type { ProductDetail } from './product-detail.ts'
 import { mayEditCatalog, staffActor } from './access.ts'
 import { fail, ok } from './failure.ts'
-import { checkVariantValues } from './option-rules.ts'
-import { describe } from './product-detail.ts'
+import { checkVariantValues, variantName } from './option-rules.ts'
+import { checkVariantPhotos, describe } from './product-detail.ts'
 import { isSkuCode } from './sku-code.ts'
 
 // One variant's code, price, status or values. The change is live at once (ADR-014: SKU prices are structure, saved
@@ -19,7 +19,7 @@ export function makeSaveVariant<T>({ uow, products, media, audit, clock, reserva
   return async (actor: Actor, storeId: string, productId: string, skuId: string, changes: VariantChanges, requestId: string | null): Promise<Result<ProductDetail>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
-    if (changes.skuCode !== undefined && !isSkuCode(changes.skuCode))
+    if (changes.skuCode !== undefined && changes.skuCode !== null && !isSkuCode(changes.skuCode))
       return fail({ reason: 'sku-code-invalid', path: 'skuCode' })
     return uow.run(async (tx) => {
       const product = await products.findForUpdate(tx, storeId, productId)
@@ -29,17 +29,20 @@ export function makeSaveVariant<T>({ uow, products, media, audit, clock, reserva
       if (product.status === 'archived')
         return fail({ reason: 'archived' })
       if (variant.status === 'archived')
-        return fail({ reason: 'refused', refusals: [{ code: 'variant-archived', path: 'status', params: { code: variant.skuCode } }] })
+        return fail({ reason: 'refused', refusals: [{ code: 'variant-archived', path: 'status', params: { code: variantName(variant, product.options) } }] })
       if (changes.values) {
-        const refusals = checkVariantValues(product.options, product.variants.filter(v => v.id !== skuId), changes.values, 'values', changes.skuCode ?? variant.skuCode)
+        const refusals = checkVariantValues(product.options, product.variants.filter(v => v.id !== skuId), changes.values, 'values', (changes.skuCode === undefined ? variant.skuCode : changes.skuCode) ?? '')
         if (refusals.length > 0)
           return fail({ reason: 'refused', refusals })
       }
       if (changes.status === 'archived' && reservations) {
         const reserved = (await reservations.reservedBySku(tx, storeId, [skuId])).get(skuId) ?? 0
         if (reserved > 0)
-          return fail({ reason: 'refused', refusals: [{ code: 'variant-reserved', path: 'status', params: { code: variant.skuCode, count: reserved } }] })
+          return fail({ reason: 'refused', refusals: [{ code: 'variant-reserved', path: 'status', params: { code: variantName(variant, product.options), count: reserved } }] })
       }
+      const photoRefused = await checkVariantPhotos(media, tx, storeId, [changes.mediaId])
+      if (photoRefused)
+        return fail(photoRefused)
       const saved = await products.saveVariant(tx, product, skuId, changes, clock.now())
       if (!saved)
         return fail({ reason: 'not-found' })

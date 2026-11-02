@@ -19,11 +19,13 @@ function setup(overrides: Partial<CatalogUseCases> = {}) {
   return createGuardedApp(people, undefined, { ...guardedCommands, routes: [routes => registerCatalogRoutes(routes, useCases)] }).app
 }
 
-const send = (app: ReturnType<typeof setup>, path: string, method: string, body: object, user = 'owner', ifMatch?: string) => app.request(path, {
-  method,
-  headers: { 'Origin': shopOrigin, 'Content-Type': 'application/json', ...(ifMatch && { 'If-Match': ifMatch }), ...signedInAs(user) },
-  body: JSON.stringify(body),
-})
+function send(app: ReturnType<typeof setup>, path: string, method: string, body: object, user = 'owner', ifMatch?: string) {
+  return app.request(path, {
+    method,
+    headers: { 'Origin': shopOrigin, 'Content-Type': 'application/json', ...(ifMatch && { 'If-Match': ifMatch }), ...signedInAs(user) },
+    body: JSON.stringify(body),
+  })
+}
 
 describe('[T-008][AC4] PATCH .../variants', () => {
   const path = `/api/store/${lucerne}/products/${productId}/variants`
@@ -44,7 +46,7 @@ describe('[T-008][AC4] PATCH .../variants', () => {
   it('[T-008][AC4] refuses an empty list, a repeated id, a price of 0 and an extra field with 400', async () => {
     const app = setup()
 
-    for (const body of [{ variants: [] }, { variants: [{ id: skuId }, { id: skuId.toUpperCase() }] }, { variants: [{ id: skuId, priceRappen: 0 }] }, { variants: [{ id: skuId, skuCode: 'X' }] }])
+    for (const body of [{ variants: [] }, { variants: [{ id: skuId }, { id: skuId.toUpperCase() }] }, { variants: [{ id: skuId, priceRappen: 0 }] }, { variants: [{ id: skuId, engraving: 'X' }] }, { variants: [{ id: skuId, skuCode: '' }] }, { variants: [{ id: skuId, mediaId: 'not-an-id' }] }])
       expect((await send(app, path, 'PATCH', body)).status).toBe(400)
   })
 
@@ -75,6 +77,6 @@ describe('[T-008][AC4] PUT .../options with new variants', () => {
 
     expect((await send(app, path, 'PUT', { options, newVariants: [{ skuCode: 'VX-S', priceRappen: 3900, values: { size: 's' } }] }, 'owner', '1')).status).toBe(200)
     expect((await send(app, path, 'PUT', { options }, 'owner', '1')).status).toBe(200)
-    expect(seen).toEqual([[{ skuCode: 'VX-S', priceRappen: 3900, status: 'published', values: { size: 's' } }], []])
+    expect(seen).toEqual([[{ skuCode: 'VX-S', mediaId: null, priceRappen: 3900, status: 'published', values: { size: 's' } }], []])
   })
 })

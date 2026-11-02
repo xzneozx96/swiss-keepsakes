@@ -37,7 +37,7 @@ async function setup() {
         photoIds: [photo],
         options: [
           { ref: 'size', name: { en: 'Size' }, values: [{ ref: 's', label: { en: 'Small' } }, { ref: 'l', label: { en: 'Large' } }] },
-          { ref: 'colour', name: { en: 'Colour' }, values: [{ ref: 'red', label: { en: 'Red' }, swatch: '#ff0000' }] },
+          { ref: 'colour', name: { en: 'Colour' }, values: [{ ref: 'red', label: { en: 'Red' } }] },
         ],
         variants: [
           { skuCode: code(), priceRappen: 3900, values: { size: 's', colour: 'red' } },

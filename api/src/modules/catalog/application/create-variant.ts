@@ -6,7 +6,7 @@ import type { ProductDetail } from './product-detail.ts'
 import { mayEditCatalog, staffActor } from './access.ts'
 import { fail, ok } from './failure.ts'
 import { checkVariantValues } from './option-rules.ts'
-import { describe } from './product-detail.ts'
+import { checkVariantPhotos, describe } from './product-detail.ts'
 import { isSkuCode } from './sku-code.ts'
 
 // One more variant: a combination that is sold. It takes one value of each option of the keepsake, and no other variant,
@@ -16,7 +16,7 @@ export function makeCreateVariant<T>({ uow, products, media, audit, clock, sales
   return async (actor: Actor, storeId: string, productId: string, input: VariantInput, requestId: string | null): Promise<Result<ProductDetail>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
-    if (!isSkuCode(input.skuCode))
+    if (input.skuCode !== null && !isSkuCode(input.skuCode))
       return fail({ reason: 'sku-code-invalid', path: 'skuCode' })
     return uow.run(async (tx) => {
       const product = await products.findForUpdate(tx, storeId, productId)
@@ -24,9 +24,12 @@ export function makeCreateVariant<T>({ uow, products, media, audit, clock, sales
         return fail({ reason: 'not-found' })
       if (product.status === 'archived')
         return fail({ reason: 'archived' })
-      const refusals = checkVariantValues(product.options, product.variants, input.values, 'values', input.skuCode)
+      const refusals = checkVariantValues(product.options, product.variants, input.values, 'values', input.skuCode ?? '')
       if (refusals.length > 0)
         return fail({ reason: 'refused', refusals })
+      const photoRefused = await checkVariantPhotos(media, tx, storeId, [input.mediaId])
+      if (photoRefused)
+        return fail(photoRefused)
       const saved = await products.insertVariant(tx, product, input, clock.now())
       await audit.record(tx, {
         storeId,

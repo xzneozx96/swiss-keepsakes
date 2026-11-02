@@ -65,8 +65,6 @@ export type VariantStatus = 'published' | 'draft' | 'archived'
 export interface OptionValue {
   id: string
   label: Localized
-  // `#rrggbb` or null (product_option_values_swatch_check).
-  swatch: string | null
 }
 
 // An option of one keepsake (ADR-027). Its values are in the order guests see them.
@@ -78,7 +76,10 @@ export interface ProductOption {
 
 export interface ProductVariant {
   id: string
-  skuCode: string
+  // Optional (owner 2026-11-02): a variant is told apart by its id and its combination. Unique per store when present.
+  skuCode: string | null
+  // One photo of the keepsake's media, a plain id (ADR-013). Null for none.
+  mediaId: string | null
   priceRappen: number
   status: VariantStatus
   // The value of each option, by option id. A keepsake with no option has an empty map.
@@ -109,6 +110,8 @@ export interface Product {
 export interface ProductListRow {
   id: string
   name: Localized
+  // The names of the keepsake's options, in order. The editor suggests the names the shop already uses.
+  optionNames: Localized[]
   status: ProductStatus
   hasUnpublishedEdits: boolean
   coverMediaId: string | null
@@ -132,7 +135,6 @@ export interface ProductChanges {
 export interface ValueInput {
   ref: string
   label: Localized
-  swatch: string | null
 }
 
 export interface OptionInput {
@@ -144,7 +146,8 @@ export interface OptionInput {
 
 // A variant to create. `values` maps an option ref to a value ref.
 export interface VariantInput {
-  skuCode: string
+  skuCode: string | null
+  mediaId: string | null
   priceRappen: number
   status: 'published' | 'draft'
   values: Record<string, string>
@@ -173,10 +176,15 @@ export interface VariantBatchChange {
   id: string
   priceRappen?: number
   status?: VariantStatus
+  // A left-out field stays; null clears the code or the photo.
+  skuCode?: string | null
+  mediaId?: string | null
 }
 
 export interface VariantChanges {
-  skuCode?: string
+  // Left out keeps it, null clears it.
+  skuCode?: string | null
+  mediaId?: string | null
   priceRappen?: number
   status?: VariantStatus
   // Every option's value, by option id. Replaces the variant's values.
@@ -252,8 +260,9 @@ export interface ProductRepository<T> {
   insertVariant: (tx: T, product: Product, input: VariantInput, at: Date) => Promise<Product>
   // Updates the price or status of several variants in one statement. Archived variants are left as they are.
   saveVariants: (tx: T, product: Product, changes: VariantBatchChange[], at: Date) => Promise<Product>
-  // Which of these codes another SKU of the shop already holds (skus_store_sku_code_key compares them exactly).
-  takenSkuCodes: (tx: T, storeId: string, codes: string[]) => Promise<Set<string>>
+  // Which of these codes another SKU of the shop already holds (skus_store_sku_code_key compares them exactly). `except`
+  // lists SKU ids whose own code does not count: a bulk save may give codes to the SKUs that hold them now.
+  takenSkuCodes: (tx: T, storeId: string, codes: string[], except?: string[]) => Promise<Set<string>>
   // Writes the options, their values and order, and the new values of the variants, creates the new variants, then bumps row_version.
   replaceOptions: (tx: T, product: Product, input: OptionsSave, at: Date) => Promise<Product>
 }

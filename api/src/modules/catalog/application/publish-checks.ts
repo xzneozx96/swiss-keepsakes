@@ -1,5 +1,6 @@
 import type { ProductDoc, ProductOption, ProductVariant } from '../ports.ts'
 import { descriptionLanguages, languagesOf } from '@sk/domain/content'
+import { variantName } from './option-rules.ts'
 
 type Language = 'en' | 'de'
 
@@ -55,7 +56,7 @@ export function publishChecks(input: { doc: ProductDoc, variants: ProductVariant
     warnings.push({ code: 'option-labels', card: 'options', count: unlabelled })
   const hidden = variants.filter(variant => variant.status === 'draft')
   if (hidden.length > 0)
-    warnings.push({ code: 'hidden', card: 'variants', count: hidden.length, codes: hidden.map(variant => variant.skuCode) })
+    warnings.push({ code: 'hidden', card: 'variants', count: hidden.length, codes: hidden.map(variant => variantName(variant, input.options)) })
   if (commissionRate === 0)
     warnings.push({ code: 'commission-zero', card: 'commission' })
 

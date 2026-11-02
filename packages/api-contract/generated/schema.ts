@@ -4697,10 +4697,15 @@ export interface components {
         };
         /** @description A variant to create: a code, a price and one value of each option. It is for sale */
         KeepsakeVariantWrite: {
+            /**
+             * Format: uuid
+             * @description The photo of the variant: a ready image of the store’s library, or null for none
+             */
+            mediaId?: string | null;
             /** @description The price in Rappen, above 0 */
             priceRappen: number;
-            /** @description Letters and digits joined by - _ or ., unique in the shop */
-            skuCode: string;
+            /** @description Letters and digits joined by - _ or ., unique in the shop. Optional: a variant may have no code */
+            skuCode?: string | null;
             /** @description The value ref of each option ref. A keepsake with no option sends none */
             values?: {
                 [key: string]: string;
@@ -5005,8 +5010,6 @@ export interface components {
             label: components["schemas"]["ValueLabel"];
             /** @description The id of a value that exists, or a key you choose for a new one */
             ref: string;
-            /** @description A colour as # and six lowercase hexadecimal digits, or null for none */
-            swatch?: string | null;
         };
         /** @description An option with its values */
         OptionWrite: {
@@ -5401,6 +5404,11 @@ export interface components {
                 de?: string;
                 en?: string;
             };
+            /** @description The names of the keepsake’s options, in order. The editor suggests the names the shop already uses */
+            optionNames: {
+                de?: string;
+                en?: string;
+            }[];
             /** @description The version a removal sends as If-Match */
             rowVersion: number;
             /** @description Variants with no unit available. Always 0 until stock exists (E6.3) */
@@ -5428,7 +5436,6 @@ export interface components {
                     de?: string;
                     en?: string;
                 };
-                swatch: string | null;
             }[];
         };
         /** @description What removing a keepsake did */
@@ -5453,8 +5460,36 @@ export interface components {
         ProductVariant: {
             /** Format: uuid */
             id: string;
+            /**
+             * Format: uuid
+             * @description The photo of the variant, a file of the library, or null
+             */
+            mediaId: string | null;
+            /** @description The photo of the variant, ready to show. Null for none, or when the file is gone */
+            photo: {
+                byteSize: number;
+                contentType: string;
+                height: number | null;
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "image" | "audio" | "pdf";
+                /** @description What the merchant sees and searches. It starts as the uploaded file name */
+                name: string;
+                /** @description The public URL of the original. Null until the file is ready */
+                publicUrl: string | null;
+                /** @enum {string} */
+                status: "processing" | "ready" | "retired";
+                /** @description Resized copies of an image. Empty until the file is ready */
+                variants: {
+                    url: string;
+                    width: number;
+                }[];
+                width: number | null;
+            } | null;
             priceRappen: number;
-            skuCode: string;
+            /** @description Null when the variant has no code */
+            skuCode: string | null;
             /**
              * @description published is for sale, draft is hidden from guests, archived stays for old orders
              * @enum {string}
@@ -7299,8 +7334,13 @@ export interface components {
         };
         /** @description One more variant of a keepsake */
         VariantCreateBody: {
+            /**
+             * Format: uuid
+             * @description The photo of the variant: a ready image of the store’s library, or null for none
+             */
+            mediaId?: string | null;
             priceRappen: number;
-            skuCode: string;
+            skuCode?: string | null;
             /**
              * @description published is for sale, draft is hidden. For sale when left out
              * @enum {string}
@@ -7313,8 +7353,14 @@ export interface components {
         };
         /** @description A change to one variant */
         VariantSaveBody: {
+            /**
+             * Format: uuid
+             * @description The photo of the variant: a ready image of the store’s library, or null for none
+             */
+            mediaId?: string | null;
             priceRappen?: number;
-            skuCode?: string;
+            /** @description A new code, or null to remove it. Left out keeps it */
+            skuCode?: string | null;
             /**
              * @description published is for sale, draft is hidden from guests, archived keeps the variant for old orders and is final
              * @enum {string}
@@ -7330,7 +7376,14 @@ export interface components {
             variants: {
                 /** Format: uuid */
                 id: string;
+                /**
+                 * Format: uuid
+                 * @description The photo of the variant: a ready image of the store’s library, or null for none
+                 */
+                mediaId?: string | null;
                 priceRappen?: number;
+                /** @description A new code, or null to remove it. Left out keeps it */
+                skuCode?: string | null;
                 /**
                  * @description published is for sale, draft is hidden from guests, archived is final
                  * @enum {string}
