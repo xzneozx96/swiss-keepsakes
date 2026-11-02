@@ -94,9 +94,11 @@ export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, 
   const [picking, setPicking] = useState(false)
   const title = options.length > 0 ? variantTitle(variant.values, options, language) : variant.skuCode ?? ''
   const forSale = held || variant.status === 'published'
+  // With codes on, the code has its own cell from lg: the values cell turns into plain grid cells (`lg:contents`), so the chips and the code share the row's grid.
+  const codeCell = skuOn && options.length > 0
 
   return (
-    <li className="grid grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 rounded-2xl px-2 py-2 sm:grid-cols-[auto_auto_minmax(0,1fr)_auto_6.5rem_auto]" data-testid="variant-row">
+    <li className={`grid grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 rounded-2xl px-2 py-2 sm:grid-cols-[auto_auto_minmax(0,1fr)_auto_6.5rem_auto] ${codeCell ? 'lg:grid-cols-[auto_auto_minmax(0,1fr)_11rem_auto_6.5rem_auto]' : ''}`} data-testid="variant-row">
       <Checkbox aria-label={t('keepsakes.variants.select', { name: title })} isSelected={isSelected} onChange={onSelect}>
         <Checkbox.Content>
           <Checkbox.Control>
@@ -107,9 +109,10 @@ export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, 
       <button aria-label={t(variant.mediaId ? 'keepsakes.variant.photo.change' : 'keepsakes.variant.photo.add', { name: title })} className="rounded-xl outline-none focus-visible:focus-ring max-lg:size-11" type="button" onClick={() => setPicking(true)}>
         <VariantThumb storeId={storeId} variant={variant} />
       </button>
-      <div className="flex min-w-0 flex-col gap-1">
+      <div className={`flex min-w-0 flex-col gap-1 ${codeCell ? 'lg:contents' : ''}`}>
         {options.length > 0 ? <RowChips options={options} values={variant.values} /> : <span className="truncate font-medium">{variant.skuCode}</span>}
-        {skuOn && variant.skuCode && options.length > 0 && (
+        {codeCell && !variant.skuCode && <span aria-hidden className="hidden lg:block" data-testid="sku-cell-empty" />}
+        {codeCell && variant.skuCode && (
           <button aria-label={t('keepsakes.variants.editSku', { name: title })} className="min-w-0 self-start truncate rounded-md font-mono text-xs text-muted underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:focus-ring max-lg:min-h-11" type="button" onClick={() => onEdit('sku')}>{variant.skuCode}</button>
         )}
       </div>
