@@ -507,19 +507,19 @@ describe('[E6.1][review] Review and publish, the fourth step', () => {
     expect(screen.queryByTestId('review-screen')).not.toBeInTheDocument()
   })
 
-  it('[T-004] a laptop shows the guest page in the iPhone mockup beside the publish card, and the bar offers Publish', async () => {
+  it('[T-004] a laptop shows the guest page in the iPhone mockup beside the publish card, and the card offers Publish', async () => {
     view.wide = true
     await openEditor()
 
     await openReview()
     const review = await screen.findByTestId('review-screen', undefined, SLOW)
 
-    expect(within(review).getByText('Goes live in English. Deutsch readers see it with a note.')).toBeInTheDocument()
+    expect(within(review).queryByText(/Goes live/)).not.toBeInTheDocument()
+    expect(within(review).queryByText(/stand-in/)).not.toBeInTheDocument()
     expect(within(review).getByTestId('publish-checks')).toBeInTheDocument()
     expect(within(review).getByText(/No Deutsch name and text/)).toBeInTheDocument()
-    expect(within(review).queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument()
-    expect(within(bar()).getByRole('button', { name: 'Publish' })).toBeEnabled()
-    expect(within(review).getByText('The web address is made from the name when you publish.')).toBeInTheDocument()
+    expect(within(review).getByRole('button', { name: 'Publish' })).toBeEnabled()
+    expect(within(bar()).queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument()
   })
 
   it('[T-004] blocking checks switch Publish off, name what is missing and Edit goes to the Details step with the Photos block', async () => {
@@ -533,8 +533,7 @@ describe('[E6.1][review] Review and publish, the fourth step', () => {
     expect(within(review).getByText('2 things stop publishing')).toBeInTheDocument()
     expect(within(review).getByText('Add at least one photo.')).toBeInTheDocument()
     expect(within(review).getByText('Put at least one variant on sale.')).toBeInTheDocument()
-    expect(within(bar()).getByRole('button', { name: 'Publish' })).toBeDisabled()
-    expect(within(review).getByText('Fix what stops publishing first.')).toBeInTheDocument()
+    expect(within(review).getByRole('button', { name: 'Publish' })).toBeDisabled()
     await userEvent.click(within(review).getAllByRole('button', { name: 'Edit' })[0]!)
 
     expect(await screen.findByRole('region', { name: 'Photos' })).toBeVisible()
@@ -556,7 +555,7 @@ describe('[E6.1][review] Review and publish, the fourth step', () => {
     expect(router.state.location.search).toMatchObject({ step: 'variants' })
   })
 
-  it('[T-004] on a phone one bar is pinned: it says what the checks say, with Back and Publish, and the checks sit in the step', async () => {
+  it('[T-004] on a phone one bar is pinned: it says what the checks say, with Back, and the checks and Publish sit in the step', async () => {
     current = product({ blocking: [{ code: 'language', card: 'basics' }] })
     await openEditor()
 
@@ -566,7 +565,7 @@ describe('[E6.1][review] Review and publish, the fourth step', () => {
     expect(checks).toHaveTextContent('Add the name and the text in English or German.')
     expect(within(bar()).getByText('1 thing stops publishing')).toBeInTheDocument()
     expect(within(bar()).getByRole('button', { name: 'Previous step' })).toBeInTheDocument()
-    expect(within(bar()).getByRole('button', { name: 'Publish' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Publish' })).toBeDisabled()
     expect(screen.getAllByRole('button', { name: 'Publish' })).toHaveLength(1)
   })
 
@@ -577,12 +576,12 @@ describe('[E6.1][review] Review and publish, the fourth step', () => {
 
     await openReview()
     await screen.findByTestId('review-screen', undefined, SLOW)
-    await userEvent.click(within(bar()).getByRole('button', { name: 'Publish' }))
+    await userEvent.click(within(await screen.findByTestId('review-screen')).getByRole('button', { name: 'Publish' }))
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `${detail}/publish`, ifMatch: '1' })
     expect(await within(screen.getByTestId('keepsake-status')).findByText('Published')).toBeInTheDocument()
-    expect(await screen.findByRole('button', { name: 'Unpublish' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Unpublish keepsake' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument()
     expect(success).toHaveBeenCalledExactlyOnceWith('Published in English. Guests see it within about a minute.')
   })
@@ -594,14 +593,14 @@ describe('[E6.1][review] Review and publish, the fourth step', () => {
 
     await openReview()
     await screen.findByTestId('review-screen', undefined, SLOW)
-    await userEvent.click(within(bar()).getByRole('button', { name: 'Publish' }))
+    await userEvent.click(within(await screen.findByTestId('review-screen')).getByRole('button', { name: 'Publish' }))
 
     expect(await screen.findByRole('region', { name: 'Name and text' })).toBeVisible()
     expect(screen.queryByTestId('review-screen')).not.toBeInTheDocument()
     expect(danger).toHaveBeenCalledExactlyOnceWith('This keepsake cannot be published yet. See what is missing.')
   })
 
-  it('[T-004] a published keepsake with edits says so and the bar offers Publish changes, with no Unpublish in the card', async () => {
+  it('[T-004] a published keepsake with edits says so and the card offers Publish changes and Unpublish', async () => {
     current = product({ status: 'published', hasUnpublishedEdits: true, slug: { en: 'victorinox-classic' } })
     await openEditor()
 
@@ -609,8 +608,8 @@ describe('[E6.1][review] Review and publish, the fourth step', () => {
     await openReview()
     const review = await screen.findByTestId('review-screen', undefined, SLOW)
 
-    expect(within(bar()).getByRole('button', { name: 'Publish changes' })).toBeEnabled()
-    expect(within(review).getByRole('button', { name: 'Unpublish' })).toBeInTheDocument()
+    expect(within(review).getByRole('button', { name: 'Publish changes' })).toBeEnabled()
+    expect(within(review).getByRole('button', { name: 'Unpublish keepsake' })).toBeInTheDocument()
   })
 
   it('[T-007B] Unpublish waits inside its dialog: a refusal stays there with no toast, and an answer closes it and makes the keepsake a draft', async () => {
@@ -626,7 +625,7 @@ describe('[E6.1][review] Review and publish, the fourth step', () => {
     await openReview()
     const review = await screen.findByTestId('review-screen', undefined, SLOW)
 
-    await userEvent.click(within(review).getByRole('button', { name: 'Unpublish' }))
+    await userEvent.click(within(review).getByRole('button', { name: 'Unpublish keepsake' }))
     const dialog = await screen.findByRole('alertdialog')
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Unpublish' }))
@@ -639,14 +638,15 @@ describe('[E6.1][review] Review and publish, the fourth step', () => {
     expect(await within(screen.getByTestId('keepsake-status')).findByText('Draft')).toBeInTheDocument()
   })
 
-  it('[T-004] a live keepsake with no edits has no Publish in the bar', async () => {
+  it('[T-004] a live keepsake with no edits has only Unpublish in the card', async () => {
     current = product({ status: 'published', slug: { en: 'victorinox-classic' } })
     await openEditor()
 
     await openReview()
     await screen.findByTestId('review-screen', undefined, SLOW)
 
-    expect(within(bar()).queryByRole('button', { name: /^Publish/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Publish/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Unpublish keepsake' })).toBeInTheDocument()
   })
 
   it('[T-004] Unpublish asks first, then sends the row version and returns to Draft; cancelling changes nothing', async () => {
@@ -656,16 +656,17 @@ describe('[E6.1][review] Review and publish, the fourth step', () => {
     await openEditor()
 
     await openReview()
-    await userEvent.click(await screen.findByRole('button', { name: 'Unpublish' }, SLOW))
+    await userEvent.click(await screen.findByRole('button', { name: 'Unpublish keepsake' }, SLOW))
     const cancelled = await screen.findByRole('alertdialog')
 
     await userEvent.click(within(cancelled).getByRole('button', { name: 'Cancel' }))
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
     expect(writes()).toHaveLength(0)
-    await userEvent.click(screen.getByRole('button', { name: 'Unpublish' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Unpublish keepsake' }))
     const dialog = await screen.findByRole('alertdialog')
 
     expect(dialog).toHaveTextContent('Unpublish this keepsake?')
+    expect(dialog).toHaveTextContent('Guests no longer see it in English or German')
     expect(dialog).toHaveTextContent('Open orders stay as they are.')
     expect(writes()).toHaveLength(0)
     await userEvent.click(within(dialog).getByRole('button', { name: 'Unpublish' }))
@@ -726,7 +727,7 @@ describe('[E6.1][i18n] M12 in German', () => {
     expect(await within(review).findByText('1 Punkt verhindert das Veröffentlichen', undefined, SLOW)).toBeInTheDocument()
     expect(within(review).getByText('Fügen Sie mindestens ein Foto hinzu.')).toBeInTheDocument()
     expect(within(review).getByText('Die Provision beträgt 0 %: Partner verdienen nichts daran.')).toBeInTheDocument()
-    expect(within(bar()).getByRole('button', { name: 'Veröffentlichen' })).toBeDisabled()
+    expect(within(review).getByRole('button', { name: 'Veröffentlichen' })).toBeDisabled()
     expect(document.body.textContent).not.toMatch(/keepsakes\.[a-z]/)
   })
 })

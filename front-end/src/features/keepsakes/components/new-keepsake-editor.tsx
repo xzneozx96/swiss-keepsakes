@@ -206,10 +206,8 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
           tone: 'muted',
           isSaving: create.isPending || publishing,
           onBack: index > 0 ? () => open(DRAFT_STEPS[index - 1]!) : undefined,
-          secondary: last ? { label: t('keepsakes.review.saveDraft'), onPress: () => submit(false) } : undefined,
-          primary: last
-            ? { label: t('keepsakes.publish'), onPress: () => submit(true), isDisabled: checks.blocking.length > 0 }
-            : { label: t('steps.next'), onPress: () => go(DRAFT_STEPS[index + 1]!) },
+          // On the last step Publish and Save as draft sit in the publish card.
+          primary: last ? undefined : { label: t('steps.next'), onPress: () => go(DRAFT_STEPS[index + 1]!) },
         }}
         canGo={id => (DRAFT_STEPS as readonly string[]).includes(id) && DRAFT_STEPS.indexOf(id as DraftStep) <= reached}
         current={step}
@@ -247,7 +245,7 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
         )}
         {last && (
           <Suspense fallback={<StepBodySkeleton />}>
-            <ReviewScreen actions={{ unpublish: async () => ({ ok: true }), isPending: false }} keepsake={review} onFix={fix} />
+            <ReviewScreen actions={{ unpublish: async () => ({ ok: true }), publish: () => submit(true), saveDraft: () => submit(false), isPending: false, isBusy: create.isPending || publishing }} keepsake={review} onFix={fix} />
             {problems}
           </Suspense>
         )}

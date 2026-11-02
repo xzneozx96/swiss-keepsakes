@@ -7,7 +7,7 @@ import { Button } from '@heroui/react'
 import { useConfirm } from '@/components/confirm-dialog'
 import { StatusDangerIcon, StatusSuccessIcon, StatusWarningIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { checkText, descriptionsOf, fullLanguages, nameIn, textOf } from '../lib/keepsake-rules'
+import { checkText, descriptionsOf, nameIn, textOf } from '../lib/keepsake-rules'
 import { problemMessageKey } from '../lib/problems'
 import { KeepsakeLanguageSwitch } from './basics-fields'
 
@@ -59,10 +59,25 @@ export function ChecksList({ keepsake, onFix }: { keepsake: Product, onFix: (che
   )
 }
 
-/** Unpublish a live keepsake. It asks first: guests lose the page. Publish is the step bar's red action. */
-export function UnpublishButton({ actions }: { actions: PublishActions }) {
+/** What the card's main action does: the saved editor publishes the live edits, the new one makes the keepsake first. */
+export interface PublishCardActions extends PublishActions {
+  publish: () => void
+  /** The new keepsake only: make it and stop at a draft. */
+  saveDraft?: () => void
+  /** A request is on its way: the buttons are off. */
+  isBusy?: boolean
+}
+
+/**
+ * The card's actions under the name, one main button full width. Draft: Publish (and Save as draft for a new keepsake).
+ * Live with edits: Publish changes, then Unpublish. Live and nothing pending: Unpublish alone. Unpublish takes the whole
+ * keepsake off sale, so it asks first and says both languages; a refusal stays inside the dialog.
+ */
+export function PublishButtons({ keepsake, actions }: { keepsake: Product, actions: PublishCardActions }) {
   const { t } = useLocale()
   const { confirm, dialog } = useConfirm()
+  const live = keepsake.status === 'published'
+  const off = actions.isPending || actions.isBusy
 
   const unpublish = () => confirm({
     title: t('keepsakes.unpublish.title'),
@@ -79,38 +94,32 @@ export function UnpublishButton({ actions }: { actions: PublishActions }) {
   })
 
   return (
-    <>
-      <Button className="self-start max-lg:min-h-11" isDisabled={actions.isPending} variant="danger-soft" onPress={() => void unpublish()}>{t('keepsakes.unpublish')}</Button>
+    <div className="flex flex-col gap-2">
+      {(!live || keepsake.hasUnpublishedEdits) && (
+        <Button fullWidth className="max-lg:min-h-11" isDisabled={off || keepsake.blocking.length > 0} onPress={actions.publish}>
+          {t(live ? 'keepsakes.publishChanges' : 'keepsakes.publish')}
+        </Button>
+      )}
+      {actions.saveDraft && (
+        <Button fullWidth className="max-lg:min-h-11" isDisabled={off} variant="secondary" onPress={actions.saveDraft}>{t('keepsakes.review.saveDraft')}</Button>
+      )}
+      {live && (
+        <Button fullWidth className="max-lg:min-h-11" isDisabled={off} variant="danger-soft" onPress={() => void unpublish()}>{t('keepsakes.unpublish')}</Button>
+      )}
       {dialog}
-    </>
+    </div>
   )
 }
 
-/** The head of the publish card: the language switch (it drives the preview), the name, and what goes live. */
+/** The head of the publish card: the language switch (it drives the preview) and the name. */
 export function PublishHead({ keepsake, language, onLanguage }: { keepsake: Product, language: Language, onLanguage: (language: Language) => void }) {
   const { t } = useLocale()
   const text = { name: textOf(keepsake.name), text: descriptionsOf(keepsake.text) }
-  const full = fullLanguages(text)
-  const other = (l: Language) => (l === 'en' ? 'de' : 'en')
-  const address = keepsake.slug?.[language]
 
   return (
     <div className="flex flex-col gap-3" id="publish-card">
-      <div className="flex flex-col gap-1.5">
-        <KeepsakeLanguageSwitch selected={language} value={text} onChange={onLanguage} />
-        <p className="text-xs text-muted">{t('keepsakes.publish.switchHint')}</p>
-      </div>
-      <div className="flex flex-col gap-1">
-        <p className="font-serif text-lg text-pretty" lang={language}>{nameIn(keepsake.name, language) || t('keepsakes.untitled')}</p>
-        <p className="text-sm text-pretty text-muted">
-          {full.length === 2
-            ? t('keepsakes.publish.goesLive.both')
-            : full.length === 1
-              ? t('keepsakes.publish.goesLive.one', { language: t(`keepsakes.language.${full[0]!}`), other: t(`keepsakes.language.${other(full[0]!)}`) })
-              : t('keepsakes.publish.needsLanguage')}
-        </p>
-        <p className="text-xs text-muted [overflow-wrap:anywhere]">{address ? t('keepsakes.publish.address', { language, slug: address }) : t('keepsakes.publish.addressLater')}</p>
-      </div>
+      <KeepsakeLanguageSwitch selected={language} value={text} onChange={onLanguage} />
+      <p className="font-serif text-lg text-pretty" lang={language}>{nameIn(keepsake.name, language) || t('keepsakes.untitled')}</p>
     </div>
   )
 }

@@ -69,7 +69,6 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
   const index = KEEPSAKE_STEPS.indexOf(step)
   const status = statusOf(keepsake)
   const { blocking, warnings } = keepsake
-  const live = keepsake.status === 'published'
 
   /** Opening Review and publish saves what is typed first, so the checks and the preview are of what is on screen. */
   const go = async (id: string) => {
@@ -135,9 +134,6 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
           isSaving: false,
           onBack: index > 0 ? () => void go(KEEPSAKE_STEPS[index - 1]!) : undefined,
           onForward: index < KEEPSAKE_STEPS.length - 1 ? () => void go(KEEPSAKE_STEPS[index + 1]!) : undefined,
-          primary: onReview && (!live || keepsake.hasUnpublishedEdits)
-            ? { label: t(live ? 'keepsakes.publishChanges' : 'keepsakes.publish'), onPress: () => void publish(), isDisabled: blocking.length > 0 || editor.isPublishing }
-            : undefined,
         }}
         canGo={() => true}
         current={step}
@@ -167,7 +163,7 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
         {step === 'variants' && <VariantsStep name={name} options={keepsake.options} variants={keepsake.variants} onCreate={editor.createVariant} onAdd={editor.addVariant} onAddDone={() => void editor.refreshVariants()} onSave={editor.saveVariant} />}
         {onReview && (
           <Suspense fallback={<StepBodySkeleton />}>
-            <ReviewScreen actions={{ unpublish: editor.unpublish, isPending: editor.isPublishing }} keepsake={keepsake} onFix={jumpTo} />
+            <ReviewScreen actions={{ unpublish: editor.unpublish, publish: () => void publish(), isPending: editor.isPublishing }} keepsake={keepsake} onFix={jumpTo} />
           </Suspense>
         )}
       </KeepsakeFrame>
