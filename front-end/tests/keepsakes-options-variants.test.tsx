@@ -224,6 +224,28 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
       await waitFor(() => expect(rows()).toHaveLength(9))
     })
 
+    it('[T-010] three options in a row, each with Done or Add another option, each keeps the one before, and the rows are titled by their values', async () => {
+      await saveSize('add-another')
+      await typeColour()
+      await done()
+      await waitFor(() => expect(puts()).toHaveLength(2))
+      await waitFor(() => expect(rows()).toHaveLength(9))
+      expect(rows()[0]).toHaveTextContent('SmallRed')
+      await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Add another option' }))
+      await userEvent.type(await screen.findByLabelText('Option name in English', { selector: 'input' }), 'Theme')
+      await typeValue('Light')
+      await typeValue('Dark')
+      await done()
+      await waitFor(() => expect(puts()).toHaveLength(3))
+      const body = puts()[2]!.body as OptionsPut
+
+      expect(screen.queryByText(/things? to fix/)).not.toBeInTheDocument()
+      expect(body.options.map(option => option.ref).slice(0, 2)).toEqual(current.options.slice(0, 2).map(option => option.id))
+      expect(body.variantValues).toHaveLength(9)
+      expect(body.newVariants).toHaveLength(9)
+      await waitFor(() => expect(rows()).toHaveLength(18))
+    })
+
     it('[T-010] a Size saved by Add another option is kept by its saved ids when the second option is done', async () => {
       await saveSize('add-another')
       await typeColour()
