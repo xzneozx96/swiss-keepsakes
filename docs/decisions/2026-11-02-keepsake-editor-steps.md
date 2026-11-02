@@ -47,7 +47,7 @@ The 2026-10-29 design (cards, with options and variants in sheets) became a step
 15. **No stock column.** Stock arrives with E6.3.
 16. **SKU codes are optional, as in Shopify (owner, 2026-11-02).**
     - A keepsake-level switch, "This keepsake has SKU codes", sits in the Price block and in the Variants block header. It is off for a new keepsake.
-    - Off: no code field anywhere (Price block, rows, variant sheet), and new variants have no code. On: the code field shows, and each row shows its code as a small mono line (from `lg`, in a column of its own between the values and the price).
+    - Off: no code field anywhere (Price block, rows, variant sheet), and new variants have no code. On: the code field shows, and each row shows its code as a small mono line (from `lg`, in a column of its own between the photo and the value chips, left-aligned, centred on the row, wrapping at "-" rather than truncating; on phones it stays under the chips).
     - New rows while it is on are prefilled with the keepsake code and the full value labels, upper case: `1.6795-XS-RED`. A clash gets `-2`. The merchant can edit every code.
     - The switch state is derived: on when any variant that is for sale or hidden has a code. A choice made before any code exists is kept in the editor. Archived variants keep their codes and do not count.
     - Turning it off asks ("Remove the SKU codes of all n variants?"), then clears the codes in one `PATCH .../variants`.
