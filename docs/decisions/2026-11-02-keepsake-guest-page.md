@@ -20,6 +20,12 @@ The editor's Review and publish step shows a phone preview (`features/keepsakes/
 7. **The subtitle under the name goes.** It named the category, which guests never see (ADR-021), and the option names, which the sheet now shows.
 8. **Kept as they are:** the photo gallery and its top buttons, the seller row, the language notice (AC30), the fold-out sections (pickup places, pickup date, cancellation, payment), the sticky price bar, the sold-out bar, quantity, pickup date and place in the sheet.
 
+### Later on 2026-11-02 (owner, after seeing the page)
+
+9. **The seller row goes.**
+10. **The stats row goes** (earliest pickup, rating, review count). One quiet line under the name replaces it: "New · No reviews yet", and later the stars, average and count. It links to Reviews.
+11. **No reviews is the shared `EmptyState`**, on the keepsake and tour pages alike.
+
 ## Rejected
 
 - **Options on the page** (Shopify, Etsy). The owner kept them in the add sheet.
