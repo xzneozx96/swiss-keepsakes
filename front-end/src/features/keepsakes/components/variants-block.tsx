@@ -3,10 +3,9 @@ import type { Outcome } from '../hooks/use-keepsake-editor'
 import type { Values } from '../lib/option-rules'
 import type { VariantActions } from '../lib/variant-actions'
 
-import { Button, Checkbox } from '@heroui/react'
+import { Button, Checkbox, Label } from '@heroui/react'
 import { useState } from 'react'
 
-import { Check } from '@/components/check'
 import { useConfirm } from '@/components/confirm-dialog'
 import { Block } from '@/components/form-block'
 import { ChevronDownIcon, ProductsIcon } from '@/components/icons'
@@ -159,14 +158,21 @@ export function VariantsBlock({ storeId, options, variants, held, actions, previ
   return (
     <Block hint={t('keepsakes.variants.hint')} icon={ProductsIcon} id="variants" title={t('keepsakes.variants.title')}>
       <SkuSwitch isOn={sku.isOn} onChange={sku.onChange} />
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-sm text-muted">{t(live.length === 1 ? 'keepsakes.list.variants.one' : 'keepsakes.list.variants.other', { count: live.length })}</span>
-        <Check
+      {/* Select all sits in the rows' checkbox column (same inset and the same checkbox as a row), the count on the right. */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-2">
+        <Checkbox
           isIndeterminate={ticked.length > 0 && !allTicked}
           isSelected={allTicked}
-          label={t('keepsakes.variants.selectAll')}
           onChange={on => setSelected(on ? new Set(live.map(variant => variant.id)) : new Set())}
-        />
+        >
+          <Checkbox.Content className="flex-row items-center gap-3">
+            <Checkbox.Control>
+              <Checkbox.Indicator />
+            </Checkbox.Control>
+            <Label className="text-sm">{t('keepsakes.variants.selectAll')}</Label>
+          </Checkbox.Content>
+        </Checkbox>
+        <span className="text-sm text-muted">{t(live.length === 1 ? 'keepsakes.list.variants.one' : 'keepsakes.list.variants.other', { count: live.length })}</span>
       </div>
       {ticked.length > 0 && (
         <VariantsBulkBar
