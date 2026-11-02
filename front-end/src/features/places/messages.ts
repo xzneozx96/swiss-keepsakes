@@ -190,8 +190,6 @@ export const placesEn = {
   'places.apiOnly': 'This screen works with the live API only.',
   'places.noStore': 'You do not belong to a store yet, so there are no places to edit.',
   'places.loadFailed': 'The places could not be loaded.',
-  'places.retry': 'Try again',
-  'places.requestId': 'Reference: {id}',
   'places.loading': 'Loading places',
   'places.back': 'All places',
   'places.newPlace': 'New place',

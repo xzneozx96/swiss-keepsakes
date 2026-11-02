@@ -22,8 +22,6 @@ export const categoriesDe: Record<keyof typeof categoriesEn, string> = {
   'categories.loading': 'Kategorien werden geladen',
   'categories.noStore': 'Sie gehören noch zu keinem Shop, daher gibt es keine Kategorien zu bearbeiten.',
   'categories.loadFailed': 'Die Kategorien konnten nicht geladen werden.',
-  'categories.retry': 'Erneut versuchen',
-  'categories.requestId': 'Referenz: {id}',
   'categories.noName.en': 'Kein englischer Name',
   'categories.noName.de': 'Kein deutscher Name',
   'categories.moveUp': 'Nach oben',

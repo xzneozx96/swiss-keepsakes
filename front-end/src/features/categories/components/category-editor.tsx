@@ -1,10 +1,11 @@
 import type { CategoryKind } from '@sk/api-contract'
 import type { ReactNode } from 'react'
-
 import { Button } from '@heroui/react'
-import { useState } from 'react'
 
-import { PlusIcon, ResetIcon } from '@/components/icons'
+import { useState } from 'react'
+import { ErrorNotice } from '@/components/error-notice'
+
+import { PlusIcon } from '@/components/icons'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
@@ -62,14 +63,11 @@ export function CategoryEditor({ storeId, kind, tabs }: { storeId: string | unde
       )}
       {categories.isError
         ? (
-            <div className="flex flex-col items-start gap-2 rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">
-              <p>{t(categories.error instanceof ApiProblem && categories.error.type === 'forbidden' ? 'categories.problem.forbidden' : 'categories.loadFailed')}</p>
-              {categories.error instanceof ApiProblem && categories.error.requestId && <p className="text-xs opacity-80">{t('categories.requestId', { id: categories.error.requestId })}</p>}
-              <Button className="min-h-11" variant="primary" onPress={() => void categories.refetch()}>
-                <ResetIcon aria-hidden size={18} />
-                {t('categories.retry')}
-              </Button>
-            </div>
+            <ErrorNotice
+              reference={categories.error instanceof ApiProblem ? categories.error.requestId : undefined}
+              message={t(categories.error instanceof ApiProblem && categories.error.type === 'forbidden' ? 'categories.problem.forbidden' : 'categories.loadFailed')}
+              onRetry={() => void categories.refetch()}
+            />
           )
         : (
             <>

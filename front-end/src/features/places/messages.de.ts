@@ -192,8 +192,6 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.apiOnly': 'Dieser Bildschirm funktioniert nur mit der Live-API.',
   'places.noStore': 'Sie gehören noch zu keinem Geschäft, daher gibt es keine Orte zu bearbeiten.',
   'places.loadFailed': 'Die Orte konnten nicht geladen werden.',
-  'places.retry': 'Erneut versuchen',
-  'places.requestId': 'Referenz: {id}',
   'places.loading': 'Orte werden geladen',
   'places.back': 'Alle Orte',
   'places.newPlace': 'Neuer Ort',

@@ -7,9 +7,7 @@ export const keepsakesEn = {
   'keepsakes.loadFailed': 'The keepsakes could not be loaded.',
   'keepsakes.loading': 'Loading the keepsake',
   'keepsakes.notFound': 'This keepsake no longer exists.',
-  'keepsakes.retry': 'Try again',
   'keepsakes.reload': 'Reload',
-  'keepsakes.requestId': 'Reference: {id}',
   'keepsakes.and': 'and',
   'keepsakes.create': 'Create',
 

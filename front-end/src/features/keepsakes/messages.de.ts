@@ -8,9 +8,7 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.loadFailed': 'Die Andenken konnten nicht geladen werden.',
   'keepsakes.loading': 'Andenken wird geladen',
   'keepsakes.notFound': 'Dieses Andenken gibt es nicht mehr.',
-  'keepsakes.retry': 'Erneut versuchen',
   'keepsakes.reload': 'Neu laden',
-  'keepsakes.requestId': 'Referenz: {id}',
   'keepsakes.and': 'und',
   'keepsakes.create': 'Erstellen',
 

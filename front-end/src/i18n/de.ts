@@ -102,6 +102,8 @@ export const de: Record<MessageKey, string> = {
     'Diese Seite gibt es nicht. Sie wurde im Prototyp eventuell verschoben.',
   'routeError.message': 'Diese Ansicht konnte nicht geladen werden.',
   'routeError.retry': 'Erneut versuchen',
+  'errorNotice.retry': 'Erneut versuchen',
+  'errorNotice.reference': 'Referenz: {id}',
   'apiFeedback.error.generic': 'Etwas ist schiefgelaufen. Versuchen Sie es gleich noch einmal.',
   'apiFeedback.error.network': 'Die Verbindung ist abgebrochen. Prüfen Sie sie und versuchen Sie es erneut.',
 

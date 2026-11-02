@@ -4,7 +4,6 @@ export const storesEn = {
   'stores.problem.network': 'The connection was lost. Check it and try again.',
   'stores.problem.generic': 'Something went wrong. Try again in a moment.',
   'stores.problem.retry': 'Try again',
-  'stores.problem.requestId': 'Reference: {id}',
 
   'stores.admin.title': 'Stores',
   'stores.admin.intro': 'Create a store, invite its Owner and follow whether the invitation was accepted.',

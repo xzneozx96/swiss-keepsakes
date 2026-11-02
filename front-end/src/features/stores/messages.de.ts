@@ -5,7 +5,6 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
   'stores.problem.network': 'Die Verbindung ist abgebrochen. Prüfen Sie sie und versuchen Sie es erneut.',
   'stores.problem.generic': 'Etwas ist schiefgelaufen. Versuchen Sie es gleich noch einmal.',
   'stores.problem.retry': 'Erneut versuchen',
-  'stores.problem.requestId': 'Referenz: {id}',
 
   'stores.admin.title': 'Shops',
   'stores.admin.intro': 'Legen Sie einen Shop an, laden Sie dessen Inhaber ein und sehen Sie, ob die Einladung angenommen wurde.',

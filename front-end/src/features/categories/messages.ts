@@ -21,8 +21,6 @@ export const categoriesEn = {
   'categories.loading': 'Loading categories',
   'categories.noStore': 'You do not belong to a store yet, so there are no categories to edit.',
   'categories.loadFailed': 'The categories could not be loaded.',
-  'categories.retry': 'Try again',
-  'categories.requestId': 'Reference: {id}',
   'categories.noName.en': 'No English name',
   'categories.noName.de': 'No German name',
   'categories.moveUp': 'Move up',

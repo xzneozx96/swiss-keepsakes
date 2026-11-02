@@ -100,6 +100,8 @@ export const en = {
     'This page does not exist. It may have moved in the prototype.',
   'routeError.message': 'This screen could not load.',
   'routeError.retry': 'Try again',
+  'errorNotice.retry': 'Try again',
+  'errorNotice.reference': 'Reference: {id}',
   'apiFeedback.error.generic': 'Something went wrong. Try again in a moment.',
   'apiFeedback.error.network': 'The connection was lost. Check it and try again.',
 

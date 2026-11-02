@@ -3,13 +3,14 @@ import type { ListFilters } from '../lib/list'
 import type { RowActionId } from './place-rows'
 import type { MessageKey } from '@/i18n/en'
 
-import { Button, buttonVariants, SearchField } from '@heroui/react'
+import { buttonVariants, SearchField } from '@heroui/react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
+import { ErrorNotice } from '@/components/error-notice'
 import { FilterButtons, FilterChips, filterGroup } from '@/components/filter-bar'
-import { ContentIcon, InfoIcon, PlusIcon, ResetIcon } from '@/components/icons'
+import { ContentIcon, InfoIcon, PlusIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useCategories } from '@/features/categories/api/queries'
 import { ApiProblem } from '@/features/data-client/errors'
@@ -140,14 +141,11 @@ export function PlacesScreen() {
       {actions.notice && <p className="rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">{t(actions.notice)}</p>}
       {places.isError
         ? (
-            <div className="flex flex-col items-start gap-2 rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">
-              <p>{t(places.error instanceof ApiProblem && places.error.type === 'forbidden' ? 'places.problem.forbidden' : 'places.loadFailed')}</p>
-              {places.error instanceof ApiProblem && places.error.requestId && <p className="text-xs opacity-80">{t('places.requestId', { id: places.error.requestId })}</p>}
-              <Button className="min-h-11" variant="primary" onPress={() => void places.refetch()}>
-                <ResetIcon aria-hidden size={18} />
-                {t('places.retry')}
-              </Button>
-            </div>
+            <ErrorNotice
+              reference={places.error instanceof ApiProblem ? places.error.requestId : undefined}
+              message={t(places.error instanceof ApiProblem && places.error.type === 'forbidden' ? 'places.problem.forbidden' : 'places.loadFailed')}
+              onRetry={() => void places.refetch()}
+            />
           )
         : (
             <>
