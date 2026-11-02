@@ -43,7 +43,7 @@ function OptionRow({ draft, option, grip, language, isLocked, onEdit }: { draft:
             ))}
           </ul>
         </div>
-        <Button className="shrink-0 max-lg:h-11" isDisabled={isLocked} size="sm" variant="outline" onPress={onEdit}>{t('keepsakes.options.edit')}</Button>
+        <Button className="shrink-0 max-lg:h-11" isDisabled={isLocked} size="sm" variant="tertiary" onPress={onEdit}>{t('keepsakes.options.edit')}</Button>
       </div>
       <NotesAt at={option.ref} draft={draft} />
     </div>
