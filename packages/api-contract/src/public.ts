@@ -100,6 +100,12 @@ export const publicStorySchema = publicStoryCardSchema.extend({
   body: publicStoryBodySchema,
 }).meta({ id: 'PublicStory' })
 
+const publicPinStorySchema = z.object({
+  slug: z.string(),
+  title: z.string(),
+  readMinutes: z.int().min(1),
+}).meta({ id: 'PublicPinStory', description: 'A published story that tags the pin, in the language the pin card carries' })
+
 export const publicPinSchema = z.object({
   id: z.uuid(),
   slug: z.string().nullable(),
@@ -117,6 +123,10 @@ export const publicPinSchema = z.object({
   hasMainStory: z.boolean(),
   mainStorySlug: z.string().nullable(),
   photoKey: z.string().nullable(),
+  link: z.string().nullable().meta({ description: 'The pin\'s one outbound link, a plain https address' }),
+  photos: z.array(z.object({ key: z.string(), alt: z.string().nullable() })).meta({ description: 'Every ready photo in the merchant\'s order, the main photo first, with the merchant\'s text for it in the carried language' }),
+  mainStory: publicPinStorySchema.nullable().meta({ description: 'The main story, when it has a published version in the carried language' }),
+  otherStories: z.array(publicPinStorySchema).meta({ description: 'The other published stories that tag the pin, newest first' }),
   ...languageNoticeSchema.shape,
 }).meta({ id: 'PublicPin', description: 'The pin card' })
 

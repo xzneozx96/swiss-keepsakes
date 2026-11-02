@@ -7686,8 +7686,39 @@
           "latitude": {
             "type": "number"
           },
+          "link": {
+            "description": "The pin's one outbound link, a plain https address",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "longitude": {
             "type": "number"
+          },
+          "mainStory": {
+            "description": "The main story, when it has a published version in the carried language",
+            "properties": {
+              "readMinutes": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "slug": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "slug",
+              "title",
+              "readMinutes"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
           },
           "mainStorySlug": {
             "type": [
@@ -7705,11 +7736,40 @@
           "nextDate": {
             "$ref": "#/components/schemas/NextDate"
           },
+          "otherStories": {
+            "description": "The other published stories that tag the pin, newest first",
+            "items": {
+              "$ref": "#/components/schemas/PublicPinStory"
+            },
+            "type": "array"
+          },
           "photoKey": {
             "type": [
               "string",
               "null"
             ]
+          },
+          "photos": {
+            "description": "Every ready photo in the merchant's order, the main photo first, with the merchant's text for it in the carried language",
+            "items": {
+              "properties": {
+                "alt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "key": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "alt"
+              ],
+              "type": "object"
+            },
+            "type": "array"
           },
           "requestedLanguage": {
             "$ref": "#/components/schemas/PublicLanguage"
@@ -7774,10 +7834,35 @@
           "hasMainStory",
           "mainStorySlug",
           "photoKey",
+          "link",
+          "photos",
+          "mainStory",
+          "otherStories",
           "language",
           "requestedLanguage",
           "fallback",
           "availableLanguages"
+        ],
+        "type": "object"
+      },
+      "PublicPinStory": {
+        "description": "A published story that tags the pin, in the language the pin card carries",
+        "properties": {
+          "readMinutes": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "title",
+          "readMinutes"
         ],
         "type": "object"
       },

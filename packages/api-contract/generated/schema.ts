@@ -5468,12 +5468,27 @@ export interface components {
             interests: string[];
             language: components["schemas"]["PublicLanguage"];
             latitude: number;
+            /** @description The pin's one outbound link, a plain https address */
+            link: string | null;
             longitude: number;
+            /** @description The main story, when it has a published version in the carried language */
+            mainStory: {
+                readMinutes: number;
+                slug: string;
+                title: string;
+            } | null;
             mainStorySlug: string | null;
             /** @description The Google Maps link the merchant stored for the place; "Open in Google Maps" opens it, else the position */
             mapsLink: string | null;
             nextDate: components["schemas"]["NextDate"];
+            /** @description The other published stories that tag the pin, newest first */
+            otherStories: components["schemas"]["PublicPinStory"][];
             photoKey: string | null;
+            /** @description Every ready photo in the merchant's order, the main photo first, with the merchant's text for it in the carried language */
+            photos: {
+                alt: string | null;
+                key: string;
+            }[];
             requestedLanguage: components["schemas"]["PublicLanguage"];
             slug: string | null;
             /** @enum {string} */
@@ -5485,6 +5500,12 @@ export interface components {
                 day: number;
                 opens: string;
             }[];
+        };
+        /** @description A published story that tags the pin, in the language the pin card carries */
+        PublicPinStory: {
+            readMinutes: number;
+            slug: string;
+            title: string;
         };
         PublicStory: {
             authorName: string;

@@ -1,6 +1,6 @@
 import type { ContentLanguage, Localized, PinDate, StayTag, TourGuideDoc } from '@sk/domain/content'
 import type { Tx } from '../../../platform/db/client.ts'
-import type { PublicCategoryRow, PublicPinRow, PublicReadRepository, PublicStoryRow, PublicTourRow, StoredStoryDoc } from '../read-ports.ts'
+import type { PublicCategoryRow, PublicPinDetailRow, PublicPinRow, PublicReadRepository, PublicStoryRow, PublicTourRow, StoredStoryDoc } from '../read-ports.ts'
 import { sql } from 'drizzle-orm'
 import { publishedStoryMediaIds } from './story-media-ids.ts'
 
@@ -24,18 +24,20 @@ interface CategoryJoinRow {
   position: number
 }
 
-// Published versions of the groups (all of them, or one), with the blog categories and the ready media keys.
-async function loadStories(tx: Tx, groupId: string | null): Promise<PublicStoryRow[]> {
+// Published versions of the groups (all of them, or the ones named), with the blog categories and the ready media keys.
+async function loadStories(tx: Tx, groupIds: string[] | null): Promise<PublicStoryRow[]> {
+  if (groupIds?.length === 0)
+    return []
   const versions = await tx.execute<VersionJoinRow & Record<string, unknown>>(sql`
     select g.id, g.store_id, g.stay_tag, g.interests, v.language, v.slug, v.published, v.published_at
       from content.story_versions v
       join content.story_groups g on g.store_id = v.store_id and g.id = v.group_id
-     where v.status = 'published' and v.published is not null${groupId ? sql` and g.id = ${groupId}` : sql``}
+     where v.status = 'published' and v.published is not null${groupIds ? sql` and g.id = any(${sql.param(groupIds)}::uuid[])` : sql``}
      order by v.published_at desc, g.id desc, v.language`)
   if (versions.rows.length === 0)
     return []
 
-  const groupIds = [...new Set(versions.rows.map(r => r.id))]
+  const foundIds = [...new Set(versions.rows.map(r => r.id))]
   const storeIds = [...new Set(versions.rows.map(r => r.store_id))]
   const mediaIds = [...new Set(versions.rows.flatMap(r => publishedStoryMediaIds(r.published)))]
 
@@ -43,7 +45,7 @@ async function loadStories(tx: Tx, groupId: string | null): Promise<PublicStoryR
     select sc.group_id, c.id, c.slug, c.name, c.parent_id, c.position
       from content.story_categories sc
       join content.blog_categories c on c.store_id = sc.store_id and c.id = sc.category_id
-     where sc.group_id = any(${sql.param(groupIds)}::uuid[])
+     where sc.group_id = any(${sql.param(foundIds)}::uuid[])
      order by c.parent_id nulls first, c.position, c.id`)
   const media = mediaIds.length === 0
     ? { rows: [] as { id: string, store_id: string, storage_key: string }[] }
@@ -171,6 +173,38 @@ async function loadPins(tx: Tx, pinId: string | null): Promise<PublicPinRow[]> {
   }))
 }
 
+interface PinExtrasRow {
+  cover_media_id: string | null
+  main_story_group_id: string | null
+  published: { coverAlt?: Localized, photoAlt?: Record<string, Localized> }
+}
+
+// What a pin's own read adds: its outbound link, the cover and the extra photos in order (ready media only), and the
+// stories that tag it. One round of queries for one pin, none of it in the list.
+async function loadPinExtras(tx: Tx, pinId: string): Promise<Pick<PublicPinDetailRow, 'link' | 'photos' | 'stories' | 'mainStoryId'>> {
+  const own = (await tx.execute<PinExtrasRow & Record<string, unknown>>(sql`
+    select cover_media_id, main_story_group_id, published from content.places where id = ${pinId}`)).rows[0]
+  // One connection runs one query at a time inside a transaction, so these go one after the other.
+  const links = await tx.execute<{ url: string } & Record<string, unknown>>(sql`select url from content.place_links where place_id = ${pinId}`)
+  const extra = await tx.execute<{ media_id: string } & Record<string, unknown>>(sql`select media_id from content.place_photos where place_id = ${pinId} order by position`)
+  const tagged = await tx.execute<{ group_id: string } & Record<string, unknown>>(sql`select group_id from content.story_group_places where place_id = ${pinId}`)
+  const mediaIds = [...new Set([...(own?.cover_media_id ? [own.cover_media_id] : []), ...extra.rows.map(r => r.media_id)])]
+  const media = mediaIds.length === 0
+    ? []
+    : (await tx.execute<{ id: string, storage_key: string } & Record<string, unknown>>(sql`
+        select id, storage_key from content.media where id = any(${sql.param(mediaIds)}::uuid[]) and status = 'ready'`)).rows
+  const keys = new Map(media.map(m => [m.id, m.storage_key]))
+  const alt = (mediaId: string): Localized => (mediaId === own?.cover_media_id ? own.published.coverAlt : own?.published.photoAlt?.[mediaId]) ?? {}
+  const mainStoryId = own?.main_story_group_id ?? null
+
+  return {
+    link: links.rows[0]?.url ?? null,
+    photos: mediaIds.flatMap(mediaId => (keys.has(mediaId) ? [{ key: keys.get(mediaId)!, alt: alt(mediaId) }] : [])),
+    stories: await loadStories(tx, [...new Set([...(mainStoryId ? [mainStoryId] : []), ...tagged.rows.map(r => r.group_id)])]),
+    mainStoryId,
+  }
+}
+
 interface TourJoinRow {
   id: string
   slug: Localized
@@ -263,7 +297,7 @@ export function createPublicReadRepository(): PublicReadRepository<Tx> {
          where status = 'published' and slug = ${slug}
          order by (language = ${language}) desc limit 1`)
       const groupId = found.rows[0]?.group_id
-      return groupId ? (await loadStories(tx, groupId))[0] : undefined
+      return groupId ? (await loadStories(tx, [groupId]))[0] : undefined
     },
 
     async listCategories(tx, kind) {
@@ -277,7 +311,9 @@ export function createPublicReadRepository(): PublicReadRepository<Tx> {
     listVisiblePins: tx => loadPins(tx, null),
 
     async findVisiblePin(tx, id) {
-      return (await loadPins(tx, id))[0]
+      const row = (await loadPins(tx, id))[0]
+
+      return row && { ...row, ...(await loadPinExtras(tx, id)) }
     },
 
     listPublishedTours: tx => loadTours(tx, null, false),

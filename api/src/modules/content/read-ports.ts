@@ -65,6 +65,17 @@ export interface PublicPinRow {
   mainStorySlugs: Partial<Record<ContentLanguage, string>>
 }
 
+// What a pin's own read adds to the row the list shares: the outbound link, the photos in the merchant's order with the
+// text for each, and the published stories that tag the pin. The list never loads them.
+export interface PublicPinDetailRow extends PublicPinRow {
+  link: string | null
+  // The cover first, then the extra photos; only ready media.
+  photos: { key: string, alt: Localized }[]
+  // The main story and every story whose places include this pin, each with its published versions.
+  stories: PublicStoryRow[]
+  mainStoryId: string | null
+}
+
 export interface PublicTourStopRow {
   position: number
   latitude: number
@@ -103,7 +114,7 @@ export interface PublicReadRepository<T> {
   listCategories: (tx: T, kind: 'map' | 'blog') => Promise<PublicCategoryRow[]>
   // Pins in `content.public_pins` (published, and dated in the future or undated), newest first.
   listVisiblePins: (tx: T) => Promise<PublicPinRow[]>
-  findVisiblePin: (tx: T, id: string) => Promise<PublicPinRow | undefined>
+  findVisiblePin: (tx: T, id: string) => Promise<PublicPinDetailRow | undefined>
   // Tour guides with status `published`, in creation order newest first (id desc; a tour has no publish timestamp), without stops.
   listPublishedTours: (tx: T) => Promise<PublicTourRow[]>
   // The tour whose published slug is this one in `language`, else in the other language, with its stops.
