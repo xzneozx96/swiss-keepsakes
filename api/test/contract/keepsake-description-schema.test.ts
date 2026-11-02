@@ -57,8 +57,8 @@ describe('[DESC-rich] the keepsake description in the save body', () => {
   })
 
   it('counts the visible text against the limit, not the markup or the line breaks', () => {
-    const marked = Array.from({ length: TEXT_MAX / 2 }).fill(t('ab', [{ type: 'bold' }]))
-    const withBreaks = Array.from({ length: TEXT_MAX / 2 }).fill([t('ab'), { type: 'hardBreak' }]).flat()
+    const marked = Array.from<DescriptionNode>({ length: TEXT_MAX / 2 }).fill(t('ab', [{ type: 'bold' }]))
+    const withBreaks = Array.from<DescriptionNode[]>({ length: TEXT_MAX / 2 }).fill([t('ab'), { type: 'hardBreak' }]).flat()
 
     expect(save({ en: doc(p(...marked)) }).success).toBe(true)
     expect(save({ en: doc(p(...withBreaks.slice(0, -1))) }).success).toBe(true)

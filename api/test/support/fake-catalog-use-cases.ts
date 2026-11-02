@@ -20,7 +20,7 @@ export const fakeProduct: Product = {
 // Stand-ins for the catalog use cases, for tests of the routes' guards over createApp. Each answers as if the row
 // existed and the caller could do the thing, so a request that gets past the guard is not a 404 or a 403.
 export function createFakeCatalogUseCases(): CatalogUseCases {
-  const detail = (storeId: string, productId = fakeProduct.id, rowVersion = 1) => ({ product: { ...fakeProduct, storeId, id: productId, rowVersion }, photos: [] })
+  const detail = (storeId: string, productId = fakeProduct.id, rowVersion = 1) => ({ product: { ...fakeProduct, storeId, id: productId, rowVersion }, photos: [], hasOrders: false })
   return {
     listProducts: async () => ({ ok: true, value: [] }),
     getProduct: async (_actor, storeId, productId) => ({ ok: true, value: detail(storeId, productId) }),
@@ -31,5 +31,6 @@ export function createFakeCatalogUseCases(): CatalogUseCases {
     saveVariant: async (_actor, storeId, productId) => ({ ok: true, value: detail(storeId, productId) }),
     saveOptions: async (_actor, storeId, productId, ifMatch) => ({ ok: true, value: detail(storeId, productId, ifMatch + 1) }),
     createVariant: async (_actor, storeId, productId) => ({ ok: true, value: detail(storeId, productId) }),
+    deleteProduct: async (_actor, _storeId, productId) => ({ ok: true, value: { id: productId, outcome: 'deleted' } }),
   }
 }

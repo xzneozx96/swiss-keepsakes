@@ -53,7 +53,7 @@ async function setup() {
     expect(live.status).toBe(200)
     return await live.json() as View
   }
-  const remove = (id: string, ifMatch: number | null, headers = store.owner.headers, key?: string) =>
+  const remove = (id: string, ifMatch: number | null, headers: Record<string, string> = store.owner.headers, key?: string) =>
     env.call(`${store.products}/${id}`, { method: 'DELETE', key, headers: { ...headers, ...(ifMatch === null ? {} : { 'If-Match': String(ifMatch) }) } })
   const count = async (table: string, productId: string) =>
     Number((await pool.query(`select count(*) from catalog.${table} where product_id = $1`, [productId])).rows[0].count)
