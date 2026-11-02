@@ -61,7 +61,11 @@ export function PriceInput({ priceRappen, label, onSave, className = 'w-24' }: {
       placeholder="0.00"
       value={text}
       onBlur={() => {
-        if (rappen !== undefined && rappen !== priceRappen)
+        if (rappen === undefined)
+          return
+        // The typed number is shown with two decimals once the field is left: 16 becomes 16.00.
+        setText((rappen / 100).toFixed(2))
+        if (rappen !== priceRappen)
           onSave(rappen)
       }}
       onChange={event => setText(event.target.value.replace(',', '.').replace(NOT_NUMBER, ''))}

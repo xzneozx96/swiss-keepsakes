@@ -43,6 +43,8 @@ export function PriceCard({ variant, held, codeFallback, showErrors, onSave }: {
     setProblem({ [at]: outcome.type === 'sku-code-taken' ? t('keepsakes.variant.codeTaken', { code: body.skuCode ?? code }) : t(problemMessageKey(outcome.type)) })
   }
   const leavePrice = () => {
+    if (rappen !== undefined)
+      setPrice((rappen / 100).toFixed(2))
     if (rappen === undefined)
       setProblem({ price: t('keepsakes.variant.priceInvalid') })
     else if (rappen !== variant.priceRappen)
