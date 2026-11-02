@@ -336,6 +336,69 @@ describe('[T-002] empty state and Choose from library', () => {
     expect(names()).toEqual(['photo-7.jpg', 'photo-5.jpg'].map(name => name))
   })
 
+  it('[T-002][AC-9] a chosen tile has the red 2 px border and the tick; a free one has neither', async () => {
+    serveLibrary()
+    renderHost()
+    await openLibrary()
+
+    const first = (await choice('lib-1.jpg')).closest('label')!
+
+    expect(first.querySelector('.border-transparent')).not.toBeNull()
+    expect(first.querySelector('svg')).toBeNull()
+    await userEvent.click(await choice('lib-1.jpg'))
+    expect(first.querySelector('.border-2.border-accent')).not.toBeNull()
+    expect(first.querySelector('svg')).not.toBeNull()
+    expect((await choice('lib-2.jpg')).closest('label')!.querySelector('.border-accent')).toBeNull()
+  })
+
+  /** The library as the server holds it: an upload that is confirmed joins it, still processing. */
+  function serveGrowingLibrary() {
+    const items = [...library]
+
+    serveLibrary(items)
+    const base = state.answer
+
+    state.answer = (call) => {
+      const answer = base(call)
+
+      if (call.path === `/api/store/${storeId}/media/confirm`)
+        items.unshift(libraryItem({ id: id(1), name: 'photo-1.jpg', status: 'processing', publicUrl: null, variants: [] }))
+
+      return answer
+    }
+  }
+  const pickerInput = () => screen.getByTestId('picker-input')
+
+  it('[T-002][AC-9] Upload a photo in the sheet: the file goes up through the field flow, joins the grid still processing and is chosen at once', async () => {
+    serveGrowingLibrary()
+    renderHost()
+    await openLibrary()
+    await choice('lib-1.jpg')
+    await userEvent.upload(pickerInput(), file('new.jpg'))
+
+    const uploaded = await screen.findByRole('checkbox', { name: 'photo-1.jpg, Processing' }, { timeout: 10_000 })
+
+    await waitFor(() => expect(uploaded).toBeChecked())
+    expect(uploaded.closest('label')).toHaveTextContent('Processing')
+    expect(screen.getByText('1 of 12 selected')).toBeInTheDocument()
+    expect(added).toEqual([])
+    await addSelected()
+    await waitFor(() => expect(added).toEqual([id(1)]))
+  }, 20_000)
+
+  it('[T-002][AC-9] a file that is not a photo is refused in the sheet with the field\'s words and can be removed', async () => {
+    serveGrowingLibrary()
+    renderHost()
+    await openLibrary()
+    await choice('lib-1.jpg')
+    await userEvent.setup({ applyAccept: false }).upload(pickerInput(), file('notes.pdf', 'application/pdf'))
+
+    expect(await screen.findByText('This type of file is not allowed. Use a JPEG, PNG or WebP photo.')).toBeInTheDocument()
+    expect(screen.getByText('Upload failed')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Remove notes.pdf' }))
+    expect(screen.queryByText('Upload failed')).not.toBeInTheDocument()
+  })
+
   it('[T-002][AC-9] only the room that is left can be chosen: the other photos are disabled until one is cleared', async () => {
     serveLibrary()
     renderHost({ initial: [id(0)], max: 3 })
@@ -350,15 +413,20 @@ describe('[T-002] empty state and Choose from library', () => {
     expect(await choice('lib-3.jpg')).toBeEnabled()
   })
 
-  it('[T-002][AC-9] a photo the page already has is shown as chosen and cannot be chosen twice', async () => {
+  it('[T-002][AC-9] a photo the page already has reads as not choosable: disabled, faded, no accent border or mark', async () => {
     serveLibrary()
     renderHost({ initial: [id(5)] })
     await openLibrary()
 
     const used = await choice('lib-1.jpg, already added')
+    const tile = used.closest('label')!
 
-    expect(used).toBeChecked()
+    expect(used).not.toBeChecked()
     expect(used).toBeDisabled()
+    expect(tile).toHaveClass('opacity-60')
+    expect(within(tile).getByText('already added')).toBeInTheDocument()
+    expect(tile.querySelector('.border-accent')).toBeNull()
+    expect(tile.querySelector('svg')).toBeNull()
     await userEvent.click(await choice('lib-2.jpg'))
     await addSelected()
     await waitFor(() => expect(added).toEqual([id(6)]))

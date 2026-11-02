@@ -297,6 +297,28 @@ describe('[AC-dup] the photos block asks before it uploads a duplicate', () => {
   })
 })
 
+describe('[AC-dup] the library sheet asks before it uploads a duplicate', () => {
+  it('[AC-dup] Upload a photo in the sheet with a file the library has: Use the existing photo chooses it, nothing is uploaded', async () => {
+    const picked = file('IMG_0001.jpg')
+    const existing = await matchOf(picked)
+    const answer = state.answer
+
+    known = [existing]
+    state.answer = call => (call.method === 'GET' && call.path.startsWith(`${base}?`) ? Response.json(libraryPage([libraryItem({ id: existingId, name: 'Kapellbruecke-Sunrise.JPG' })])) : answer(call))
+    renderHost()
+    await userEvent.click(screen.getByRole('button', { name: 'Choose from library' }))
+    await userEvent.upload(await screen.findByTestId('picker-input'), picked)
+
+    const sheet = await screen.findByRole('dialog', { name: 'Already in your library' }, SLOW)
+
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Continue' }))
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'Kapellbruecke-Sunrise.JPG' })).toBeChecked(), SLOW)
+    expect(requests(`${base}/uploads`)).toHaveLength(0)
+    await userEvent.click(screen.getByRole('button', { name: 'Add selected' }))
+    await waitFor(() => expect(added).toEqual([existingId]))
+  })
+})
+
 describe('[AC-dup] the Media library upload asks before it uploads a duplicate', () => {
   const answerLibrary = (matches: Record<string, unknown>[]) => {
     state.answer = (call) => {
@@ -334,7 +356,7 @@ describe('[AC-dup] the Media library upload asks before it uploads a duplicate',
     await waitFor(() => expect(toasts.info).toHaveBeenCalledWith('Already in your library, not uploaded again: Kapellbruecke-Sunrise.JPG.'), SLOW)
     expect(requests(`${base}/uploads`)).toHaveLength(0)
     await waitFor(() => expect(state.calls.some(call => call.method === 'GET' && call.path.includes(`${base}?`) && call.path.includes('q=Kapellbruecke-Sunrise.JPG'))).toBe(true), SLOW)
-    await waitFor(() => expect(document.querySelector(`[data-media="${photoId}"] .ring-accent`)).not.toBeNull())
+    await waitFor(() => expect(document.querySelector(`[data-media="${photoId}"] .border-accent`)).not.toBeNull())
   })
 
   it('[AC-dup] Upload a copy uploads it, and a new file is uploaded with no question', async () => {

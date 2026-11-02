@@ -6,7 +6,7 @@ import { PhotoThumbOverlay } from '@/components/photo-order'
 import { useLocale } from '@/contexts/locale-context'
 import { useMediaFile } from '../api/queries'
 
-const ACCEPT = 'image/jpeg,image/png,image/webp'
+export const ACCEPT = 'image/jpeg,image/png,image/webp'
 
 /** The 44 px picture of a media id: the smallest copy that is wide enough, a spinner over it while the file is processed. */
 export function PhotoThumb({ storeId, mediaId }: { storeId: string, mediaId: string }) {

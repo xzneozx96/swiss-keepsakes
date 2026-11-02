@@ -326,6 +326,11 @@ describe('[E4.11][AC51] retiring', () => {
 
     expect(screen.getByText('3 selected')).toBeInTheDocument()
     expect(screen.getByText('1 in use, kept')).toBeInTheDocument()
+    const chosen = screen.getByRole('button', { name: 'Select Used.jpg' })
+
+    expect(chosen).toHaveAttribute('aria-pressed', 'true')
+    expect(chosen.querySelector('.border-2.border-accent')).not.toBeNull()
+    expect(chosen.querySelector('svg')).not.toBeNull()
     await userEvent.click(screen.getByRole('button', { name: 'Delete 2' }))
     const confirm = await screen.findByRole('alertdialog')
 

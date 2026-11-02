@@ -5,9 +5,10 @@ import { Skeleton } from '@heroui/react'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { FileThumb } from './file-thumb'
-import { TileMark, TileOutline } from './tile-mark'
+import { ChosenMark } from './tile-mark'
+import { chosenBorder, TILE_GAPS } from './tile-style'
 
-const GRID = 'grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6'
+const GRID = `grid grid-cols-3 ${TILE_GAPS} sm:grid-cols-4 lg:grid-cols-6`
 
 function Tile({ item, busy, found, selecting, selected, onPress }: { item: MediaItem, busy: boolean, found: boolean, selecting: boolean, selected: boolean, onPress: () => void }) {
   const { t } = useLocale()
@@ -22,16 +23,17 @@ function Tile({ item, busy, found, selecting, selected, onPress }: { item: Media
       type="button"
       onClick={onPress}
     >
-      <span className="relative block w-full overflow-hidden rounded-xl">
-        <FileThumb busy={busy} className="aspect-square w-full rounded-xl" item={item} />
-        <TileOutline shown={selected || found} />
-        {unused && <span className="absolute start-1.5 bottom-1.5 rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-semibold">{t('media.grid.unused')}</span>}
-        {item.status !== 'ready' && (
-          <span className="absolute start-1.5 bottom-1.5">
-            <StatusChip tone={item.status === 'processing' ? 'info' : 'neutral'}>{t(`media.status.${item.status}`)}</StatusChip>
-          </span>
-        )}
-        {selecting && <TileMark selected={selected} />}
+      <span className="relative block w-full">
+        <span className={`relative block w-full overflow-hidden rounded-xl ${chosenBorder(selected || found)}`}>
+          <FileThumb busy={busy} className="aspect-square w-full" item={item} />
+          {unused && <span className="absolute start-1.5 bottom-1.5 rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-semibold">{t('media.grid.unused')}</span>}
+          {item.status !== 'ready' && (
+            <span className="absolute start-1.5 bottom-1.5">
+              <StatusChip tone={item.status === 'processing' ? 'info' : 'neutral'}>{t(`media.status.${item.status}`)}</StatusChip>
+            </span>
+          )}
+        </span>
+        {selecting && selected && <ChosenMark />}
       </span>
       <span aria-hidden className="truncate px-0.5 text-xs text-muted">{item.name}</span>
     </button>
