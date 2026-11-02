@@ -22,6 +22,8 @@ interface OptionBody { ref: string, name: { en?: string, de?: string }, values: 
 interface OptionsPut { options: OptionBody[], variantValues?: { variantId: string, values: Record<string, string> }[], newVariants?: { skuCode: string | null, priceRappen: number, values: Record<string, string> }[] }
 
 let current: ReturnType<typeof product>
+/** How many ids the fake API has made: a new option or value takes the next one. */
+let madeIds = 0
 
 /**
  * A small fake server for the keepsake: reads answer with `current`, the options save builds the keepsake the way the API
@@ -40,12 +42,23 @@ function serve(extra: (call: Call) => Response | undefined = () => undefined) {
       return Response.json(list([listItem()]))
     if (call.method === 'PUT' && call.path === `${detail}/options`) {
       const body = call.body as OptionsPut
+      // Like the API: an option or value that is new gets an id of its own, and the rows' values follow it.
+      const known = new Set(current.options.flatMap(option => [option.id, ...option.values.map(value => value.id)]))
+      const ids = new Map<string, string>()
+      const saved = (ref: string) => {
+        if (!known.has(ref) && !ids.has(ref))
+          ids.set(ref, id(0x40 + madeIds++))
+
+        return ids.get(ref) ?? ref
+      }
+      const options = body.options.map(option => ({ id: saved(option.ref), name: option.name, values: option.values.map(value => ({ id: saved(value.ref), label: value.label })) }))
+      const remap = (values: Record<string, string>) => Object.fromEntries(Object.entries(values).map(([option, value]) => [saved(option), saved(value)]))
       const variants: Variant[] = [
-        ...current.variants.map(variant => ({ ...variant, values: { ...variant.values, ...body.variantValues?.find(row => row.variantId === variant.id)?.values } })),
-        ...(body.newVariants ?? []).map((made, index) => ({ id: id(0xE0 + index), skuCode: made.skuCode, mediaId: null, photo: null, priceRappen: made.priceRappen, status: 'published' as const, values: made.values })),
+        ...current.variants.map(variant => ({ ...variant, values: { ...variant.values, ...remap(body.variantValues?.find(row => row.variantId === variant.id)?.values ?? {}) } })),
+        ...(body.newVariants ?? []).map((row, index) => ({ id: id(0xE0 + current.variants.length + index), skuCode: row.skuCode, mediaId: null, photo: null, priceRappen: row.priceRappen, status: 'published' as const, values: remap(row.values) })),
       ]
 
-      current = product({ ...current, options: body.options.map(option => ({ id: option.ref, name: option.name, values: option.values.map(value => ({ id: value.ref, label: value.label })) })), variants, rowVersion: current.rowVersion + 1 })
+      current = product({ ...current, options, variants, rowVersion: current.rowVersion + 1 })
 
       return Response.json(current)
     }
@@ -69,6 +82,7 @@ function serve(extra: (call: Call) => Response | undefined = () => undefined) {
 }
 
 beforeEach(async () => {
+  madeIds = 0
   current = product()
   await setUpHarness()
   serve()
@@ -157,6 +171,72 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
     expect((puts()[0]!.body as OptionsPut).options[0]!.name).toEqual({ en: 'Size' })
     expect(await within(optionsBlock()).findByTestId('option-row')).toHaveTextContent('Size')
     expect(await screen.findAllByLabelText('Option name in English', { selector: 'input' })).toHaveLength(1)
+  })
+
+  describe('a second option after the first was saved (the API gives a new option and value ids of their own)', () => {
+    let sizeIds: { option: string, values: string[] }
+
+    /** Pressing Done, or Add another option (which runs the Done of the open Size first), on a Size that has three values. */
+    async function saveSize(how: 'done' | 'add-another') {
+      await openStep()
+      await startOption('Size', ['Small', 'Medium', 'Large'])
+      if (how === 'done')
+        await done()
+      else
+        await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Add another option' }))
+      await waitFor(() => expect(puts()).toHaveLength(1))
+      expect(await within(optionsBlock()).findByTestId('option-row')).toHaveTextContent('Size')
+      sizeIds = { option: current.options[0]!.id, values: current.options[0]!.values.map(value => value.id) }
+      expect(sizeIds.option).not.toBe((puts()[0]!.body as OptionsPut).options[0]!.ref)
+    }
+
+    const typeColour = async () => {
+      await userEvent.type(await screen.findByLabelText('Option name in English', { selector: 'input' }), 'Colour')
+      for (const value of ['Red', 'Blue', 'Green'])
+        await typeValue(value)
+    }
+
+    async function expectSecondSave() {
+      await waitFor(() => expect(puts()).toHaveLength(2))
+      const body = puts()[1]!.body as OptionsPut
+      const [size, colour] = body.options
+
+      expect(screen.queryByText(/things? to fix/)).not.toBeInTheDocument()
+      // Size goes back under the ids the API gave it, with its values; Colour is new.
+      expect(body.options).toHaveLength(2)
+      expect(size).toMatchObject({ ref: sizeIds.option, name: { en: 'Size' } })
+      expect(size!.values.map(value => value.ref)).toEqual(sizeIds.values)
+      expect(size!.values.map(value => value.label.en)).toEqual(['Small', 'Medium', 'Large'])
+      expect(colour!.name).toEqual({ en: 'Colour' })
+      expect(colour!.values.map(value => value.label.en)).toEqual(['Red', 'Blue', 'Green'])
+      // Each of the 3 variants takes Red and keeps its Size; Blue and Green make 6 new ones.
+      expect(body.variantValues).toHaveLength(3)
+      expect(body.variantValues!.every(row => Object.keys(row.values).join() === colour!.ref && row.values[colour!.ref] === colour!.values[0]!.ref)).toBe(true)
+      expect(body.newVariants).toHaveLength(6)
+    }
+
+    it('[T-010] Done on a second option keeps the first by the ids it was saved under', async () => {
+      await saveSize('done')
+      await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Add another option' }))
+      await typeColour()
+      await done()
+      await expectSecondSave()
+      await waitFor(() => expect(rows()).toHaveLength(9))
+    })
+
+    it('[T-010] a Size saved by Add another option is kept by its saved ids when the second option is done', async () => {
+      await saveSize('add-another')
+      await typeColour()
+      await done()
+      await expectSecondSave()
+    })
+
+    it('[T-010] a Size saved by Add another option is kept by its saved ids when Add another option saves the second', async () => {
+      await saveSize('add-another')
+      await typeColour()
+      await userEvent.click(within(optionsBlock()).getByRole('button', { name: 'Add another option' }))
+      await expectSecondSave()
+    })
   })
 
   it('[T-010] Add another option with a refused Done keeps that option open and opens no second one', async () => {
@@ -280,7 +360,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     expect(await screen.findByText('8 selected')).toBeInTheDocument()
     expect(all()).toBeChecked()
     await userEvent.click(all())
-    expect(screen.queryByTestId('bulk-bar')).not.toBeInTheDocument()
+    expect(screen.queryByRole('toolbar')).not.toBeInTheDocument()
     await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select all S' }))
     expect(await screen.findByText('2 selected')).toBeInTheDocument()
     expect(all()).toBePartiallyChecked()
@@ -291,7 +371,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
 
     await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select XS / Red' }))
     await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select XS / Blue' }))
-    await userEvent.click(within(screen.getByTestId('bulk-bar')).getByRole('button', { name: 'Hidden' }))
+    await userEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: 'Hidden' }))
 
     await waitFor(() => expect(patches()).toHaveLength(1))
     expect(patches()[0]!.body).toEqual({ variants: [{ id: all[0]!.id, status: 'draft' }, { id: all[1]!.id, status: 'draft' }] })
@@ -303,7 +383,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
 
     await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select XS / Red' }))
     await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select S / Red' }))
-    await userEvent.click(within(screen.getByTestId('bulk-bar')).getByRole('button', { name: 'Archive' }))
+    await userEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: 'Archive' }))
     const dialog = await screen.findByRole('alertdialog')
 
     expect(dialog).toHaveTextContent('Archive 2 variants?')
@@ -325,7 +405,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     await openStep()
 
     await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select XS / Red' }))
-    await userEvent.click(within(screen.getByTestId('bulk-bar')).getByRole('button', { name: 'Archive' }))
+    await userEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: 'Archive' }))
     await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Archive variant' }))
 
     expect(await within(screen.getByRole('alertdialog')).findByText(/Can’t archive VX-XS-RED/)).toBeInTheDocument()
@@ -540,7 +620,7 @@ describe('[T-008][AC9] a new keepsake: the same step, held in the browser', () =
 
     await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select M' }))
     await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select L' }))
-    await userEvent.click(within(screen.getByTestId('bulk-bar')).getByRole('button', { name: 'Remove variant' }))
+    await userEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: 'Remove variant' }))
     const dialog = await screen.findByRole('alertdialog')
 
     expect(dialog).toHaveTextContent('Remove 2 variants?')
@@ -561,7 +641,7 @@ describe('[T-008][AC9] a new keepsake: the same step, held in the browser', () =
     await done()
     await waitFor(() => expect(rows()).toHaveLength(2))
     await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select M' }))
-    await userEvent.click(within(screen.getByTestId('bulk-bar')).getByRole('button', { name: 'Remove variant' }))
+    await userEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: 'Remove variant' }))
     await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Remove variant' }))
     await waitFor(() => expect(rows()).toHaveLength(1))
     await next()

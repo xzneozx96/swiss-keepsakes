@@ -247,6 +247,7 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.variants.selected.other': '{count} ausgewählt',
   'keepsakes.variants.bulk.setPrice': 'Preis setzen',
   'keepsakes.variants.bulk.apply': 'Übernehmen',
+  'keepsakes.variants.bulk.priceFor': 'Neuer Preis für {count} Varianten',
   'keepsakes.variants.bulk.priceLabel': 'Neuer Preis, CHF',
   'keepsakes.variants.bulk.done.one': '1 Variante aktualisiert.',
   'keepsakes.variants.bulk.done.other': '{count} Varianten aktualisiert.',

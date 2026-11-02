@@ -107,6 +107,10 @@ export { Qr as QrIcon } from 'reicon-react'
 /** Sliders: "adjust what you see" (owner, 14 Oct 2026: clearer than the funnel shape). */
 export { Setting4 as FilterIcon } from 'reicon-react'
 export { Archive as ArchiveIcon } from 'reicon-react'
+/** The Variants block's bulk actions (ActionBar): set a price, put on sale, hide. */
+export { Money as PriceIcon } from 'reicon-react'
+export { Eye as ForSaleIcon } from 'reicon-react'
+export { EyeOff as HiddenIcon } from 'reicon-react'
 export { Trash4 as CartRemoveIcon } from 'reicon-react'
 // Map controls
 export { Fullscreen as FullscreenIcon } from 'reicon-react'

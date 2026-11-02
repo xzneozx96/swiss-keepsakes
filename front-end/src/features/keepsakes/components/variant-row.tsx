@@ -96,7 +96,7 @@ export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, 
   const forSale = held || variant.status === 'published'
 
   return (
-    <li className={`grid grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 rounded-2xl px-2 py-2 sm:grid-cols-[auto_auto_minmax(0,1fr)_auto_6.5rem_auto] ${isSelected ? 'bg-default' : ''}`} data-testid="variant-row">
+    <li className="grid grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 rounded-2xl px-2 py-2 sm:grid-cols-[auto_auto_minmax(0,1fr)_auto_6.5rem_auto]" data-testid="variant-row">
       <Checkbox aria-label={t('keepsakes.variants.select', { name: title })} isSelected={isSelected} onChange={onSelect}>
         <Checkbox.Content>
           <Checkbox.Control>

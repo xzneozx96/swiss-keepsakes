@@ -6,9 +6,10 @@ import type { VariantActions } from '../lib/variant-actions'
 import { Button, Checkbox, Label } from '@heroui/react'
 import { useState } from 'react'
 
+import { ActionBar } from '@/components/action-bar'
 import { useConfirm } from '@/components/confirm-dialog'
 import { Block } from '@/components/form-block'
-import { ChevronDownIcon, ProductsIcon } from '@/components/icons'
+import { ArchiveIcon, ChevronDownIcon, ForSaleIcon, HiddenIcon, PriceIcon, ProductsIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { groupByFirstOption, priceRange } from '../lib/combinations'
 import { chf } from '../lib/keepsake-rules'
@@ -18,7 +19,7 @@ import { QuietNote } from './option-bits'
 import { SkuSwitch } from './sku-switch'
 import { PreviewRow, VariantRow } from './variant-row'
 import { VariantSheet } from './variant-sheet'
-import { VariantsBulkBar } from './variants-bulk-bar'
+import { VariantsPriceForm } from './variants-bulk-bar'
 
 /** What the merchant is told when a request was refused, in the words of the refusal or of the problem. */
 function failureText(t: ReturnType<typeof useLocale>['t'], outcome: Extract<Outcome, { ok: false }>) {
@@ -97,6 +98,7 @@ export function VariantsBlock({ storeId, options, variants, held, actions, previ
 
     return outcome
   }
+  const [pricing, setPricing] = useState(false)
   const tick = (ids: string[], on: boolean) => setSelected((current) => {
     const next = new Set(current)
 
@@ -174,14 +176,35 @@ export function VariantsBlock({ storeId, options, variants, held, actions, previ
         </Checkbox>
         <span className="text-sm text-muted">{t(live.length === 1 ? 'keepsakes.list.variants.one' : 'keepsakes.list.variants.other', { count: live.length })}</span>
       </div>
-      {ticked.length > 0 && (
-        <VariantsBulkBar
+      {pricing && ticked.length > 0 && (
+        <VariantsPriceForm
           count={ticked.length}
-          held={held}
           isPending={isPending}
-          onArchive={() => void archive(ticked, () => setSelected(new Set()))}
-          onPrice={rappen => forTicked({ priceRappen: rappen })}
-          onStatus={status => forTicked({ status })}
+          onApply={(rappen) => {
+            forTicked({ priceRappen: rappen })
+            setPricing(false)
+          }}
+          onCancel={() => setPricing(false)}
+        />
+      )}
+      {/* The shared floating bar of bulk selection, as in Media: count, actions, clear. */}
+      {ticked.length > 0 && (
+        <ActionBar
+          actions={[
+            { icon: PriceIcon, label: t('keepsakes.variants.bulk.setPrice'), isDisabled: isPending, onPress: () => setPricing(true) },
+            ...(held
+              ? []
+              : [
+                  { icon: ForSaleIcon, label: t('keepsakes.variant.status.published'), isDisabled: isPending, onPress: () => forTicked({ status: 'published' }) },
+                  { icon: HiddenIcon, label: t('keepsakes.variant.status.hidden'), isDisabled: isPending, onPress: () => forTicked({ status: 'draft' }) },
+                ]),
+            { icon: held ? TrashIcon : ArchiveIcon, label: t(held ? 'keepsakes.variants.remove' : 'keepsakes.variant.archive'), tone: 'danger', isDisabled: isPending, onPress: () => void archive(ticked, () => setSelected(new Set())) },
+          ]}
+          count={ticked.length}
+          onClear={() => {
+            setSelected(new Set())
+            setPricing(false)
+          }}
         />
       )}
       {failure && <QuietNote>{failure}</QuietNote>}

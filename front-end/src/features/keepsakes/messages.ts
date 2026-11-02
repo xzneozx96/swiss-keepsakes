@@ -246,6 +246,7 @@ export const keepsakesEn = {
   'keepsakes.variants.selected.other': '{count} selected',
   'keepsakes.variants.bulk.setPrice': 'Set price',
   'keepsakes.variants.bulk.apply': 'Apply',
+  'keepsakes.variants.bulk.priceFor': 'New price for {count} variants',
   'keepsakes.variants.bulk.priceLabel': 'New price, CHF',
   'keepsakes.variants.bulk.done.one': '1 variant updated.',
   'keepsakes.variants.bulk.done.other': '{count} variants updated.',
