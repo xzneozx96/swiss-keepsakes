@@ -3,7 +3,7 @@ import type { StartStep } from '../lib/search-params'
 import { Button } from '@heroui/react'
 
 import { EmptyState } from '@/components/empty-state'
-import { ContentIcon, InfoIcon } from '@/components/icons'
+import { ContentIcon, InfoIcon, ResetIcon } from '@/components/icons'
 import { StepEditorSkeleton } from '@/components/layout/detail-skeletons'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
@@ -44,7 +44,10 @@ export function PlaceEditorScreen({ placeId, start }: { placeId: string, start: 
     return (
       <div className="flex flex-col items-start gap-2 rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">
         <p>{t(problem?.type === 'forbidden' ? 'places.problem.forbidden' : 'places.loadFailed')}</p>
-        <Button className="min-h-11" variant="outline" onPress={() => void place.refetch()}>{t('places.retry')}</Button>
+        <Button className="min-h-11" variant="primary" onPress={() => void place.refetch()}>
+          <ResetIcon aria-hidden size={18} />
+          {t('places.retry')}
+        </Button>
       </div>
     )
   }
