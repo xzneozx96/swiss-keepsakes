@@ -188,7 +188,7 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     expect(row?.request_id).toMatch(uuidPattern)
   })
 
-  it('[E2.6][AC79] hide writes the audit row, and a pin that was published cannot be deleted', async () => {
+  it('[E2.6][T-016][AC79] hide writes the audit row, and the hidden pin is then deleted with 204', async () => {
     const { owner, manager, pins, storeId } = await env.storeWithStaff()
     const created = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Lion Monument' }, ...located } })).json() as { id: string }
     await env.call(`${pins}/${created.id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '1' } })
@@ -204,8 +204,28 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     expect(rows[1]?.request_id).toMatch(uuidPattern)
 
     const removed = await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: { ...owner.headers, 'If-Match': '3' } })
-    expect(removed.status).toBe(409)
-    expect(await removed.json()).toMatchObject({ type: 'published-cannot-be-deleted', title: 'A published item cannot be deleted. Hide it instead.' })
+    expect(removed.status).toBe(204)
+    expect(await count(pool, 'select count(*) from content.places where id = $1', [created.id])).toBe(0)
+  })
+
+  it('[T-016][AC1][AC3] a published pin that nothing uses is deleted with 204; one that a tour stop uses is 409 content-in-use naming the tour, and Hide then works', async () => {
+    const { owner, pins, storeId } = await env.storeWithStaff()
+    const make = async (title: string) => {
+      const created = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: title }, ...located } })).json() as { id: string }
+      await env.call(`${pins}/${created.id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '1' } })
+      return created.id
+    }
+    const free = await make('Free Pin')
+    const used = await make('Used Pin')
+    const tour = (await pool.query<{ id: string }>('insert into content.tours (store_id) values ($1) returning id', [storeId])).rows[0]!.id
+    await pool.query(`insert into content.tour_stops (tour_id, store_id, position, latitude, longitude, content, place_id) values ($1, $2, 1, 47, 8, '{}', $3)`, [tour, storeId, used])
+
+    expect((await env.call(`${pins}/${free}`, { method: 'DELETE', headers: { ...owner.headers, 'If-Match': '2' } })).status).toBe(204)
+    const refused = await env.call(`${pins}/${used}`, { method: 'DELETE', headers: { ...owner.headers, 'If-Match': '2' } })
+    expect(refused.status).toBe(409)
+    expect(await refused.json()).toMatchObject({ type: 'content-in-use', errors: [{ code: 'pin-in-use', params: { stories: 0, reviews: 0, tours: 1 } }] })
+    expect(await count(pool, 'select count(*) from content.places where id = any($1::uuid[])', [[free, used]])).toBe(1)
+    expect((await env.call(`${pins}/${used}/hide`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '2' } })).status).toBe(200)
   })
 
   it('[E2.6] a draft pin is deleted with 204, and then it is gone', async () => {

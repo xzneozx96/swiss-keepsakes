@@ -159,11 +159,11 @@ describe('[E4.2][AC68] N17 the review is a phone with the guest map', () => {
     expect(await screen.findByRole('heading', { name: /Place on the map$/, level: 2 })).toBeInTheDocument()
   })
 
-  it('keeps Delete draft and the map link beside the phone, and Publish only in the step bar', async () => {
+  it('keeps Delete and the map link beside the phone, and Publish only in the step bar', async () => {
     await openReview()
 
     expect(screen.getAllByRole('button', { name: 'Publish' })).toHaveLength(1)
-    expect(screen.getByRole('button', { name: 'Delete draft' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument()
     expect(screen.getByText('Made from the title when you publish')).toBeInTheDocument()
     expect(screen.queryByText(/Publishing puts the pin on the guest map/)).not.toBeInTheDocument()
   })

@@ -78,7 +78,7 @@ async function names(pool: Pool, text: string, values: unknown[] = []): Promise<
 }
 
 const droppedTriggers = ['story_versions_keep_pin_story', 'story_versions_keep_pin_story_on_delete', 'places_pin_has_published_story', 'places_type_is_immutable']
-const keptTriggers = ['places_keep_once_published', 'story_versions_keep_once_published', 'story_versions_published_is_kept', 'places_first_published_is_fixed', 'places_no_truncate', 'story_versions_no_truncate']
+const keptTriggers = ['story_versions_keep_once_published', 'story_versions_published_is_kept', 'places_first_published_is_fixed', 'places_no_truncate', 'story_versions_no_truncate']
 
 const triggersSql = `select t.tgname as name from pg_trigger t join pg_class c on c.oid = t.tgrelid join pg_namespace n on n.oid = c.relnamespace
   where n.nspname = 'content' and c.relname in ('places', 'story_versions') and not t.tgisinternal`

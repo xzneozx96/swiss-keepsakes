@@ -82,7 +82,7 @@ One responsive design: a table on desktop and rows on phones (the dashboard's li
 - **Per pin:** title (with which languages exist), status, map categories, next date, stay tag, interests, main story (with a warning when the story has no published version) and last edited.
 - **Status:** draft, published, hidden, and **ended**: published but past its last date, so it is no longer on the guests' map (AC86).
 - **Filters:** status (including ended), category (including "no category"), stay tag, has dates, and search.
-- **Actions:** edit, hide, unhide, delete. **Only a draft can be deleted.** A published pin can only be hidden (AC79).
+- **Actions:** edit, hide, unhide, delete. **Every pin can be deleted when nothing uses it** (amended 2026-11-02, owner; was: only a draft, AC79). A pin that a story, an editorial review or a tour uses is refused in words (what uses it and how many), and a pin that is not hidden yet is offered Hide instead.
 - **Add place** and **Add event** are two ways into the same editor. Add event opens it with the dates section ready.
 - **States:** normal (a list of pins), loading, empty (no pins yet) and no matches.
 
@@ -101,7 +101,7 @@ The editor uses the **tour editor's stepper** (M13, now shared: `components/step
 
 - **New pin:** walk the steps with **Next**; **Save draft** at any time. **Existing pin:** open any step and save from any step.
 - **Publish rules** (AC68): a title in at least one language, a location and a slug. Everything else is optional. Publish is off until they hold, and the panel lists what is missing.
-- **Lifecycle:** a draft can be deleted. A published pin can only be hidden, after a confirm. A hidden pin can be shown again.
+- **Lifecycle:** any pin can be deleted after a confirm that says it cannot be undone, if nothing uses it (amended 2026-11-02, owner). A published pin can be hidden, after a confirm. A hidden pin can be shown again.
 - **Scenarios in the lab:** new place, new event, published pin, hidden pin, ended event, draft with errors (German title only, no location, a link another pin uses, a 22:00 to 00:30 entry and a link with a space).
 - **Preview** in EN and DE: the editor has "Preview EN" and "Preview DE" actions, and the lab shows the guest phone beside the editor drawing the unsaved edits. In the product the preview is an `ssr:false` route (decision D6).
 - Editor fields are bilingual and validated in the API as well as the UI (ADR-003). Every block of a step is a non-collapsible card; a card that groups several fields has an icon tile, a title and a summary, and a one-field card has none, so no heading repeats a field label.

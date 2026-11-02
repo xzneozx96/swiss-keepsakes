@@ -215,6 +215,9 @@ export interface PinListRow {
 /** A row of the merchant pin list with its cover file: the entry of the domain plus what the view needs for the photo. */
 export type MerchantPinEntry = PinListEntry & { cover: MediaRecord | null }
 
+/** How many things use a pin: stories that link it, editorial reviews about it, tours with a stop on it. */
+export interface PinUsage { stories: number, reviews: number, tours: number }
+
 export interface PinRepository<T> {
   insert: (tx: T, storeId: string, changes: PinChanges, at: Date) => Promise<Pin>
   // Locks the row; dates and category ids come with it. An id of another store has no row.
@@ -225,6 +228,9 @@ export interface PinRepository<T> {
   // published languages (places_published_fields_check); first_published_at is kept once set.
   publish: (tx: T, pin: Pin, at: Date, slug: Localized) => Promise<Pin>
   hide: (tx: T, pin: Pin, at: Date) => Promise<Pin>
+  // What names the pin and so holds it against a delete: stories that link it, editorial reviews about it, tour stops on it.
+  usage: (tx: T, storeId: string, pinId: string) => Promise<PinUsage>
+  // Its dates, categories, photos and link go with it (ON DELETE CASCADE). Any status: migration 0020 lifted the published guard.
   remove: (tx: T, storeId: string, pinId: string) => Promise<boolean>
   // The ids among the given ones that are pins of this store, whatever their status. An id of another store is left out.
   idsInStore: (tx: T, storeId: string, ids: string[]) => Promise<string[]>

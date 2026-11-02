@@ -96,7 +96,7 @@ const deletePinRoute = createRoute({
   path: '/api/store/{storeId}/pins/{pinId}',
   request: { params: pinParams, ...withIfMatch },
   responses: {
-    204: { description: 'The pin is deleted. Only a pin that was never published can be', headers: requestIdHeader },
+    204: { description: 'The pin is deleted, whatever its status, when no story, review or tour uses it', headers: requestIdHeader },
     ...problemResponses,
   },
 })

@@ -298,6 +298,15 @@ export function createPinRepository(): PinRepository<Tx> {
       return reload(tx, pin)
     },
 
+    async usage(tx, storeId, pinId) {
+      const { rows } = await tx.execute<{ stories: number, reviews: number, tours: number }>(sql`
+        select
+          (select count(*)::int from content.story_group_places where store_id = ${storeId} and place_id = ${pinId}) as stories,
+          (select count(*)::int from content.story_groups where store_id = ${storeId} and subject_place_id = ${pinId}) as reviews,
+          (select count(distinct tour_id)::int from content.tour_stops where store_id = ${storeId} and place_id = ${pinId}) as tours`)
+      return rows[0]!
+    },
+
     async remove(tx, storeId, pinId) {
       const deleted = await tx.execute(sql`delete from content.places where store_id = ${storeId} and id = ${pinId} returning id`)
       return deleted.rows.length > 0

@@ -18823,7 +18823,7 @@
         ],
         "responses": {
           "204": {
-            "description": "The pin is deleted. Only a pin that was never published can be",
+            "description": "The pin is deleted, whatever its status, when no story, review or tour uses it",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"

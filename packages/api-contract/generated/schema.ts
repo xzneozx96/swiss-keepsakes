@@ -2177,7 +2177,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description The pin is deleted. Only a pin that was never published can be */
+                /** @description The pin is deleted, whatever its status, when no story, review or tour uses it */
                 204: {
                     headers: {
                         "X-Request-Id": components["headers"]["RequestId"];

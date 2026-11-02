@@ -9,14 +9,16 @@ import { ApiProblem } from '@/features/data-client/errors'
 import { useSubmit } from '@/features/data-client/use-command'
 import { titleOf } from '../lib/list'
 import { problemMessageKey } from '../lib/problems'
+import { askDeletePin } from './ask-delete-pin'
 
 /**
- * The writes of the list: hide after a confirm, show again, delete a draft after a confirm. One write at a
+ * The writes of the list: hide after a confirm, show again, delete after a confirm. One write at a
  * time, each with its own `Idempotency-Key`. Hide and delete run inside their confirm dialog (spinner, then the
  * row changes at once, `commandChanges`), and a refusal shows in it; show again shows its refusal next to the list.
  */
 export function usePlaceActions(storeId: string) {
-  const { t, language } = useLocale()
+  const locale = useLocale()
+  const { t, language } = locale
   // Which row a tap acted on, written only once its submit went out (`api-feedback.md`).
   const nameRef = useRef('')
   // A refusal shows next to the list (`notice`), so the cache's error toast is off.
@@ -63,12 +65,14 @@ export function usePlaceActions(storeId: string) {
       if (busy)
         return
       setNotice(undefined)
-      void confirm({
-        title: t('places.delete.title', { name: nameOf(item) }),
-        body: t('places.delete.body'),
-        confirmLabel: t('places.delete.confirm'),
-        problem,
-        run: () => remove.submitAsync({ storeId, id: item.id, ifMatch: item.rowVersion, idempotencyKey: crypto.randomUUID() }),
+      nameRef.current = nameOf(item)
+      void askDeletePin({
+        locale,
+        confirm,
+        name: nameOf(item),
+        canHide: item.status !== 'hidden',
+        remove: () => remove.submitAsync({ storeId, id: item.id, ifMatch: item.rowVersion, idempotencyKey: crypto.randomUUID() }),
+        hide: () => hide.submitAsync({ storeId, id: item.id, ifMatch: item.rowVersion, idempotencyKey: crypto.randomUUID() }),
       })
     },
   }

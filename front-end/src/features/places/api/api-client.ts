@@ -1,6 +1,7 @@
 import type { PlacesClient } from './client'
 
 import { answer, keyed, loadClient, problemOf, timeout } from '@/features/data-client/api-transport'
+import { PinProblem } from '../lib/problems'
 
 const withVersion = (idempotencyKey: string, ifMatch: number) => ({ ...keyed(idempotencyKey), params: { header: { 'If-Match': String(ifMatch) } } })
 
@@ -36,7 +37,7 @@ export function createPlacesClient(): PlacesClient {
       const { error, response } = await (await loadClient()).DELETE('/api/store/{storeId}/pins/{pinId}', { ...keyed(idempotencyKey), params: { ...params, path: { storeId, pinId: id } } })
 
       if (!response.ok)
-        throw problemOf(response, error)
+        throw new PinProblem(problemOf(response, error), error)
     },
     resolveMapsLink: async ({ storeId, url }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/maps-link', { ...timeout(), params: { path: { storeId }, query: { url } } })),

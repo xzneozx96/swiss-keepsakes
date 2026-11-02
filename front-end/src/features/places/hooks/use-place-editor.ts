@@ -18,6 +18,7 @@ import { useIdempotencyKey } from '@/features/stores/hooks/use-idempotency-key'
 import { bodyOf, emptyForm, formOf, isDirty, publishGaps, validate } from '../lib/form'
 import { problemMessageKey } from '../lib/problems'
 import { PLACES_PATH } from '../lib/search-params'
+import { askDeletePin } from './ask-delete-pin'
 
 export const STEP_IDS = ['place', 'content', 'when', 'tags', 'links', 'review'] as const
 export type StepId = typeof STEP_IDS[number]
@@ -50,7 +51,8 @@ function statusOf(id: StepId, form: PlaceForm, errors: FormErrors, refused: bool
  * moves to its own address.
  */
 export function usePlaceEditor({ storeId, initial, start }: { storeId: string, initial: Pin | undefined, start: StartStep | undefined }) {
-  const { t } = useLocale()
+  const locale = useLocale()
+  const { t } = locale
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   // The editor shows every refusal itself (`notice`), so each write is `silent`. What a save says depends on the tap
@@ -229,12 +231,14 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
     const name = form.titleEn || form.titleDe || t('places.row.untitled')
 
     clear()
-    void confirm({
-      title: t('places.delete.title', { name }),
-      body: t('places.delete.body'),
-      confirmLabel: t('places.delete.confirm'),
-      problem: problemText,
-      run: () => remove.submitAsync({ storeId, id: pin.id, ifMatch: pin.rowVersion, idempotencyKey: crypto.randomUUID() }).then(() => void navigate({ to: PLACES_PATH as never })),
+    hiddenNameRef.current = name
+    void askDeletePin({
+      locale,
+      confirm,
+      name,
+      canHide: pin.status !== 'hidden',
+      remove: () => remove.submitAsync({ storeId, id: pin.id, ifMatch: pin.rowVersion, idempotencyKey: crypto.randomUUID() }).then(() => void navigate({ to: PLACES_PATH as never })),
+      hide: () => hide.submitAsync({ storeId, id: pin.id, ifMatch: pin.rowVersion, idempotencyKey: crypto.randomUUID() }).then(adopt),
     })
   }
 

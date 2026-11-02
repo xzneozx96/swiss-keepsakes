@@ -216,6 +216,15 @@ describe('[E2.6] publish, hide and delete answer the editor in its own words', (
     expect(await response.json()).toMatchObject({ type: 'published-cannot-be-deleted', title: 'A published item cannot be deleted. Hide it instead.' })
   })
 
+  it('[T-016][AC3] DELETE of a pin that stories, reviews or tours use answers 409 content-in-use with how many of each', async () => {
+    const app = setup({ deletePin: async () => ({ ok: false, reason: 'pin-in-use', stories: 2, reviews: 0, tours: 1 }) })
+
+    const response = await send(app, 'DELETE', pin, { 'If-Match': '1' })
+
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({ type: 'content-in-use', errors: [{ code: 'pin-in-use', params: { stories: 2, reviews: 0, tours: 1 } }] })
+  })
+
   it('[E2.6] DELETE with If-Match 3 passes the version to the use case and answers 204 with no body', async () => {
     const seen: number[] = []
     const app = setup({ deletePin: async (_actor, _storeId, id, ifMatch) => {

@@ -250,14 +250,56 @@ describe('[E2.6] pin repository on the real database', () => {
     expect(mapDatabaseError(error)).toEqual({ reason: 'slug-taken' })
   })
 
-  it('[E2.6][AC79] the database refuses a direct delete of a published pin and mapDatabaseError says published-cannot-be-deleted', async () => {
+  it('[T-016][AC1] a published pin that nothing uses is deleted with its dates, categories, photos and link, and the guest map no longer has it', async () => {
+    const s = setup()
+    const category = await mapCategory(s.store)
+    const photo = await media(s.store, 'image')
+    const pin = await draft(s, { categoryIds: [category], photos: [{ mediaId: photo, alt: {} }], outboundUrl: 'https://example.com/', dates: [{ firstDay: '2030-05-01', lastDay: '2030-05-02' }] })
+    await s.use.publish(s.actor, s.store, pin.id, 1, null)
+    const own = async () => (await Promise.all(['place_categories', 'place_photos', 'place_links', 'place_dates'].map(table => count(pool, `select count(*) from content.${table} where place_id = $1`, [pin.id])))).join()
+    expect(await own()).toBe('1,1,1,1')
+    expect(await count(pool, 'select count(*) from content.public_pins where id = $1', [pin.id])).toBe(1)
+
+    expect(await s.use.remove(s.actor, s.store, pin.id, 2, null)).toEqual({ ok: true, value: { id: pin.id } })
+
+    expect(await pinRow(pin.id)).toBeUndefined()
+    expect(await own()).toBe('0,0,0,0')
+    expect(await count(pool, 'select count(*) from content.public_pins where id = $1', [pin.id])).toBe(0)
+    expect(await count(pool, `select count(*) from content.media where id = $1`, [photo])).toBe(1)
+  })
+
+  it('[T-016][AC2] a hidden pin that nothing uses is deleted', async () => {
     const s = setup()
     const pin = await draft(s)
     await s.use.publish(s.actor, s.store, pin.id, 1, null)
-    const error = await thrown(() => s.uow.run(tx => s.pins.remove(tx, s.store, pin.id)))
-    expect(error).toMatchObject({ cause: { code: '23001' } })
-    expect(mapDatabaseError(error)).toEqual({ reason: 'published-cannot-be-deleted' })
+    await s.use.hide(s.actor, s.store, pin.id, 2, null)
+    expect(await s.use.remove(s.actor, s.store, pin.id, 3, null)).toEqual({ ok: true, value: { id: pin.id } })
+    expect(await pinRow(pin.id)).toBeUndefined()
+  })
+
+  it('[T-016][AC3] a published pin that a story, a review and a tour use is refused with how many of each, and stays', async () => {
+    const s = setup()
+    const pin = await draft(s)
+    await s.use.publish(s.actor, s.store, pin.id, 1, null)
+    const group = (await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [s.store])).rows[0]!.id
+    await pool.query('insert into content.story_group_places (group_id, place_id, store_id, position) values ($1, $2, $3, 1)', [group, pin.id, s.store])
+    await pool.query(`insert into content.story_groups (store_id, kind, subject_place_id) values ($1, 'editorial_review', $2)`, [s.store, pin.id])
+    const tour = (await pool.query<{ id: string }>('insert into content.tours (store_id) values ($1) returning id', [s.store])).rows[0]!.id
+    for (const position of [1, 2])
+      await pool.query(`insert into content.tour_stops (tour_id, store_id, position, latitude, longitude, content, place_id) values ($1, $2, $3, 47, 8, '{}', $4)`, [tour, s.store, position, pin.id])
+
+    expect(await s.use.remove(s.actor, s.store, pin.id, 2, null)).toEqual({ ok: false, reason: 'pin-in-use', stories: 1, reviews: 1, tours: 1 })
     expect((await pinRow(pin.id))?.status).toBe('published')
+  })
+
+  it('[T-016] a published pin that a story links is still refused by the database itself (RESTRICT), not only by the check', async () => {
+    const s = setup()
+    const pin = await draft(s)
+    await s.use.publish(s.actor, s.store, pin.id, 1, null)
+    const group = (await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [s.store])).rows[0]!.id
+    await pool.query('insert into content.story_group_places (group_id, place_id, store_id, position) values ($1, $2, $3, 1)', [group, pin.id, s.store])
+    const error = await thrown(() => s.uow.run(tx => s.pins.remove(tx, s.store, pin.id)))
+    expect(mapDatabaseError(error)).toEqual({ reason: 'in-use' })
   })
 
   it('[E2.6][AC79] a draft pin that a story group or a tour stop names is in-use, not a thrown error', async () => {
@@ -269,12 +311,12 @@ describe('[E2.6] pin repository on the real database', () => {
     // ON DELETE RESTRICT raises restrict_violation (23001), not 23503, with the "update or delete on table" wording.
     expect(error).toMatchObject({ cause: { code: '23001', message: expect.stringContaining('update or delete on table') } })
     expect(mapDatabaseError(error)).toEqual({ reason: 'in-use' })
-    expect(await s.use.remove(s.actor, s.store, mentioned.id, 1, null)).toEqual({ ok: false, reason: 'in-use' })
+    expect(await s.use.remove(s.actor, s.store, mentioned.id, 1, null)).toEqual({ ok: false, reason: 'pin-in-use', stories: 1, reviews: 0, tours: 0 })
 
     const stopped = await draft(s)
     const tour = (await pool.query<{ id: string }>('insert into content.tours (store_id) values ($1) returning id', [s.store])).rows[0]!.id
     await pool.query(`insert into content.tour_stops (tour_id, store_id, position, latitude, longitude, content, place_id) values ($1, $2, 1, 47, 8, '{}', $3)`, [tour, s.store, stopped.id])
-    expect(await s.use.remove(s.actor, s.store, stopped.id, 1, null)).toEqual({ ok: false, reason: 'in-use' })
+    expect(await s.use.remove(s.actor, s.store, stopped.id, 1, null)).toEqual({ ok: false, reason: 'pin-in-use', stories: 0, reviews: 0, tours: 1 })
     expect(await pinRow(stopped.id)).toBeDefined()
   })
 

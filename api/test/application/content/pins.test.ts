@@ -100,20 +100,38 @@ describe('pin use cases', () => {
     expect(s.pins.rows.has(pin.id)).toBe(false)
   })
 
-  it('[E2.6][AC79] a delete with a stale If-Match is stale and the pin stays, even a published one (stale before published-cannot-be-deleted)', async () => {
+  it('[E2.6][AC79] a delete with a stale If-Match is stale and the pin stays, even a published one', async () => {
     const s = setup()
     const pin = await created(s)
     expect(await s.remove(owner, store, pin.id, 2, null)).toEqual({ ok: false, reason: 'stale' })
     expect(s.pins.rows.has(pin.id)).toBe(true)
     await s.publish(owner, store, pin.id, 1, null)
     expect(await s.remove(owner, store, pin.id, 1, null)).toEqual({ ok: false, reason: 'stale' })
+    expect(s.pins.rows.has(pin.id)).toBe(true)
   })
 
-  it('[E2.6][AC79] a published pin cannot be deleted and stays published', async () => {
+  it('[T-016][AC1] a published pin that nothing uses is deleted', async () => {
     const s = setup()
     const pin = await created(s)
     await s.publish(owner, store, pin.id, 1, null)
-    expect(await s.remove(owner, store, pin.id, 2, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
+    expect(await s.remove(owner, store, pin.id, 2, null)).toEqual({ ok: true, value: { id: pin.id } })
+    expect(s.pins.rows.has(pin.id)).toBe(false)
+  })
+
+  it('[T-016][AC2] a hidden pin that nothing uses is deleted', async () => {
+    const s = setup()
+    const pin = await created(s)
+    await s.publish(owner, store, pin.id, 1, null)
+    await s.hide(owner, store, pin.id, 2, null)
+    expect(await s.remove(owner, store, pin.id, 3, null)).toEqual({ ok: true, value: { id: pin.id } })
+  })
+
+  it('[T-016][AC3] a pin that a story, a review or a tour uses is refused with how many of each, and stays', async () => {
+    const s = setup()
+    const pin = await created(s)
+    await s.publish(owner, store, pin.id, 1, null)
+    s.pins.usages.set(pin.id, { stories: 2, reviews: 1, tours: 3 })
+    expect(await s.remove(owner, store, pin.id, 2, null)).toEqual({ ok: false, reason: 'pin-in-use', stories: 2, reviews: 1, tours: 3 })
     expect(s.pins.rows.get(pin.id)?.status).toBe('published')
   })
 

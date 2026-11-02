@@ -58,7 +58,7 @@ function Checklist({ form, go }: Pick<StepProps, 'form' | 'go'>) {
   )
 }
 
-/** Show on map again while the pin is hidden, Hide while it is live, and Delete while it is a draft. Publish is the step bar's red action. */
+/** Show on map again while the pin is hidden, Hide while it is live, and Delete for every saved pin. Publish is the step bar's red action. */
 function Actions({ pin, actions }: Pick<StepProps, 'pin'> & { actions: ReviewActions }) {
   const { t } = useLocale()
   const status = pin?.status ?? 'new'
@@ -69,7 +69,7 @@ function Actions({ pin, actions }: Pick<StepProps, 'pin'> & { actions: ReviewAct
       <div className="flex flex-wrap gap-2">
         {status === 'published' && <Button className="max-lg:min-h-11" isDisabled={actions.busy || actions.dirty} variant="danger-soft" onPress={actions.hide}>{t('places.action.hide')}</Button>}
         {status === 'hidden' && <Button className="max-lg:min-h-11" isDisabled={actions.busy} variant="secondary" onPress={actions.unhide}>{t('places.action.unhide')}</Button>}
-        {status === 'draft' && <Button className="max-lg:min-h-11" isDisabled={actions.busy} variant="danger-soft" onPress={actions.remove}>{t('places.action.delete')}</Button>}
+        {pin && <Button className="max-lg:min-h-11" isDisabled={actions.busy} variant="danger-soft" onPress={actions.remove}>{t('places.action.delete')}</Button>}
       </div>
       {status === 'published' && actions.dirty && <p className="text-sm text-muted">{t('places.hide.unsaved')}</p>}
     </div>

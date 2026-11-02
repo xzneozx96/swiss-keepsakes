@@ -9,7 +9,7 @@ import { SECTION_PAGES } from '@/components/layout/section-pages'
 import { PlacesScreen } from '@/features/places/components/places-screen'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
-import { installApi, listItem, problem, renderInRouter, storeId, uuid } from './places-support'
+import { installApi, listItem, pinInUse, problem, renderInRouter, storeId, uuid } from './places-support'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -400,13 +400,13 @@ describe('[E4.2][AC68] N16 the list', () => {
     expect((await screen.findAllByText(/No pins match/)).length).toBeGreaterThan(0)
   })
 
-  it('[E4.2][AC79] a published pin can be hidden and not deleted: hide asks first, sends If-Match and a key, and the list reloads', async () => {
+  it('[E4.2][AC79] a published pin can be hidden: hide asks first, sends If-Match and a key, and the list reloads', async () => {
     const success = vi.spyOn(toast, 'success')
     api.items = [listItem({ id: uuid(11), status: 'published', title: { en: 'Chapel Bridge' }, rowVersion: 4 })]
     await open()
     await screen.findAllByRole('link', { name: 'Chapel Bridge' })
     await userEvent.click(screen.getAllByRole('button', { name: 'Actions for Chapel Bridge' }).at(-1)!)
-    expect(screen.queryByRole('menuitem', { name: 'Delete draft' })).not.toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument()
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Hide from map' }))
 
     expect(await screen.findByText('Hide Chapel Bridge?')).toBeInTheDocument()
@@ -419,6 +419,60 @@ describe('[E4.2][AC68] N16 the list', () => {
     expect(success).toHaveBeenCalledExactlyOnceWith('Chapel Bridge is hidden.')
   })
 
+  it.each(['published', 'hidden', 'ended'] as const)('[T-016][AC1][AC2] a %s pin is deleted after a confirm that says it cannot be undone', async (status) => {
+    const success = vi.spyOn(toast, 'success')
+    api.items = [listItem({ id: uuid(11), status, title: { en: 'Chapel Bridge' }, rowVersion: 5 })]
+    await open()
+    await screen.findAllByRole('link', { name: 'Chapel Bridge' })
+    await openMenu('Chapel Bridge', 'Delete')
+    const dialog = await screen.findByRole('alertdialog')
+
+    expect(within(dialog).getByText('Delete Chapel Bridge?')).toBeInTheDocument()
+    expect(within(dialog).getByText(/can’t be undone/)).toBeInTheDocument()
+    expect(writes('DELETE')).toHaveLength(0)
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => expect(writes('DELETE')).toHaveLength(1))
+    expect(writes('DELETE')[0]).toMatchObject({ path: `/api/store/${storeId}/pins/${uuid(11)}`, ifMatch: '5' })
+    await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('Pin deleted.'))
+  })
+
+  it('[T-016][AC3] a published pin that stories and tours use is refused: the dialog names what uses it and offers Hide, which hides it', async () => {
+    const success = vi.spyOn(toast, 'success')
+    api.items = [listItem({ id: uuid(11), status: 'published', title: { en: 'Chapel Bridge' }, rowVersion: 4 })]
+    api.answer = call => (call.method === 'DELETE' ? pinInUse({ stories: 1, tours: 2 }) : undefined)
+    await open()
+    await screen.findAllByRole('link', { name: 'Chapel Bridge' })
+    await openMenu('Chapel Bridge', 'Delete')
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete' }))
+
+    expect(await screen.findByText('Can’t delete Chapel Bridge')).toBeInTheDocument()
+    const dialog = screen.getByRole('alertdialog')
+
+    expect(dialog).toHaveTextContent('still used by 1 story and 2 tours')
+    expect(within(dialog).queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument()
+    api.answer = undefined
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Hide pin' }))
+
+    await waitFor(() => expect(writes('POST')).toHaveLength(1))
+    expect(writes('POST')[0]).toMatchObject({ path: `/api/store/${storeId}/pins/${uuid(11)}/hide`, ifMatch: '4' })
+    await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('Chapel Bridge is hidden.'))
+  })
+
+  it('[T-016][AC3] a hidden pin that something uses is refused in its own dialog with the reason, and no Hide is offered', async () => {
+    api.items = [listItem({ id: uuid(11), status: 'hidden', title: { en: 'Old tap' }, rowVersion: 3 })]
+    api.answer = call => (call.method === 'DELETE' ? pinInUse({ stories: 2, reviews: 1, tours: 1 }) : undefined)
+    await open()
+    await screen.findAllByRole('link', { name: 'Old tap' })
+    await openMenu('Old tap', 'Delete')
+    const dialog = await screen.findByRole('alertdialog')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('still used by 2 stories, 1 editorial review and 1 tour')
+    expect(within(dialog).queryByRole('button', { name: 'Hide pin' })).not.toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Delete' })).toBeEnabled()
+  })
+
   it('[E4.2][AC79] a draft can be deleted after a confirm, and has no hide action', async () => {
     const success = vi.spyOn(toast, 'success')
     api.items = [listItem({ id: uuid(11), status: 'draft', title: { en: 'Draft pin' }, rowVersion: 2 })]
@@ -426,12 +480,12 @@ describe('[E4.2][AC68] N16 the list', () => {
     await screen.findAllByRole('link', { name: 'Draft pin' })
     await userEvent.click(screen.getAllByRole('button', { name: 'Actions for Draft pin' }).at(-1)!)
     expect(screen.queryByRole('menuitem', { name: 'Hide from map' })).not.toBeInTheDocument()
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Delete draft' }))
-    await userEvent.click(await screen.findByRole('button', { name: 'Delete draft' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Delete' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Delete' }))
 
     await waitFor(() => expect(writes('DELETE')).toHaveLength(1))
     expect(writes('DELETE')[0]).toMatchObject({ path: `/api/store/${storeId}/pins/${uuid(11)}`, ifMatch: '2' })
-    await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('Draft deleted.'))
+    await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('Pin deleted.'))
   })
 
   it('delete: the dialog spins and stays while the server works, the row goes at once on success, before the re-read, with one toast', async () => {
@@ -440,7 +494,7 @@ describe('[E4.2][AC68] N16 the list', () => {
     api.items = [listItem({ id: uuid(11), status: 'draft', title: { en: 'Draft pin' }, rowVersion: 2 }), listItem({ id: uuid(12), status: 'draft', title: { en: 'Other pin' } })]
     await open()
     await screen.findAllByRole('link', { name: 'Draft pin' })
-    await openMenu('Draft pin', 'Delete draft')
+    await openMenu('Draft pin', 'Delete')
 
     // The server answers the delete only when released; the re-read after it is held for good until the end.
     let releaseDelete = () => {}
@@ -459,10 +513,10 @@ describe('[E4.2][AC68] N16 the list', () => {
     const readsBefore = reads()
     const dialog = await screen.findByRole('alertdialog')
 
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete draft' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
     // Pending: the button spins, Cancel is off, Esc and the dialog stay, and the row is still listed.
-    await waitFor(() => expect(within(dialog).getByRole('button', { name: /Delete draft/ })).toHaveAttribute('data-pending', 'true'))
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: /Delete/ })).toHaveAttribute('data-pending', 'true'))
     expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeDisabled()
     await userEvent.keyboard('{Escape}')
     expect(screen.getByRole('alertdialog')).toBeInTheDocument()
@@ -476,7 +530,7 @@ describe('[E4.2][AC68] N16 the list', () => {
     await waitFor(() => expect(tableBehind().queryByRole('link', { name: 'Draft pin', hidden: true })).not.toBeInTheDocument())
     expect(tableBehind().getByRole('link', { name: 'Other pin', hidden: true })).toBeInTheDocument()
     await waitFor(() => expect(reads()).toBeGreaterThan(readsBefore))
-    expect(success).toHaveBeenCalledExactlyOnceWith('Draft deleted.')
+    expect(success).toHaveBeenCalledExactlyOnceWith('Pin deleted.')
     expect(danger).not.toHaveBeenCalled()
     releaseRead()
     await waitFor(() => expect(tableBehind().queryByRole('link', { name: 'Draft pin', hidden: true })).not.toBeInTheDocument())
@@ -489,13 +543,13 @@ describe('[E4.2][AC68] N16 the list', () => {
     api.answer = call => (call.method === 'DELETE' ? problem(412, 'precondition-failed') : undefined)
     await open()
     await screen.findAllByRole('link', { name: 'Draft pin' })
-    await openMenu('Draft pin', 'Delete draft')
+    await openMenu('Draft pin', 'Delete')
     const dialog = await screen.findByRole('alertdialog')
 
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete draft' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
     expect(await within(dialog).findByRole('alert')).toHaveTextContent('Someone saved this place after you opened it')
-    expect(within(dialog).getByRole('button', { name: 'Delete draft' })).toBeEnabled()
+    expect(within(dialog).getByRole('button', { name: 'Delete' })).toBeEnabled()
     expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeEnabled()
     expect(tableBehind().getByRole('link', { name: 'Draft pin', hidden: true })).toBeInTheDocument()
     expect(success).not.toHaveBeenCalled()

@@ -1,4 +1,4 @@
-import type { ProblemType } from '@sk/api-contract'
+import type { Problem, ProblemType } from '@sk/api-contract'
 import type { PublishGap } from '@sk/domain/content'
 import type { Failure } from '../application/failure.ts'
 
@@ -6,7 +6,7 @@ export interface FailureProblem {
   status: 403 | 404 | 409 | 412 | 422 | 503
   type: ProblemType
   title: string
-  errors?: { in: 'body', path: string, message: string }[]
+  errors?: NonNullable<Problem['errors']>
   mediaIds?: string[]
   pages?: number
 }
@@ -49,6 +49,15 @@ export function failureProblem(failure: Failure): FailureProblem {
     case 'published-cannot-move': return { status: 409, type: 'published-version-cannot-move', title: 'A published story version cannot move to another group.' }
     case 'version-exists': return { status: 409, type: 'version-exists', title: 'This group already has a version in that language.' }
     case 'not-published': return { status: 409, type: 'not-published', title: 'This item is not published.' }
+    case 'pin-in-use': {
+      const { stories, reviews, tours } = failure
+      return {
+        status: 409,
+        type: 'content-in-use',
+        title: 'Other content uses this pin, so it cannot be deleted. Hide it instead.',
+        errors: [{ in: 'path', path: 'pin', message: 'Stories, reviews or tours use this pin', code: 'pin-in-use', params: { stories, reviews, tours } }],
+      }
+    }
     case 'in-use': return { status: 409, type: 'content-in-use', title: 'Other content still uses this item.' }
     case 'type-not-allowed': return { status: 422, type: 'media-type-not-allowed', title: 'This type of file is not allowed. Use JPEG, PNG, WebP, MP3, M4A or PDF.' }
     case 'too-large': return { status: 422, type: 'media-too-large', title: 'This file is too large.' }

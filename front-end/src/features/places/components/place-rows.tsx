@@ -149,7 +149,7 @@ function actionsOf(item: PinListItem, t: ReturnType<typeof useLocale>['t']): Row
     { id: 'edit', label: t('places.row.edit'), icon: EditIcon, href: hrefOf(item) },
     ...(item.status === 'published' || item.status === 'ended' ? [{ id: 'hide' as const, label: t('places.row.hide'), icon: ArchiveIcon }] : []),
     ...(item.status === 'hidden' ? [{ id: 'unhide' as const, label: t('places.row.unhide'), icon: RestoreIcon }] : []),
-    ...(item.status === 'draft' ? [{ id: 'delete' as const, label: t('places.row.delete'), icon: TrashIcon, isDanger: true }] : []),
+    { id: 'delete' as const, label: t('places.row.delete'), icon: TrashIcon, isDanger: true },
   ]
 }
 

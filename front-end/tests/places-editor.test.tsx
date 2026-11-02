@@ -10,7 +10,7 @@ import { LocaleProvider } from '@/contexts/locale-context'
 import { PlaceEditorScreen } from '@/features/places/components/place-editor-screen'
 import { StepWhen } from '@/features/places/components/step-when'
 import { emptyDate, emptyForm, validate } from '@/features/places/lib/form'
-import { installApi, pinOf, problem, renderInRouter, storeId, uuid } from './places-support'
+import { installApi, pinInUse, pinOf, problem, renderInRouter, storeId, uuid } from './places-support'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -1352,14 +1352,14 @@ describe('[E4.2][AC79][AC85] N17 a pin that exists', () => {
     expect(writes()).toHaveLength(1)
   })
 
-  it('[E4.2][AC79] a published pin is hidden after a confirm, and has no delete', async () => {
+  it('[E4.2][AC79] a published pin is hidden after a confirm, and can be deleted too', async () => {
     const success = vi.spyOn(toast, 'success')
     api.pin = livePin()
     await open(uuid(10))
     await heading('Place on the map')
     await nextTo('Review and publish')
 
-    expect(screen.queryByRole('button', { name: 'Delete draft' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument()
     await press('Hide from map')
     await userEvent.click(await screen.findByRole('button', { name: 'Hide pin' }))
 
@@ -1404,13 +1404,34 @@ describe('[E4.2][AC79][AC85] N17 a pin that exists', () => {
     const { router } = await open(uuid(10))
     await heading('Place on the map')
     await nextTo('Review and publish')
-    await press('Delete draft')
-    await userEvent.click(await screen.findByRole('button', { name: 'Delete draft', hidden: false }).then(() => screen.getAllByRole('button', { name: 'Delete draft' }).at(-1)!))
+    await press('Delete')
+    await userEvent.click(await screen.findByRole('button', { name: 'Delete', hidden: false }).then(() => screen.getAllByRole('button', { name: 'Delete' }).at(-1)!))
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'DELETE', ifMatch: '2' })
     await waitFor(() => expect(router.state.location.pathname).toBe('/store/content/places'))
-    expect(success).toHaveBeenCalledExactlyOnceWith('Draft deleted.')
+    expect(success).toHaveBeenCalledExactlyOnceWith('Pin deleted.')
+  })
+
+  it('[T-016][AC1][AC3] a published pin is deleted from the review; when a tour uses it the refusal names the tour and Hide hides it', async () => {
+    const success = vi.spyOn(toast, 'success')
+    api.pin = livePin()
+    const { router } = await open(uuid(10))
+    await heading('Place on the map')
+    await nextTo('Review and publish')
+    api.answer = call => (call.method === 'DELETE' ? pinInUse({ tours: 1 }) : undefined)
+    await press('Delete')
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete' }))
+
+    expect(await screen.findByText('Can’t delete Chapel Bridge')).toBeInTheDocument()
+    expect(screen.getByRole('alertdialog')).toHaveTextContent('still used by 1 tour')
+    expect(router.state.location.pathname).not.toBe('/store/content/places')
+    api.answer = undefined
+    await userEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Hide pin' }))
+
+    await waitFor(() => expect(writes().filter(call => call.method === 'POST')).toHaveLength(1))
+    expect(writes().at(-1)).toMatchObject({ path: `/api/store/${storeId}/pins/${uuid(10)}/hide` })
+    await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('Chapel Bridge is hidden.'))
   })
 
   it('[E4.2][AC68] a pin that is not in the store is not found, with a way back', async () => {

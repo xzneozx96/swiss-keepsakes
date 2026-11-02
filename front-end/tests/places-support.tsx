@@ -17,7 +17,12 @@ export const uuid = (n: number) => `0198a000-0000-7000-8000-${String(n).padStart
 
 export interface Call { method: string, path: string, key: string | null, ifMatch: string | null, body: unknown }
 
-export const problem = (status: number, type: string) => Response.json(problemSchema.parse({ type, status, title: type, instance: '/x', requestId: 'req-1' }), { status })
+export const problem = (status: number, type: string, errors?: { in: string, path: string, message: string, code?: string, params?: Record<string, string | number> }[]) => Response.json(problemSchema.parse({ type, status, title: type, instance: '/x', requestId: 'req-1', errors }), { status })
+
+/** The refusal of a delete: a pin that stories, reviews or tours use (T-016). */
+export function pinInUse(uses: { stories?: number, reviews?: number, tours?: number }) {
+  return problem(409, 'content-in-use', [{ in: 'path', path: 'pin', message: 'in use', code: 'pin-in-use', params: { stories: 0, reviews: 0, tours: 0, ...uses } }])
+}
 
 export function listItem(over: Partial<PinListItem> = {}): PinListItem {
   return {
