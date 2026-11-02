@@ -29,24 +29,20 @@ export function StepPlace({ form, patch, storeId }: StepProps) {
   const located = form.latitude !== null && form.longitude !== null
   const removePosition = () => patch({ latitude: null, longitude: null })
   const pin = located ? { lat: form.latitude!, lng: form.longitude! } : null
-  const { filled: addressFilled, looking, fill } = useAddressFromPosition({ storeId, latitude: form.latitude, longitude: form.longitude, address: form.address, patch })
+  const { filled: addressFilled, looking, problem, fill, retry, typed: typedAddress } = useAddressFromPosition({ storeId, latitude: form.latitude, longitude: form.longitude, address: form.address, patch })
   // Typed by the person in this editor session: what a saved address came from is not stored, so it starts unknown.
   // `typedAt` is where the pin was at the last keystroke, to see whether the pin has moved since.
   const [typed, setTyped] = useState<{ at: LatLng | null } | null>(null)
-  const [noneFound, setNoneFound] = useState(false)
   const typedByHand = typed !== null && form.address !== '' && !addressFilled
   const mayNotMatch = typedByHand && addressMayNotMatch(typed.at, pin)
   const typeAddress = (address: string) => {
     patch({ address })
     setTyped(address === '' ? null : { at: pin })
-    setNoneFound(false)
+    typedAddress()
   }
   const fillFromPin = async () => {
-    setNoneFound(false)
-    const found = await fill()
-
-    setTyped(null)
-    setNoneFound(!found)
+    if (await fill())
+      setTyped(null)
   }
 
   return (
@@ -78,21 +74,28 @@ export function StepPlace({ form, patch, storeId }: StepProps) {
             )}
       </div>
       <div className="mt-3 flex flex-col gap-3">
-        <Field description={addressFilled ? t('places.address.filled') : typedByHand ? t('places.address.typed') : t('places.address.help')} label={t('places.address.label')} maxLength={300} value={form.address} onChange={typeAddress} />
-        <div aria-live="polite" role="status">
-          {looking && (
-            <Description className="flex items-center gap-1.5">
-              <Spinner size="sm" />
-              {t('places.address.looking')}
-            </Description>
-          )}
+        <div>
+          <Field description={addressFilled ? t('places.address.filled') : typedByHand ? t('places.address.typed') : t('places.address.help')} label={t('places.address.label')} maxLength={300} value={form.address} onChange={typeAddress} />
+          <div aria-live="polite" role="status">
+            {looking && (
+              <Description className="flex items-center gap-1.5">
+                <Spinner size="sm" />
+                {t('places.address.looking')}
+              </Description>
+            )}
+          </div>
         </div>
         {mayNotMatch && (
           <SyncWarning text={t('places.address.pinMoved')}>
             <Button size="sm" variant="secondary" onPress={() => void fillFromPin()}>{t('places.address.fill')}</Button>
           </SyncWarning>
         )}
-        {noneFound && !looking && <SyncWarning text={t('places.address.none')} />}
+        {problem === 'none' && !looking && <SyncWarning text={t('places.address.none')} />}
+        {problem === 'unavailable' && !looking && (
+          <SyncWarning text={t('places.address.unavailable')}>
+            <Button size="sm" variant="secondary" onPress={retry}>{t('places.address.retry')}</Button>
+          </SyncWarning>
+        )}
       </div>
       <p aria-live="polite" className="sr-only" data-testid="places-position" role="status">
         {located ? t('places.map.position', { lat: form.latitude!, lng: form.longitude! }) : t('places.map.empty')}

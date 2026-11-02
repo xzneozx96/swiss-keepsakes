@@ -168,8 +168,47 @@ describe('the pin and the address', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Fill from the pin' }))
 
-    expect(await screen.findByText('No address found at the pin. Check the address yourself.')).toBeInTheDocument()
+    expect(await screen.findByText('No address near the pin. Type one if it has one.')).toBeInTheDocument()
     expect(address()).toHaveValue('My own text')
+  })
+
+  it('says the lookup failed with a Try again that asks again, and never overwrites a typed address', async () => {
+    let answers = 0
+    api.answer = (call) => {
+      if (!call.path.includes('address-at'))
+        return undefined
+      answers += 1
+
+      return answers === 1 ? Response.json({ type: 'address-lookup-unavailable', title: 'x', status: 503 }, { status: 503 }) : Response.json(bridge)
+    }
+    await open()
+    await movePin()
+
+    expect(await screen.findByText('Couldn\'t look up the address.')).toBeInTheDocument()
+    expect(address()).toHaveValue('')
+    await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
+
+    await waitFor(() => expect(address()).toHaveValue('Kapellbrücke 1, 6004 Luzern'))
+    expect(screen.queryByText('Couldn\'t look up the address.')).not.toBeInTheDocument()
+  })
+
+  it('try again leaves a typed address alone, and typing clears the message', async () => {
+    api.answer = call => (call.path.includes('address-at') ? Response.json({ type: 'address-lookup-unavailable', title: 'x', status: 503 }, { status: 503 }) : undefined)
+    await open()
+    await movePin()
+    await screen.findByText('Couldn\'t look up the address.')
+    await userEvent.type(address(), 'Mine')
+    expect(screen.queryByText('Couldn\'t look up the address.')).not.toBeInTheDocument()
+    expect(address()).toHaveValue('Mine')
+  })
+
+  it('says no address was found near the pin, without a button', async () => {
+    api.answer = call => (call.path.includes('address-at') ? Response.json({ type: 'address-not-found', title: 'x', status: 404 }, { status: 404 }) : undefined)
+    await open()
+    await movePin()
+
+    expect(await screen.findByText('No address near the pin. Type one if it has one.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument()
   })
 
   it('shows a spinner line while the address is looked up', async () => {
