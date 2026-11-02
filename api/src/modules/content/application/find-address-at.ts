@@ -28,12 +28,15 @@ function toAddress({ street, houseNumber, postcode, city }: RegisteredBuilding):
 
 // The address of the building nearest to a pin, so the Address field of a place can fill itself. The register does not
 // sort by distance, so the use case measures each entrance and keeps the nearest one inside the radius. A viewpoint or
-// a bench has none (`address-not-found`); a register that cannot be read is `address-lookup-unavailable`.
+// a bench has none (`address-not-found`, never retried: it is an answer). A register that cannot be read is asked once
+// more, each ask with its own `timeoutMs`, because the service is slow now and then (the owner's call, 2026-11-02);
+// if the second ask fails too, it is `address-lookup-unavailable`.
 export function makeFindAddressAt({ register, timeoutMs = 3000, radiusMeters = 50 }: FindAddressAtDeps) {
   return async (actor: Actor, storeId: string, position: { latitude: number, longitude: number }): Promise<Result<FoundAddress>> => {
     if (!mayManageContent(actor, storeId))
       return fail({ reason: 'forbidden' })
     const buildings = await register.buildingsNear(position.latitude, position.longitude, radiusMeters, timeoutMs)
+      ?? await register.buildingsNear(position.latitude, position.longitude, radiusMeters, timeoutMs)
     if (!buildings)
       return fail({ reason: 'address-lookup-unavailable' })
     let nearest: { building: RegisteredBuilding, distance: number } | undefined

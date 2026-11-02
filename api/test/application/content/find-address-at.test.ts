@@ -15,12 +15,12 @@ const building = (over: Partial<RegisteredBuilding> = {}): RegisteredBuilding =>
 // About 11 m per 0.0001 degrees of latitude.
 const north = (meters: number) => ({ latitude: pin.latitude + meters / 111_320, longitude: pin.longitude })
 
-function setup(answer: RegisteredBuilding[] | undefined) {
+function setup(...answers: (RegisteredBuilding[] | undefined)[]) {
   const asked: { latitude: number, longitude: number, radiusMeters: number, timeoutMs: number }[] = []
   const register: AddressRegister = {
     buildingsNear: async (latitude, longitude, radiusMeters, timeoutMs) => {
       asked.push({ latitude, longitude, radiusMeters, timeoutMs })
-      return answer
+      return answers[Math.min(asked.length, answers.length) - 1]
     },
   }
   return { asked, find: makeFindAddressAt({ register }) }
@@ -55,8 +55,28 @@ describe('finding the address at a pin', () => {
     expect(await setup([]).find(owner, store, pin)).toEqual({ ok: false, reason: 'address-not-found' })
   })
 
-  it('says address-lookup-unavailable when the register could not be read', async () => {
-    expect(await setup(undefined).find(owner, store, pin)).toEqual({ ok: false, reason: 'address-lookup-unavailable' })
+  it('says address-lookup-unavailable when the register could not be read twice, each ask with its own 3 s limit', async () => {
+    const s = setup(undefined, undefined)
+
+    expect(await s.find(owner, store, pin)).toEqual({ ok: false, reason: 'address-lookup-unavailable' })
+    expect(s.asked.map(ask => ask.timeoutMs)).toEqual([3000, 3000])
+  })
+
+  it('asks once more when the first ask fails, and answers from the second', async () => {
+    const s = setup(undefined, [building()])
+
+    expect(await s.find(owner, store, pin)).toMatchObject({ ok: true, value: { formatted: 'Kapellbrücke 1, 6004 Luzern' } })
+    expect(s.asked).toHaveLength(2)
+  })
+
+  it('does not ask again for an answer: no building near is final, and a first answer is not repeated', async () => {
+    const none = setup([])
+    const found = setup([building()])
+
+    expect(await none.find(owner, store, pin)).toEqual({ ok: false, reason: 'address-not-found' })
+    await found.find(owner, store, pin)
+    expect(none.asked).toHaveLength(1)
+    expect(found.asked).toHaveLength(1)
   })
 
   it('refuses a guest and a member of another store, and never asks the register', async () => {
