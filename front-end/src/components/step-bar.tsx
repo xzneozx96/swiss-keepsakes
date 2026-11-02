@@ -107,29 +107,17 @@ export function StepBar({
         </span>
         <div className="flex shrink-0 items-center gap-1.5 lg:gap-2">
           {destructive && (
-            <>
-              <Button
-                isIconOnly
-                aria-label={destructive.label}
-                className="sm:hidden"
-                isDisabled={destructive.isDisabled}
-                size="sm"
-                variant="danger-soft"
-                onPress={destructive.onPress}
-              >
-                <TrashIcon aria-hidden size={18} />
-              </Button>
-              <Button
-                className="max-sm:hidden"
-                isDisabled={destructive.isDisabled}
-                size="sm"
-                variant="danger-soft"
-                onPress={destructive.onPress}
-              >
-                <TrashIcon aria-hidden size={16} />
-                {destructive.label}
-              </Button>
-            </>
+            // One button: the label is read at every width and only shown from 640px, the icon stands alone below.
+            <Button
+              className="max-sm:size-9 max-sm:px-0"
+              isDisabled={destructive.isDisabled}
+              size="sm"
+              variant="danger-soft"
+              onPress={destructive.onPress}
+            >
+              <TrashIcon aria-hidden size={16} />
+              <span className="max-sm:sr-only">{destructive.label}</span>
+            </Button>
           )}
           {onBack && (
             <Button
