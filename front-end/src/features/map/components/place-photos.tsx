@@ -36,7 +36,7 @@ export function PlacePhotos({ photos, title }: { photos: { src: string, alt: str
       >
         {photos.map((photo, i) => (
           <img
-            key={photo.src}
+            key={`${i}-${photo.src}`}
             alt={photo.alt ?? ''}
             className="size-full shrink-0 snap-center object-cover"
             data-photo={i + 1}

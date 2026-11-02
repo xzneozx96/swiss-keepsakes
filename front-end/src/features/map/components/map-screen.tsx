@@ -246,7 +246,7 @@ export function MapScreen({ place }: { place?: string }) {
       )}
 
       {gone && (
-        <div className="absolute inset-x-3 top-[70px] z-[9] flex justify-center">
+        <div className="absolute start-3 end-[68px] top-[70px] z-[9] flex justify-center">
           <div className="flex w-full items-center gap-2 rounded-3xl bg-surface py-2 ps-5 pe-2 shadow-overlay" role="status">
             <p className="flex-1 text-sm">{t('map.gone')}</p>
             <Button isIconOnly aria-label={t('map.gone.close')} className="size-11 min-w-11 rounded-full" variant="tertiary" onPress={() => setGone(false)}>
