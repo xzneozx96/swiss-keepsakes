@@ -111,7 +111,6 @@ import { Route as StoreProductsToursTourIdRouteImport } from './routes/store/pro
 import { Route as StoreProductsToursNewRouteImport } from './routes/store/products/tours/new'
 import { Route as StoreRequestsAdviceRequestIdRouteImport } from './routes/store/requests/advice/$requestId'
 import { Route as GuestAccountOrdersOrderIdPayRouteImport } from './routes/_guest/account_.orders.$orderId_.pay'
-import { Route as StoreProductsGiftsProductIdVariantsVariantIdRouteImport } from './routes/store/products/gifts/$productId_.variants.$variantId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -630,12 +629,6 @@ const GuestAccountOrdersOrderIdPayRoute =
     path: '/account/orders/$orderId/pay',
     getParentRoute: () => GuestRoute,
   } as any)
-const StoreProductsGiftsProductIdVariantsVariantIdRoute =
-  StoreProductsGiftsProductIdVariantsVariantIdRouteImport.update({
-    id: '/products/gifts/$productId_/variants/$variantId',
-    path: '/products/gifts/$productId/variants/$variantId',
-    getParentRoute: () => StoreRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -739,7 +732,6 @@ export interface FileRoutesByFullPath {
   '/store/content/places/': typeof StoreContentPlacesIndexRoute
   '/store/products/tours/': typeof StoreProductsToursIndexRoute
   '/account/orders/$orderId/pay': typeof GuestAccountOrdersOrderIdPayRoute
-  '/store/products/gifts/$productId/variants/$variantId': typeof StoreProductsGiftsProductIdVariantsVariantIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -839,7 +831,6 @@ export interface FileRoutesByTo {
   '/store/content/places': typeof StoreContentPlacesIndexRoute
   '/store/products/tours': typeof StoreProductsToursIndexRoute
   '/account/orders/$orderId/pay': typeof GuestAccountOrdersOrderIdPayRoute
-  '/store/products/gifts/$productId/variants/$variantId': typeof StoreProductsGiftsProductIdVariantsVariantIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -945,7 +936,6 @@ export interface FileRoutesById {
   '/store/content/places/': typeof StoreContentPlacesIndexRoute
   '/store/products/tours/': typeof StoreProductsToursIndexRoute
   '/_guest/account_/orders/$orderId_/pay': typeof GuestAccountOrdersOrderIdPayRoute
-  '/store/products/gifts/$productId_/variants/$variantId': typeof StoreProductsGiftsProductIdVariantsVariantIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1051,7 +1041,6 @@ export interface FileRouteTypes {
     | '/store/content/places/'
     | '/store/products/tours/'
     | '/account/orders/$orderId/pay'
-    | '/store/products/gifts/$productId/variants/$variantId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1151,7 +1140,6 @@ export interface FileRouteTypes {
     | '/store/content/places'
     | '/store/products/tours'
     | '/account/orders/$orderId/pay'
-    | '/store/products/gifts/$productId/variants/$variantId'
   id:
     | '__root__'
     | '/'
@@ -1256,7 +1244,6 @@ export interface FileRouteTypes {
     | '/store/content/places/'
     | '/store/products/tours/'
     | '/_guest/account_/orders/$orderId_/pay'
-    | '/store/products/gifts/$productId_/variants/$variantId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2025,13 +2012,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuestAccountOrdersOrderIdPayRouteImport
       parentRoute: typeof GuestRoute
     }
-    '/store/products/gifts/$productId_/variants/$variantId': {
-      id: '/store/products/gifts/$productId_/variants/$variantId'
-      path: '/products/gifts/$productId/variants/$variantId'
-      fullPath: '/store/products/gifts/$productId/variants/$variantId'
-      preLoaderRoute: typeof StoreProductsGiftsProductIdVariantsVariantIdRouteImport
-      parentRoute: typeof StoreRoute
-    }
   }
 }
 
@@ -2153,7 +2133,6 @@ interface StoreRouteChildren {
   StoreRequestsAdviceRequestIdRoute: typeof StoreRequestsAdviceRequestIdRoute
   StoreContentPlacesIndexRoute: typeof StoreContentPlacesIndexRoute
   StoreProductsToursIndexRoute: typeof StoreProductsToursIndexRoute
-  StoreProductsGiftsProductIdVariantsVariantIdRoute: typeof StoreProductsGiftsProductIdVariantsVariantIdRoute
 }
 
 const StoreRouteChildren: StoreRouteChildren = {
@@ -2187,8 +2166,6 @@ const StoreRouteChildren: StoreRouteChildren = {
   StoreRequestsAdviceRequestIdRoute: StoreRequestsAdviceRequestIdRoute,
   StoreContentPlacesIndexRoute: StoreContentPlacesIndexRoute,
   StoreProductsToursIndexRoute: StoreProductsToursIndexRoute,
-  StoreProductsGiftsProductIdVariantsVariantIdRoute:
-    StoreProductsGiftsProductIdVariantsVariantIdRoute,
 }
 
 const StoreRouteWithChildren = StoreRoute._addFileChildren(StoreRouteChildren)
