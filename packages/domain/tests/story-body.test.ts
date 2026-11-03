@@ -105,7 +105,7 @@ describe('[E4.3][AC45] storyBodyFacts', () => {
       h(3, 'small'),
       { type: 'image', attrs: { mediaId: 'm', alt: '', caption: 'a b c' } },
     )
-    expect(storyBodyFacts(body)).toMatchObject({ words: 3, minutes: 1, sections: 0 })
+    expect(storyBodyFacts(body)).toEqual({ words: 3, minutes: 1, sections: 0, hasContent: true, photosWithoutAlt: 1, mediaWithoutCaption: 0 })
   })
 
   it('[E4.3][AC45] SIMPLICITY-E43-6 an H2 with no text is not a section (the preview contents bar leaves it out too)', () => {
