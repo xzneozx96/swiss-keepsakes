@@ -6,7 +6,7 @@ export const contentMerchantDe: Record<keyof typeof contentMerchantEn, string>
     'merchantContent.intro':
       'Geschichten für Ihre Gäste, ihre Kommentare und Bewertungen.',
     'merchantContent.tabsLabel': 'Inhaltsbereiche',
-    'merchantContent.tab.articles': 'Geschichten',
+    'merchantContent.tab.stories': 'Geschichten',
     'merchantContent.tab.comments': 'Kommentare',
     'merchantContent.tab.reviews': 'Bewertungen',
     'merchantContent.filter.language': 'Sprache',
@@ -17,34 +17,15 @@ export const contentMerchantDe: Record<keyof typeof contentMerchantEn, string>
     'merchantContent.column.actions': 'Aktionen',
     'merchantContent.back': 'Zurück',
 
-    'merchantArticles.new': 'Neuer Artikel',
-    'merchantArticles.filter.all': 'Alle',
     'merchantArticles.status.published': 'Veröffentlicht',
     'merchantArticles.status.draft': 'Entwurf',
     'merchantArticles.missing.en': 'Keine englische Version',
     'merchantArticles.missing.de': 'Keine deutsche Version',
-    'merchantArticles.unpublishedLinks.one':
-      '1 verknüpfter Eintrag ist nicht veröffentlicht',
-    'merchantArticles.unpublishedLinks.other':
-      '{count} verknüpfte Einträge sind nicht veröffentlicht',
-    'merchantArticles.publishedOn': 'Veröffentlicht am {date}',
-    'merchantArticles.editedOn': 'Bearbeitet am {date}',
     'merchantArticles.readTime': '{minutes} Min. Lesezeit',
-    'merchantArticles.untitled': 'Ohne Titel',
     'merchantArticles.links': 'Andenken und Touren',
-    'merchantArticles.comments': 'Kommentare',
-    'merchantArticles.column.article': 'Artikel',
-    'merchantArticles.column.status': 'Status',
-    'merchantArticles.column.links': 'Verknüpfungen',
-    'merchantArticles.column.updated': 'Letzte Änderung',
-    'merchantArticles.empty.all':
-      'Noch keine Artikel. Schreiben Sie die erste Geschichte für Ihre Gäste.',
-    'merchantArticles.empty.en': 'Noch keine Artikel auf Englisch.',
-    'merchantArticles.empty.de': 'Noch keine Artikel auf Deutsch.',
 
     'merchantArticles.back': 'Alle Artikel',
     'merchantArticles.newTitle': 'Neuer Artikel',
-    'merchantArticles.notFound': 'Diesen Artikel gibt es nicht mehr.',
     'merchantArticles.publication.eyebrow': 'Veröffentlichung',
     'merchantArticles.publication.new': 'Neuer Entwurf',
     'merchantArticles.publication.draft': 'Entwurf: für Gäste unsichtbar',
