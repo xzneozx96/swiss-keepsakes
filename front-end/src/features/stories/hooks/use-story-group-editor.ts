@@ -32,33 +32,36 @@ export function useStoryGroupEditor({ storeId, group }: { storeId: string, group
   const [state, setState] = useState<AutosaveState>('saved')
   const [problem, setProblem] = useState<string>()
   const typedRef = useRef<GroupFields>(undefined)
-  // The fields as the last answer left them: a save sends the difference to these.
-  const savedRef = useRef(groupFieldsOf(group))
   const latest = useLatest({ save, storeId, groupId: group.id })
   const groupKey = storiesQueries.group(client, storeId, group.id).queryKey
-  const [engine] = useState(() => createAutosave<GroupFields>({
-    version: group.rowVersion,
-    delayMs: GROUP_AUTOSAVE_MS,
-    save: async (draft, ifMatch) => {
-      const body = groupBody(draft, savedRef.current)
+  const [engine] = useState(() => {
+    // The fields as the last answer left them: a save sends the difference to these.
+    let saved = groupFieldsOf(group)
 
-      // A change put back to what is saved (or a field this save cannot carry) sends nothing: a PATCH would move the row version for no reason.
-      if (Object.keys(body).length === 0)
-        return ifMatch
-      const now = latest.current
-      const answer = await now.save.mutateAsync({ storeId: now.storeId, groupId: now.groupId, ifMatch, idempotencyKey: crypto.randomUUID(), ...body })
+    return createAutosave<GroupFields>({
+      version: group.rowVersion,
+      delayMs: GROUP_AUTOSAVE_MS,
+      save: async (draft, ifMatch) => {
+        const body = groupBody(draft, saved)
 
-      savedRef.current = groupFieldsOf(answer)
-      queryClient.setQueryData<StoryGroupDetail>(groupKey, current => (current ? { ...current, ...answer, versions: current.versions } : current))
+        // A change put back to what is saved (or a field this save cannot carry) sends nothing: a PATCH would move the row version for no reason.
+        if (Object.keys(body).length === 0)
+          return ifMatch
+        const now = latest.current
+        const answer = await now.save.mutateAsync({ storeId: now.storeId, groupId: now.groupId, ifMatch, idempotencyKey: crypto.randomUUID(), ...body })
 
-      return answer.rowVersion
-    },
-    isStale: error => error instanceof ApiProblem && error.type === 'precondition-failed',
-    onState: (next, error) => {
-      setState(next)
-      setProblem(next === 'failed' || next === 'stale' ? (error instanceof ApiProblem ? error.type : 'unknown') : undefined)
-    },
-  }))
+        saved = groupFieldsOf(answer)
+        queryClient.setQueryData<StoryGroupDetail>(groupKey, current => (current ? { ...current, ...answer, versions: current.versions } : current))
+
+        return answer.rowVersion
+      },
+      isStale: error => error instanceof ApiProblem && error.type === 'precondition-failed',
+      onState: (next, error) => {
+        setState(next)
+        setProblem(next === 'failed' || next === 'stale' ? (error instanceof ApiProblem ? error.type : 'unknown') : undefined)
+      },
+    })
+  })
 
   // Leaving by any route saves what is pending: the request goes on after the screen is gone.
   useEffect(() => () => engine.dispose(), [engine])
