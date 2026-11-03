@@ -51,6 +51,18 @@ function point(over: Record<string, unknown> = {}) {
 
 const problem = (status: number, type: string) => Response.json(problemSchema.parse({ type, status, title: type, instance: '/x', requestId: 'req-1' }), { status })
 
+/** The API's 422 for a 101st active point: the type is `validation-failed`, the reason is the code of `errors[0]`. */
+function limitProblem() {
+  return Response.json({
+    type: 'validation-failed',
+    status: 422,
+    title: 'This shop has the most active pickup points it can hold.',
+    instance: '/x',
+    requestId: 'req-1',
+    errors: [{ in: 'body', path: 'name', message: 'A shop can have at most 100 active pickup points. Archive one first', code: 'pickup-limit' }],
+  }, { status: 422, headers: { 'content-type': 'application/problem+json' } })
+}
+
 beforeEach(async () => {
   window.scrollTo = vi.fn()
   // Sheets open as a dialog on desktop in the merchant area.
@@ -187,6 +199,22 @@ describe('[E6.6][AC26] the pickup point sheet', { timeout: 30_000 }, () => {
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'PATCH', path: `/api/store/${storeId}/pickup-places/${pointId}`, ifMatch: '3' })
     expect((writes()[0]!.body as { hours: unknown[] }).hours).toHaveLength(2)
+  })
+
+  it('a create refused at 100 active points (422 pickup-limit) says why in the sheet, not the generic failure, and keeps the typed text', async () => {
+    const danger = vi.spyOn(toast, 'danger')
+
+    await renderSheet(undefined)
+    await type('Name', 'Shop Hertensteinstrasse')
+    await type('Address', 'Hertensteinstrasse 1')
+    answer = call => (call.method === 'POST' ? limitProblem() : undefined)
+    await press('Save pickup point')
+
+    expect(await screen.findByText('100 active pickup points. Archive one first.')).toBeInTheDocument()
+    expect(screen.queryByText(/could not be saved|Something went wrong/i)).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Name')).toHaveValue('Shop Hertensteinstrasse')
+    expect(danger).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
   })
 
   it('a stale save (412) shows the notice, keeps the typed text and offers Reload; Reload swaps in the saved point', async () => {

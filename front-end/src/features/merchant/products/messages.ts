@@ -239,6 +239,7 @@ export const productsEn = {
   'pickup.error.hoursRepeat': 'Two time ranges on one day cannot open at the same time.',
   'pickup.problem.stale':
     'Someone saved this pickup point after you opened it. Reload to see their version. Your last edits are not saved.',
+  'pickup.problem.limit': '100 active pickup points. Archive one first.',
   'pickup.reload': 'Reload',
   'products.place.noHours': 'No opening hours set',
 

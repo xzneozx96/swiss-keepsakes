@@ -1,6 +1,17 @@
 import type { PickupClient } from './client'
 
-import { answer, keyed, loadClient, timeout } from '@/features/data-client/api-transport'
+import { keyed, loadClient, problemOf, timeout } from '@/features/data-client/api-transport'
+import { PickupProblem } from '../lib/problems'
+
+/** The data, or the API's problem with its `errors`, which name the 100-point limit. */
+async function answer<T>(call: Promise<{ data?: T, error?: unknown, response: Response }>): Promise<T> {
+  const { data, error, response } = await call
+
+  if (data === undefined)
+    throw new PickupProblem(problemOf(response, error), error)
+
+  return data
+}
 
 export function createPickupClient(): PickupClient {
   return {

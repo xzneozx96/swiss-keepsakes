@@ -7,6 +7,7 @@ import { useConfirm } from '@/components/confirm-dialog'
 import { useLocale } from '@/contexts/locale-context'
 import { useSubmit } from '@/features/data-client/use-command'
 import { usePickupPlaces } from '@/features/pickup/api/queries'
+import { pickupLimitType } from '@/features/pickup/lib/problems'
 import { useMe } from '@/features/stores/api/queries'
 import { keepsKey } from '@/features/stores/hooks/use-idempotency-key'
 import { currentStore } from '@/features/stores/lib/current-store'
@@ -26,7 +27,7 @@ export function usePickupPoints(isOpen: boolean) {
   const nameOf = (place: PickupPlace) => pickText(place.name, language).text
   // The confirm dialog shows a refusal of the archive, so the cache stays silent on its error.
   const archiveCommand = useSubmit('pickup', 'archive', { meta: { success: place => t('products.archivedToast', { name: nameOf(place) }), silent: true } })
-  const restoreCommand = useSubmit('pickup', 'restore', { meta: { success: place => t('pickup.toast.restored', { name: nameOf(place) }) } })
+  const restoreCommand = useSubmit('pickup', 'restore', { meta: { success: place => t('pickup.toast.restored', { name: nameOf(place) }), error: { [pickupLimitType]: 'pickup.problem.limit' } } })
 
   // One key per intent (this action on this row version), kept while a retry is safe, as `useIdempotencyKey` does
   // for the sheet; the places differ per press, so the keys sit in a map.

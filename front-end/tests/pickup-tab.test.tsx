@@ -1,3 +1,4 @@
+import { toast } from '@heroui/react'
 import { pickupPlaceListSchema, pickupPlaceSchema } from '@sk/api-contract'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
@@ -34,6 +35,7 @@ let active: ReturnType<typeof point>[]
 let archivedPoints: ReturnType<typeof point>[]
 let hold: Promise<void> | undefined
 let failNext: boolean
+let refuseRestoreAtLimit: boolean
 
 function point(n: number, over: Record<string, unknown> = {}) {
   return pickupPlaceSchema.parse({
@@ -62,6 +64,7 @@ beforeEach(async () => {
   archivedPoints = []
   hold = undefined
   failNext = false
+  refuseRestoreAtLimit = false
   vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
     const request = input instanceof Request ? input : new Request(input, init)
     const url = new URL(request.url)
@@ -82,6 +85,14 @@ beforeEach(async () => {
       archivedPoints = [...archivedPoints, { ...found, archived: true }]
 
       return Response.json({ ...found, archived: true })
+    }
+    if (action === 'restore' && refuseRestoreAtLimit) {
+      return Response.json({
+        type: 'validation-failed',
+        status: 422,
+        title: 'This shop has the most active pickup points it can hold.',
+        errors: [{ in: 'body', path: 'name', message: 'A shop can have at most 100 active pickup points. Archive one first', code: 'pickup-limit' }],
+      }, { status: 422, headers: { 'content-type': 'application/problem+json' } })
     }
     if (action === 'restore' && failNext) {
       failNext = false
@@ -225,6 +236,24 @@ describe('[E6.6][AC26] M14 the Pickup points tab on the API', { timeout: 30_000 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `${base}/0198a000-0000-7000-8000-0000000000d1/restore`, ifMatch: '3' })
     await waitFor(() => expect(screen.getByRole('tab', { name: /Pickup points/ })).toHaveTextContent('1'))
+  })
+
+  it('a Restore refused at 100 active points (422 pickup-limit) toasts the reason, not the generic failure', async () => {
+    const danger = vi.spyOn(toast, 'danger')
+
+    archivedPoints = [point(1, { archived: true })]
+    refuseRestoreAtLimit = true
+    await renderTab()
+    await screen.findByText('No pickup points yet.')
+
+    await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
+    await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
+    await userEvent.click(await screen.findByRole('checkbox', { name: /Active/ }))
+    await userEvent.keyboard('{Escape}')
+    await userEvent.click(within(await ticket('Point 1')).getByRole('button', { name: 'Restore Point 1' }))
+
+    await waitFor(() => expect(danger).toHaveBeenCalledWith('100 active pickup points. Archive one first.'))
+    expect(danger).toHaveBeenCalledTimes(1)
   })
 
   it('two quick presses on Restore send one request', async () => {

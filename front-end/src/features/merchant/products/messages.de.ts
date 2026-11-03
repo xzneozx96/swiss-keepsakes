@@ -242,6 +242,7 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'pickup.error.hoursRepeat': 'Zwei Zeitfenster am selben Tag können nicht zur gleichen Zeit öffnen.',
   'pickup.problem.stale':
     'Jemand hat diese Abholstelle gespeichert, nachdem Sie sie geöffnet haben. Laden Sie neu, um die Version zu sehen. Ihre letzten Änderungen sind nicht gespeichert.',
+  'pickup.problem.limit': '100 aktive Abholstellen. Archivieren Sie zuerst eine.',
   'pickup.reload': 'Neu laden',
   'products.place.noHours': 'Keine Öffnungszeiten angegeben',
 
