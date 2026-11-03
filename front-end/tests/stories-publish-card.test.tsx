@@ -7,7 +7,8 @@ import { coverId, groupId, patches, posts, problem, PUBLISHED_AT, renderStoryEdi
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
-const view = vi.hoisted(() => ({ wide: false }))
+// The laptop layout shows the card, the checks and the Details cards together. The phone layout is in stories-review-layout.test.tsx.
+const view = vi.hoisted(() => ({ wide: true }))
 
 vi.mock('@/hooks/use-is-wide', () => ({ useIsWide: () => view.wide }))
 
@@ -17,7 +18,7 @@ const path = `/store/content/articles/${groupId}`
 const base = `/api/store/${storeId}/story-groups/${groupId}`
 
 beforeEach(async () => {
-  view.wide = false
+  view.wide = true
   await setUpHarness()
 })
 
@@ -124,7 +125,7 @@ describe('[E4.3][AC30][AC45] the publish card', () => {
 
     await userEvent.click(title)
     await userEvent.keyboard('{End}!')
-    await userEvent.click(screen.getByRole('button', { name: 'Review' }))
+    await userEvent.click(screen.getByRole('button', { name: /^Review/ }))
     await userEvent.click(await button('Publish English'))
     await waitFor(() => expect(posts('/versions/en/publish')).toHaveLength(1), SLOW)
     expect(patches()).toHaveLength(1)

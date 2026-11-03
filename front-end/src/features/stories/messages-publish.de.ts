@@ -46,6 +46,7 @@ export const storiesPublishDe: Record<keyof typeof storiesPublishEn, string> = {
   'storyPublish.tabs.label': 'Anzeigen',
   'storyPublish.tab.details': 'Details',
   'storyPublish.tab.preview': 'Vorschau',
+  'storyPublish.panel.label': 'Veröffentlichen und Details',
   'storyPublish.preview.hint': 'Das sehen Gäste, auf dem Handy, wie die meisten lesen. Scrollen Sie im Handy.',
   'storyPublish.preview.placeholder': 'Die Vorschau folgt mit dem nächsten Schritt des Editors.',
   'storyPublish.link.title': 'Link',

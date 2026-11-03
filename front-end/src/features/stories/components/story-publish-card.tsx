@@ -18,8 +18,11 @@ import { storyProblemKey } from '../lib/problems'
  * path, then the actions of this version. Draft: Publish. Live with edits not live: Publish changes, then Unpublish.
  * Live and nothing pending: Unpublish alone. Unpublish asks first, and a refusal stays inside its dialog. Publish is off
  * while something blocks, with the reason under it.
+ *
+ * `layout` says which part renders, so one tree shows at a time. `card` (laptop) is the head and every action. `head`
+ * (phone) is the head and Unpublish, and `bar` is the short Publish button the fixed bar holds.
  */
-export function StoryPublishCard({ language, version, fields, checks, versionState, switchNode, publish, unpublish, isPending }: {
+export function StoryPublishCard({ language, version, fields, checks, versionState, switchNode, publish, unpublish, isPending, layout = 'card' }: {
   language: StoryLanguage
   version: StoryVersion
   fields: StoryFields
@@ -29,6 +32,7 @@ export function StoryPublishCard({ language, version, fields, checks, versionSta
   publish: () => Promise<Outcome>
   unpublish: () => Promise<Outcome>
   isPending: boolean
+  layout?: 'card' | 'head' | 'bar'
 }) {
   const { t } = useLocale()
   const { confirm, dialog } = useConfirm()
@@ -50,6 +54,15 @@ export function StoryPublishCard({ language, version, fields, checks, versionSta
     problem: error => (error instanceof Error ? error.message : t(storyProblemKey('unknown'))),
   })
 
+  const publishButton = versionState !== 'published' && (
+    <Button fullWidth={layout === 'card'} className="max-lg:min-h-11" isDisabled={isPending || blocked} onPress={() => void publish()}>
+      {versionState === 'editsNotLive' ? t('storyPublish.action.publishChanges', { code: language.toUpperCase() }) : t('storyPublish.action.publish', { language: languageName })}
+    </Button>
+  )
+
+  if (layout === 'bar')
+    return publishButton || null
+
   return (
     <section className="flex flex-col gap-3" id="publish-card">
       {switchNode}
@@ -57,14 +70,8 @@ export function StoryPublishCard({ language, version, fields, checks, versionSta
       <h2 className="font-serif text-lg text-pretty" lang={language}>{fields.title.trim() || t('merchantStories.untitled')}</h2>
       <p className="text-sm break-all text-muted">{t('storyPublish.card.path', { path: linkPath(language, version.slug) })}</p>
       <div className="flex flex-col gap-2">
-        {versionState !== 'published' && (
-          <>
-            <Button fullWidth className="max-lg:min-h-11" isDisabled={isPending || blocked} onPress={() => void publish()}>
-              {versionState === 'editsNotLive' ? t('storyPublish.action.publishChanges', { code: language.toUpperCase() }) : t('storyPublish.action.publish', { language: languageName })}
-            </Button>
-            {blocked && <p className="text-sm text-muted">{t('storyPublish.action.blocked')}</p>}
-          </>
-        )}
+        {layout === 'card' && publishButton}
+        {layout === 'card' && publishButton && blocked && <p className="text-sm text-muted">{t('storyPublish.action.blocked')}</p>}
         {live && (
           <Button fullWidth className="max-lg:min-h-11" isDisabled={isPending} variant="danger-soft" onPress={() => void ask()}>{t('storyPublish.action.unpublish')}</Button>
         )}

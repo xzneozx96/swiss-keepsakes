@@ -6,7 +6,8 @@ import { coverId, groupId, patches, problem, renderStoryEditor, servePublish, se
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
-const view = vi.hoisted(() => ({ wide: false }))
+// The laptop layout shows the card, the checks and the Details cards together. The phone layout is in stories-review-layout.test.tsx.
+const view = vi.hoisted(() => ({ wide: true }))
 
 vi.mock('@/hooks/use-is-wide', () => ({ useIsWide: () => view.wide }))
 
@@ -15,7 +16,7 @@ const AUTOSAVE = { timeout: 5000 }
 const path = `/store/content/articles/${groupId}`
 
 beforeEach(async () => {
-  view.wide = false
+  view.wide = true
   await setUpHarness()
 })
 

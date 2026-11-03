@@ -138,10 +138,10 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
       />
       {screen === 'review'
         ? (
-            <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4 pt-4">
-              {notices}
+            <>
+              {(editor.state === 'stale' || editor.state === 'failed') && <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4 pt-4 max-lg:-mx-4">{notices}</div>}
               <StoryReviewScreen editor={editor} group={group} language={language} storeId={storeId} switchNode={switcher(false, true)} onEdit={edit} version={group.versions[language]!} />
-            </div>
+            </>
           )
         : (
             <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4 py-4 max-lg:-mx-4 max-lg:w-auto lg:py-8">
