@@ -333,7 +333,7 @@ async function main(): Promise<number> {
 
 // Runs after the keepsakes exist, also on a second run. The plan is read again from the database, so a row that a person
 // set in between is skipped.
-async function openingStock(pool: Pool, storeId: string, quantities: Record<string, number>): Promise<number> {
+export async function openingStock(pool: Pool, storeId: string, quantities: Record<string, number>): Promise<number> {
   const plan = await planFromDatabase(pool, storeId, quantities)
   if (plan.faults.length > 0 || !plan.ownerUserId) {
     process.stderr.write(`${plan.faults.join('\n')}\nNo opening stock was written.\n`)
