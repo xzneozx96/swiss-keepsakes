@@ -17,16 +17,15 @@ import { createKeepsakeLinks } from '../src/modules/content/adapters/keepsake-li
 import { createMediaRepository } from '../src/modules/content/adapters/media-repository.ts'
 import { mediaView } from '../src/modules/content/adapters/media-view.ts'
 import { createPinRepository } from '../src/modules/content/adapters/pin-repository.ts'
-import { createS3Storage } from '../src/modules/content/adapters/s3-storage.ts'
-import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeDescribeMedia, makeProcessMedia, makePublishPin, makeRequestUpload } from '../src/modules/content/index.ts'
+import { makeCreateCategory, makeCreatePin, makePublishPin } from '../src/modules/content/index.ts'
 import { createStockRepository } from '../src/modules/inventory/adapters/stock-repository.ts'
 import { makeReservedBySku, makeSeedStock, makeSetStock, makeStockLevels } from '../src/modules/inventory/index.ts'
 import { createAuditLog } from '../src/platform/audit.ts'
 import { systemClock } from '../src/platform/clock.ts'
 import { createDatabase } from '../src/platform/db/client.ts'
 import { createUnitOfWork } from '../src/platform/db/unit-of-work.ts'
-import { createS3Client } from '../src/platform/storage.ts'
 import { isLocalDatabaseUrl } from './seed-guard.ts'
+import { createMediaStorage, createMediaUploader, objectStorageSettings, SeedError } from './seed-media-upload.ts'
 import { applyOpeningStock, describeDecision, loadOpeningStock, openingStockReady, planFromDatabase } from './seed-opening-stock.ts'
 import { placeStoriesStep } from './seed-place-stories.ts'
 
@@ -39,14 +38,9 @@ import { placeStoriesStep } from './seed-place-stories.ts'
 // One step is not add-only (standing order 16): the opening stock of `seed-data/curated/opening-stock.json` sets a stock row
 // that still holds the migration's 0 with no history, through the inventory set-stock use case, as the store's owner.
 // Faults in that plan (an unknown code, a SKU with no row, no owner) stop the run before anything is written.
-// The last step adds the stories and editorial reviews of `seed-data/place-stories.ts` (seed-place-stories.ts, standing order 19):
-// add-only, and a story becomes the main story of a place that has none. `--replace-legacy-stories` also deletes the 13 old
-// stories once, through the Delete story use case. `--stories-only` runs that step alone.
-
-// Its message names a record and a reason, never the connection string, so the entry point may print it.
-class SeedError extends Error {
-  override name = 'SeedError'
-}
+// The last step brings the stories and editorial reviews of `seed-data/place-stories.ts` and their photos into the store
+// (seed-place-stories.ts, standing order 19): a story that is missing is created, one that differs from the data is saved and
+// published again, and a story becomes the main story of a place that has none. `--stories-only` runs that step alone.
 
 const urlLike = /postgres(?:ql)?:\/\/\S+/g
 
@@ -273,17 +267,14 @@ function printPlan(plan: Plan, snapshot: Snapshot, photos: Map<string, Uint8Arra
 }
 
 // `--stock-only` runs the opening-stock step alone: no category, place or keepsake is planned or created (owner, 2026-11-03).
-// `--stories-only` does the same for the stories step, and `--replace-legacy-stories` adds the one-time delete of the old stories to it.
+// `--stories-only` does the same for the stories step.
 // A flag that is not known stops the run, so a typo cannot start the full seed.
-const knownFlags = ['--dry-run', '--stock-only', '--stories-only', '--replace-legacy-stories', '--delete-sample-pins', '--refresh-story-bodies']
+const knownFlags = ['--dry-run', '--stock-only', '--stories-only']
 export function parseFlags(argv: readonly string[]) {
   return {
     dry: argv.includes('--dry-run'),
     stockOnly: argv.includes('--stock-only'),
     storiesOnly: argv.includes('--stories-only'),
-    replaceLegacyStories: argv.includes('--replace-legacy-stories'),
-    deleteSamplePins: argv.includes('--delete-sample-pins'),
-    refreshStoryBodies: argv.includes('--refresh-story-bodies'),
     unknown: argv.filter(arg => !knownFlags.includes(arg)),
   }
 }
@@ -315,7 +306,7 @@ export async function stockOnly(pool: Pool, storeId: string, dry: boolean): Prom
 }
 
 async function main(): Promise<number> {
-  const { dry, stockOnly: onlyStock, storiesOnly, replaceLegacyStories, deleteSamplePins, refreshStoryBodies, unknown } = parseFlags(process.argv.slice(2))
+  const { dry, stockOnly: onlyStock, storiesOnly, unknown } = parseFlags(process.argv.slice(2))
   if (unknown.length > 0) {
     process.stderr.write(`Unknown flag: ${unknown.join(' ')}. Known: ${knownFlags.join(', ')}. Nothing was written.\n`)
     return 2
@@ -337,7 +328,7 @@ async function main(): Promise<number> {
     if (onlyStock)
       return await stockOnly(pool, storeId, dry)
     if (storiesOnly)
-      return await placeStoriesStep(pool, storeId, { dry, replaceLegacy: replaceLegacyStories, deleteSamplePins, refreshBodies: refreshStoryBodies })
+      return await placeStoriesStep(pool, storeId, { dry })
     const data = loadData()
     const snapshot = await readSnapshot(pool, storeId)
     const plan = buildPlan(data, snapshot)
@@ -364,7 +355,7 @@ async function main(): Promise<number> {
         process.stdout.write('Stories: planned after the places exist.\n')
         return 0
       }
-      return await placeStoriesStep(pool, storeId, { dry, replaceLegacy: replaceLegacyStories, deleteSamplePins, refreshBodies: refreshStoryBodies })
+      return await placeStoriesStep(pool, storeId, { dry })
     }
     // The content use cases read the home column, so nothing can be written until migration 0016 is applied.
     if (!homeColumn) {
@@ -380,7 +371,7 @@ async function main(): Promise<number> {
     else if (await run(pool, storeId, data, plan, snapshot, files) !== 0)
       return 1
     const stockCode = await openingStock(pool, storeId, quantities)
-    return stockCode !== 0 ? stockCode : await placeStoriesStep(pool, storeId, { dry, replaceLegacy: replaceLegacyStories, deleteSamplePins, refreshBodies: refreshStoryBodies })
+    return stockCode !== 0 ? stockCode : await placeStoriesStep(pool, storeId, { dry })
   }
   finally {
     await pool.end()
@@ -403,26 +394,21 @@ export async function openingStock(pool: Pool, storeId: string, quantities: Reco
 }
 
 async function run(pool: Pool, storeId: string, data: Data, plan: Plan, snapshot: Snapshot, files: Map<string, Uint8Array>): Promise<number> {
-  const { AWS_ENDPOINT_URL_S3: endpoint, AWS_REGION: region, AWS_ACCESS_KEY_ID: accessKeyId, AWS_SECRET_ACCESS_KEY: secretAccessKey } = process.env
-  if (files.size > 0 && !(endpoint && region && accessKeyId && secretAccessKey)) {
+  if (files.size > 0 && !objectStorageSettings()) {
     process.stderr.write('AWS_* object storage settings are not set. Nothing was written.\n')
     return 2
   }
   const db = createDatabase(pool)
   const uow = createUnitOfWork(db)
   const audit = createAuditLog(systemClock)
-  const storage = createS3Storage(createS3Client({ endpoint: endpoint ?? '', region: region ?? '', accessKeyId: accessKeyId ?? '', secretAccessKey: secretAccessKey ?? '' }), endpoint ?? '')
+  const storage = createMediaStorage()
   // The seed acts as an owner of the store, so the use cases' own access rule passes.
   const actor: Actor = { kind: 'staff', userId: 'seed-curated', guestId: 'seed-curated', stores: new Map([[storeId, 'owner' as const]]) }
   const media = createMediaRepository()
   const pins = createPinRepository()
   const pinDeps = { uow, pins, media, audit, clock: systemClock }
   const createCategory = makeCreateCategory({ uow, categories: createCategoryRepository(), audit, clock: systemClock })
-  const requestUpload = makeRequestUpload({ storage, clock: systemClock, newId: () => crypto.randomUUID() })
-  // The seed runs the media job itself right after the confirm, so no queue is needed: the job is not sent.
-  const confirmUpload = makeConfirmUpload({ uow, media, storage, jobs: { send: async () => {} }, audit, clock: systemClock, newId: () => crypto.randomUUID() })
-  const processMedia = makeProcessMedia({ uow, media, storage, clock: systemClock })
-  const describeMedia = makeDescribeMedia({ uow, media, audit, clock: systemClock })
+  const uploadFile = createMediaUploader(pool, storeId, actor, storage)
   const createPin = makeCreatePin(pinDeps)
   const publishPin = makePublishPin(pinDeps)
   const stockRepository = createStockRepository()
@@ -492,26 +478,9 @@ async function run(pool: Pool, storeId: string, data: Data, plan: Plan, snapshot
   })
 
   async function upload(key: string, bytes: Uint8Array): Promise<string> {
-    const name = key.slice(key.lastIndexOf('/') + 1)
-    const contentType = name.endsWith('.png') ? 'image/png' : name.endsWith('.webp') ? 'image/webp' : 'image/jpeg'
-    const grant = await requestUpload(actor, storeId, { contentType, byteSize: bytes.byteLength })
-    if (!grant.ok)
-      throw new SeedError(`Upload of ${key} was refused: ${grant.reason}`)
-    const put = await fetch(grant.value.url, { method: grant.value.method, headers: grant.value.headers, body: bytes })
-    if (!put.ok)
-      throw new SeedError(`The storage refused the PUT of ${key}: ${put.status}`)
-    const confirmed = await confirmUpload(actor, storeId, { uploadKey: grant.value.uploadKey, fileName: name }, null)
-    if (!confirmed.ok)
-      throw new SeedError(`Confirm of ${key} was refused: ${confirmed.reason}`)
-    await processMedia({ storeId, mediaId: confirmed.value.id })
-    const alt = altByFile.get(key)
-    if (alt) {
-      const described = await describeMedia(actor, storeId, confirmed.value.id, { alt }, null)
-      if (!described.ok)
-        throw new SeedError(`Alt text of ${key} was refused: ${described.reason}`)
-    }
+    const id = await uploadFile(key, bytes, altByFile.get(key))
     counts.uploaded += 1
-    return confirmed.value.id
+    return id
   }
 
   const mediaIdsOf = (group: string, photos: { file: string }[]) => photos.map(photo => mediaIdByFile.get(`${group}/${photo.file}`)!)

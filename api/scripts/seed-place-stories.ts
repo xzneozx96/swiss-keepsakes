@@ -1,32 +1,38 @@
-import type { ContentLanguage, StoryBody, StoryBodyNode, StoryDraft } from '@sk/domain/content'
+import type { ContentLanguage, Localized, StoryBody, StoryBodyNode, StoryDraft } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { Pool } from 'pg'
 import type { PlaceStory, PlaceStoryBlock } from './seed-data/place-stories.ts'
+import type { StoryPhoto } from './seed-data/story-photos.ts'
+import type { MediaUploader } from './seed-media-upload.ts'
+import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import process from 'node:process'
+import { fileURLToPath } from 'node:url'
 import { isDeepStrictEqual } from 'node:util'
 import { createMediaRepository } from '../src/modules/content/adapters/media-repository.ts'
 import { createPinRepository } from '../src/modules/content/adapters/pin-repository.ts'
 import { createStoryRepository } from '../src/modules/content/adapters/story-repository.ts'
-import { makeCreateStoryGroup, makeCreateStoryVersion, makeDeletePin, makeDeleteStoryGroup, makePublishStoryVersion, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion } from '../src/modules/content/index.ts'
+import { makeCreateStoryGroup, makeCreateStoryVersion, makePublishPin, makePublishStoryVersion, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion } from '../src/modules/content/index.ts'
 import { createAuditLog } from '../src/platform/audit.ts'
 import { systemClock } from '../src/platform/clock.ts'
 import { createDatabase } from '../src/platform/db/client.ts'
 import { createUnitOfWork } from '../src/platform/db/unit-of-work.ts'
-import { legacyStoryGroups, placeStories, samplePinSlugs } from './seed-data/place-stories.ts'
+import { placeCovers, placeStories } from './seed-data/place-stories.ts'
+import { storyPhotos } from './seed-data/story-photos.ts'
+import { createMediaStorage, createMediaUploader, objectStorageSettings, SeedError } from './seed-media-upload.ts'
 
-// The stories step of the curated loader (owner decisions of 2026-11-03, standing order 19). It adds one story for each
-// sight and photo spot and one editorial review for a food-and-drink place, in English and German, through the content
-// use cases, so the publish checks, the audit rows and the database rules hold. A story whose slug exists in either
-// language is skipped, so a second run changes nothing. The cover is the cover of the place (media the seed already
-// holds); a story with no ready cover stays a draft. Two things are not add-only, both from the owner's decision:
-// `--replace-legacy-stories` deletes the 13 old stories once (the Delete story use case, by the ids listed in the data
-// file), and a story becomes the main story of a place that has none. Three more one-time steps are flag-gated (owner, 2026-11-03):
-// `--delete-sample-pins` deletes the unused sample pin of `samplePinSlugs` through the Delete pin use case, and
-// `--refresh-story-bodies` rewrites the body of the stories this seed created (through the save and publish use cases, keeping
-// their state) so a change to the text reaches dev once.
+// The stories step of the curated loader (owner decisions of 2026-11-03, standing order 19). It brings the stories and editorial
+// reviews of `seed-data/place-stories.ts` into the store, in English and German, through the content use cases, so the publish
+// checks, the audit rows and the database rules hold. A story that does not exist yet is created and published. A story that
+// exists is brought to the data: title, short summary, cover, body (text and photo blocks) and check date are saved as the draft
+// and published again, and only when they differ, so a second run changes nothing. Photos of `seed-data/story-photos.ts` go through
+// the media path once (a file whose bytes are in the library is reused), and a place named in `placeCovers` that has no cover gets
+// one. Links are not rewritten: a story becomes the main story of a place that has none, and a main story a person chose is kept.
 
 const languages: ContentLanguage[] = ['en', 'de']
 const author = 'Swiss Native'
+const photoDir = join(dirname(fileURLToPath(import.meta.url)), 'seed-data', 'story-photos')
 
 export interface PlaceFacts {
   id: string
@@ -43,12 +49,10 @@ export interface StorySnapshot {
   places: ReadonlyMap<string, PlaceFacts>
   // Blog category ids of the store by slug.
   blogCategoryIds: ReadonlyMap<string, string>
-  // The story groups of the store with the slugs of their versions.
-  groups: readonly { id: string, slugs: string[] }[]
-  // The sample pins of `samplePinSlugs` that the store has, with how many stories, reviews and tour stops use them.
-  samplePins: readonly { id: string, slug: string, uses: number }[]
   // The stored versions of the stories of this seed, by slug (either language).
   versions: readonly StoredVersion[]
+  // The library item of each photo key whose bytes the store holds already.
+  photoMedia: ReadonlyMap<string, string>
 }
 
 export interface StoredVersion {
@@ -58,12 +62,6 @@ export interface StoredVersion {
   status: 'draft' | 'published'
   rowVersion: number
   doc: StoryDraft
-}
-
-export interface StepOptions {
-  replaceLegacy: boolean
-  deleteSamplePins: boolean
-  refreshBodies: boolean
 }
 
 export interface PlannedStory {
@@ -79,11 +77,14 @@ export interface PlannedStory {
 }
 
 export interface StoryPlan {
-  deletes: { id: string, slugs: string[] }[]
-  pinDeletes: { id: string, slug: string }[]
-  // A stored version of a seed story whose body differs from the data: rewritten, and published again if it was published.
-  refreshes: { key: string, version: StoredVersion }[]
-  // Stories that exist already (skipped) whose place has no main story yet: the link is set, and only that.
+  refs: PhotoRefs
+  // Photos the store does not hold yet.
+  uploads: StoryPhoto[]
+  // A stored version that is not the data yet (or is not published): saved as the draft, then published.
+  refreshes: { key: string, version: StoredVersion, draft: StoryDraft }[]
+  // Places with no cover that get the photo as their cover.
+  placeCovers: { placeId: string, slug: string, photo: StoryPhoto }[]
+  // Stories that exist already whose place has no main story yet: the link is set, and only that.
   links: { key: string, groupId: string, placeId: string }[]
   creates: PlannedStory[]
   skipped: { key: string, reason: string }[]
@@ -91,38 +92,117 @@ export interface StoryPlan {
   faults: string[]
 }
 
-// What gets removed: a group of the store that the legacy list names by id and whose versions all have legacy slugs.
-export function planLegacyDeletes(groups: StorySnapshot['groups'], legacy = legacyStoryGroups): StoryPlan['deletes'] {
-  return groups.flatMap((group) => {
-    const known = legacy.find(entry => entry.id === group.id)
-    return known && group.slugs.every(slug => known.slugs.includes(slug)) ? [group] : []
-  })
+// What the body and the cover need of a photo: its library id (a placeholder while it is still to be uploaded) and its texts.
+export type PhotoRefs = ReadonlyMap<string, { mediaId: string, photo: StoryPhoto }>
+
+export function photoRefs(photoMedia: ReadonlyMap<string, string>, photos: readonly StoryPhoto[] = storyPhotos): PhotoRefs {
+  return new Map(photos.map(photo => [photo.key, { mediaId: photoMedia.get(photo.key) ?? `pending:${photo.key}`, photo }]))
 }
 
-export function planPlaceStories(stories: readonly PlaceStory[], snapshot: StorySnapshot, options: StepOptions, legacy = legacyStoryGroups): StoryPlan {
-  const plan: StoryPlan = { deletes: options.replaceLegacy ? planLegacyDeletes(snapshot.groups, legacy) : [], pinDeletes: [], refreshes: [], links: [], creates: [], skipped: [], faults: [] }
-  if (options.deleteSamplePins) {
-    for (const pin of snapshot.samplePins) {
-      if (pin.uses > 0)
-        plan.faults.push(`The sample pin ${pin.slug} is used by ${pin.uses} stories, reviews or tours and is not deleted.`)
-      else
-        plan.pinDeletes.push({ id: pin.id, slug: pin.slug })
+export function photoBytes(photo: StoryPhoto): Buffer {
+  return readFileSync(join(photoDir, photo.file))
+}
+
+function text(value: string, marks?: { type: string, attrs?: Record<string, unknown> }[]): StoryBodyNode {
+  return { type: 'text', text: value, ...(marks ? { marks } : {}) }
+}
+
+function nodeOf(block: PlaceStoryBlock, language: ContentLanguage, refs: PhotoRefs): StoryBodyNode {
+  if (typeof block === 'string')
+    return { type: 'paragraph', content: [text(block)] }
+  if ('h' in block)
+    return { type: 'heading', attrs: { level: 2 }, content: [text(block.h)] }
+  if ('photo' in block) {
+    const ref = refs.get(block.photo)
+    if (!ref)
+      throw new SeedError(`A story names the photo ${block.photo}, which is not in the photo list`)
+    return { type: 'image', attrs: { mediaId: ref.mediaId, alt: ref.photo.alt[language], caption: ref.photo.caption[language] } }
+  }
+  return { type: 'bulletList', content: block.ul.map(item => ({ type: 'listItem', content: [{ type: 'paragraph', content: [text(item)] }] })) }
+}
+
+export function placeStoryBody(story: PlaceStory, language: ContentLanguage, refs: PhotoRefs): StoryBody {
+  return { type: 'doc', content: story.versions[language].blocks.map(block => nodeOf(block, language, refs)) }
+}
+
+export function placeStoryDraft(story: PlaceStory, language: ContentLanguage, coverMediaId: string | null, refs: PhotoRefs): StoryDraft {
+  const { title, excerpt } = story.versions[language]
+  return {
+    title,
+    excerpt,
+    authorName: author,
+    coverMediaId,
+    ...(story.checkedOn ? { checkedOn: story.checkedOn } : {}),
+    body: placeStoryBody(story, language, refs),
+  }
+}
+
+// The photo keys a story uses: the cover first, then each photo block.
+export function storyPhotoKeys(story: PlaceStory): string[] {
+  const keys = story.cover ? [story.cover] : []
+  for (const language of languages) {
+    for (const block of story.versions[language].blocks) {
+      if (typeof block !== 'string' && 'photo' in block)
+        keys.push(block.photo)
     }
   }
-  if (options.refreshBodies) {
-    for (const story of stories) {
+  return [...new Set(keys)]
+}
+
+function sameDraft(stored: StoryDraft, target: StoryDraft): boolean {
+  return stored.title === target.title
+    && stored.excerpt === target.excerpt
+    && stored.coverMediaId === target.coverMediaId
+    && (target.checkedOn === undefined || stored.checkedOn === target.checkedOn)
+    && isDeepStrictEqual(stored.body, target.body)
+}
+
+export function planPlaceStories(stories: readonly PlaceStory[], snapshot: StorySnapshot, photos: readonly StoryPhoto[] = storyPhotos, covers: typeof placeCovers = placeCovers): StoryPlan {
+  const plan: StoryPlan = { refs: new Map(), uploads: [], refreshes: [], placeCovers: [], links: [], creates: [], skipped: [], faults: [] }
+  const refs = photoRefs(snapshot.photoMedia, photos)
+  plan.refs = refs
+  const wanted = new Set([...stories.flatMap(storyPhotoKeys), ...covers.map(entry => entry.photo)])
+  for (const key of wanted) {
+    const ref = refs.get(key)
+    if (!ref)
+      plan.faults.push(`The photo ${key} is used by a story or a place cover and is not in the photo list.`)
+    else if (!snapshot.photoMedia.has(key))
+      plan.uploads.push(ref.photo)
+  }
+  for (const entry of covers) {
+    const place = snapshot.places.get(entry.place)
+    const ref = refs.get(entry.photo)
+    if (!place)
+      plan.faults.push(`The cover of the place ${entry.place} names a place the store does not have.`)
+    else if (ref && place.coverMediaId === null && place.status !== 'draft')
+      plan.placeCovers.push({ placeId: place.id, slug: entry.place, photo: ref.photo })
+  }
+
+  // The cover of a story: its own photo, else the cover of the place it names.
+  const coverOf = (story: PlaceStory): string | null => {
+    if (story.cover)
+      return refs.get(story.cover)?.mediaId ?? null
+    const place = snapshot.places.get(story.coverFrom)
+    return place?.coverReady ? place.coverMediaId : null
+  }
+
+  for (const story of stories) {
+    const exists = languages.some(l => snapshot.slugs.has(story.slug[l]))
+    if (exists) {
+      plan.skipped.push({ key: story.key, reason: 'a version with this slug exists' })
+      const cover = coverOf(story)
       for (const language of languages) {
         const stored = snapshot.versions.find(v => v.slug === story.slug[language] && v.language === language)
-        if (stored && !isDeepStrictEqual(stored.doc.body, placeStoryBody(story, language)))
-          plan.refreshes.push({ key: story.key, version: stored })
+        if (!stored)
+          continue
+        if (cover === null) {
+          plan.faults.push(`Story ${story.key} (${language}) has no cover: no cover photo, and the place ${story.coverFrom} has none.`)
+          continue
+        }
+        const draft = placeStoryDraft(story, language, cover, refs)
+        if (stored.status !== 'published' || !sameDraft(stored.doc, draft))
+          plan.refreshes.push({ key: story.key, version: stored, draft })
       }
-    }
-  }
-  const removed = new Set(plan.deletes.flatMap(group => group.slugs))
-  const deletedIds = new Set(plan.deletes.map(group => group.id))
-  for (const story of stories) {
-    if (languages.some(l => snapshot.slugs.has(story.slug[l]) && !removed.has(story.slug[l]))) {
-      plan.skipped.push({ key: story.key, reason: 'a version with this slug exists' })
       const groupId = snapshot.versions.find(v => v.slug === story.slug.en)?.groupId
       for (const slug of story.mainStoryFor) {
         const place = snapshot.places.get(slug)
@@ -144,14 +224,13 @@ export function planPlaceStories(stories: readonly PlaceStory[], snapshot: Story
         faults.push(`Story ${story.key} names the blog category ${slug}, which the store does not have.`)
       return id ? [id] : []
     })
-    const cover = snapshot.places.get(story.coverFrom)
-    if (!cover)
+    if (!story.cover && !snapshot.places.get(story.coverFrom))
       faults.push(`Story ${story.key} takes its cover from the place ${story.coverFrom}, which the store does not have.`)
     if (faults.length > 0) {
       plan.faults.push(...faults)
       continue
     }
-    const coverMediaId = cover!.coverReady ? cover!.coverMediaId : null
+    const coverMediaId = coverOf(story)
     const placeIds = places.map(place => place!.id)
     plan.creates.push({
       story,
@@ -163,49 +242,17 @@ export function planPlaceStories(stories: readonly PlaceStory[], snapshot: Story
       draftReason: coverMediaId === null ? `the place ${story.coverFrom} has no ready cover` : null,
       mainStoryPlaceIds: story.mainStoryFor.flatMap((slug) => {
         const place = snapshot.places.get(slug)
-        return place && (place.mainStoryGroupId === null || deletedIds.has(place.mainStoryGroupId)) && place.status !== 'draft' ? [place.id] : []
+        return place && place.mainStoryGroupId === null && place.status !== 'draft' ? [place.id] : []
       }),
     })
   }
   return plan
 }
 
-function text(value: string, marks?: { type: string, attrs?: Record<string, unknown> }[]): StoryBodyNode {
-  return { type: 'text', text: value, ...(marks ? { marks } : {}) }
-}
-
-function nodeOf(block: PlaceStoryBlock): StoryBodyNode {
-  if (typeof block === 'string')
-    return { type: 'paragraph', content: [text(block)] }
-  if ('h' in block)
-    return { type: 'heading', attrs: { level: 2 }, content: [text(block.h)] }
-  return { type: 'bulletList', content: block.ul.map(item => ({ type: 'listItem', content: [{ type: 'paragraph', content: [text(item)] }] })) }
-}
-
-// The body: the blocks, then a closing line that names the sources as links.
-export function placeStoryBody(story: PlaceStory, language: ContentLanguage): StoryBody {
-  const sources: StoryBodyNode[] = story.sources.flatMap((source, index) => [
-    ...(index > 0 ? [text('; ')] : []),
-    text(source.name, [{ type: 'link', attrs: { href: source.url } }]),
-  ])
-  const line: StoryBodyNode = { type: 'paragraph', content: [text(language === 'en' ? 'Sources: ' : 'Quellen: ', [{ type: 'italic' }]), ...sources] }
-  return { type: 'doc', content: [...story.versions[language].blocks.map(nodeOf), line] }
-}
-
-export function placeStoryDraft(story: PlaceStory, language: ContentLanguage, coverMediaId: string | null): StoryDraft {
-  const { title, excerpt } = story.versions[language]
-  return {
-    title,
-    excerpt,
-    authorName: author,
-    coverMediaId,
-    ...(story.checkedOn ? { checkedOn: story.checkedOn } : {}),
-    body: placeStoryBody(story, language),
-  }
-}
-
-export async function readStorySnapshot(pool: Pool, storeId: string, stories: readonly PlaceStory[] = placeStories): Promise<StorySnapshot> {
-  const [slugs, places, categories, groups, samplePins, versions] = await Promise.all([
+export async function readStorySnapshot(pool: Pool, storeId: string, stories: readonly PlaceStory[] = placeStories, photos: readonly StoryPhoto[] = storyPhotos, covers: typeof placeCovers = placeCovers): Promise<StorySnapshot> {
+  const used = new Set(stories.flatMap(storyPhotoKeys))
+  const hashes = new Map(photos.filter(photo => used.has(photo.key) || covers.some(entry => entry.photo === photo.key)).map(photo => [photo.key, createHash('sha256').update(photoBytes(photo)).digest('hex')]))
+  const [slugs, places, categories, versions, media] = await Promise.all([
     pool.query<{ slug: string }>(`select slug from content.story_versions where slug is not null`),
     pool.query<{ id: string, status: string, slug: string, main_story_group_id: string | null, cover_media_id: string | null, ready: boolean }>(
       `select p.id, p.status, p.slug->>'en' as slug, p.main_story_group_id, p.cover_media_id,
@@ -214,41 +261,32 @@ export async function readStorySnapshot(pool: Pool, storeId: string, stories: re
       [storeId],
     ),
     pool.query<{ id: string, slug: string }>(`select id, slug from content.blog_categories where store_id = $1`, [storeId]),
-    pool.query<{ id: string, slugs: string[] }>(
-      `select g.id, coalesce(array_agg(v.slug) filter (where v.slug is not null), '{}') as slugs
-         from content.story_groups g left join content.story_versions v on v.group_id = g.id where g.store_id = $1 group by g.id`,
-      [storeId],
-    ),
-    pool.query<{ id: string, slug: string, uses: number }>(
-      `select p.id, p.slug->>'en' as slug,
-              (select count(*)::int from content.story_group_places where place_id = p.id)
-              + (select count(*)::int from content.story_groups where subject_place_id = p.id)
-              + (select count(distinct tour_id)::int from content.tour_stops where place_id = p.id) as uses
-         from content.places p where p.store_id = $1 and p.slug->>'en' = any($2::text[])`,
-      [storeId, samplePinSlugs],
-    ),
     pool.query<{ group_id: string, language: ContentLanguage, slug: string, status: 'draft' | 'published', row_version: number, doc: StoryDraft }>(
       `select group_id, language, slug, status, row_version, coalesce(draft, published) as doc
          from content.story_versions where store_id = $1 and slug = any($2::text[])`,
       [storeId, stories.flatMap(story => [story.slug.en, story.slug.de])],
     ),
+    pool.query<{ id: string, sha256: string }>(
+      `select distinct on (sha256) id, sha256 from content.media where store_id = $1 and status = 'ready' and sha256 = any($2::text[]) order by sha256, created_at, id`,
+      [storeId, [...hashes.values()]],
+    ),
   ])
+  const idBySha = new Map(media.rows.map(row => [row.sha256, row.id]))
   return {
     slugs: new Set(slugs.rows.map(row => row.slug)),
     places: new Map(places.rows.map(row => [row.slug, { id: row.id, status: row.status, mainStoryGroupId: row.main_story_group_id, coverMediaId: row.cover_media_id, coverReady: row.ready }])),
     blogCategoryIds: new Map(categories.rows.map(row => [row.slug, row.id])),
-    groups: groups.rows,
-    samplePins: samplePins.rows,
     versions: versions.rows.map(row => ({ groupId: row.group_id, language: row.language, slug: row.slug, status: row.status, rowVersion: row.row_version, doc: row.doc })),
+    photoMedia: new Map([...hashes].flatMap(([key, sha]) => (idBySha.has(sha) ? [[key, idBySha.get(sha)!] as const] : []))),
   }
 }
 
 export function describePlan(plan: StoryPlan, dry: boolean): string {
   const verb = dry ? 'Would' : 'Will'
   const lines = [
-    `${verb} delete ${plan.deletes.length} legacy stories: ${plan.deletes.map(group => group.slugs.join('/')).join(', ') || '-'}`,
-    `${verb} delete ${plan.pinDeletes.length} sample pins: ${plan.pinDeletes.map(pin => pin.slug).join(', ') || '-'}`,
-    `${verb} rewrite the body of ${plan.refreshes.length} story versions: ${plan.refreshes.map(r => `${r.key}/${r.version.language}`).join(', ') || '-'}`,
+    `${verb} upload ${plan.uploads.length} photos: ${plan.uploads.map(photo => photo.key).join(', ') || '-'}`,
+    `${verb} set the cover of ${plan.placeCovers.length} places: ${plan.placeCovers.map(entry => entry.slug).join(', ') || '-'}`,
+    `${verb} rewrite and publish ${plan.refreshes.length} story versions: ${plan.refreshes.map(r => `${r.key}/${r.version.language}`).join(', ') || '-'}`,
     `${verb} set the main story of ${plan.links.length} places for existing stories`,
     `${verb} create ${plan.creates.length} stories and reviews, skipping ${plan.skipped.length}${plan.skipped.length ? ` (${plan.skipped.map(s => s.key).join(', ')})` : ''}:`,
     ...plan.creates.map(item => `  ${item.story.kind} ${item.story.slug.en} / ${item.story.slug.de}: ${item.publish ? 'published' : `draft (${item.draftReason})`}, places ${item.story.places.join(', ')}, main story of ${item.mainStoryPlaceIds.length} places`),
@@ -256,52 +294,48 @@ export function describePlan(plan: StoryPlan, dry: boolean): string {
   return `${lines.join('\n')}\n`
 }
 
+export interface StepCounts { created: number, published: number, related: number, mainStories: number, refreshed: number, placeCovers: number }
+
 // Applies a plan with no fault. Each use case runs in its own transaction.
-export async function applyPlaceStories(pool: Pool, storeId: string, plan: StoryPlan, log: (line: string) => void = () => {}, stories: readonly PlaceStory[] = placeStories): Promise<{ deleted: number, created: number, published: number, related: number, mainStories: number, pinsDeleted: number, refreshed: number }> {
+export async function applyPlaceStories(pool: Pool, storeId: string, plan: StoryPlan, log: (line: string) => void = () => {}, stories: readonly PlaceStory[] = placeStories): Promise<StepCounts> {
   const db = createDatabase(pool)
   const deps = { uow: createUnitOfWork(db), stories: createStoryRepository(), media: createMediaRepository(), pins: createPinRepository(), audit: createAuditLog(systemClock), clock: systemClock }
   const actor: Actor = { kind: 'staff', userId: 'seed-curated', guestId: 'seed-curated', stores: new Map([[storeId, 'owner' as const]]) }
-  const deleteGroup = makeDeleteStoryGroup(deps)
   const createGroup = makeCreateStoryGroup(deps)
   const createVersion = makeCreateStoryVersion(deps)
   const publish = makePublishStoryVersion(deps)
   const saveGroup = makeSaveStoryGroup(deps)
   const savePin = makeSavePin(deps)
-  const deletePin = makeDeletePin(deps)
+  const publishPin = makePublishPin(deps)
   const saveVersion = makeSaveStoryVersion(deps)
-  const counts = { deleted: 0, created: 0, published: 0, related: 0, mainStories: 0, pinsDeleted: 0, refreshed: 0 }
+  const counts: StepCounts = { created: 0, published: 0, related: 0, mainStories: 0, refreshed: 0, placeCovers: 0 }
+  const pinRow = async (placeId: string) => (await pool.query<{ row_version: number, main_story_group_id: string | null, status: string }>(`select row_version, main_story_group_id, status from content.places where store_id = $1 and id = $2`, [storeId, placeId])).rows[0]
 
-  // Deletes first: the new slugs must not meet an old version of the same slug.
-  for (const group of plan.deletes) {
-    const result = await deleteGroup(actor, storeId, group.id, null)
-    if (!result.ok)
-      throw new Error(`Deleting the story ${group.slugs.join('/')} was refused: ${result.reason}`)
-    log(`Deleted ${group.slugs.join('/')}: ${result.value.pinsUnlinked} pins and ${result.value.storiesUnlinked} stories unlinked`)
-    counts.deleted += 1
-  }
-
-  for (const pin of plan.pinDeletes) {
-    const row = (await pool.query<{ row_version: number }>(`select row_version from content.places where store_id = $1 and id = $2`, [storeId, pin.id])).rows[0]
-    if (!row)
-      continue
-    const result = await deletePin(actor, storeId, pin.id, row.row_version, null)
-    if (!result.ok)
-      throw new Error(`Deleting the sample pin ${pin.slug} was refused: ${result.reason}`)
-    log(`Deleted the sample pin ${pin.slug}`)
-    counts.pinsDeleted += 1
-  }
-
-  // Bodies: the text of a stored version is replaced, nothing else; a published version goes live again with the new body.
-  for (const { key, version } of plan.refreshes) {
-    const story = stories.find(s => s.key === key)!
-    const saved = await saveVersion(actor, storeId, version.groupId, version.language, version.rowVersion, { draft: { ...version.doc, body: placeStoryBody(story, version.language) } }, null)
+  // Place covers first: a story that reads the place cover finds it.
+  for (const entry of plan.placeCovers) {
+    const row = await pinRow(entry.placeId)
+    const mediaId = (await pool.query<{ id: string }>(`select id from content.media where store_id = $1 and status = 'ready' and sha256 = $2 order by created_at limit 1`, [storeId, createHash('sha256').update(photoBytes(entry.photo)).digest('hex')])).rows[0]?.id
+    if (!row || !mediaId)
+      throw new SeedError(`The cover of ${entry.slug} cannot be set: the place or the photo is missing`)
+    const saved = await savePin(actor, storeId, entry.placeId, row.row_version, { coverMediaId: mediaId, coverAlt: entry.photo.alt as Localized }, null)
     if (!saved.ok)
-      throw new Error(`The body of ${key} (${version.language}) was refused: ${saved.reason}`)
-    if (version.status === 'published') {
-      const live = await publish(actor, storeId, version.groupId, version.language, saved.value.rowVersion, null)
-      if (!live.ok)
-        throw new Error(`The body of ${key} (${version.language}) was not published again: ${live.reason}`)
-    }
+      throw new SeedError(`The cover of ${entry.slug} was refused: ${saved.reason}`)
+    const live = await publishPin(actor, storeId, entry.placeId, saved.value.rowVersion, null)
+    if (!live.ok)
+      throw new SeedError(`The cover of ${entry.slug} was not published: ${live.reason}`)
+    log(`Set the cover of ${entry.slug}`)
+    counts.placeCovers += 1
+  }
+
+  // Stored versions: the draft is replaced as a whole, and the version goes live again.
+  for (const { key, version, draft } of plan.refreshes) {
+    const saved = await saveVersion(actor, storeId, version.groupId, version.language, version.rowVersion, { draft: { ...version.doc, ...draft } }, null)
+    if (!saved.ok)
+      throw new SeedError(`The text of ${key} (${version.language}) was refused: ${saved.reason}`)
+    const live = await publish(actor, storeId, version.groupId, version.language, saved.value.rowVersion, null)
+    if (!live.ok)
+      throw new SeedError(`The text of ${key} (${version.language}) was not published: ${live.reason}${'gaps' in live ? ` ${live.gaps.join(',')}` : ''}`)
+    log(`Rewrote and published ${key} (${version.language})`)
     counts.refreshed += 1
   }
 
@@ -310,17 +344,17 @@ export async function applyPlaceStories(pool: Pool, storeId: string, plan: Story
     const { story } = item
     const group = await createGroup(actor, storeId, { kind: story.kind, subjectPlaceId: item.subjectPlaceId, stayTag: story.stayTag, interests: story.interests, categoryIds: item.categoryIds, placeIds: item.placeIds }, null)
     if (!group.ok)
-      throw new Error(`Story ${story.key} was refused: ${group.reason}`)
+      throw new SeedError(`Story ${story.key} was refused: ${group.reason}`)
     groupIds.set(story.key, group.value.id)
     for (const language of languages) {
-      const version = await createVersion(actor, storeId, group.value.id, language, { slug: story.slug[language], draft: placeStoryDraft(story, language, item.coverMediaId) }, null)
+      const version = await createVersion(actor, storeId, group.value.id, language, { slug: story.slug[language], draft: placeStoryDraft(story, language, item.coverMediaId, plan.refs) }, null)
       if (!version.ok)
-        throw new Error(`Story ${story.key} (${language}) was refused: ${version.reason}`)
+        throw new SeedError(`Story ${story.key} (${language}) was refused: ${version.reason}`)
       if (!item.publish)
         continue
       const live = await publish(actor, storeId, group.value.id, language, version.value.rowVersion, null)
       if (!live.ok)
-        throw new Error(`Story ${story.key} (${language}) was not published: ${live.reason}${'gaps' in live ? ` ${live.gaps.join(',')}` : ''}`)
+        throw new SeedError(`Story ${story.key} (${language}) was not published: ${live.reason}${'gaps' in live ? ` ${live.gaps.join(',')}` : ''}`)
       counts.published += 1
     }
     counts.created += 1
@@ -343,7 +377,7 @@ export async function applyPlaceStories(pool: Pool, storeId: string, plan: Story
     const current = await pool.query<{ row_version: number }>(`select row_version from content.story_groups where store_id = $1 and id = $2`, [storeId, groupIds.get(item.story.key)])
     const saved = await saveGroup(actor, storeId, groupIds.get(item.story.key)!, current.rows[0]!.row_version, { relatedGroupIds: related }, null)
     if (!saved.ok)
-      throw new Error(`The related stories of ${item.story.key} were refused: ${saved.reason}`)
+      throw new SeedError(`The related stories of ${item.story.key} were refused: ${saved.reason}`)
     counts.related += related.length
   }
 
@@ -353,20 +387,28 @@ export async function applyPlaceStories(pool: Pool, storeId: string, plan: Story
     ...plan.links,
   ]
   for (const link of links) {
-    const row = (await pool.query<{ row_version: number, main_story_group_id: string | null }>(`select row_version, main_story_group_id from content.places where store_id = $1 and id = $2`, [storeId, link.placeId])).rows[0]
+    const row = await pinRow(link.placeId)
     if (!row || row.main_story_group_id !== null)
       continue
     const saved = await savePin(actor, storeId, link.placeId, row.row_version, { mainStoryGroupId: link.groupId }, null)
     if (!saved.ok)
-      throw new Error(`The main story of a place for ${link.key} was refused: ${saved.reason}${'gaps' in saved ? ` ${saved.gaps.join(',')}` : ''}`)
+      throw new SeedError(`The main story of a place for ${link.key} was refused: ${saved.reason}${'gaps' in saved ? ` ${saved.gaps.join(',')}` : ''}`)
     counts.mainStories += 1
   }
   return counts
 }
 
+export interface StepDeps {
+  // Puts a file in the library and returns its id. The default is the real media path, which needs the AWS_* settings.
+  uploader?: MediaUploader
+  // The places that get a cover photo. The default is the list of the data file; a test passes its own slugs.
+  covers?: typeof placeCovers
+}
+
 // The step as the loader runs it. Returns the exit code: 0, or 1 on a fault (nothing is written then).
-export async function placeStoriesStep(pool: Pool, storeId: string, options: StepOptions & { dry: boolean }, stories: readonly PlaceStory[] = placeStories): Promise<number> {
-  const plan = planPlaceStories(stories, await readStorySnapshot(pool, storeId, stories), options)
+export async function placeStoriesStep(pool: Pool, storeId: string, options: { dry: boolean }, stories: readonly PlaceStory[] = placeStories, deps: StepDeps = {}, photos: readonly StoryPhoto[] = storyPhotos): Promise<number> {
+  const covers = deps.covers ?? placeCovers
+  let plan = planPlaceStories(stories, await readStorySnapshot(pool, storeId, stories, photos, covers), photos, covers)
   process.stdout.write(describePlan(plan, options.dry))
   if (plan.faults.length > 0) {
     process.stderr.write(`${plan.faults.join('\n')}\nNo story was written.\n`)
@@ -374,7 +416,30 @@ export async function placeStoriesStep(pool: Pool, storeId: string, options: Ste
   }
   if (options.dry)
     return 0
+  const uploaded = plan.uploads.length
+  if (uploaded > 0) {
+    let uploader = deps.uploader
+    if (!uploader) {
+      if (!objectStorageSettings()) {
+        process.stderr.write('AWS_* object storage settings are not set. Nothing was written.\n')
+        return 2
+      }
+      const actor: Actor = { kind: 'staff', userId: 'seed-curated', guestId: 'seed-curated', stores: new Map([[storeId, 'owner' as const]]) }
+      uploader = createMediaUploader(pool, storeId, actor, createMediaStorage())
+    }
+    for (const photo of plan.uploads) {
+      await uploader(`${photo.key}.jpg`, photoBytes(photo), photo.alt as Localized)
+      process.stdout.write(`Uploaded ${photo.key}\n`)
+    }
+    // The ids exist now: plan again, so the bodies carry them.
+    plan = planPlaceStories(stories, await readStorySnapshot(pool, storeId, stories, photos, covers), photos, covers)
+    if (plan.faults.length > 0 || plan.uploads.length > 0) {
+      process.stderr.write(`${plan.faults.join('\n')}\nThe photos are not all in the library. No story was written.\n`)
+      return 1
+    }
+  }
   const counts = await applyPlaceStories(pool, storeId, plan, line => process.stdout.write(`${line}\n`), stories)
-  process.stdout.write(`Stories: ${counts.deleted} deleted, ${counts.pinsDeleted} sample pins deleted, ${counts.refreshed} bodies rewritten, ${counts.created} created (${counts.published} versions published), ${counts.related} related links, ${counts.mainStories} main stories set.${counts.deleted + counts.pinsDeleted + counts.refreshed + counts.created + counts.mainStories === 0 ? ' Nothing was changed.' : ''}\n`)
+  const changed = uploaded + counts.refreshed + counts.created + counts.mainStories + counts.placeCovers
+  process.stdout.write(`Stories: ${counts.refreshed} versions rewritten, ${counts.placeCovers} place covers set, ${counts.created} created (${counts.published} versions published), ${counts.related} related links, ${counts.mainStories} main stories set.${changed === 0 ? ' Nothing was changed.' : ''}\n`)
   return 0
 }

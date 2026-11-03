@@ -1,224 +1,279 @@
 import type { StoryBody, StoryBodyNode } from '@sk/domain/content'
-import type { PlaceFacts, StepOptions, StorySnapshot } from '../scripts/seed-place-stories.ts'
+import type { PlaceFacts, StorySnapshot } from '../scripts/seed-place-stories.ts'
+import type { PlaceStory } from '../scripts/seed-data/place-stories.ts'
+import type { StoryPhoto } from '../scripts/seed-data/story-photos.ts'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { storyDraftSchema } from '@sk/api-contract'
-import { interestCodes, storyBodyFacts, storyVersionPublishGaps } from '@sk/domain/content'
+import { interestCodes, storyBodyFacts, storyBodyMediaRefs, storyVersionPublishGaps } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
 import { parseFlags } from '../scripts/seed-curated.ts'
-import { legacyStoryGroups, placeStories } from '../scripts/seed-data/place-stories.ts'
-import { describePlan, placeStoryBody, placeStoryDraft, planLegacyDeletes, planPlaceStories } from '../scripts/seed-place-stories.ts'
+import { placeCovers, placeStories } from '../scripts/seed-data/place-stories.ts'
+import { storyPhotos } from '../scripts/seed-data/story-photos.ts'
+import { describePlan, photoRefs, placeStoryBody, placeStoryDraft, planPlaceStories, storyPhotoKeys } from '../scripts/seed-place-stories.ts'
 
-const cover = '11111111-1111-4111-8111-111111111111'
 const languages = ['en', 'de'] as const
-const none: StepOptions = { replaceLegacy: false, deleteSamplePins: false, refreshBodies: false }
+const photoRoot = join(import.meta.dirname, '..', 'scripts', 'seed-data', 'story-photos')
 
 function textsOf(nodes: StoryBodyNode[]): string[] {
   return nodes.flatMap(n => [...(n.type === 'text' ? [n.text ?? ''] : []), ...textsOf(n.content ?? [])])
 }
 
-// A store that has every place the data names, each with a ready cover, and every blog category.
-function snapshotOf(overrides: Partial<StorySnapshot> = {}, place: (slug: string) => Partial<PlaceFacts> = () => ({})): StorySnapshot {
-  const slugs = [...new Set(placeStories.flatMap(story => [...story.places, story.coverFrom, ...story.mainStoryFor]))]
-  return {
-    slugs: new Set(),
-    places: new Map(slugs.map((slug, index) => [slug, { id: `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`, status: 'published', mainStoryGroupId: null, coverMediaId: cover, coverReady: true, ...place(slug) }])),
-    blogCategoryIds: new Map(['history', 'old-town-history', 'legends'].map(slug => [slug, `blog-${slug}`])),
-    groups: [],
-    samplePins: [],
-    versions: [],
-    ...overrides,
-  }
+// A stand-in id for every photo, as the library would give.
+const ids = new Map(storyPhotos.map((photo, index) => [photo.key, `00000000-0000-4000-9000-${String(index).padStart(12, '0')}`]))
+const refs = photoRefs(ids)
+
+// Phrases the owner does not want (an AI tell, or a platitude) and the dash characters.
+const banned = [/—/, /–/, /\bnestled\b/i, /\biconic\b/i, /testament to/i, /rich tapestry/i, /whether you(?:'|’)re/i, /hidden gem/i, /\bdelve\b/i, /\bvibrant\b/i, /\bbustling\b/i, /\bnicht nur\b.*\bsondern auch\b/i, /\bunvergesslich/i, /\bwahres Juwel/i, /Eintauchen in/i]
+
+function everyText(story: PlaceStory): string[] {
+  const own = languages.flatMap(language => [story.versions[language].title, story.versions[language].excerpt, ...textsOf(placeStoryBody(story, language, refs).content)])
+  const photos = storyPhotoKeys(story).flatMap((key) => {
+    const photo = storyPhotos.find(entry => entry.key === key)
+    return photo ? [...Object.values(photo.alt), ...Object.values(photo.caption)] : []
+  })
+  return [...own, ...photos]
 }
 
-const versions = placeStories.flatMap(story => languages.map(language => ({ key: story.key, kind: story.kind, language, story })))
+const libraryKeys = new Set(['wm-fountain', 'wm-houses', 'wm-basin', 'fr-house', 'ph-house'])
+const cover = '11111111-1111-4111-8111-111111111111'
+const stories = placeStories.flatMap(story => languages.map(language => ({ key: story.key, kind: story.kind, language, story })))
 
 describe('[seed-place-stories] the data', () => {
-  it('has seven stories and one review, with distinct keys and slugs', () => {
+  it('has seven stories and four reviews, with distinct keys and slugs', () => {
     expect(placeStories.filter(s => s.kind === 'story')).toHaveLength(7)
-    expect(placeStories.filter(s => s.kind === 'editorial_review')).toHaveLength(1)
+    expect(placeStories.filter(s => s.kind === 'editorial_review')).toHaveLength(4)
     expect(new Set(placeStories.map(s => s.key)).size).toBe(placeStories.length)
     const slugs = placeStories.flatMap(s => [s.slug.en, s.slug.de])
     expect(new Set(slugs).size).toBe(slugs.length)
   })
 
-  it('does not reuse a slug of the 13 stories that are deleted', () => {
-    const old = new Set(legacyStoryGroups.flatMap(g => g.slugs))
-    expect(placeStories.flatMap(s => [s.slug.en, s.slug.de]).filter(slug => old.has(slug))).toEqual([])
-  })
-
-  it('lists 13 legacy groups', () => {
-    expect(legacyStoryGroups).toHaveLength(13)
-  })
-
-  it.each(versions)('$key/$language passes the story draft schema, with every publish gap but the cover closed', ({ story, language }) => {
-    const draft = placeStoryDraft(story, language, cover)
+  it.each(stories)('$key/$language validates against the story draft schema, with every publish gap closed', ({ story, language }) => {
+    const draft = placeStoryDraft(story, language, cover, refs)
     const parsed = storyDraftSchema.safeParse(draft)
     expect(parsed.success, parsed.success ? '' : JSON.stringify(parsed.error.issues)).toBe(true)
     expect(storyVersionPublishGaps({ slug: story.slug[language], title: draft.title, excerpt: draft.excerpt, coverMediaId: draft.coverMediaId, kind: story.kind, subjectPlaceId: story.kind === 'editorial_review' ? 'place' : null, checkedOn: draft.checkedOn })).toEqual([])
   })
 
-  it.each(versions)('$key/$language has a title, an excerpt and a closing line of sources with links', ({ story, language }) => {
-    const { title, excerpt } = story.versions[language]
-    expect(title.length).toBeGreaterThan(5)
-    expect(excerpt.length).toBeGreaterThan(30)
-    expect(excerpt.length).toBeLessThanOrEqual(1000)
-    const body = placeStoryBody(story, language) as StoryBody
-    const last = body.content.at(-1)!
-    expect(textsOf([last]).join('')).toContain(language === 'en' ? 'Sources: ' : 'Quellen: ')
-    const links = (last.content ?? []).flatMap(node => node.marks ?? []).filter(mark => mark.type === 'link')
-    expect(links).toHaveLength(story.sources.length)
-    for (const mark of links)
-      expect(String(mark.attrs?.href)).toMatch(/^https:\/\//)
+  it.each(stories)('$key/$language is long enough, has sections and keeps the sources out of the body', ({ story, language, kind }) => {
+    const body = placeStoryBody(story, language, refs) as StoryBody
+    const facts = storyBodyFacts(body)
+    // German runs about 10 percent shorter in words than the English for the same text, so its floor is lower.
+    expect(facts.words, `${story.key}/${language}`).toBeGreaterThanOrEqual((kind === 'story' ? 900 : 300) * (language === 'en' ? 1 : 0.85))
+    expect(facts.sections).toBeGreaterThanOrEqual(kind === 'story' ? 5 : 2)
+    expect(facts.mediaWithoutCaption).toBe(0)
+    expect(facts.photosWithoutAlt).toBe(0)
+    expect(textsOf(body.content).join(' ')).not.toMatch(/Sources:|Quellen:/)
+    expect(story.sources.length).toBeGreaterThan(0)
+    for (const source of story.sources)
+      expect(source.url).toMatch(/^https:\/\//)
+    expect(story.versions[language].excerpt.length).toBeLessThanOrEqual(1000)
   })
 
-  it.each(versions)('$key/$language is 300 to 600 words for a story and 150 to 300 for a review, with at least two sections', ({ story, language, kind }) => {
-    const facts = storyBodyFacts(placeStoryBody(story, language))
-    const [min, max] = kind === 'story' ? [300, 600] : [150, 300]
-    expect(facts.words, `${story.key}/${language}`).toBeGreaterThanOrEqual(min)
-    expect(facts.words, `${story.key}/${language}`).toBeLessThanOrEqual(max)
-    expect(facts.sections).toBeGreaterThanOrEqual(2)
-    expect(facts.mediaWithoutCaption).toBe(0)
+  it.each(placeStories.map(story => ({ key: story.key, story })))('$key has no dash, banned phrase or question mark', ({ story }) => {
+    for (const value of everyText(story)) {
+      for (const pattern of banned)
+        expect(value, `${story.key}: ${pattern}`).not.toMatch(pattern)
+      expect(value, story.key).not.toContain('?')
+    }
+  })
+
+  it.each(placeStories.map(story => ({ key: story.key, story })))('$key has photo blocks that point at listed photos, in both languages, and a cover', ({ story }) => {
+    const keys = storyPhotoKeys(story)
+    const blocks = ['en', 'de'].map(l => story.versions[l as 'en' | 'de'].blocks.filter(b => typeof b !== 'string' && 'photo' in b).map(b => (b as { photo: string }).photo))
+    expect(blocks[0], 'the German has the same photos in the same order').toEqual(blocks[1])
+    expect(blocks[0]!.length).toBeGreaterThanOrEqual(story.kind === 'story' ? 4 : 2)
+    for (const key of keys)
+      expect(storyPhotos.some(photo => photo.key === key), key).toBe(true)
+    const body = placeStoryBody(story, 'en', refs) as StoryBody
+    expect(storyBodyMediaRefs(body).map(ref => ref.id).every(id => [...ids.values()].includes(id))).toBe(true)
+    expect(story.cover ?? story.coverFrom).toBeTruthy()
+  })
+
+  it('lists photos with alt text and a caption in both languages, a source, a licence that needs no credit, and a file on disk', () => {
+    expect(new Set(storyPhotos.map(p => p.key)).size).toBe(storyPhotos.length)
+    for (const photo of storyPhotos as StoryPhoto[]) {
+      for (const language of languages) {
+        expect(photo.alt[language].length, `${photo.key} alt ${language}`).toBeGreaterThan(10)
+        expect(photo.alt[language].length).toBeLessThanOrEqual(300)
+        expect(photo.caption[language].length, `${photo.key} caption ${language}`).toBeGreaterThan(10)
+        expect(photo.caption[language].length).toBeLessThanOrEqual(300)
+      }
+      expect(photo.sourceUrl, photo.key).toMatch(/^https:\/\//)
+      expect(photo.author.length).toBeGreaterThan(0)
+      // New photos are public domain or CC0. Five photos come from the library of the curated places (owner decision of sprint 7: no credits), under a CC BY-SA licence.
+      expect(photo.licence, photo.key).toMatch(libraryKeys.has(photo.key) ? /^CC BY-SA/ : /^(?:CC0|Public domain)/)
+      expect(photo.description.length).toBeGreaterThan(10)
+      expect(existsSync(join(photoRoot, photo.file)), photo.file).toBe(true)
+    }
+  })
+
+  it('uses every listed photo, and names real photos for the place covers', () => {
+    const used = new Set([...placeStories.flatMap(storyPhotoKeys), ...placeCovers.map(entry => entry.photo)])
+    expect(storyPhotos.filter(photo => !used.has(photo.key)).map(photo => photo.key)).toEqual([])
+    expect(placeCovers.every(entry => storyPhotos.some(photo => photo.key === entry.photo))).toBe(true)
   })
 
   it('writes the German in the Sie form and the English without a Sie', () => {
     for (const story of placeStories) {
-      const de = textsOf(placeStoryBody(story, 'de').content).join(' ')
+      const de = textsOf(placeStoryBody(story, 'de', refs).content).join(' ')
       expect(de, story.key).not.toMatch(/\b(?:du|dein|deine|dir)\b/i)
       expect(de, story.key).toMatch(/\bSie\b|\bIhr/)
     }
   })
 
-  it('uses closed values for interests, stay tags and at most three related stories that exist', () => {
+  it('links every story to its places, makes it the main story only of places it is linked to, and uses closed values', () => {
     const keys = new Set(placeStories.map(s => s.key))
     for (const story of placeStories) {
+      expect(story.places.length).toBeGreaterThan(0)
+      expect(story.mainStoryFor.length).toBeGreaterThan(0)
+      expect(story.mainStoryFor.every(slug => story.places.includes(slug))).toBe(true)
       expect(story.interests.every(i => (interestCodes as readonly string[]).includes(i))).toBe(true)
       expect(['short_stay', 'multi_day', 'both']).toContain(story.stayTag)
       expect(story.related.length).toBeLessThanOrEqual(3)
       expect(story.related.every(k => keys.has(k) && k !== story.key)).toBe(true)
-      expect(story.kind === 'editorial_review' ? story.checkedOn : 'x').toMatch(/^\d{4}-\d{2}-\d{2}$|^x$/)
+      expect(story.kind === 'editorial_review' ? story.checkedOn : '2026-11-04').toMatch(/^\d{4}-\d{2}-\d{2}$/)
     }
+    const reviews = placeStories.filter(s => s.kind === 'editorial_review')
+    expect(reviews.map(s => s.places[0]).sort()).toEqual(['bachmann-at-bahnhof-luzern-ug', 'coop-bahnhof-luzern', 'manor-luzern', 'migros-bahnhof-luzern'])
+    expect(reviews.every(s => s.mainStoryFor.length === 1 && s.mainStoryFor[0] === s.places[0])).toBe(true)
   })
 })
+
+// Small fixtures: the plan does not depend on the real texts.
+const photo = (key: string): StoryPhoto => ({ key, file: `${key}.jpg`, sourceUrl: 'https://example.org', author: 'a', licence: 'CC0', description: 'a photo', alt: { en: `alt ${key}`, de: `alt de ${key}` }, caption: { en: `cap ${key}`, de: `cap de ${key}` } })
+const photos = [photo('cover'), photo('inline')]
+const fixture: PlaceStory = {
+  key: 'one',
+  kind: 'story',
+  slug: { en: 'one-en', de: 'one-de' },
+  places: ['pin-a'],
+  mainStoryFor: ['pin-a'],
+  cover: 'cover',
+  coverFrom: 'pin-a',
+  blogCategories: ['history'],
+  interests: ['history-culture'],
+  stayTag: 'both',
+  related: [],
+  sources: [{ name: 's', url: 'https://example.org' }],
+  versions: {
+    en: { title: 'One', excerpt: 'Short summary of one.', blocks: [{ h: 'Heading' }, 'Text.', { photo: 'inline' }] },
+    de: { title: 'Eins', excerpt: 'Kurzfassung von eins.', blocks: [{ h: 'Titel' }, 'Text.', { photo: 'inline' }] },
+  },
+}
+const ready = new Map([['cover', 'media-cover'], ['inline', 'media-inline']])
+function snapshotOf(overrides: Partial<StorySnapshot> = {}, place: Partial<PlaceFacts> = {}): StorySnapshot {
+  return {
+    slugs: new Set(),
+    places: new Map([['pin-a', { id: 'place-a', status: 'published', mainStoryGroupId: null, coverMediaId: null, coverReady: false, ...place }]]),
+    blogCategoryIds: new Map([['history', 'blog-history']]),
+    versions: [],
+    photoMedia: ready,
+    ...overrides,
+  }
+}
+const plan = (snapshot: StorySnapshot, covers: typeof placeCovers = []) => planPlaceStories([fixture], snapshot, photos, covers)
+const storedFor = (language: 'en' | 'de', changes: Record<string, unknown> = {}, status: 'draft' | 'published' = 'published') => {
+  const draft = placeStoryDraft(fixture, language, 'media-cover', photoRefs(ready, photos))
+  return { groupId: 'g1', language, slug: fixture.slug[language], status, rowVersion: 4, doc: { ...draft, ...changes } as never }
+}
+const existing = (...versions: ReturnType<typeof storedFor>[]) => snapshotOf({ slugs: new Set([fixture.slug.en, fixture.slug.de]), versions })
 
 describe('[seed-place-stories] the plan', () => {
-  it('creates every story, publishes those with a cover, links places and sets main stories on pins that have none', () => {
-    const plan = planPlaceStories(placeStories, snapshotOf(), none)
-    expect(plan.faults).toEqual([])
-    expect(plan.creates).toHaveLength(8)
-    expect(plan.skipped).toEqual([])
-    expect(plan.deletes).toEqual([])
-    const chapel = plan.creates.find(c => c.story.key === 'chapel-bridge')!
-    expect(chapel.placeIds).toHaveLength(2)
-    expect(chapel.mainStoryPlaceIds).toHaveLength(2)
-    expect(plan.creates.every(c => c.categoryIds.length === c.story.blogCategories.length)).toBe(true)
-    // Every story and every review is the main story of the place it is about.
-    expect(plan.creates.every(c => c.mainStoryPlaceIds.length === c.story.mainStoryFor.length && c.story.mainStoryFor.length > 0)).toBe(true)
+  it('creates a story that is missing, with the cover photo and the place links', () => {
+    const result = plan(snapshotOf())
+    expect(result.faults).toEqual([])
+    expect(result.creates).toHaveLength(1)
+    expect(result.creates[0]!.coverMediaId).toBe('media-cover')
+    expect(result.creates[0]!.publish).toBe(true)
+    expect(result.creates[0]!.mainStoryPlaceIds).toEqual(['place-a'])
+    expect(result.refreshes).toEqual([])
   })
 
-  it('leaves a story a draft when the place has no ready cover, and says why', () => {
-    const plan = planPlaceStories(placeStories, snapshotOf({}, slug => (slug === 'bachmann-at-bahnhof-luzern-ug' ? { coverMediaId: null, coverReady: false } : {})), none)
-    const review = plan.creates.find(c => c.story.kind === 'editorial_review')!
-    expect(review.publish).toBe(false)
-    expect(review.coverMediaId).toBeNull()
-    expect(review.draftReason).toContain('no ready cover')
-    expect(review.subjectPlaceId).toBe(review.placeIds[0])
-    expect(plan.creates.filter(c => !c.publish)).toHaveLength(1)
+  it('plans no write for stored versions that are the data and published, so a second run changes nothing', () => {
+    const result = plan(existing(storedFor('en'), storedFor('de')))
+    expect(result.refreshes).toEqual([])
+    expect(result.creates).toEqual([])
+    expect(result.uploads).toEqual([])
+    expect(result.skipped).toHaveLength(1)
   })
 
-  it('does not publish a story whose cover file is not ready', () => {
-    const plan = planPlaceStories(placeStories, snapshotOf({}, slug => (slug === 'lion-monument' ? { coverReady: false } : {})), none)
-    expect(plan.creates.find(c => c.story.key === 'lion-monument')!.publish).toBe(false)
+  it.each([
+    ['the title', { title: 'Old' }],
+    ['the short summary', { excerpt: 'Old summary.' }],
+    ['the cover', { coverMediaId: 'media-old' }],
+    ['the body', { body: { type: 'doc', content: [{ type: 'paragraph' }] } }],
+  ])('rewrites a version when %s differs', (_name, changes) => {
+    const result = plan(existing(storedFor('en', changes), storedFor('de')))
+    expect(result.refreshes.map(r => `${r.key}/${r.version.language}`)).toEqual(['one/en'])
+    expect(result.refreshes[0]!.draft.coverMediaId).toBe('media-cover')
+    expect(result.refreshes[0]!.draft.title).toBe('One')
   })
 
-  it('skips a story when either of its slugs exists, so a second run adds nothing', () => {
-    const second = planPlaceStories(placeStories, snapshotOf({ slugs: new Set(placeStories.map(s => s.slug.en)) }), none)
-    expect(second.creates).toEqual([])
-    expect(second.skipped).toHaveLength(8)
-    const german = planPlaceStories(placeStories, snapshotOf({ slugs: new Set([placeStories[0]!.slug.de]) }), none)
-    expect(german.skipped.map(s => s.key)).toEqual([placeStories[0]!.key])
-    expect(german.creates).toHaveLength(7)
+  it('publishes a stored draft even when its text is the data', () => {
+    const result = plan(existing(storedFor('en', {}, 'draft'), storedFor('de')))
+    expect(result.refreshes.map(r => `${r.version.language}/${r.version.status}`)).toEqual(['en/draft'])
   })
 
-  it('keeps a main story that a person chose', () => {
-    const plan = planPlaceStories(placeStories, snapshotOf({}, slug => (slug === 'weinmarkt' ? { mainStoryGroupId: 'chosen' } : {})), none)
-    expect(plan.creates.find(c => c.story.key === 'weinmarkt')!.mainStoryPlaceIds).toEqual([])
+  it('compares the check date of a review only when the data has one', () => {
+    const review = { ...fixture, kind: 'editorial_review' as const, checkedOn: '2026-11-04' }
+    const draft = (checkedOn: string) => ({ groupId: 'g1', language: 'en' as const, slug: 'one-en', status: 'published' as const, rowVersion: 1, doc: { ...placeStoryDraft(review, 'en', 'media-cover', photoRefs(ready, photos)), checkedOn } })
+    const base = existing()
+    expect(planPlaceStories([review], { ...base, versions: [draft('2026-11-03')] }, photos, []).refreshes).toHaveLength(1)
+    expect(planPlaceStories([review], { ...base, versions: [draft('2026-11-04')] }, photos, []).refreshes).toHaveLength(0)
   })
 
-  it('stops with a fault when a place or a blog category is missing, and names it', () => {
-    const missingPlace = snapshotOf()
-    const places = new Map(missingPlace.places)
-    places.delete('weinmarkt')
-    const a = planPlaceStories(placeStories, { ...missingPlace, places }, none)
-    expect(a.faults.join('\n')).toContain('weinmarkt')
-    const b = planPlaceStories(placeStories, { ...snapshotOf(), blogCategoryIds: new Map() }, none)
-    expect(b.faults.join('\n')).toContain('blog category history')
+  it('lists the photos the store does not hold yet, and gives them a placeholder id until they are uploaded', () => {
+    const result = plan(snapshotOf({ photoMedia: new Map([['cover', 'media-cover']]) }))
+    expect(result.uploads.map(p => p.key)).toEqual(['inline'])
+    const body = placeStoryBody(fixture, 'en', result.refs) as StoryBody
+    expect(storyBodyMediaRefs(body).map(r => r.id)).toEqual(['pending:inline'])
   })
 
-  it('deletes only the legacy groups, and only when asked', () => {
-    const [first, second] = legacyStoryGroups
-    const groups = [{ id: first!.id, slugs: first!.slugs }, { id: second!.id, slugs: [...second!.slugs, 'something-else'] }, { id: 'not-listed', slugs: ['musegg-morning'] }]
-    expect(planLegacyDeletes(groups).map(g => g.id)).toEqual([first!.id])
-    expect(planPlaceStories(placeStories, snapshotOf({ groups }), none).deletes).toEqual([])
-    expect(planPlaceStories(placeStories, snapshotOf({ groups }), { ...none, replaceLegacy: true }).deletes.map(g => g.id)).toEqual([first!.id])
+  it('writes the photo block with its alt text and caption in the language of the version', () => {
+    const image = (placeStoryBody(fixture, 'de', photoRefs(ready, photos)).content.at(-1))!
+    expect(image).toEqual({ type: 'image', attrs: { mediaId: 'media-inline', alt: 'alt de inline', caption: 'cap de inline' } })
   })
 
-  it('counts a place whose main story is about to be deleted as free, so the dry run matches the real run', () => {
-    const lion = legacyStoryGroups[1]!
-    const plan = planPlaceStories(placeStories, snapshotOf({ groups: [lion] }, slug => (slug === 'lion-monument' ? { mainStoryGroupId: lion.id } : {})), { ...none, replaceLegacy: true })
-    expect(plan.creates.find(c => c.story.key === 'lion-monument')!.mainStoryPlaceIds).toHaveLength(1)
-    const without = planPlaceStories(placeStories, snapshotOf({ groups: [lion] }, slug => (slug === 'lion-monument' ? { mainStoryGroupId: lion.id } : {})), none)
-    expect(without.creates.find(c => c.story.key === 'lion-monument')!.mainStoryPlaceIds).toEqual([])
+  it('falls back to the cover of the place when the story has no cover photo, and stops with a fault when there is none', () => {
+    const noCover = { ...fixture, cover: undefined }
+    const withPlace = planPlaceStories([noCover], snapshotOf({}, { coverMediaId: 'media-place', coverReady: true }), photos, [])
+    expect(withPlace.creates[0]!.coverMediaId).toBe('media-place')
+    const none = planPlaceStories([noCover], existing(storedFor('en'), storedFor('de')), photos, [])
+    expect(none.faults.join('\n')).toContain('has no cover')
   })
 
-  it('prints a plan with counts and titles', () => {
-    const text = describePlan(planPlaceStories(placeStories, snapshotOf(), { ...none, replaceLegacy: true }), true)
-    expect(text).toContain('Would delete 0 legacy stories')
-    expect(text).toContain('Would create 8 stories and reviews, skipping 0')
-    expect(text).toContain('crossing-the-chapel-bridge')
-  })
-})
-
-describe('[seed-place-stories] the one-time steps and links', () => {
-  const chapel = placeStories[0]!
-  const stored = (language: 'en' | 'de', status: 'draft' | 'published', body: StoryBody) => ({ groupId: 'g1', language, slug: chapel.slug[language], status, rowVersion: 3, doc: { ...placeStoryDraft(chapel, language, cover), body } })
-
-  it('deletes an unused sample pin only when asked, and stops with a fault when something uses it', () => {
-    const pins = [{ id: 'p1', slug: 'baeckerei-weinmarkt', uses: 0 }]
-    expect(planPlaceStories(placeStories, snapshotOf({ samplePins: pins }), none).pinDeletes).toEqual([])
-    expect(planPlaceStories(placeStories, snapshotOf({ samplePins: pins }), { ...none, deleteSamplePins: true }).pinDeletes).toEqual([{ id: 'p1', slug: 'baeckerei-weinmarkt' }])
-    const used = planPlaceStories(placeStories, snapshotOf({ samplePins: [{ ...pins[0]!, uses: 2 }] }), { ...none, deleteSamplePins: true })
-    expect(used.pinDeletes).toEqual([])
-    expect(used.faults.join('\n')).toContain('baeckerei-weinmarkt')
+  it('gives a place without a cover its photo, and leaves a place that has one', () => {
+    const covers = [{ place: 'pin-a', photo: 'cover' }]
+    expect(plan(snapshotOf(), covers).placeCovers.map(c => c.slug)).toEqual(['pin-a'])
+    expect(plan(snapshotOf({}, { coverMediaId: 'media-place', coverReady: true }), covers).placeCovers).toEqual([])
   })
 
-  it('plans a body rewrite only for a stored version whose body differs, and none once the bodies match', () => {
-    const old = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'old' }] }] } as StoryBody
-    const differing = planPlaceStories(placeStories, snapshotOf({ slugs: new Set([chapel.slug.en, chapel.slug.de]), versions: [stored('en', 'published', old), stored('de', 'draft', placeStoryBody(chapel, 'de'))] }), { ...none, refreshBodies: true })
-    expect(differing.refreshes.map(r => `${r.key}/${r.version.language}/${r.version.status}`)).toEqual(['chapel-bridge/en/published'])
-    expect(planPlaceStories(placeStories, snapshotOf({ slugs: new Set([chapel.slug.en]), versions: [stored('en', 'published', old)] }), none).refreshes).toEqual([])
+  it('stops with a fault when a place, a blog category or a photo is missing, and names it', () => {
+    expect(plan({ ...snapshotOf(), places: new Map() }).faults.join('\n')).toContain('pin-a')
+    expect(plan({ ...snapshotOf(), blogCategoryIds: new Map() }).faults.join('\n')).toContain('blog category history')
+    expect(planPlaceStories([fixture], snapshotOf(), [photo('cover')], []).faults.join('\n')).toContain('inline')
   })
 
-  it('links an existing story to a place that has no main story, and leaves a main story a person chose', () => {
-    const slugs = new Set(placeStories.flatMap(s => [s.slug.en, s.slug.de]))
-    const versions = placeStories.map(s => ({ ...stored('en', 'published', placeStoryBody(s, 'en')), groupId: `group-${s.key}`, slug: s.slug.en }))
-    const free = planPlaceStories(placeStories, snapshotOf({ slugs, versions }), none)
-    expect(free.creates).toEqual([])
-    expect(free.links).toHaveLength(placeStories.reduce((n, s) => n + s.mainStoryFor.length, 0))
-    const chosen = planPlaceStories(placeStories, snapshotOf({ slugs, versions }, slug => (slug === 'manor-luzern' ? { mainStoryGroupId: 'mine' } : {})), none)
-    expect(chosen.links.some(l => l.key === 'manor-review')).toBe(false)
+  it('keeps a main story that a person chose, and links one for an existing story to a place that has none', () => {
+    expect(plan(snapshotOf({}, { mainStoryGroupId: 'chosen' })).creates[0]!.mainStoryPlaceIds).toEqual([])
+    expect(plan(existing(storedFor('en'), storedFor('de'))).links).toEqual([{ key: 'one', groupId: 'g1', placeId: 'place-a' }])
+    expect(plan({ ...existing(storedFor('en'), storedFor('de')), places: new Map([['pin-a', { id: 'place-a', status: 'published', mainStoryGroupId: 'mine', coverMediaId: null, coverReady: false }]]) }).links).toEqual([])
   })
 
-  it('makes the Bachmann review the main story of its place, as subject and link', () => {
-    const review = placeStories.find(s => s.kind === 'editorial_review')!
-    expect(review.places).toEqual(['bachmann-at-bahnhof-luzern-ug'])
-    expect(review.mainStoryFor).toEqual(review.places)
+  it('prints a plan with counts', () => {
+    const text = describePlan(plan(snapshotOf({ photoMedia: new Map() }), [{ place: 'pin-a', photo: 'cover' }]), true)
+    expect(text).toContain('Would upload 2 photos: cover, inline')
+    expect(text).toContain('Would set the cover of 1 places: pin-a')
+    expect(text).toContain('Would create 1 stories and reviews, skipping 0')
   })
 })
 
 describe('[seed-place-stories] the flags', () => {
-  it('--stories-only and --replace-legacy-stories are known flags; stories run by default', () => {
-    expect(parseFlags([])).toMatchObject({ storiesOnly: false, replaceLegacyStories: false, unknown: [] })
+  it('knows --stories-only and --dry-run, and no longer the one-time flags', () => {
+    expect(parseFlags([])).toMatchObject({ storiesOnly: false, unknown: [] })
     expect(parseFlags(['--stories-only', '--dry-run'])).toMatchObject({ dry: true, storiesOnly: true, unknown: [] })
-    expect(parseFlags(['--stories-only', '--replace-legacy-stories'])).toMatchObject({ storiesOnly: true, replaceLegacyStories: true, unknown: [] })
-    expect(parseFlags(['--stories-only', '--delete-sample-pins', '--refresh-story-bodies'])).toMatchObject({ deleteSamplePins: true, refreshStoryBodies: true, unknown: [] })
+    for (const gone of ['--replace-legacy-stories', '--delete-sample-pins', '--refresh-story-bodies'])
+      expect(parseFlags(['--stories-only', gone]).unknown).toEqual([gone])
   })
 })
