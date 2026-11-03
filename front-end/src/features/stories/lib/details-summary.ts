@@ -14,3 +14,6 @@ export function interestsSummary(t: Translate, interests: string[]) {
 
   return chosen.length > 0 ? chosen.join(', ') : t('storyDetails.none')
 }
+
+/** The chosen category names, or "None". */
+export const categoriesSummary = (t: Translate, names: string[]) => names.length > 0 ? names.join(', ') : t('storyDetails.none')

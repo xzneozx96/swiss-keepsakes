@@ -14,6 +14,7 @@ import { useIsWide } from '@/hooks/use-is-wide'
 import { useStoryPublishFacts } from '../hooks/use-publish-facts'
 import { useStoryPublish } from '../hooks/use-story-publish'
 import { publishChecks } from '../lib/publish-checks'
+import { CategoriesCard } from './story-categories-card'
 import { StoryChecksList } from './story-checks-list'
 import { DetailsPanel, useDetailsPanel } from './story-details-panel'
 import { InterestsCard } from './story-interests-card'
@@ -69,6 +70,7 @@ export function StoryReviewScreen({ storeId, groupEditor, language, version, edi
   const details = (
     <DetailsPanel panel={panel}>
       <StoryLinkCard group={group} language={language} title={editor.fields.title} version={version} onSave={publish.saveSlug} />
+      <CategoriesCard group={group} language={language} storeId={storeId} onChange={groupEditor.change} />
       <StayCard group={group} onChange={groupEditor.change} />
       <InterestsCard group={group} onChange={groupEditor.change} />
     </DetailsPanel>
