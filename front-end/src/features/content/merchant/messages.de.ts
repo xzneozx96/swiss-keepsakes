@@ -6,7 +6,7 @@ export const contentMerchantDe: Record<keyof typeof contentMerchantEn, string>
     'merchantContent.intro':
       'Geschichten für Ihre Gäste, ihre Kommentare und Bewertungen.',
     'merchantContent.tabsLabel': 'Inhaltsbereiche',
-    'merchantContent.tab.articles': 'Artikel',
+    'merchantContent.tab.articles': 'Geschichten',
     'merchantContent.tab.comments': 'Kommentare',
     'merchantContent.tab.reviews': 'Bewertungen',
     'merchantContent.filter.language': 'Sprache',

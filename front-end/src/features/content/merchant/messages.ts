@@ -4,7 +4,7 @@ export const contentMerchantEn = {
   'merchantContent.intro':
     'Stories for your guests, their comments and reviews.',
   'merchantContent.tabsLabel': 'Content sections',
-  'merchantContent.tab.articles': 'Articles',
+  'merchantContent.tab.articles': 'Stories',
   'merchantContent.tab.comments': 'Comments',
   'merchantContent.tab.reviews': 'Reviews',
   'merchantContent.filter.language': 'Language',
