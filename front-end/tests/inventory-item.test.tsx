@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { toast } from '@heroui/react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
@@ -196,7 +197,7 @@ describe('[E6.3][AC05][AC53] AC-4 Reserved by orders', () => {
 })
 
 describe('[E6.3][AC05][AC53] AC-5 the item page uses the shared parts', () => {
-  const read = (path: string) => readFileSync(`src/features/inventory/components/${path}`, 'utf8')
+  const read = (path: string) => readFileSync(resolve(__dirname, '../src/features/inventory/components', path), 'utf8')
 
   it('[E6.3][AC05][AC53] AC-5 opens Adjust stock in the shared SheetFrame with the shared QuantityStepper, and says In stock and Reserved, never on hand or held', async () => {
     answerWith(stockItem({ onHand: 5, reserved: 2, available: 3 }))
