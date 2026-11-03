@@ -198,7 +198,8 @@ describe('[E4.3][AC30] SECURITY-E43-2 a pin saved at the same moment waits for t
       racing = (await client.query<{ id: string }>('insert into content.places (store_id, main_story_group_id) values ($1, $2) returning id', [staff.storeId, s.id])).rows[0]!.id
       const removing = env.call(s.path, { method: 'DELETE', headers: staff.owner.headers })
 
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // The delete must be waiting on this transaction before it commits, or the test proves nothing.
+      await waitUntilBlockedBy(await backendPid(client))
       await client.query('commit')
       const removed = await removing
 
