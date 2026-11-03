@@ -150,6 +150,13 @@
       "breakpoints": true
     },
     {
+      "idx": 21,
+      "version": "7",
+      "when": 1794028153729,
+      "tag": "0021_inventory",
+      "breakpoints": true
+    },
+    {
       "idx": 22,
       "version": "7",
       "when": 1794114553729,

@@ -12,7 +12,7 @@ import { productSlug } from './slug.ts'
 // The working copy goes live. The blocking checks of the publish card are the write validation: a full language
 // (AC30), a photo and a variant for sale. A photo retired or removed since the save is refused again here. A keepsake that was unpublished and has no pending edit goes live again
 // with the text it had.
-export function makePublishProduct<T>({ uow, products, media, audit, clock, sales }: CatalogDeps<T>) {
+export function makePublishProduct<T>({ uow, products, media, audit, clock, sales, stockLevels }: CatalogDeps<T>) {
   return async (actor: Actor, storeId: string, productId: string, ifMatch: number, requestId: string | null): Promise<Result<ProductDetail>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -50,7 +50,7 @@ export function makePublishProduct<T>({ uow, products, media, audit, clock, sale
         after: { status: 'published', rowVersion: published.rowVersion },
         requestId,
       })
-      return ok(await describe({ media, sales }, tx, published))
+      return ok(await describe({ media, sales, stockLevels }, tx, published))
     })
   }
 }

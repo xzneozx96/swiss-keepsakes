@@ -102,6 +102,8 @@ const optionList = z.array(optionWriteSchema).max(MAX_OPTIONS)
 // A SKU code is optional (owner 2026-11-02): left out or null means none. A variant may show one photo, a file of the
 // store's library that is ready.
 const skuCodeWrite = noNul(z.string().trim().min(1).max(60)).nullable().optional()
+// The units on the shelf at creation (the inventory module's limit). Left out means 0.
+const quantity = z.int().min(0).max(9999).optional().meta({ description: 'The units in stock when the variant is created, 0 to 9999. Left out means 0' })
 const mediaIdWrite = z.uuid().nullable().optional().meta({ description: 'The photo of the variant: a ready image of the store’s library, or null for none' })
 
 export const keepsakeVariantWriteSchema = z.strictObject({
@@ -109,6 +111,7 @@ export const keepsakeVariantWriteSchema = z.strictObject({
   mediaId: mediaIdWrite,
   priceRappen: z.int().min(1).max(MAX_PRICE_RAPPEN).meta({ description: 'The price in Rappen, above 0' }),
   values: valueRefs.optional().meta({ description: 'The value ref of each option ref. A keepsake with no option sends none' }),
+  quantity,
 }).meta({ id: 'KeepsakeVariantWrite', description: 'A variant to create: a code, a price and one value of each option. It is for sale' })
 
 export const optionsSaveBodySchema = z.strictObject({
@@ -137,6 +140,7 @@ export const variantCreateBodySchema = z.strictObject({
   priceRappen: z.int().min(1).max(MAX_PRICE_RAPPEN),
   status: z.enum(['published', 'draft']).optional().meta({ description: 'published is for sale, draft is hidden. For sale when left out' }),
   values: valueIds.optional().meta({ description: 'The value id of each option id' }),
+  quantity,
 }).meta({ id: 'VariantCreateBody', description: 'One more variant of a keepsake' })
 
 export const productSaveBodySchema = z.strictObject({
@@ -188,6 +192,9 @@ export const productVariantSchema = z.object({
   status: z.enum(['published', 'draft', 'archived']).meta({ description: 'published is for sale, draft is hidden from guests, archived stays for old orders' }),
   values: z.record(z.uuid(), z.uuid()).meta({ description: 'The value id of each option id. Empty for a keepsake with no option' }),
   hasOrders: z.boolean().optional().meta({ description: 'An order line names the variant, so removing it archives instead of deleting. Left out means false; always false until the orders module is wired' }),
+  onHand: z.int().optional().meta({ description: 'The units on the shelf, from the inventory module. 0 when the variant has no stock row. Sent on every read; left out only by a client that builds a variant itself' }),
+  reserved: z.int().optional().meta({ description: 'The units that open orders hold. Never above onHand' }),
+  available: z.int().optional().meta({ description: 'onHand minus reserved: the units a guest can still buy' }),
 }).meta({ id: 'ProductVariant', description: 'A variant (SKU) of a keepsake' })
 
 export const productOptionSchema = z.object({
@@ -237,7 +244,7 @@ export const productListItemSchema = z.object({
   rowVersion: z.int().meta({ description: 'The version a removal sends as If-Match' }),
   cover: mediaSchema.nullable().meta({ description: 'The first photo' }),
   variantCount: z.int().meta({ description: 'Variants that are not archived' }),
-  soldOutCount: z.int().meta({ description: 'Variants with no unit available. Always 0 until stock exists (E6.3)' }),
+  soldOutCount: z.int().meta({ description: 'Variants that are not archived and have no unit available. A variant with no stock row counts' }),
   updatedAt: z.iso.datetime(),
 }).meta({ id: 'ProductListItem', description: 'One row of the keepsake list' })
 

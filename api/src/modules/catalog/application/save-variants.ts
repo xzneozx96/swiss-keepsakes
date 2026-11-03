@@ -12,7 +12,7 @@ import { isSkuCode } from './sku-code.ts'
 // The price or status of several variants of one keepsake, all or nothing, with the rules of `saveVariant`: live at
 // once (no row version, ADR-014), archived is final, an archived variant can't be changed, and archiving is refused
 // while open orders reserve units. A row set to removed (owner, 2026-11-02) is deleted when no order line names its variant and archived when one does; the rest of such a row is ignored. A row may also set or clear (null) the code and the photo; a code is checked as one variant's is. A variant that is not this keepsake's is not found, and nothing is written.
-export function makeSaveVariants<T>({ uow, products, media, audit, clock, reservations, sales }: CatalogDeps<T>) {
+export function makeSaveVariants<T>({ uow, products, media, audit, clock, reservations, sales, stockLevels }: CatalogDeps<T>) {
   return async (actor: Actor, storeId: string, productId: string, requests: VariantBatchRequest[], requestId: string | null): Promise<Result<ProductDetail>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -95,7 +95,7 @@ export function makeSaveVariants<T>({ uow, products, media, audit, clock, reserv
           requestId,
         })),
       ])
-      return ok(await describe({ media, sales }, tx, saved))
+      return ok(await describe({ media, sales, stockLevels }, tx, saved))
     })
   }
 }

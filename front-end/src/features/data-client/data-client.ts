@@ -2,6 +2,7 @@ import type { AccountClient } from '@/features/account/api/client'
 import type { CatalogClient } from '@/features/catalog/api/client'
 import type { CategoriesClient } from '@/features/categories/api/client'
 import type { ContentClient } from '@/features/content/api/client'
+import type { InventoryClient } from '@/features/inventory/api/client'
 import type { KeepsakesClient } from '@/features/keepsakes/api/client'
 import type { MediaClient } from '@/features/media/api/client'
 import type { NotificationsClient } from '@/features/notifications/api/client'
@@ -25,6 +26,7 @@ export interface DataClient {
   catalog: CatalogClient
   categories: CategoriesClient
   content: ContentClient
+  inventory: InventoryClient
   keepsakes: KeepsakesClient
   media: MediaClient
   notifications: NotificationsClient

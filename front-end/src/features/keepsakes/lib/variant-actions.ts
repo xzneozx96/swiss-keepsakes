@@ -1,10 +1,19 @@
-import type { OptionWrite, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
+import type { OptionWrite, ProductVariant, VariantCreateBody, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
 import type { Outcome } from '../hooks/use-keepsake-editor'
 import type { OptionsPlan } from './combinations'
 import type { OptionDraft, Values } from './option-rules'
 
 /** One variant's price, code or status. A saved keepsake sends it to the API at once; a new one changes its draft. */
 export type SaveVariant = (variantId: string, body: VariantSaveBody) => Promise<Outcome>
+
+/** The one variant of a keepsake that has none and no options: the Price block's first valid price creates it, with the code and status chosen by then. */
+export type CreateVariant = (body: VariantCreateBody) => Promise<Outcome>
+
+/** The answer to a stock write: a refusal comes with its text (the reserved units for one below them), shown under the field. */
+export type StockOutcome = { ok: true } | { ok: false, message: string }
+
+/** The units in stock of one variant. A saved variant's figure goes to the inventory at once; one that is only in the browser keeps it until the keepsake or the options are saved. */
+export type SetStock = (variant: Pick<ProductVariant, 'id' | 'reserved'>, onHand: number) => Promise<StockOutcome>
 
 /** The price, status, code or photo of several variants in one request, all or nothing. */
 export type SaveVariants = (rows: VariantsSaveBody['variants']) => Promise<Outcome>
@@ -19,6 +28,8 @@ export type AddBack = (combinations: Values[], codeBase: string | null) => Promi
 export interface VariantActions {
   saveVariant: SaveVariant
   saveVariants: SaveVariants
+  createVariant: CreateVariant
+  setStock: SetStock
   commit: CommitOptions
   addBack: AddBack
   /** A photo that a variant takes and the keepsake does not have yet joins the keepsake's photos (the autosave, or the draft). */

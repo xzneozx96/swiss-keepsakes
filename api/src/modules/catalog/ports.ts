@@ -116,8 +116,9 @@ export interface ProductListRow {
   hasUnpublishedEdits: boolean
   coverMediaId: string | null
   variantCount: number
-  // Always 0 until stock exists (E6.3, `inventory.stock_items`).
-  soldOutCount: number
+  // The ids of the variants that are not archived. The list use case asks the stock port for their figures (ADR-013) and
+  // counts the sold-out ones itself.
+  liveSkuIds: string[]
   // The version an `If-Match` of a removal carries.
   rowVersion: number
   updatedAt: Date
@@ -151,6 +152,8 @@ export interface VariantInput {
   priceRappen: number
   status: 'published' | 'draft'
   values: Record<string, string>
+  // The units on the shelf when the variant is created, 0 to 9999. Left out means 0.
+  quantity?: number
 }
 
 export interface NewProduct {
@@ -222,10 +225,28 @@ export interface Refusal {
   params?: Record<string, string | number>
 }
 
-// The units that open orders reserve, by SKU id. E6.3 wires this from the inventory module (ADR-009, ADR-013); until
-// then nothing is wired and archiving never finds a reserved unit.
+// The units that open orders reserve, by SKU id. The composition root wires this from the inventory module (ADR-009,
+// ADR-013). Without it archiving never finds a reserved unit.
 export interface ReservationDirectory<T> {
   reservedBySku: (tx: T, storeId: string, skuIds: string[]) => Promise<Map<string, number>>
+}
+
+// Creates the stock row of every SKU a write has just created, in the same transaction (ADR-013, gate G-S8-D2). The
+// composition root wires this from the inventory module. A quantity above 0 also writes the first `set` history row, with
+// the acting user. A SKU that already has a row fails.
+export interface StockSeeding<T> {
+  seed: (tx: T, storeId: string, items: { skuId: string, quantity: number }[], actorUserId: string) => Promise<void>
+}
+
+export interface StockLevel {
+  onHand: number
+  reserved: number
+}
+
+// On hand and reserved by SKU id, archived variants included. A SKU with no stock row is left out of the map. The
+// composition root wires this from the inventory module.
+export interface StockLevels<T> {
+  levels: (tx: T, storeId: string, skuIds: string[]) => Promise<Map<string, StockLevel>>
 }
 
 // Which keepsakes an order line names, by product id (ADR-023: `orders.order_lines.product_id`). The orders module fills
@@ -243,6 +264,12 @@ export interface KeepsakeLinks<T> {
   removeAll: (tx: T, storeId: string, productId: string) => Promise<void>
 }
 
+// A product after a write that created SKUs, with the ids of those SKUs in the order the request listed their variants.
+export interface WrittenProduct {
+  product: Product
+  createdSkuIds: string[]
+}
+
 export interface ProductRepository<T> {
   list: (tx: T, storeId: string) => Promise<ProductListRow[]>
   // An id of another store has no row.
@@ -250,7 +277,7 @@ export interface ProductRepository<T> {
   // Locks the row. An id of another store has no row.
   findForUpdate: (tx: T, storeId: string, productId: string) => Promise<Product | undefined>
   // A draft product with its options and its variants for sale, in one transaction.
-  insert: (tx: T, storeId: string, input: NewProduct, at: Date) => Promise<Product>
+  insert: (tx: T, storeId: string, input: NewProduct, at: Date) => Promise<WrittenProduct>
   // Writes the draft document and the commission, bumps row_version.
   save: (tx: T, product: Product, changes: ProductChanges, at: Date) => Promise<Product>
   // The draft becomes the live text and is cleared, the photos replace product_media, the slug is written in the
@@ -267,7 +294,7 @@ export interface ProductRepository<T> {
   // Writes the variant and returns the product. undefined when the variant is not this product's.
   saveVariant: (tx: T, product: Product, skuId: string, changes: VariantChanges, at: Date) => Promise<Product | undefined>
   // Adds one variant. `values` maps option ids to value ids.
-  insertVariant: (tx: T, product: Product, input: VariantInput, at: Date) => Promise<Product>
+  insertVariant: (tx: T, product: Product, input: VariantInput, at: Date) => Promise<WrittenProduct>
   // Updates the price or status of several variants in one statement. Archived variants are left as they are.
   saveVariants: (tx: T, product: Product, changes: VariantBatchChange[], at: Date) => Promise<Product>
   // Deletes variants of the keepsake with their option values, archived ones too (the use case allows that only for unsold ones). Frees their combinations.
@@ -276,7 +303,7 @@ export interface ProductRepository<T> {
   // lists SKU ids whose own code does not count: a bulk save may give codes to the SKUs that hold them now.
   takenSkuCodes: (tx: T, storeId: string, codes: string[], except?: string[]) => Promise<Set<string>>
   // Writes the options, their values and order, and the new values of the variants, creates the new variants, then bumps row_version.
-  replaceOptions: (tx: T, product: Product, input: OptionsSave, at: Date) => Promise<Product>
+  replaceOptions: (tx: T, product: Product, input: OptionsSave, at: Date) => Promise<WrittenProduct>
 }
 
 // One keepsake that holds a file as a photo. The content module's media library reads this to count keepsakes as uses

@@ -4,6 +4,7 @@ import type { PickupUseCases } from '../src/modules/catalog/adapters/pickup-rout
 import type { CatalogUseCases } from '../src/modules/catalog/adapters/routes.ts'
 import type { ContentUseCases } from '../src/modules/content/adapters/routes.ts'
 import type { IdentityUseCases } from '../src/modules/identity/adapters/routes.ts'
+import type { InventoryUseCases } from '../src/modules/inventory/adapters/routes.ts'
 import type { AppEnv } from '../src/platform/http/app.ts'
 import { fileURLToPath } from 'node:url'
 import openapiTS, { astToString } from 'openapi-typescript'
@@ -12,6 +13,7 @@ import { registerPickupRoutes } from '../src/modules/catalog/adapters/pickup-rou
 import { registerCatalogRoutes } from '../src/modules/catalog/adapters/routes.ts'
 import { registerContentRoutes } from '../src/modules/content/adapters/routes.ts'
 import { registerIdentityRoutes } from '../src/modules/identity/adapters/routes.ts'
+import { registerInventoryRoutes } from '../src/modules/inventory/adapters/routes.ts'
 import { createApp } from '../src/platform/http/app.ts'
 import { createLogger } from '../src/platform/logger.ts'
 
@@ -26,7 +28,7 @@ const unreachable = new Proxy({}, {
   get: () => async () => {
     throw new Error('The contract build calls no use case')
   },
-}) as IdentityUseCases & ContentUseCases & CatalogUseCases & PickupUseCases
+}) as IdentityUseCases & ContentUseCases & CatalogUseCases & InventoryUseCases & PickupUseCases
 
 // The real routes. Building the document calls neither the logger nor the health check.
 export function contractApp(): OpenAPIHono<AppEnv> {
@@ -41,7 +43,7 @@ export function contractApp(): OpenAPIHono<AppEnv> {
     idempotency: async (_c, next) => {
       await next()
     },
-    routes: [app => registerIdentityRoutes(app, unreachable), app => registerContentRoutes(app, unreachable), app => registerCatalogRoutes(app, unreachable), app => registerPickupRoutes(app, unreachable)],
+    routes: [app => registerIdentityRoutes(app, unreachable), app => registerContentRoutes(app, unreachable), app => registerCatalogRoutes(app, unreachable), app => registerInventoryRoutes(app, unreachable), app => registerPickupRoutes(app, unreachable)],
   })
 }
 
