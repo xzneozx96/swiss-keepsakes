@@ -1,0 +1,34 @@
+import type { StoryLanguage } from '../lib/search-params'
+import type { VersionState } from '../lib/version-state'
+import type { LanguageStatusTone } from '@/components/language-version-switch'
+
+import { LanguageVersionSwitch } from '@/components/language-version-switch'
+import { useLocale } from '@/contexts/locale-context'
+import { STORY_LANGUAGES } from '../lib/search-params'
+
+const tone: Record<VersionState, LanguageStatusTone> = { published: 'success', editsNotLive: 'warning', draft: 'warning', none: 'muted' }
+
+/**
+ * Which language version is open, on the shared switch. A version that does not exist reads "Not started" and is started by
+ * choosing it (the caller does that). Arrow keys only move the focus; a click, Enter or Space chooses.
+ */
+export function StoryLanguageSwitch({ versions, selected, onChange, compact = false }: {
+  versions: Record<StoryLanguage, { state: VersionState }>
+  selected: StoryLanguage
+  onChange: (language: StoryLanguage) => void
+  compact?: boolean
+}) {
+  const { t } = useLocale()
+  const status = (language: StoryLanguage) => ({ text: t(`storyEditor.state.${versions[language].state}`), tone: tone[versions[language].state] })
+
+  return (
+    <LanguageVersionSwitch
+      compact={compact}
+      label={t('storyEditor.language.switch')}
+      languages={STORY_LANGUAGES.map(id => ({ id, label: t(`storyEditor.language.${id}`), short: id.toUpperCase() }))}
+      selected={selected}
+      status={{ en: status('en'), de: status('de') }}
+      onChange={onChange}
+    />
+  )
+}
