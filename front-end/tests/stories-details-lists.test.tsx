@@ -58,7 +58,7 @@ describe('[E4.3][AC30][AC33][AC54] the linked cards on the Review screen', () =>
     view.wide = false
     serve()
     await openReview()
-    expect(cardIds()).toEqual(['details-link', 'details-categories', 'details-pins', 'details-stay', 'details-interests', 'details-keepsakes', 'details-related'])
+    expect(cardIds()).toEqual(['details-link', 'details-review', 'details-categories', 'details-pins', 'details-stay', 'details-interests', 'details-keepsakes', 'details-related'])
   }, 30000)
 
   it('[E4.3][AC33] Show on the related-language warning opens More to discover', async () => {

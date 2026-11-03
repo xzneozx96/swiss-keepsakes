@@ -26,3 +26,12 @@ export const keepsakesSummary = (t: Translate, count: number) => t('storyLists.k
 
 /** "{count} of 3", or the fallback guests get when none is chosen. */
 export const relatedSummary = (t: Translate, count: number) => count > 0 ? t('storyLists.related.summary', { count }) : t('storyLists.related.summaryNone')
+
+/** The closed summary of the Editorial review card: "No, a story", or the place and whether the facts have a check date. */
+export function reviewSummary(t: Translate, review: { isReview: boolean, placeName: string | undefined, checkedOn: string | null | undefined, formatDay: (day: string) => string }) {
+  if (!review.isReview)
+    return t('storyDetails.review.summary.no')
+  const place = review.placeName ?? t('storyDetails.review.summary.noPlace')
+
+  return review.checkedOn ? t('storyDetails.review.summary.checked', { place, date: review.formatDay(review.checkedOn) }) : t('storyDetails.review.summary.noDate', { place })
+}

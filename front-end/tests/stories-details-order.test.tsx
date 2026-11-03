@@ -40,11 +40,10 @@ async function openReview(search = '') {
 const cardIds = () => Array.from(document.querySelectorAll('section[id^="details-"]'), node => node.id)
 
 describe('[E4.3][AC30][AC87] the order and jumps of the Details cards', () => {
-  it('[E4.3][AC30] the cards render in design order: Link, Blog categories, Places, Stay, Interests, Keepsakes, More to discover (Editorial review goes after Link)', async () => {
+  it('[E4.3][AC30] the cards render in design order: Link, Editorial review, Blog categories, Places, Stay, Interests, Keepsakes, More to discover', async () => {
     serve()
     await openReview()
-    // The Editorial review card (T-E4.3f Task 8, waiting on D1 to D3) takes the slot between Link and Blog categories.
-    expect(cardIds()).toEqual(['details-link', 'details-categories', 'details-pins', 'details-stay', 'details-interests', 'details-keepsakes', 'details-related'])
+    expect(cardIds()).toEqual(['details-link', 'details-review', 'details-categories', 'details-pins', 'details-stay', 'details-interests', 'details-keepsakes', 'details-related'])
   }, 20000)
 
   it('[E4.3][AC87] the Blog categories card opens by default with the "To look at" icon for a story with no category', async () => {
@@ -93,7 +92,7 @@ describe('[E4.3][AC30][AC87] the order and jumps of the Details cards', () => {
     view.wide = false
     serve()
     await openReview()
-    expect(cardIds()).toEqual(['details-link', 'details-categories', 'details-pins', 'details-stay', 'details-interests', 'details-keepsakes', 'details-related'])
+    expect(cardIds()).toEqual(['details-link', 'details-review', 'details-categories', 'details-pins', 'details-stay', 'details-interests', 'details-keepsakes', 'details-related'])
     await userEvent.click(screen.getByRole('tab', { name: 'Preview' }))
     await waitFor(() => expect(cardIds()).toEqual([]), SLOW)
   }, 30000)

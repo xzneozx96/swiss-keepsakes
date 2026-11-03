@@ -25,12 +25,13 @@ import { StoryPreviewSlot } from './story-preview-slot'
 import { StoryPublishBar } from './story-publish-bar'
 import { StoryPublishCard } from './story-publish-card'
 import { RelatedCard } from './story-related-card'
+import { ReviewCard } from './story-review-card'
 import { StayCard } from './story-stay-card'
 
 /**
  * Review and publish. Laptop: the preview on the left and a 440 px panel on the right (the publish card, the checks, the
  * Details cards). Phone: the card head, a Details and Preview switch, and the fixed bar that holds the checks and Publish.
- * Only one of the two trees renders, so no id is on the page twice. T-E4.3f and g add their cards inside `DetailsPanel`.
+ * Only one of the two trees renders, so no id is on the page twice. The Details cards sit inside `DetailsPanel`.
  */
 export function StoryReviewScreen({ storeId, groupEditor, language, version, editor, switchNode, onEdit }: {
   storeId: string
@@ -73,6 +74,7 @@ export function StoryReviewScreen({ storeId, groupEditor, language, version, edi
   const details = (
     <DetailsPanel panel={panel}>
       <StoryLinkCard group={group} language={language} title={editor.fields.title} version={version} onSave={publish.saveSlug} />
+      <ReviewCard fields={editor.fields} group={group} language={language} storeId={storeId} onFieldsChange={editor.change} onGroupChange={groupEditor.change} />
       <CategoriesCard group={group} language={language} storeId={storeId} onChange={groupEditor.change} />
       <PlacesCard body={editor.fields.body} group={group} language={language} storeId={storeId} onChange={groupEditor.change} />
       <StayCard group={group} onChange={groupEditor.change} />
