@@ -226,6 +226,15 @@ export const productsEn = {
   'products.departure.added': 'Departure added',
   'products.departure.updated': 'Seats saved',
 
+  'pickup.sheet.add': 'Add pickup point',
+  'pickup.hours.title': 'Opening hours',
+  'pickup.hours.help':
+    'Hours are Swiss local time. A closing time before the opening time closes the next morning.',
+  'pickup.problem.stale':
+    'Someone saved this pickup point after you opened it. Reload to see their version. Your last edits are not saved.',
+  'pickup.reload': 'Reload',
+  'products.place.noHours': 'No opening hours set',
+
   'products.place.intro':
     'Guests see these on the keepsake page, at checkout, in their orders and in emails.',
   'products.place.edit': 'Edit pickup point',

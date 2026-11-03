@@ -229,6 +229,15 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'products.departure.added': 'Termin hinzugefügt',
   'products.departure.updated': 'Plätze gespeichert',
 
+  'pickup.sheet.add': 'Abholstelle hinzufügen',
+  'pickup.hours.title': 'Öffnungszeiten',
+  'pickup.hours.help':
+    'Die Zeiten sind Schweizer Ortszeit. Eine Schliesszeit vor der Öffnungszeit schliesst am nächsten Morgen.',
+  'pickup.problem.stale':
+    'Jemand hat diese Abholstelle gespeichert, nachdem Sie sie geöffnet haben. Laden Sie neu, um die Version zu sehen. Ihre letzten Änderungen sind nicht gespeichert.',
+  'pickup.reload': 'Neu laden',
+  'products.place.noHours': 'Keine Öffnungszeiten angegeben',
+
   'products.place.intro':
     'Gäste sehen diese Angaben auf der Andenken-Seite, beim Bestellen, in ihren Bestellungen und in E-Mails.',
   'products.place.edit': 'Abholstelle bearbeiten',
