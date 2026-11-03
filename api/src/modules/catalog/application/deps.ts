@@ -1,4 +1,4 @@
-import type { AuditLog, Clock, KeepsakeLinks, MediaDirectory, PickupPlaceRepository, ProductRepository, ReservationDirectory, SalesDirectory, StockLevels, StockSeeding, UnitOfWork } from '../ports.ts'
+import type { AuditLog, Clock, KeepsakeLinks, MapsPositions, MediaDirectory, PickupPlaceRepository, ProductRepository, ReservationDirectory, SalesDirectory, StockLevels, StockSeeding, UnitOfWork } from '../ports.ts'
 
 export interface CatalogDeps<T> {
   uow: UnitOfWork<T>
@@ -20,6 +20,7 @@ export interface CatalogDeps<T> {
 export interface PickupDeps<T> {
   uow: UnitOfWork<T>
   pickups: PickupPlaceRepository<T>
+  maps: MapsPositions
   audit: AuditLog<T>
   clock: Clock
 }

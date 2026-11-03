@@ -12,8 +12,10 @@ import { createProductRepository } from '../../src/modules/catalog/adapters/prod
 import { registerCatalogRoutes } from '../../src/modules/catalog/adapters/routes.ts'
 import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetPickupPlace, makeGetProduct, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
 import { createKeepsakeLinks } from '../../src/modules/content/adapters/keepsake-links.ts'
+import { createMapsLinks } from '../../src/modules/content/adapters/maps-link-fetch.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
 import { mediaView } from '../../src/modules/content/adapters/media-view.ts'
+import { makeReadMapsPosition } from '../../src/modules/content/index.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
@@ -41,7 +43,7 @@ const secret = 'test-only-secret-0123456789-abcdefghij'
 const randomIp = () => `198.51.${Math.floor(Math.random() * 250) + 1}.${Math.floor(Math.random() * 250) + 1}`
 
 // `slugsTaken` replaces the slug read, so a test can make two publishes read the same slug as free (the race).
-export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDatabase>, options: { slugsTaken?: () => Set<string>, sales?: SalesDirectory<Tx>, extraRoutes?: ((app: OpenAPIHono<AppEnv>) => void)[], wrapSeed?: (seed: StockSeeding<Tx>['seed']) => StockSeeding<Tx>['seed'] } = {}) {
+export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDatabase>, options: { slugsTaken?: () => Set<string>, sales?: SalesDirectory<Tx>, extraRoutes?: ((app: OpenAPIHono<AppEnv>) => void)[], wrapSeed?: (seed: StockSeeding<Tx>['seed']) => StockSeeding<Tx>['seed'], mapsFetch?: typeof fetch } = {}) {
   const codes = new Map<string, string>()
   const uow = createUnitOfWork(db)
   const auth = createAuth({
@@ -84,7 +86,9 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
     saveOptions: makeSaveOptions(deps),
     createVariant: makeCreateVariant(deps),
   })
-  const pickupDeps = { uow, pickups: createPickupRepository(), audit: deps.audit, clock: systemClock }
+  // A short link is followed by `options.mapsFetch`; the default asks nobody, so a test never calls Google.
+  const mapsFetch = options.mapsFetch ?? (async () => new Response(null, { status: 404 }))
+  const pickupDeps = { uow, pickups: createPickupRepository(), maps: { positionOf: makeReadMapsPosition({ links: createMapsLinks(mapsFetch), clock: systemClock }) }, audit: deps.audit, clock: systemClock }
   const pickupUseCases = guardUseCases({
     listPickupPlaces: makeListPickupPlaces(pickupDeps),
     getPickupPlace: makeGetPickupPlace(pickupDeps),

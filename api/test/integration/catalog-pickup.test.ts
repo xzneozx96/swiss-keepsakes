@@ -12,7 +12,15 @@ afterAll(async () => {
   await pool.end()
 })
 
-const env = createCatalogHttp(testDatabase)
+// A short link is followed through this stand-in for Google, so no test calls the network (gate G-S8-PICKUP-MAPS).
+const shortLink = 'https://maps.app.goo.gl/AbCdEf123'
+const placeLink = 'https://www.google.com/maps/place/Hotel/@47.0502,8.3093,17z/data=!3d47.0516!4d8.3074'
+const asked: string[] = []
+const mapsFetch = (async (input: URL | string) => {
+  asked.push(String(input))
+  return String(input) === shortLink ? new Response(null, { status: 302, headers: { location: placeLink } }) : new Response(null, { status: 404 })
+}) as typeof fetch
+const env = createCatalogHttp(testDatabase, { mapsFetch })
 
 interface Span { weekday: number, opens: string, closes: string }
 interface View {
@@ -20,6 +28,9 @@ interface View {
   storeId: string
   name: { en?: string, de?: string }
   address: { en?: string, de?: string }
+  mapsLink: string
+  latitude: number
+  longitude: number
   instructions: { en?: string, de?: string } | null
   position: number
   archived: boolean
@@ -28,6 +39,7 @@ interface View {
 }
 interface Problem { type: string, errors?: { in: string, path: string, message: string, code?: string }[] }
 
+const shopLink = 'https://www.google.com/maps/place/Shop/@47.0507,8.3068,17z'
 const monToSat = [1, 2, 3, 4, 5, 6].map(weekday => ({ weekday, opens: '10:00', closes: '18:00' }))
 
 let sharedStore: ReturnType<typeof env.storeWithStaff> | undefined
@@ -37,7 +49,7 @@ async function setup(options: { fresh?: boolean } = {}) {
   const store = await (options.fresh ? env.storeWithStaff() : getStore())
   const base = `/api/store/${store.storeId}/pickup-places`
   const send = (path: string, method: string, body?: object, headers: Record<string, string> = store.owner.headers) => env.call(`${base}${path}`, { method, headers, ...(body && { body }) })
-  const create = (body: object, headers?: Record<string, string>) => send('', 'POST', { name: { en: 'Shop' }, address: { en: 'Hertensteinstrasse 1' }, hours: monToSat, ...body }, headers)
+  const create = (body: object, headers?: Record<string, string>) => send('', 'POST', { name: { en: 'Shop' }, address: { en: 'Hertensteinstrasse 1' }, mapsLink: shopLink, hours: monToSat, ...body }, headers)
   const created = async (body: object = {}) => {
     const response = await create(body)
     expect(response.status).toBe(201)
@@ -212,7 +224,7 @@ describe('[E6.6][AC26] pickup points over HTTP', () => {
     const point = await created()
     const stranger = await env.signIn()
     const as = { ...stranger.headers, 'If-Match': '1' }
-    const body = { name: { en: 'Shop' }, address: { en: 'Hertensteinstrasse 1' }, hours: monToSat }
+    const body = { name: { en: 'Shop' }, address: { en: 'Hertensteinstrasse 1' }, mapsLink: shopLink, hours: monToSat }
     const calls = [
       env.call(base, { method: 'POST', headers: stranger.headers, body }),
       env.call(`${base}/${point.id}`, { method: 'PATCH', headers: as, body: { name: { en: 'Mine' } } }),
@@ -240,7 +252,7 @@ describe('[E6.6][AC26] pickup points over HTTP', () => {
     const first = await created()
     // 99 archived points beside one active: the store is nowhere near the limit.
     await pool.query(
-      `insert into catalog.pickup_places (store_id, name, address, position, archived_at) select $1, '{"en":"Old"}'::jsonb, '{"en":"Old"}'::jsonb, g, now() from generate_series(2, 100) g`,
+      `insert into catalog.pickup_places (store_id, name, address, maps_link, latitude, longitude, position, archived_at) select $1, '{"en":"Old"}'::jsonb, '{"en":"Old"}'::jsonb, 'https://maps.app.goo.gl/x', 47, 8, g, now() from generate_series(2, 100) g`,
       [store.storeId],
     )
     const second = await created({ name: { en: 'Second' } })
@@ -248,7 +260,7 @@ describe('[E6.6][AC26] pickup points over HTTP', () => {
 
     // Fill the active list to 100.
     await pool.query(
-      `insert into catalog.pickup_places (store_id, name, address, position) select $1, '{"en":"Bulk"}'::jsonb, '{"en":"Bulk"}'::jsonb, g from generate_series(200, 297) g`,
+      `insert into catalog.pickup_places (store_id, name, address, maps_link, latitude, longitude, position) select $1, '{"en":"Bulk"}'::jsonb, '{"en":"Bulk"}'::jsonb, 'https://maps.app.goo.gl/x', 47, 8, g from generate_series(200, 297) g`,
       [store.storeId],
     )
     const refused = await create({})
@@ -277,6 +289,80 @@ describe('[E6.6][AC26] pickup points over HTTP', () => {
 
     expect((await send('/order', 'PUT', { ids: [a.id, b.id] })).status).toBe(422)
     expect((await send('/order', 'PUT', { ids: [a.id] })).status).toBe(200)
+  })
+
+  it('[S8-PICKUP-MAPS] a point stores its Google Maps link and the pin read from it, and the read returns both', async () => {
+    const { created, send, list } = await setup({ fresh: true })
+    const point = await created()
+
+    expect(point).toMatchObject({ mapsLink: shopLink, latitude: 47.0507, longitude: 8.3068 })
+    expect(await (await send(`/${point.id}`, 'GET')).json()).toMatchObject({ mapsLink: shopLink, latitude: 47.0507, longitude: 8.3068 })
+    expect((await list())[0]).toMatchObject({ mapsLink: shopLink, latitude: 47.0507, longitude: 8.3068 })
+  })
+
+  it('[S8-PICKUP-MAPS] a short link is followed through Google and the link is stored as pasted', async () => {
+    const { created } = await setup({ fresh: true })
+    asked.length = 0
+    const point = await created({ mapsLink: shortLink })
+
+    expect(asked).toEqual([shortLink])
+    expect(point).toMatchObject({ mapsLink: shortLink, latitude: 47.0516, longitude: 8.3074 })
+  })
+
+  it('[S8-PICKUP-MAPS] the link is required: left out, null or not a Google Maps link is a refused body and nothing is stored', async () => {
+    const { store, base, create, list } = await setup({ fresh: true })
+    const { mapsLink: _left, ...without } = { name: { en: 'Shop' }, address: { en: 'Hertensteinstrasse 1' }, mapsLink: shopLink, hours: monToSat }
+    const noLink = await env.call(base, { method: 'POST', headers: store.owner.headers, body: without })
+    expect(noLink.status).toBe(400)
+    for (const mapsLink of [null, '', 'https://evil.example/maps/abc', 'http://maps.app.goo.gl/abc'])
+      expect((await create({ mapsLink })).status, String(mapsLink)).toBe(400)
+    expect(await list()).toEqual([])
+  })
+
+  it('[S8-PICKUP-MAPS] a Google Maps link that holds no position is 422 maps-link-unreadable and nothing is stored', async () => {
+    const { create, list } = await setup({ fresh: true })
+    for (const mapsLink of ['https://www.google.com/maps/place/Lucerne', 'https://maps.app.goo.gl/Unknown404']) {
+      const response = await create({ mapsLink })
+      expect(response.status, mapsLink).toBe(422)
+      expect(await response.json()).toMatchObject({ type: expect.stringContaining('maps-link-unreadable'), errors: [{ in: 'body', path: 'mapsLink' }] })
+    }
+    expect(await list()).toEqual([])
+  })
+
+  it('[S8-PICKUP-MAPS] a save with a new link moves the pin; a save without one keeps link and pin; an unreadable link changes nothing', async () => {
+    const { created, send, withVersion } = await setup({ fresh: true })
+    const point = await created()
+
+    const renamed = await send(`/${point.id}`, 'PATCH', { name: { en: 'Renamed' } }, withVersion(1))
+    expect(await renamed.json()).toMatchObject({ mapsLink: shopLink, latitude: 47.0507, longitude: 8.3068, rowVersion: 2 })
+
+    const moved = await send(`/${point.id}`, 'PATCH', { mapsLink: placeLink }, withVersion(2))
+    expect(await moved.json()).toMatchObject({ mapsLink: placeLink, latitude: 47.0516, longitude: 8.3074, rowVersion: 3 })
+
+    const bad = await send(`/${point.id}`, 'PATCH', { mapsLink: 'https://www.google.com/maps/place/Lucerne' }, withVersion(3))
+    expect(bad.status).toBe(422)
+    expect(await (await send(`/${point.id}`, 'GET')).json()).toMatchObject({ mapsLink: placeLink, latitude: 47.0516, rowVersion: 3 })
+    expect((await send(`/${point.id}`, 'PATCH', { mapsLink: null }, withVersion(3))).status).toBe(400)
+    expect((await send(`/${point.id}`, 'PATCH', { latitude: 1 }, withVersion(3))).status).toBe(400)
+  })
+
+  it('[S8-PICKUP-MAPS] archive and restore keep the link and the pin', async () => {
+    const { created, send, withVersion } = await setup({ fresh: true })
+    const point = await created()
+    await send(`/${point.id}/archive`, 'POST', undefined, withVersion(1))
+    const restored = await send(`/${point.id}/restore`, 'POST', undefined, withVersion(2))
+
+    expect(await restored.json()).toMatchObject({ mapsLink: shopLink, latitude: 47.0507, longitude: 8.3068 })
+  })
+
+  it('[S8-PICKUP-MAPS] a non-member gets 403 before the link is read', async () => {
+    const { base } = await setup()
+    const stranger = await env.signIn()
+    asked.length = 0
+    const response = await env.call(base, { method: 'POST', headers: stranger.headers, body: { name: { en: 'Shop' }, address: { en: 'Hertensteinstrasse 1' }, mapsLink: shortLink, hours: monToSat } })
+
+    expect(response.status).toBe(403)
+    expect(asked).toEqual([])
   })
 
   it('[E6.6][AC26] a create and an archive each write one audit entry', async () => {

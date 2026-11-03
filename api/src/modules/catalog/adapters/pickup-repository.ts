@@ -7,6 +7,9 @@ interface PlaceRow {
   store_id: string
   name: Localized
   address: Localized
+  maps_link: string
+  latitude: number
+  longitude: number
   instructions: Localized | null
   position: number
   archived: boolean
@@ -20,7 +23,7 @@ interface HourRow {
   closes: string
 }
 
-const placeColumns = sql`p.id, p.store_id, p.name, p.address, p.instructions, p.position, (p.archived_at is not null) as archived, p.row_version`
+const placeColumns = sql`p.id, p.store_id, p.name, p.address, p.maps_link, p.latitude, p.longitude, p.instructions, p.position, (p.archived_at is not null) as archived, p.row_version`
 
 // `time` holds 24:00 and to_char would show it as 00:00, so closing at midnight is named apart.
 const hourColumns = sql`h.place_id, h.weekday::int as weekday, to_char(h.opens, 'HH24:MI') as opens,
@@ -34,6 +37,9 @@ function view(row: PlaceRow, hours: HourRow[]): PickupPlace {
     storeId: row.store_id,
     name: row.name,
     address: row.address,
+    mapsLink: row.maps_link,
+    latitude: row.latitude,
+    longitude: row.longitude,
     instructions: row.instructions,
     position: row.position,
     archived: row.archived,
@@ -90,8 +96,8 @@ export function createPickupRepository(): PickupPlaceRepository<Tx> {
 
     async insert(tx, storeId, input, at) {
       const inserted = await tx.execute<{ id: string }>(sql`
-        insert into catalog.pickup_places (store_id, name, address, instructions, position, created_at, updated_at)
-        values (${storeId}, ${JSON.stringify(input.name)}::jsonb, ${JSON.stringify(input.address)}::jsonb, ${json(input.instructions)}::jsonb,
+        insert into catalog.pickup_places (store_id, name, address, maps_link, latitude, longitude, instructions, position, created_at, updated_at)
+        values (${storeId}, ${JSON.stringify(input.name)}::jsonb, ${JSON.stringify(input.address)}::jsonb, ${input.mapsLink}, ${input.latitude}, ${input.longitude}, ${json(input.instructions)}::jsonb,
                 (select coalesce(max(position), 0) + 1 from catalog.pickup_places where store_id = ${storeId}), ${at}, ${at})
         returning id`)
       const id = inserted.rows[0]!.id
@@ -104,6 +110,9 @@ export function createPickupRepository(): PickupPlaceRepository<Tx> {
         update catalog.pickup_places
            set name = ${JSON.stringify(changes.name ?? place.name)}::jsonb,
                address = ${JSON.stringify(changes.address ?? place.address)}::jsonb,
+               maps_link = ${changes.map?.mapsLink ?? place.mapsLink},
+               latitude = ${changes.map?.latitude ?? place.latitude},
+               longitude = ${changes.map?.longitude ?? place.longitude},
                instructions = ${json(changes.instructions === undefined ? place.instructions : changes.instructions)}::jsonb,
                row_version = row_version + 1, updated_at = ${at}
          where store_id = ${place.storeId} and id = ${place.id}`)

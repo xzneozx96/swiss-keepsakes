@@ -16,6 +16,9 @@ function place(id: string, over: Partial<PickupPlace> = {}): PickupPlace {
     storeId,
     name: { en: 'Shop' },
     address: { en: 'Hertensteinstrasse 1' },
+    mapsLink: 'https://maps.app.goo.gl/AbCdEf123',
+    latitude: 47.0507,
+    longitude: 8.3068,
     instructions: null,
     position: 1,
     archived: false,
@@ -36,16 +39,19 @@ function setup(rows: PickupPlace[] = [place('a'), place('b', { position: 2 })]) 
     setPositions: vi.fn(async () => {}),
     setArchived: vi.fn(async (_tx: null, current: PickupPlace) => current),
   } as unknown as PickupPlaceRepository<null>
+  const maps = { positionOf: vi.fn(async (_link: string): Promise<{ latitude: number, longitude: number } | undefined> => ({ latitude: 46.9, longitude: 7.4 })) }
   const deps: PickupDeps<null> = {
-    uow: { run: work => work(null) },
+    uow: { run: vi.fn(work => work(null)) },
     pickups: repo,
+    maps,
     audit: { record: vi.fn(async () => {}) },
     clock: { now: () => new Date('2026-11-03T08:00:00Z') },
   }
-  return { repo, deps }
+  return { repo, deps, maps }
 }
 
-const body = { name: { en: 'Hotel' }, address: { de: 'Strasse 2' }, hours: [{ weekday: 1, opens: '10:00', closes: '18:00' }] }
+const link = 'https://maps.app.goo.gl/NewLink99'
+const body = { name: { en: 'Hotel' }, address: { de: 'Strasse 2' }, mapsLink: link, hours: [{ weekday: 1, opens: '10:00', closes: '18:00' }] }
 
 describe('[E6.6][AC26] pickup point use cases', () => {
   it('[E6.6][AC26] a guest is forbidden on every use case and the repository is not touched', async () => {
@@ -105,7 +111,7 @@ describe('[E6.6][AC26] pickup point use cases', () => {
 
   it('[E6.6][AC26] create answers invalid with every wrong path and writes nothing', async () => {
     const { repo, deps } = setup()
-    const result = await makeCreatePickupPlace(deps)(owner, storeId, { name: {}, address: { en: ' ' }, hours: [{ weekday: 8, opens: '10:00', closes: '10:00' }] }, null)
+    const result = await makeCreatePickupPlace(deps)(owner, storeId, { name: {}, address: { en: ' ' }, mapsLink: link, hours: [{ weekday: 8, opens: '10:00', closes: '10:00' }] }, null)
 
     expect(result).toMatchObject({ ok: false, reason: 'invalid' })
     expect(result.ok === false && result.reason === 'invalid' && result.errors.map(error => error.path)).toEqual(['name', 'address', 'hours.0.weekday', 'hours.0.closes'])
@@ -184,5 +190,63 @@ describe('[E6.6][AC26] pickup point use cases', () => {
     await makeRestorePickupPlace(deps)(owner, storeId, 'c', 3, 'req-5')
     expect(last()).toMatchObject({ entity: 'pickup_place', entityId: 'c', action: 'restored' })
     expect(record).toHaveBeenCalledTimes(5)
+  })
+
+  it('[S8-PICKUP-MAPS] create reads the pin from the link before the transaction and stores the link and the pin', async () => {
+    const { repo, deps, maps } = setup()
+    const result = await makeCreatePickupPlace(deps)(owner, storeId, body, null)
+
+    expect(result).toMatchObject({ ok: true })
+    expect(maps.positionOf).toHaveBeenCalledWith(link)
+    expect(vi.mocked(maps.positionOf).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(deps.uow.run).mock.invocationCallOrder[0]!)
+    expect(repo.insert).toHaveBeenCalledWith(null, storeId, expect.objectContaining({ mapsLink: link, latitude: 46.9, longitude: 7.4 }), expect.any(Date))
+  })
+
+  it('[S8-PICKUP-MAPS] create with a link that holds no position is maps-link-unreadable and opens no transaction', async () => {
+    const { repo, deps, maps } = setup()
+    vi.mocked(maps.positionOf).mockResolvedValue(undefined)
+
+    expect(await makeCreatePickupPlace(deps)(owner, storeId, body, null)).toEqual({ ok: false, reason: 'maps-link-unreadable' })
+    expect(deps.uow.run).not.toHaveBeenCalled()
+    expect(repo.insert).not.toHaveBeenCalled()
+  })
+
+  it('[S8-PICKUP-MAPS] create with wrong text is invalid without reading the link', async () => {
+    const { deps, maps } = setup()
+
+    expect(await makeCreatePickupPlace(deps)(owner, storeId, { ...body, name: {} }, null)).toMatchObject({ ok: false, reason: 'invalid' })
+    expect(maps.positionOf).not.toHaveBeenCalled()
+  })
+
+  it('[S8-PICKUP-MAPS] a save with a new link moves the pin; a save without one keeps link and pin and reads nothing', async () => {
+    const { repo, deps, maps } = setup()
+
+    await makeSavePickupPlace(deps)(owner, storeId, 'a', 3, { mapsLink: link }, null)
+    expect(maps.positionOf).toHaveBeenCalledWith(link)
+    expect(repo.save).toHaveBeenLastCalledWith(null, expect.objectContaining({ id: 'a' }), expect.objectContaining({ map: { mapsLink: link, latitude: 46.9, longitude: 7.4 } }), expect.any(Date))
+
+    vi.mocked(maps.positionOf).mockClear()
+    await makeSavePickupPlace(deps)(owner, storeId, 'a', 3, { name: { en: 'X' } }, null)
+    expect(maps.positionOf).not.toHaveBeenCalled()
+    expect(vi.mocked(repo.save).mock.lastCall![2]).not.toHaveProperty('map')
+  })
+
+  it('[S8-PICKUP-MAPS] a save with an unreadable link is refused and writes nothing; a guest never reaches the link', async () => {
+    const { repo, deps, maps } = setup()
+    vi.mocked(maps.positionOf).mockResolvedValue(undefined)
+
+    expect(await makeSavePickupPlace(deps)(owner, storeId, 'a', 3, { mapsLink: link }, null)).toEqual({ ok: false, reason: 'maps-link-unreadable' })
+    expect(repo.save).not.toHaveBeenCalled()
+    vi.mocked(maps.positionOf).mockClear()
+    expect(await makeSavePickupPlace(deps)(guest, storeId, 'a', 3, { mapsLink: link }, null)).toMatchObject({ reason: 'forbidden' })
+    expect(await makeCreatePickupPlace(deps)(guest, storeId, body, null)).toMatchObject({ reason: 'forbidden' })
+    expect(maps.positionOf).not.toHaveBeenCalled()
+  })
+
+  it('[S8-PICKUP-MAPS] the audit entry holds the link and the pin', async () => {
+    const { deps } = setup()
+    await makeCreatePickupPlace(deps)(owner, storeId, body, null)
+
+    expect(vi.mocked(deps.audit.record).mock.lastCall![1].after).toMatchObject({ mapsLink: expect.any(String), latitude: expect.any(Number), longitude: expect.any(Number) })
   })
 })

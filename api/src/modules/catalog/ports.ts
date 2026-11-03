@@ -333,6 +333,10 @@ export interface PickupPlace {
   storeId: string
   name: Localized
   address: Localized
+  // The Google Maps link the merchant stored, and the pin read from it (gate G-S8-PICKUP-MAPS).
+  mapsLink: string
+  latitude: number
+  longitude: number
   instructions: Localized | null
   position: number
   archived: boolean
@@ -340,20 +344,32 @@ export interface PickupPlace {
   rowVersion: number
 }
 
-export interface NewPickupPlace {
+export interface PickupMap { mapsLink: string, latitude: number, longitude: number }
+
+export interface NewPickupPlace extends PickupMap {
   name: Localized
   address: Localized
   instructions: Localized | null
   hours: PickupSpan[]
 }
 
-// Fields left out stay; `hours`, when given, replaces the whole set.
+// Fields left out stay; `hours`, when given, replaces the whole set. `map` sets the link and the pin together.
 export interface PickupPlaceChanges {
   name?: Localized
   address?: Localized
+  map?: PickupMap
   instructions?: Localized | null
   hours?: PickupSpan[]
 }
+
+// Reads the pin behind a stored Google Maps link (a full link, or a short one the server follows through Google hosts).
+// Undefined when the text is no Google Maps link or holds no position. Wired in main.ts from the content module (ADR-013).
+export interface MapsPositions {
+  positionOf: (link: string) => Promise<{ latitude: number, longitude: number } | undefined>
+}
+
+// What a save asks for: the changes, with the link as the merchant gave it. The use case reads the pin and passes `map`.
+export type PickupPlaceEdit = Omit<PickupPlaceChanges, 'map'> & { mapsLink?: string }
 
 export interface PickupPlaceRepository<T> {
   // The active points, or the archived ones, by position then id. Each carries its hours by weekday then opening time.

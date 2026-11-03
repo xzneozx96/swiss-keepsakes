@@ -4,7 +4,7 @@ import type { Actor } from '@sk/domain/identity'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
 import type { PickupTextInput } from '../application/pickup-rules.ts'
-import type { PickupPlace, PickupPlaceChanges, PickupSpan } from '../ports.ts'
+import type { PickupPlace, PickupPlaceEdit, PickupSpan } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
 import { pickupPlaceListQuerySchema, pickupPlaceListSchema, pickupPlaceOrderBodySchema, pickupPlacePatchBodySchema, pickupPlaceSchema, pickupPlaceWriteBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
@@ -17,8 +17,8 @@ import { etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts
 export interface PickupUseCases {
   listPickupPlaces: (actor: Actor, storeId: string, archived: boolean) => Promise<Result<PickupPlace[]>>
   getPickupPlace: (actor: Actor, storeId: string, placeId: string) => Promise<Result<PickupPlace>>
-  createPickupPlace: (actor: Actor, storeId: string, input: PickupTextInput & { hours: PickupSpan[] }, requestId: string | null) => Promise<Result<PickupPlace>>
-  savePickupPlace: (actor: Actor, storeId: string, placeId: string, ifMatch: number, changes: PickupPlaceChanges, requestId: string | null) => Promise<Result<PickupPlace>>
+  createPickupPlace: (actor: Actor, storeId: string, input: PickupTextInput & { mapsLink: string, hours: PickupSpan[] }, requestId: string | null) => Promise<Result<PickupPlace>>
+  savePickupPlace: (actor: Actor, storeId: string, placeId: string, ifMatch: number, changes: PickupPlaceEdit, requestId: string | null) => Promise<Result<PickupPlace>>
   reorderPickupPlaces: (actor: Actor, storeId: string, ids: string[], requestId: string | null) => Promise<Result<PickupPlace[]>>
   archivePickupPlace: (actor: Actor, storeId: string, placeId: string, ifMatch: number, requestId: string | null) => Promise<Result<PickupPlace>>
   restorePickupPlace: (actor: Actor, storeId: string, placeId: string, ifMatch: number, requestId: string | null) => Promise<Result<PickupPlace>>
@@ -42,7 +42,7 @@ const createPlaceRoute = createRoute({
   path,
   request: { params: storeParams, body: { required: true, content: json(pickupPlaceWriteBodySchema) } },
   responses: {
-    201: { description: 'The new pickup point, last in the list', headers: etagHeaders, content: json(pickupPlaceSchema) },
+    201: { description: 'The new pickup point, last in the list. 422 `maps-link-unreadable` when the link holds no position', headers: etagHeaders, content: json(pickupPlaceSchema) },
     ...problemResponses,
   },
 })
@@ -72,7 +72,7 @@ const saveRoute = createRoute({
   path: `${path}/{placeId}`,
   request: { params: placeParams, ...withIfMatch, body: { required: true, content: json(pickupPlacePatchBodySchema) } },
   responses: {
-    200: { description: 'The pickup point with the change saved. A left-out field stays; hours replace the whole set', headers: etagHeaders, content: json(pickupPlaceSchema) },
+    200: { description: 'The pickup point with the change saved. A left-out field stays; a new Google Maps link moves the pin (422 `maps-link-unreadable` when the link holds no position); hours replace the whole set', headers: etagHeaders, content: json(pickupPlaceSchema) },
     ...problemResponses,
   },
 })
@@ -97,7 +97,7 @@ const restoreRoute = createRoute({
   },
 })
 
-const view = ({ id, storeId, name, address, instructions, position, archived, hours, rowVersion }: PickupPlace): PickupPlaceView => ({ id, storeId, name, address, instructions, position, archived, hours, rowVersion })
+const view = ({ id, storeId, name, address, mapsLink, latitude, longitude, instructions, position, archived, hours, rowVersion }: PickupPlace): PickupPlaceView => ({ id, storeId, name, address, mapsLink, latitude, longitude, instructions, position, archived, hours, rowVersion })
 
 // The Idempotency-Key middleware and the store guard sit before these (createApp), so the handlers read the
 // verified store from `c.get('store')`, never from the path.
@@ -110,8 +110,8 @@ export function registerPickupRoutes(app: OpenAPIHono<AppEnv>, useCases: PickupU
   })
 
   app.openapi(createPlaceRoute, async (c) => {
-    const { name, address, instructions, hours } = c.req.valid('json')
-    const result = await useCases.createPickupPlace(c.get('actor'), c.get('store').storeId, { name, address, instructions, hours }, c.get('requestId'))
+    const { name, address, mapsLink, instructions, hours } = c.req.valid('json')
+    const result = await useCases.createPickupPlace(c.get('actor'), c.get('store').storeId, { name, address, mapsLink, instructions, hours }, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(view(result.value), 201, etag(result.value))
@@ -135,10 +135,11 @@ export function registerPickupRoutes(app: OpenAPIHono<AppEnv>, useCases: PickupU
     const ifMatch = readIfMatch(c)
     if (!ifMatch.ok)
       return ifMatch.response
-    const { name, address, instructions, hours } = c.req.valid('json')
-    const changes: PickupPlaceChanges = {
+    const { name, address, mapsLink, instructions, hours } = c.req.valid('json')
+    const changes: PickupPlaceEdit = {
       ...(name !== undefined && { name }),
       ...(address !== undefined && { address }),
+      ...(mapsLink !== undefined && { mapsLink }),
       ...(instructions !== undefined && { instructions }),
       ...(hours !== undefined && { hours }),
     }

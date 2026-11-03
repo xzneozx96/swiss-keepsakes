@@ -104,6 +104,8 @@ export function failureProblem(failure: Failure): FailureProblem {
       }
     case 'invalid':
       return { status: 422, type: 'validation-failed', title: 'This can’t be saved. See what needs a fix.', errors: failure.errors.map(error => ({ in: 'body' as const, path: error.path, message: error.message })) }
+    case 'maps-link-unreadable':
+      return { status: 422, type: 'maps-link-unreadable', title: 'This Google Maps link could not be read. Paste a short link such as https://maps.app.goo.gl/..., or the full link of the place.', errors: [{ in: 'body', path: 'mapsLink', message: 'This Google Maps link could not be read' }] }
     case 'order-mismatch':
       return { status: 422, type: 'validation-failed', title: 'The list changed. Reload it and move the point again.', errors: [{ in: 'body', path: 'ids', message: 'Send exactly the active pickup points' }] }
     case 'too-many':
