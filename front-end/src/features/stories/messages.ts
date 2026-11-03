@@ -54,7 +54,6 @@ export const storiesMerchantEn = {
   'storyEditor.review.button': 'Review and publish',
   'storyEditor.review.short': 'Review',
   'storyEditor.review.title': 'Review and publish',
-  'storyEditor.review.placeholder': 'The review and publish screen is coming. Go back to keep writing.',
   'storyEditor.card.cover': 'Cover and title',
   'storyEditor.cover.add': 'Add a cover photo',
   'storyEditor.cover.addHint': 'From your media library, or upload one',

@@ -226,9 +226,8 @@ describe('[E4.3][AC30][AC45] the story editor', () => {
 
     expect(screen.queryByText('Add a title to publish.')).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Review' }))
-    expect(await screen.findByRole('heading', { name: 'Review and publish' })).toBeInTheDocument()
-    // The header's Back and the placeholder's own button both lead back to Write.
-    await userEvent.click(screen.getAllByRole('button', { name: 'Back to writing' })[0]!)
+    expect(await screen.findByText('Review and publish')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Back to writing' }))
 
     expect(await screen.findByText('Add a title to publish.')).toBeInTheDocument()
     expect(screen.getByText('Add an excerpt to publish.')).toBeInTheDocument()

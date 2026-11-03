@@ -55,7 +55,6 @@ export const storiesMerchantDe: Record<keyof typeof storiesMerchantEn, string> =
   'storyEditor.review.button': 'Prüfen und veröffentlichen',
   'storyEditor.review.short': 'Prüfen',
   'storyEditor.review.title': 'Prüfen und veröffentlichen',
-  'storyEditor.review.placeholder': 'Die Ansicht zum Prüfen und Veröffentlichen folgt. Gehen Sie zurück, um weiterzuschreiben.',
   'storyEditor.card.cover': 'Titelbild und Titel',
   'storyEditor.cover.add': 'Titelbild hinzufügen',
   'storyEditor.cover.addHint': 'Aus Ihrer Mediathek oder neu hochladen',

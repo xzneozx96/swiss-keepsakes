@@ -1,6 +1,7 @@
 import type { StoryGroupDetail } from '@sk/api-contract'
 import type { StoryLanguage } from '../lib/search-params'
 
+import { formatDate } from '@sk/domain/shared'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
@@ -18,7 +19,7 @@ import { versionStateOf } from '../lib/version-state'
 import { CoverTitleCard } from './cover-title-card'
 import { StoryHeader } from './story-header'
 import { StoryLanguageSwitch } from './story-language-switch'
-import { StoryReviewPlaceholder } from './story-review-placeholder'
+import { StoryReviewScreen } from './story-review-screen'
 import { StoryStaleNotice } from './story-stale-notice'
 
 /**
@@ -56,9 +57,17 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
     onLeave: () => void navigate({ to: STORIES_PATH }),
   })
   const other = language === 'en' ? 'de' : 'en'
-  const switcher = (compact: boolean) => (
+  const publishedOn = (dated: boolean) => dated
+    ? Object.fromEntries((['en', 'de'] as const).flatMap((code) => {
+        const at = group.versions[code]?.publishedAt
+
+        return at ? [[code, formatDate(new Date(at), intlLocale)]] : []
+      }))
+    : undefined
+  const switcher = (compact: boolean, dated = false) => (
     <StoryLanguageSwitch
       compact={compact}
+      publishedOn={publishedOn(dated)}
       selected={language}
       versions={{
         [language]: { state: editor.versionState },
@@ -87,6 +96,17 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
     window.scrollTo?.({ top: 0 })
   }
 
+  const notices = (
+    <>
+      {editor.state === 'stale' && (
+        <div className="max-lg:px-4">
+          <StoryStaleNotice onReload={onReload} />
+        </div>
+      )}
+      {editor.state === 'failed' && <ErrorNotice compact message={t(storyProblemKey(editor.problem ?? 'unknown'))} onRetry={editor.retry} />}
+    </>
+  )
+
   return (
     <>
       <StoryHeader
@@ -99,15 +119,15 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
         onReview={() => void review()}
       />
       {screen === 'review'
-        ? <StoryReviewPlaceholder onBack={() => onScreen('write')} />
+        ? (
+            <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4 pt-4">
+              {notices}
+              <StoryReviewScreen editor={editor} group={group} language={language} storeId={storeId} switchNode={switcher(false, true)} version={group.versions[language]!} />
+            </div>
+          )
         : (
             <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4 py-4 max-lg:-mx-4 max-lg:w-auto lg:py-8">
-              {editor.state === 'stale' && (
-                <div className="max-lg:px-4">
-                  <StoryStaleNotice onReload={onReload} />
-                </div>
-              )}
-              {editor.state === 'failed' && <ErrorNotice compact message={t(storyProblemKey(editor.problem ?? 'unknown'))} onRetry={editor.retry} />}
+              {notices}
               {!isWide && <div className="max-lg:px-4">{switcher(false)}</div>}
               <CoverTitleCard accountName={accountName} fields={editor.fields} language={language} showErrors={showErrors} storeId={storeId} onChange={editor.change} />
             </div>
