@@ -114,6 +114,15 @@ describe('[E4.3][AC45] cleanBody', () => {
     expect(storyBodySchema.safeParse(clean).success).toBe(true)
   })
 
+  it('[E4.3][AC45] AC-4 a text node with both a link and a pin link keeps the pin link only', () => {
+    const marks = [{ type: 'link', attrs: { href: 'https://zyt.example' } }, { type: 'pinLink', attrs: { pinId: '0198a000-0000-7000-8000-000000000010' } }, { type: 'bold' }]
+    const clean = cleanBody({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Zyt', marks }] }] })
+    const kept = (clean.content?.[0]?.content?.[0]?.marks ?? []).map(mark => mark.type)
+
+    expect(kept).toEqual(['pinLink', 'bold'])
+    expect(storyBodySchema.safeParse(clean).success).toBe(true)
+  })
+
   it('[E4.3][AC30] an empty result is the empty body', () => {
     expect(cleanBody({ type: 'doc', content: [] })).toEqual({ type: 'doc', content: [{ type: 'paragraph' }] })
     expect(cleanBody(null)).toEqual({ type: 'doc', content: [{ type: 'paragraph' }] })

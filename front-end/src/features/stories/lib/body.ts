@@ -40,7 +40,10 @@ function cleanMarks(marks: StoryBodyMark[] | undefined): StoryBodyMark[] {
       kept.push(next)
   }
 
-  return kept.slice(0, MARKS_MAX)
+  // A pin link replaces a plain link on the same text (the mark excludes it; a paste or an old body may carry both).
+  const unique = kept.some(mark => mark.type === 'pinLink') ? kept.filter(mark => mark.type !== 'link') : kept
+
+  return unique.slice(0, MARKS_MAX)
 }
 
 /** Cuts at `max` code units without splitting a surrogate pair. */
