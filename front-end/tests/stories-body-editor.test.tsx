@@ -45,7 +45,7 @@ function setUp(body: never = sample, language: 'en' | 'de' = 'en') {
   const onChange = vi.fn()
   const onDirty = vi.fn()
   const registered: (BodyHandover | null)[] = []
-  const props = { storeId, body, language, onChange, onDirty, registerHandover: (handover: BodyHandover | null) => void registered.push(handover) }
+  const props = { storeId, pins: [], body, language, onChange, onDirty, registerHandover: (handover: BodyHandover | null) => void registered.push(handover) }
   const rendered = renderWithStore(<StoryBodyEditor {...props} />)
   const handover = () => registered.filter(Boolean).at(-1)!
 
@@ -141,7 +141,7 @@ describe('[E4.3][AC30][AC45] the story body editor', () => {
     expect(screen.getByRole('textbox', { name: 'Story text' })).toHaveAttribute('lang', 'en')
   })
 
-  it('[E4.3][AC30] wide: the toolbar shows the seven tools, Link, Undo and Redo; a text selection opens the bubble with the tools and without Undo and Redo; phone: the bar has no Redo and Done shows only while the editor has focus; neither shows Insert, "+" or Link a pin', async () => {
+  it('[E4.3][AC30] wide: the toolbar shows the seven tools, Link, Undo and Redo; a text selection opens the bubble with the tools and without Undo and Redo; phone: the bar has no Redo and Done shows only while the editor has focus; the bubble has Link a pin and no Insert', async () => {
     const wide = setUp()
     const bar = screen.getByRole('toolbar', { name: 'Formatting' })
 
@@ -155,8 +155,8 @@ describe('[E4.3][AC30][AC45] the story body editor', () => {
     expect(within(bubble).getByRole('button', { name: 'Bold' })).toBeInTheDocument()
     expect(within(bubble).queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument()
     expect(within(bubble).queryByRole('button', { name: 'Redo' })).not.toBeInTheDocument()
-    for (const name of [/insert/i, /^\+$/, /pin/i])
-      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument()
+    expect(within(bubble).getByRole('button', { name: 'Link a pin' })).toBeInTheDocument()
+    expect(within(bubble).queryByRole('button', { name: /insert/i })).not.toBeInTheDocument()
     wide.unmount()
 
     view.wide = false
@@ -170,7 +170,6 @@ describe('[E4.3][AC30][AC45] the story body editor', () => {
     act(() => void editorOf().commands.focus())
     await userEvent.click(await within(phone).findByRole('button', { name: 'Done' }))
     await waitFor(() => expect(within(phone).queryByRole('button', { name: 'Done' })).not.toBeInTheDocument())
-    for (const name of [/insert/i, /^\+$/, /pin/i])
-      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument()
+    expect(within(phone).getByRole('button', { name: 'Link a pin' })).toBeInTheDocument()
   })
 })

@@ -38,7 +38,7 @@ beforeEach(async () => {
 function setUp(body: never) {
   const onChange = vi.fn()
   const registered: (BodyHandover | null)[] = []
-  const rendered = renderWithStore(<StoryBodyEditor body={body} language="en" registerHandover={handover => void registered.push(handover)} storeId={storeId} onChange={onChange} onDirty={() => {}} />)
+  const rendered = renderWithStore(<StoryBodyEditor body={body} language="en" pins={[]} registerHandover={handover => void registered.push(handover)} storeId={storeId} onChange={onChange} onDirty={() => {}} />)
 
   return { ...rendered, onChange }
 }

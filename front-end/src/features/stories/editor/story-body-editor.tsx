@@ -1,6 +1,8 @@
 import type { StoryDraft } from '@sk/api-contract'
 import type { BodyHandover } from '../hooks/use-story-version-editor'
+import type { PinOption } from '../lib/pins'
 import type { StoryLanguage } from '../lib/search-params'
+import type { BodySheet } from './body-sheets'
 
 import { NodeSelection } from '@tiptap/pm/state'
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
@@ -12,8 +14,11 @@ import { useIsWide } from '@/hooks/use-is-wide'
 import { useLatest } from '@/hooks/use-latest'
 import { cleanBody } from '../lib/body'
 import { BodyEditorContext } from './body-context'
+import { BodySheets } from './body-sheets'
+import { EmptyLinePlus } from './empty-line-plus'
 import { createStoryExtensions, storyEditorProps } from './extensions'
 import { FormatButtons, UndoRedo, useFormatState } from './format-bar'
+import { LinkContext } from './link-context'
 import { LinkForm } from './link-form'
 import { PhoneBar } from './phone-bar'
 
@@ -29,8 +34,6 @@ const proseClass = [
   '[&_blockquote]:border-s-2 [&_blockquote]:border-foreground [&_blockquote]:ps-4 [&_blockquote]:font-serif [&_blockquote]:text-lg [&_blockquote]:italic',
   '[&_a]:underline [&_a]:underline-offset-4',
   '[&_a.pin-link]:rounded-md [&_a.pin-link]:bg-accent-soft [&_a.pin-link]:px-1 [&_a.pin-link]:text-accent-soft-foreground [&_a.pin-link]:no-underline',
-  '[&_figure]:grid [&_figure]:min-h-24 [&_figure]:place-items-center [&_figure]:rounded-2xl [&_figure]:border [&_figure]:border-dashed [&_figure]:border-separator [&_figure]:text-sm [&_figure]:text-muted',
-  '[&_figure.ProseMirror-selectednode]:ring-2 [&_figure.ProseMirror-selectednode]:ring-foreground',
 ].join(' ')
 
 /**
@@ -39,8 +42,9 @@ const proseClass = [
  * key, and `onDirty` at once on every change so the header says "Unsaved" and the leave guard asks. A body still waiting
  * is handed over by `handoff`, which the version editor calls before a save, a switch or Review, and on unmount.
  */
-export default function StoryBodyEditor({ storeId, body, language, onChange, onDirty, registerHandover }: {
+export default function StoryBodyEditor({ storeId, pins, body, language, onChange, onDirty, registerHandover }: {
   storeId: string
+  pins: PinOption[]
   body: StoryDraft['body']
   language: StoryLanguage
   onChange: (body: StoryDraft['body']) => void
@@ -50,6 +54,8 @@ export default function StoryBodyEditor({ storeId, body, language, onChange, onD
   const { t } = useLocale()
   const isWide = useIsWide()
   const [linkOpen, setLinkOpen] = useState(false)
+  const [sheet, setSheet] = useState<BodySheet | null>(null)
+  const [dismissed, setDismissed] = useState<string[]>([])
   const callbacks = useLatest({ onChange, onDirty, registerHandover })
   const timerRef = useRef<number | undefined>(undefined)
   const [extensions] = useState(() => createStoryExtensions({ image: t('storyEditor.body.media.image'), video: t('storyEditor.body.media.video'), audio: t('storyEditor.body.media.audio') }))
@@ -110,17 +116,21 @@ export default function StoryBodyEditor({ storeId, body, language, onChange, onD
   const isEmpty = useEditorState({ editor, selector: ({ editor: e }) => e.isEmpty })
   const toggleLink = () => setLinkOpen(open => !open)
   const linkForm = linkOpen && <LinkForm current={state.link} editor={editor} onDone={() => setLinkOpen(false)} />
+  const openInsert = (tab: 'image' | 'video' | 'audio' = 'image') => setSheet({ kind: 'insert', tab })
+  const openPin = () => setSheet({ kind: 'pin', current: state.pinId })
+  // The line under the bar: the link form while it is open, else the pin link or the pin website warning for the cursor's link.
+  const line = linkForm || <LinkContext dismissed={dismissed} editor={editor} link={state.link} pinId={state.pinId} pins={pins} onChangePin={openPin} onKeep={host => setDismissed(current => [...current, host])} />
 
   return (
     <div className="relative flex flex-col gap-3">
       {isWide && (
         <div className="sticky top-16 z-10 -mx-2 flex flex-col gap-2 rounded-2xl bg-surface/95 px-2 py-1.5 backdrop-blur">
           <div aria-label={t('storyEditor.format.toolbar')} className="flex flex-wrap items-center gap-0.5 rounded-xl border border-separator p-1" role="toolbar">
-            <FormatButtons big={false} editor={editor} linkOpen={linkOpen} state={state} onLink={toggleLink} />
+            <FormatButtons big={false} editor={editor} linkOpen={linkOpen} state={state} onInsert={() => openInsert()} onLink={toggleLink} onPin={openPin} />
             <span className="flex-1" />
             <UndoRedo big={false} editor={editor} state={state} />
           </div>
-          {linkForm && <div className="px-1 pb-1">{linkForm}</div>}
+          <div className="px-1 pb-1 empty:hidden">{line}</div>
         </div>
       )}
 
@@ -139,10 +149,12 @@ export default function StoryBodyEditor({ storeId, body, language, onChange, onD
           }}
         >
           <div aria-label={t('storyEditor.format.selection')} className="flex items-center gap-0.5 rounded-2xl bg-surface p-1.5 shadow-overlay" role="toolbar">
-            <FormatButtons big={false} editor={editor} linkOpen={linkOpen} state={state} onLink={toggleLink} />
+            <FormatButtons big={false} editor={editor} linkOpen={linkOpen} state={state} onLink={toggleLink} onPin={openPin} />
           </div>
         </BubbleMenu>
       )}
+
+      {isWide && <EmptyLinePlus editor={editor} onInsert={openInsert} />}
 
       <div className="relative">
         {isEmpty && <p aria-hidden className="pointer-events-none absolute start-0 top-0 text-[17px] leading-8 text-muted/80">{t('storyEditor.body.placeholder')}</p>}
@@ -151,7 +163,9 @@ export default function StoryBodyEditor({ storeId, body, language, onChange, onD
         </BodyEditorContext>
       </div>
 
-      {!isWide && <PhoneBar context={linkForm} editor={editor} linkOpen={linkOpen} state={state} onLink={toggleLink} />}
+      {!isWide && <PhoneBar context={line} editor={editor} linkOpen={linkOpen} state={state} onInsert={() => openInsert()} onLink={toggleLink} onPin={openPin} />}
+
+      <BodySheets editor={editor} language={language} sheet={sheet} storeId={storeId} onClose={() => setSheet(null)} />
     </div>
   )
 }

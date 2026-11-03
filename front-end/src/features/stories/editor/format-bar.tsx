@@ -9,6 +9,8 @@ import {
   ItalicIcon,
   LinkIcon,
   NumberedListIcon,
+  PhotoAddIcon,
+  PinLinkIcon,
   QuoteIcon,
   RedoIcon,
   UndoIcon,
@@ -25,6 +27,8 @@ export interface FormatState {
   numbers: boolean
   /** The address of the link at the cursor, or ''. */
   link: string
+  /** The pin id of the pin link at the cursor, or ''. */
+  pinId: string
   canUndo: boolean
   canRedo: boolean
   focused: boolean
@@ -43,6 +47,7 @@ export function useFormatState(editor: Editor): FormatState {
       bullets: e.isActive('bulletList'),
       numbers: e.isActive('orderedList'),
       link: e.isActive('link') ? String(e.getAttributes('link').href ?? '') : '',
+      pinId: e.isActive('pinLink') ? String(e.getAttributes('pinLink').pinId ?? '') : '',
       canUndo: e.can().undo(),
       canRedo: e.can().redo(),
       focused: e.isFocused,
@@ -81,13 +86,30 @@ export function ToolButton({ label, pressed, isDisabled, onPress, big, children 
 
 const Divider = () => <span aria-hidden className="mx-1 h-6 w-px shrink-0 self-center bg-separator" />
 
-/** The seven tools in the design's order, a divider and Link. Undo and Redo are `UndoRedo`, which the bubble leaves out. */
-export function FormatButtons({ editor, state, big, linkOpen, onLink }: {
+/** Insert: the laptop bar's button for a photo, video or recording (the phone bar has its own "+"). It never takes focus from the text. */
+function InsertButton({ onPress }: { onPress: () => void }) {
+  const { t } = useLocale()
+
+  return (
+    <Button preventFocusOnPress className="h-9 shrink-0 rounded-xl px-2 text-muted" variant="ghost" onPress={onPress}>
+      <PhotoAddIcon aria-hidden size={18} />
+      {t('storyMedia.insert.button')}
+    </Button>
+  )
+}
+
+/**
+ * The seven tools in the design's order, a divider, Link and Link a pin, and, when `onInsert` is given (the laptop bar, not the bubble),
+ * a divider and Insert. Undo and Redo are `UndoRedo`, which the bubble leaves out.
+ */
+export function FormatButtons({ editor, state, big, linkOpen, onLink, onPin, onInsert }: {
   editor: Editor
   state: FormatState
   big: boolean
   linkOpen: boolean
   onLink: () => void
+  onPin: () => void
+  onInsert?: () => void
 }) {
   const { t } = useLocale()
   const chain = () => editor.chain().focus()
@@ -119,6 +141,15 @@ export function FormatButtons({ editor, state, big, linkOpen, onLink }: {
       <ToolButton big={big} label={t('storyEditor.format.link')} pressed={state.link !== '' || linkOpen} onPress={onLink}>
         <LinkIcon aria-hidden size={18} />
       </ToolButton>
+      <ToolButton big={big} label={t('storyMedia.pin.tool')} pressed={state.pinId !== ''} onPress={onPin}>
+        <PinLinkIcon aria-hidden size={18} />
+      </ToolButton>
+      {onInsert && (
+        <>
+          <Divider />
+          <InsertButton onPress={onInsert} />
+        </>
+      )}
     </>
   )
 }

@@ -33,7 +33,7 @@ function Bar({ content, big = false }: { content: JSONContent, big?: boolean }) 
     <>
       <EditorContent editor={editor} />
       <div role="toolbar">
-        <FormatButtons big={big} editor={editor} linkOpen={linkOpen} state={state} onLink={() => setLinkOpen(open => !open)} />
+        <FormatButtons big={big} editor={editor} linkOpen={linkOpen} state={state} onLink={() => setLinkOpen(open => !open)} onPin={() => {}} />
         <UndoRedo big={big} editor={editor} state={state} />
       </div>
       {linkOpen && <LinkForm current={state.link} editor={editor} onDone={() => setLinkOpen(false)} />}

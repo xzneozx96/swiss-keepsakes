@@ -3,7 +3,7 @@ import type { FormatState } from './format-bar'
 
 import { useEffect, useRef } from 'react'
 
-import { CloseIcon } from '@/components/icons'
+import { CloseIcon, PlusIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { FormatButtons, ToolButton, UndoRedo } from './format-bar'
 
@@ -11,13 +11,16 @@ import { FormatButtons, ToolButton, UndoRedo } from './format-bar'
  * The phone formatting bar: pinned above the merchant tab bar (`h-16` plus the home-indicator inset, as merchant-shell
  * draws it) and, once the keyboard opens, right above the keyboard. It follows the visual viewport; the offset is written
  * to the element, not to state, so scrolling never re-renders. 44 px buttons, no Redo, a Done button while the text has
- * focus, and it scrolls sideways when the buttons do not fit. `context` (the link form) sits above the buttons.
+ * focus, and it scrolls sideways when the buttons do not fit. `context` (the link form, or the pin link line) sits above the buttons.
+ * It starts with the 44 px "+" that opens the Insert sheet.
  */
-export function PhoneBar({ editor, state, linkOpen, onLink, context }: {
+export function PhoneBar({ editor, state, linkOpen, onLink, onPin, onInsert, context }: {
   editor: Editor
   state: FormatState
   linkOpen: boolean
   onLink: () => void
+  onPin: () => void
+  onInsert: () => void
   context: React.ReactNode
 }) {
   const { t } = useLocale()
@@ -64,9 +67,13 @@ export function PhoneBar({ editor, state, linkOpen, onLink, context }: {
           event.preventDefault()
       }}
     >
-      {context && <div className="border-b border-separator px-3 py-2">{context}</div>}
+      {context && <div className="border-b border-separator px-3 py-2 empty:hidden">{context}</div>}
       <div aria-label={t('storyEditor.format.toolbar')} className="flex items-center gap-0.5 overflow-x-auto px-1.5 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="toolbar">
-        <FormatButtons big editor={editor} linkOpen={linkOpen} state={state} onLink={onLink} />
+        <ToolButton big label={t('storyMedia.insert.plus')} onPress={onInsert}>
+          <PlusIcon aria-hidden size={20} />
+        </ToolButton>
+        <span aria-hidden className="mx-1 h-6 w-px shrink-0 bg-separator" />
+        <FormatButtons big editor={editor} linkOpen={linkOpen} state={state} onLink={onLink} onPin={onPin} />
         <span aria-hidden className="mx-1 h-6 w-px shrink-0 bg-separator" />
         <UndoRedo big editor={editor} redo={false} state={state} />
         {state.focused && (
