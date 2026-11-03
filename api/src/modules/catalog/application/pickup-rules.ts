@@ -3,7 +3,7 @@ import type { Localized, PickupSpan } from '../ports.ts'
 // The rules for a pickup point (E6.6, gate G-S8-D5). Pure: the use cases call them and the database CHECKs are the backstop.
 // A span closing before it opens closes the next morning; opens equal to closes is refused; 24:00 may close but not open.
 
-// The most points one store holds, archived ones included. The contract's PICKUP_MAX_PLACES caps the order body at the same number; a test keeps the two equal.
+// The most active points one store holds; archived points do not count (gate G-S8-PICKUP-LIMIT, 2026-11-03). The contract's PICKUP_MAX_PLACES caps the order body at the same number; a test keeps the two equal.
 export const PICKUP_MAX_PLACES = 100
 
 export interface PickupError { path: string, message: string }

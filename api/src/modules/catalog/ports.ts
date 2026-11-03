@@ -335,8 +335,8 @@ export interface PickupPlaceRepository<T> {
   find: (tx: T, storeId: string, placeId: string, lock?: boolean) => Promise<PickupPlace | undefined>
   // Serialises writers of one store's list (create, reorder).
   lockList: (tx: T, storeId: string) => Promise<void>
-  // How many points the store has, archived ones included.
-  count: (tx: T, storeId: string) => Promise<number>
+  // How many active points the store has. Archived points do not count (gate G-S8-PICKUP-LIMIT).
+  countActive: (tx: T, storeId: string) => Promise<number>
   // Appends the point after the last one of the store, archived points included.
   insert: (tx: T, storeId: string, input: NewPickupPlace, at: Date) => Promise<PickupPlace>
   // Writes the changes and bumps row_version.

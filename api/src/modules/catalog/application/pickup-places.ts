@@ -41,8 +41,8 @@ export function makeCreatePickupPlace<T>({ uow, pickups, audit, clock }: PickupD
       return fail({ reason: 'invalid', errors: [...('errors' in text ? text.errors : []), ...hoursErrors] })
     return uow.run(async (tx) => {
       await pickups.lockList(tx, storeId)
-      // Archived points count too, so a reorder of the active ones can never go over the limit the order body allows.
-      if (await pickups.count(tx, storeId) >= PICKUP_MAX_PLACES)
+      // Only active points count (gate G-S8-PICKUP-LIMIT), so a reorder of the active ones never goes over the limit the order body allows.
+      if (await pickups.countActive(tx, storeId) >= PICKUP_MAX_PLACES)
         return fail({ reason: 'too-many' })
       const place = await pickups.insert(tx, storeId, { ...text.value, hours: input.hours }, clock.now())
       await audit.record(tx, { storeId, actor: staffActor(actor), entity: 'pickup_place', entityId: place.id, action: 'created', after: audited(place), requestId })
@@ -101,6 +101,8 @@ function makeSetArchived<T>({ uow, pickups, audit, clock }: PickupDeps<T>, archi
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
     return uow.run(async (tx) => {
+      // The same list lock as create and reorder, taken before the row lock, so a reorder never reads the active set while a point leaves or joins it.
+      await pickups.lockList(tx, storeId)
       const place = await pickups.find(tx, storeId, placeId, true)
       if (!place)
         return fail({ reason: 'not-found' })
@@ -109,6 +111,8 @@ function makeSetArchived<T>({ uow, pickups, audit, clock }: PickupDeps<T>, archi
       // Already in the state asked for: nothing to write, so the row version stays.
       if (place.archived === archived)
         return ok(place)
+      if (!archived && await pickups.countActive(tx, storeId) >= PICKUP_MAX_PLACES)
+        return fail({ reason: 'too-many' })
       const saved = await pickups.setArchived(tx, place, archived, clock.now())
       await audit.record(tx, { storeId, actor: staffActor(actor), entity: 'pickup_place', entityId: place.id, action: archived ? 'archived' : 'restored', before: audited(place), after: audited(saved), requestId })
       return ok(saved)

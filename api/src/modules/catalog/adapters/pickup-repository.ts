@@ -83,8 +83,8 @@ export function createPickupRepository(): PickupPlaceRepository<Tx> {
       await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`pickup_places:${storeId}`}, 0))`)
     },
 
-    async count(tx, storeId) {
-      const counted = await tx.execute<{ n: number }>(sql`select count(*)::int as n from catalog.pickup_places where store_id = ${storeId}`)
+    async countActive(tx, storeId) {
+      const counted = await tx.execute<{ n: number }>(sql`select count(*)::int as n from catalog.pickup_places where store_id = ${storeId} and archived_at is null`)
       return counted.rows[0]!.n
     },
 
@@ -123,9 +123,11 @@ export function createPickupRepository(): PickupPlaceRepository<Tx> {
     },
 
     async setArchived(tx, place, archived, at) {
+      // A restored point goes to the end of the active list, so it never ties with a point that took its place.
+      const position = archived ? sql`position` : sql`(select coalesce(max(position), 0) + 1 from catalog.pickup_places where store_id = ${place.storeId} and archived_at is null)`
       await tx.execute(sql`
         update catalog.pickup_places
-           set archived_at = ${archived ? at : null}, row_version = row_version + 1, updated_at = ${at}
+           set archived_at = ${archived ? at : null}, position = ${position}, row_version = row_version + 1, updated_at = ${at}
          where store_id = ${place.storeId} and id = ${place.id}`)
       return (await load(tx, place.storeId, place.id, false))!
     },

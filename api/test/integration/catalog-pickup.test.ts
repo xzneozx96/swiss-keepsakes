@@ -148,7 +148,7 @@ describe('[E6.6][AC26] pickup points over HTTP', () => {
     expect(await (await send(`/${point.id}`, 'GET')).json()).toMatchObject({ rowVersion: 2, hours: [{ weekday: 3, opens: '09:00', closes: '11:00' }] })
   })
 
-  it('[E6.6][AC26] AC-6: archive then restore keeps the hours and the position', async () => {
+  it('[E6.6][AC26] AC-6: archive then restore keeps the hours; the restored point goes to the end of the active list', async () => {
     const { created, send, list, withVersion } = await setup({ fresh: true })
     await created({ name: { en: 'First' } })
     const second = await created({ name: { en: 'Second' }, hours: [{ weekday: 2, opens: '10:00', closes: '12:00' }] })
@@ -161,8 +161,8 @@ describe('[E6.6][AC26] pickup points over HTTP', () => {
     expect((await list()).map(item => item.name.en)).toEqual(['First', 'Third'])
 
     const restored = await send(`/${second.id}/restore`, 'POST', undefined, withVersion(2))
-    expect(await restored.json()).toMatchObject({ archived: false, position: 2, rowVersion: 3, hours: [{ weekday: 2, opens: '10:00', closes: '12:00' }] })
-    expect((await list()).map(item => item.name.en)).toEqual(['First', 'Second', 'Third'])
+    expect(await restored.json()).toMatchObject({ archived: false, position: 4, rowVersion: 3, hours: [{ weekday: 2, opens: '10:00', closes: '12:00' }] })
+    expect((await list()).map(item => [item.name.en, item.position])).toEqual([['First', 1], ['Third', 3], ['Second', 4]])
     expect((await send(`/${second.id}/restore`, 'POST')).status).toBe(428)
     expect((await send(`/${second.id}`, 'DELETE')).status).toBe(404)
   })
@@ -235,18 +235,48 @@ describe('[E6.6][AC26] pickup points over HTTP', () => {
     expect(await list()).toEqual([expect.objectContaining({ id: point.id, archived: false, rowVersion: 2 })])
   })
 
-  it('[E6.6][AC26] the 101st point is 422 pickup-limit on name, archived points counted', async () => {
-    const { store, create, created, list } = await setup({ fresh: true })
+  it('[E6.6][AC26] G-S8-PICKUP-LIMIT: 100 active points is the limit; archived ones do not count, and restore is refused at 100 active', async () => {
+    const { store, create, created, list, send, withVersion } = await setup({ fresh: true })
     const first = await created()
+    // 99 archived points beside one active: the store is nowhere near the limit.
     await pool.query(
-      `insert into catalog.pickup_places (store_id, name, address, position, archived_at) select $1, '{"en":"Bulk"}'::jsonb, '{"en":"Bulk"}'::jsonb, g, now() from generate_series(2, 100) g`,
+      `insert into catalog.pickup_places (store_id, name, address, position, archived_at) select $1, '{"en":"Old"}'::jsonb, '{"en":"Old"}'::jsonb, g, now() from generate_series(2, 100) g`,
       [store.storeId],
     )
+    const second = await created({ name: { en: 'Second' } })
+    expect((await list()).map(item => item.id)).toEqual([first.id, second.id])
 
+    // Fill the active list to 100.
+    await pool.query(
+      `insert into catalog.pickup_places (store_id, name, address, position) select $1, '{"en":"Bulk"}'::jsonb, '{"en":"Bulk"}'::jsonb, g from generate_series(200, 297) g`,
+      [store.storeId],
+    )
     const refused = await create({})
     expect(refused.status).toBe(422)
     expect((await refused.json() as Problem).errors).toEqual([expect.objectContaining({ path: 'name', code: 'pickup-limit' })])
-    expect(await list()).toEqual([first])
+    expect(await list()).toHaveLength(100)
+
+    const archivedOne = await pool.query<{ id: string }>(`select id from catalog.pickup_places where store_id = $1 and archived_at is not null limit 1`, [store.storeId])
+    const noRoom = await send(`/${archivedOne.rows[0]!.id}/restore`, 'POST', undefined, withVersion(1))
+    expect(noRoom.status).toBe(422)
+    expect((await noRoom.json() as Problem).errors).toEqual([expect.objectContaining({ code: 'pickup-limit' })])
+    expect(await list()).toHaveLength(100)
+
+    // Archiving one makes room for exactly one: the restore then works.
+    const archive = await send(`/${second.id}/archive`, 'POST', undefined, withVersion(second.rowVersion))
+    expect(archive.status).toBe(200)
+    const restored = await send(`/${archivedOne.rows[0]!.id}/restore`, 'POST', undefined, withVersion(1))
+    expect(restored.status).toBe(200)
+    expect(await list()).toHaveLength(100)
+  })
+
+  it('[E6.6][AC26] a reorder names the active points only; an archived id is refused', async () => {
+    const { created, send, withVersion } = await setup({ fresh: true })
+    const [a, b] = [await created({ name: { en: 'A' } }), await created({ name: { en: 'B' } })]
+    await send(`/${b.id}/archive`, 'POST', undefined, withVersion(1))
+
+    expect((await send('/order', 'PUT', { ids: [a.id, b.id] })).status).toBe(422)
+    expect((await send('/order', 'PUT', { ids: [a.id] })).status).toBe(200)
   })
 
   it('[E6.6][AC26] a create and an archive each write one audit entry', async () => {

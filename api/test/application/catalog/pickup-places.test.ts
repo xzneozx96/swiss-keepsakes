@@ -3,8 +3,8 @@ import type { PickupDeps } from '../../../src/modules/catalog/application/deps.t
 import type { PickupPlace, PickupPlaceRepository } from '../../../src/modules/catalog/ports.ts'
 import { PICKUP_MAX_PLACES as CONTRACT_MAX_PLACES } from '@sk/api-contract'
 import { describe, expect, it, vi } from 'vitest'
-import { PICKUP_MAX_PLACES } from '../../../src/modules/catalog/application/pickup-rules.ts'
 import { makeArchivePickupPlace, makeCreatePickupPlace, makeGetPickupPlace, makeListPickupPlaces, makeReorderPickupPlaces, makeRestorePickupPlace, makeSavePickupPlace } from '../../../src/modules/catalog/application/pickup-places.ts'
+import { PICKUP_MAX_PLACES } from '../../../src/modules/catalog/application/pickup-rules.ts'
 
 const storeId = '0190f0c2-0000-7000-8000-00000000000a'
 const owner: Actor = { kind: 'staff', userId: 'u1', guestId: 'g-u1', stores: new Map([[storeId, 'owner']]) }
@@ -29,7 +29,7 @@ function setup(rows: PickupPlace[] = [place('a'), place('b', { position: 2 })]) 
   const repo = {
     find: vi.fn(async (_tx: null, _store: string, id: string) => rows.find(row => row.id === id)),
     lockList: vi.fn(async () => {}),
-    count: vi.fn(async () => rows.length),
+    countActive: vi.fn(async () => rows.filter(row => !row.archived).length),
     list: vi.fn(async (_tx: null, _store: string, archived: boolean) => rows.filter(row => row.archived === archived)),
     insert: vi.fn(async (_tx: null, _store: string, input: { name: object }) => place('new', { ...input })),
     save: vi.fn(async (_tx: null, current: PickupPlace) => current),
@@ -71,15 +71,36 @@ describe('[E6.6][AC26] pickup point use cases', () => {
     expect(PICKUP_MAX_PLACES).toBe(CONTRACT_MAX_PLACES)
   })
 
-  it('[E6.6][AC26] create at the limit of points, archived ones counted, is too-many and writes nothing', async () => {
+  it('[E6.6][AC26] create at the limit of 100 active points is too-many and writes nothing; one below it passes', async () => {
     const { repo, deps } = setup()
-    vi.mocked(repo.count).mockResolvedValue(PICKUP_MAX_PLACES)
+    vi.mocked(repo.countActive).mockResolvedValue(PICKUP_MAX_PLACES)
 
     expect(await makeCreatePickupPlace(deps)(owner, storeId, body, null)).toMatchObject({ ok: false, reason: 'too-many' })
     expect(repo.insert).not.toHaveBeenCalled()
     expect(deps.audit.record).not.toHaveBeenCalled()
-    vi.mocked(repo.count).mockResolvedValue(PICKUP_MAX_PLACES - 1)
+    vi.mocked(repo.countActive).mockResolvedValue(PICKUP_MAX_PLACES - 1)
     expect(await makeCreatePickupPlace(deps)(owner, storeId, body, null)).toMatchObject({ ok: true })
+  })
+
+  it('[E6.6][AC26] restore with 100 active points is too-many and writes nothing; with 99 it restores', async () => {
+    const { repo, deps } = setup([place('a', { archived: true }), place('b')])
+    vi.mocked(repo.countActive).mockResolvedValue(PICKUP_MAX_PLACES)
+
+    expect(await makeRestorePickupPlace(deps)(owner, storeId, 'a', 3, null)).toMatchObject({ ok: false, reason: 'too-many' })
+    expect(repo.setArchived).not.toHaveBeenCalled()
+    expect(deps.audit.record).not.toHaveBeenCalled()
+    vi.mocked(repo.countActive).mockResolvedValue(PICKUP_MAX_PLACES - 1)
+    expect(await makeRestorePickupPlace(deps)(owner, storeId, 'a', 3, null)).toMatchObject({ ok: true })
+    expect(repo.setArchived).toHaveBeenCalledTimes(1)
+  })
+
+  it('[E6.6][AC26] archive and restore take the same store list lock as create and reorder, before the row', async () => {
+    const { repo, deps } = setup([place('a', { archived: true }), place('b')])
+
+    await makeRestorePickupPlace(deps)(owner, storeId, 'a', 3, null)
+    await makeArchivePickupPlace(deps)(owner, storeId, 'b', 3, null)
+    expect(repo.lockList).toHaveBeenCalledTimes(2)
+    expect(vi.mocked(repo.lockList).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(repo.find).mock.invocationCallOrder[0]!)
   })
 
   it('[E6.6][AC26] create answers invalid with every wrong path and writes nothing', async () => {
@@ -129,6 +150,9 @@ describe('[E6.6][AC26] pickup point use cases', () => {
     expect(await reorder(owner, storeId, ['a'], null)).toMatchObject({ reason: 'order-mismatch' })
     expect(await reorder(owner, storeId, ['a', 'b', 'c'], null)).toMatchObject({ reason: 'order-mismatch' })
     expect(await reorder(owner, storeId, ['a', 'a'], null)).toMatchObject({ reason: 'order-mismatch' })
+    // An archived point is not part of the order: naming it is a mismatch.
+    const withArchived = setup([place('a'), place('b', { position: 2 }), place('z', { archived: true, position: 3 })])
+    expect(await makeReorderPickupPlaces(withArchived.deps)(owner, storeId, ['a', 'b', 'z'], null)).toMatchObject({ reason: 'order-mismatch' })
     expect(repo.setPositions).not.toHaveBeenCalled()
     expect(await reorder(owner, storeId, ['b', 'a'], null)).toMatchObject({ ok: true })
     expect(repo.setPositions).toHaveBeenCalledWith(null, storeId, ['b', 'a'], expect.any(Date))
