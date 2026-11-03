@@ -236,6 +236,7 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'products.place.save': 'Abholstelle speichern',
   'products.place.saved': '{name} gespeichert',
   'products.place.addressError': 'Geben Sie die Adresse ein.',
+  'pickup.hours.range': '{from} bis {to}',
   'products.place.hoursHelp':
     'Gäste sehen den Text so, wie er hier steht. Abholtermine lassen Sonntage weiterhin überall aus.',
 

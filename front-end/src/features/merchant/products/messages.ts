@@ -233,6 +233,7 @@ export const productsEn = {
   'products.place.save': 'Save pickup point',
   'products.place.saved': '{name} saved',
   'products.place.addressError': 'Enter the address.',
+  'pickup.hours.range': '{from} to {to}',
   'products.place.hoursHelp':
     'Shown to guests as written. Pickup dates still skip Sundays at every place.',
 

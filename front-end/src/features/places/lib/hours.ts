@@ -1,4 +1,5 @@
 import type { HoursSpan } from './form'
+import type { MessageKey } from '@/i18n/en'
 
 /** Days are 1 (Mon) to 7 (Sun), as the form and the API hold them. */
 export const DAYS = [1, 2, 3, 4, 5, 6, 7] as const
@@ -10,6 +11,8 @@ const CLOSES = '18:00'
 const LATEST_START = 22 * 60
 const MIDNIGHT = 24 * 60
 const TIME = /^\d{2}:\d{2}$/
+export const OPEN_TIME = /^(?:[01]\d|2[0-3]):[0-5]\d$/
+export const CLOSE_TIME = /^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$/
 
 function span(day: number, opens: string, closes: string): HoursSpan {
   return { key: crypto.randomUUID(), day, opens, closes }
@@ -73,4 +76,18 @@ export function copyDay(hours: HoursSpan[], from: number, to: number[]) {
   const source = spansOf(hours, from)
 
   return byDay([...hours.filter(s => !to.includes(s.day)), ...to.flatMap(day => source.map(s => span(day, s.opens, s.closes)))])
+}
+
+/** The refusal per span key: a time that is missing or malformed, or opens equal to closes. A closing time before the opening time is allowed (it closes the next morning). */
+export function hoursErrors(hours: HoursSpan[]): Record<string, MessageKey> {
+  const errors: Record<string, MessageKey> = {}
+
+  for (const span of hours) {
+    if (!OPEN_TIME.test(span.opens) || !CLOSE_TIME.test(span.closes))
+      errors[span.key] = 'places.error.hoursMissing'
+    else if (span.opens === span.closes)
+      errors[span.key] = 'places.error.hoursSame'
+  }
+
+  return errors
 }
