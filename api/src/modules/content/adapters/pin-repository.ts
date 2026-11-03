@@ -230,7 +230,7 @@ async function storyOptionRows(tx: Tx, storeId: string): Promise<PinStoryOption[
                     filter (where coalesce(v.published->>'title', v.draft->>'title') is not null), '{}'::jsonb) as title,
            coalesce(jsonb_object_agg(v.language, v.status) filter (where v.language is not null), '{}'::jsonb) as statuses
       from content.story_groups g
-      left join content.story_versions v on v.group_id = g.id and v.store_id = g.store_id
+      join content.story_versions v on v.group_id = g.id and v.store_id = g.store_id
      where g.store_id = ${storeId}
      group by g.id, g.kind, g.created_at
      order by g.created_at desc, g.id`)

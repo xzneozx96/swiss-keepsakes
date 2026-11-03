@@ -1,6 +1,6 @@
 import type { StoryDraft, StoryGroup, StoryVersion } from '@sk/domain/content'
 import type { Tx } from '../../../platform/db/client.ts'
-import type { StoryGroupChanges, StoryRepository } from '../ports.ts'
+import type { StoryGroupChanges, StoryListRow, StoryRepository } from '../ports.ts'
 import { storyMediaIds } from '@sk/domain/content'
 import { sql } from 'drizzle-orm'
 
@@ -140,6 +140,19 @@ function reloadVersion(tx: Tx, v: Pick<StoryVersion, 'storeId' | 'groupId' | 'la
   return loadVersion(tx, v.storeId, v.groupId, v.language, false).then(version => version!)
 }
 
+interface ListRow {
+  group_id: string
+  kind: StoryGroup['kind']
+  language: StoryVersion['language']
+  status: StoryVersion['status']
+  title: string | null
+  cover_media_id: string | null
+  ever_published: boolean
+  edits_not_live: boolean
+  row_version: number
+  updated_at: Date
+}
+
 export function createStoryRepository(): StoryRepository<Tx> {
   return {
     async insertGroup(tx, storeId, input, at) {
@@ -153,6 +166,32 @@ export function createStoryRepository(): StoryRepository<Tx> {
     },
 
     findGroupForUpdate: (tx, storeId, groupId) => loadGroup(tx, storeId, groupId, true),
+
+    findGroup: (tx, storeId, groupId) => loadGroup(tx, storeId, groupId, false),
+
+    // One query, and not the documents: a body can be 200 KB. The title and cover come from the draft when there is one,
+    // else from the published text. A `case`, not `coalesce`, so a draft that cleared its cover does not show the live one.
+    // The inner join leaves out a group with no version.
+    async listGroups(tx, storeId) {
+      const found = await tx.execute<ListRow & Record<string, unknown>>(sql`
+        select g.id as group_id, g.kind, v.language, v.status,
+               case when v.draft is not null then v.draft->>'title' else v.published->>'title' end as title,
+               case when v.draft is not null then v.draft->>'coverMediaId' else v.published->>'coverMediaId' end as cover_media_id,
+               v.published is not null as ever_published,
+               (v.status = 'published' and v.draft is not null) as edits_not_live,
+               v.row_version, v.updated_at
+          from content.story_groups g
+          join content.story_versions v on v.group_id = g.id and v.store_id = g.store_id
+         where g.store_id = ${storeId}
+         order by g.id, v.language`)
+      const rows = new Map<string, StoryListRow>()
+      for (const row of found.rows) {
+        const entry = rows.get(row.group_id) ?? { groupId: row.group_id, kind: row.kind, versions: [] }
+        entry.versions.push({ language: row.language, status: row.status, title: row.title ?? '', coverMediaId: row.cover_media_id, everPublished: row.ever_published, editsNotLive: row.edits_not_live, rowVersion: row.row_version, updatedAt: new Date(row.updated_at) })
+        rows.set(row.group_id, entry)
+      }
+      return [...rows.values()]
+    },
 
     async saveGroup(tx, group, changes, at) {
       await tx.execute(sql`

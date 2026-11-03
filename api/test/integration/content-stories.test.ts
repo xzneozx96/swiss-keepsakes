@@ -659,3 +659,73 @@ describe('[E2.6] the story routes over the real app and the database', () => {
     expect(await auditRows(groupId)).toHaveLength(1)
   }, timeout)
 })
+
+describe('[E4.3][AC30] the story list reads', () => {
+  const list = (s: Setup, store = s.store) => s.uow.run(tx => s.stories.listGroups(tx, store))
+
+  it('[E4.3][AC30] AC-1 reads title, cover id and the state of both languages of one store only', async () => {
+    const s = setup()
+    const other = setup()
+    const g = await group(s)
+    const cover = await media(s.store)
+    const en = await version(s, g.id, 'en', { slug: slug(), draft: doc({ title: 'The wall', coverMediaId: cover }) })
+    const de = await version(s, g.id, 'de', await complete(s.store, { title: 'Einst' }))
+    const dePublished = await s.use.publish(s.actor, s.store, g.id, 'de', de.rowVersion, null)
+    if (!dePublished.ok)
+      throw new Error(`publish failed: ${dePublished.reason}`)
+    const unpublished = await s.use.unpublish(s.actor, s.store, g.id, 'de', dePublished.value.rowVersion, null)
+    if (!unpublished.ok)
+      throw new Error(`unpublish failed: ${unpublished.reason}`)
+    const g2 = await group(s)
+    const live = await version(s, g2.id, 'en', await complete(s.store, { title: 'Live' }))
+    const livePublished = await s.use.publish(s.actor, s.store, g2.id, 'en', live.rowVersion, null)
+    if (!livePublished.ok)
+      throw new Error(`publish failed: ${livePublished.reason}`)
+    await s.use.saveVersion(s.actor, s.store, g2.id, 'en', livePublished.value.rowVersion, { draft: doc({ title: 'Edited' }) }, null)
+    await version(other, (await group(other)).id)
+
+    const rows = await list(s)
+
+    expect(rows.map(row => row.groupId).sort()).toEqual([g.id, g2.id].sort())
+    const first = rows.find(row => row.groupId === g.id)!
+    expect(first.versions.find(v => v.language === 'en')).toMatchObject({ status: 'draft', title: 'The wall', coverMediaId: cover, everPublished: false, editsNotLive: false, rowVersion: en.rowVersion })
+    expect(first.versions.find(v => v.language === 'de')).toMatchObject({ status: 'draft', title: 'Einst', everPublished: true, editsNotLive: false, rowVersion: unpublished.value.rowVersion })
+    expect(rows.find(row => row.groupId === g2.id)!.versions[0]).toMatchObject({ status: 'published', title: 'Edited', everPublished: true, editsNotLive: true })
+    expect(await list(other)).toHaveLength(1)
+  })
+
+  it('[E4.3][AC30] a draft that cleared its cover does not show the published cover', async () => {
+    const s = setup()
+    const g = await group(s)
+    const created = await version(s, g.id, 'en', await complete(s.store))
+    const published = await s.use.publish(s.actor, s.store, g.id, 'en', created.rowVersion, null)
+    if (!published.ok)
+      throw new Error(`publish failed: ${published.reason}`)
+    expect((await list(s))[0]!.versions[0]!.coverMediaId).toBe(created.draft!.coverMediaId)
+    await s.use.saveVersion(s.actor, s.store, g.id, 'en', published.value.rowVersion, { draft: doc({ coverMediaId: null }) }, null)
+
+    expect((await list(s))[0]!.versions[0]).toMatchObject({ coverMediaId: null, editsNotLive: true })
+  })
+
+  it('[E4.3][AC30] a group with no version is not listed', async () => {
+    const s = setup()
+    await group(s)
+    const withVersion = await group(s)
+    await version(s, withVersion.id)
+
+    expect((await list(s)).map(row => row.groupId)).toEqual([withVersion.id])
+  })
+
+  it('[E4.3][AC30] findGroup returns the group of this store with its lists and no row of another store', async () => {
+    const s = setup()
+    const other = setup()
+    const place = await group(s, { interests: ['food-drink'] })
+
+    const found = await s.uow.run(tx => s.stories.findGroup(tx, s.store, place.id))
+    const foreign = await s.uow.run(tx => s.stories.findGroup(tx, other.store, place.id))
+
+    expect(found).toEqual(place)
+    expect(found).toMatchObject({ storeId: s.store, interests: ['food-drink'], categoryIds: [], placeIds: [] })
+    expect(foreign).toBeUndefined()
+  })
+})
