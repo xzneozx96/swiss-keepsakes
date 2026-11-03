@@ -9,6 +9,10 @@ export const storyProblemKeys: Partial<Record<string, MessageKey>> = {
   'not-found': 'storyEditor.problem.generic',
   'forbidden': 'storyEditor.problem.generic',
   'validation-failed': 'storyEditor.problem.generic',
+  'publish-incomplete': 'storyPublish.problem.incomplete',
+  'media-processing': 'storyPublish.problem.processing',
+  'content-slug-taken': 'storyPublish.link.taken',
+  'slug-conflict': 'storyEditor.problem.generic',
 }
 
 export function storyProblemKey(type: string): MessageKey {
