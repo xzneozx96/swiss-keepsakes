@@ -106,6 +106,7 @@ import { Route as StoreContentPlacesIndexRouteImport } from './routes/store/cont
 import { Route as StoreContentPlacesPlaceIdRouteImport } from './routes/store/content/places/$placeId'
 import { Route as StoreProductsGiftsProductIdRouteImport } from './routes/store/products/gifts/$productId'
 import { Route as StoreProductsGiftsNewRouteImport } from './routes/store/products/gifts/new'
+import { Route as StoreProductsInventoryIndexRouteImport } from './routes/store/products/inventory/index'
 import { Route as StoreProductsToursIndexRouteImport } from './routes/store/products/tours/index'
 import { Route as StoreProductsToursTourIdRouteImport } from './routes/store/products/tours/$tourId'
 import { Route as StoreProductsToursNewRouteImport } from './routes/store/products/tours/new'
@@ -601,6 +602,12 @@ const StoreProductsGiftsNewRoute = StoreProductsGiftsNewRouteImport.update({
   path: '/products/gifts/new',
   getParentRoute: () => StoreRoute,
 } as any)
+const StoreProductsInventoryIndexRoute =
+  StoreProductsInventoryIndexRouteImport.update({
+    id: '/products/inventory/',
+    path: '/products/inventory/',
+    getParentRoute: () => StoreRoute,
+  } as any)
 const StoreProductsToursIndexRoute = StoreProductsToursIndexRouteImport.update({
   id: '/products/tours/',
   path: '/products/tours/',
@@ -730,6 +737,7 @@ export interface FileRoutesByFullPath {
   '/$lang/stories/': typeof GuestLangStoriesIndexRoute
   '/$lang/tours/': typeof GuestLangToursIndexRoute
   '/store/content/places/': typeof StoreContentPlacesIndexRoute
+  '/store/products/inventory/': typeof StoreProductsInventoryIndexRoute
   '/store/products/tours/': typeof StoreProductsToursIndexRoute
   '/account/orders/$orderId/pay': typeof GuestAccountOrdersOrderIdPayRoute
 }
@@ -829,6 +837,7 @@ export interface FileRoutesByTo {
   '/$lang/stories': typeof GuestLangStoriesIndexRoute
   '/$lang/tours': typeof GuestLangToursIndexRoute
   '/store/content/places': typeof StoreContentPlacesIndexRoute
+  '/store/products/inventory': typeof StoreProductsInventoryIndexRoute
   '/store/products/tours': typeof StoreProductsToursIndexRoute
   '/account/orders/$orderId/pay': typeof GuestAccountOrdersOrderIdPayRoute
 }
@@ -934,6 +943,7 @@ export interface FileRoutesById {
   '/_guest/$lang/stories/': typeof GuestLangStoriesIndexRoute
   '/_guest/$lang/tours/': typeof GuestLangToursIndexRoute
   '/store/content/places/': typeof StoreContentPlacesIndexRoute
+  '/store/products/inventory/': typeof StoreProductsInventoryIndexRoute
   '/store/products/tours/': typeof StoreProductsToursIndexRoute
   '/_guest/account_/orders/$orderId_/pay': typeof GuestAccountOrdersOrderIdPayRoute
 }
@@ -1039,6 +1049,7 @@ export interface FileRouteTypes {
     | '/$lang/stories/'
     | '/$lang/tours/'
     | '/store/content/places/'
+    | '/store/products/inventory/'
     | '/store/products/tours/'
     | '/account/orders/$orderId/pay'
   fileRoutesByTo: FileRoutesByTo
@@ -1138,6 +1149,7 @@ export interface FileRouteTypes {
     | '/$lang/stories'
     | '/$lang/tours'
     | '/store/content/places'
+    | '/store/products/inventory'
     | '/store/products/tours'
     | '/account/orders/$orderId/pay'
   id:
@@ -1242,6 +1254,7 @@ export interface FileRouteTypes {
     | '/_guest/$lang/stories/'
     | '/_guest/$lang/tours/'
     | '/store/content/places/'
+    | '/store/products/inventory/'
     | '/store/products/tours/'
     | '/_guest/account_/orders/$orderId_/pay'
   fileRoutesById: FileRoutesById
@@ -1977,6 +1990,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreProductsGiftsNewRouteImport
       parentRoute: typeof StoreRoute
     }
+    '/store/products/inventory/': {
+      id: '/store/products/inventory/'
+      path: '/products/inventory'
+      fullPath: '/store/products/inventory/'
+      preLoaderRoute: typeof StoreProductsInventoryIndexRouteImport
+      parentRoute: typeof StoreRoute
+    }
     '/store/products/tours/': {
       id: '/store/products/tours/'
       path: '/products/tours'
@@ -2132,6 +2152,7 @@ interface StoreRouteChildren {
   StoreProductsToursNewRoute: typeof StoreProductsToursNewRoute
   StoreRequestsAdviceRequestIdRoute: typeof StoreRequestsAdviceRequestIdRoute
   StoreContentPlacesIndexRoute: typeof StoreContentPlacesIndexRoute
+  StoreProductsInventoryIndexRoute: typeof StoreProductsInventoryIndexRoute
   StoreProductsToursIndexRoute: typeof StoreProductsToursIndexRoute
 }
 
@@ -2165,6 +2186,7 @@ const StoreRouteChildren: StoreRouteChildren = {
   StoreProductsToursNewRoute: StoreProductsToursNewRoute,
   StoreRequestsAdviceRequestIdRoute: StoreRequestsAdviceRequestIdRoute,
   StoreContentPlacesIndexRoute: StoreContentPlacesIndexRoute,
+  StoreProductsInventoryIndexRoute: StoreProductsInventoryIndexRoute,
   StoreProductsToursIndexRoute: StoreProductsToursIndexRoute,
 }
 
