@@ -3,11 +3,14 @@ import type { ReactNode } from 'react'
 import type { useStoryVersionEditor } from '../hooks/use-story-version-editor'
 import type { Check, CheckTarget } from '../lib/publish-checks'
 import type { StoryLanguage } from '../lib/search-params'
+import type { DetailCardId } from './story-details-panel'
 
 import { useStoryPublishFacts } from '../hooks/use-publish-facts'
 import { useStoryPublish } from '../hooks/use-story-publish'
 import { publishChecks } from '../lib/publish-checks'
 import { StoryChecksList } from './story-checks-list'
+import { DetailsPanel, useDetailsPanel } from './story-details-panel'
+import { StoryLinkCard } from './story-link-card'
 import { StoryPublishCard } from './story-publish-card'
 
 /**
@@ -29,11 +32,15 @@ export function StoryReviewScreen({ storeId, group, language, version, editor, s
   const facts = useStoryPublishFacts({ storeId, group, language, body: editor.fields.body })
   const checks = publishChecks({ group, language, slug: version.slug, fields: editor.fields, otherExists: group.versions[other] !== null, facts, refused: publish.refused })
 
+  const panel = useDetailsPanel(checks)
+
   function fix(check: Check) {
     if (check.step === 'write')
       onEdit(check.target)
     else if (check.step === 'publish')
       document.getElementById('publish-card')?.scrollIntoView?.({ block: 'start' })
+    else
+      panel.reveal(check.target as DetailCardId)
   }
 
   return (
@@ -43,6 +50,9 @@ export function StoryReviewScreen({ storeId, group, language, version, editor, s
         <hr className="border-separator" />
         <StoryChecksList checks={checks} onFix={fix} />
       </div>
+      <DetailsPanel panel={panel}>
+        <StoryLinkCard group={group} language={language} title={editor.fields.title} version={version} onSave={publish.saveSlug} />
+      </DetailsPanel>
     </div>
   )
 }
