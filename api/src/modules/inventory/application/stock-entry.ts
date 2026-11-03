@@ -10,7 +10,7 @@ export interface StockEntry {
   photo: MediaInfo | null
 }
 
-export const entryOf = (sku: LiveSku, level: Pick<StockLevel, 'onHand' | 'reserved'> | undefined, photo: MediaInfo | null = null): StockEntry => {
+export function entryOf(sku: LiveSku, level: Pick<StockLevel, 'onHand' | 'reserved'> | undefined, photo: MediaInfo | null = null): StockEntry {
   const onHand = level?.onHand ?? 0
   const reserved = level?.reserved ?? 0
 

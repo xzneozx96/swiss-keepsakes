@@ -5,10 +5,12 @@ import { makeReservedBySku, makeStockLevels } from '../../../src/modules/invento
 import { guest, id, outsider, owner, setup, sku, storeId } from './fakes.ts'
 
 // Variants with 0, 3 and 5 available, and an archived one (never in the directory) with 2.
-const world = () => setup(
-  [sku(1, { keepsakeName: { en: 'Victorinox Classic' }, code: 'VX-L-RED' }), sku(2, { code: 'KN-2', keepsakeName: { en: 'Fondue set' }, variantTitle: { de: 'Gross' } }), sku(3, { code: 'KN-3', keepsakeName: { en: 'Alpine cap' }, variantTitle: {} })],
-  { [id(1)]: [0, 0], [id(2)]: [4, 1], [id(3)]: [5, 0], [id(99)]: [2, 0] },
-)
+function world() {
+  return setup(
+    [sku(1, { keepsakeName: { en: 'Victorinox Classic' }, code: 'VX-L-RED' }), sku(2, { code: 'KN-2', keepsakeName: { en: 'Fondue set' }, variantTitle: { de: 'Gross' } }), sku(3, { code: 'KN-3', keepsakeName: { en: 'Alpine cap' }, variantTitle: {} })],
+    { [id(1)]: [0, 0], [id(2)]: [4, 1], [id(3)]: [5, 0], [id(99)]: [2, 0] },
+  )
+}
 
 describe('[E6.3][AC05][AC53] the stock list', () => {
   it.each([

@@ -194,7 +194,7 @@ describe('[E6.3][AC05][AC53] setting stock for many variants', () => {
 
     expect((await s.setMany({ items: [] })).status).toBe(400)
     expect((await s.setMany({ items: [{ skuId, onHand: 1 }, { skuId, onHand: 2 }] })).status).toBe(400)
-    expect((await s.setMany({ items: Array.from({ length: 201 }, () => ({ skuId: randomUUID(), onHand: 1 })) })).status).toBe(400)
+    expect((await s.setMany({ items: Array.from({ length: 201 }).fill({ skuId: randomUUID(), onHand: 1 }) })).status).toBe(400)
   })
 })
 

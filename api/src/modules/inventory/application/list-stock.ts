@@ -17,8 +17,9 @@ export interface StockListEntry {
 
 const label = (text: Localized) => text.en || text.de || ''
 
-const matches = (sku: LiveSku, needle: string) =>
-  [sku.code ?? '', sku.variantTitle.en ?? '', sku.variantTitle.de ?? '', sku.keepsakeName.en ?? '', sku.keepsakeName.de ?? ''].some(text => text.toLowerCase().includes(needle))
+function matches(sku: LiveSku, needle: string) {
+  return [sku.code ?? '', sku.variantTitle.en ?? '', sku.variantTitle.de ?? '', sku.keepsakeName.en ?? '', sku.keepsakeName.de ?? ''].some(text => text.toLowerCase().includes(needle))
+}
 
 // The live variants of the store in the order of keepsake name, variant title, code. The directory lists the variants,
 // the stock rows give the figures, so an archived variant or an orphaned stock row never appears. A variant with no
@@ -37,7 +38,7 @@ export function makeListStock<T>({ uow, stock, skus, media }: InventoryDeps<T>) 
       const filter = query.filter ?? 'all'
       const needle = (query.q ?? '').trim().toLowerCase()
       const shown = all
-        .filter(entry => filter === 'all' || (filter === 'in-stock') === entry.available > 0)
+        .filter(entry => filter === 'all' || (filter === 'in-stock') === (entry.available > 0))
         .filter(entry => needle === '' || matches(entry.sku, needle))
 
       return ok({ items: await withPhotos(media, tx, storeId, shown), counts })
