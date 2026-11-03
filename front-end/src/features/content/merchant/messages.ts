@@ -15,123 +15,9 @@ export const contentMerchantEn = {
   'merchantContent.column.actions': 'Actions',
   'merchantContent.back': 'Go back',
 
-  'merchantArticles.status.published': 'Published',
-  'merchantArticles.status.draft': 'Draft',
-  'merchantArticles.missing.en': 'No English version',
-  'merchantArticles.missing.de': 'No German version',
-  'merchantArticles.readTime': '{minutes} min read',
-  'merchantArticles.links': 'Keepsakes and tours',
-
-  'merchantArticles.back': 'All articles',
-  'merchantArticles.newTitle': 'New article',
-  'merchantArticles.publication.eyebrow': 'Publication',
-  'merchantArticles.publication.new': 'New draft',
-  'merchantArticles.publication.draft': 'Draft: guests can\'t see it',
-  'merchantArticles.publication.published': 'Published in {language}',
-  'merchantArticles.publication.draftBody':
-    'Publish it to show it under Stories for guests reading in {language}.',
-  'merchantArticles.publication.publishedBody':
-    'Shown under Stories for guests reading in {language} since {date}.',
-  'merchantArticles.unsaved': 'Unsaved changes',
-  'merchantArticles.action.saveDraft': 'Save draft',
-  'merchantArticles.action.publish': 'Publish',
-  'merchantArticles.action.save': 'Save changes',
-  'merchantArticles.action.unpublish': 'Unpublish',
-  'merchantArticles.toast.saved': 'Draft saved.',
-  'merchantArticles.toast.savedPublished':
-    'Changes saved. Guests see them now.',
-  'merchantArticles.toast.published':
-    'Published. It now shows under Stories in {language}.',
-  'merchantArticles.toast.unpublished': 'Unpublished. Guests no longer see it.',
-  'merchantArticles.unpublish.title': 'Unpublish “{title}”?',
-  'merchantArticles.unpublish.body':
-    'Guests no longer see it under Stories or in other stories. Its comments are kept.',
-  'merchantArticles.errors.publish.one': 'Fill in 1 marked field to publish.',
-  'merchantArticles.errors.publish.other':
-    'Fill in the {count} marked fields to publish.',
-  'merchantArticles.errors.save': 'Fix the marked fields to save.',
-
-  'merchantArticles.details': 'Details',
-  'merchantArticles.language': 'Language',
-  'merchantArticles.languageHelp':
-    'Each language version is its own article. The language can\'t be changed later.',
-  'merchantArticles.field.title': 'Title',
-  'merchantArticles.field.excerpt': 'Short summary',
-  'merchantArticles.field.excerptHelp':
-    'Shown under the title on the cover and in lists.',
-  'merchantArticles.field.intro': 'Lead paragraph',
-  'merchantArticles.field.introHelp':
-    'The first paragraph, before the sections.',
-  'merchantArticles.author': 'Author',
-  'merchantArticles.author.help':
-    'A member of our team, shown with their photo.',
-  'merchantArticles.field.authorName': 'Name',
-  'merchantArticles.field.authorRole': 'Role',
-  'merchantArticles.cover': 'Cover photo',
-  'merchantArticles.photo.choose': 'Choose photo',
-  'merchantArticles.photo.change': 'Change photo',
-  'merchantArticles.photo.none': 'No photo chosen',
-
-  'merchantArticles.error.title': 'Enter a title.',
-  'merchantArticles.error.excerpt': 'Enter a short summary.',
-  'merchantArticles.error.intro': 'Enter a lead paragraph.',
-  'merchantArticles.error.authorName': 'Enter the author\'s name.',
-  'merchantArticles.error.authorRole': 'Enter the author\'s role.',
-  'merchantArticles.error.cover': 'Choose a cover photo.',
-  'merchantArticles.error.place': 'Enter where the story happens.',
-  'merchantArticles.category': 'Category',
-  'merchantArticles.categoryHelp':
-    'Guests filter the stories by it and see it on the home cards.',
-  'merchantArticles.field.place': 'Place',
-  'merchantArticles.field.placeHelp':
-    'Where the story happens, e.g. Old Town or Bürgenstock. Shown with a pin on the home cards.',
-  'merchantArticles.error.sections': 'Add at least one section.',
-  'merchantArticles.error.heading': 'Enter a heading.',
-  'merchantArticles.error.blocks': 'Add at least one block to this section.',
-  'merchantArticles.error.paragraph': 'Write the paragraph or remove it.',
-  'merchantArticles.error.photo': 'Choose a photo.',
-  'merchantArticles.error.caption':
-    'Describe the photo. Screen readers read it aloud.',
-  'merchantArticles.error.youtube': 'Enter a YouTube link or video ID.',
-  'merchantArticles.error.videoTitle': 'Enter the video\'s title.',
-  'merchantArticles.error.audio': 'Choose a recording.',
-  'merchantArticles.error.audioTitle': 'Enter a title for the recording.',
-
-  'merchantArticles.sections': 'Sections',
-  'merchantArticles.sectionsHelp':
-    'Each heading becomes a stop in the story\'s contents bar.',
-  'merchantArticles.section': 'Section {n}',
-  'merchantArticles.field.heading': 'Heading',
-  'merchantArticles.addSection': 'Add section',
-  'merchantArticles.addBlock': 'Add block',
-  'merchantArticles.addBlockTo': 'Add a block to section {n}',
-  'merchantArticles.block.paragraph': 'Paragraph',
-  'merchantArticles.block.image': 'Photo',
-  'merchantArticles.block.video': 'YouTube video',
-  'merchantArticles.block.audio': 'Audio',
-  'merchantArticles.field.text': 'Text',
-  'merchantArticles.field.caption': 'Caption',
-  'merchantArticles.field.youtube': 'YouTube link or video ID',
-  'merchantArticles.field.youtubeHelp':
-    'The player loads only when a guest taps play.',
-  'merchantArticles.field.videoTitle': 'Video title',
-  'merchantArticles.field.mediaCaption': 'Caption (optional)',
-  'merchantArticles.field.audioTitle': 'Title',
-  'merchantArticles.audio.choose': 'Choose recording',
-  'merchantArticles.audio.change': 'Change recording',
-  'merchantArticles.audio.none': 'No recording chosen',
   'merchantArticles.moveUp': 'Move {name} up',
   'merchantArticles.moveDown': 'Move {name} down',
   'merchantArticles.remove': 'Remove {name}',
-  'merchantArticles.blockName': '{block} in section {n}',
-  'merchantArticles.removeSection.title': 'Remove section {n}?',
-  'merchantArticles.removeSection.body':
-    'Its heading and everything in it leave the article when you save.',
-  'merchantArticles.removeSection.confirm': 'Remove section',
-  'merchantArticles.removeBlock.title': 'Remove block: {block}?',
-  'merchantArticles.removeBlock.body':
-    'Its content leaves the article when you save.',
-  'merchantArticles.removeBlock.confirm': 'Remove block',
 
   'merchantArticles.photoSheet.title': 'Choose a photo',
   'merchantArticles.photoSheet.note':
@@ -142,56 +28,8 @@ export const contentMerchantEn = {
     'Prototype: recordings come from the shop\'s audio library instead of an upload.',
   'merchantArticles.audioSheet.use': 'Use this recording',
 
-  'merchantArticles.links.help':
-    'Shown under the story in this order. Up to 6, published only.',
-  'merchantArticles.links.count': '{count} of 6',
-  'merchantArticles.links.add': 'Add keepsake or tour',
-  'merchantArticles.links.empty':
-    'No keepsakes or tours linked. The story hides this part.',
-  'merchantArticles.links.limit':
-    '6 linked, the most a story shows. Remove one to add another.',
-  'merchantArticles.links.unpublished': 'Unpublished: hidden on the story',
-  'merchantArticles.links.soldOut': 'Sold out',
   'merchantArticles.kind.gift': 'Keepsake',
   'merchantArticles.kind.tour': 'Tour',
-  'merchantArticles.linkSheet.title': 'Add a keepsake or tour',
-  'merchantArticles.linkSheet.gifts': 'Keepsakes',
-  'merchantArticles.linkSheet.tours': 'Tours',
-  'merchantArticles.linkSheet.note':
-    'Only published keepsakes and tours can be linked.',
-  'merchantArticles.linkSheet.add': 'Add',
-  'merchantArticles.linkSheet.added': 'Added',
-  'merchantArticles.linkSheet.addItem': 'Add {name}',
-  'merchantArticles.linkSheet.done': 'Done',
-
-  'merchantArticles.related.title': 'More to discover',
-  'merchantArticles.related.help':
-    'Up to 3 other published stories in {language}, shown at the end.',
-  'merchantArticles.related.count': '{count} of 3',
-  'merchantArticles.related.empty':
-    'None chosen: the newest other stories in {language} show.',
-  'merchantArticles.related.add': 'Add story',
-  'merchantArticles.related.limit':
-    '3 chosen, the most this part shows. Remove one to add another.',
-  'merchantArticles.relatedSheet.title': 'Add a story',
-  'merchantArticles.relatedSheet.none':
-    'No other published stories in {language} to add.',
-
-  'merchantArticles.version.title': 'Other language',
-  'merchantArticles.version.open.en': 'Open the English version',
-  'merchantArticles.version.open.de': 'Open the German version',
-  'merchantArticles.version.missing.en':
-    'No English version yet. Guests reading in English don\'t find this story under Stories.',
-  'merchantArticles.version.missing.de':
-    'No German version yet. Guests reading in German don\'t find this story under Stories.',
-  'merchantArticles.version.add.en': 'Add English version',
-  'merchantArticles.version.add.de': 'Add German version',
-  'merchantArticles.version.addHelp':
-    'It starts as a draft copy of this version, ready to translate.',
-  'merchantArticles.toast.versionAdded.en':
-    'English draft added. Translate it, then publish.',
-  'merchantArticles.toast.versionAdded.de':
-    'German draft added. Translate it, then publish.',
 
   'merchantComments.filter.all': 'All',
   'merchantComments.filter.notReplied': 'Not replied',
