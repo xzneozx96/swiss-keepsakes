@@ -1,4 +1,5 @@
 import type { ProductVariant } from '@sk/api-contract'
+import type { OptionsPlan } from '../lib/combinations'
 import type { OptionDraft } from '../lib/option-rules'
 import type { CommitOptions } from '../lib/variant-actions'
 import type { OptionsDraftState, OptionsSnapshot } from './use-options-draft'
@@ -9,6 +10,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { basePriceOf, planOptionsDone } from '../lib/combinations'
 import { labelOf, optionsBody } from '../lib/option-rules'
 import { problemMessageKey } from '../lib/problems'
+import { baseQuantityOf, fillNewRows } from '../lib/stock-rules'
 
 interface Open { ref: string, snapshot: OptionsSnapshot, /** Added with Add option and not finished yet. */ isNew: boolean }
 
@@ -39,6 +41,8 @@ export function useOptionsFlow({ draft, committed, variants, codeBase, commit }:
   const openOption = open && draft.options.find(option => option.ref === open.ref)
   // What the open option would bring, shown as rows to come before Done is pressed.
   const preview = openOption ? planOptionsDone({ options: draft.options, committed, variants, basePrice, codeBase }) : undefined
+  /** The new rows start at the quantity typed in the Price block (the first variant's stock); each stays editable on its own (item 25). */
+  const withStock = (plan: OptionsPlan): OptionsPlan => ({ ...plan, newVariants: fillNewRows(plan.newVariants, baseQuantityOf(variants)) })
 
   const droppingBlanks = (ref: string) => draft.options.map(option => (option.ref === ref ? { ...option, values: option.values.filter(value => labelOf(value.label) !== '' || draft.isSaved(value.ref)) } : option))
 
@@ -53,7 +57,7 @@ export function useOptionsFlow({ draft, committed, variants, codeBase, commit }:
     if (problems.length > 0)
       return false
     draft.replaceOptions(options)
-    const plan = planOptionsDone({ options, committed, variants, basePrice, codeBase })
+    const plan = withStock(planOptionsDone({ options, committed, variants, basePrice, codeBase }))
 
     // Nothing to send when the option is what the keepsake already has.
     if (!draft.isDirty(options) && plan.newVariants.length === 0 && plan.variantValues.length === 0) {

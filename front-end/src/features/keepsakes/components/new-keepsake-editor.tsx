@@ -25,6 +25,7 @@ import { asSaved, optionsBody, refusalText } from '../lib/option-rules'
 import { keepsakeProblemKeys, problemMessageKey, problemTypeOf, refusalsOf } from '../lib/problems'
 import { KEEPSAKE_STEPS, KEEPSAKES_PATH } from '../lib/search-params'
 import { draftStatuses, stepOfCard } from '../lib/steps'
+import { baseQuantityOf } from '../lib/stock-rules'
 import { codeProblem, isComplete, variantsBody } from '../lib/variant-rules'
 import { KeepsakeLanguageSwitch } from './basics-fields'
 import { DetailsStep } from './details-step'
@@ -213,7 +214,7 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
 
       return outcome
     },
-    addBack: (combinations, codeBase) => held.addBack(combinations, basePriceOf(variants), codeBase),
+    addBack: (combinations, codeBase) => held.addBack(combinations, basePriceOf(variants), codeBase, [], baseQuantityOf(variants)),
     addPhoto: mediaId => setPhotoIds(current => (current.includes(mediaId) ? current : [...current, mediaId])),
   }
   const problems = draft.problems.length > 0 && <RefusalAlert>{draft.problems.map(problem => refusalText(t, problem)).join(' ')}</RefusalAlert>

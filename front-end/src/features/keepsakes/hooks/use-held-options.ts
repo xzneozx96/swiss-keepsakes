@@ -11,6 +11,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { basePriceOf, refsOf, savedRefsOf } from '../lib/combinations'
 import { optionsBody, refusalText } from '../lib/option-rules'
 import { problemMessageKey } from '../lib/problems'
+import { baseQuantityOf } from '../lib/stock-rules'
 import { variantsBody } from '../lib/variant-rules'
 import { useDraftVariants } from './use-draft-variants'
 
@@ -76,7 +77,7 @@ export function useHeldOptions({ keepsake, draft, handle, saveOptions, saveVaria
 
       return outcome
     },
-    addBack: (combinations, codeBase) => rows.addBack(combinations, basePriceOf(variants), codeBase, saved),
+    addBack: (combinations, codeBase) => rows.addBack(combinations, basePriceOf(variants), codeBase, saved, baseQuantityOf(variants)),
     addPhoto,
   }
 

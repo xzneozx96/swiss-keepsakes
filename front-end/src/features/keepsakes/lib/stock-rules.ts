@@ -11,7 +11,10 @@ export function baseQuantityOf(variants: Pick<ProductVariant, 'onHand' | 'status
   return (variants.find(variant => variant.status !== 'archived') ?? variants[0])?.onHand ?? 0
 }
 
-/** New rows with `quantity` as their starting stock. A row that already has its own figure keeps it. */
+/** New rows with `quantity` as their starting stock. A row that already has its own figure keeps it. 0 is what the API gives a row with no figure, so the rows are left as they are and the request stays the same. */
 export function fillNewRows(rows: NewVariant[], quantity: number): NewVariant[] {
+  if (quantity === 0)
+    return rows
+
   return rows.map(row => ({ ...row, quantity: row.quantity ?? quantity }))
 }

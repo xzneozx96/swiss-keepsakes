@@ -8,6 +8,7 @@ import { useState } from 'react'
 
 import { newVariantsFor } from '../lib/combinations'
 import { asSaved, combinationKey } from '../lib/option-rules'
+import { fillNewRows } from '../lib/stock-rules'
 import { isComplete, normaliseValues } from '../lib/variant-rules'
 
 /** The one variant of a keepsake with no option yet: no price, which the Price card asks for, and no code. */
@@ -96,9 +97,9 @@ export function useDraftVariants(options: OptionDraft[], initial: ProductVariant
 
       return { ok: true }
     },
-    /** Combinations that no variant holds, made again at the price of the first variant. `others` are variants kept elsewhere, whose codes the new ones must not repeat. */
-    addBack: async (combinations: Values[], basePrice: number, codeBase: string | null, others: Pick<ProductVariant, 'skuCode'>[] = []): Promise<Outcome> => {
-      setStored(list => [...list, ...newVariantsFor(combinations, options, [...others, ...list], basePrice, codeBase).map(made => fresh(made))])
+    /** Combinations that no variant holds, made again at the price and the stock of the first variant (`quantity`). `others` are variants kept elsewhere, whose codes the new ones must not repeat. */
+    addBack: async (combinations: Values[], basePrice: number, codeBase: string | null, others: Pick<ProductVariant, 'skuCode'>[] = [], quantity = 0): Promise<Outcome> => {
+      setStored(list => [...list, ...fillNewRows(newVariantsFor(combinations, options, [...others, ...list], basePrice, codeBase), quantity).map(made => fresh(made))])
 
       return { ok: true }
     },

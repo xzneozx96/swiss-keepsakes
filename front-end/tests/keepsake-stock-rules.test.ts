@@ -20,6 +20,12 @@ describe('[E6.3][AC05][AC53] the stock rules of the keepsake editor', () => {
     expect(rows[0]).not.toHaveProperty('quantity')
   })
 
+  it('[E6.3][AC05][AC53] AC-2 a starting quantity of 0 leaves the rows without a figure, as the API gives them 0 by default', () => {
+    const rows = [{ skuCode: 'A', priceRappen: 100, values: {} }]
+
+    expect(fillNewRows(rows, 0)).toEqual(rows)
+  })
+
   it('[E6.3][AC05][AC53] AC-5 a new keepsake sends each variant\'s stock as `quantity`, and none for a variant that has no figure', () => {
     expect(variantsBody([variant({ onHand: 12 }), variant({ onHand: 0 }), variant()]).map(row => row.quantity)).toEqual([12, 0, undefined])
     expect(variantsBody([variant()])[0]).not.toHaveProperty('quantity')
