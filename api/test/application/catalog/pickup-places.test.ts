@@ -115,4 +115,22 @@ describe('[E6.6][AC26] pickup point use cases', () => {
     expect(await makeRestorePickupPlace(deps)(owner, storeId, 'a', 3, null)).toMatchObject({ ok: true })
     expect(repo.setArchived).toHaveBeenCalledWith(null, expect.objectContaining({ id: 'a' }), false, expect.any(Date))
   })
+
+  it('[E6.6][AC26] each write records one audit entry with the entity, the action and the point id', async () => {
+    const { deps } = setup([place('a'), place('b', { position: 2 }), place('c', { archived: true, position: 3 })])
+    const record = vi.mocked(deps.audit.record)
+    const last = () => record.mock.lastCall![1]
+
+    await makeCreatePickupPlace(deps)(owner, storeId, body, 'req-1')
+    expect(last()).toMatchObject({ storeId, entity: 'pickup_place', entityId: 'new', action: 'created', requestId: 'req-1' })
+    await makeSavePickupPlace(deps)(owner, storeId, 'a', 3, { name: { en: 'X' } }, 'req-2')
+    expect(last()).toMatchObject({ entity: 'pickup_place', entityId: 'a', action: 'updated', requestId: 'req-2' })
+    await makeReorderPickupPlaces(deps)(owner, storeId, ['b', 'a'], 'req-3')
+    expect(last()).toMatchObject({ entity: 'pickup_place', entityId: storeId, action: 'reordered', before: { ids: ['a', 'b'] }, after: { ids: ['b', 'a'] } })
+    await makeArchivePickupPlace(deps)(owner, storeId, 'a', 3, 'req-4')
+    expect(last()).toMatchObject({ entity: 'pickup_place', entityId: 'a', action: 'archived' })
+    await makeRestorePickupPlace(deps)(owner, storeId, 'c', 3, 'req-5')
+    expect(last()).toMatchObject({ entity: 'pickup_place', entityId: 'c', action: 'restored' })
+    expect(record).toHaveBeenCalledTimes(5)
+  })
 })

@@ -179,7 +179,7 @@ describe('[E6.6][AC26] pickup points over HTTP', () => {
     expect(await other.list()).toHaveLength(1)
     // The store guard stops a member of A from using B's path at all.
     const crossed = await env.call(`${other.base}`, { headers: mine.store.owner.headers })
-    expect(crossed.status).toBeGreaterThanOrEqual(403)
+    expect(crossed.status).toBe(403)
   })
 
   it('[E6.6][AC26] reorder sets positions 1..n and refuses a missing, extra or repeated id; a manager may write', async () => {
@@ -198,12 +198,24 @@ describe('[E6.6][AC26] pickup points over HTTP', () => {
     expect((await send('/order', 'PUT', { ids: ['nope'] })).status).toBe(400)
   })
 
-  it('[E6.6][AC26] a signed-in person with no role in the store is refused', async () => {
-    const { store, base } = await setup()
+  // Only owner and manager exist and both hold edit-catalog, so the refused person is a signed-in non-member: the store guard answers 403.
+  it('[E6.6][AC26] a signed-in person who is not a member of the store gets 403 from the store guard', async () => {
+    const { base } = await setup()
     const stranger = await env.signIn()
     const response = await env.call(base, { headers: stranger.headers })
 
-    expect(response.status).toBeGreaterThanOrEqual(403)
-    expect(store.storeId).toBeTruthy()
+    expect(response.status).toBe(403)
+  })
+
+  it('[E6.6][AC26] a create and an archive each write one audit entry', async () => {
+    const { created, send, withVersion, store } = await setup({ fresh: true })
+    const point = await created()
+    await send(`/${point.id}/archive`, 'POST', undefined, withVersion(1))
+
+    const { rows } = await pool.query<{ entity: string, action: string, store_id: string }>(`select entity, action, store_id from platform.audit_log where entity = 'pickup_place' and entity_id = $1 order by at, id`, [point.id])
+    expect(rows).toEqual([
+      { entity: 'pickup_place', action: 'created', store_id: store.storeId },
+      { entity: 'pickup_place', action: 'archived', store_id: store.storeId },
+    ])
   })
 })

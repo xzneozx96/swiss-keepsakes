@@ -27,6 +27,7 @@ export function checkHours(spans: readonly PickupSpan[]): PickupError[] {
     if (opensOk && closesOk) {
       if (span.opens === span.closes)
         errors.push({ path: `${at}.closes`, message: 'The closing time cannot equal the opening time' })
+      // The primary key (place_id, weekday, opens) makes a repeated start time on one day impossible, so it is a 422 on that span and not an overlap rule.
       const key = `${span.weekday}|${span.opens}`
       if (seen.has(key))
         errors.push({ path: `${at}.opens`, message: 'Two spans on one day cannot open at the same time' })
