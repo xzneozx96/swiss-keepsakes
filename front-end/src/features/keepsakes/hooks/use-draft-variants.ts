@@ -1,4 +1,4 @@
-import type { ProductVariant, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
+import type { ProductVariant, VariantCreateBody, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
 import type { OptionsPlan } from '../lib/combinations'
 import type { OptionDraft, Values } from '../lib/option-rules'
 import type { Outcome } from './use-keepsake-editor'
@@ -66,6 +66,12 @@ export function useDraftVariants(options: OptionDraft[], initial: ProductVariant
 
         return row ? { ...variant, ...changesOf(row), priceRappen: row.priceRappen ?? variant.priceRappen } : variant
       }))
+
+      return { ok: true }
+    },
+    /** The one variant of a keepsake with no options and none left: the Price block's first valid price. */
+    create: async (body: VariantCreateBody): Promise<Outcome> => {
+      setStored(list => [...list, { ...defaultVariant(), skuCode: body.skuCode ?? null, priceRappen: body.priceRappen, status: body.status ?? 'published' }])
 
       return { ok: true }
     },

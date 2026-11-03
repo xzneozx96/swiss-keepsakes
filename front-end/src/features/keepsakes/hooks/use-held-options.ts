@@ -32,13 +32,14 @@ export interface OptionsStepHandle {
  *
  * `committed` holds the refs of the options and values that were finished with Done, as in a new keepsake.
  */
-export function useHeldOptions({ keepsake, draft, handle, saveOptions, saveVariant, saveVariants, addPhoto }: {
+export function useHeldOptions({ keepsake, draft, handle, saveOptions, saveVariant, saveVariants, createVariant, addPhoto }: {
   keepsake: Product
   draft: OptionsDraftState
   handle: RefObject<OptionsStepHandle | null>
   saveOptions: (change: { options: OptionWrite[], plan: OptionsPlan }) => Promise<Outcome>
   saveVariant: VariantActions['saveVariant']
   saveVariants: VariantActions['saveVariants']
+  createVariant: VariantActions['createVariant']
   addPhoto: VariantActions['addPhoto']
 }) {
   const { t } = useLocale()
@@ -64,6 +65,7 @@ export function useHeldOptions({ keepsake, draft, handle, saveOptions, saveVaria
 
       return others.length > 0 ? saveVariants(others) : { ok: true }
     },
+    createVariant,
     commit: async ({ drafts, plan }) => {
       const outcome = await rows.apply(drafts, plan)
 

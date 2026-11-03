@@ -1,10 +1,13 @@
-import type { OptionWrite, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
+import type { OptionWrite, VariantCreateBody, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
 import type { Outcome } from '../hooks/use-keepsake-editor'
 import type { OptionsPlan } from './combinations'
 import type { OptionDraft, Values } from './option-rules'
 
 /** One variant's price, code or status. A saved keepsake sends it to the API at once; a new one changes its draft. */
 export type SaveVariant = (variantId: string, body: VariantSaveBody) => Promise<Outcome>
+
+/** The one variant of a keepsake that has none and no options: the Price block's first valid price creates it, with the code and status chosen by then. */
+export type CreateVariant = (body: VariantCreateBody) => Promise<Outcome>
 
 /** The price, status, code or photo of several variants in one request, all or nothing. */
 export type SaveVariants = (rows: VariantsSaveBody['variants']) => Promise<Outcome>
@@ -19,6 +22,7 @@ export type AddBack = (combinations: Values[], codeBase: string | null) => Promi
 export interface VariantActions {
   saveVariant: SaveVariant
   saveVariants: SaveVariants
+  createVariant: CreateVariant
   commit: CommitOptions
   addBack: AddBack
   /** A photo that a variant takes and the keepsake does not have yet joins the keepsake's photos (the autosave, or the draft). */
