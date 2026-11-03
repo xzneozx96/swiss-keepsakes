@@ -3,20 +3,21 @@
 - **Sprint:** 8 (release 1 polish and first sales groundwork)
 - **Stories covered:** E6.3 stock, E6.5 opening stock, E6.6 pickup points, E8.7 analytics events, E4.3 stories (the story editor), the Lark sync and plan docs.
 - **What to test:** each PR's branch, or the integration branch once the PRs are merged in the order below.
-- **Written:** 2026-11-03. Format: `docs/development-rules/shared/manual-test-cases.md`.
+- **Written:** 2026-11-03. Updated 2026-11-04 (pickup Google Maps link, UI and fix cases). Format: `docs/development-rules/shared/manual-test-cases.md`.
 
 ## Order of the PRs
 
-The cases are grouped by PR, in this merge order. Test and merge in this order. The database migrations 0021, 0022 and 0023 must reach the dev database in number order.
+The cases are grouped by PR, in this merge order. Test and merge in this order. The database migrations 0021 to 0025 must reach the dev database in number order.
 
 | PR | Content | Cases |
 |---|---|---|
 | 1 | Lark sync and plan docs (T-LARK, T-DOCS) | S8-LARK-01 to 03 |
 | 2 | E6.3 stock: inventory page, stock in the keepsake editor (migration 0021) | S8-INV-01 to 09 |
 | 3 | E6.5 opening stock for the five Victorinox knives | S8-STOCK-SEED-01 to 04 |
-| 4 | E6.6 pickup points (migration 0022) | S8-PICKUP-01 to 08 |
+| 4 | E6.6 pickup points (migrations 0022 and 0025) | S8-PICKUP-01 to 14 |
 | 5 | E8.7 analytics events and the map card tip fix (migration 0023) | S8-EVENTS-01 to 07, S8-MAP-01 |
 | 6 | E4.3 story editor | S8-STORY-01 to 28 |
+| 7 | UI consistency and story fixes (list headers, story Write layout, story header notice) | S8-UI-01, S8-UI-02, S8-STORY-FIX-01 |
 
 S8-FIX (the one-variant fix) is already on main (PR #95, commit 8b936dbc). The E6.3 stock cases in PR 2 depend on it, so run S8-FIX first on any build.
 
@@ -80,6 +81,12 @@ Events go to PostHog EU. Nothing is sent unless you switch it on.
 | S8-PICKUP-06 | The limit of 100 counts active points only | E6.6 / AC26 (gate G-S8-PICKUP-LIMIT) | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-PICKUP-07 | A restored point goes to the end of the list | E6.6 / AC26 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-PICKUP-08 | Two spans with the same day and opening time are refused | E6.6 / AC26 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-PICKUP-09 | Pickup points is a page of its own | Owner fix 2026-11-03 / design 2026-10-29 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-PICKUP-10 | A Google Maps link sets the pin and fills the address | E6.6 / AC26 (gate G-S8-PICKUP-MAPS) | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-PICKUP-11 | A short link is followed to its position | E6.6 / AC26 (gate G-S8-PICKUP-MAPS) | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-PICKUP-12 | A missing or unreadable link is refused at the field | E6.6 / AC26 (gate G-S8-PICKUP-MAPS) | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-PICKUP-13 | The merchant's own address is never overwritten, and a new link moves the pin | E6.6 / AC26 (gate G-S8-PICKUP-MAPS) | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-PICKUP-14 | The Location block in German | E6.6 / AC26 (gate G-S8-PICKUP-MAPS) | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-EVENTS-01 | Events arrive in PostHog with closed values only | E8.7 / AC37, AC60 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-EVENTS-02 | A merchant page and a switched-off build send nothing | E8.7 / AC37 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-EVENTS-03 | A guest's deep-linked pin is recorded once | E8.7 / AC60 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
@@ -116,8 +123,11 @@ Events go to PostHog EU. Nothing is sent unless you switch it on.
 | S8-STORY-26 | The header shows a failed Details save | E4.3 / AC45 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-STORY-27 | Deleting a story leaves no stale pin or story behind | E4.3 / AC30 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-STORY-28 | The cover picker waits for a new photo to finish processing | E4.3 / AC30 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-UI-01 | Merchant list screens share one header and toolbar | UI consistency, owner feedback 2026-11-03 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-UI-02 | Story Write screen: two columns, Short summary field, growing text boxes | E4.3 / AC30 (owner feedback 2026-11-03) | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-FIX-01 | Story editor header does not cover the store notice | E4.3 / owner fix 2026-11-03 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 
-Counts: 65 cases. P1: 15, P2: 31, P3: 19.
+Counts: 74 cases. P1: 19, P2: 35, P3: 20.
 
 ## PR 1: Lark and plan docs
 
@@ -458,8 +468,8 @@ Terminal cases except S8-STOCK-SEED-02 and 04, which use the browser. The seed m
 
 | # | Step | Expected result |
 |---|---|---|
-| 1 | Open Products, Pickup points, and add "Shop Hertensteinstrasse" with an address and Monday to Saturday 10:00 to 18:00. | The point shows as a ticket with the line "Mon to Sat 10:00 to 18:00". |
-| 2 | Add a second point with different hours. | Both tickets show in order. |
+| 1 | Open Products, Pickup points, and add "Shop Hertensteinstrasse" with a Google Maps link, an address and Monday to Saturday 10:00 to 18:00. | The point shows as a ticket with the line "Mon to Sat 10:00 to 18:00". |
+| 2 | Add a second point with its own link and different hours. | Both tickets show in order. |
 | 3 | Reload. | Both are still there with their hours. |
 
 - **Postconditions:** two active pickup points.
@@ -502,7 +512,7 @@ Terminal cases except S8-STOCK-SEED-02 and 04, which use the browser. The seed m
 
 | # | Step | Expected result |
 |---|---|---|
-| 1 | Add a point with a German name and address only, and press Save. | It saves. |
+| 1 | Add a point with a Google Maps link and a German name and address only, and press Save. | It saves. |
 | 2 | Read the ticket. | It shows the missing-English notice. |
 
 - **Postconditions:** one point without English text.
@@ -568,6 +578,105 @@ Terminal cases except S8-STOCK-SEED-02 and 04, which use the browser. The seed m
 | 4 | Reload. | Monday 09:00 to 12:00 and Tuesday 09:00 to 14:00 are both there. |
 
 - **Postconditions:** the point has one Monday span and one Tuesday span.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-PICKUP-09 Pickup points is a page of its own
+- **Story / AC:** owner fix 2026-11-03 / design 2026-10-29
+- **Priority:** P1
+- **Role and device:** Owner, desktop 1280 px, then phone 375 px
+- **Preconditions:** a store with at least one active and one archived pickup point.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | In the sidebar open Products, then "Pickup points". | The title is "Pickup points" with the line "Where guests collect their orders and where handovers meet." No Keepsakes or Tours tabs, no "Products" title. Pickup points is highlighted in the sidebar. |
+| 2 | Press "Add pickup point". | The sheet opens empty. Press the back arrow; it closes. |
+| 3 | Open Status, tick Archived, untick Active. | A chip "Status: Archived" shows; only the archived point is listed with Restore. "Clear all" removes the chip. |
+| 4 | Untick everything except Active and archive the last active point. | The empty state "No pickup points yet." shows. |
+| 5 | Switch the language to German and reload. | Title "Abholstellen", line "Wo Gäste ihre Bestellungen abholen und wo Übergaben stattfinden.", button "Abholstelle hinzufügen". |
+| 6 | Open Products > Tours (old screen), press its "Pickup points" tab. | The Pickup points page opens (the tab shows no count). |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-PICKUP-10 A Google Maps link sets the pin and fills the address
+- **Story / AC:** E6.6 / AC26 (gate G-S8-PICKUP-MAPS)
+- **Priority:** P1
+- **Role and device:** Owner, desktop 1280 px (repeat at phone 375 px)
+- **Preconditions:** the Pickup points page, with no point named "Chapel Bridge shop".
+- **Test data:** the full link `https://www.google.com/maps/place/Chapel+Bridge/@47.0516489,8.3075351,17z/data=!3d47.0516489!4d8.3075351`.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Press "Add pickup point". | The sheet opens with a "Location" block on top: the field "Google Maps link", a map and the help line. Below it are the name, address and instructions fields. |
+| 2 | Paste the test link into "Google Maps link". | The line under the field reads "Pin moved to the link." The map shows a pin at the Chapel Bridge. |
+| 3 | Wait two seconds, then read the Address field in English and in German. | Both hold the same street address in Lucerne, filled in from the link. You can still click in and change it. |
+| 4 | Type the name "Chapel Bridge shop" and press "Save pickup point". | The sheet closes and a toast says "Chapel Bridge shop saved". |
+| 5 | Reload and open the point. | The link field holds the pasted link, the map shows the pin at the same place, and the address is as saved. |
+| 6 | Ask the developer to run this read-only query: `select maps_link, latitude, longitude from catalog.pickup_places where archived = false`. | One row for the point with the link as pasted, latitude about 47.05165 and longitude about 8.30754. |
+
+- **Postconditions:** one active pickup point with a link and a pin.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-PICKUP-11 A short link is followed to its position
+- **Story / AC:** E6.6 / AC26 (gate G-S8-PICKUP-MAPS)
+- **Priority:** P2
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** the Pickup points page. A short link from Google Maps (Share, then Copy link in the Google Maps app, which gives `https://maps.app.goo.gl/...`) for a place in Lucerne.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Press "Add pickup point" and paste the short link into "Google Maps link". | The line under the field reads "Reading the link…" with a spinner, then "Pin moved to the link." |
+| 2 | Read the map and the Address field. | The pin is on the place you copied. The address is filled in from it. |
+| 3 | Fill the name, press "Save pickup point", then reload and open the point. | It saved with the short link in the field and the pin on the same place. |
+
+- **Postconditions:** one active pickup point stored with a short link.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-PICKUP-12 A missing or unreadable link is refused at the field
+- **Story / AC:** E6.6 / AC26 (gate G-S8-PICKUP-MAPS)
+- **Priority:** P2
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** the Pickup points page.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Press "Add pickup point", type a name and an address, leave the link empty and press "Save pickup point". | The sheet stays open. The field "Google Maps link" is red and says "A Google Maps link is needed." Nothing is saved. |
+| 2 | Paste the text `hello` into the link field. | The field says "This link has no position we can read. Use a link from Google Maps." |
+| 3 | Paste `https://www.example.com/maps` and press "Save pickup point". | The same refusal shows and the sheet stays open. Nothing is saved. |
+| 4 | Paste a valid Google Maps link and press "Save pickup point". | It saves and the sheet closes. |
+
+- **Postconditions:** one new active pickup point.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-PICKUP-13 The merchant's own address is never overwritten, and a new link moves the pin
+- **Story / AC:** E6.6 / AC26 (gate G-S8-PICKUP-MAPS)
+- **Priority:** P2
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** one pickup point saved with a link (case S8-PICKUP-10).
+- **Test data:** a second full Google Maps link for another place in Lucerne.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open the point. Replace the English address with "Meet at the green door". | The field shows your text. |
+| 2 | Clear the link field and paste the second link. | The line reads "Pin moved to the link." The map moves to the new place. The English address still reads "Meet at the green door". |
+| 3 | Press "Save pickup point", reload and open the point. | The new link and pin are saved. The address is still "Meet at the green door". |
+| 4 | Change only the name and save. | It saves. The link and the pin are unchanged. |
+
+- **Postconditions:** the point has the second link and the typed address.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-PICKUP-14 The Location block in German
+- **Story / AC:** E6.6 / AC26 (gate G-S8-PICKUP-MAPS)
+- **Priority:** P3
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** the interface is set to German.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open "Abholstelle hinzufügen". | The block is titled "Standort" and the field "Google-Maps-Link" has a German help line. |
+| 2 | Press "Abholstelle speichern" with the link empty. | The field says "Ein Google-Maps-Link ist erforderlich." and nothing is saved. |
+
+- **Postconditions:** none.
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
 
 ## PR 5: E8.7 analytics events and the map card
@@ -1131,3 +1240,71 @@ Open Content, Stories. Run the cases on a story with both an English and a Germa
 
 - **Postconditions:** none until the merchant presses "Use as cover".
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+## PR 7: UI consistency and story fixes
+
+Merchant UI changes made after the first draft of this file. They are on main, not in the PRs above.
+
+### S8-UI-01 Merchant list screens share one header and toolbar
+- **Story / AC:** UI consistency, owner feedback 2026-11-03
+- **Priority:** P1
+- **Role and device:** Owner, desktop 1280 px, then phone 375 px (repeat the table at both widths)
+- **Preconditions:** a store with keepsakes, stories, places, media files, pickup points (one archived), and stock rows with the code VICTORINOX-0.6223.G.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open Media. 1280 px. | Title and Upload button on one row; below it the tabs Photos · N, Audio · N, PDFs · N alone on one line; under that Use, Status and Select on the left, the search box on the right. |
+| 2 | Open Keepsakes, Places, Pickup points. | Same Add button size as Upload (default size, plus icon). Status/filter buttons left, search right on one line. |
+| 3 | Open Stories, Categories, Inventory. | Tabs left, search right on one line. Stories and Inventory tabs read "All · 13" style, no grey pill. |
+| 4 | Pickup points: load the page. | No "Status: Active" chip; only active points listed. |
+| 5 | Pickup points: tick Archived. | Only archived points. Tick Active too: both. Clear all: back to active only. |
+| 6 | Pickup points: type part of a name, then of an address. | Tickets filter; a word that matches nothing shows "No pickup point matches. Try another word or remove a filter." and the button "Clear search and filters" empties the search. |
+| 7 | Inventory: look at the table. | Same plain table as Keepsakes (no white card around it). The SKU code VICTORINOX-0.6223.G is on one line; type a number in In stock and it still saves. |
+| 8 | Open a keepsake's Variants; narrow the window to 1024 px. | SKU codes never break at a hyphen. |
+| 9 | Open Add pickup point and press Save with nothing filled. | "Complete the text in English or German to save." shows as a red tinted alert; a "can still publish" hint is amber tinted. |
+| 10 | Repeat steps 1 to 3 at 375 px. | Order is header, action button full width under the intro, tabs, then filters, then the search box full width. Tabs stay pinned when scrolling Stories. |
+
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-UI-02 Story Write screen: two columns, Short summary field, growing text boxes
+- **Story / AC:** E4.3 / AC30 (owner feedback 2026-11-03)
+- **Priority:** P2
+- **Role and device:** Owner, desktop 1280 px, then phone 375 px; browsers Chrome and Firefox
+- **Preconditions:** a story with a cover, a title and a body; the owner is signed in to the store.
+- **Test data:** the story "A morning on the Musegg wall" (or any story), a 400-character text to paste.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | At 1280 px open the story, Write screen. | "Cover and title" card at the left (about 5/12 of the width), the story card at the right (about 7/12), side by side. |
+| 2 | Scroll the page down. | Both cards scroll with the page; neither stays fixed. |
+| 3 | Look at the summary field. | Label reads "Short summary" with the red star. Only the counter "0 / 300" (or the current count) sits under it: no "Under the title..." line and no "Written by ..." line. |
+| 4 | Type three lines into Short summary, pressing Enter between them. | The box grows by one line each time; no scrollbar inside the box; no resize handle at its corner. |
+| 5 | Paste 400 characters. | The box holds the first 300 characters, the counter shows "300 / 300", still no inner scrollbar. |
+| 6 | Clear the summary and the title, press Review, press Back to writing. | The summary shows "Add a short summary to publish." |
+| 7 | Press Review with the summary empty. | The check list says "Add a short summary." |
+| 8 | Switch the page language to German and repeat steps 3, 6 and 7. | Label "Kurze Zusammenfassung"; errors "Kurze Zusammenfassung zum Veröffentlichen hinzufügen." and "Fügen Sie eine kurze Zusammenfassung hinzu."; no helper or author line. |
+| 9 | Open Firefox, repeat step 4 in the same story. | Same behaviour: the box grows as you type, no inner scrollbar, no resize handle (Firefox uses the measured fallback). |
+| 10 | At 375 px open the Write screen. | One column: "Cover and title" first, the story card below it, as before. |
+| 11 | Open a merchant sheet with a text box (for example Record payment, note) and type five lines. | The box grows with the text; no inner scrollbar; no resize handle. |
+
+- **Postconditions:** the summary text typed in step 4 is saved (clear it if not wanted).
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-FIX-01 Story editor header does not cover the store notice
+- **Story / AC:** E4.3 / owner fix 2026-11-03
+- **Priority:** P1
+- **Role and device:** Merchant owner, desktop 1280 px, then phone 375 px
+- **Preconditions:** the store is not open for sale (yellow "Your store is not open for sale yet. Set up store" notice shows); one story exists.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open the story editor (Write). | The yellow notice is whole, including its bottom edge; the header (back arrow, title, EN/DE, Review and publish, menu) starts below it. |
+| 2 | Open Review and publish, then go back. | Same on Review and on return to Write. |
+| 3 | Reload and watch the loading state. | The loading bar sits below the notice too. Same for a keepsake edit screen. |
+| 4 | Resize to 375 px. | Spacing is as before the fix; no gap or overlap. |
+| 5 | Open a store where the notice is not shown. | The header sits flush at the top of the page, no extra gap. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+- **Note:** scrolling the page down with the notice shown is a known separate item (the header pins over the sticky notice).
