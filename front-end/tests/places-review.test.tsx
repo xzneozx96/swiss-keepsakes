@@ -111,20 +111,20 @@ describe('[E4.2][AC68] N17 the review is a phone with the guest map', () => {
     expect(screen.getByText('There is no German title yet. Guests reading German see the English one.')).toBeInTheDocument()
   })
 
-  it('puts the tips (two lines at most) and the first category name on the card, in the previewed language', async () => {
+  it('puts the first category name on the card, in the previewed language, and no tip', async () => {
     api.categories = [
       { id: uuid(20), slug: 'walks', name: { en: 'Walks', de: 'Wanderungen' }, parentId: null, position: 1, childCount: 0, useCount: 1 },
       { id: uuid(21), slug: 'views', name: { en: 'Views' }, parentId: null, position: 2, childCount: 0, useCount: 1 },
     ]
     await openReview(draft({ categoryIds: [uuid(20), uuid(21)], draft: { ...text, tip: { en: 'Go early', de: 'Früh kommen' } } }))
 
-    expect(within(await screen.findByRole('article')).getByText('Go early')).toHaveClass('line-clamp-2')
     expect(await within(card()).findByText(/^Walks/)).toBeInTheDocument()
+    expect(within(card()).queryByText('Go early')).not.toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('tab', { name: /German/ }))
 
-    expect(await within(card()).findByText('Früh kommen')).toHaveAttribute('lang', 'de')
-    expect(within(card()).getByText(/^Wanderungen/)).toBeInTheDocument()
+    expect(await within(card()).findByText(/^Wanderungen/)).toBeInTheDocument()
+    expect(within(card()).queryByText('Früh kommen')).not.toBeInTheDocument()
   })
 
   it('shows no tip and no category on a card of a draft that has neither', async () => {
