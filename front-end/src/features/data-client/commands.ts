@@ -24,6 +24,7 @@ interface ReadsWithInput {
   media: 'list' | 'uses' | 'get' | 'lookup'
   pickup: 'list'
   places: 'list' | 'get' | 'storyOptions' | 'storyVersion'
+  stories: 'list' | 'group' | 'links'
 }
 
 /**
@@ -158,6 +159,20 @@ export const commandAffects: {
   reviews: {
     addReview: [queryKeys.reviews.reviews],
     replyToReview: [queryKeys.reviews.reviews],
+  },
+  stories: {
+    createStory: [queryKeys.stories.list, queryKeys.stories.group],
+    createVersion: [queryKeys.stories.list, queryKeys.stories.group],
+    // Not the groups: a deleted story's group answers 404, and the editor is still on screen when the delete is answered. The screen drops them.
+    // The pins that named the story lost their main story and the stories that listed it lost a related one, so their row versions moved.
+    removeStory: [queryKeys.stories.list, queryKeys.places.list, queryKeys.places.pin, queryKeys.places.storyOptions],
+    // The editor writes every answer into the group query itself (as the keepsake editor does), so a save refreshes nothing.
+    saveVersion: [],
+    // The group editor writes the answer into the group query itself; the list carries `kind`, so it is refreshed.
+    saveGroup: [queryKeys.stories.list],
+    // Likewise: the editor writes the answer into the group query itself (through `engine.exclusive`), so only the list is refreshed.
+    publishVersion: [queryKeys.stories.list],
+    unpublishVersion: [queryKeys.stories.list],
   },
   stores: {
     createStore: [queryKeys.stores.adminStores],

@@ -3,9 +3,14 @@ import {
   pinSchema,
   pinWriteBodySchema,
   problemTypes,
+  storyDeletedSchema,
   storyDraftSchema,
   storyGroupCreateBodySchema,
+  storyGroupDetailSchema,
   storyGroupSaveBodySchema,
+  storyLinksSchema,
+  storyListItemSchema,
+  storyListSchema,
   storyVersionCreateBodySchema,
   storyVersionMoveBodySchema,
   storyVersionSaveBodySchema,
@@ -132,8 +137,21 @@ describe('[E2.6] content write schemas', () => {
     expect(ok(storyGroupSaveBodySchema, { keepsakeProductIds: distinct(7) })).toBe(false)
     expect(storyGroupCreateBodySchema.parse({}).kind).toBe('story')
     expect(ok(storyGroupCreateBodySchema, { kind: 'editorial_review', subjectPlaceId: uuid })).toBe(true)
-    expect(ok(storyGroupSaveBodySchema, { kind: 'story' })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'story' })).toBe(true)
     expect(ok(storyGroupSaveBodySchema, { subjectPlaceId: uuid })).toBe(false)
+  })
+
+  it('[E4.3][AC30] a group save takes kind and subjectPlaceId together: both pairings pass, every mismatch is refused', () => {
+    expect(ok(storyGroupSaveBodySchema, { kind: 'editorial_review', subjectPlaceId: uuid })).toBe(true)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'story', subjectPlaceId: null })).toBe(true)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'story' })).toBe(true)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'editorial_review' })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'editorial_review', subjectPlaceId: null })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'story', subjectPlaceId: uuid })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { subjectPlaceId: uuid })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { subjectPlaceId: null })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'editorial_review', subjectPlaceId: 'not-a-uuid' })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'editorial_review', subjectPlaceId: uuid, placeIds: [uuid] })).toBe(true)
   })
 
   it('[E2.13] story draft: the old intro, sections and readMinutes are refused and the body is required', () => {
@@ -315,5 +333,41 @@ describe('[E2.6] content write schemas', () => {
   it('[E2.6] every new problem code is in problemTypes', () => {
     for (const code of ['precondition-failed', 'precondition-required', 'publish-incomplete', 'media-retired', 'media-invalid', 'reference-invalid', 'content-slug-taken', 'slug-conflict', 'published-cannot-be-deleted', 'published-version-cannot-move', 'version-exists', 'not-published', 'content-in-use'])
       expect(problemTypes).toContain(code)
+  })
+})
+
+describe('[E4.3][AC30] story list and group read schemas', () => {
+  const iso = '2026-10-27T10:00:00.000Z'
+  const listVersion = { status: 'published', everPublished: true, editsNotLive: false, rowVersion: 2, updatedAt: iso }
+  const row = { groupId: uuid, kind: 'story', title: { de: 'Die Kapellbrücke' }, cover: null, languages: { en: null, de: listVersion }, updatedAt: iso }
+
+  it('[E4.3][AC30] a list row with a German version only has null for English', () => {
+    const parsed = storyListItemSchema.parse(row)
+    expect(parsed.languages.en).toBeNull()
+    expect(ok(storyListSchema, { items: [row] })).toBe(true)
+  })
+
+  it('[E4.3][AC30] a list version with an unknown status is refused', () => {
+    expect(ok(storyListItemSchema, { ...row, languages: { en: null, de: { ...listVersion, status: 'archived' } } })).toBe(false)
+  })
+
+  it('[E4.3][AC30] the group read holds both languages as StoryVersion or null', () => {
+    const version = { groupId: uuid, storeId: uuid2, language: 'en', status: 'draft', slug: null, draft: null, published: null, publishedAt: null, rowVersion: 1, createdAt: iso, updatedAt: iso }
+    const group = { id: uuid, storeId: uuid2, kind: 'story', subjectPlaceId: null, stayTag: 'both', interests: [], categoryIds: [], placeIds: [], keepsakeProductIds: [], relatedGroupIds: [], rowVersion: 1, createdAt: iso, updatedAt: iso }
+    const parsed = storyGroupDetailSchema.parse({ ...group, versions: { en: version, de: null } })
+    expect(parsed.versions.de).toBeNull()
+    expect(parsed.versions.en?.language).toBe('en')
+  })
+})
+
+describe('[E4.3][AC30] the Delete story schemas', () => {
+  it('[E4.3][AC30] the link counts and the delete result are two non-negative whole numbers each', () => {
+    expect(ok(storyLinksSchema, { pins: 1, stories: 2 })).toBe(true)
+    expect(ok(storyLinksSchema, { pins: 0, stories: 0 })).toBe(true)
+    expect(ok(storyLinksSchema, { pins: -1, stories: 0 })).toBe(false)
+    expect(ok(storyLinksSchema, { pins: 1.5, stories: 0 })).toBe(false)
+    expect(ok(storyLinksSchema, { pins: 1 })).toBe(false)
+    expect(ok(storyDeletedSchema, { pinsUnlinked: 2, storiesUnlinked: 3 })).toBe(true)
+    expect(ok(storyDeletedSchema, { pinsUnlinked: 2 })).toBe(false)
   })
 })

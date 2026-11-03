@@ -169,6 +169,13 @@
       "when": 1794200953729,
       "tag": "0023_analytics",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794287353729,
+      "tag": "0024_story_delete",
+      "breakpoints": true
     }
   ]
 }

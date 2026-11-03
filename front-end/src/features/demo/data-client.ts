@@ -29,6 +29,7 @@ import { requestsQueries } from '@/features/requests/api/queries'
 import { createReviewsDemoClient } from '@/features/reviews/api/demo-client'
 import { reviewsQueries } from '@/features/reviews/api/queries'
 import { createStoresClient } from '@/features/stores/api/api-client'
+import { createStoriesClient } from '@/features/stories/api/api-client'
 import { createToursDemoClient } from '@/features/tours/api/demo-client'
 import { toursQueries } from '@/features/tours/api/queries'
 import { createTourSeed } from '@/features/tours/seed'
@@ -129,6 +130,7 @@ export function createDemoDataClient(store: DemoStore): DataClient {
     reports: createReportsDemoClient(store),
     requests: createRequestsDemoClient(store),
     reviews: createReviewsDemoClient(store),
+    stories: createStoriesClient(),
     stores: createStoresClient(),
     tours: createToursDemoClient(store),
   }

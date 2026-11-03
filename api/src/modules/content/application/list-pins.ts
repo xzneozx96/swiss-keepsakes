@@ -22,6 +22,7 @@ function toEntry(row: PinListRow, now: Date): MerchantPinEntry {
     stayTag: row.stayTag,
     interests: row.interests,
     coverMediaId: row.coverMediaId,
+    outboundUrl: row.outboundUrl,
     cover: row.cover,
     mainStory: row.mainStoryGroupId ? { groupId: row.mainStoryGroupId, published: row.mainStoryPublished } : null,
     rowVersion: row.rowVersion,

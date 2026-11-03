@@ -3,17 +3,20 @@ import type { StoryGroup, StoryVersion } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { StoryGroupInput } from '../application/create-story-group.ts'
+import type { StoryGroupDeleted } from '../application/delete-story-group.ts'
 import type { Result } from '../application/failure.ts'
+import type { StoryGroupRead } from '../application/get-story-group.ts'
 import type { StoryVersionText } from '../application/get-story-version-text.ts'
-import type { StoryGroupChanges, StoryVersionChanges } from '../ports.ts'
+import type { StoryListEntry } from '../application/list-story-groups.ts'
+import type { StoryGroupChanges, StoryLinkCounts, StoryVersionChanges } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { storyGroupCreateBodySchema, storyGroupSaveBodySchema, storyGroupSchema, storyVersionCreateBodySchema, storyVersionMoveBodySchema, storyVersionSaveBodySchema, storyVersionSchema, storyVersionTextSchema } from '@sk/api-contract'
+import { storyDeletedSchema, storyGroupCreateBodySchema, storyGroupDetailSchema, storyGroupSaveBodySchema, storyGroupSchema, storyLinksSchema, storyListSchema, storyVersionCreateBodySchema, storyVersionMoveBodySchema, storyVersionSaveBodySchema, storyVersionSchema, storyVersionTextSchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
 import { failureProblem } from './problems.ts'
 import { etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
-import { storyGroupView, storyVersionTextView, storyVersionView } from './story-view.ts'
+import { storyGroupDetailView, storyGroupView, storyListView, storyVersionTextView, storyVersionView } from './story-view.ts'
 
 type Language = StoryVersion['language']
 
@@ -26,7 +29,11 @@ export interface StoryUseCases {
   publishStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, requestId: string | null) => Promise<Result<StoryVersion>>
   unpublishStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, requestId: string | null) => Promise<Result<StoryVersion>>
   moveStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, targetGroupId: string, requestId: string | null) => Promise<Result<StoryVersion>>
+  listStoryGroups: (actor: Actor, storeId: string) => Promise<Result<StoryListEntry[]>>
+  getStoryGroup: (actor: Actor, storeId: string, groupId: string) => Promise<Result<StoryGroupRead>>
   getStoryVersionText: (actor: Actor, storeId: string, groupId: string, language: Language) => Promise<Result<StoryVersionText>>
+  getStoryLinks: (actor: Actor, storeId: string, groupId: string) => Promise<Result<StoryLinkCounts>>
+  deleteStoryGroup: (actor: Actor, storeId: string, groupId: string, requestId: string | null) => Promise<Result<StoryGroupDeleted>>
   // Turns a stored file key into its public URL, for the files a text names.
   publicUrl: (key: string) => string
   deleteStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, requestId: string | null) => Promise<Result<{ groupId: string, language: Language }>>
@@ -62,6 +69,46 @@ const getVersionTextRoute = createRoute({
   request: { params: versionParams },
   responses: {
     200: { description: 'The text of the version as the editor last left it, for a preview. 404 when the group has no version in the language', headers: requestIdHeader, content: json(storyVersionTextSchema) },
+    ...problemResponses,
+  },
+})
+
+const listGroupsRoute = createRoute({
+  method: 'get',
+  path: groupsPath,
+  request: { params: storeParams },
+  responses: {
+    200: { description: 'The story groups of the store that have a version, with the state of each language version, most recently updated first', headers: requestIdHeader, content: json(storyListSchema) },
+    ...problemResponses,
+  },
+})
+
+const getGroupRoute = createRoute({
+  method: 'get',
+  path: `${groupsPath}/{groupId}`,
+  request: { params: groupParams },
+  responses: {
+    200: { description: 'The group with its English and German versions. The ETag is the group\'s row version', headers: etagHeaders, content: json(storyGroupDetailSchema) },
+    ...problemResponses,
+  },
+})
+
+const getLinksRoute = createRoute({
+  method: 'get',
+  path: `${groupsPath}/{groupId}/links`,
+  request: { params: groupParams },
+  responses: {
+    200: { description: 'How many pins name the story as their main story and how many other stories list it as related, for the Delete story confirm', headers: requestIdHeader, content: json(storyLinksSchema) },
+    ...problemResponses,
+  },
+})
+
+const deleteGroupRoute = createRoute({
+  method: 'delete',
+  path: `${groupsPath}/{groupId}`,
+  request: { params: groupParams },
+  responses: {
+    200: { description: 'The story is deleted with both language versions, whatever their status, in one transaction. Pins that named it lose their main story, other stories stop listing it. No If-Match: the story goes whatever its row version', headers: requestIdHeader, content: json(storyDeletedSchema) },
     ...problemResponses,
   },
 })
@@ -149,6 +196,34 @@ const deleteVersionRoute = createRoute({
 // The Idempotency-Key middleware and the store guard sit before these (createApp), so the handlers read the
 // verified store from `c.get('store')`, never from the path.
 export function registerStoryRoutes(app: OpenAPIHono<AppEnv>, useCases: StoryUseCases): void {
+  app.openapi(listGroupsRoute, async (c) => {
+    const result = await useCases.listStoryGroups(c.get('actor'), c.get('store').storeId)
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json(storyListView(result.value, useCases.publicUrl), 200)
+  })
+
+  app.openapi(getGroupRoute, async (c) => {
+    const result = await useCases.getStoryGroup(c.get('actor'), c.get('store').storeId, c.req.valid('param').groupId)
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json(storyGroupDetailView(result.value), 200, etag(result.value.group))
+  })
+
+  app.openapi(getLinksRoute, async (c) => {
+    const result = await useCases.getStoryLinks(c.get('actor'), c.get('store').storeId, c.req.valid('param').groupId)
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json(result.value, 200)
+  })
+
+  app.openapi(deleteGroupRoute, async (c) => {
+    const result = await useCases.deleteStoryGroup(c.get('actor'), c.get('store').storeId, c.req.valid('param').groupId, c.get('requestId'))
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json(result.value, 200)
+  })
+
   app.openapi(getVersionTextRoute, async (c) => {
     const { groupId, language } = c.req.valid('param')
     const result = await useCases.getStoryVersionText(c.get('actor'), c.get('store').storeId, groupId, language)

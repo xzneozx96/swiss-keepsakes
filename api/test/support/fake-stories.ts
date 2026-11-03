@@ -5,7 +5,9 @@ import { randomUUID } from 'node:crypto'
 const key = (groupId: string, language: string) => `${groupId}/${language}`
 
 // An in-memory story repository. It copies what the SQL one does, but none of the database guards.
-export function createFakeStories(): StoryRepository<null> & { groups: Map<string, StoryGroup>, versions: Map<string, StoryVersion> } {
+export function createFakeStories(): StoryRepository<null> & { groups: Map<string, StoryGroup>, versions: Map<string, StoryVersion>, mainStoryOf: Map<string, { storeId: string, groupId: string | null }> } {
+  // pin id -> the main story it names; the pins themselves live in another repository.
+  const mainStoryOf = new Map<string, { storeId: string, groupId: string | null }>()
   const groups = new Map<string, StoryGroup>()
   const versions = new Map<string, StoryVersion>()
   const putGroup = (group: StoryGroup) => {
@@ -19,6 +21,7 @@ export function createFakeStories(): StoryRepository<null> & { groups: Map<strin
   return {
     groups,
     versions,
+    mainStoryOf,
     async insertGroup(_tx, storeId, input, at) {
       return putGroup({
         id: randomUUID(),
@@ -40,7 +43,8 @@ export function createFakeStories(): StoryRepository<null> & { groups: Map<strin
       return group?.storeId === storeId ? group : undefined
     },
     async saveGroup(_tx, group, changes, at) {
-      return putGroup({ ...group, ...changes, rowVersion: group.rowVersion + 1, updatedAt: at })
+      // As the SQL: a kind with no place stores no place, and a save that leaves kind out keeps both.
+      return putGroup({ ...group, ...changes, subjectPlaceId: changes.kind === undefined ? group.subjectPlaceId : (changes.subjectPlaceId ?? null), rowVersion: group.rowVersion + 1, updatedAt: at })
     },
     async insertVersion(_tx, storeId, groupId, language, changes, at) {
       if (versions.has(key(groupId, language)))
@@ -90,6 +94,50 @@ export function createFakeStories(): StoryRepository<null> & { groups: Map<strin
       if (versions.get(key(groupId, language))?.storeId !== storeId)
         return false
       return versions.delete(key(groupId, language))
+    },
+    async linkCounts(_tx, storeId, groupId) {
+      return {
+        pins: [...mainStoryOf.values()].filter(pin => pin.storeId === storeId && pin.groupId === groupId).length,
+        stories: [...groups.values()].filter(other => other.storeId === storeId && other.id !== groupId && other.relatedGroupIds.includes(groupId)).length,
+      }
+    },
+    async deleteGroup(_tx, storeId, groupId, at) {
+      if (groups.get(groupId)?.storeId !== storeId)
+        return undefined
+      const named = [...mainStoryOf.values()].filter(pin => pin.storeId === storeId && pin.groupId === groupId)
+      for (const pin of named)
+        pin.groupId = null
+      const listing = [...groups.values()].filter(other => other.storeId === storeId && other.relatedGroupIds.includes(groupId))
+      for (const other of listing)
+        putGroup({ ...other, relatedGroupIds: other.relatedGroupIds.filter(id => id !== groupId), rowVersion: other.rowVersion + 1, updatedAt: at })
+      const gone: { language: StoryVersion['language'], status: StoryVersion['status'] }[] = []
+      for (const [k, version] of versions) {
+        if (version.storeId === storeId && version.groupId === groupId) {
+          gone.push({ language: version.language, status: version.status })
+          versions.delete(k)
+        }
+      }
+      groups.delete(groupId)
+      return { pinsUnlinked: named.length, storiesUnlinked: listing.length, versions: gone }
+    },
+    async listGroups(_tx, storeId) {
+      return [...groups.values()].filter(group => group.storeId === storeId).flatMap((group) => {
+        const own = [...versions.values()].filter(version => version.storeId === storeId && version.groupId === group.id)
+        if (own.length === 0)
+          return []
+        return [{
+          groupId: group.id,
+          kind: group.kind,
+          versions: own.map((version) => {
+            const doc = version.draft ?? version.published
+            return { language: version.language, status: version.status, title: doc?.title ?? '', coverMediaId: doc?.coverMediaId ?? null, everPublished: version.published !== null, editsNotLive: version.status === 'published' && version.draft !== null, rowVersion: version.rowVersion, updatedAt: version.updatedAt }
+          }),
+        }]
+      })
+    },
+    async findGroup(_tx, storeId, groupId) {
+      const group = groups.get(groupId)
+      return group?.storeId === storeId ? group : undefined
     },
   }
 }

@@ -64,3 +64,13 @@ export function useMediaNames(storeId: string, ids: string[]) {
     combine: results => results.map(result => result.data?.name),
   })
 }
+
+/** The ids among `ids` whose file is ready, from the same cache as `useMediaFile`; one read each, side by side. */
+export function useReadyIds(storeId: string, ids: string[]) {
+  const client = useDataClient()
+
+  return useQueries({
+    queries: ids.map(id => mediaQueries.file(client, storeId, id)),
+    combine: results => results.flatMap((result, index) => (result.data?.status === 'ready' ? [ids[index]!] : [])),
+  })
+}

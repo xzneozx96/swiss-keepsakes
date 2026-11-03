@@ -17,6 +17,11 @@ import { placesEn } from '@/features/places/messages'
 import { reportPagesEn } from '@/features/reports/pages-messages'
 import { requestsEn } from '@/features/requests/messages'
 import { storesEn } from '@/features/stores/messages'
+import { storiesMerchantEn } from '@/features/stories/messages'
+import { storiesListsEn } from '@/features/stories/messages-lists'
+import { storiesMediaEn } from '@/features/stories/messages-media'
+import { storiesPreviewEn } from '@/features/stories/messages-preview'
+import { storiesPublishEn } from '@/features/stories/messages-publish'
 import { tourBookingEn } from '@/features/tours/booking/messages'
 import { tourDetailEn } from '@/features/tours/detail/messages'
 import { tourDiscoveryEn } from '@/features/tours/discovery/messages'
@@ -48,6 +53,11 @@ export const en = {
   ...keepsakesEn,
   ...mediaEn,
   ...placesEn,
+  ...storiesMerchantEn,
+  ...storiesPublishEn,
+  ...storiesPreviewEn,
+  ...storiesMediaEn,
+  ...storiesListsEn,
   ...actionBarEn,
   ...multiSelectEn,
   ...stepsEn,

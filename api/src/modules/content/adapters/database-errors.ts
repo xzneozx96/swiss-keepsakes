@@ -38,6 +38,9 @@ export function mapDatabaseError(error: unknown): Failure | undefined {
     return undefined
   const message = pg.message ?? ''
   const constraint = pg.constraint ?? ''
+  // A deadlock or serialization failure rolled this request back whole; a retry on a fresh read runs again (the house answer for a concurrent save).
+  if (pg.code === '40P01' || pg.code === '40001')
+    return { reason: 'stale' }
   if (pg.code === '23505' && slugConstraints.has(constraint))
     return { reason: 'slug-taken' }
   if (pg.code === '23001') {

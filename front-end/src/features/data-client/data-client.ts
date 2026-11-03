@@ -14,6 +14,7 @@ import type { ReportsClient } from '@/features/reports/api/client'
 import type { RequestsClient } from '@/features/requests/api/client'
 import type { ReviewsClient } from '@/features/reviews/api/client'
 import type { StoresClient } from '@/features/stores/api/client'
+import type { StoriesClient } from '@/features/stories/api/client'
 import type { ToursClient } from '@/features/tours/api/client'
 
 /**
@@ -37,6 +38,7 @@ export interface DataClient {
   reports: ReportsClient
   requests: RequestsClient
   reviews: ReviewsClient
+  stories: StoriesClient
   stores: StoresClient
   tours: ToursClient
 }

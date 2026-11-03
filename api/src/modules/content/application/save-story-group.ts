@@ -10,6 +10,9 @@ export function makeSaveStoryGroup<T>({ uow, stories, clock }: StoryDeps<T>) {
   return async (actor: Actor, storeId: string, groupId: string, ifMatch: number, changes: StoryGroupChanges, _requestId: string | null): Promise<Result<StoryGroup>> => {
     if (!mayManageContent(actor, storeId))
       return fail({ reason: 'forbidden' })
+    // story_groups_subject_check, as at creation: a review needs its place, a story has none, a place needs a kind.
+    if (changes.kind === undefined ? changes.subjectPlaceId !== undefined : (changes.kind === 'editorial_review') !== (changes.subjectPlaceId != null))
+      return fail({ reason: 'reference-invalid' })
     return uow.run(async (tx) => {
       const group = await stories.findGroupForUpdate(tx, storeId, groupId)
       if (!group)

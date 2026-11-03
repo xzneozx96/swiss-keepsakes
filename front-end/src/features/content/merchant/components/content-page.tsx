@@ -8,11 +8,8 @@ import type {
 } from '../hooks/use-merchant-reviews'
 import type { CommentAction } from './comment-rows'
 import type { Language } from '@/contexts/locale-context'
-import type { ArticleFilter } from '@/features/content/merchant/lib/search-params'
 import type { MessageKey } from '@/i18n/en'
 
-import { buttonVariants } from '@heroui/react'
-import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
@@ -21,26 +18,18 @@ import {
   FilterToolbar,
   selectedLabels,
 } from '@/components/filter-bar'
-import {
-  ContentIcon,
-  MessageIcon,
-  PlusIcon,
-  RatingIcon,
-} from '@/components/icons'
+import { MessageIcon, RatingIcon } from '@/components/icons'
 
 import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
 import { useLocale } from '@/contexts/locale-context'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
-import { useMerchantArticles } from '../hooks/use-merchant-articles'
-
 import { useMerchantComments } from '../hooks/use-merchant-comments'
 import { useMerchantReviews } from '../hooks/use-merchant-reviews'
-import { ArticleRows } from './article-rows'
 import { CommentRows } from './comment-rows'
 import { ReplySheet } from './reply-sheet'
 import { ReviewRows } from './review-rows'
 
-export type ContentTab = 'articles' | 'comments' | 'reviews'
+export type ContentTab = 'comments' | 'reviews'
 
 /** The page's one filter: its options with counts, any number ticked, as on M15. */
 function Filters<Id extends string>({
@@ -72,48 +61,6 @@ function Filters<Id extends string>({
 /** The empty-list wording of the one filter ticked, else of the whole list. */
 function emptyKey(prefix: string, filter: string[]) {
   return `${prefix}.${filter.length === 1 ? filter[0] : 'all'}` as MessageKey
-}
-
-/** M17 list: every language version, filtered by language (spec §3.2 "by language"). */
-function ArticlesPanel({
-  filter,
-  onFilterChange,
-  isLoading,
-}: {
-  filter: ArticleFilter[]
-  onFilterChange: (filter: ArticleFilter[]) => void
-  isLoading: boolean
-}) {
-  const { t } = useLocale()
-  const { rows, filters, total } = useMerchantArticles(filter)
-  const allLabel = t('merchantArticles.filter.all')
-  const selectedLabel = selectedLabels(filters, filter, allLabel)
-  const emptyState = {
-    icon: ContentIcon,
-    message: t(
-      total === 0
-        ? 'merchantArticles.empty.all'
-        : emptyKey('merchantArticles.empty', filter),
-    ),
-  }
-
-  return (
-    <>
-      <Filters
-        filters={filters}
-        label={t('merchantContent.filter.language')}
-        selected={filter}
-        onChange={onFilterChange}
-      />
-      <ArticleRows
-        empty={emptyState}
-        isLoading={isLoading}
-        label={selectedLabel}
-        resetKey={selectedLabel}
-        rows={rows}
-      />
-    </>
-  )
 }
 
 /** M18: hide, show again, delete through the shared dialog, and reply as the shop. */
@@ -268,50 +215,20 @@ function ReviewsPanel({ isLoading }: { isLoading: boolean }) {
 }
 
 /**
- * Content (spec §3.2): Articles (M17), Comments (M18) and Reviews (M23), each its own page
- * under Content (/store/content, /comments, /reviews). Each has M15's filter, phone cards
- * and, from 1024px, a table.
+ * Content (spec §3.2): Comments (M18) and Reviews (M23), each its own page under Content (/store/content/comments,
+ * /reviews); the stories list (M17) is the Content landing page (`features/stories`). Each has M15's filter, phone
+ * cards and, from 1024px, a table.
  */
-export function ContentPage({
-  tab,
-  articleFilter,
-  onArticleFilterChange,
-}: {
-  tab: ContentTab
-  articleFilter: ArticleFilter[]
-  onArticleFilterChange: (filter: ArticleFilter[]) => void
-}) {
+export function ContentPage({ tab }: { tab: ContentTab }) {
   const { t } = useLocale()
   const isLoading = useSimulatedLoading()
 
   return (
     <div className="flex flex-col gap-4">
       <MerchantPageHeader
-        action={
-          tab === 'articles' && (
-            <Link
-              className={`${buttonVariants({ size: 'sm' })} shrink-0`}
-              params={{ articleId: 'new' }}
-              search={
-                articleFilter.length === 1 ? { lang: articleFilter[0] } : {}
-              }
-              to="/store/content/articles/$articleId"
-            >
-              <PlusIcon aria-hidden size={16} />
-              {t('merchantArticles.new')}
-            </Link>
-          )
-        }
         description={t('merchantContent.intro')}
         title={t(`merchantContent.tab.${tab}`)}
       />
-      {tab === 'articles' && (
-        <ArticlesPanel
-          filter={articleFilter}
-          isLoading={isLoading}
-          onFilterChange={onArticleFilterChange}
-        />
-      )}
       {tab === 'comments' && <CommentsPanel isLoading={isLoading} />}
       {tab === 'reviews' && <ReviewsPanel isLoading={isLoading} />}
     </div>

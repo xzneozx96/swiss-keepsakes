@@ -45,7 +45,8 @@ export interface PhotoOrderPendingList {
 /** The words a screen reader and the live region use; the caller owns the translation. */
 export interface PhotoOrderLabels {
   list: string
-  cover: string
+  /** The line under the first row. Leave it out for a list whose first row is not special (keepsakes, stories). */
+  cover?: string
   move: (name: string, position: number, count: number) => string
   moved: (name: string, position: number, count: number) => string
   remove: (name: string) => string
@@ -167,7 +168,7 @@ export function PhotoOrder({ items, labels, pending, onChange }: { items: PhotoO
                 {item.thumbnail}
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate text-sm font-medium" title={item.name}>{item.name}</span>
-                  {index === 0 && <span className="truncate text-xs text-muted">{labels.cover}</span>}
+                  {index === 0 && labels.cover && <span className="truncate text-xs text-muted">{labels.cover}</span>}
                   {item.note}
                 </span>
                 <Button

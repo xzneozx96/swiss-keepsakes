@@ -166,3 +166,8 @@ export { MusicNote as MusicIcon } from 'reicon-react'
 export { Play as PlayIcon } from 'reicon-react'
 export { Pause as PauseIcon } from 'reicon-react'
 export { FilePdf as FilePdfIcon } from 'reicon-react'
+// Story body media blocks and the pin link
+export { Video as VideoIcon } from 'reicon-react'
+export { ArrowUp as ArrowUpIcon } from 'reicon-react'
+export { ArrowDown as ArrowDownIcon } from 'reicon-react'
+export { MapPoint as PinLinkIcon } from 'reicon-react'

@@ -1,4 +1,4 @@
-import type { ContentLanguage, Localized, MediaKind, Pin, PinDate, PinListEntry, PinStoryOption, StayTag, StoryDraft, StoryGroup, StoryVersion, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
+import type { ContentLanguage, Localized, MediaKind, Pin, PinDate, PinListEntry, PinStoryOption, StayTag, StoryDraft, StoryGroup, StoryVersion, StoryVersionStatus, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
 
 // What the content use cases need. Same shapes as the identity module's ports, copied so modules do not import
 // each other (backend/architecture.md). The platform's unit of work fits the generic shape structurally.
@@ -204,6 +204,7 @@ export interface PinListRow {
   stayTag: StayTag
   interests: string[]
   coverMediaId: string | null
+  outboundUrl: string | null
   // The cover file when it is ready; null when the pin has none or the file is not ready (still processing, or retired).
   cover: MediaRecord | null
   mainStoryGroupId: string | null
@@ -249,6 +250,9 @@ export interface PinRepository<T> {
 
 // What a story group save may change. A list replaces the whole list, in the order given.
 export interface StoryGroupChanges {
+  // Together: a review names its subject place, a story clears it (story_groups_subject_check).
+  kind?: StoryGroup['kind']
+  subjectPlaceId?: string | null
   stayTag?: StayTag
   interests?: string[]
   categoryIds?: string[]
@@ -261,6 +265,26 @@ export interface StoryGroupChanges {
 export interface StoryVersionChanges {
   slug?: string | null
   draft?: StoryDraft
+}
+
+// One story group for the list: only what the list shows, never the documents (a body can be 200 KB). Title and cover
+// id come from the draft when the version has one, else from the published text.
+export interface StoryListRow {
+  groupId: string
+  kind: StoryGroup['kind']
+  versions: { language: ContentLanguage, status: StoryVersionStatus, title: string, coverMediaId: string | null, everPublished: boolean, editsNotLive: boolean, rowVersion: number, updatedAt: Date }[]
+}
+
+export interface StoryLinkCounts {
+  pins: number
+  stories: number
+}
+
+export interface StoryGroupRemoval {
+  pinsUnlinked: number
+  storiesUnlinked: number
+  // The versions that went, with the status they had.
+  versions: { language: ContentLanguage, status: StoryVersionStatus }[]
 }
 
 export interface StoryRepository<T> {
@@ -282,6 +306,18 @@ export interface StoryRepository<T> {
   unpublishVersion: (tx: T, version: StoryVersion, at: Date) => Promise<StoryVersion>
   moveVersion: (tx: T, version: StoryVersion, targetGroupId: string, at: Date) => Promise<StoryVersion>
   removeVersion: (tx: T, storeId: string, groupId: string, language: ContentLanguage) => Promise<boolean>
+  // What links to the group: pins of the store that name it as main story, and other groups that list it as related.
+  linkCounts: (tx: T, storeId: string, groupId: string) => Promise<StoryLinkCounts>
+  // Delete story, whole, in the order the foreign keys need (the pins and the related rows that point at the group, the media
+  // references, both versions, then the group; its own lists go with it, CASCADE). The group is locked FOR UPDATE first, so a pin or
+  // story save that names it at the same moment waits for the commit and then fails as an invalid reference, instead of failing the
+  // delete. The pins keep every other field; their row_version moves so an open pin editor is stale. The groups that listed it move
+  // theirs too. `undefined` when the store has no such group.
+  deleteGroup: (tx: T, storeId: string, groupId: string, at: Date) => Promise<StoryGroupRemoval | undefined>
+  // The groups of the store that have at least one version. A group with none (left by a failed create) is left out.
+  listGroups: (tx: T, storeId: string) => Promise<StoryListRow[]>
+  // The group with its lists, without a lock. An id of another store has no row.
+  findGroup: (tx: T, storeId: string, groupId: string) => Promise<StoryGroup | undefined>
 }
 
 // What a tour guide save may change. A tour guide has no price and no departure. `stops` and `keepsakeProductIds`

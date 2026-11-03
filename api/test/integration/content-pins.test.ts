@@ -385,3 +385,18 @@ describe('[E2.6] pin repository on the real database', () => {
     expect(await other.use.remove(other.actor, other.store, pin.id, 1, null)).toEqual({ ok: false, reason: 'not-found' })
   })
 })
+
+describe('[E4.3][AC30] the pin story options', () => {
+  it('[E4.3][AC30] the pin story options leave out a group with no version', async () => {
+    // There is no group delete, so every story deleted from the list and every half-failed New story leaves a version-less group.
+    const s = setup()
+    const { rows: [empty] } = await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [s.store])
+    const { rows: [used] } = await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [s.store])
+    await pool.query(`insert into content.story_versions (group_id, store_id, language, status, draft) values ($1, $2, 'en', 'draft', '{"title":"A story","excerpt":"","authorName":"","coverMediaId":null,"body":{"type":"doc","content":[]}}')`, [used!.id, s.store])
+
+    const options = await s.uow.run(tx => s.pins.storyOptions(tx, s.store))
+
+    expect(options.map(option => option.groupId)).toEqual([used!.id])
+    expect(options.map(option => option.groupId)).not.toContain(empty!.id)
+  })
+})

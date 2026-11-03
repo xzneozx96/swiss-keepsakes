@@ -1,6 +1,8 @@
-import type { StoryGroup as StoryGroupView, StoryVersionText as StoryVersionTextView, StoryVersion as StoryVersionView } from '@sk/api-contract'
+import type { StoryGroupDetail as StoryGroupDetailView, StoryGroup as StoryGroupView, StoryList as StoryListView, StoryVersionText as StoryVersionTextView, StoryVersion as StoryVersionView } from '@sk/api-contract'
 import type { StoryDraft, StoryGroup, StoryVersion } from '@sk/domain/content'
+import type { StoryGroupRead } from '../application/get-story-group.ts'
 import type { StoryVersionText } from '../application/get-story-version-text.ts'
+import type { StoryListEntry } from '../application/list-story-groups.ts'
 import { mediaView } from './media-view.ts'
 
 // The response shape of a story group: the dates as ISO strings.
@@ -56,4 +58,23 @@ export function storyVersionTextView(text: StoryVersionText, publicUrl: (key: st
     media: text.media.map(file => mediaView(file, publicUrl)),
     updatedAt: text.updatedAt.toISOString(),
   }
+}
+
+// The list names each version's state only; the title and cover id the repository read for it are not part of the row.
+export function storyListView(entries: StoryListEntry[], publicUrl: (key: string) => string): StoryListView {
+  const version = (row: StoryListEntry['languages']['en']) => row && { status: row.status, everPublished: row.everPublished, editsNotLive: row.editsNotLive, rowVersion: row.rowVersion, updatedAt: row.updatedAt.toISOString() }
+  return {
+    items: entries.map(entry => ({
+      groupId: entry.groupId,
+      kind: entry.kind,
+      title: entry.title,
+      cover: entry.cover && mediaView(entry.cover, publicUrl),
+      languages: { en: version(entry.languages.en) ?? null, de: version(entry.languages.de) ?? null },
+      updatedAt: entry.updatedAt.toISOString(),
+    })),
+  }
+}
+
+export function storyGroupDetailView({ group, versions }: StoryGroupRead): StoryGroupDetailView {
+  return { ...storyGroupView(group), versions: { en: versions.en && storyVersionView(versions.en), de: versions.de && storyVersionView(versions.de) } }
 }

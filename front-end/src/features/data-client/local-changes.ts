@@ -14,14 +14,14 @@ export interface LocalChange {
 }
 
 interface Item { id: string }
-type ItemsOf = (items: Item[], queryKey: QueryKey) => Item[]
+type ItemsOf<T extends Item = Item> = (items: T[], queryKey: QueryKey) => T[]
 
 /** Edits `data[field]`, an array of items, and leaves any other shape alone. The one cast of the file: a cache holds `unknown`. */
-function editItems(field: string, edit: ItemsOf): LocalChange['apply'] {
+function editItems<T extends Item = Item>(field: string, edit: ItemsOf<T>): LocalChange['apply'] {
   return (data, queryKey) => {
     const items = (data as Record<string, unknown> | undefined)?.[field]
 
-    return Array.isArray(items) ? { ...(data as object), [field]: edit(items as Item[], queryKey) } : data
+    return Array.isArray(items) ? { ...(data as object), [field]: edit(items as T[], queryKey) } : data
   }
 }
 
@@ -108,6 +108,13 @@ export const commandChanges: Changes = {
       apply: patching('items', input.id, { status: hidden.status, rowVersion: hidden.rowVersion, updatedAt: hidden.updatedAt }),
     }],
     remove: input => [{ key: [...queryKeys.places.list, input.storeId], apply: without('items', input.id) }],
+  },
+  stories: {
+    // The list items are keyed by `groupId`, not `id`: the story's row is gone when the dialog closes.
+    removeStory: input => [{
+      key: [...queryKeys.stories.list, input.storeId],
+      apply: editItems<Item & { groupId: string }>('items', items => items.filter(item => item.groupId !== input.groupId)),
+    }],
   },
   stores: {
     removeMember: input => [{ key: [...queryKeys.stores.members, input.storeId], apply: without('members', input.memberId) }],

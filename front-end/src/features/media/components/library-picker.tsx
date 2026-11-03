@@ -1,7 +1,7 @@
 import type { MediaItem } from '@sk/api-contract'
 import type { PendingPhoto } from '../hooks/use-pending-photos'
 
-import { Button, SearchField, Skeleton, Spinner } from '@heroui/react'
+import { Button, SearchField, Skeleton, Spinner, toast } from '@heroui/react'
 import { useEffect, useRef, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
@@ -11,7 +11,7 @@ import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { useLatest } from '@/hooks/use-latest'
 import { useListLoading } from '@/hooks/use-list-loading'
-import { useMediaList } from '../api/queries'
+import { useMediaList, useMediaNames, useReadyIds } from '../api/queries'
 import { useDuplicateCheck } from '../hooks/use-duplicate-check'
 import { usePendingPhotos } from '../hooks/use-pending-photos'
 import { refusalOf } from '../hooks/use-photo-upload'
@@ -44,9 +44,9 @@ function TileChip({ children }: { children: string }) {
 
 /**
  * One photo as a labelled checkbox: the file name is its name for a screen reader; the tile shows the picture.
- * Choosable: an empty corner circle; chosen in this pick: the inside outline and the filled circle. A photo the page already has is disabled and faded, with no accent.
+ * Choosable: an empty corner circle; chosen in this pick: the inside outline and the filled circle. A photo the page already has is disabled and faded, with no accent; so is a photo that is still processing when `blocked`.
  */
-function Choice({ item, checked, disabled, used, onToggle }: { item: MediaItem, checked: boolean, disabled: boolean, used: boolean, onToggle: () => void }) {
+function Choice({ item, checked, disabled, used, blocked, onToggle }: { item: MediaItem, checked: boolean, disabled: boolean, used: boolean, blocked: boolean, onToggle: () => void }) {
   const { t } = useLocale()
   const processing = !used && item.status === 'processing'
   // The picture's spinner has a name of its own, so the checkbox says what it is.
@@ -54,12 +54,12 @@ function Choice({ item, checked, disabled, used, onToggle }: { item: MediaItem, 
 
   return (
     <li>
-      <label className={`group flex flex-col gap-1 ${disabled ? 'cursor-default opacity-60' : 'cursor-pointer'}`}>
+      <label className={`group flex flex-col gap-1 ${disabled || blocked ? 'cursor-default opacity-60' : 'cursor-pointer'}`}>
         <input
           aria-label={name}
           checked={checked}
           className="peer sr-only"
-          disabled={disabled}
+          disabled={disabled || blocked}
           type="checkbox"
           onChange={onToggle}
         />
@@ -67,7 +67,7 @@ function Choice({ item, checked, disabled, used, onToggle }: { item: MediaItem, 
           <span className="relative block w-full overflow-hidden rounded-xl">
             <FileThumb className="aspect-square w-full" item={item} />
             <TileOutline shown={checked} />
-            {!disabled && <TileMark selected={checked} />}
+            {!disabled && !blocked && <TileMark selected={checked} />}
             {used && <TileChip>{t('media.library.used')}</TileChip>}
             {processing && <TileChip>{t('media.status.processing')}</TileChip>}
           </span>
@@ -111,13 +111,15 @@ function PendingChoice({ item, onRetry, onRemove }: { item: PendingPhoto, onRetr
   )
 }
 
-function PickerBody({ storeId, used, selected, room, single, uploads, onToggle, onUpload }: {
+function PickerBody({ storeId, used, selected, room, single, readyOnly, uploads, onToggle, onUpload }: {
   storeId: string
   used: string[]
   selected: string[]
   room: number
   /** One photo is chosen: an upload or a pick replaces the choice, and there is always room for it. */
   single: boolean
+  /** A photo that is still processing cannot be chosen (a cover must be ready). */
+  readyOnly: boolean
   uploads: { pending: PendingPhoto[], retry: (key: string) => void, remove: (key: string) => void }
   onToggle: (id: string) => void
   onUpload: (files: File[]) => void
@@ -188,7 +190,7 @@ function PickerBody({ storeId, used, selected, room, single, uploads, onToggle, 
             const isUsed = used.includes(item.id)
             const checked = !isUsed && selected.includes(item.id)
 
-            return <Choice key={item.id} checked={checked} disabled={isUsed || (!checked && free <= 0)} item={item} used={isUsed} onToggle={() => onToggle(item.id)} />
+            return <Choice key={item.id} blocked={readyOnly && item.status === 'processing'} checked={checked} disabled={isUsed || (!checked && free <= 0)} item={item} used={isUsed} onToggle={() => onToggle(item.id)} />
           })}
         </ul>
       )}
@@ -198,15 +200,96 @@ function PickerBody({ storeId, used, selected, room, single, uploads, onToggle, 
 }
 
 /**
- * Choose photos that are already in the store's library (the same list, search and paging as the Media screen,
- * images, ready or still processing), up to `room` of them. A photo the page already has is disabled, faded, and
- * marked "already added". Upload a photo sends files through the photos field's own flow (duplicate check, request,
- * PUT, confirm): the new photo joins the grid and is chosen at once, a library duplicate the merchant chose to reuse
- * is chosen too. Add selected hands the ids to `onAdd` in the order they were chosen.
- * With `single` one photo is chosen (a new pick replaces it, `room` is ignored) and the button reads "Use this photo": a
- * variant takes one photo of the library.
+ * The photo wall of the library with its uploads, to sit inside a sheet of its own: the same list, search and paging as the Media screen
+ * (images, ready or still processing), "Upload a photo" (duplicate check, request, PUT, confirm) and the duplicates dialog. The parent owns
+ * `selected` and the sheet around it. A new upload and a library duplicate the merchant chose to reuse are chosen at once, except with
+ * `readyOnly`: a photo still processing cannot be chosen, and a new upload is chosen only when its file is ready (a story's photo or cover
+ * must not name a file that is still being made), with a line that says which file is awaited. `onLateUpload` gets an id that lands after the wall was closed. A file that is not a photo shows
+ * a toast, as on the Media screen, and its row says why.
  */
-export function LibraryPicker({ storeId, isOpen, used, room, single = false, onAdd, onClose }: {
+export function LibraryChoice({ storeId, used, room, single = false, readyOnly = false, selected, onSelectedChange, onLateUpload }: {
+  storeId: string
+  used: string[]
+  room: number
+  single?: boolean
+  readyOnly?: boolean
+  selected: string[]
+  onSelectedChange: (ids: string[]) => void
+  onLateUpload?: (id: string) => void
+}) {
+  const { t } = useLocale()
+  const duplicates = useDuplicateCheck(storeId)
+  const [awaiting, setAwaiting] = useState<string[]>([])
+  const mountedRef = useRef(true)
+  const claimedRef = useRef(new Set<string>())
+  const latest = useLatest({ used, selected, onSelectedChange, onLateUpload })
+  const choose = (ids: string[]) => latest.current.onSelectedChange(single ? ids.slice(-1) : [...new Set([...latest.current.selected, ...ids])])
+  const uploads = usePendingPhotos(storeId, (id) => {
+    if (!mountedRef.current)
+      latest.current.onLateUpload?.(id)
+    else if (readyOnly)
+      setAwaiting(current => [...current, id])
+    else
+      choose([id])
+  })
+  const ready = useReadyIds(storeId, awaiting)
+  const waiting = awaiting.filter(id => !ready.includes(id))
+  const names = useMediaNames(storeId, waiting)
+
+  useEffect(() => {
+    mountedRef.current = true
+
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+  // A file that was awaited and is now ready is chosen once; deselecting it later does not bring it back.
+  useEffect(() => {
+    const fresh = ready.filter(id => !claimedRef.current.has(id))
+
+    if (fresh.length === 0)
+      return
+    for (const id of fresh)
+      claimedRef.current.add(id)
+    choose(fresh)
+  })
+
+  const upload = async (files: File[]) => {
+    const refused = files.filter(file => refusalOf(file))
+
+    if (refused.length > 0)
+      toast.warning(t(refused.length === 1 ? 'media.upload.refusedOne' : 'media.upload.refused', { count: refused.length, list: refused.map(file => file.name).join(', ') }))
+    const decision = await duplicates.resolve(files, file => !refusalOf(file))
+
+    if (!decision)
+      return
+    const reused = decision.reuse.map(({ id }) => id).filter(id => !latest.current.used.includes(id))
+
+    if (reused.length > 0)
+      latest.current.onSelectedChange(single ? reused.slice(0, 1) : [...new Set([...latest.current.selected, ...reused])])
+    uploads.add(decision.upload)
+  }
+  const toggle = (id: string) => onSelectedChange(selected.includes(id) ? selected.filter(other => other !== id) : single ? [id] : [...selected, id])
+
+  return (
+    <>
+      <PickerBody readyOnly={readyOnly} room={room} selected={selected} single={single} storeId={storeId} uploads={uploads} used={used} onToggle={toggle} onUpload={files => void upload(files)} />
+      {waiting.map((id, index) => (
+        <p key={id} aria-live="polite" className="text-sm text-muted" role="status">{t('storyMedia.photo.waiting', { name: names[index] ?? '' })}</p>
+      ))}
+      {duplicates.dialog}
+    </>
+  )
+}
+
+/**
+ * Choose photos that are already in the store's library, up to `room` of them, in a sheet of their own (the wall is `LibraryChoice`).
+ * A photo the page already has is disabled, faded, and marked "already added". Add selected hands the ids to `onAdd` in the order
+ * they were chosen. With `single` one photo is chosen (a new pick replaces it, `room` is ignored) and the button reads "Use this photo":
+ * a variant takes one photo of the library. `title` and `chooseLabel` replace the sheet title and the button text (a story's cover
+ * says "Cover photo" and "Use as cover"); `readyOnly` disables a photo that is still processing.
+ */
+export function LibraryPicker({ storeId, isOpen, used, room, single = false, title, chooseLabel, readyOnly = false, onAdd, onClose }: {
   storeId: string
   isOpen: boolean
   /** The photos the page already has. */
@@ -215,35 +298,18 @@ export function LibraryPicker({ storeId, isOpen, used, room, single = false, onA
   room: number
   /** Choose one photo instead of several. */
   single?: boolean
+  title?: string
+  chooseLabel?: string
+  readyOnly?: boolean
   onAdd: (ids: string[]) => void
   onClose: () => void
 }) {
   const { t } = useLocale()
   const [selected, setSelected] = useState<string[]>([])
-  const duplicates = useDuplicateCheck(storeId)
-  const latest = useLatest({ isOpen, onAdd, used })
-  // A finished upload is chosen; one that lands after the sheet was closed goes straight to the page, as in the field.
-  const uploads = usePendingPhotos(storeId, (id) => {
-    if (latest.current.isOpen)
-      setSelected(current => (single ? [id] : current.includes(id) ? current : [...current, id]))
-    else
-      latest.current.onAdd([id])
-  })
-  const upload = async (files: File[]) => {
-    const decision = await duplicates.resolve(files, file => !refusalOf(file))
-
-    if (!decision)
-      return
-    const reused = decision.reuse.map(({ id }) => id).filter(id => !latest.current.used.includes(id))
-
-    setSelected(current => (single ? reused.slice(0, 1) : [...current, ...reused.filter(id => !current.includes(id))]))
-    uploads.add(decision.upload)
-  }
   const close = () => {
     setSelected([])
     onClose()
   }
-  const toggle = (id: string) => setSelected(current => (current.includes(id) ? current.filter(other => other !== id) : single ? [id] : [...current, id]))
 
   return (
     <SheetFrame
@@ -256,18 +322,17 @@ export function LibraryPicker({ storeId, isOpen, used, room, single = false, onA
               close()
             }}
           >
-            {t(single ? 'media.library.choose' : 'media.library.add')}
+            {chooseLabel ?? t(single ? 'media.library.choose' : 'media.library.add')}
           </Button>
           <Button variant="tertiary" onPress={close}>{t('media.library.cancel')}</Button>
         </>
       )}
       isOpen={isOpen}
-      title={t(single ? 'media.library.titleOne' : 'media.library.title')}
+      title={title ?? t(single ? 'media.library.titleOne' : 'media.library.title')}
       onClose={close}
     >
       {!single && <p aria-live="polite" className="text-sm text-muted" role="status">{t('media.library.selected', { count: selected.length, room })}</p>}
-      <PickerBody room={room} selected={selected} single={single} storeId={storeId} uploads={uploads} used={used} onToggle={toggle} onUpload={files => void upload(files)} />
-      {duplicates.dialog}
+      <LibraryChoice readyOnly={readyOnly} room={room} selected={selected} single={single} storeId={storeId} used={used} onLateUpload={id => onAdd([id])} onSelectedChange={setSelected} />
     </SheetFrame>
   )
 }

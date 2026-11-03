@@ -328,15 +328,12 @@ describe('[E2.6] story repository on the real database', () => {
     expect(await refs(a.id, 'draft')).toBe(0)
   })
 
-  it('[E2.6][AC79] a direct delete of a version that kept published text raises restrict_violation and mapDatabaseError says published-cannot-be-deleted', async () => {
+  it('[E2.6][AC79] the use case refuses to delete a version that kept published text, even though the database no longer does (migration 0024)', async () => {
     const s = setup()
     const g = await group(s)
     await version(s, g.id, 'en', await complete(s.store))
     await s.use.publish(s.actor, s.store, g.id, 'en', 1, null)
     await s.use.unpublish(s.actor, s.store, g.id, 'en', 2, null)
-    const error = await thrown(() => s.uow.run(tx => s.stories.removeVersion(tx, s.store, g.id, 'en')))
-    expect(error).toMatchObject({ cause: { code: '23001' } })
-    expect(mapDatabaseError(error)).toEqual({ reason: 'published-cannot-be-deleted' })
     expect(await s.use.remove(s.actor, s.store, g.id, 'en', 3, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
     expect(await versionRow(g.id)).toMatchObject({ status: 'draft' })
     const lone = await version(s, g.id, 'de', { slug: slug() })
@@ -407,6 +404,31 @@ describe('[E2.6] story repository on the real database', () => {
     // And the pin cannot be deleted while a review is about it.
     const error2 = await thrown(() => s.uow.run(tx => pins.remove(tx, s.store, pin.id)))
     expect(mapDatabaseError(error2)).toEqual({ reason: 'in-use' })
+  })
+
+  it('[E4.3][AC30] a group save sets kind and subject place together, and the database check holds', async () => {
+    const s = setup()
+    const pins = createPinRepository()
+    const pin = await s.uow.run(tx => pins.insert(tx, s.store, { title: { en: 'Chapel Bridge' } }, new Date()))
+    const foreign = await s.uow.run(tx => pins.insert(tx, randomUUID(), { title: { en: 'Elsewhere' } }, new Date()))
+    const g = await group(s)
+    const row = async () => (await pool.query<{ kind: string, subject_place_id: string | null, row_version: number }>(`select kind, subject_place_id, row_version from content.story_groups where id = $1`, [g.id])).rows[0]
+
+    expect(await s.use.saveGroup(s.actor, s.store, g.id, 1, { kind: 'editorial_review', subjectPlaceId: pin.id, placeIds: [pin.id] }, null))
+      .toMatchObject({ ok: true, value: { kind: 'editorial_review', subjectPlaceId: pin.id, placeIds: [pin.id], rowVersion: 2 } })
+    expect(await row()).toEqual({ kind: 'editorial_review', subject_place_id: pin.id, row_version: 2 })
+    // A mismatch is refused before the database and nothing changes.
+    expect(await s.use.saveGroup(s.actor, s.store, g.id, 2, { kind: 'story', subjectPlaceId: pin.id }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+    expect(await s.use.saveGroup(s.actor, s.store, g.id, 2, { kind: 'editorial_review', subjectPlaceId: null }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+    // A pin of another store, or none, is refused at commit and the group keeps its place.
+    expect(await s.use.saveGroup(s.actor, s.store, g.id, 2, { kind: 'editorial_review', subjectPlaceId: foreign.id }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+    expect(await s.use.saveGroup(s.actor, s.store, g.id, 2, { kind: 'editorial_review', subjectPlaceId: randomUUID() }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+    expect(await row()).toEqual({ kind: 'editorial_review', subject_place_id: pin.id, row_version: 2 })
+    // A save that leaves kind out keeps both.
+    expect(await s.use.saveGroup(s.actor, s.store, g.id, 2, { stayTag: 'short_stay' }, null)).toMatchObject({ ok: true, value: { kind: 'editorial_review', subjectPlaceId: pin.id, rowVersion: 3 } })
+    // Back to a story: the place is cleared.
+    expect(await s.use.saveGroup(s.actor, s.store, g.id, 3, { kind: 'story' }, null)).toMatchObject({ ok: true, value: { kind: 'story', subjectPlaceId: null, rowVersion: 4 } })
+    expect(await row()).toEqual({ kind: 'story', subject_place_id: null, row_version: 4 })
   })
 })
 
@@ -626,6 +648,36 @@ describe('[E2.6] the story routes over the real app and the database', () => {
     expect((await versionRow(groupId))!.draft).not.toMatchObject({ coverMediaId: cover })
   }, timeout)
 
+  it('[E4.3][AC30] the group PATCH over the real app: both pairings pass, both mismatches are 400, another store\'s group is 404, another store\'s pin is 422', async () => {
+    const lucerne = await env.storeWithStaff()
+    const zug = await env.storeWithStaff()
+    const { owner, groups } = lucerne
+    const pins = createPinRepository()
+    const [pin, foreign] = await Promise.all([
+      createUnitOfWork(db).run(tx => pins.insert(tx, lucerne.storeId, { title: { en: 'Chapel Bridge' } }, new Date())),
+      createUnitOfWork(db).run(tx => pins.insert(tx, zug.storeId, { title: { en: 'Elsewhere' } }, new Date())),
+    ]).then(rows => rows.map(r => r.id))
+    const { groupId } = await groupAndVersion(lucerne)
+    const path = `${groups}/${groupId}`
+    const patch = (version: number, body: object, base = path) => env.call(base, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': String(version) }, body })
+    const row = async () => (await pool.query(`select kind, subject_place_id, row_version from content.story_groups where id = $1`, [groupId])).rows[0]
+
+    const on = await patch(1, { kind: 'editorial_review', subjectPlaceId: pin, placeIds: [pin] })
+    expect(on.status).toBe(200)
+    expect(await on.json()).toMatchObject({ kind: 'editorial_review', subjectPlaceId: pin, rowVersion: 2 })
+    expect((await patch(2, { kind: 'editorial_review' })).status).toBe(400)
+    expect((await patch(2, { kind: 'story', subjectPlaceId: pin })).status).toBe(400)
+    expect((await patch(2, { kind: 'editorial_review', subjectPlaceId: foreign })).status).toBe(422)
+    expect(await row()).toMatchObject({ kind: 'editorial_review', subject_place_id: pin, row_version: 2 })
+    const off = await patch(2, { kind: 'story', subjectPlaceId: null })
+    expect(off.status).toBe(200)
+    expect(await off.json()).toMatchObject({ kind: 'story', subjectPlaceId: null, rowVersion: 3 })
+    expect(await row()).toMatchObject({ kind: 'story', subject_place_id: null, row_version: 3 })
+
+    const theirs = await groupAndVersion(zug)
+    expect((await patch(1, { kind: 'story', subjectPlaceId: null }, `${groups}/${theirs.groupId}`)).status).toBe(404)
+  }, timeout)
+
   it('[E2.6] AC-7 the other store\'s owner gets 403 and a group of another store is 404 through my store', async () => {
     const lucerne = await env.storeWithStaff()
     const zug = await env.storeWithStaff()
@@ -658,4 +710,74 @@ describe('[E2.6] the story routes over the real app and the database', () => {
     expect(await again.json()).toEqual(await first.json())
     expect(await auditRows(groupId)).toHaveLength(1)
   }, timeout)
+})
+
+describe('[E4.3][AC30] the story list reads', () => {
+  const list = (s: Setup, store = s.store) => s.uow.run(tx => s.stories.listGroups(tx, store))
+
+  it('[E4.3][AC30] AC-1 reads title, cover id and the state of both languages of one store only', async () => {
+    const s = setup()
+    const other = setup()
+    const g = await group(s)
+    const cover = await media(s.store)
+    const en = await version(s, g.id, 'en', { slug: slug(), draft: doc({ title: 'The wall', coverMediaId: cover }) })
+    const de = await version(s, g.id, 'de', await complete(s.store, { title: 'Einst' }))
+    const dePublished = await s.use.publish(s.actor, s.store, g.id, 'de', de.rowVersion, null)
+    if (!dePublished.ok)
+      throw new Error(`publish failed: ${dePublished.reason}`)
+    const unpublished = await s.use.unpublish(s.actor, s.store, g.id, 'de', dePublished.value.rowVersion, null)
+    if (!unpublished.ok)
+      throw new Error(`unpublish failed: ${unpublished.reason}`)
+    const g2 = await group(s)
+    const live = await version(s, g2.id, 'en', await complete(s.store, { title: 'Live' }))
+    const livePublished = await s.use.publish(s.actor, s.store, g2.id, 'en', live.rowVersion, null)
+    if (!livePublished.ok)
+      throw new Error(`publish failed: ${livePublished.reason}`)
+    await s.use.saveVersion(s.actor, s.store, g2.id, 'en', livePublished.value.rowVersion, { draft: doc({ title: 'Edited' }) }, null)
+    await version(other, (await group(other)).id)
+
+    const rows = await list(s)
+
+    expect(rows.map(row => row.groupId).sort()).toEqual([g.id, g2.id].sort())
+    const first = rows.find(row => row.groupId === g.id)!
+    expect(first.versions.find(v => v.language === 'en')).toMatchObject({ status: 'draft', title: 'The wall', coverMediaId: cover, everPublished: false, editsNotLive: false, rowVersion: en.rowVersion })
+    expect(first.versions.find(v => v.language === 'de')).toMatchObject({ status: 'draft', title: 'Einst', everPublished: true, editsNotLive: false, rowVersion: unpublished.value.rowVersion })
+    expect(rows.find(row => row.groupId === g2.id)!.versions[0]).toMatchObject({ status: 'published', title: 'Edited', everPublished: true, editsNotLive: true })
+    expect(await list(other)).toHaveLength(1)
+  })
+
+  it('[E4.3][AC30] a draft that cleared its cover does not show the published cover', async () => {
+    const s = setup()
+    const g = await group(s)
+    const created = await version(s, g.id, 'en', await complete(s.store))
+    const published = await s.use.publish(s.actor, s.store, g.id, 'en', created.rowVersion, null)
+    if (!published.ok)
+      throw new Error(`publish failed: ${published.reason}`)
+    expect((await list(s))[0]!.versions[0]!.coverMediaId).toBe(created.draft!.coverMediaId)
+    await s.use.saveVersion(s.actor, s.store, g.id, 'en', published.value.rowVersion, { draft: doc({ coverMediaId: null }) }, null)
+
+    expect((await list(s))[0]!.versions[0]).toMatchObject({ coverMediaId: null, editsNotLive: true })
+  })
+
+  it('[E4.3][AC30] a group with no version is not listed', async () => {
+    const s = setup()
+    await group(s)
+    const withVersion = await group(s)
+    await version(s, withVersion.id)
+
+    expect((await list(s)).map(row => row.groupId)).toEqual([withVersion.id])
+  })
+
+  it('[E4.3][AC30] findGroup returns the group of this store with its lists and no row of another store', async () => {
+    const s = setup()
+    const other = setup()
+    const place = await group(s, { interests: ['food-drink'] })
+
+    const found = await s.uow.run(tx => s.stories.findGroup(tx, s.store, place.id))
+    const foreign = await s.uow.run(tx => s.stories.findGroup(tx, other.store, place.id))
+
+    expect(found).toEqual(place)
+    expect(found).toMatchObject({ storeId: s.store, interests: ['food-drink'], categoryIds: [], placeIds: [] })
+    expect(foreign).toBeUndefined()
+  })
 })

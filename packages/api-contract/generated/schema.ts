@@ -3459,7 +3459,39 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The story groups of the store that have a version, with the state of each language version, most recently updated first */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryList"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
         put?: never;
         post: {
             parameters: {
@@ -3513,10 +3545,78 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The group with its English and German versions. The ETag is the group's row version */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryGroupDetail"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
-        delete?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The story is deleted with both language versions, whatever their status, in one transaction. Pins that named it lose their main story, other stories stop listing it. No If-Match: the story goes whatever its row version */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryDeleted"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch: {
@@ -3562,6 +3662,55 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/store/{storeId}/story-groups/{groupId}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description How many pins name the story as their main story and how many other stories list it as related, for the Delete story confirm */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryLinks"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/store/{storeId}/story-groups/{groupId}/versions": {
@@ -5754,6 +5903,8 @@ export interface components {
                 lastDay: string;
                 startTime: string | null;
             } | null;
+            /** @description The pin's one outbound link, or null */
+            outboundUrl: string | null;
             rowVersion: number;
             slug: {
                 de?: string;
@@ -7719,6 +7870,13 @@ export interface components {
             /** @enum {string} */
             type: "doc";
         };
+        /** @description The result of Delete story: how many links were removed with it */
+        StoryDeleted: {
+            /** @description Pins whose main story was cleared */
+            pinsUnlinked: number;
+            /** @description Other stories that no longer list the deleted one as related */
+            storiesUnlinked: number;
+        };
         /** @description The text of one story version. The title may be empty until it is published */
         StoryDraft: {
             authorName: string;
@@ -7769,15 +7927,113 @@ export interface components {
             /** Format: uuid */
             subjectPlaceId?: string;
         };
+        /** @description One story group with its English and German versions */
+        StoryGroupDetail: {
+            categoryIds: string[];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            id: string;
+            interests: string[];
+            keepsakeProductIds: string[];
+            /** @enum {string} */
+            kind: "story" | "editorial_review";
+            placeIds: string[];
+            relatedGroupIds: string[];
+            rowVersion: number;
+            /** @enum {string} */
+            stayTag: "short_stay" | "multi_day" | "both";
+            /** Format: uuid */
+            storeId: string;
+            /** Format: uuid */
+            subjectPlaceId: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+            versions: {
+                de: components["schemas"]["StoryVersion"];
+                en: components["schemas"]["StoryVersion"];
+            };
+        };
         StoryGroupSaveBody: {
             categoryIds?: string[];
             interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes" | "local-activities")[];
             keepsakeProductIds?: string[];
+            /** @enum {string} */
+            kind?: "story" | "editorial_review";
             placeIds?: string[];
             relatedGroupIds?: string[];
             /** @enum {string} */
             stayTag?: "short_stay" | "multi_day" | "both";
+            /** Format: uuid */
+            subjectPlaceId?: string | null;
         };
+        /** @description What links to a story: the counts the Delete story confirm names before the delete */
+        StoryLinks: {
+            /** @description Pins that name the story as their main story */
+            pins: number;
+            /** @description Other stories that list the story under More to discover */
+            stories: number;
+        };
+        /** @description The story groups of the store that have a version, most recently updated first */
+        StoryList: {
+            items: components["schemas"]["StoryListItem"][];
+        };
+        /** @description One story group, one row of the Stories list */
+        StoryListItem: {
+            /** @description The cover of the first language that has a ready one. Null when none */
+            cover: {
+                byteSize: number;
+                contentType: string;
+                height: number | null;
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "image" | "audio" | "pdf";
+                /** @description What the merchant sees and searches. It starts as the uploaded file name */
+                name: string;
+                /** @description The public URL of the original. Null until the file is ready */
+                publicUrl: string | null;
+                /** @enum {string} */
+                status: "processing" | "ready" | "retired";
+                /** @description Resized copies of an image. Empty until the file is ready */
+                variants: {
+                    url: string;
+                    width: number;
+                }[];
+                width: number | null;
+            } | null;
+            /** Format: uuid */
+            groupId: string;
+            /** @enum {string} */
+            kind: "story" | "editorial_review";
+            /** @description Null: no version in that language */
+            languages: {
+                de: components["schemas"]["StoryListVersion"];
+                en: components["schemas"]["StoryListVersion"];
+            };
+            /** @description The non-empty title of each language, from the draft, else the published text */
+            title: {
+                de?: string;
+                en?: string;
+            };
+            /**
+             * Format: date-time
+             * @description The latest update of any version
+             */
+            updatedAt: string;
+        };
+        /** @description The state of one language version of a story, for the list */
+        StoryListVersion: {
+            /** @description True when the version is published and a draft with unpublished edits sits on top */
+            editsNotLive: boolean;
+            /** @description True when the version holds published text, live or taken down. Such a version cannot be deleted */
+            everPublished: boolean;
+            rowVersion: number;
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** Format: date-time */
+            updatedAt: string;
+        } | null;
         /** @description One language version of a story, with its draft and its published text */
         StoryVersion: {
             /** Format: date-time */
@@ -7838,7 +8094,7 @@ export interface components {
             storeId: string;
             /** Format: date-time */
             updatedAt: string;
-        };
+        } | null;
         StoryVersionCreateBody: {
             draft?: components["schemas"]["StoryDraft"];
             /** @enum {string} */

@@ -78,4 +78,28 @@ describe('the story body as the sheet draws it', () => {
       .toEqual([{ type: 'paragraph', inlines: [{ text: 'kept' }] }])
     expect(storyBlocks({ type: 'doc', content: undefined } as never, [])).toEqual([])
   })
+
+  describe('[E4.3][AC45] AC-3 pin links', () => {
+    const pinned = doc({ type: 'paragraph', content: [text('Musegg', [{ type: 'pinLink', attrs: { pinId: 'p1' } }])] })
+
+    it('carries the target the lookup gives for a pin link', () => {
+      const blocks = storyBlocks(pinned, [], { pinHref: id => (id === 'p1' ? '/en/map?place=a' : null) })
+
+      expect(blocks).toEqual([{ type: 'paragraph', inlines: [{ text: 'Musegg', pinHref: '/en/map?place=a' }] }])
+    })
+
+    it('draws plain text when the lookup gives null', () => {
+      expect(storyBlocks(pinned, [], { pinHref: () => null })).toEqual([{ type: 'paragraph', inlines: [{ text: 'Musegg' }] }])
+    })
+
+    it('draws plain text with no options, as before', () => {
+      expect(storyBlocks(pinned, [])).toEqual([{ type: 'paragraph', inlines: [{ text: 'Musegg' }] }])
+    })
+
+    it('gives no href for a javascript link', () => {
+      const body = doc({ type: 'paragraph', content: [text('x', [{ type: 'link', attrs: { href: 'javascript:alert(1)' } }])] })
+
+      expect(storyBlocks(body, [])).toEqual([{ type: 'paragraph', inlines: [{ text: 'x' }] }])
+    })
+  })
 })

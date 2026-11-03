@@ -60,6 +60,11 @@ export const queryKeys = {
   reviews: {
     reviews: ['reviews', 'reviews'],
   },
+  stories: {
+    list: ['stories', 'list'],
+    group: ['stories', 'group'],
+    links: ['stories', 'links'],
+  },
   stores: {
     adminStores: ['stores', 'adminStores'],
     onboarding: ['stores', 'onboarding'],

@@ -6,7 +6,7 @@ import { registerContentRoutes } from '../../../src/modules/content/adapters/rou
 import { makeSaveStoryVersion } from '../../../src/modules/content/application/save-story-version.ts'
 import { createFakeContentUseCases, fakeMedia, fakeStoryGroup, fakeStoryVersion } from '../../support/fake-content-use-cases.ts'
 import { createFakeStories } from '../../support/fake-stories.ts'
-import { createGuardedApp, guardedCommands, noAccess, shopOrigin, signedInAs } from '../../support/guarded-app.ts'
+import { createGuardedApp, guardedCommands, noAccess, shopOrigin, signedInAs, strictCommands } from '../../support/guarded-app.ts'
 
 const lucerne = '0190f0c2-0000-7000-8000-00000000000a'
 const zug = '0190f0c2-0000-7000-8000-00000000000b'
@@ -522,5 +522,179 @@ describe('the story version text read (the place editor\'s preview)', () => {
     expect((await send(app, 'GET', english, signedInAs('guest'))).status).toBe(403)
     expect((await send(app, 'GET', english, signedInAs('ownerElsewhere'))).status).toBe(403)
     expect((await app.request(english, { headers: { Origin: shopOrigin } })).status).toBe(401)
+  })
+})
+
+describe('[E4.3][AC30] the story reads', () => {
+  const at = new Date('2026-10-27T10:00:00Z')
+  const readyCover = { ...fakeMedia, status: 'ready' as const }
+  const rowOf = (language: 'en' | 'de') => ({ language, status: 'published' as const, title: 'Die Mauer', coverMediaId: fakeMedia.id, everPublished: true, editsNotLive: false, rowVersion: 3, updatedAt: at })
+
+  it('[E4.3][AC30] GET story-groups answers the list with ISO dates and the cover urls', async () => {
+    const seen: unknown[] = []
+    const app = setup({ listStoryGroups: async (actor, storeId) => {
+      seen.push({ kind: actor.kind, storeId })
+      return { ok: true, value: [{ groupId, kind: 'story', title: { de: 'Die Mauer' }, cover: readyCover, languages: { en: null, de: rowOf('de') }, updatedAt: at }] }
+    } })
+
+    const response = await send(app, 'GET', groups)
+
+    expect(response.status).toBe(200)
+    const body = await response.json() as { items: { languages: { de: object } }[] }
+    expect(body).toMatchObject({ items: [{ groupId, kind: 'story', title: { de: 'Die Mauer' }, cover: { id: fakeMedia.id, publicUrl: `https://storage.test/media/${fakeMedia.storageKey}` }, languages: { en: null, de: { status: 'published', everPublished: true, editsNotLive: false, rowVersion: 3, updatedAt: '2026-10-27T10:00:00.000Z' } }, updatedAt: '2026-10-27T10:00:00.000Z' }] })
+    expect(Object.keys(body.items[0]!.languages.de)).not.toContain('title')
+    expect(seen).toEqual([{ kind: 'staff', storeId: lucerne }])
+  })
+
+  it('[E4.3][AC30] GET story-groups is 403 for a guest and for the owner of another store', async () => {
+    const app = setup()
+
+    expect((await send(app, 'GET', groups, signedInAs('guest'))).status).toBe(403)
+    expect((await send(app, 'GET', groups, signedInAs('ownerElsewhere'))).status).toBe(403)
+  })
+
+  it('[E4.3][AC30] GET story-groups/{groupId} answers the group with both versions and an ETag', async () => {
+    const app = setup({ getStoryGroup: async () => ({ ok: true, value: { group: { ...fakeStoryGroup, rowVersion: 4 }, versions: { en: fakeStoryVersion, de: null } } }) })
+
+    const response = await send(app, 'GET', group)
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('ETag')).toBe('"4"')
+    expect(await response.json()).toMatchObject({ id: groupId, rowVersion: 4, versions: { en: { language: 'en', groupId }, de: null } })
+  })
+
+  it('[E4.3][AC30] GET story-groups/{groupId} is 404 when the use case says not-found', async () => {
+    const app = setup({ getStoryGroup: async () => ({ ok: false, reason: 'not-found' }) })
+
+    const response = await send(app, 'GET', group)
+
+    expect(response.status).toBe(404)
+    expect(await response.json()).toMatchObject({ type: 'not-found' })
+  })
+
+  it('[E4.3][AC30] PATCH story-groups/{id} hands kind and subjectPlaceId to the use case', async () => {
+    const seen: unknown[] = []
+    const app = setup({ saveStoryGroup: async (_actor, _storeId, _id, _ifMatch, changes) => {
+      seen.push(changes)
+      return { ok: true, value: { ...fakeStoryGroup, rowVersion: 2 } }
+    } })
+    const pin = '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d'
+
+    expect((await send(app, 'PATCH', group, { 'If-Match': '1' }, { kind: 'editorial_review', subjectPlaceId: pin, placeIds: [pin] })).status).toBe(200)
+    expect((await send(app, 'PATCH', group, { 'If-Match': '1' }, { kind: 'story', subjectPlaceId: null })).status).toBe(200)
+    expect(seen).toEqual([{ kind: 'editorial_review', subjectPlaceId: pin, placeIds: [pin] }, { kind: 'story', subjectPlaceId: null }])
+  })
+
+  it('[E4.3][AC30] PATCH story-groups/{id} with a kind and subject place that disagree is 400 and never reaches the use case', async () => {
+    let calls = 0
+    const app = setup({ saveStoryGroup: async () => {
+      calls++
+      return { ok: true, value: fakeStoryGroup }
+    } })
+    const pin = '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d'
+
+    for (const body of [{ kind: 'editorial_review' }, { kind: 'story', subjectPlaceId: pin }, { subjectPlaceId: pin }]) {
+      const response = await send(app, 'PATCH', group, { 'If-Match': '1' }, body)
+      expect(response.status, JSON.stringify(body)).toBe(400)
+    }
+    expect(calls).toBe(0)
+  })
+
+  it('[E4.3][AC30] PATCH story-groups/{id} with a subject place of another store answers 422 reference-invalid', async () => {
+    const app = setup({ saveStoryGroup: async () => ({ ok: false, reason: 'reference-invalid' }) })
+    const response = await send(app, 'PATCH', group, { 'If-Match': '1' }, { kind: 'editorial_review', subjectPlaceId: '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d' })
+
+    expect(response.status).toBe(422)
+    expect(await response.json()).toMatchObject({ type: 'reference-invalid' })
+  })
+
+  it('[E4.3][AC30] the existing PATCH and POST on story-groups still answer', async () => {
+    const app = setup()
+
+    expect((await send(app, 'POST', groups, {}, {})).status).toBe(201)
+    expect((await send(app, 'PATCH', group, { 'If-Match': '"1"' }, {})).status).toBe(200)
+  })
+})
+
+describe('[E4.3][AC30] Delete story and its link counts', () => {
+  const links = `${group}/links`
+  const key = { 'Idempotency-Key': 'delete-story-1' }
+
+  it('[E4.3][AC30] GET links answers the two counts, and the use case gets the store from the verified path', async () => {
+    const seen: unknown[] = []
+    const app = setup({ getStoryLinks: async (actor, storeId, id) => {
+      seen.push({ kind: actor.kind, storeId, id })
+      return { ok: true, value: { pins: 1, stories: 2 } }
+    } })
+
+    const response = await send(app, 'GET', links)
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ pins: 1, stories: 2 })
+    expect(seen).toEqual([{ kind: 'staff', storeId: lucerne, id: groupId }])
+  })
+
+  it('[E4.3][AC30] DELETE of the group answers 200 with the unlink counts, needs no If-Match and reaches the use case with the verified store', async () => {
+    const seen: unknown[] = []
+    const app = setup({ deleteStoryGroup: async (_actor, storeId, id, requestId) => {
+      seen.push({ storeId, id, requestId: typeof requestId })
+      return { ok: true, value: { pinsUnlinked: 2, storiesUnlinked: 3 } }
+    } })
+
+    const response = await send(app, 'DELETE', group, key)
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ pinsUnlinked: 2, storiesUnlinked: 3 })
+    expect(seen).toEqual([{ storeId: lucerne, id: groupId, requestId: 'string' }])
+  })
+
+  it.each([
+    ['not-found', 404, 'not-found'],
+    ['forbidden', 403, 'forbidden'],
+  ] as const)('[E4.3][AC30] AC-3 a %s failure answers %i', async (reason, status, type) => {
+    const app = setup({ deleteStoryGroup: async () => ({ ok: false, reason }), getStoryLinks: async () => ({ ok: false, reason }) })
+
+    const removed = await send(app, 'DELETE', group, key)
+    const read = await send(app, 'GET', links)
+
+    expect(removed.status).toBe(status)
+    expect(await removed.json()).toMatchObject({ type })
+    expect(read.status).toBe(status)
+  })
+
+  it('[E4.3][AC30] AC-3 a member of another store never reaches the use case', async () => {
+    let calls = 0
+    const app = setup({
+      deleteStoryGroup: async () => {
+        calls++
+        return { ok: true, value: { pinsUnlinked: 0, storiesUnlinked: 0 } }
+      },
+      getStoryLinks: async () => {
+        calls++
+        return { ok: true, value: { pins: 0, stories: 0 } }
+      },
+    })
+
+    const removed = await send(app, 'DELETE', group, { ...key, ...signedInAs('ownerElsewhere') })
+    const read = await send(app, 'GET', links, signedInAs('ownerElsewhere'))
+
+    expect(removed.status).toBe(403)
+    expect(read.status).toBe(403)
+    expect(calls).toBe(0)
+  })
+
+  it('[E4.3][AC30] AC-4 a DELETE with no Idempotency-Key is 400 idempotency-key-required', async () => {
+    let calls = 0
+    const useCases = { ...createFakeContentUseCases(), deleteStoryGroup: async () => {
+      calls++
+      return { ok: true as const, value: { pinsUnlinked: 0, storiesUnlinked: 0 } }
+    } }
+    const { app } = createGuardedApp(people, undefined, { ...strictCommands, routes: [routes => registerContentRoutes(routes, useCases)] })
+
+    const response = await app.request(group, { method: 'DELETE', headers: { Origin: shopOrigin, ...signedInAs('owner') } })
+
+    expect(response.status).toBe(400)
+    expect(await response.json()).toMatchObject({ type: 'idempotency-key-required' })
+    expect(calls).toBe(0)
   })
 })

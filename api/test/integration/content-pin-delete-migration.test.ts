@@ -79,8 +79,8 @@ describe('[T-016] migration 0020 lets a published pin be deleted', () => {
     for (const statement of sql.split('--> statement-breakpoint'))
       await pool.query(statement)
     expect((await pool.query('delete from content.places where id = $1', [after])).rowCount).toBe(1)
-    // The story version guard of the same family is untouched.
+    // 0020 left the story version guard alone; migration 0024 (E4.3) drops it, so neither is left now.
     const triggers = await pool.query<{ name: string }>(`select tgname as name from pg_trigger where tgname in ('story_versions_keep_once_published', 'places_keep_once_published') and not tgisinternal`)
-    expect(triggers.rows.map(row => row.name)).toEqual(['story_versions_keep_once_published'])
+    expect(triggers.rows).toEqual([])
   })
 })

@@ -6681,6 +6681,13 @@
               "null"
             ]
           },
+          "outboundUrl": {
+            "description": "The pin's one outbound link, or null",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "rowVersion": {
             "type": "integer"
           },
@@ -6744,6 +6751,7 @@
           "stayTag",
           "interests",
           "coverMediaId",
+          "outboundUrl",
           "cover",
           "mainStory",
           "rowVersion",
@@ -15361,6 +15369,26 @@
         ],
         "type": "object"
       },
+      "StoryDeleted": {
+        "description": "The result of Delete story: how many links were removed with it",
+        "properties": {
+          "pinsUnlinked": {
+            "description": "Pins whose main story was cleared",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "storiesUnlinked": {
+            "description": "Other stories that no longer list the deleted one as related",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "pinsUnlinked",
+          "storiesUnlinked"
+        ],
+        "type": "object"
+      },
       "StoryDraft": {
         "additionalProperties": false,
         "description": "The text of one story version. The title may be empty until it is published",
@@ -15572,6 +15600,118 @@
         },
         "type": "object"
       },
+      "StoryGroupDetail": {
+        "description": "One story group with its English and German versions",
+        "properties": {
+          "categoryIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "keepsakeProductIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "story",
+              "editorial_review"
+            ],
+            "type": "string"
+          },
+          "placeIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "relatedGroupIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rowVersion": {
+            "type": "integer"
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "storeId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "subjectPlaceId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "versions": {
+            "properties": {
+              "de": {
+                "$ref": "#/components/schemas/StoryVersion"
+              },
+              "en": {
+                "$ref": "#/components/schemas/StoryVersion"
+              }
+            },
+            "required": [
+              "en",
+              "de"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "storeId",
+          "kind",
+          "subjectPlaceId",
+          "stayTag",
+          "interests",
+          "categoryIds",
+          "placeIds",
+          "keepsakeProductIds",
+          "relatedGroupIds",
+          "rowVersion",
+          "createdAt",
+          "updatedAt",
+          "versions"
+        ],
+        "type": "object"
+      },
       "StoryGroupSaveBody": {
         "additionalProperties": false,
         "properties": {
@@ -15605,6 +15745,13 @@
             "maxItems": 6,
             "type": "array"
           },
+          "kind": {
+            "enum": [
+              "story",
+              "editorial_review"
+            ],
+            "type": "string"
+          },
           "placeIds": {
             "items": {
               "format": "uuid",
@@ -15628,9 +15775,236 @@
               "both"
             ],
             "type": "string"
+          },
+          "subjectPlaceId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "type": "object"
+      },
+      "StoryLinks": {
+        "description": "What links to a story: the counts the Delete story confirm names before the delete",
+        "properties": {
+          "pins": {
+            "description": "Pins that name the story as their main story",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "stories": {
+            "description": "Other stories that list the story under More to discover",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "pins",
+          "stories"
+        ],
+        "type": "object"
+      },
+      "StoryList": {
+        "description": "The story groups of the store that have a version, most recently updated first",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StoryListItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "StoryListItem": {
+        "description": "One story group, one row of the Stories list",
+        "properties": {
+          "cover": {
+            "description": "The cover of the first language that has a ready one. Null when none",
+            "properties": {
+              "byteSize": {
+                "type": "integer"
+              },
+              "contentType": {
+                "type": "string"
+              },
+              "height": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "image",
+                  "audio",
+                  "pdf"
+                ],
+                "type": "string"
+              },
+              "name": {
+                "description": "What the merchant sees and searches. It starts as the uploaded file name",
+                "type": "string"
+              },
+              "publicUrl": {
+                "description": "The public URL of the original. Null until the file is ready",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "processing",
+                  "ready",
+                  "retired"
+                ],
+                "type": "string"
+              },
+              "variants": {
+                "description": "Resized copies of an image. Empty until the file is ready",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "width": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "status",
+              "name",
+              "contentType",
+              "byteSize",
+              "width",
+              "height",
+              "publicUrl",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "groupId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "story",
+              "editorial_review"
+            ],
+            "type": "string"
+          },
+          "languages": {
+            "description": "Null: no version in that language",
+            "properties": {
+              "de": {
+                "$ref": "#/components/schemas/StoryListVersion"
+              },
+              "en": {
+                "$ref": "#/components/schemas/StoryListVersion"
+              }
+            },
+            "required": [
+              "en",
+              "de"
+            ],
+            "type": "object"
+          },
+          "title": {
+            "description": "The non-empty title of each language, from the draft, else the published text",
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "updatedAt": {
+            "description": "The latest update of any version",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "groupId",
+          "kind",
+          "title",
+          "cover",
+          "languages",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "StoryListVersion": {
+        "description": "The state of one language version of a story, for the list",
+        "properties": {
+          "editsNotLive": {
+            "description": "True when the version is published and a draft with unpublished edits sits on top",
+            "type": "boolean"
+          },
+          "everPublished": {
+            "description": "True when the version holds published text, live or taken down. Such a version cannot be deleted",
+            "type": "boolean"
+          },
+          "rowVersion": {
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "everPublished",
+          "editsNotLive",
+          "rowVersion",
+          "updatedAt"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
       },
       "StoryVersion": {
         "description": "One language version of a story, with its draft and its published text",
@@ -15857,7 +16231,10 @@
           "createdAt",
           "updatedAt"
         ],
-        "type": "object"
+        "type": [
+          "object",
+          "null"
+        ]
       },
       "StoryVersionCreateBody": {
         "additionalProperties": false,
@@ -21363,6 +21740,51 @@
       }
     },
     "/api/store/{storeId}/story-groups": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryList"
+                }
+              }
+            },
+            "description": "The story groups of the store that have a version, with the state of each language version, most recently updated first",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
       "post": {
         "parameters": [
           {
@@ -21426,6 +21848,120 @@
       }
     },
     "/api/store/{storeId}/story-groups/{groupId}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryDeleted"
+                }
+              }
+            },
+            "description": "The story is deleted with both language versions, whatever their status, in one transaction. Pins that named it lose their main story, other stories stop listing it. No If-Match: the story goes whatever its row version",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryGroupDetail"
+                }
+              }
+            },
+            "description": "The group with its English and German versions. The ETag is the group's row version",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
       "patch": {
         "parameters": [
           {
@@ -21484,6 +22020,62 @@
                   "type": "string"
                 }
               },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/story-groups/{groupId}/links": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryLinks"
+                }
+              }
+            },
+            "description": "How many pins name the story as their main story and how many other stories list it as related, for the Delete story confirm",
+            "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }

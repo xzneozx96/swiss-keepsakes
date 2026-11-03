@@ -26,7 +26,7 @@ export const SECTION_PAGES = {
     {
       id: 'articles',
       to: '/store/content',
-      label: 'merchantContent.tab.articles',
+      label: 'merchantContent.tab.stories',
     },
     {
       id: 'places',

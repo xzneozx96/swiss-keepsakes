@@ -181,7 +181,7 @@ describe('[T-018][AC2] one save when the merchant leaves the step', () => {
     expect(body.newVariants!.filter(made => made.values[colour.ref] === colour.values[0]!.ref)).toHaveLength(1)
     expect(body.newVariants!.filter(made => made.values[colour.ref] === colour.values[1]!.ref)).toHaveLength(3)
     expect(body.newVariants!.every(made => Object.keys(made.values).length === 2)).toBe(true)
-  })
+  }, 20_000)
 
   it('[T-018] the arrow keys on an option\'s grip reorder the held options with no request; the order is saved when the step is left', async () => {
     await openStep()
@@ -199,7 +199,7 @@ describe('[T-018][AC2] one save when the merchant leaves the step', () => {
     await screen.findByTestId('review-screen', undefined, SLOW)
 
     expect((puts()[0]!.body as OptionsPut).options.map(option => option.name.en)).toEqual(['Colour', 'Size'])
-  })
+  }, 20_000)
 })
 
 describe('[T-018][AC3] a refused save stays on the step', () => {

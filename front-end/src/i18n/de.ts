@@ -19,6 +19,11 @@ import { placesDe } from '@/features/places/messages.de'
 import { reportPagesDe } from '@/features/reports/pages-messages.de'
 import { requestsDe } from '@/features/requests/messages.de'
 import { storesDe } from '@/features/stores/messages.de'
+import { storiesListsDe } from '@/features/stories/messages-lists.de'
+import { storiesMediaDe } from '@/features/stories/messages-media.de'
+import { storiesPreviewDe } from '@/features/stories/messages-preview.de'
+import { storiesPublishDe } from '@/features/stories/messages-publish.de'
+import { storiesMerchantDe } from '@/features/stories/messages.de'
 import { tourBookingDe } from '@/features/tours/booking/messages.de'
 import { tourDetailDe } from '@/features/tours/detail/messages.de'
 import { tourDiscoveryDe } from '@/features/tours/discovery/messages.de'
@@ -50,6 +55,11 @@ export const de: Record<MessageKey, string> = {
   ...keepsakesDe,
   ...mediaDe,
   ...placesDe,
+  ...storiesMerchantDe,
+  ...storiesPublishDe,
+  ...storiesPreviewDe,
+  ...storiesMediaDe,
+  ...storiesListsDe,
   ...actionBarDe,
   ...multiSelectDe,
   ...stepsDe,

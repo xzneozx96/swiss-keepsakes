@@ -37,6 +37,7 @@ export function listItem(over: Partial<PinListItem> = {}): PinListItem {
     stayTag: 'both',
     interests: [],
     coverMediaId: null,
+    outboundUrl: null,
     cover: null,
     mainStory: null,
     rowVersion: 1,
