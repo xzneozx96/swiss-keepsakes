@@ -1,58 +1,27 @@
-import type { Language } from '@/contexts/locale-context'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
-import { createFileRoute } from '@tanstack/react-router'
+import { StoryEditorScreen } from '@/features/stories/components/story-editor-screen'
+import { storySearch } from '@/features/stories/lib/search-params'
 
-import { EmptyState } from '@/components/empty-state'
-import { ContentIcon } from '@/components/icons'
-import { EditorFormSkeleton } from '@/components/layout/detail-skeletons'
-import { useLocale } from '@/contexts/locale-context'
-import { useArticles } from '@/features/content/api/queries'
-import { ArticleEditor } from '@/features/content/merchant/components/article-editor'
-import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
-
-interface EditorSearch {
-  /** Language of a new article; absent = the interface language. */
-  lang?: Language
-}
-
-// M17 article editor (step 4.12). `new` opens an empty draft that is stored on its first save.
+// The story editor (E4.3). `$articleId` is the story group's id; `?lang=en|de` is the open language version and
+// `?screen=review` the Review and publish screen (none means Write).
 export const Route = createFileRoute('/store/content/articles/$articleId')({
-  validateSearch: (search: Record<string, unknown>): EditorSearch => ({
-    lang:
-      search.lang === 'en' || search.lang === 'de' ? search.lang : undefined,
-  }),
-  component: ArticleEditorPage,
+  validateSearch: storySearch,
+  component: StoryEditorPage,
 })
 
-function ArticleEditorPage() {
+function StoryEditorPage() {
   const { articleId } = Route.useParams()
-  const { lang } = Route.useSearch()
-  const { t, language } = useLocale()
-  const isLoading = useSimulatedLoading()
-  const exists = useArticles(
-    articles => articleId === 'new' || articles.some(a => a.id === articleId),
-  )
+  const { lang, screen } = Route.useSearch()
+  const navigate = useNavigate({ from: Route.fullPath })
 
-  if (isLoading) {
-    return <EditorFormSkeleton cards={3} />
-  }
-
-  if (!exists) {
-    return (
-      <EmptyState
-        action={{ label: t('merchantArticles.back'), to: '/store/content' }}
-        icon={ContentIcon}
-        message={t('merchantArticles.notFound')}
-      />
-    )
-  }
-
-  // Keyed by article, so a save of a new article or a jump to the other version starts fresh.
   return (
-    <ArticleEditor
-      key={articleId}
-      articleId={articleId}
-      newLanguage={lang ?? language}
+    <StoryEditorScreen
+      groupId={articleId}
+      language={lang}
+      screen={screen ?? 'write'}
+      onLanguage={next => void navigate({ search: previous => ({ ...previous, lang: next }), replace: true })}
+      onScreen={next => void navigate({ search: previous => ({ ...previous, screen: next === 'review' ? 'review' : undefined }) })}
     />
   )
 }
