@@ -73,6 +73,7 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
     saveVariant: editor.saveVariant,
     saveVariants: editor.saveVariants,
     createVariant: editor.createVariant,
+    setStock: editor.setStock,
     addPhoto: mediaId => editor.change(current => ({ photoIds: current.photoIds.includes(mediaId) ? current.photoIds : [...current.photoIds, mediaId] })),
   })
   const [showErrors, setShowErrors] = useState(false)

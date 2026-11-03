@@ -204,6 +204,7 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
     saveVariant: held.save,
     saveVariants: held.saveMany,
     createVariant: held.create,
+    setStock: (variant, onHand) => held.setStock(variant.id, onHand),
     // Done: the variants take the option's values and the new combinations are made, in the browser.
     commit: async ({ drafts, plan }) => {
       const outcome = await held.apply(drafts, plan)
