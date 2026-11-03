@@ -1,0 +1,36 @@
+/** Products > Inventory (E6.3): the stock of every variant, edited in the list. The screens say "In stock" and "Reserved", never "on hand" or "held". */
+export const inventoryEn = {
+  'inventory.nav': 'Inventory',
+  'inventory.title': 'Inventory',
+  'inventory.description': 'What is in stock for each variant and what orders have reserved. Change a figure right in the list.',
+  'inventory.tabsLabel': 'Stock',
+  'inventory.tab.all': 'All',
+  'inventory.tab.inStock': 'In stock',
+  'inventory.tab.soldOut': 'Sold out',
+  'inventory.search': 'Search code or name',
+  'inventory.searchLabel': 'Search by code or name',
+
+  'inventory.column.variant': 'Variant',
+  'inventory.column.code': 'SKU code',
+  'inventory.column.reserved': 'Reserved',
+  'inventory.column.inStock': 'In stock',
+  'inventory.column.available': 'Available',
+  'inventory.soldOut': 'Sold out',
+  'inventory.available': '{count} available',
+  'inventory.reserved': '{count} reserved',
+  'inventory.field': 'In stock for {code}',
+  'inventory.untitled': 'Untitled keepsake',
+
+  'inventory.empty.all': 'No variants yet.',
+  'inventory.empty.inStock': 'No variants in stock.',
+  'inventory.empty.soldOut': 'Nothing is sold out.',
+  'inventory.empty.search': 'No variant matches “{query}”.',
+
+  'inventory.error.whole': 'Enter a whole number, 0 or more.',
+  'inventory.error.most': 'Most 9999.',
+  'inventory.error.belowReserved.one': '{count} unit is reserved by orders, so stock can’t go below the {count} reserved.',
+  'inventory.error.belowReserved.other': '{count} units are reserved by orders, so stock can’t go below the {count} reserved.',
+  'inventory.problem.forbidden': 'You can’t change the stock of this shop.',
+  'inventory.problem.notFound': 'This variant no longer exists.',
+  'inventory.problem.generic': 'The stock could not be saved. Try again.',
+}
