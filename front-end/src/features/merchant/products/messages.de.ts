@@ -239,6 +239,7 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'pickup.hours.title': 'Öffnungszeiten',
   'pickup.hours.help':
     'Die Zeiten sind Schweizer Ortszeit. Eine Schliesszeit vor der Öffnungszeit schliesst am nächsten Morgen.',
+  'pickup.error.hoursRepeat': 'Zwei Zeitfenster am selben Tag können nicht zur gleichen Zeit öffnen.',
   'pickup.problem.stale':
     'Jemand hat diese Abholstelle gespeichert, nachdem Sie sie geöffnet haben. Laden Sie neu, um die Version zu sehen. Ihre letzten Änderungen sind nicht gespeichert.',
   'pickup.reload': 'Neu laden',

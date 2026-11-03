@@ -79,6 +79,20 @@ describe('[E6.6][AC26] pickup form', () => {
     })
   })
 
+  it('refuses a second span that opens at the same time on the same day, as the API does, and not on another day', () => {
+    const form = { ...filled(), hours: [
+      { key: 'a', day: 1, opens: '10:00', closes: '12:00' },
+      { key: 'b', day: 1, opens: '10:00', closes: '18:00' },
+      { key: 'c', day: 2, opens: '10:00', closes: '12:00' },
+      { key: 'd', day: 1, opens: '10:00', closes: '10:00' },
+    ] }
+
+    expect(pickupErrors(form)).toMatchObject({
+      hours: { b: 'pickup.error.hoursRepeat', d: 'places.error.hoursSame' },
+      count: 2,
+    })
+  })
+
   it('reports the languages a point is complete in', () => {
     expect(languagesOf(filled())).toBe('en-missing')
     expect(languagesOf(formOf(place))).toBe('de-missing')

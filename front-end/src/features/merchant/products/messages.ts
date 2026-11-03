@@ -236,6 +236,7 @@ export const productsEn = {
   'pickup.hours.title': 'Opening hours',
   'pickup.hours.help':
     'Hours are Swiss local time. A closing time before the opening time closes the next morning.',
+  'pickup.error.hoursRepeat': 'Two time ranges on one day cannot open at the same time.',
   'pickup.problem.stale':
     'Someone saved this pickup point after you opened it. Reload to see their version. Your last edits are not saved.',
   'pickup.reload': 'Reload',
