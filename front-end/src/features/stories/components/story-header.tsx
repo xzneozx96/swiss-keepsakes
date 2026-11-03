@@ -4,6 +4,7 @@ import type { VersionState } from '../lib/version-state'
 import { Button } from '@heroui/react'
 
 import { BackIcon, TrashIcon } from '@/components/icons'
+import { BAR_PULL_UP } from '@/components/layout/notice-aware-bar'
 import { RowActions } from '@/components/row-actions'
 import { useLocale } from '@/contexts/locale-context'
 import { useIsWide } from '@/hooks/use-is-wide'
@@ -36,7 +37,7 @@ export function StoryHeader({ screen, language, versionState, save, onBack, onRe
     : t('storyEditor.title.line', { language: t(`storyEditor.language.${language}`), state: t(live ? 'storyEditor.state.published' : 'storyEditor.state.draft') })
 
   return (
-    <div className="sticky top-0 z-30 -mx-4 -mt-4 border-b border-separator bg-background/90 backdrop-blur-xl lg:-mx-8 lg:-mt-8">
+    <div className={`sticky top-0 z-30 -mx-4 border-b border-separator bg-background/90 backdrop-blur-xl lg:-mx-8 ${BAR_PULL_UP}`}>
       <div className="flex h-16 items-center gap-2 px-2 lg:gap-3 lg:px-6">
         <Button isIconOnly aria-label={t(reviewing ? 'storyEditor.back.toWriting' : 'storyEditor.back.toStories')} className="size-11 shrink-0" variant="ghost" onPress={onBack}>
           <BackIcon aria-hidden size={20} />

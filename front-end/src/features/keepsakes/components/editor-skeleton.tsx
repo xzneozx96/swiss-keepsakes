@@ -1,5 +1,6 @@
 import { Skeleton } from '@heroui/react'
 
+import { BAR_PULL_UP } from '@/components/layout/notice-aware-bar'
 import { useLocale } from '@/contexts/locale-context'
 
 function CardSkeleton({ children }: { children: React.ReactNode }) {
@@ -20,7 +21,7 @@ export function EditorSkeleton() {
 
   return (
     <div aria-busy="true" aria-label={t('keepsakes.loading')} className="flex flex-col">
-      <div className="-mx-4 -mt-4 flex min-h-16 items-center gap-3 border-b border-separator px-2 py-2 lg:-mx-8 lg:-mt-8 lg:px-8">
+      <div className={`-mx-4 flex min-h-16 items-center gap-3 border-b border-separator px-2 py-2 lg:-mx-8 ${BAR_PULL_UP} lg:px-8`}>
         <Skeleton className="size-11 shrink-0 rounded-full" />
         <div className="flex flex-1 flex-col gap-2">
           <Skeleton className="h-4 w-48 rounded-lg" />
