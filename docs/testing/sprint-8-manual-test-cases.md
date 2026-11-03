@@ -1,7 +1,7 @@
 # Sprint 8 manual test cases
 
 - **Sprint:** 8 (release 1 polish and first sales groundwork)
-- **Stories covered:** E6.3 stock, E6.5 opening stock, E6.6 pickup points, E8.7 analytics events, the Lark sync and plan docs. E4.3 (stories) comes with its own PR.
+- **Stories covered:** E6.3 stock, E6.5 opening stock, E6.6 pickup points, E8.7 analytics events, E4.3 stories (the story editor), the Lark sync and plan docs.
 - **What to test:** each PR's branch, or the integration branch once the PRs are merged in the order below.
 - **Written:** 2026-11-03. Format: `docs/development-rules/shared/manual-test-cases.md`.
 
@@ -16,6 +16,7 @@ The cases are grouped by PR, in this merge order. Test and merge in this order. 
 | 3 | E6.5 opening stock for the five Victorinox knives | S8-STOCK-SEED-01 to 04 |
 | 4 | E6.6 pickup points (migration 0022) | S8-PICKUP-01 to 08 |
 | 5 | E8.7 analytics events and the map card tip fix (migration 0023) | S8-EVENTS-01 to 07, S8-MAP-01 |
+| 6 | E4.3 story editor | S8-STORY-01 to 28 |
 
 S8-FIX (the one-variant fix) is already on main (PR #95, commit 8b936dbc). The E6.3 stock cases in PR 2 depend on it, so run S8-FIX first on any build.
 
@@ -87,8 +88,36 @@ Events go to PostHog EU. Nothing is sent unless you switch it on.
 | S8-EVENTS-06 | A production or unset site environment sends nothing | E8.7 / AC37 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-EVENTS-07 | A signed-in Super Admin on the guest site sends nothing | E8.7 / AC37 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-MAP-01 | The map place card shows no tip | E8.7 / owner decision 2026-11-03 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-01 | The stories list shows each language version's state | E4.3 / AC30 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-02 | New story opens the editor | E4.3 / AC30 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-03 | A draft saves itself while typing | E4.3 / AC45 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-04 | Leaving with unsaved edits asks first | E4.3 / AC45 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-05 | A save from a stale tab is refused | E4.3 / AC45 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-06 | Starting the German version carries the cover | E4.3 / AC30 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-07 | Formatting survives a save and reload | E4.3 / AC45 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-08 | Pasted text keeps only the allowed formatting | E4.3 / AC45 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-09 | Photo, video and recording between paragraphs | E4.3 / AC45 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-10 | Link a word to a pin | E4.3 / AC45 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-11 | A new story is blocked until four things are set | E4.3 / AC30 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-12 | Publish in one language only | E4.3 / AC30 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-13 | Publish changes and Unpublish | E4.3 / AC45 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-14 | Blog category choice rules | E4.3 / AC87 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-15 | An editorial review needs a place and a date | E4.3 / AC30 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-16 | Keepsakes stop at six and reorder by keyboard | E4.3 / AC33 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-17 | Related stories stop at three and are shared by both languages | E4.3 / AC33 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-18 | The preview shows the draft as guests will see it | E4.3 / AC45 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-19 | Delete a draft story from the list | E4.3 / AC30 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-20 | Delete a published story that pins and stories link to | E4.3 / AC30 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-21 | A failed delete keeps the dialog open | E4.3 / AC30 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-22 | Delete in German, and a second tab | E4.3 / AC30 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-23 | A review at 50 places refuses a 51st place | E4.3 / AC30 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-24 | The reviewed place cannot leave Places | E4.3 / AC30 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-25 | Leaving with a review that has no place asks first | E4.3 / AC30 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-26 | The header shows a failed Details save | E4.3 / AC45 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-27 | Deleting a story leaves no stale pin or story behind | E4.3 / AC30 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-STORY-28 | The cover picker waits for a new photo to finish processing | E4.3 / AC30 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
 
-Counts: 37 cases. P1: 7, P2: 21, P3: 9.
+Counts: 65 cases. P1: 15, P2: 31, P3: 19.
 
 ## PR 1: Lark and plan docs
 
@@ -672,6 +701,433 @@ Do the PostHog setup in "Before you start" first. A sender that is off sends not
 - **Postconditions:** none.
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
 
-## S8-STORY: comes with the E4.3 PR
+## PR 6: E4.3 story editor
 
-The stories (E4.3) cases are not in this file yet. They arrive with the E4.3 PR, as `S8-STORY-<nn>`, and the summary table and counts above are then updated.
+Open Content, Stories. Run the cases on a story with both an English and a German version unless a case says otherwise. Cases S8-STORY-23 to 28 cover review fixes: the 50-place limit, the reviewed place, the save status, delete and the cover picker.
+
+### S8-STORY-01 The stories list shows each language version's state
+- **Story / AC:** E4.3 / AC30
+- **Priority:** P2
+- **Role and device:** Owner, desktop 1280 px (repeat at phone 375 px)
+- **Preconditions:** a story with an English draft and a story with a published German version.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open Content, Stories. | Each row shows the title, a thumbnail and the English and German state. |
+| 2 | Open the Drafts tab. | Only stories with no published version show. |
+| 3 | Search for text that matches no title. | The list says "No story matches “{query}”." |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-02 New story opens the editor
+- **Story / AC:** E4.3 / AC30
+- **Priority:** P1
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** none.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Press New story. | The editor opens on an empty English draft. |
+| 2 | Press Back to Stories. | The list shows the new story as an English draft. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-03 A draft saves itself while typing
+- **Story / AC:** E4.3 / AC45
+- **Priority:** P1
+- **Role and device:** Owner, desktop 1280 px (repeat at phone 375 px)
+- **Preconditions:** an English draft.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Type a title and wait two seconds. | The header shows "Saving…" and then "Saved {time}". |
+| 2 | Reload. | The title is still there. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-04 Leaving with unsaved edits asks first
+- **Story / AC:** E4.3 / AC45
+- **Priority:** P2
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** an open draft.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Type a title and press Back at once. | A dialog "Leave without saving?" opens with Keep editing and Leave without saving. |
+| 2 | Press Keep editing. | The editor stays open with the text. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-05 A save from a stale tab is refused
+- **Story / AC:** E4.3 / AC45
+- **Priority:** P3
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** the same story open in two tabs.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Change the title in tab 1 and wait for Saved. | Tab 1 shows "Saved {time}". |
+| 2 | Change the title in tab 2 and wait. | Tab 2 shows "Someone saved this after you opened it. Reload and apply your change again." with a reload button. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-06 Starting the German version carries the cover
+- **Story / AC:** E4.3 / AC30
+- **Priority:** P3
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** an English draft with a cover.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Press Start this version on the German switch. | A German draft opens. |
+| 2 | Look at the cover card. | It shows the English cover. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-07 Formatting survives a save and reload
+- **Story / AC:** E4.3 / AC45
+- **Priority:** P1
+- **Role and device:** Owner, desktop 1280 px (repeat at phone 375 px)
+- **Preconditions:** an English draft.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Write two paragraphs, make a word bold, add a link, an H2, a quote and a bullet list. | The editor shows each format. |
+| 2 | Wait for Saved, then reload. | The body looks the same. |
+| 3 | Read the line under the editor. | It shows the words, the minutes and "Contents: {k} sections" or "No contents list (needs 2 headings)". |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-08 Pasted text keeps only the allowed formatting
+- **Story / AC:** E4.3 / AC45
+- **Priority:** P3
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** an open draft; a web page with a table and code.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Paste text with a table and code from a web page. | The text stays as paragraphs with no table and no code style. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-09 Photo, video and recording between paragraphs
+- **Story / AC:** E4.3 / AC45
+- **Priority:** P2
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** a draft with two paragraphs; one photo and one recording in the library.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Put the cursor between the paragraphs and press Insert, then pick a ready photo and Insert photo. | A photo block shows between the paragraphs. |
+| 2 | Insert a YouTube link on the Video tab with a title. | The poster shows and the block is added. |
+| 3 | Enter a Vimeo link. | The sheet says "This is not a YouTube link. Copy the address from the video’s Share button." |
+| 4 | Wait for Saved and reload. | The blocks are in the same places. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-10 Link a word to a pin
+- **Story / AC:** E4.3 / AC45
+- **Priority:** P2
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** a published pin with a website and a draft pin.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Select a word, open the pin tool and pick the published pin, then Link this pin. | The word shows the pale red pin-link highlight. |
+| 2 | Pick the draft pin for another word. | Its row says "Draft: shows as plain text until published" and it can be chosen. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-11 A new story is blocked until four things are set
+- **Story / AC:** E4.3 / AC30
+- **Priority:** P1
+- **Role and device:** Owner, desktop 1280 px (repeat at phone 375 px)
+- **Preconditions:** a new empty draft.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Press Review and publish. | The list says "4 things stop publishing" and Publish is off with "Fix what stops publishing first." |
+| 2 | Use each Edit jump to add a cover, a title, an excerpt and the link. | Each check disappears as it is fixed. |
+| 3 | Read the heading. | It says "Ready to publish". |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-12 Publish in one language only
+- **Story / AC:** E4.3 / AC30
+- **Priority:** P1
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** a draft ready to publish in English only.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Press Publish English. | The toast says "English version published. Guests see it within about a minute." |
+| 2 | Read the publish card. | English is Published, and German only warns that no Deutsch version exists. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-13 Publish changes and Unpublish
+- **Story / AC:** E4.3 / AC45
+- **Priority:** P2
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** a published English version.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Edit the title and open Review and publish. | The card says "Published · edits not live" with Publish changes (EN). |
+| 2 | Press Publish changes (EN). | The card shows Published. |
+| 3 | Press Unpublish and confirm. | The toast says "English version is a draft again." |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-14 Blog category choice rules
+- **Story / AC:** E4.3 / AC87
+- **Priority:** P2
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** categories Swiss history with Old Town, and Practical tips.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open Details, Blog categories, choose Old Town and Save categories. | A chip "Old Town in Swiss history" shows with "Swiss history is included through Old Town." |
+| 2 | Reopen and choose Swiss history. | Only Swiss history is chosen. |
+| 3 | Search "xyz". | The sheet says "No category matches “xyz”." |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-15 An editorial review needs a place and a date
+- **Story / AC:** E4.3 / AC30
+- **Priority:** P3
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** a plain story ready except for this card, with an English and a German version.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open Review and publish, open Editorial review, switch on "This is an editorial review". | The card shows the problem icon "Stops publishing"; the checks list "Choose the place this review is about." and "Add the day the facts were checked."; nothing is saved yet. |
+| 2 | Choose a place ("Choose the place", pick a pin, "Use this place"), then pick a date. | Both checks disappear; there is no "Checked by" field; the place is also in the Places card. |
+| 3 | Type a date after today. | "Choose today or an earlier day." and the date is not saved. |
+| 4 | Reload the page. | The switch is on, with the place and date. |
+| 5 | Open the German version and start it. | Facts checked on shows the English date; changing it leaves the English date as it was. |
+| 6 | Close the card. | The summary reads "{place} · checked {date}". |
+| 7 | Switch the review off. | The card says "No, a story"; after a reload it still does. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-16 Keepsakes stop at six and reorder by keyboard
+- **Story / AC:** E4.3 / AC33
+- **Priority:** P2
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** at least 7 published keepsakes (the sprint 7 seed has 5; add test ones).
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open Details, Keepsakes and choose six. | The button reads "Choose keepsakes · 6 of 6" and no price shows. |
+| 2 | Try to choose a seventh. | Nothing changes. |
+| 3 | Focus a grip and press Up. | The row moves up one place and the focus stays on the grip. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-17 Related stories stop at three and are shared by both languages
+- **Story / AC:** E4.3 / AC33
+- **Priority:** P3
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** four other stories.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open More to discover and choose three stories. | The summary says "3 of 3". |
+| 2 | Try a fourth. | Nothing changes. |
+| 3 | Switch to the German version. | The same three show. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-18 The preview shows the draft as guests will see it
+- **Story / AC:** E4.3 / AC45
+- **Priority:** P2
+- **Role and device:** Owner, desktop 1280 px (repeat at phone 375 px)
+- **Preconditions:** a draft with a cover, an H2, a photo and linked keepsakes.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open Review and publish. | A phone outline shows the cover with title and excerpt over a dark gradient. |
+| 2 | Scroll inside the phone. | The body, places, "Keepsakes from this story" (no price) and "More to discover" show. |
+| 3 | Switch to Deutsch and edit the title. | The preview shows the German version and the edit without reload. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-19 Delete a draft story from the list
+- **Story / AC:** E4.3 / AC30
+- **Priority:** P1
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** a story with an English draft that was never published, no pin names it.
+- **Test data:** the story "Delete me draft".
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open Content, Stories. | The row "Delete me draft" shows with English Draft. |
+| 2 | Open the row menu and choose Delete. | A dialog asks to delete the draft story, with no "live for guests" line and no link line. |
+| 3 | Press Delete story. | The button shows a spinner, then the dialog closes. |
+| 4 | Look at the list. | The row is gone, the tab counts dropped by one, and a toast says the story was deleted. |
+| 5 | Reload the page. | The row is still gone. |
+
+- **Postconditions:** the story no longer exists.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-20 Delete a published story that pins and stories link to
+- **Story / AC:** E4.3 / AC30
+- **Priority:** P1
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** a published story in English and German; one pin has it as main story; another story lists it under More to discover.
+- **Test data:** story "Old Town walk", pin "Chapel Bridge", story "Lake views".
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open "Old Town walk" in the editor and open the "More actions" menu. | The menu has "Delete story". |
+| 2 | Choose Delete story. | A danger dialog says "This story is live for guests and will disappear. This story is the main story of 1 pin and is linked from 1 other story. Deleting it removes those links." |
+| 3 | Press Cancel. | The dialog closes and nothing changes. |
+| 4 | Choose Delete story again and press Delete story. | The editor closes, the list opens, a toast says the story was deleted, and the row is gone. |
+| 5 | Open the pin "Chapel Bridge". | Its main story is empty. |
+| 6 | Open "Lake views", Details, More to discover. | "Old Town walk" is no longer listed. |
+| 7 | Open the story's old public address in English and in German. | Both show a not found page. |
+
+- **Postconditions:** story and links gone; pin and "Lake views" still exist.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-21 A failed delete keeps the dialog open
+- **Story / AC:** E4.3 / AC30
+- **Priority:** P3
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** a story in the list; the browser can go offline (developer tools, Network, Offline).
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open the row menu, choose Delete, then go offline. | The dialog is open. |
+| 2 | Press Delete story. | The dialog stays open with an error in a danger notice, and both buttons work. |
+| 3 | Go online and press Delete story again. | The story is deleted and the row is gone. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-22 Delete in German, and a second tab
+- **Story / AC:** E4.3 / AC30
+- **Priority:** P3
+- **Role and device:** Owner, desktop 1280 px, two tabs
+- **Preconditions:** a story open in two tabs, the interface set to German in tab 1.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | In tab 1, delete the story from the list. | The dialog, the buttons and the toast are in German. |
+| 2 | In tab 2, change the title and wait for the autosave. | The editor shows a save problem or "not found", and no story reappears in the list after a reload. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-23 A review at 50 places refuses a 51st place
+- **Story / AC:** E4.3 / AC30
+- **Priority:** P2
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** a story with 50 places in Places and no editorial review; a pin that is not among them.
+- **Test data:** the 50 places, one extra pin "Spare pin".
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open Review and publish, then the card "Editorial review", and switch "This is an editorial review" on. | The switch is on; the header says "Stops publishing". |
+| 2 | Press "Choose the place", press "Spare pin", press "Use this place". | The sheet closes. The card shows "50 chosen, the most a story can have. Remove one to add another." |
+| 3 | Wait 3 seconds and look at the header save status. | It does not say "Saving…" or "Not saved". |
+| 4 | Remove one place in the Places card, then repeat step 2. | The place is accepted and the message is gone. |
+
+- **Postconditions:** the story is a review with "Spare pin" as its place.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-24 The reviewed place cannot leave Places
+- **Story / AC:** E4.3 / AC30
+- **Priority:** P2
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** a story that is an editorial review with place "Pin 1", and Places holding "Pin 1" and "Pin 2".
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open the Places card. | The row "Pin 1" shows "The review is about this place. Change the reviewed place to remove it." and its remove button is greyed out. |
+| 2 | Press "Remove Pin 2". | "Pin 2" leaves the list. |
+| 3 | Press "Choose places", press "Pin 1" in the sheet. | "Pin 1" stays chosen; the sheet shows the same note. |
+| 4 | Switch the review off in the Editorial review card. | The "Pin 1" remove button works again. |
+
+- **Postconditions:** the story is a plain story with "Pin 1" in Places.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-25 Leaving with a review that has no place asks first
+- **Story / AC:** E4.3 / AC30
+- **Priority:** P3
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** a plain story.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open Review and publish, open "Editorial review", switch the review on, choose no place. | The header says "Stops publishing". |
+| 2 | Wait 3 seconds, press "Back to writing", then "Back to Stories". | A dialog "Leave without saving?" opens. |
+| 3 | Press "Keep editing". | The dialog closes and the editor stays open. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-26 The header shows a failed Details save
+- **Story / AC:** E4.3 / AC45
+- **Priority:** P3
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** a story open on Review and publish. Block the network to the API in the browser developer tools (offline).
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open the Stay card and pick "Multi-day". | The choice shows as selected. |
+| 2 | Wait 3 seconds. | The header says "Not saved" and a retry notice shows. |
+| 3 | Turn the network back on and press the retry button. | The header says "Saved" with a time. |
+
+- **Postconditions:** the story's stay is "Multi-day".
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-27 Deleting a story leaves no stale pin or story behind
+- **Story / AC:** E4.3 / AC30
+- **Priority:** P1
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** story A is the main story of pin P and is listed as "More to discover" in story B. Open B and P once before the delete, so they are cached.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open story A, open the menu "More actions", press "Delete story", confirm. | The Stories list opens and a toast says "Story deleted." |
+| 2 | Open story B. | B no longer lists A in "More to discover". |
+| 3 | In B, change the Stay to "Multi-day". | The header says "Saved" with a time and no "Someone saved this after you opened it" notice. |
+| 4 | Open pin P in Places and change its note, then save. | The save works with no stale notice; P has no main story. |
+
+- **Postconditions:** story A is gone; B and P are saved.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-STORY-28 The cover picker waits for a new photo to finish processing
+- **Story / AC:** E4.3 / AC30
+- **Priority:** P3
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** a story open on Write.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | In the cover card press "Change", then upload a large photo. | The wall shows the photo as "Processing" and a line says "Waiting for “name” to finish processing". |
+| 2 | While it processes, look at "Use as cover". | It stays disabled. |
+| 3 | Wait until processing ends. | The photo is chosen and "Use as cover" is enabled. |
+
+- **Postconditions:** none until the merchant presses "Use as cover".
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
