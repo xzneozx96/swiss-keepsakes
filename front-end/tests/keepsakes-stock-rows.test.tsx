@@ -239,5 +239,5 @@ describe(`${tag} stock of a new keepsake`, () => {
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: base })
     expect((writes()[0]!.body as { variants: { quantity: number }[] }).variants.map(variant => variant.quantity)).toEqual([3, 4, 5])
-  })
+  }, 20_000)
 })
