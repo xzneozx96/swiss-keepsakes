@@ -93,6 +93,31 @@ describe('[E6.3][AC05][AC53][AC-10] a new SKU has its stock row', () => {
       expect(await s.stockOf(variant.id)).toHaveLength(1)
   })
 
+  it.each([10000, -1, 1.5])('[E6.3][AC05][AC53][TQ-9] a quantity of %s is refused on a create and on a new variant, and writes nothing', async (quantity) => {
+    const s = await setup()
+    const count = async (table: string) => Number((await pool.query(`select count(*) from ${table} where store_id = $1`, [s.storeId])).rows[0].count)
+    const refusedCreate = await s.create([{ skuCode: code(), priceRappen: 3900, values: { size: 's' }, quantity }])
+    const product = await (await s.create([{ skuCode: code(), priceRappen: 3900, values: { size: 's' } }])).json() as Product
+    const optionId = Object.keys(product.variants[0]!.values)[0]!
+    const detail = await (await env.call(`${s.products}/${product.id}`, { headers: s.owner.headers })).json() as { options: { values: { id: string, label: { en: string } }[] }[] }
+    const large = detail.options[0]!.values.find(v => v.label.en === 'Large')!.id
+    const refusedVariant = await s.post(`${s.products}/${product.id}/variants`, { skuCode: code(), priceRappen: 3900, values: { [optionId]: large }, quantity })
+
+    expect([refusedCreate.status, refusedVariant.status]).toEqual([400, 400])
+    expect(await count('catalog.products')).toBe(1)
+    expect(await count('catalog.skus')).toBe(1)
+    expect(await count('inventory.stock_items')).toBe(1)
+  })
+
+  it('[E6.3][AC05][AC53][TQ-9] a quantity of 9999 is accepted', async () => {
+    const s = await setup()
+    const response = await s.create([{ skuCode: code(), priceRappen: 3900, values: { size: 's' }, quantity: 9999 }])
+    const product = await response.json() as Product
+
+    expect(response.status).toBe(201)
+    expect(product.variants[0]).toMatchObject({ onHand: 9999 })
+  })
+
   it('[E6.3][AC05][AC53][AC-10] an options save seeds the variants it creates', async () => {
     const s = await setup()
     const product = await (await s.create([{ skuCode: code(), priceRappen: 3900, values: { size: 's' } }])).json() as Product
