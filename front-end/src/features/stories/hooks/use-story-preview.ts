@@ -14,6 +14,7 @@ import { thumbOf } from '@/features/media/lib/rules'
 import { usePlaces } from '@/features/places/api/queries'
 import { sessionUserQuery } from '@/features/stores/api/queries'
 import { useStories } from '../api/queries'
+import { accountNameOf } from '../lib/draft'
 import { keepsakesOf, pinHrefFor, placesOf, previewPin, relatedOf } from '../lib/preview-rules'
 
 type Body = StoryVersionText['body']
@@ -46,7 +47,7 @@ export function useStoryPreview({ group, language, fields }: { group: StoryGroup
   const version = group.versions[language]
   const cover = fields.coverMediaId ? files.find(file => file.id === fields.coverMediaId) : undefined
   const previewPins = (pins.data?.items ?? []).map(item => previewPin(item, language))
-  const accountName = typeof session.data?.name === 'string' ? session.data.name.trim() : ''
+  const accountName = accountNameOf(session.data)
 
   return {
     language,

@@ -40,7 +40,9 @@ export function ReviewCard({ storeId, group, language, fields, onGroupChange, on
   const [refused, setRefused] = useState<string>()
   const [sheetOpen, setSheetOpen] = useState(false)
   // The place a review names joins the story's places; at the cap the choice is refused, as in the Places sheet.
-  const [full, setFull] = useState(false)
+  // Only the refused pin is kept: the message shows while the list is still at the cap without it.
+  const [capRefused, setCapRefused] = useState<string>()
+  const full = capRefused !== undefined && group.placeIds.length >= MAX_PLACES && !group.placeIds.includes(capRefused)
   const placeName = placeId ? (pins.find(pin => pin.id === placeId)?.name ?? t('storyMedia.pin.unknown')) : undefined
   const summary = placeId && isLoading ? '' : reviewSummary(t, { isReview, placeName, checkedOn: fields.checkedOn, formatDay: day => formatShortDate(day, today, intlLocale) })
 
@@ -49,7 +51,10 @@ export function ReviewCard({ storeId, group, language, fields, onGroupChange, on
       <Switch
         className="min-h-11 lg:min-h-9"
         isSelected={isReview}
-        onChange={on => onGroupChange(on ? { kind: 'editorial_review' } : { kind: 'story', subjectPlaceId: null })}
+        onChange={(on) => {
+          setCapRefused(undefined)
+          onGroupChange(on ? { kind: 'editorial_review' } : { kind: 'story', subjectPlaceId: null })
+        }}
       >
         <Switch.Content className="items-center">
           <Switch.Control>
@@ -90,10 +95,10 @@ export function ReviewCard({ storeId, group, language, fields, onGroupChange, on
             storeId={storeId}
             title={t('storyDetails.review.placeSheet')}
             onChoose={(pin) => {
-              const refused = !group.placeIds.includes(pin.id) && group.placeIds.length >= MAX_PLACES
+              const atCap = !group.placeIds.includes(pin.id) && group.placeIds.length >= MAX_PLACES
 
-              setFull(refused)
-              if (!refused) {
+              setCapRefused(atCap ? pin.id : undefined)
+              if (!atCap) {
                 onGroupChange(current => ({
                   kind: 'editorial_review',
                   subjectPlaceId: pin.id,

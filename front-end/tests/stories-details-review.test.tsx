@@ -118,6 +118,18 @@ describe('[E4.3][AC30] the Editorial review card', () => {
     expect(groupPatches()).toHaveLength(0)
   }, 40000)
 
+  it('[E4.3][AC30] CORRECTNESS-E43-R2-2 the "50 chosen" message goes when the switch is turned off and on again', async () => {
+    serve(group({ placeIds: Array.from({ length: 50 }, (_, i) => uuid(101 + i)) }))
+    await openReview()
+    await openCard()
+    await userEvent.click(await toggle())
+    await choosePin('Pin 1')
+    expect(await screen.findByText('50 chosen, the most a story can have. Remove one to add another.')).toBeInTheDocument()
+    await userEvent.click(await toggle())
+    await userEvent.click(await toggle())
+    expect(screen.queryByText('50 chosen, the most a story can have. Remove one to add another.')).toBeNull()
+  }, 40000)
+
   it('[E4.3][AC30] AC-4 a pin already in the places is not added twice', async () => {
     serve(group({ placeIds: [uuid(1)] }))
     await openReview()
