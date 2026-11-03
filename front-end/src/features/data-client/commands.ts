@@ -22,6 +22,7 @@ interface ReadsWithInput {
   keepsakes: 'list' | 'get'
   media: 'list' | 'uses' | 'get' | 'lookup'
   places: 'list' | 'get' | 'storyOptions' | 'storyVersion'
+  stories: 'list'
 }
 
 /**
@@ -146,6 +147,11 @@ export const commandAffects: {
   reviews: {
     addReview: [queryKeys.reviews.reviews],
     replyToReview: [queryKeys.reviews.reviews],
+  },
+  stories: {
+    createStory: [queryKeys.stories.list, queryKeys.stories.group],
+    createVersion: [queryKeys.stories.list, queryKeys.stories.group],
+    removeStory: [queryKeys.stories.list, queryKeys.stories.group],
   },
   stores: {
     createStore: [queryKeys.stores.adminStores],

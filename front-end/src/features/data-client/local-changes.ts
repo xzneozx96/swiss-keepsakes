@@ -109,6 +109,13 @@ export const commandChanges: Changes = {
     }],
     remove: input => [{ key: [...queryKeys.places.list, input.storeId], apply: without('items', input.id) }],
   },
+  stories: {
+    // The list items are keyed by `groupId`, not `id`: the story's row is gone when the dialog closes.
+    removeStory: input => [{
+      key: [...queryKeys.stories.list, input.storeId],
+      apply: editItems('items', items => items.filter(item => (item as unknown as { groupId: string }).groupId !== input.groupId)),
+    }],
+  },
   stores: {
     removeMember: input => [{ key: [...queryKeys.stores.members, input.storeId], apply: without('members', input.memberId) }],
     revokeManagerInvitation: input => [{ key: [...queryKeys.stores.members, input.storeId], apply: without('invitations', input.invitationId) }],
