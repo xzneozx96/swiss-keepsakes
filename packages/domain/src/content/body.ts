@@ -64,15 +64,28 @@ export function storyBodyPinIds(body: StoryBody): string[] {
 
 const WORDS_PER_MINUTE = 200
 
-/** Words in the text nodes at 200 a minute, rounded up, at least 1. Media add nothing. */
-export function storyBodyReadMinutes(body: StoryBody): number {
+export interface StoryBodyFacts { words: number, minutes: number, sections: number }
+
+/**
+ * What the editor and the public page say about a body: words of the joined text nodes (any other node, a hard break
+ * included, separates words), minutes at 200 words a minute rounded up and at least 1, and the level 2 headings at any
+ * depth, which are the sections of the contents list. Media add nothing.
+ */
+export function storyBodyFacts(body: StoryBody): StoryBodyFacts {
   let text = ''
+  let sections = 0
   walk(body.content, (node) => {
     if (node.type === 'text') text += node.text ?? ''
     else text += ' '
+    if (node.type === 'heading' && node.attrs?.level === 2) sections += 1
   })
-  const count = text.split(/\s+/).filter(word => word !== '').length
-  return Math.max(1, Math.ceil(count / WORDS_PER_MINUTE))
+  const words = text.split(/\s+/).filter(word => word !== '').length
+  return { words, minutes: Math.max(1, Math.ceil(words / WORDS_PER_MINUTE)), sections }
+}
+
+/** Reading time in minutes: the `minutes` of `storyBodyFacts`. */
+export function storyBodyReadMinutes(body: StoryBody): number {
+  return storyBodyFacts(body).minutes
 }
 
 // The package builds with lib ES2022 only. Node and every browser provide URL.

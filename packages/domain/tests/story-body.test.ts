@@ -10,6 +10,7 @@ import {
   STORY_BODY_LIMITS,
   storyBodyMediaRefs,
   storyBodyPinIds,
+  storyBodyFacts,
   storyBodyReadMinutes,
 } from '../src/content'
 import type { StoryBody } from '../src/content'
@@ -82,6 +83,35 @@ describe('[E2.13] storyBodyReadMinutes', () => {
       { type: 'paragraph', content: [{ type: 'text', text: 'a' }, { type: 'hardBreak' }, { type: 'text', text: 'b' }] },
     )
     expect(storyBodyReadMinutes(nested)).toBe(2)
+  })
+})
+
+describe('[E4.3][AC45] storyBodyFacts', () => {
+  const h = (level: number, text: string) => ({ type: 'heading', attrs: { level }, content: [{ type: 'text', text }] })
+
+  it.each([
+    [0, 0, { words: 0, minutes: 1, sections: 0 }],
+    [400, 2, { words: 400, minutes: 2, sections: 2 }],
+    [150, 1, { words: 150, minutes: 1, sections: 1 }],
+  ])('[E4.3][AC45] AC-3 outline: %i words and %i H2', (count, h2, expected) => {
+    const headings = Array.from({ length: h2 }, () => h(2, 'a'))
+    const body = doc(...headings, ...(count > 0 ? [para(words(count - h2))] : []))
+    expect(storyBodyFacts(body)).toEqual(expected)
+  })
+
+  it('[E4.3][AC45] a bold half word is one word, an H3 is not a section, a hard break separates words, media add nothing', () => {
+    const body = doc(
+      { type: 'paragraph', content: [{ type: 'text', text: 'wor' }, { type: 'text', text: 'd', marks: [{ type: 'bold' }] }, { type: 'hardBreak' }, { type: 'text', text: 'two' }] },
+      h(3, 'small'),
+      { type: 'image', attrs: { mediaId: 'm', alt: '', caption: 'a b c' } },
+    )
+    expect(storyBodyFacts(body)).toEqual({ words: 3, minutes: 1, sections: 0 })
+  })
+
+  it('[E4.3][AC45] an H2 inside nothing else counts, and storyBodyReadMinutes still returns the minutes of the facts', () => {
+    const body = doc({ type: 'blockquote', content: [h(2, 'x')] }, para(words(450)))
+    expect(storyBodyFacts(body).sections).toBe(1)
+    expect(storyBodyReadMinutes(body)).toBe(storyBodyFacts(body).minutes)
   })
 })
 
