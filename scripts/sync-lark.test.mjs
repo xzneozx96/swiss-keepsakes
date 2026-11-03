@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   BLOCKED_PATTERN, classifyDeletes, diffEpicOptions, diffMoves, diffSections, fingerprint, initialStatus, moveArgs, moveTasks, needsPatch, parseArgs,
-  parsePlan, readCurrentSections, readIds, sectionName, select, syncTasks,
+  parsePlan, readCurrentSections, readIds, sectionName, select, syncMoves, syncTasks,
 } from "../docs/development-plan/sync-lark.mjs";
 
 const plans = join(dirname(fileURLToPath(import.meta.url)), "..", "docs", "development-plan");
@@ -350,4 +350,58 @@ test("readCurrentSections pages through each section and maps task guid to secti
   const current = readCurrentSections({ 7: "sec-7", 8: "sec-8", 9: "<section 9>" }, read);
 
   assert.deepEqual([...current], [["a", "sec-7"], ["b", "sec-7"], ["c", "sec-8"]]);
+});
+
+// syncMoves wiring: the mode reaches moveTasks, and the failure list reaches the caller that sets the exit code.
+const wiringPlan = { sprints: [{ number: 7 }, { number: 8 }], stories: [{ id: "E6.1", sprint: 8 }, { id: "E6.2", sprint: 8 }] };
+const wiringState = { tasklist: "list-1", sections: { 7: "sec-7", 8: "sec-8" } };
+const wiringTasks = [{ id: "E6.1", guid: "g1" }, { id: "E6.2", guid: "g2" }];
+
+function wiring({ mode, sectionOf, run }) {
+  const calls = [];
+  const lines = [];
+  const result = syncMoves(wiringPlan, wiringState, new Set(), {
+    mode,
+    list: () => wiringTasks,
+    read: (args) => {
+      const { section_guid } = JSON.parse(args[args.indexOf("--params") + 1]);
+      return { items: wiringTasks.filter((t) => sectionOf[t.guid] === section_guid).map((t) => ({ guid: t.guid })), has_more: false };
+    },
+    run: (a) => {
+      calls.push(a);
+      run?.(a);
+    },
+    log: (l) => lines.push(l),
+    error: (l) => lines.push(l),
+    warn: () => {},
+  });
+  return { result, calls, lines };
+}
+
+test("syncMoves in dry mode runs no write", () => {
+  const { calls, lines } = wiring({ mode: "dry", sectionOf: { g1: "sec-7", g2: "sec-7" } });
+
+  assert.deepEqual(calls, []);
+  assert.equal(lines.at(-1), "moves: 2");
+});
+
+test("syncMoves in live mode writes and returns the failed moves for a non-zero exit", () => {
+  const { result, calls } = wiring({
+    mode: "live",
+    sectionOf: { g1: "sec-7", g2: "sec-7" },
+    run: (a) => {
+      if (a[2].includes("/g2/")) throw new Error("boom");
+    },
+  });
+
+  assert.equal(calls.length, 2);
+  assert.deepEqual(result.failed, [{ id: "E6.2", error: "boom" }]);
+});
+
+test("syncMoves prints moves: 0 and writes nothing when every task is in its sprint section", () => {
+  const { result, calls, lines } = wiring({ mode: "live", sectionOf: { g1: "sec-8", g2: "sec-8" } });
+
+  assert.deepEqual(calls, []);
+  assert.deepEqual(lines, ["moves: 0"]);
+  assert.deepEqual(result, { moved: 0, failed: [] });
 });

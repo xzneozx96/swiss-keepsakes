@@ -252,12 +252,15 @@ function larkRaw(args) {
   return JSON.parse(out).data;
 }
 
-function syncMoves(plan, state, gone) {
-  const tasks = listTasks(state).filter((t) => !gone.has(t.guid));
-  const current = readCurrentSections(state.sections, (args) => task(args));
+// The deps are injectable so a test can drive the wiring (dry mode runs no write, failures come back) without lark-cli.
+export function syncMoves(plan, state, gone, {
+  mode: runMode = mode, list = listTasks, read = (args) => task(args), run = larkRaw, log = console.log, error = console.error, warn = console.warn,
+} = {}) {
+  const tasks = list(state).filter((t) => !gone.has(t.guid));
+  const current = readCurrentSections(state.sections, read);
   const { moves, unplanned } = diffMoves(plan, tasks, current, state.sections);
-  if (unplanned.length) console.warn(`in Lark but not in the plan, not moved: ${unplanned.join(", ")}`);
-  return moveTasks(moves, state, { run: larkRaw, dry: mode === "dry" });
+  if (unplanned.length) warn(`in Lark but not in the plan, not moved: ${unplanned.join(", ")}`);
+  return moveTasks(moves, state, { run, dry: runMode === "dry", log, error });
 }
 
 function loadState() {
