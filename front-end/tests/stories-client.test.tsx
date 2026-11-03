@@ -4,7 +4,7 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DataClientProvider, useCommand } from '@/features/data-client'
 import { commandAffects } from '@/features/data-client/commands'
-import { useStories } from '@/features/stories/api/queries'
+import { useStories, useStoryGroup } from '@/features/stories/api/queries'
 import { problem, setUpHarness, state, storeId } from './keepsakes-harness'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
@@ -106,5 +106,50 @@ describe('[E4.3][AC30] the stories queries and commands', () => {
   it('[E4.3][AC30] commandAffects lists the stories list for every command', () => {
     for (const command of ['createStory', 'createVersion', 'removeStory'] as const)
       expect(commandAffects.stories[command]).toEqual([['stories', 'list'], ['stories', 'group']])
+  })
+
+  it('[E4.3][AC45] reads the group with both versions from GET story-groups/{groupId}', async () => {
+    const detail = { ...group, versions: { en: version, de: null } }
+
+    state.answer = call => (call.method === 'GET' && call.path === `${base}/${groupId}` ? Response.json(detail) : undefined)
+    const waiting = renderHook(() => useStoryGroup(undefined, groupId), { wrapper })
+
+    expect(waiting.result.current.fetchStatus).toBe('idle')
+    const read = renderHook(() => useStoryGroup(storeId, groupId), { wrapper })
+
+    await waitFor(() => expect(read.result.current.data).toEqual(detail))
+    expect(state.calls.filter(call => call.path === `${base}/${groupId}`)).toHaveLength(1)
+  })
+
+  it('[E4.3][AC45] AC-1 saveVersion PATCHes the version with If-Match, an Idempotency-Key and the full draft', async () => {
+    const draft = { title: 'A title', excerpt: '', authorName: 'Anna Keller', coverMediaId: null, body: { type: 'doc' as const, content: [{ type: 'paragraph' as const }] } }
+
+    state.answer = call => (call.method === 'PATCH' ? Response.json({ ...version, draft, rowVersion: 4 }) : undefined)
+    const save = renderHook(() => useCommand('stories', 'saveVersion'), { wrapper })
+    let saved: unknown
+
+    await act(async () => {
+      saved = await save.result.current.mutateAsync({ storeId, groupId, language: 'de', ifMatch: 3, idempotencyKey: 'key-save', draft })
+    })
+    const patch = state.calls.find(call => call.method === 'PATCH')
+
+    expect(patch).toMatchObject({ path: `${base}/${groupId}/versions/de`, key: 'key-save', ifMatch: '3', body: { draft } })
+    expect(patch?.body).not.toHaveProperty('slug')
+    expect(saved).toMatchObject({ rowVersion: 4 })
+  })
+
+  it('[E4.3][AC45] AC-2 a 412 is an ApiProblem of type precondition-failed', async () => {
+    state.answer = call => (call.method === 'PATCH' ? problem(412, 'precondition-failed') : undefined)
+    const save = renderHook(() => useCommand('stories', 'saveVersion', { meta: { silent: true } }), { wrapper })
+
+    await act(async () => {
+      const saving = save.result.current.mutateAsync({ storeId, groupId, language: 'en', ifMatch: 1, idempotencyKey: 'k', draft: { title: '', excerpt: '', authorName: '', coverMediaId: null, body: { type: 'doc', content: [] } } })
+
+      await expect(saving).rejects.toMatchObject({ type: 'precondition-failed', status: 412 })
+    })
+  })
+
+  it('[E4.3][AC45] commandAffects.stories.saveVersion is empty', () => {
+    expect(commandAffects.stories.saveVersion).toEqual([])
   })
 })

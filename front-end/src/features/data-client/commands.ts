@@ -22,7 +22,7 @@ interface ReadsWithInput {
   keepsakes: 'list' | 'get'
   media: 'list' | 'uses' | 'get' | 'lookup'
   places: 'list' | 'get' | 'storyOptions' | 'storyVersion'
-  stories: 'list'
+  stories: 'list' | 'group'
 }
 
 /**
@@ -152,6 +152,8 @@ export const commandAffects: {
     createStory: [queryKeys.stories.list, queryKeys.stories.group],
     createVersion: [queryKeys.stories.list, queryKeys.stories.group],
     removeStory: [queryKeys.stories.list, queryKeys.stories.group],
+    // The editor writes every answer into the group query itself (as the keepsake editor does), so a save refreshes nothing.
+    saveVersion: [],
   },
   stores: {
     createStore: [queryKeys.stores.adminStores],

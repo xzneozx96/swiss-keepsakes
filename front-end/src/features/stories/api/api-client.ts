@@ -1,4 +1,4 @@
-import type { StoryVersion } from '@sk/api-contract'
+import type { StoryGroupDetail, StoryVersion } from '@sk/api-contract'
 import type { StoriesClient } from './client'
 
 import { answer, keyed, loadClient, problemOf, timeout } from '@/features/data-client/api-transport'
@@ -14,6 +14,8 @@ export function createStoriesClient(): StoriesClient {
   return {
     list: async ({ storeId }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/story-groups', { ...timeout(), params: { path: { storeId } } })),
+    group: async ({ storeId, groupId }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/story-groups/{groupId}', { ...timeout(), params: { path: { storeId, groupId } } })) as Promise<StoryGroupDetail>,
     createStory: async ({ storeId, authorName, idempotencyKey, versionIdempotencyKey }) => {
       try {
         const client = await loadClient()
@@ -35,6 +37,13 @@ export function createStoriesClient(): StoriesClient {
     createVersion: async ({ storeId, groupId, idempotencyKey, ...body }) =>
       // `as never` and `as StoryVersion`: see the note on `emptyBody` and below.
       answer((await loadClient()).POST('/api/store/{storeId}/story-groups/{groupId}/versions', { ...keyed(idempotencyKey), params: { path: { storeId, groupId } }, body: body as never })) as Promise<StoryVersion>,
+    saveVersion: async ({ storeId, groupId, language, ifMatch, idempotencyKey, ...body }) =>
+      // `as never` and `as StoryVersion`: see the note on `emptyBody`.
+      answer((await loadClient()).PATCH('/api/store/{storeId}/story-groups/{groupId}/versions/{language}', {
+        ...keyed(idempotencyKey),
+        params: { path: { storeId, groupId, language }, header: { 'If-Match': String(ifMatch) } },
+        body: body as never,
+      })) as Promise<StoryVersion>,
     removeStory: async ({ storeId, groupId, versions }) => {
       const client = await loadClient()
       // One DELETE per version, none depends on another.
