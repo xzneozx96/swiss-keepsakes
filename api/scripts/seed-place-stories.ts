@@ -3,6 +3,7 @@ import type { Actor } from '@sk/domain/identity'
 import type { Pool } from 'pg'
 import type { PlaceStory, PlaceStoryBlock } from './seed-data/place-stories.ts'
 import process from 'node:process'
+import { isDeepStrictEqual } from 'node:util'
 import { createMediaRepository } from '../src/modules/content/adapters/media-repository.ts'
 import { createPinRepository } from '../src/modules/content/adapters/pin-repository.ts'
 import { createStoryRepository } from '../src/modules/content/adapters/story-repository.ts'
@@ -112,7 +113,7 @@ export function planPlaceStories(stories: readonly PlaceStory[], snapshot: Story
     for (const story of stories) {
       for (const language of languages) {
         const stored = snapshot.versions.find(v => v.slug === story.slug[language] && v.language === language)
-        if (stored && JSON.stringify(stored.doc.body) !== JSON.stringify(placeStoryBody(story, language)))
+        if (stored && !isDeepStrictEqual(stored.doc.body, placeStoryBody(story, language)))
           plan.refreshes.push({ key: story.key, version: stored })
       }
     }
@@ -203,7 +204,7 @@ export function placeStoryDraft(story: PlaceStory, language: ContentLanguage, co
   }
 }
 
-export async function readStorySnapshot(pool: Pool, storeId: string): Promise<StorySnapshot> {
+export async function readStorySnapshot(pool: Pool, storeId: string, stories: readonly PlaceStory[] = placeStories): Promise<StorySnapshot> {
   const [slugs, places, categories, groups, samplePins, versions] = await Promise.all([
     pool.query<{ slug: string }>(`select slug from content.story_versions where slug is not null`),
     pool.query<{ id: string, status: string, slug: string, main_story_group_id: string | null, cover_media_id: string | null, ready: boolean }>(
@@ -229,7 +230,7 @@ export async function readStorySnapshot(pool: Pool, storeId: string): Promise<St
     pool.query<{ group_id: string, language: ContentLanguage, slug: string, status: 'draft' | 'published', row_version: number, doc: StoryDraft }>(
       `select group_id, language, slug, status, row_version, coalesce(draft, published) as doc
          from content.story_versions where store_id = $1 and slug = any($2::text[])`,
-      [storeId, placeStories.flatMap(story => [story.slug.en, story.slug.de])],
+      [storeId, stories.flatMap(story => [story.slug.en, story.slug.de])],
     ),
   ])
   return {
@@ -365,7 +366,7 @@ export async function applyPlaceStories(pool: Pool, storeId: string, plan: Story
 
 // The step as the loader runs it. Returns the exit code: 0, or 1 on a fault (nothing is written then).
 export async function placeStoriesStep(pool: Pool, storeId: string, options: StepOptions & { dry: boolean }, stories: readonly PlaceStory[] = placeStories): Promise<number> {
-  const plan = planPlaceStories(stories, await readStorySnapshot(pool, storeId), options)
+  const plan = planPlaceStories(stories, await readStorySnapshot(pool, storeId, stories), options)
   process.stdout.write(describePlan(plan, options.dry))
   if (plan.faults.length > 0) {
     process.stderr.write(`${plan.faults.join('\n')}\nNo story was written.\n`)

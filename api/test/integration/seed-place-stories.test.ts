@@ -160,7 +160,7 @@ describe('[seed-place-stories] the stories step on a scratch store', () => {
 
     expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: false, replaceLegacy: true }, stories)).toBe(0)
     expect(out.stdout).toContain('Will delete 1 legacy stories: qa-story-c2cd1d')
-    expect(out.stdout).toContain('1 deleted, 8 created')
+    expect(out.stdout).toContain('1 deleted, 0 sample pins deleted, 0 bodies rewritten, 8 created')
     const groups = (await store.state()).groups
     expect(groups.some(g => g.id === legacy.id)).toBe(false)
     expect(groups.some(g => g.id === mine)).toBe(true)
@@ -209,7 +209,7 @@ describe('[seed-place-stories] the stories step on a scratch store', () => {
     const after = await store.state()
     out.stdout = ''
     expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: false, deleteSamplePins: true }, stories)).toBe(0)
-    expect(out.stdout).toContain('Would delete 0 sample pins')
+    expect(out.stdout).toContain('Will delete 0 sample pins')
     expect(await store.state()).toEqual(after)
   })
 
