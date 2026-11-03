@@ -1,9 +1,10 @@
 import type { StoryGroupDetail } from '@sk/api-contract'
+import type { CheckTarget } from '../lib/publish-checks'
 import type { StoryLanguage } from '../lib/search-params'
 
 import { formatDate } from '@sk/domain/shared'
 import { useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { ErrorNotice } from '@/components/error-notice'
 import { useLocale } from '@/contexts/locale-context'
@@ -43,6 +44,15 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
   const editor = useStoryVersionEditor({ storeId, group, language, accountName })
   const starter = useStartVersion({ storeId, group, accountName })
   const [showErrors, setShowErrors] = useState(false)
+  // The field a check sent the merchant to: scrolled to once Write has rendered.
+  const scrollToRef = useRef<string>(undefined)
+
+  useEffect(() => {
+    if (screen === 'write' && scrollToRef.current) {
+      document.getElementById(scrollToRef.current)?.scrollIntoView?.({ block: 'center' })
+      scrollToRef.current = undefined
+    }
+  }, [screen])
   // Back with edits that are not saved asks first, and "Leave without saving" drops them: the engine is emptied, so
   // nothing is sent when the screen goes. Judgment call 1 of the plan: this is the one place that decides it.
   const guard = useLeaveGuard({
@@ -86,6 +96,13 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
     onLanguage(next)
   }
 
+  /** Edit on a check: Write, with the field errors on and the field in view. */
+  function edit(target: CheckTarget) {
+    setShowErrors(true)
+    scrollToRef.current = `write-${target}`
+    onScreen('write')
+  }
+
   /** Review saves what is typed, so the checks and the preview are of what is on screen; a blocking check turns the field errors on. */
   async function review() {
     if (!(await editor.flush()))
@@ -122,7 +139,7 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
         ? (
             <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4 pt-4">
               {notices}
-              <StoryReviewScreen editor={editor} group={group} language={language} storeId={storeId} switchNode={switcher(false, true)} version={group.versions[language]!} />
+              <StoryReviewScreen editor={editor} group={group} language={language} storeId={storeId} switchNode={switcher(false, true)} onEdit={edit} version={group.versions[language]!} />
             </div>
           )
         : (
