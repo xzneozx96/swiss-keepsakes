@@ -65,6 +65,7 @@ export const problemTypes = [
   'category-too-deep',
   'category-parent-has-children',
   'sku-code-taken',
+  'stock-below-reserved',
 ] as const
 
 export type ProblemType = (typeof problemTypes)[number]
@@ -85,6 +86,8 @@ export const problemSchema = z.object({
   })).optional(),
   pages: z.int().optional().meta({ description: 'With media-in-use: how many pages use the file' }),
   mediaIds: z.array(z.string()).optional().meta({ description: 'With media-processing: the ids of the files that are not ready yet' }),
+  reserved: z.int().optional().meta({ description: 'With stock-below-reserved: the units open orders hold. Set the stock to at least this' }),
+  skuId: z.string().optional().meta({ description: 'With stock-below-reserved on a batch: the variant that was refused' }),
   checks: z.record(z.string(), z.enum(['ok', 'failed'])).optional(),
 }).meta({ id: 'Problem', description: 'RFC 9457 problem details, sent as application/problem+json' })
 

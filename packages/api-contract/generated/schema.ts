@@ -1184,6 +1184,181 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/store/{storeId}/inventory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    /** @description `in-stock`: at least one unit available. `sold-out`: none available */
+                    filter?: components["schemas"]["StockFilter"];
+                    /** @description Matches the code, the variant title or the keepsake name, in any case */
+                    q?: string;
+                };
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The live variants of the store with their stock, and the tab counts of the whole store */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockList"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StockManySetBody"];
+                };
+            };
+            responses: {
+                /** @description The stock of every listed variant is set, all or nothing. A value below the reserved units refuses the whole request with stock-below-reserved, naming the variant */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockMany"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/inventory/{skuId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    skuId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description One variant with the open orders that hold its units */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockItem"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    skuId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StockSetBody"];
+                };
+            };
+            responses: {
+                /** @description The stock is set. A value below the reserved units is refused with stock-below-reserved and the reserved count. The same value changes nothing */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockRow"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/store/{storeId}/maps-link": {
         parameters: {
             query?: never;
@@ -5289,9 +5464,13 @@ export interface components {
             pages?: number;
             /** @description The server's id for this request, also sent as X-Request-Id */
             requestId: string;
+            /** @description With stock-below-reserved: the units open orders hold. Set the stock to at least this */
+            reserved?: number;
+            /** @description With stock-below-reserved on a batch: the variant that was refused */
+            skuId?: string;
             status: number;
             title: string;
-            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, keepsake-archived, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, maps-link-unreadable, address-not-found, address-lookup-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other */
+            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, keepsake-archived, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, maps-link-unreadable, address-not-found, address-lookup-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken, stock-below-reserved. Show generic copy for any other */
             type: string;
         };
         /** @description A keepsake with its working copy, variants and publish checks */
@@ -6361,6 +6540,141 @@ export interface components {
              * @enum {string}
              */
             language?: "en" | "de";
+        };
+        /**
+         * @description `in-stock`: at least one unit available. `sold-out`: none available
+         * @enum {string}
+         */
+        StockFilter: "all" | "in-stock" | "sold-out";
+        /** @description The stock of one variant with the orders that hold it */
+        StockItem: {
+            available: number;
+            /** @description The SKU code. Null when the variant has none */
+            code: string | null;
+            keepsakeName: components["schemas"]["StockText"];
+            onHand: number;
+            /** @description The photo of the variant, else the first photo of the keepsake. Null for none */
+            photo: {
+                byteSize: number;
+                contentType: string;
+                height: number | null;
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "image" | "audio" | "pdf";
+                /** @description What the merchant sees and searches. It starts as the uploaded file name */
+                name: string;
+                /** @description The public URL of the original. Null until the file is ready */
+                publicUrl: string | null;
+                /** @enum {string} */
+                status: "processing" | "ready" | "retired";
+                /** @description Resized copies of an image. Empty until the file is ready */
+                variants: {
+                    url: string;
+                    width: number;
+                }[];
+                width: number | null;
+            } | null;
+            /** Format: uuid */
+            productId: string;
+            /** @description The open holds, oldest first. Empty when nothing is reserved */
+            reservations: components["schemas"]["StockReservation"][];
+            reserved: number;
+            /** Format: uuid */
+            skuId: string;
+            /** @description The option values joined by " / " ("XS / Red"). Empty for a keepsake with no option */
+            variantTitle: {
+                de?: string;
+                en?: string;
+            };
+        };
+        /** @description The live variants of the store with their stock */
+        StockList: {
+            /** @description The tab figures of the whole store, counted before the filter and the search */
+            counts: {
+                all: number;
+                inStock: number;
+                soldOut: number;
+            };
+            items: components["schemas"]["StockRow"][];
+        };
+        /** @description The rows that were set, in the order of the request */
+        StockMany: {
+            items: components["schemas"]["StockRow"][];
+        };
+        /** @description The units in stock for up to 200 variants, set in one transaction: all or nothing */
+        StockManySetBody: {
+            items: {
+                /** @description The units on the shelf, 0 to 9999. Never below the reserved units */
+                onHand: number;
+                /** Format: uuid */
+                skuId: string;
+            }[];
+        };
+        /** @description An open order that holds units of the variant */
+        StockReservation: {
+            /**
+             * Format: date-time
+             * @description When the hold was made
+             */
+            acceptedAt: string;
+            /** @description The guest. Null until the orders module exists */
+            guestName: string | null;
+            /** Format: uuid */
+            orderId: string;
+            /** @description The order reference. Null until the orders module exists */
+            orderRef: string | null;
+            quantity: number;
+        };
+        /** @description The stock of one live variant */
+        StockRow: {
+            available: number;
+            /** @description The SKU code. Null when the variant has none */
+            code: string | null;
+            keepsakeName: components["schemas"]["StockText"];
+            onHand: number;
+            /** @description The photo of the variant, else the first photo of the keepsake. Null for none */
+            photo: {
+                byteSize: number;
+                contentType: string;
+                height: number | null;
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "image" | "audio" | "pdf";
+                /** @description What the merchant sees and searches. It starts as the uploaded file name */
+                name: string;
+                /** @description The public URL of the original. Null until the file is ready */
+                publicUrl: string | null;
+                /** @enum {string} */
+                status: "processing" | "ready" | "retired";
+                /** @description Resized copies of an image. Empty until the file is ready */
+                variants: {
+                    url: string;
+                    width: number;
+                }[];
+                width: number | null;
+            } | null;
+            /** Format: uuid */
+            productId: string;
+            reserved: number;
+            /** Format: uuid */
+            skuId: string;
+            /** @description The option values joined by " / " ("XS / Red"). Empty for a keepsake with no option */
+            variantTitle: {
+                de?: string;
+                en?: string;
+            };
+        };
+        /** @description The units in stock for one variant */
+        StockSetBody: {
+            /** @description The units on the shelf, 0 to 9999. Never below the reserved units */
+            onHand: number;
+        };
+        /** @description A text per language. A language with no text is left out */
+        StockText: {
+            de?: string;
+            en?: string;
         };
         Store: {
             /** Format: date-time */

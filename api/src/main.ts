@@ -6,6 +6,7 @@ import { createMediaDirectory } from './modules/catalog/adapters/media-directory
 import { createMediaUses } from './modules/catalog/adapters/media-uses.ts'
 import { createProductRepository } from './modules/catalog/adapters/product-repository.ts'
 import { registerCatalogRoutes } from './modules/catalog/adapters/routes.ts'
+import { createSkuDirectory } from './modules/catalog/adapters/sku-directory.ts'
 import { makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from './modules/catalog/index.ts'
 import { createAddressRegister } from './modules/content/adapters/address-register-fetch.ts'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
@@ -35,6 +36,10 @@ import { invitationPreviewPath, registerIdentityRoutes } from './modules/identit
 import { createStoreRepository } from './modules/identity/adapters/store-repository.ts'
 import { createUserDirectory } from './modules/identity/adapters/user-directory.ts'
 import { invitationScreens, makeAcceptInvitation, makeCreateStore, makeGetOnboarding, makeInvitationLink, makeInviteManager, makeListMembers, makeListMyStores, makeListStores, makeLoadIdentity, makeOpenStoreForSale, makePreviewInvitation, makeRemoveMember, makeResendManagerInvitation, makeResendOwnerInvitation, makeRevokeInvitation, makeUpdateStoreInformation, newInvitationToken } from './modules/identity/index.ts'
+import { guardUseCases as guardInventoryUseCases } from './modules/inventory/adapters/database-errors.ts'
+import { registerInventoryRoutes } from './modules/inventory/adapters/routes.ts'
+import { createStockRepository } from './modules/inventory/adapters/stock-repository.ts'
+import { makeGetStockItem, makeListStock, makeSetManyStock, makeSetStock } from './modules/inventory/index.ts'
 import { createMailJobScrubber } from './modules/notifications/adapters/job-scrubber.ts'
 import { createMailQueues, mailQueues, startMailWorkers } from './modules/notifications/adapters/jobs.ts'
 import { createLogAlert } from './modules/notifications/adapters/mail-alert.ts'
@@ -270,10 +275,26 @@ async function main() {
       saveOptions: makeSaveOptions(catalogDeps),
       createVariant: makeCreateVariant(catalogDeps),
     })
+    // Inventory reads the live variants through a directory built from the catalog's data (ADR-013: it never joins a
+    // catalog table), and the photos through the same media lookup the catalog uses.
+    const inventoryDeps = {
+      uow,
+      stock: createStockRepository(),
+      skus: createSkuDirectory(),
+      media: catalogDeps.media,
+      audit,
+      clock: systemClock,
+    }
+    const inventoryUseCases = guardInventoryUseCases({
+      listStock: makeListStock(inventoryDeps),
+      getStockItem: makeGetStockItem(inventoryDeps),
+      setStock: makeSetStock(inventoryDeps),
+      setManyStock: makeSetManyStock(inventoryDeps),
+    })
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),
       withoutIdempotencyKey: [invitationPreviewPath, mediaLookupPath],
-      routes: [app => registerIdentityRoutes(app, useCases), app => registerContentRoutes(app, contentUseCases), app => registerCatalogRoutes(app, catalogUseCases)],
+      routes: [app => registerIdentityRoutes(app, useCases), app => registerContentRoutes(app, contentUseCases), app => registerCatalogRoutes(app, catalogUseCases), app => registerInventoryRoutes(app, inventoryUseCases)],
     }
     const server = await startHttpServer(createApp(logger, checkHealth, identity, commands).fetch, config.HOST, config.PORT, logger)
     stops.unshift(server.close)
