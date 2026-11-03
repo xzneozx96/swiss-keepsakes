@@ -66,6 +66,9 @@ export function OptionsAndVariantsStep({ storeId, keepsakeId, draft, language, h
   useImperativeHandle(handle, () => ({ isOpen: () => flow.open !== undefined, edit: flow.edit, done: flow.done }))
   const suggestions = useOptionNames(storeId, keepsakeId)
   const only = variants.find(variant => variant.status !== 'archived')
+  // No option: the Price block always shows. A variant that is archived keeps its (empty) combination, so a new one would
+  // clash; with only archived ones the block stays away (decision pending, see the unit report).
+  const showsPrice = tableOptions.length === 0 && (only !== undefined || variants.length === 0)
   const rows = flow.preview?.newVariants.map(made => made.values) ?? []
   const preview = rows.length > 0 ? { options: asSaved(draft.options), rows, price: basePriceOf(variants) } : undefined
 
@@ -99,7 +102,7 @@ export function OptionsAndVariantsStep({ storeId, keepsakeId, draft, language, h
 
   return (
     <>
-      {tableOptions.length === 0 && only && <PriceCard key={only.id} held={held} showErrors={showErrors} sku={sku} variant={only} onSave={actions.saveVariant} />}
+      {showsPrice && <PriceCard key={only?.id ?? 'none'} held={held} showErrors={showErrors} sku={sku} variant={only} onCreate={actions.createVariant} onSave={actions.saveVariant} />}
       <OptionsBlock committed={committed} draft={draft} flow={flow} language={language} suggestions={suggestions} />
       {(tableOptions.length > 0 || preview) && <VariantsBlock actions={actions} held={held} toCome={toCome} notSold={missingCombinations(tableOptions, variants)} options={tableOptions} ownPhotos={photoIds} preview={preview} sku={sku} storeId={storeId} variants={variants} />}
       {dialog}

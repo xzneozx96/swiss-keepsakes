@@ -97,6 +97,15 @@ The 2026-10-29 design (cards, with options and variants in sheets) became a step
     - **A single value** that a variant uses still cannot be deleted (ADR-027).
     - **The draft and the API agree:** `checkOptionsDraft` and `checkOptionsSave` apply the same rule with the same code and numbers. No migration: the existing triggers recompute the combination key at commit (DM-7).
 
+### Amended on 2026-11-03, one variant (owner)
+
+27. **A keepsake with no options always has its Price block** (as in Shopify). The case that started it: "Explorer" had its variants deleted (T-019), then its options, and the Price block was gone with the keepsake still Published and no SKU.
+    - **With no live variant** the block shows empty fields (price empty, status For sale). The first valid price, saved when the field is left, creates the single variant with no option values (`POST .../variants`, no API change), and the block then behaves as before.
+    - **A code or status chosen before the price** is kept in the block and sent with that first price. Nothing is created until a price is valid.
+    - **A new keepsake** (held in the browser) does the same: the variant is added to the draft.
+    - **Only archived variants** (all sold): the block does not show. An archived variant keeps its combination (ADR-017), and the empty combination would clash (`no-options-one-variant`). Open question for the owner.
+    - **Not changed:** the last-option rule (item 26), publishing a keepsake with no live variant, and stock (E6.3).
+
 ## Rejected
 
 - **One long page for new and existing keepsakes** (Shopify). The owner kept the steps.

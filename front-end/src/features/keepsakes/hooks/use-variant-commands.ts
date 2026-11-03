@@ -1,4 +1,4 @@
-import type { VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
+import type { VariantCreateBody, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
 import type { Outcome } from './use-keepsake-editor'
 
 import { useQueryClient } from '@tanstack/react-query'
@@ -11,7 +11,7 @@ import { variantName } from '../lib/option-rules'
 import { problemTypeOf, refusalsOf } from '../lib/problems'
 
 /**
- * A variant's own writes: change one (code, price, status, values, archive) or change the price or status of several in
+ * A variant's own writes: create the one of a keepsake with no options, change one (code, price, status, values, archive) or change the price or status of several in
  * one request. Both are live at once and take no row version (ADR-014), so they need no autosave. Every answer is the
  * whole keepsake, written into the detail query. Each screen shows a refusal beside its field or in its own alert, so both
  * commands are `silent`; the bar says "Saved" for a price, so only a status and a bulk change toast.
@@ -40,12 +40,23 @@ export function useVariantCommands({ storeId, id }: { storeId: string, id: strin
       silent: true,
     },
   })
+  const createVariant = useCommand('keepsakes', 'createVariant', { meta: { silent: true } })
   const detailKey = keepsakesQueries.detail(client, storeId, id).queryKey
 
   return {
     saveVariant: async (variantId: string, body: VariantSaveBody): Promise<Outcome> => {
       try {
         queryClient.setQueryData(detailKey, await saveVariant.mutateAsync({ storeId, id, variantId, idempotencyKey: crypto.randomUUID(), ...body }))
+
+        return { ok: true }
+      }
+      catch (error) {
+        return { ok: false, type: problemTypeOf(error), refusals: refusalsOf(error) }
+      }
+    },
+    createVariant: async (body: VariantCreateBody): Promise<Outcome> => {
+      try {
+        queryClient.setQueryData(detailKey, await createVariant.mutateAsync({ storeId, id, idempotencyKey: crypto.randomUUID(), ...body }))
 
         return { ok: true }
       }

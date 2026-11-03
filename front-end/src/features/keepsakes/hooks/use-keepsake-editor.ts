@@ -1,4 +1,4 @@
-import type { OptionWrite, Product, ProductOption, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
+import type { OptionWrite, Product, ProductOption, VariantCreateBody, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
 import type { OptionsPlan } from '../lib/combinations'
 import type { KeepsakeText } from '../lib/keepsake-rules'
 import type { Refusal } from '../lib/option-rules'
@@ -226,6 +226,7 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     unpublish: () => afterFlush(() => unpublish.mutateAsync({ storeId, id, ifMatch: versionRef.current, idempotencyKey: crypto.randomUUID() })),
     saveVariant: (variantId: string, body: VariantSaveBody) => tracked(() => variantCommands.saveVariant(variantId, body)),
     saveVariants: (variants: VariantsSaveBody['variants']) => tracked(() => variantCommands.saveVariants(variants)),
+    createVariant: (body: VariantCreateBody) => tracked(() => variantCommands.createVariant(body)),
     /**
      * The options, the values existing variants take of a new option and the new variants, in one write on the version the
      * page holds. The typed fields save first.
