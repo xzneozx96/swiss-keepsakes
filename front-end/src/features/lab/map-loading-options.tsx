@@ -8,8 +8,6 @@ import {
   ExploreIcon,
 } from '@/components/icons'
 
-import '@/features/tours/map/tour-itinerary-map.css'
-
 /** The map frame as it looks while the next stop's tiles load: the old view stays on screen. */
 function MockMap({
   background,
@@ -21,7 +19,7 @@ function MockMap({
   children?: ReactNode
 }) {
   return (
-    <div className="tour-map-frame relative overflow-hidden rounded-3xl bg-surface-secondary">
+    <div className="relative h-[min(72svh,640px)] min-h-[460px] overflow-hidden rounded-3xl bg-surface-secondary">
       <img
         alt=""
         className="absolute inset-0 size-full object-cover"
@@ -38,7 +36,7 @@ function MockMap({
         </span>
       </div>
       {children}
-      <div className="tour-map-card absolute inset-x-3 flex flex-col gap-2 rounded-2xl bg-surface p-3 shadow-overlay">
+      <div className="absolute inset-x-3 bottom-9 flex flex-col gap-2 rounded-2xl bg-surface p-3 shadow-overlay">
         {cardLoading && (
           <span className="absolute inset-x-4 top-0 h-0.5 overflow-hidden rounded-full bg-accent/20">
             <span className="lab-slide block h-full w-1/3 bg-accent" />

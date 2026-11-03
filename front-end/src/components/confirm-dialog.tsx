@@ -1,4 +1,4 @@
-import { AlertDialog, Button } from '@heroui/react'
+import { AlertDialog, Button, Spinner } from '@heroui/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
@@ -14,11 +14,20 @@ export interface ConfirmOptions {
   cancelLabel?: string
   /** `danger` (default): soft brick icon and the ink destructive button. */
   tone?: 'danger'
+  /**
+   * The write the button starts. While it runs the button shows a spinner and the dialog cannot be
+   * closed; when it resolves the dialog closes and `confirm` resolves true; when it rejects the dialog
+   * stays open and says why (`problem`). Without `run` the button closes the dialog at once.
+   */
+  run?: () => Promise<unknown>
+  /** The words for a refusal of `run`, from the feature's own problem map (`api-feedback.md`). */
+  problem?: (error: unknown) => string
 }
 
 export interface ConfirmDialogProps extends ConfirmOptions {
   isOpen: boolean
-  onConfirm: () => void
+  /** May return a promise: the dialog then waits for it (spinner, not closable) and shows `problem` when it rejects. */
+  onConfirm: () => void | Promise<unknown>
   /** Cancel button, Esc or a backdrop tap. */
   onCancel: () => void
 }
@@ -42,6 +51,11 @@ export interface ConfirmDialogProps extends ConfirmOptions {
  *   onConfirm={() => { cancelOrder(); setOpen(false); }}
  * />
  * ```
+ *
+ * A confirm that writes to the server returns the write's promise (owner decision, 1.11.2026): the
+ * destructive button spins and the dialog stays until the server answers, so the row never lingers
+ * after the dialog closed. The caller closes it when the promise resolves; a rejection shows
+ * `problem(error)` in the dialog and re-enables both buttons.
  */
 export function ConfirmDialog({
   isOpen,
@@ -50,17 +64,40 @@ export function ConfirmDialog({
   confirmLabel,
   cancelLabel,
   tone = 'danger',
+  problem,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
   const { t } = useLocale()
+  const [isPending, setIsPending] = useState(false)
+  const [refusal, setRefusal] = useState<string>()
+
+  const cancel = () => {
+    if (!isPending)
+      onCancel()
+  }
+  const confirm = () => {
+    const result = onConfirm()
+
+    if (!(result instanceof Promise))
+      return
+    setRefusal(undefined)
+    setIsPending(true)
+    result.then(
+      () => setIsPending(false),
+      (error: unknown) => {
+        setIsPending(false)
+        setRefusal(problem?.(error) ?? t('confirm.failed'))
+      },
+    )
+  }
 
   return (
     <AlertDialog.Backdrop
-      isDismissable
-      isKeyboardDismissDisabled={false}
+      isDismissable={!isPending}
+      isKeyboardDismissDisabled={isPending}
       isOpen={isOpen}
-      onOpenChange={open => !open && onCancel()}
+      onOpenChange={open => !open && cancel()}
     >
       <AlertDialog.Container size="sm">
         <AlertDialog.Dialog>
@@ -70,6 +107,7 @@ export function ConfirmDialog({
           </AlertDialog.Header>
           <AlertDialog.Body>
             <p>{body}</p>
+            {refusal && <p className="mt-3 rounded-2xl bg-danger-soft p-3 text-sm text-danger-soft-foreground" role="alert">{refusal}</p>}
           </AlertDialog.Body>
           <AlertDialog.Footer className="flex-col-reverse sm:flex-row">
             <Button
@@ -77,16 +115,19 @@ export function ConfirmDialog({
               // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
               className="w-full sm:w-auto"
+              isDisabled={isPending}
               variant="tertiary"
-              onPress={onCancel}
+              onPress={cancel}
             >
               {cancelLabel ?? t('confirm.cancel')}
             </Button>
             <Button
               className="w-full sm:w-auto"
+              isPending={isPending}
               variant={tone}
-              onPress={onConfirm}
+              onPress={confirm}
             >
+              {isPending && <Spinner color="current" size="sm" />}
               {confirmLabel}
             </Button>
           </AlertDialog.Footer>
@@ -99,7 +140,8 @@ export function ConfirmDialog({
 /**
  * Asks before a destructive action. Render `dialog` once anywhere in the component, then
  * `await confirm(options)`: true after the confirm button, false after Cancel, Esc, a
- * backdrop tap or unmount.
+ * backdrop tap or unmount. With `options.run` (a write), true comes after the write succeeded and
+ * the dialog waits for it, see {@link ConfirmOptions}.
  *
  * ```tsx
  * const { confirm, dialog } = useConfirm();
@@ -114,6 +156,7 @@ export function ConfirmDialog({
 export function useConfirm() {
   const [options, setOptions] = useState<ConfirmOptions | null>(null)
   const [isOpen, setIsOpen] = useState(false)
+  const [opened, setOpened] = useState(0)
   const resolveRef = useRef<((confirmed: boolean) => void) | null>(null)
 
   const settle = useCallback((confirmed: boolean) => {
@@ -128,6 +171,8 @@ export function useConfirm() {
         resolveRef.current?.(false)
         resolveRef.current = resolve
         setOptions(next)
+        // A new key: a refusal of the last dialog or its pending state does not carry over.
+        setOpened(count => count + 1)
         setIsOpen(true)
       }),
     [],
@@ -139,10 +184,11 @@ export function useConfirm() {
   const dialog = options
     ? (
         <ConfirmDialog
+          key={opened}
           {...options}
           isOpen={isOpen}
           onCancel={() => settle(false)}
-          onConfirm={() => settle(true)}
+          onConfirm={() => options.run ? options.run().then(() => settle(true)) : settle(true)}
         />
       )
     : null

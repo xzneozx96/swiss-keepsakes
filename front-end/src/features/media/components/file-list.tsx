@@ -42,10 +42,12 @@ function FileMenu({ item, onOpen, onReplace, onRetire }: { item: MediaItem, onOp
 }
 
 /** The Audio and PDF lists: one row per file, the whole row opens the sheet. */
-export function FileList({ items, label, busyIds, onOpen, onReplace, onRetire }: {
+export function FileList({ items, label, busyIds, foundIds, onOpen, onReplace, onRetire }: {
   items: MediaItem[]
   label: string
   busyIds: string[]
+  /** Files to point out: the ones a pick already had in the library. */
+  foundIds: string[]
   onOpen: (item: MediaItem) => void
   onReplace: (item: MediaItem) => void
   onRetire: (item: MediaItem) => void
@@ -55,7 +57,7 @@ export function FileList({ items, label, busyIds, onOpen, onReplace, onRetire }:
   return (
     <ul aria-label={label} className={CARD}>
       {items.map(item => (
-        <li key={item.id} className="flex items-center gap-2 py-2 pe-1" data-media={item.id}>
+        <li key={item.id} className={`flex items-center gap-2 py-2 pe-1 ${foundIds.includes(item.id) ? 'rounded-xl bg-accent/10' : ''}`} data-media={item.id}>
           <button className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-start outline-none focus-visible:focus-ring" type="button" onClick={() => onOpen(item)}>
             <FileThumb busy={busyIds.includes(item.id)} item={item} />
             <span className="flex min-w-0 flex-col">

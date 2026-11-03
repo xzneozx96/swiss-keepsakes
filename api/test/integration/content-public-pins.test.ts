@@ -15,7 +15,7 @@ afterAll(async () => {
   await pool.end()
 })
 
-const deps = { uow: createUnitOfWork(db), reads: createPublicReadRepository(), clock: systemClock }
+const deps = { uow: createUnitOfWork(db), reads: createPublicReadRepository(), clock: systemClock, publicUrl: (key: string) => `https://media.test/${key}` }
 const getPin = makeGetPin(deps)
 
 const slug = () => `p-${randomUUID().slice(0, 8)}`
@@ -26,6 +26,8 @@ interface PinOptions {
   slugs?: Record<string, string>
   cover?: string
   mainStory?: string
+  // More of the published text (the alt text of the photos).
+  published?: Record<string, unknown>
 }
 
 async function place(store: string, o: PinOptions = {}): Promise<string> {
@@ -35,7 +37,7 @@ async function place(store: string, o: PinOptions = {}): Promise<string> {
   const { rows } = await pool.query<{ id: string }>(
     `insert into content.places (store_id, status, slug, latitude, longitude, published, first_published_at, cover_media_id, main_story_group_id)
      values ($1, $2, $3, 47.05, 8.3, $4, $5, $6, $7) returning id`,
-    [store, status, JSON.stringify(slugs), JSON.stringify({ name, tip: Object.fromEntries(Object.keys(name).map(k => [k, `Tip ${k}`])) }), status === 'draft' ? null : new Date().toISOString(), o.cover ?? null, o.mainStory ?? null],
+    [store, status, JSON.stringify(slugs), JSON.stringify({ name, tip: Object.fromEntries(Object.keys(name).map(k => [k, `Tip ${k}`])), ...o.published }), status === 'draft' ? null : new Date().toISOString(), o.cover ?? null, o.mainStory ?? null],
   )
   return rows[0]!.id
 }
@@ -105,6 +107,19 @@ describe('public pin reads over the database', () => {
     expect(await getPin(randomUUID(), 'en')).toEqual({ ok: false, reason: 'not-found' })
   })
 
+  it('the public card carries the stored Google Maps link, and null when there is none', async () => {
+    const store = randomUUID()
+    const withLink = await place(store)
+    const without = await place(store)
+    await pool.query('update content.places set maps_link = $2 where id = $1', [withLink, 'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38'])
+
+    const linked = await getPin(withLink, 'en')
+    const plain = await getPin(without, 'en')
+
+    expect(linked.ok && linked.value.mapsLink).toBe('https://maps.app.goo.gl/RiTbLwL8vxFxPzk38')
+    expect(plain.ok && plain.value.mapsLink).toBeNull()
+  })
+
   it('[E2.12][AC64] a pin with English only, read as de, carries English', async () => {
     const store = randomUUID()
     const a = await place(store, { name: { en: 'Only English' } })
@@ -151,7 +166,60 @@ describe('public pin reads over the database', () => {
 
     const items = await mapItems('en')
 
-    expect(items.find(i => i.id === a)).toMatchObject({ hasMainStory: true, mainStorySlug: storySlug, photoKey: key })
-    expect(items.find(i => i.id === noStory)).toMatchObject({ hasMainStory: false, mainStorySlug: null, photoKey: null })
+    expect(items.find(i => i.id === a)).toMatchObject({ hasMainStory: true, mainStorySlug: storySlug, photoUrl: `https://media.test/${key}` })
+    expect(items.find(i => i.id === noStory)).toMatchObject({ hasMainStory: false, mainStorySlug: null, photoUrl: null })
+  })
+
+  it('[E4.7][AC42][AC49][N03] the pin read carries the outbound link, the photos in order with their text, the main story and the other stories, and the list carries none of them', async () => {
+    const store = randomUUID()
+    const media = async () => (await pool.query<{ id: string, storage_key: string }>(
+      `insert into content.media (store_id, kind, storage_key, content_type, byte_size, sha256, status, width, height) values ($1, 'image', $2, 'image/jpeg', 10, repeat('a', 64), 'ready', 700, 500) returning id, storage_key`,
+      [store, `${store}/${randomUUID()}/original.jpg`],
+    )).rows[0]!
+    const story = async (title: Record<string, string>) => {
+      const { rows } = await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [store])
+      const body = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'word '.repeat(450) }] }] }
+      for (const [language, text] of Object.entries(title)) {
+        await pool.query(
+          `insert into content.story_versions (store_id, group_id, language, status, slug, published, published_at) values ($1, $2, $3, 'published', $4, $5, now())`,
+          [store, rows[0]!.id, language, slug(), JSON.stringify({ title: text, excerpt: '', authorName: '', coverMediaId: null, body })],
+        )
+      }
+      return rows[0]!.id
+    }
+    // 700 px wide: the 320 and 640 px copies exist, the larger ones do not.
+    const shown = (key: string, alt: string | null) => ({
+      url: `https://media.test/${key}`,
+      variants: [320, 640].map(width => ({ width, url: `https://media.test/${key.replace('original.jpg', `w${width}.webp`)}` })),
+      alt,
+    })
+    const [cover, second, third] = [await media(), await media(), await media()]
+    const main = await story({ en: 'Main story', de: 'Hauptgeschichte' })
+    const also = await story({ en: 'Also here', de: 'Auch hier' })
+    const germanOnly = await story({ de: 'Nur deutsch' })
+    const pin = await place(store, {
+      cover: cover.id,
+      mainStory: main,
+      published: { coverAlt: { en: 'The cover' }, photoAlt: { [third.id]: { en: 'Third', de: 'Dritte' } } },
+    })
+    await pool.query('insert into content.place_photos (place_id, store_id, position, media_id) values ($1, $2, 1, $3), ($1, $2, 2, $4)', [pin, store, third.id, second.id])
+    await pool.query('insert into content.place_links (place_id, store_id, url) values ($1, $2, $3)', [pin, store, 'https://hotel.example/rooms'])
+    for (const [position, groupId] of [main, also, germanOnly].entries())
+      await pool.query('insert into content.story_group_places (group_id, place_id, store_id, position) values ($1, $2, $3, $4)', [groupId, pin, store, position + 1])
+    const bare = await place(store)
+
+    const card = await getPin(pin, 'en')
+    const plain = await getPin(bare, 'en')
+    const listed = (await mapItems('en')).find(i => i.id === pin)
+
+    expect(card.ok && card.value).toMatchObject({
+      link: 'https://hotel.example/rooms',
+      photos: [shown(cover.storage_key, 'The cover'), shown(third.storage_key, 'Third'), shown(second.storage_key, null)],
+      mainStory: { title: 'Main story', readMinutes: 3 },
+      otherStories: [{ title: 'Also here', readMinutes: 3 }],
+    })
+    expect(plain.ok && plain.value).toMatchObject({ link: null, photos: [], mainStory: null, otherStories: [] })
+    expect(listed).toBeDefined()
+    expect(Object.keys(listed!)).not.toEqual(expect.arrayContaining(['link', 'photos', 'otherStories']))
   })
 })

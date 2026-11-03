@@ -163,26 +163,18 @@ describe('[E2.6] publish, hide and delete answer the editor in its own words', (
     expect(await response.json()).toMatchObject({ type: 'publish-incomplete', errors: [{ in: 'body', path: 'slug' }] })
   })
 
-  it('[E2.6][AC68] a publish that renames a live slug answers 409 slug-conflict', async () => {
-    const app = setup({ publishPin: async () => ({ ok: false, reason: 'slug-conflict' }) })
-
-    const response = await send(app, 'POST', `${pin}/publish`, { 'If-Match': '1' }, { slug: { en: 'renamed' } })
-
-    expect(response.status).toBe(409)
-    expect(await response.json()).toMatchObject({ type: 'slug-conflict', status: 409 })
-  })
-
-  it('[E2.6][AC30] publish reads an optional slug body: none, a slug for a new language, and nothing else', async () => {
-    const seen: unknown[] = []
-    const app = setup({ publishPin: async (_actor, _storeId, _id, ifMatch, _requestId, slug) => {
-      seen.push(slug)
-      return { ok: true, value: { ...fakePin, status: 'published', rowVersion: ifMatch + 1 } }
+  it('[E2.6][AC30] publish takes no slug: none, an empty body, or an ignored deprecated slug all reach the use case the same way', async () => {
+    const seen: unknown[][] = []
+    const app = setup({ publishPin: async (...args) => {
+      seen.push(args.slice(4))
+      return { ok: true, value: { ...fakePin, status: 'published', rowVersion: args[3] + 1 } }
     } })
 
     expect((await send(app, 'POST', `${pin}/publish`, { 'If-Match': '1' })).status).toBe(200)
     expect((await send(app, 'POST', `${pin}/publish`, { 'If-Match': '1' }, {})).status).toBe(200)
     expect((await send(app, 'POST', `${pin}/publish`, { 'If-Match': '1' }, { slug: { de: 'kapellbruecke' } })).status).toBe(200)
-    expect(seen).toEqual([undefined, undefined, { de: 'kapellbruecke' }])
+    expect(seen).toHaveLength(3)
+    expect(seen.every(rest => rest.length === 1 && typeof rest[0] === 'string')).toBe(true)
   })
 
   it.each([
@@ -222,6 +214,15 @@ describe('[E2.6] publish, hide and delete answer the editor in its own words', (
 
     expect(response.status).toBe(409)
     expect(await response.json()).toMatchObject({ type: 'published-cannot-be-deleted', title: 'A published item cannot be deleted. Hide it instead.' })
+  })
+
+  it('[T-016][AC3] DELETE of a pin that stories, reviews or tours use answers 409 content-in-use with how many of each', async () => {
+    const app = setup({ deletePin: async () => ({ ok: false, reason: 'pin-in-use', stories: 2, reviews: 0, tours: 1 }) })
+
+    const response = await send(app, 'DELETE', pin, { 'If-Match': '1' })
+
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({ type: 'content-in-use', errors: [{ code: 'pin-in-use', params: { stories: 2, reviews: 0, tours: 1 } }] })
   })
 
   it('[E2.6] DELETE with If-Match 3 passes the version to the use case and answers 204 with no body', async () => {

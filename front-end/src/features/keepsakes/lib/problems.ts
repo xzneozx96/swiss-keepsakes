@@ -32,6 +32,7 @@ export const keepsakeProblemKeys: Partial<Record<string, MessageKey>> = {
   'forbidden': 'keepsakes.problem.forbidden',
   'not-found': 'keepsakes.problem.notFound',
   'not-published': 'keepsakes.problem.notPublished',
+  'keepsake-archived': 'keepsakes.problem.archived',
   'storage-unavailable': 'keepsakes.problem.storage',
 }
 

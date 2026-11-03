@@ -4,7 +4,6 @@ export const storesEn = {
   'stores.problem.network': 'The connection was lost. Check it and try again.',
   'stores.problem.generic': 'Something went wrong. Try again in a moment.',
   'stores.problem.retry': 'Try again',
-  'stores.problem.requestId': 'Reference: {id}',
 
   'stores.admin.title': 'Stores',
   'stores.admin.intro': 'Create a store, invite its Owner and follow whether the invitation was accepted.',
@@ -136,12 +135,9 @@ export const storesEn = {
   'stores.open.forbidden': 'Only the Owner can open the store for sale.',
 
   'stores.setup.notice': 'Your store is not open for sale yet.',
-  'stores.setup.steps.label': 'Steps',
-  'stores.setup.steps.title': 'Your steps',
-  'stores.setup.steps.all': 'All steps',
-  'stores.setup.steps.of': 'Step {n} of {total}',
+  'stores.setup.action': 'Set up store',
+  'stores.setup.close': 'Close',
   'stores.setup.open': 'Open for sale',
-  'stores.setup.back': 'Back',
   'stores.setup.continue': 'Continue',
   'stores.setup.skip': 'Skip for now',
   'stores.setup.why.store-information': 'The name and the language guests see your store in.',

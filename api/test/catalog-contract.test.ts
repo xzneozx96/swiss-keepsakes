@@ -8,7 +8,7 @@ const document = JSON.parse(readFileSync(fileURLToPath(new URL('../../packages/a
 }
 
 const catalogPaths = Object.keys(document.paths).filter(path => path.startsWith('/api/store/{storeId}/products'))
-const catalogSchemas = ['Product', 'ProductList', 'ProductListItem', 'ProductCreateBody', 'ProductSaveBody', 'VariantSaveBody', 'VariantCreateBody', 'ProductVariant', 'ProductOption', 'OptionsSaveBody', 'OptionWrite', 'OptionValueWrite', 'OptionName', 'ValueLabel', 'KeepsakeVariantWrite', 'PublishCheck', 'KeepsakeName', 'KeepsakeText']
+const catalogSchemas = ['Product', 'ProductList', 'ProductListItem', 'ProductCreateBody', 'ProductSaveBody', 'VariantSaveBody', 'VariantCreateBody', 'ProductVariant', 'ProductOption', 'OptionsSaveBody', 'OptionWrite', 'OptionValueWrite', 'OptionName', 'ValueLabel', 'KeepsakeVariantWrite', 'VariantsSaveBody', 'PublishCheck', 'KeepsakeName', 'KeepsakeText']
 
 describe('[E6.1][AC55] the catalog contract', () => {
   it('[E6.1][AC55] has the keepsake routes and nothing else under products', () => {
@@ -48,10 +48,27 @@ describe('[E6.2][AC52] the options and variants contract', () => {
     expect(Object.keys(schema('ProductOption').properties ?? {})).toEqual(['id', 'name', 'values'])
   })
 
-  it('[E6.2][AC52] saving the options takes the options and the new values of variants in one body, with If-Match', () => {
-    expect(Object.keys(schema('OptionsSaveBody').properties ?? {})).toEqual(['options', 'variantValues'])
+  it('[E6.2][AC52] saving the options takes the options, the new values of variants and the new variants in one body, with If-Match', () => {
+    expect(Object.keys(schema('OptionsSaveBody').properties ?? {})).toEqual(['newVariants', 'options', 'variantValues'])
     expect(operation('/{productId}/options', 'put').parameters).toContainEqual(expect.objectContaining({ name: 'If-Match', in: 'header' }))
     expect(Object.keys(operation('/{productId}/options', 'put').responses)).toEqual(expect.arrayContaining(['200', 'default']))
+  })
+
+  it('[T-008][AC4] the new variants of an options save are for sale, with a description', () => {
+    const text = JSON.stringify(document.components.schemas.OptionsSaveBody)
+
+    expect(text).toContain('Variants to create in the same write')
+    expect(text).toContain('KeepsakeVariantWrite')
+  })
+
+  it('[T-008][AC4] changing several variants is a PATCH of variants with no If-Match, 1 to 300 rows', () => {
+    const patch = operation('/{productId}/variants', 'patch')
+
+    expect(patch.parameters?.some(p => p.name === 'If-Match')).toBe(false)
+    expect(Object.keys(patch.responses)).toEqual(expect.arrayContaining(['200', 'default']))
+    expect(Object.keys(schema('VariantsSaveBody').properties ?? {})).toEqual(['variants'])
+    expect(JSON.stringify(document.components.schemas.VariantsSaveBody)).toContain('"minItems":1')
+    expect(JSON.stringify(document.components.schemas.VariantsSaveBody)).toContain('"maxItems":300')
   })
 
   it('[E6.2][AC52] creating a variant is a POST that answers 201 and has no row version', () => {
@@ -65,10 +82,11 @@ describe('[E6.2][AC52] the options and variants contract', () => {
     expect(Object.keys(problem.properties.errors.items.properties ?? {})).toEqual(expect.arrayContaining(['code', 'params']))
   })
 
-  it('[E6.2][AC52] a swatch is a lowercase # colour, and the status archived is a status, not a restore', () => {
+  it('[T-010] an option value has no swatch, and the status archived is a status, not a restore', () => {
     const text = JSON.stringify(document.components.schemas.OptionValueWrite)
 
-    expect(text).toContain('^#[0-9a-f]{6}$')
+    expect(text).not.toContain('swatch')
+    expect(JSON.stringify(document.components.schemas.ProductOption)).not.toContain('swatch')
     expect(JSON.stringify(document.components.schemas.VariantSaveBody)).toContain('archived')
     expect(JSON.stringify(catalogPaths)).not.toContain('restore')
   })

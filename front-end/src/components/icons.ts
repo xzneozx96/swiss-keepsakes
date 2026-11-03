@@ -70,12 +70,14 @@ export { Location as PickupIcon } from 'reicon-react'
 export { Wallet as PayLaterIcon } from 'reicon-react'
 export { Calendar as PickupDateIcon } from 'reicon-react'
 export { Tag as OptionIcon } from 'reicon-react'
+export { Tag as CategoryIcon } from 'reicon-react'
 
 // Seller contact card
 export { Call as CallIcon } from 'reicon-react'
 export { Sms as EmailIcon } from 'reicon-react'
 export { Routing as DirectionsIcon } from 'reicon-react'
 export { Pin2 as OpenInMapsIcon } from 'reicon-react'
+export { Crosshairs as RecenterIcon } from 'reicon-react'
 export { Shop as ShopIcon } from 'reicon-react'
 
 // Cart line
@@ -105,13 +107,21 @@ export { Qr as QrIcon } from 'reicon-react'
 /** Sliders: "adjust what you see" (owner, 14 Oct 2026: clearer than the funnel shape). */
 export { Setting4 as FilterIcon } from 'reicon-react'
 export { Archive as ArchiveIcon } from 'reicon-react'
+/** The Variants block's bulk actions (ActionBar): set a price, put on sale, hide. */
+export { Money as PriceIcon } from 'reicon-react'
+export { Eye as ForSaleIcon } from 'reicon-react'
+export { EyeOff as HiddenIcon } from 'reicon-react'
 export { Trash4 as CartRemoveIcon } from 'reicon-react'
+// Map controls
+export { Fullscreen as FullscreenIcon } from 'reicon-react'
+export { ExitFullscreen as ExitFullscreenIcon } from 'reicon-react'
 export { Minus as MinusIcon } from 'reicon-react'
 export { Plus as PlusIcon } from 'reicon-react'
 export { ChevronDown as ChevronDownIcon } from 'reicon-react'
 
 // Trip profile (C07)
 export { Profile2user as TravelGroupIcon } from 'reicon-react'
+export { Profile2user as AudienceIcon } from 'reicon-react'
 export { User as TravelSoloIcon } from 'reicon-react'
 
 // Overview analytics deltas (M02, step 1.9s)
@@ -142,6 +152,7 @@ export { QuoteUp as QuoteIcon } from 'reicon-react'
 export { Link as LinkIcon } from 'reicon-react'
 export { GalleryAdd as PhotoAddIcon } from 'reicon-react'
 export { ImageUp as UploadIcon } from 'reicon-react'
+export { Gallery as LibraryIcon } from 'reicon-react'
 export { Undo as UndoIcon } from 'reicon-react'
 export { Redo as RedoIcon } from 'reicon-react'
 /** The long story card (M12, M13). */

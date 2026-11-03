@@ -31,7 +31,6 @@ erDiagram
         uuid product_id FK "-> catalog.product_options; -> catalog.products"
         uuid option_id FK, UK "-> catalog.product_options; unique with position"
         jsonb label
-        text swatch
         integer position UK "unique with option_id"
         timestamptz created_at
         timestamptz updated_at
@@ -39,11 +38,12 @@ erDiagram
     catalog_skus["catalog.skus"] {
         uuid id PK, UK "unique with store_id"
         uuid store_id UK "unique with id; unique with sku_code; id -> identity.stores"
-        text sku_code UK "unique with store_id"
+        text sku_code UK "optional (NULL allowed); unique with store_id when present"
         uuid product_id FK, UK "-> catalog.products; unique with combination_key"
         text combination_key UK "unique with product_id"
         bigint price_rappen
         text status
+        uuid media_id "optional variant photo; id -> content.media, no foreign key"
         timestamptz created_at
         timestamptz updated_at
     }

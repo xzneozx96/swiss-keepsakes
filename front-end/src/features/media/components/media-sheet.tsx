@@ -4,7 +4,8 @@ import { Alert, Button, Description, Drawer, FieldError, Input, Label, Skeleton,
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
-import { ChevronRightIcon, CloseIcon, FilePdfIcon, MusicIcon, PickupIcon, TrashIcon, UploadIcon } from '@/components/icons'
+import { EmptyState } from '@/components/empty-state'
+import { ChevronRightIcon, CloseIcon, FilePdfIcon, InfoIcon, LinkIcon, MusicIcon, PickupIcon, TrashIcon, UploadIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useIsWide } from '@/hooks/use-is-wide'
 import { useMediaUses } from '../api/queries'
@@ -13,6 +14,8 @@ import { FileThumb } from './file-thumb'
 
 /** Replace and Retire on the preview: 44 px pills on a white surface, so they read on any photo. */
 const OVERLAY_BUTTON = 'h-11 min-w-11 rounded-full bg-surface/95 px-3.5 text-sm font-medium text-foreground shadow-overlay backdrop-blur hover:bg-surface data-[disabled=true]:opacity-60'
+/** Delete on the preview: the same pill, but a solid danger-soft fill so it still reads on any photo. */
+const DANGER_OVERLAY_BUTTON = 'h-11 min-w-11 rounded-full px-3.5 text-sm font-medium shadow-overlay data-[disabled=true]:opacity-60'
 
 export interface SheetActions {
   askReplace: (item: MediaItem) => void
@@ -59,7 +62,7 @@ function Preview({ item, busy, actions }: { item: MediaItem, busy: boolean, acti
               <UploadIcon aria-hidden size={16} />
               {t('media.row.replace')}
             </Button>
-            <Button aria-describedby={reason ? `retire-${item.id}` : undefined} className={OVERLAY_BUTTON} isDisabled={!check.ok || busy} onPress={() => actions.retire(item)}>
+            <Button aria-describedby={reason ? `retire-${item.id}` : undefined} className={DANGER_OVERLAY_BUTTON} isDisabled={!check.ok || busy} variant="danger-soft" onPress={() => actions.retire(item)}>
               <TrashIcon aria-hidden size={16} />
               {t('media.retire.button')}
             </Button>
@@ -195,8 +198,8 @@ function WhereUsed({ storeId, item }: { storeId: string, item: MediaItem }) {
           ))}
         </div>
       )}
-      {uses.isError && <p className="text-sm text-danger">{t('media.where.loadFailed')}</p>}
-      {none && <p className="text-sm text-muted">{t('media.where.none')}</p>}
+      {uses.isError && <EmptyState compact alert icon={InfoIcon} message={t('media.where.loadFailed')} />}
+      {none && <EmptyState compact icon={LinkIcon} message={t('media.where.none')} />}
       {!!uses.data?.published.length && (
         <div className="flex flex-col">
           <h4 className="text-label text-muted">{`${t('media.where.published')} (${uses.data.published.length})`}</h4>

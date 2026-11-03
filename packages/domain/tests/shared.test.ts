@@ -32,6 +32,7 @@ describe('[E1.2] shared/slug', () => {
   it('turns umlauts into ae, oe and ue and strips the rest', () => {
     expect(shared.slugify('Kapellbrücke Taschenmesser')).toBe('kapellbruecke-taschenmesser')
     expect(shared.slugify('  --Café  Nº 5!-- ')).toBe('cafe-n-5')
+    expect(shared.slugify('Straße Ärger Öl')).toBe('strasse-aerger-oel')
   })
 
   it('cuts to 60 characters without a trailing dash', () => {

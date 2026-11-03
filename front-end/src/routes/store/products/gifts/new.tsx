@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { CreateKeepsake } from '@/features/keepsakes/components/create-flow'
+import { NewKeepsake } from '@/features/keepsakes/components/new-keepsake-editor'
 
-// Create on M11: Details, then the variant, then a draft keepsake that opens at /store/products/gifts/$productId.
-// A static segment, so it wins over $productId.
+// A new keepsake in the stepped editor: Details, Options and Variants in the browser, then a draft that opens at
+// /store/products/gifts/$productId on Review and publish. A static segment, so it wins over $productId.
 export const Route = createFileRoute('/store/products/gifts/new')({
-  component: CreateKeepsake,
+  component: NewKeepsake,
 })

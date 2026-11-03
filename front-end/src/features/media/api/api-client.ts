@@ -36,8 +36,12 @@ export function createMediaClient(): MediaClient {
           },
         },
       })),
+    get: async ({ storeId, id }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/media/{mediaId}', { ...timeout(), params: { path: { storeId, mediaId: id } } })),
     uses: async ({ storeId, id }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/media/{mediaId}/uses', { ...timeout(), params: { path: { storeId, mediaId: id } } })),
+    lookup: async ({ storeId, sha256 }) =>
+      (await answer((await loadClient()).POST('/api/store/{storeId}/media/lookup', { ...timeout(), params: { path: { storeId } }, body: { sha256 } }))).items,
     upload: async ({ storeId, file, contentType }) => {
       const { client, uploadKey } = await putToStorage(storeId, file, contentType)
 
@@ -56,6 +60,10 @@ export function createMediaClient(): MediaClient {
         body: { uploadKey, fileName: file.name },
       }))
     },
+    requestUpload: async ({ storeId, idempotencyKey, ...body }) =>
+      answer((await loadClient()).POST('/api/store/{storeId}/media/uploads', { ...keyed(idempotencyKey), params: { path: { storeId } }, body })),
+    confirmUpload: async ({ storeId, idempotencyKey, ...body }) =>
+      answer((await loadClient()).POST('/api/store/{storeId}/media/confirm', { ...keyed(idempotencyKey, FILE_CALL_TIMEOUT_MS), params: { path: { storeId } }, body })),
     describe: async ({ storeId, id, idempotencyKey, ...body }) =>
       answer((await loadClient()).PATCH('/api/store/{storeId}/media/{mediaId}', { ...keyed(idempotencyKey), params: { path: { storeId, mediaId: id } }, body })),
     retire: async ({ storeId, id, idempotencyKey }) =>

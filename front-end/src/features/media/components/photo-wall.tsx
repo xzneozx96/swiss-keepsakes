@@ -2,14 +2,15 @@ import type { MediaItem } from '@sk/api-contract'
 
 import { Skeleton } from '@heroui/react'
 
-import { SelectedIcon } from '@/components/icons'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { FileThumb } from './file-thumb'
+import { TileMark, TileOutline } from './tile-mark'
+import { TILE_GAPS } from './tile-style'
 
-const GRID = 'grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6'
+const GRID = `grid grid-cols-3 ${TILE_GAPS} sm:grid-cols-4 lg:grid-cols-6`
 
-function Tile({ item, busy, selecting, selected, onPress }: { item: MediaItem, busy: boolean, selecting: boolean, selected: boolean, onPress: () => void }) {
+function Tile({ item, busy, found, selecting, selected, onPress }: { item: MediaItem, busy: boolean, found: boolean, selecting: boolean, selected: boolean, onPress: () => void }) {
   const { t } = useLocale()
   const unused = item.status === 'ready' && !item.usage?.pages
 
@@ -22,19 +23,18 @@ function Tile({ item, busy, selecting, selected, onPress }: { item: MediaItem, b
       type="button"
       onClick={onPress}
     >
-      <span className={`relative block w-full overflow-hidden rounded-xl ${selected ? 'ring-2 ring-foreground ring-offset-2' : ''}`}>
-        <FileThumb busy={busy} className="aspect-square w-full rounded-xl" item={item} />
-        {unused && <span className="absolute start-1.5 bottom-1.5 rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-semibold">{t('media.grid.unused')}</span>}
-        {item.status !== 'ready' && (
-          <span className="absolute start-1.5 bottom-1.5">
-            <StatusChip tone={item.status === 'processing' ? 'info' : 'neutral'}>{t(`media.status.${item.status}`)}</StatusChip>
-          </span>
-        )}
-        {selecting && (
-          <span aria-hidden className={`absolute end-1.5 top-1.5 flex size-6 items-center justify-center rounded-full border-2 ${selected ? 'border-surface bg-surface text-foreground' : 'border-surface/90 bg-foreground/20'}`}>
-            {selected && <SelectedIcon size={22} weight="Filled" />}
-          </span>
-        )}
+      <span className="relative block w-full">
+        <span className="relative block w-full overflow-hidden rounded-xl">
+          <FileThumb busy={busy} className="aspect-square w-full" item={item} />
+          {unused && <span className="absolute start-1.5 bottom-1.5 rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-semibold">{t('media.grid.unused')}</span>}
+          <TileOutline shown={selected || found} />
+          {selecting && <TileMark selected={selected} />}
+          {item.status !== 'ready' && (
+            <span className="absolute start-1.5 bottom-1.5">
+              <StatusChip tone={item.status === 'processing' ? 'info' : 'neutral'}>{t(`media.status.${item.status}`)}</StatusChip>
+            </span>
+          )}
+        </span>
       </span>
       <span aria-hidden className="truncate px-0.5 text-xs text-muted">{item.name}</span>
     </button>
@@ -42,10 +42,12 @@ function Tile({ item, busy, selecting, selected, onPress }: { item: MediaItem, b
 }
 
 /** The photo wall: square tiles, three across on a phone, four from 640 px, six from 1024 px. */
-export function PhotoWall({ items, label, busyIds, selecting, selected, onOpen, onToggle }: {
+export function PhotoWall({ items, label, busyIds, foundIds, selecting, selected, onOpen, onToggle }: {
   items: MediaItem[]
   label: string
   busyIds: string[]
+  /** Files to point out: the ones a pick already had in the library. */
+  foundIds: string[]
   selecting: boolean
   selected: string[]
   onOpen: (item: MediaItem) => void
@@ -55,7 +57,7 @@ export function PhotoWall({ items, label, busyIds, selecting, selected, onOpen, 
     <ul aria-label={label} className={GRID}>
       {items.map(item => (
         <li key={item.id}>
-          <Tile busy={busyIds.includes(item.id)} item={item} selected={selected.includes(item.id)} selecting={selecting} onPress={() => (selecting ? onToggle(item) : onOpen(item))} />
+          <Tile busy={busyIds.includes(item.id)} found={foundIds.includes(item.id)} item={item} selected={selected.includes(item.id)} selecting={selecting} onPress={() => (selecting ? onToggle(item) : onOpen(item))} />
         </li>
       ))}
     </ul>

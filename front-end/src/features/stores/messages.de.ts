@@ -5,7 +5,6 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
   'stores.problem.network': 'Die Verbindung ist abgebrochen. Prüfen Sie sie und versuchen Sie es erneut.',
   'stores.problem.generic': 'Etwas ist schiefgelaufen. Versuchen Sie es gleich noch einmal.',
   'stores.problem.retry': 'Erneut versuchen',
-  'stores.problem.requestId': 'Referenz: {id}',
 
   'stores.admin.title': 'Shops',
   'stores.admin.intro': 'Legen Sie einen Shop an, laden Sie dessen Inhaber ein und sehen Sie, ob die Einladung angenommen wurde.',
@@ -137,12 +136,9 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
   'stores.open.forbidden': 'Nur der Inhaber kann den Verkauf starten.',
 
   'stores.setup.notice': 'Ihr Shop ist noch nicht im Verkauf.',
-  'stores.setup.steps.label': 'Schritte',
-  'stores.setup.steps.title': 'Ihre Schritte',
-  'stores.setup.steps.all': 'Alle Schritte',
-  'stores.setup.steps.of': 'Schritt {n} von {total}',
+  'stores.setup.action': 'Shop einrichten',
+  'stores.setup.close': 'Schliessen',
   'stores.setup.open': 'Verkaufsstart',
-  'stores.setup.back': 'Zurück',
   'stores.setup.continue': 'Weiter',
   'stores.setup.skip': 'Vorerst überspringen',
   'stores.setup.why.store-information': 'Name und Sprache, in der Gäste Ihren Shop sehen.',

@@ -26,6 +26,7 @@ import { pickText } from '@sk/domain/shared'
 
 import { useState } from 'react'
 
+import { choiceCard } from '@/components/choice-card'
 import { useConfirm } from '@/components/confirm-dialog'
 import {
   GiftIcon,
@@ -45,10 +46,6 @@ import { declineReasons } from '../hooks/use-merchant-order-detail'
 import { ActionPanel } from './detail-card'
 
 type Sheet = 'accept' | 'change' | 'decline' | null
-
-/** Radio as a choice card in the sheets: hairline frame, ink frame when selected. */
-const choiceCard
-  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 /**
  * M04 decision block for a requested order (spec §4.6): stock per line, then accept

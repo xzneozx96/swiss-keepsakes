@@ -1,6 +1,7 @@
-import type { OptionWrite, Product } from '@sk/api-contract'
+import type { OptionWrite, Product, ProductOption, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
+import type { OptionsPlan } from '../lib/combinations'
 import type { KeepsakeText } from '../lib/keepsake-rules'
-import type { Refusal, Values } from '../lib/option-rules'
+import type { Refusal } from '../lib/option-rules'
 
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
@@ -10,7 +11,8 @@ import { useDataClient } from '@/features/data-client'
 import { useCommand } from '@/features/data-client/use-command'
 import { useLatest } from '@/hooks/use-latest'
 import { keepsakesQueries } from '../api/queries'
-import { AUTOSAVE_MS, fullLanguages, textOf } from '../lib/keepsake-rules'
+import { descriptionsBody, isTooLong } from '../lib/description-doc'
+import { AUTOSAVE_MS, descriptionsOf, publishedText, textOf } from '../lib/keepsake-rules'
 import { keepsakeProblemKeys, problemTypeOf, refusalsOf } from '../lib/problems'
 import { useVariantCommands } from './use-variant-commands'
 
@@ -22,13 +24,13 @@ export interface KeepsakeDraft extends KeepsakeText {
 
 export type SaveState = 'saved' | 'unsaved' | 'saving' | 'stale' | 'failed'
 
-/** `refusals` are the rules the API named when it refused the save (422). */
-export type Outcome = { ok: true } | { ok: false, type: string, refusals?: Refusal[] }
+/** `refusals` are the rules the API named when it refused the save (422). `options` are the keepsake's options as the API saved them, with the ids it gave the new ones. */
+export type Outcome = { ok: true, options?: ProductOption[] } | { ok: false, type: string, refusals?: Refusal[] }
 
 export function draftOf(keepsake: Product): KeepsakeDraft {
   return {
     name: textOf(keepsake.name),
-    text: textOf(keepsake.text),
+    text: descriptionsOf(keepsake.text),
     photoIds: keepsake.photos.map(photo => photo.id),
     commission: keepsake.commissionRate,
   }
@@ -52,23 +54,18 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
   const client = useDataClient()
   const queryClient = useQueryClient()
   const { t } = useLocale()
-  // The autosave and the options sheet show a refusal inline, so their error toast is off. Publish and unpublish have
-  // no field to show it at: their refusal is the toast, in the keepsake screens' copy.
+  // The autosave and the options sheet show a refusal inline, so their error toast is off, and so is unpublish's: its
+  // confirm dialog shows the refusal. Publish has no field to show it at: its refusal is the toast, in the keepsake screens' copy.
   const save = useCommand('keepsakes', 'save', { meta: { silent: true } })
   const publish = useCommand('keepsakes', 'publish', {
     meta: {
-      success: (published) => {
-        const languages = fullLanguages({ name: textOf(published.name), text: textOf(published.text) })
-
-        return t('keepsakes.toast.published', { languages: languages.map(language => t(`keepsakes.language.${language}`)).join(` ${t('keepsakes.and')} `) })
-      },
+      success: published => publishedText(t, published),
       error: keepsakeProblemKeys,
     },
   })
-  const unpublish = useCommand('keepsakes', 'unpublish', { meta: { success: 'keepsakes.toast.unpublished', error: keepsakeProblemKeys } })
-  const saveOptions = useCommand('keepsakes', 'saveOptions', { meta: { success: 'keepsakes.optionsSheet.saved', silent: true } })
-  // Removing an option from its row says nothing on success; its refusal shows beside the Options card.
-  const removeOption = useCommand('keepsakes', 'saveOptions', { meta: { silent: true } })
+  const unpublish = useCommand('keepsakes', 'unpublish', { meta: { success: 'keepsakes.toast.unpublished', silent: true } })
+  // The bar says "Saved" for an option that is done; its refusal shows in the Options block.
+  const saveOptions = useCommand('keepsakes', 'saveOptions', { meta: { silent: true } })
   const variantCommands = useVariantCommands({ storeId, id: keepsake.id })
   const [draft, setDraft] = useState(() => draftOf(keepsake))
   const [state, setState] = useState<SaveState>('saved')
@@ -98,11 +95,24 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
       return false
     if (!dirtyRef.current)
       return true
+    // The API refuses a description of more than 1200 characters, and the field says so: nothing is sent until it is
+    // shorter. Checked before the run starts, so a finished run is never stored as the running one.
+    if (isTooLong(draftRef.current.text)) {
+      setState('unsaved')
+
+      return false
+    }
     const run = (async () => {
       try {
         while (dirtyRef.current) {
           const sent = draftRef.current
 
+          // A change made while an earlier save ran can have made it too long.
+          if (isTooLong(sent.text)) {
+            setState('unsaved')
+
+            return false
+          }
           dirtyRef.current = false
           setState('saving')
           try {
@@ -112,7 +122,7 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
               ifMatch: versionRef.current,
               idempotencyKey: crypto.randomUUID(),
               name: trimmed(sent.name),
-              text: trimmed(sent.text),
+              text: descriptionsBody(sent.text),
               photoIds: sent.photoIds,
               commissionRate: sent.commission,
             }))
@@ -147,8 +157,9 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
 
   const flushRef = useLatest(flush)
 
-  const change = (patch: Partial<KeepsakeDraft>) => {
-    const next = { ...draftRef.current, ...patch }
+  /** A change of some fields, or a function of the draft as it is now: several uploads that finish together all land. */
+  const change = (patch: Partial<KeepsakeDraft> | ((current: KeepsakeDraft) => Partial<KeepsakeDraft>)) => {
+    const next = { ...draftRef.current, ...(typeof patch === 'function' ? patch(draftRef.current) : patch) }
 
     draftRef.current = next
     dirtyRef.current = true
@@ -170,9 +181,11 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     if (!(await flush()))
       return { ok: false, type: problemRef.current ?? 'unknown' }
     try {
-      accept(await run())
+      const result = await run()
 
-      return { ok: true }
+      accept(result)
+
+      return { ok: true, options: result.options }
     }
     catch (error) {
       const type = problemTypeOf(error)
@@ -187,6 +200,18 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     }
   }
 
+  /** A write that is not the autosave (a price, a bulk change, an option that is done) still moves the bar: Saving, then Saved with the time. */
+  async function tracked(run: () => Promise<Outcome>): Promise<Outcome> {
+    setState(current => (current === 'stale' ? current : 'saving'))
+    const outcome = await run()
+
+    if (outcome.ok)
+      setSavedAt(new Date())
+    setState(current => (current === 'stale' ? current : dirtyRef.current ? 'unsaved' : 'saved'))
+
+    return outcome
+  }
+
   return {
     draft,
     change,
@@ -199,12 +224,22 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     flush,
     publish: () => afterFlush(() => publish.mutateAsync({ storeId, id, ifMatch: versionRef.current, idempotencyKey: crypto.randomUUID() })),
     unpublish: () => afterFlush(() => unpublish.mutateAsync({ storeId, id, ifMatch: versionRef.current, idempotencyKey: crypto.randomUUID() })),
-    ...variantCommands,
-    /** The options and the new values of the variants, in one write on the version the page holds. The typed fields save first. */
-    saveOptions: (options: OptionWrite[], variantValues: { variantId: string, values: Values }[]) =>
-      afterFlush(() => saveOptions.mutateAsync({ storeId, id, ifMatch: versionRef.current, idempotencyKey: crypto.randomUUID(), options, variantValues })),
-    removeOption: (options: OptionWrite[]) =>
-      afterFlush(() => removeOption.mutateAsync({ storeId, id, ifMatch: versionRef.current, idempotencyKey: crypto.randomUUID(), options, variantValues: [] })),
+    saveVariant: (variantId: string, body: VariantSaveBody) => tracked(() => variantCommands.saveVariant(variantId, body)),
+    saveVariants: (variants: VariantsSaveBody['variants']) => tracked(() => variantCommands.saveVariants(variants)),
+    /**
+     * The options, the values existing variants take of a new option and the new variants, in one write on the version the
+     * page holds. The typed fields save first.
+     */
+    commitOptions: ({ options, plan }: { options: OptionWrite[], plan: OptionsPlan }) =>
+      tracked(() => afterFlush(() => saveOptions.mutateAsync({
+        storeId,
+        id,
+        ifMatch: versionRef.current,
+        idempotencyKey: crypto.randomUUID(),
+        options,
+        ...(plan.variantValues.length > 0 && { variantValues: plan.variantValues }),
+        ...(plan.newVariants.length > 0 && { newVariants: plan.newVariants }),
+      }))),
     isPublishing: publish.isPending || unpublish.isPending,
   }
 }

@@ -165,7 +165,8 @@
     --default-soft-foreground: var(--default-foreground);
     --default-soft-hover: color-mix(in oklab, var(--default) 60%, transparent);
     --accent-soft-hover: color-mix(in oklab, var(--accent) 20%, transparent);
-    --danger-soft-hover: color-mix(in oklab, var(--danger) 20%, transparent);
+    /* Over the surface, not transparent: a Delete on a photo or on the dark action bar stays solid on hover. */
+    --danger-soft-hover: color-mix(in oklab, var(--danger) 20%, var(--surface));
     --warning-soft-hover: color-mix(in oklab, var(--warning) 20%, transparent);
     --success-soft-hover: color-mix(in oklab, var(--success) 20%, transparent);
 

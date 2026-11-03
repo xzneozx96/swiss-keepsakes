@@ -1,10 +1,9 @@
 import type { StartStep } from '../lib/search-params'
 
-import { Button } from '@heroui/react'
-
 import { EmptyState } from '@/components/empty-state'
+import { ErrorNotice } from '@/components/error-notice'
 import { ContentIcon, InfoIcon } from '@/components/icons'
-import { EditorFormSkeleton } from '@/components/layout/detail-skeletons'
+import { StepEditorSkeleton } from '@/components/layout/detail-skeletons'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useMe } from '@/features/stores/api/queries'
@@ -34,7 +33,7 @@ export function PlaceEditorScreen({ placeId, start }: { placeId: string, start: 
   if (!me.isPending && !store)
     return <EmptyState icon={InfoIcon} message={t('places.noStore')} />
   if (me.isPending || (!isNew && place.isPending))
-    return <EditorFormSkeleton cards={3} />
+    return <StepEditorSkeleton cards={3} />
   if (!isNew && place.isError) {
     const problem = place.error instanceof ApiProblem ? place.error : undefined
 
@@ -42,10 +41,7 @@ export function PlaceEditorScreen({ placeId, start }: { placeId: string, start: 
       return <EmptyState action={back} icon={ContentIcon} message={t('places.notFound')} />
 
     return (
-      <div className="flex flex-col items-start gap-2 rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">
-        <p>{t(problem?.type === 'forbidden' ? 'places.problem.forbidden' : 'places.loadFailed')}</p>
-        <Button className="min-h-11" variant="secondary" onPress={() => void place.refetch()}>{t('places.retry')}</Button>
-      </div>
+      <ErrorNotice reference={place.error instanceof ApiProblem ? place.error.requestId : undefined} message={t(problem?.type === 'forbidden' ? 'places.problem.forbidden' : 'places.loadFailed')} onRetry={() => void place.refetch()} />
     )
   }
 

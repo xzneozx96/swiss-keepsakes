@@ -49,3 +49,15 @@ export function StatusChip({
     </Chip>
   )
 }
+
+/**
+ * A plain label next to a status (a category, an interest): the size and shape of StatusChip, in
+ * the neutral soft tint and without an icon, so every chip of a table row looks like one family.
+ */
+export function TagChip({ children }: { children: React.ReactNode }) {
+  return (
+    <Chip color="default" size="lg" variant="soft">
+      <Chip.Label className="whitespace-nowrap">{children}</Chip.Label>
+    </Chip>
+  )
+}

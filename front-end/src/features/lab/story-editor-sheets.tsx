@@ -6,6 +6,7 @@ import { useRef, useState } from 'react'
 import { MusicIcon, PickupIcon, UploadIcon } from '@/components/icons'
 import { Media } from '@/components/media'
 import { parseYoutubeId } from '@/features/content/merchant/lib/youtube'
+import { TileMark, TileOutline } from '@/features/media/components/tile-mark'
 import { checkUpload } from './media-data'
 import { addUpload, keepsakes, media, mediaOf, otherStories, pins, uploadUrls } from './story-editor-data'
 import { PickerFrame } from './story-editor-picker'
@@ -18,9 +19,6 @@ import { ChosenMark } from './story-editor-selected'
  */
 
 export type MediaKind = 'image' | 'video' | 'audio'
-
-/** The app's chosen border (gift options C03): 2 px red when chosen, transparent otherwise. */
-const chosenBorder = (chosen: boolean) => `border-2 ${chosen ? 'border-accent' : 'border-transparent'}`
 
 const DASHES = /[-_]/g
 const EXTENSION = /\.[a-z0-9]+$/i
@@ -114,11 +112,12 @@ function PhotoWall({ selected, onSelect }: { selected: string, onSelect: (id: st
                 onClick={() => onSelect(item.id)}
               >
                 <span className="relative block w-full">
-                  <span className={`relative block w-full overflow-hidden rounded-xl ${chosenBorder(isSelected)}`}>
+                  <span className="relative block w-full overflow-hidden rounded-xl">
                     <PhotoTile className="aspect-square w-full" item={item} />
+                    <TileOutline shown={isSelected} />
+                    {item.ready && <TileMark selected={isSelected} />}
                     {!item.ready && <span className="absolute start-1.5 bottom-1.5 rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-semibold">Processing</span>}
                   </span>
-                  {isSelected && <ChosenMark />}
                 </span>
                 <span aria-hidden className="truncate px-0.5 text-xs text-muted">{item.name}</span>
               </button>
@@ -338,10 +337,11 @@ export function KeepsakeSheet({ selected, onDone, onClose }: { selected: string[
                 onClick={() => setChosen(c => (c.includes(k.id) ? c.filter(x => x !== k.id) : [...c, k.id]))}
               >
                 <span className="relative block">
-                  <span className={`block overflow-hidden rounded-xl ${chosenBorder(isChosen)}`}>
+                  <span className="relative block overflow-hidden rounded-xl">
                     <Media alt="" className="aspect-square w-full" photo={k.photo || undefined} />
+                    <TileOutline shown={isChosen} />
+                    {isChosen ? <ChosenMark order={chosen.indexOf(k.id) + 1} /> : !disabled && <TileMark selected={false} />}
                   </span>
-                  {isChosen && <ChosenMark order={chosen.indexOf(k.id) + 1} />}
                 </span>
                 <span className="line-clamp-2 px-0.5 text-xs">{k.name}</span>
                 {!k.published && <span className="px-0.5 text-[11px] text-muted">Not published</span>}

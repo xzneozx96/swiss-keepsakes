@@ -25,13 +25,11 @@ export const placesQueries = {
       queryKey: [...queryKeys.places.storyOptions, storeId],
       queryFn: () => client.places.storyOptions({ storeId }),
     }),
-  media: (client: DataClient, storeId: string, id: string) =>
+  storyVersion: (client: DataClient, storeId: string, groupId: string, language: 'en' | 'de') =>
     queryOptions({
       ...fromApi,
-      queryKey: [...queryKeys.places.media, storeId, id],
-      queryFn: () => client.places.media({ storeId, id }),
-      // A photo is "processing" for a moment after the upload.
-      refetchInterval: query => (query.state.data?.status === 'processing' ? 2000 : false),
+      queryKey: [...queryKeys.places.storyVersion, storeId, groupId, language],
+      queryFn: () => client.places.storyVersion({ storeId, groupId, language }),
     }),
 }
 
@@ -55,8 +53,9 @@ export function useStoryOptions(storeId: string | undefined) {
   return useQuery({ ...placesQueries.storyOptions(client, storeId ?? ''), enabled: storeId !== undefined })
 }
 
-export function useMedia(storeId: string | undefined, id: string | null) {
+/** The text of the story's version in a language, read when `enabled` (the sheet is open). A story with no version in the language is a 404 `ApiProblem`. */
+export function useStoryVersion(storeId: string | undefined, groupId: string | null, language: 'en' | 'de', enabled: boolean) {
   const client = useDataClient()
 
-  return useQuery({ ...placesQueries.media(client, storeId ?? '', id ?? ''), enabled: storeId !== undefined && id !== null })
+  return useQuery({ ...placesQueries.storyVersion(client, storeId ?? '', groupId ?? '', language), enabled: enabled && storeId !== undefined && groupId !== null })
 }

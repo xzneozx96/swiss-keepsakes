@@ -8,6 +8,7 @@ import { buttonVariants } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 
 import { CopyText } from '@/components/copy-text'
+import { EmptyState } from '@/components/empty-state'
 
 import {
   AccountIcon,
@@ -279,7 +280,7 @@ export function PaymentsCard({ view }: { view: MerchantOrderView }) {
       </dl>
       {view.payments.length === 0
         ? (
-            <p className="text-sm text-muted">{t('merchantOrder.payments.none')}</p>
+            <EmptyState compact icon={PayLaterIcon} message={t('merchantOrder.payments.none')} />
           )
         : (
             <ul className="flex flex-col divide-y divide-separator">

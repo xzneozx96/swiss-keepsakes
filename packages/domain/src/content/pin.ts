@@ -1,4 +1,5 @@
 import type { ContentLanguage, Localized, PublishGap, StayTag } from './localized.ts'
+import { slugify } from '../shared/slug.ts'
 import { hasText, slugCoversTitle } from './localized.ts'
 
 export type PinStatus = 'draft' | 'published' | 'hidden'
@@ -8,14 +9,6 @@ export type PinStatus = 'draft' | 'published' | 'hidden'
  * a must-visit (decision 2026-10-28, home local briefing). `coverAlt` and `photoAlt` (by media id) describe the photos.
  */
 export interface PinDraft { title: Localized, tip: Localized, localTip: Localized, coverAlt: Localized, photoAlt: Record<string, Localized> }
-
-/** What a service pin gives a visitor on the home's "Sorted before you unpack" row. */
-export const serviceTypes = ['water', 'toilets', 'connect', 'transport', 'lockers', 'cash'] as const
-export type ServiceType = typeof serviceTypes[number]
-
-/** The kind of a food and drink pin, which picks its icon. */
-export const foodKinds = ['restaurant', 'cafe-bakery', 'pub-bar', 'market'] as const
-export type FoodKind = typeof foodKinds[number]
 
 /** One extra photo of a pin, in the order the merchant set. The main photo is `coverMediaId`. */
 export interface PinPhoto { mediaId: string }
@@ -39,12 +32,12 @@ export interface Pin {
   latitude: number | null
   longitude: number | null
   address: string | null
+  /** The Google Maps link the merchant stored: live on save, like the address. */
+  mapsLink: string | null
   weeklyHours: WeeklySpan[]
   stayTag: StayTag
   interests: string[]
-  serviceType: ServiceType | null
   mustVisit: boolean
-  foodKind: FoodKind | null
   coverMediaId: string | null
   photos: PinPhoto[]
   /** The pin's one outbound link (ADR-011): a plain https address. */
@@ -84,8 +77,12 @@ export interface PinStoryOption {
   groupId: string
   kind: 'story' | 'editorial_review'
   title: Localized
+  /** Per language: `none` has no version, `draft` has only an unpublished one, `published` is live. */
+  languages: Record<ContentLanguage, StoryLanguageState>
   publishedLanguages: ContentLanguage[]
 }
+
+export type StoryLanguageState = 'none' | 'draft' | 'published'
 
 /** A pin publishes with a title in one language, a location and a slug (ADR-029). No story or category is needed. */
 export function pinPublishGaps(pin: Pick<Pin, 'slug' | 'latitude' | 'longitude'> & { title: Localized }): PublishGap[] {
@@ -96,7 +93,7 @@ export function pinPublishGaps(pin: Pick<Pin, 'slug' | 'latitude' | 'longitude'>
   return gaps
 }
 
-/** Once a pin was published, hide it instead (ADR-015). */
-export function canDeletePin(pin: Pick<Pin, 'firstPublishedAt'>): boolean {
-  return pin.firstPublishedAt === null
+/** The slug a pin title makes: lower case, umlauts folded (ä to ae), dashes, at most 60 characters. A title that folds to nothing still gets one. */
+export function pinSlugBase(title: string): string {
+  return slugify(title) || 'place'
 }

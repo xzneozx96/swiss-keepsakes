@@ -100,6 +100,18 @@ export const publicStorySchema = publicStoryCardSchema.extend({
   body: publicStoryBodySchema,
 }).meta({ id: 'PublicStory' })
 
+const publicPhotoSchema = z.object({
+  url: z.string().meta({ description: 'The original file' }),
+  variants: z.array(z.object({ width: z.int(), url: z.string() })).meta({ description: 'The webp copies, smallest first (320, 640, 1280, 1920 px as far as the image is wide)' }),
+  alt: z.string().nullable(),
+}).meta({ id: 'PublicPhoto', description: 'A photo of a pin, with its public addresses' })
+
+const publicPinStorySchema = z.object({
+  slug: z.string(),
+  title: z.string(),
+  readMinutes: z.int().min(1),
+}).meta({ id: 'PublicPinStory', description: 'A published story that tags the pin, in the language the pin card carries' })
+
 export const publicPinSchema = z.object({
   id: z.uuid(),
   slug: z.string().nullable(),
@@ -108,6 +120,7 @@ export const publicPinSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   address: z.string().nullable(),
+  mapsLink: z.string().nullable().meta({ description: 'The Google Maps link the merchant stored for the place; "Open in Google Maps" opens it, else the position' }),
   weeklyHours: z.array(z.object({ day: z.int(), opens: z.string(), closes: z.string() })),
   stayTag,
   interests: z.array(z.string()),
@@ -115,7 +128,10 @@ export const publicPinSchema = z.object({
   nextDate: nextDateSchema.nullable(),
   hasMainStory: z.boolean(),
   mainStorySlug: z.string().nullable(),
-  photoKey: z.string().nullable(),
+  link: z.string().nullable().meta({ description: 'The pin\'s one outbound link, a plain https address' }),
+  photos: z.array(publicPhotoSchema).meta({ description: 'Every ready photo in the merchant\'s order, the main photo first, with the merchant\'s text for it in the carried language' }),
+  mainStory: publicPinStorySchema.nullable().meta({ description: 'The main story, when it has a published version in the carried language' }),
+  otherStories: z.array(publicPinStorySchema).meta({ description: 'The other published stories that tag the pin, newest first' }),
   ...languageNoticeSchema.shape,
 }).meta({ id: 'PublicPin', description: 'The pin card' })
 
@@ -132,7 +148,7 @@ export const publicMapItemSchema = z.object({
   nextDate: nextDateSchema.nullable(),
   hasMainStory: z.boolean(),
   mainStorySlug: z.string().nullable(),
-  photoKey: z.string().nullable(),
+  photoUrl: z.string().nullable().meta({ description: 'The smallest copy of the cover photo; null when the pin has none' }),
 }).meta({ id: 'PublicMapItem', description: 'One pin on the map list' })
 
 export const publicMapSchema = z.object({
@@ -177,6 +193,7 @@ export const publicCategorySchema = z.object({
   slug: z.string(),
   name: z.object({ en: z.string().nullable(), de: z.string().nullable() }),
   parentId: z.uuid().nullable(),
+  showOnHome: z.boolean().meta({ description: 'Whether a map category is listed on the home (always false for a blog category)' }),
   position: z.int(),
 }).meta({ id: 'PublicCategory' })
 

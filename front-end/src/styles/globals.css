@@ -102,6 +102,19 @@ button {
   max-height: calc(var(--visual-viewport-height, 100dvh) * 0.92);
 }
 
+/*
+ * A sheet inside a phone mockup (place editor preview). HeroUI writes --visual-viewport-height inline on the
+ * backdrop, as the page's window height, so the phone's screen, a size container, overrides it (the inline
+ * style loses only to !important) with its own height: the sheet fits the screen and its body scrolls.
+ */
+[data-sheet-screen] {
+  container-type: size;
+}
+
+[data-sheet-screen] .drawer__backdrop {
+  --visual-viewport-height: 100cqh !important;
+}
+
 @utility sheet-tall {
   height: calc(var(--visual-viewport-height, 100dvh) * 0.94);
 }

@@ -8,19 +8,64 @@ const MAX_CODES_NAMED = 3
 
 export const labelOf = (text: Localized): string => text.en || text.de || ''
 
+// "Small" for "Small · 58 mm Classic SD": how a value reads in a variant's title.
+const shortLabel = (text: Localized): string => labelOf(text).split(' · ')[0] ?? ''
+
 interface Valued {
-  skuCode: string
+  skuCode: string | null
   status?: string
   values: Record<string, string>
+}
+
+// How a variant is named in a refusal: its code, or, when it has none, its values joined by " / " ("XS / Red"). `options`
+// and the variant's values use the same ids (ids of a saved keepsake, or refs of one request).
+export function variantName(variant: Valued, options: Pick<ProductOption, 'id' | 'values'>[]): string {
+  if (variant.skuCode)
+    return variant.skuCode
+
+  return options.map(option => labelOf(option.values.find(value => value.id === variant.values[option.id])?.label ?? {})).filter(Boolean).join(' / ')
+}
+
+// The request's codes that appear before position `index`, compared as the shop's key does not (exactly) but as a person
+// would read them: a code used twice is refused whatever its case. A missing code never clashes.
+function repeatsCode(codes: (string | null)[], index: number): boolean {
+  const code = codes[index]
+
+  return code != null && codes.slice(0, index).some(other => other?.toLowerCase() === code.toLowerCase())
 }
 
 function usersOf(variants: ProductVariant[], optionId: string, valueId?: string): ProductVariant[] {
   return variants.filter(variant => (valueId === undefined ? variant.values[optionId] !== undefined : variant.values[optionId] === valueId))
 }
 
-// "Used by 2 variants (A, B)": the first three codes, the number of all of them.
-function usedBy(users: ProductVariant[]): Record<string, string | number> {
-  return { count: users.length, codes: users.slice(0, MAX_CODES_NAMED).map(user => user.skuCode).join(', '), more: Math.max(0, users.length - MAX_CODES_NAMED) }
+// "Used by 2 live (A, B) and 3 archived variants": the live variants are counted and named (the first three codes), the
+// archived ones are counted apart, so the screen, which lists only the live ones, agrees with the number.
+function usedBy(users: ProductVariant[], options: ProductOption[]): Record<string, string | number> {
+  const live = users.filter(user => user.status !== 'archived')
+  const archived = users.length - live.length
+
+  return { count: live.length, ...(archived > 0 && { archived }), codes: live.slice(0, MAX_CODES_NAMED).map(user => variantName(user, options)).join(', '), more: Math.max(0, live.length - MAX_CODES_NAMED) }
+}
+
+// The rows that would become one when options go: each group is the combination they share ("Light / Small"), how many
+// rows it holds and the values of the dropped options that told them apart. `groups` is JSON so a client can say it in
+// its own words; `sold` counts the archived rows an order line names, which cannot be deleted to make room.
+function dropClash(product: Pick<Product, 'options' | 'variants'>, input: OptionsSave, dropped: ProductOption[], clashes: ProductVariant[][], sold: ReadonlySet<string>): Refusal {
+  const read = (variant: ProductVariant, options: Pick<ProductOption, 'id' | 'values'>[]) =>
+    options.map(option => shortLabel(option.values.find(value => value.id === variant.values[option.id])?.label ?? {})).filter(Boolean).join(' / ')
+  const kept = product.options.filter(option => input.options.some(next => next.ref === option.id))
+  const rows = clashes.flat()
+
+  return {
+    code: 'option-drop-clash',
+    path: `options.${dropped[0]!.id}`,
+    params: {
+      option: dropped.map(option => labelOf(option.name)).join(', '),
+      count: rows.length,
+      sold: rows.filter(row => sold.has(row.id)).length,
+      groups: JSON.stringify(clashes.map(rows => ({ title: read(rows[0]!, kept), count: rows.length, values: rows.map(row => read(row, dropped)) }))),
+    },
+  }
 }
 
 // The options as a client names them: a name and a label in at least one language, at least one value, and every ref
@@ -60,7 +105,7 @@ export function checkVariantValues(options: Pick<ProductOption, 'id' | 'name' | 
   if (options.length === 0) {
     const [other] = others
 
-    return other ? [{ code: 'no-options-one-variant', path, params: { code: other.skuCode } }, ...unknown] : unknown
+    return other ? [{ code: 'no-options-one-variant', path, params: { code: variantName(other, options) } }, ...unknown] : unknown
   }
   const refusals: Refusal[] = []
 
@@ -77,16 +122,18 @@ export function checkVariantValues(options: Pick<ProductOption, 'id' | 'name' | 
     const twin = others.find(other => options.every(option => other.values[option.id] === values[option.id]))
 
     if (twin)
-      refusals.push({ code: 'combination-taken', path, params: { code: twin.skuCode, archived: twin.status === 'archived' ? 1 : 0 } })
+      refusals.push({ code: 'combination-taken', path, params: { code: variantName(twin, options), archived: twin.status === 'archived' ? 1 : 0 } })
   }
 
   return refusals
 }
 
-// Can these options be saved with the variants' new values, in one save? `product` is the keepsake as it is now.
-// A removed option or value that a variant uses is refused, and so is a variant that ends up without a value of
-// an option or on the same combination as another (archived variants count in every check).
-export function checkOptionsSave(product: Pick<Product, 'options' | 'variants'>, input: OptionsSave): Refusal[] {
+// Can these options be saved with the variants' new values, in one save? `product` is the keepsake as it is now, and
+// `sold` the ids of its archived variants that an order line names. A removed value that a variant uses is refused, and
+// so is a variant that ends up without a value of an option or on the same combination as another (archived variants
+// count in every check). A removed option that variants use is allowed (ADR-027, amended 2026-11-02): its value leaves
+// every variant, so it is refused only when two variants would become one combination (`option-drop-clash`).
+export function checkOptionsSave(product: Pick<Product, 'options' | 'variants'>, input: OptionsSave, sold: ReadonlySet<string> = new Set()): Refusal[] {
   const refusals = checkOptionDefinitions(input.options)
   const existingOptions = new Map(product.options.map(option => [option.id, option]))
   const existingValueOwner = new Map(product.options.flatMap(option => option.values.map(value => [value.id, option.id] as const)))
@@ -107,18 +154,13 @@ export function checkOptionsSave(product: Pick<Product, 'options' | 'variants'>,
   for (const option of product.options) {
     const next = kept.get(option.id)
 
-    if (!next) {
-      const users = usersOf(product.variants, option.id)
-
-      if (users.length > 0)
-        refusals.push({ code: 'option-in-use', path: `options.${option.id}`, params: { option: labelOf(option.name), ...usedBy(users) } })
+    if (!next)
       continue
-    }
     for (const value of option.values.filter(v => !next.values.some(n => n.ref === v.id))) {
       const users = usersOf(product.variants, option.id, value.id)
 
       if (users.length > 0)
-        refusals.push({ code: 'value-in-use', path: `options.${option.id}.values.${value.id}`, params: { value: labelOf(value.label), ...usedBy(users) } })
+        refusals.push({ code: 'value-in-use', path: `options.${option.id}.values.${value.id}`, params: { value: labelOf(value.label), ...usedBy(users, product.options) } })
     }
   }
 
@@ -153,7 +195,7 @@ export function checkOptionsSave(product: Pick<Product, 'options' | 'variants'>,
 
       if (value === undefined) {
         complete = false
-        refusals.push({ code: 'values-missing', path, params: { code: variant.skuCode, option: labelOf(option.name) } })
+        refusals.push({ code: 'values-missing', path, params: { code: variantName(variant, product.options), option: labelOf(option.name) } })
       }
       else if (!option.values.some(v => v.ref === value)) {
         complete = false
@@ -168,7 +210,9 @@ export function checkOptionsSave(product: Pick<Product, 'options' | 'variants'>,
     finals.push({ variant, values, complete })
   }
 
+  const dropped = product.options.filter(option => !kept.has(option.id))
   const seen = new Map<string, ProductVariant>()
+  const groups = new Map<string, ProductVariant[]>()
 
   for (const { variant, values, complete } of finals) {
     if (!complete)
@@ -176,11 +220,33 @@ export function checkOptionsSave(product: Pick<Product, 'options' | 'variants'>,
     const key = input.options.map(option => `${option.ref}:${values[option.ref]}`).join(',')
     const twin = seen.get(key)
 
-    if (twin)
-      refusals.push({ code: 'combination-duplicate', path: `variants.${variant.id}`, params: { code: variant.skuCode, twin: twin.skuCode } })
+    if (twin && dropped.length > 0)
+      groups.set(key, [...(groups.get(key) ?? [twin]), variant])
+    else if (twin)
+      refusals.push({ code: 'combination-duplicate', path: `variants.${variant.id}`, params: { code: variantName(variant, product.options), twin: variantName(twin, product.options) } })
     else
       seen.set(key, variant)
   }
+
+  if (groups.size > 0)
+    refusals.push(dropClash(product, input, dropped, [...groups.values()], sold))
+
+  // The new variants stand beside every variant that stays, archived ones included. Their values are refs of this save.
+  const pseudo: ProductOption[] = input.options.map(option => ({
+    id: option.ref,
+    name: option.name,
+    values: option.values.map(value => ({ id: value.ref, label: value.label })),
+  }))
+  const placed: Valued[] = finals.filter(entry => entry.complete).map(entry => ({ skuCode: entry.variant.skuCode, status: entry.variant.status, values: entry.values }))
+
+  input.newVariants.forEach((variant, index) => {
+    const path = `newVariants.${index}`
+
+    refusals.push(...checkVariantValues(pseudo, placed, variant.values, `${path}.values`, variant.skuCode ?? ''))
+    if (repeatsCode(input.newVariants.map(other => other.skuCode), index))
+      refusals.push({ code: 'code-duplicate', path: `${path}.skuCode`, params: { code: variant.skuCode ?? '' } })
+    placed.push({ skuCode: variant.skuCode, status: variant.status, values: variant.values })
+  })
 
   return refusals
 }
@@ -192,13 +258,13 @@ export function checkNewProduct(options: OptionInput[], variants: VariantInput[]
   const pseudo: ProductOption[] = options.map(option => ({
     id: option.ref,
     name: option.name,
-    values: option.values.map(value => ({ id: value.ref, label: value.label, swatch: value.swatch })),
+    values: option.values.map(value => ({ id: value.ref, label: value.label })),
   }))
 
   variants.forEach((variant, index) => {
-    refusals.push(...checkVariantValues(pseudo, variants.slice(0, index), variant.values, `variants.${index}.values`, variant.skuCode))
-    if (variants.slice(0, index).some(other => other.skuCode.toLowerCase() === variant.skuCode.toLowerCase()))
-      refusals.push({ code: 'code-duplicate', path: `variants.${index}.skuCode`, params: { code: variant.skuCode } })
+    refusals.push(...checkVariantValues(pseudo, variants.slice(0, index), variant.values, `variants.${index}.values`, variant.skuCode ?? ''))
+    if (repeatsCode(variants.map(other => other.skuCode), index))
+      refusals.push({ code: 'code-duplicate', path: `variants.${index}.skuCode`, params: { code: variant.skuCode ?? '' } })
   })
 
   return refusals

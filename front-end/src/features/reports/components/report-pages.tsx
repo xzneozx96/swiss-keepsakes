@@ -12,7 +12,7 @@ import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
 import { DataTable } from '@/components/data-table'
 
 import { EmptyState } from '@/components/empty-state'
-import { CloseIcon, FilterIcon, ReportsIcon } from '@/components/icons'
+import { CloseIcon, ContentIcon, ExploreIcon, FilterIcon, GiftIcon, PayLaterIcon, ReportsIcon } from '@/components/icons'
 import { SectionFrame } from '@/components/layout/section-frame'
 import { Pager, usePaged } from '@/components/list-pagination'
 import { useLocale } from '@/contexts/locale-context'
@@ -325,7 +325,7 @@ export function ReportsMoneyPage() {
               </div>
             )
           : (
-              <p className="text-sm text-muted">{t('reportPages.methods.none')}</p>
+              <EmptyState compact icon={PayLaterIcon} message={t('reportPages.methods.none')} />
             )}
       </Widget>
     </>
@@ -434,7 +434,7 @@ export function ReportsSalesPage() {
                 />
               )
             : (
-                <p className="text-sm text-muted">{t('reports.products.none')}</p>
+                <EmptyState compact icon={GiftIcon} message={t('reports.products.none')} />
               )}
         </Widget>
       </div>
@@ -613,7 +613,7 @@ export function ReportsGuestsPage() {
                 />
               )
             : (
-                <p className="text-sm text-muted">{t('reportPages.places.none')}</p>
+                <EmptyState compact icon={ExploreIcon} message={t('reportPages.places.none')} />
               )}
         </Widget>
       </div>
@@ -792,7 +792,7 @@ export function ContentAnalyticsPage() {
               />
             )
           : (
-              <p className="text-sm text-muted">{t('reports.content.none')}</p>
+              <EmptyState compact icon={ContentIcon} message={t('reports.content.none')} />
             )}
       </Widget>
       <Widget

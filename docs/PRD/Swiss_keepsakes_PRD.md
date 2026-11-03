@@ -601,9 +601,9 @@ Bản đồ là tính năng quan trọng nhất của sản phẩm (chủ sản 
 - slug dùng cho liên kết bản đồ (bắt buộc);
 - **danh mục bản đồ**, không bắt buộc; điểm không có danh mục chỉ được làm nổi bật ở chip "Tất cả";
 - thẻ lưu trú và sở thích (§3.2, §3.3);
-- **loại dịch vụ** (tùy chọn, cố định: nước uống, nhà vệ sinh, SIM và Wi-Fi, giao thông, tủ gửi hành lý, tiền mặt và thẻ), kèm ghi chú EN và DE: dùng cho sáu ô tiện ích trên trang chủ (AC95). Cờ `free` thêm sáng 28/10/2026 không còn được trang chủ dùng; story E4.2 quyết giữ hay bỏ;
+- **dịch vụ của điểm** (từ 02/11/2026 không còn là trường của điểm): danh mục bản đồ có thêm **biểu tượng** (tùy chọn, một trong bộ cố định gồm nước uống, nhà vệ sinh, Wi-Fi, giao thông, tủ gửi hành lý, tiền mặt, nhà hàng, quán cà phê, quầy bar, chợ, siêu thị, cửa hàng, công trình, nhà thờ, cầu, tượng đài, bảo tàng, điểm ngắm cảnh, quảng trường, thông tin, nghỉ dưỡng, khẩn cấp, thuyền, núi) và công tắc **Hiện trên trang chủ**. Merchant đặt hai thứ này trong trang Danh mục; danh mục vẫn là danh mục bình thường, không có vai trò đặc biệt. Sáu ô tiện ích trên trang chủ (AC95) sẽ liệt kê các danh mục bật công tắc. Cờ `free` thêm sáng 28/10/2026 không còn được trang chủ dùng; story E4.2 quyết giữ hay bỏ;
 - cờ **nên xem trước** (tùy chọn) và một dòng **mẹo của người địa phương** bằng EN và DE: dùng cho thẻ trong nhóm "See these first" của trang chủ (AC95);
-- ảnh sự kiện (tùy chọn): dùng cho thẻ "This week" của trang chủ; điểm không có ảnh hiện biểu tượng theo loại (quán rượu hoặc bar, quán cà phê hoặc tiệm bánh, nhà hàng, chợ) trên nền xanh hồ, không bao giờ hiện chữ cái đầu;
+- ảnh sự kiện (tùy chọn): dùng cho thẻ "This week" của trang chủ; điểm không có ảnh hiện biểu tượng theo loại (quán rượu hoặc bar, quán cà phê hoặc tiệm bánh, nhà hàng, chợ), biểu tượng này là biểu tượng của danh mục đầu tiên của điểm có biểu tượng (danh mục con không có thì lấy của danh mục cha; không phải trường của điểm) trên nền xanh hồ, không bao giờ hiện chữ cái đầu;
 - giờ mở theo tuần (tùy chọn);
 - ngày (tùy chọn, xem dưới);
 - một bài viết chính (tùy chọn) và một liên kết ra ngoài (tùy chọn);
@@ -621,7 +621,7 @@ Bản đồ là tính năng quan trọng nhất của sản phẩm (chủ sản 
 - Thứ tự và độ nổi bật của điểm theo thẻ nhóm khách và sở thích (§3.2). **Không điểm nào bị ẩn khỏi bản đồ vì nhóm khách hay sở thích** (Q26).
 - Thẻ điểm không hiện giá ở bất kỳ chỗ nào (Q24).
 - Nội dung điểm bằng EN và DE (Q22). Khi chưa có ngôn ngữ khách chọn, hiện bản có sẵn kèm thông báo ngôn ngữ, không tự dịch (R02, AC64).
-- Merchant thêm và sửa điểm bất cứ lúc nào. Điểm còn là bản nháp xóa được. Điểm đã xuất bản chỉ ẩn được, không xóa (cổng M6, 26/10/2026; AC79).
+- Merchant thêm và sửa điểm bất cứ lúc nào. Điểm còn là bản nháp xóa được. Điểm đã xuất bản chỉ ẩn được, không xóa (cổng M6, 26/10/2026; AC79). **Sửa 02/11/2026 (chủ sản phẩm): mọi điểm đều xóa được khi không có gì dùng đến nó; điểm đang được bài, bài đánh giá hoặc tour dùng thì bị từ chối kèm lý do và merchant ẩn điểm thay vì xóa (vòng sửa 13).**
 - Khách mở bản đồ không cần tài khoản. Khách không tạo, lưu hay sửa điểm của riêng mình.
 - Bản đồ không lập lộ trình cho khách và không dùng vị trí của khách (cổng G9).
 - **Nền bản đồ** (cổng G11; đóng phần nền của O23). Bản đồ và bản đồ lộ trình tour dùng cùng một nền: ảnh swisstopo SWISSIMAGE phẳng 2D kèm tên địa danh từ OpenFreeMap, không nghiêng và không địa hình 3D. Bản đồ ghi nguồn "© swisstopo" và OpenFreeMap, OpenMapTiles, OpenStreetMap.
@@ -823,6 +823,7 @@ Mã AC giữ nguyên số của v2. Mã đã gỡ không dùng lại: **AC06, AC
 | AC77 | Đối tác đề xuất một lượt và merchant không trả lời | Lượt không nhận đơn; merchant nhận lời nhắc; tới giờ bàn giao trừ thời gian chuẩn bị thì đề xuất hết hạn và đối tác được báo | Phase 1, O38 |
 | AC78 | Một lượt đã thống nhất có đơn bị hủy | Mọi khách có đơn được báo ngay và chọn tự nhận hoặc hủy đơn hoàn tiền toàn bộ; đơn giữ đối tác ban đầu; khách tự nhận và merchant bấm "Đã giao" thì hoa hồng thuộc đối tác đó | Phase 1, O38 |
 | AC79 | Merchant xóa một điểm còn là bản nháp, rồi thử xóa một điểm đã xuất bản | Bản nháp xóa được; điểm đã xuất bản không có thao tác xóa, chỉ ẩn được | Phase 1, cổng M6 |
+| AC79 (sửa 02/11/2026) | Merchant xóa một điểm đã xuất bản hoặc đã ẩn mà không có gì dùng đến, rồi thử xóa một điểm mà một bài, bài đánh giá hoặc tour đang dùng | Điểm không ai dùng bị xóa hẳn (kèm ngày, danh mục, ảnh và liên kết của nó) và không còn trên bản đồ; điểm đang được dùng bị từ chối, hộp thoại nói điểm được dùng bởi bao nhiêu bài, bài đánh giá và tour, và đề nghị ẩn điểm thay vì xóa | Phase 1, chủ sản phẩm 02/11/2026 |
 | AC80 | Khách đã đăng nhập thêm dao vào giỏ trên điện thoại rồi đăng nhập trên máy khác | Giỏ còn nguyên trên máy thứ hai, đủ món và số lượng | Phase 1, cổng M7; giỏ của khách chưa đăng nhập theo O41 |
 | AC81 | Merchant đổi giá hoặc tồn của một SKU đang nằm trong giỏ | Khi giỏ đổi, hệ thống kiểm tra lại tồn và giá; ở checkout kiểm tra lại lần nữa; khách thấy món hết hàng hoặc giá mới trước khi gửi | Phase 1, cổng M7 |
 | AC82 | Giỏ có hai món khác điểm nhận, và một món qua lượt bàn giao | Khi gửi yêu cầu tạo đơn riêng cho từng điểm nhận hoặc lượt bàn giao; khách thấy các đơn sẽ tạo và số tiền của từng đơn trước khi gửi | Phase 1, cổng M7 |
@@ -967,6 +968,10 @@ Mục đích sản phẩm đổi từ "bán quà và tour" sang kể chuyện c�
 *Vòng sửa 10 (28/10/2026):* trang chủ chia theo sở thích, không có công cụ chọn, và có sở thích thứ năm `local-activities` "Local activities" (`docs/decisions/2026-10-28-home-by-interests.md`, người yêu cầu duyệt 28/10/2026). Nhóm "Free and useful" theo cờ cố định `free`; mỗi mục xuất hiện một lần; thứ tự mặc định và thứ tự theo câu trả lời như trong §3.3 (§3.3, §11.1; sửa AC36, AC41, AC94; thêm AC95).
 
 *Vòng sửa 11 (28/10/2026):* trang chủ đổi từ chia theo sở thích sang "bản tóm tắt của một người địa phương", thứ tự cố định (`docs/decisions/2026-10-28-home-local-briefing.md`, người yêu cầu duyệt 28/10/2026, thay quyết định của vòng sửa 10 về bố cục trang chủ). Sở thích thứ năm `local-activities` giữ nguyên. Nhóm "Free and useful", dải "More in Lucerne" và thứ tự mặc định theo sở thích bị bỏ; cờ `free` được thay bằng loại dịch vụ, cờ nên xem trước và mẹo địa phương (§3.3, §11.1; viết lại AC95). Trang chủ có một bản đồ sống, trong nhóm ăn uống (trước đó kế hoạch chỉ có lối vào bản đồ tĩnh). Ô tìm kiếm ở đầu trang là nơi vào tìm kiếm (AC94). Đặc tả: `docs/ux/home-design.md`.
+
+*Vòng sửa 12 (02/11/2026):* loại dịch vụ và loại ăn uống không còn là trường của điểm; danh mục bản đồ có công tắc **Hiện trên trang chủ** (biểu tượng danh mục từng được thêm rồi bỏ ngày 02/11/2026 vì chưa có gì dùng đến nó cho tới khi có trang chủ); **nên xem trước** vẫn là cờ của điểm và nằm trong khối "Recommended for" của biểu mẫu (`docs/decisions/2026-11-02-map-category-show-on-home.md`, chủ sản phẩm quyết 02/11/2026; §11.1, ADR-030).
+
+*Vòng sửa 13 (02/11/2026):* chủ sản phẩm sửa cổng M6 (26/10/2026) và AC79: mọi điểm, dù bản nháp, đã xuất bản, đã ẩn hay đã kết thúc, đều xóa được khi không có gì dùng đến nó, và không thể hoàn tác. Điểm mà một bài, một bài đánh giá biên tập hoặc một điểm dừng của tour đang dùng thì bị từ chối kèm lý do bằng lời; merchant ẩn điểm thay vì xóa. Ngày, danh mục, ảnh và liên kết của điểm bị xóa cùng điểm. Ngày xuất bản đầu tiên vẫn không sửa được khi điểm còn tồn tại. Sửa ADR-015, ADR-029 và `docs/ux/pins-design.md`.
 
 *Mới:* mục đích và chỉ số (§1, SM-1 đến SM-3); onboarding hai bước, cá nhân hóa, danh sách sở thích cố định (§3); bản đồ tương tác, câu chuyện, review biên tập, review của khách, review lưu trú (§11.1 đến §11.5); thông tin tour miễn phí với PDF (§7.3); SKU theo kích cỡ, chủ đề, màu (§7.2); hủy trước giờ giao do merchant chỉnh (§9.4); đơn nhóm và vận hành của guide (§10.4); AC36 đến AC60; O21 đến O31.
 

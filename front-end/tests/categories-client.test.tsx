@@ -24,7 +24,7 @@ let answer: (call: Call) => Response
 let demo: ReturnType<typeof startDemo>
 
 function category(id: string, over: Record<string, unknown> = {}) {
-  return merchantCategorySchema.parse({ id, slug: 'walks', name: { en: 'Walks', de: null }, parentId: null, position: 1, childCount: 0, useCount: 0, ...over })
+  return merchantCategorySchema.parse({ id, slug: 'walks', name: { en: 'Walks', de: null }, parentId: null, showOnHome: false, position: 1, childCount: 0, useCount: 0, ...over })
 }
 
 beforeEach(async () => {

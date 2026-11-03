@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  canDeletePin,
   canDeleteStoryVersion,
   canDeleteTour,
   canMoveStoryVersion,
   hasText,
   languagesOf,
   pinPublishGaps,
+  pinSlugBase,
   storyMediaIds,
   storyVersionCheckGaps,
   storyVersionPublishGaps,
@@ -53,9 +53,10 @@ describe('[E2.6] content/pin', () => {
     expect(pinPublishGaps({ title: { de: 'Brücke' }, slug: { en: 'bridge' }, latitude: 1, longitude: 2 })).toEqual(['slug'])
   })
 
-  it('[E2.6][AC79] only a never-published pin can be deleted', () => {
-    expect(canDeletePin({ firstPublishedAt: null })).toBe(true)
-    expect(canDeletePin({ firstPublishedAt: new Date('2026-10-01T00:00:00Z') })).toBe(false)
+  it('[E7] the slug base of a pin title folds umlauts and falls back to place', () => {
+    expect(pinSlugBase('Kapellbrücke Luzern')).toBe('kapellbruecke-luzern')
+    expect(pinSlugBase('Löwendenkmal Straße')).toBe('loewendenkmal-strasse')
+    expect(pinSlugBase('!!!')).toBe('place')
   })
 })
 

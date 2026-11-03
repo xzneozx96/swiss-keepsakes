@@ -140,9 +140,9 @@ describe('[E4.11][AC51] the media library list over HTTP', () => {
     expect(byName['Cowbell.jpg']!.usage).toEqual({ pages: 1, published: 1, drafts: 0 })
     expect(body.kinds).toEqual({ image: 6, audio: 1, pdf: 1 })
     expect(body.statuses).toEqual({ processing: 1, ready: 4, retired: 1 })
-    expect(body.uses).toEqual({ unused: 3, drafts: 1, published: 2 })
-    // Newest upload first.
-    expect(body.items.map(item => item.name)).toEqual(['Just-uploaded.jpg', 'Old-banner.jpg', 'Cowbell.jpg', 'Fondue-set.jpg', 'Pilatus-clouds.jpg', 'Kapellbruecke-Sunrise.JPG'])
+    expect(body.uses).toEqual({ unused: 2, drafts: 1, published: 2 })
+    // Newest upload first; the retired Old-banner.jpg is not listed unless the Retired filter asks for it.
+    expect(body.items.map(item => item.name)).toEqual(['Just-uploaded.jpg', 'Cowbell.jpg', 'Fondue-set.jpg', 'Pilatus-clouds.jpg', 'Kapellbruecke-Sunrise.JPG'])
   })
 
   it('[E4.11][AC51] the kind tabs hold audio and PDFs, and a file of the body counts for its story version', async () => {
@@ -156,7 +156,8 @@ describe('[E4.11][AC51] the media library list over HTTP', () => {
   it('[E4.11][AC51] the Use filter, the Status filter and their counts', async () => {
     const w = await wall()
     const names = async (query: string) => (await list(w.staff, `kind=image&pageSize=24&${query}`)).body.items.map(item => item.name).sort()
-    expect(await names('use=unused')).toEqual(['Just-uploaded.jpg', 'Old-banner.jpg', 'Pilatus-clouds.jpg'])
+    expect(await names('use=unused')).toEqual(['Just-uploaded.jpg', 'Pilatus-clouds.jpg'])
+    expect(await names('use=unused&status=retired')).toEqual(['Old-banner.jpg'])
     expect(await names('use=drafts')).toEqual(['Fondue-set.jpg'])
     expect(await names('use=published')).toEqual(['Cowbell.jpg', 'Kapellbruecke-Sunrise.JPG'])
     expect(await names('use=unused,drafts&status=ready')).toEqual(['Fondue-set.jpg', 'Pilatus-clouds.jpg'])
@@ -183,9 +184,9 @@ describe('[E4.11][AC51] the media library list over HTTP', () => {
     const first = await list(w.staff, 'kind=image&pageSize=4&page=1')
     const second = await list(w.staff, 'kind=image&pageSize=4&page=2')
     const beyond = await list(w.staff, 'kind=image&pageSize=4&page=3')
-    expect([first.body.items.length, second.body.items.length, beyond.body.items.length]).toEqual([4, 2, 0])
-    expect([first.body.total, second.body.total, beyond.body.total]).toEqual([6, 6, 6])
-    expect(new Set([...first.body.items, ...second.body.items].map(item => item.id)).size).toBe(6)
+    expect([first.body.items.length, second.body.items.length, beyond.body.items.length]).toEqual([4, 1, 0])
+    expect([first.body.total, second.body.total, beyond.body.total]).toEqual([5, 5, 5])
+    expect(new Set([...first.body.items, ...second.body.items].map(item => item.id)).size).toBe(5)
   })
 
   it('[E4.11][AC51] another store sees nothing of this one, and a guest is refused', async () => {
@@ -397,7 +398,7 @@ describe('[E4.11][AC51] replacing a file over HTTP', () => {
       const read = async (path: string) => (await (await env.call(path)).json()) as Record<string, unknown>
       return {
         story: (await read(`/api/public/stories/${version!.slug}?lang=en`)).coverKey,
-        place: (await read(`/api/public/places/${place}?lang=en`)).photoKey,
+        place: ((await read(`/api/public/places/${place}?lang=en`)).photos as { url: string }[])[0]!.url.replace('https://media.test/', ''),
         tour: (await read(`/api/public/tours/${walk.slug}?lang=en`)).coverKey,
       }
     }
@@ -471,5 +472,60 @@ describe('[E4.11][AC51] replacing a file over HTTP', () => {
     expect([result.status, result.body.type]).toEqual([422, 'media-content-mismatch'])
     const { rows } = await pool.query<{ version: number }>('select version from content.media where id = $1', [w.lonely])
     expect(rows[0]!.version).toBe(1)
+  })
+})
+
+describe('[AC-dup] the lookup by content over HTTP', () => {
+  const hash = (letter: string) => letter.repeat(64)
+  const lookup = (staff: Staff, sha256: string[], key?: string | null) =>
+    env.call(`/api/store/${staff.storeId}/media/lookup`, { method: 'POST', body: { sha256 }, headers: staff.owner.headers, key })
+  async function withHash(store: string, name: string, sha: string, status: 'ready' | 'processing' | 'retired' = 'ready') {
+    const id = await media(store, 'image', name, { status })
+    await pool.query(`update content.media set sha256 = $2 where id = $1`, [id, sha])
+    return id
+  }
+
+  it('[AC-dup] finds a ready file by content with no Idempotency-Key, and a same name with other content is no match', async () => {
+    const staff = await env.storeWithStaff()
+    const id = await withHash(staff.storeId, 'IMG_0001.jpg', hash('c'))
+    await withHash(staff.storeId, 'IMG_0001.jpg', hash('d'))
+
+    const found = await lookup(staff, [hash('c'), hash('e')], null)
+    const body = await found.json() as { items: { id: string, name: string, sha256: string, variants: unknown[] }[] }
+
+    expect(found.status).toBe(200)
+    expect(body.items).toHaveLength(1)
+    expect(body.items[0]).toMatchObject({ id, name: 'IMG_0001.jpg', sha256: hash('c') })
+    expect(body.items[0]!.variants.length).toBeGreaterThan(0)
+  })
+
+  it('[AC-dup] an empty list answers an empty list, and a bad hash is a 400', async () => {
+    const staff = await env.storeWithStaff()
+
+    expect(await (await lookup(staff, [])).json()).toEqual({ items: [] })
+    expect((await lookup(staff, ['not-a-hash'])).status).toBe(400)
+  })
+
+  it('[AC-dup] a retired file, a processing file and a file of another store are not offered', async () => {
+    const staff = await env.storeWithStaff()
+    const neighbour = await env.storeWithStaff()
+    await withHash(staff.storeId, 'retired.jpg', hash('1'), 'retired')
+    await withHash(staff.storeId, 'processing.jpg', hash('2'), 'processing')
+    await withHash(neighbour.storeId, 'theirs.jpg', hash('3'))
+
+    const body = await (await lookup(staff, [hash('1'), hash('2'), hash('3')])).json()
+
+    expect(body).toEqual({ items: [] })
+  })
+
+  it('[AC-dup] a guest, another store\'s staff and an anonymous caller are refused', async () => {
+    const staff = await env.storeWithStaff()
+    const outsider = await env.storeWithStaff()
+
+    const asOutsider = await env.call(`/api/store/${staff.storeId}/media/lookup`, { method: 'POST', body: { sha256: [hash('c')] }, headers: outsider.owner.headers })
+    const anonymous = await env.call(`/api/store/${staff.storeId}/media/lookup`, { method: 'POST', body: { sha256: [hash('c')] }, key: null })
+
+    expect(asOutsider.status).toBe(403)
+    expect(anonymous.status).toBe(401)
   })
 })

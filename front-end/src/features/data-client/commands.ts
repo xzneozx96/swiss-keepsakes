@@ -20,8 +20,8 @@ interface ReadsWithInput {
   stores: 'onboarding' | 'members' | 'previewInvitation'
   categories: 'list'
   keepsakes: 'list' | 'get'
-  media: 'list' | 'uses'
-  places: 'list' | 'get' | 'storyOptions' | 'media'
+  media: 'list' | 'uses' | 'get' | 'lookup'
+  places: 'list' | 'get' | 'storyOptions' | 'storyVersion'
 }
 
 /**
@@ -65,12 +65,18 @@ export const commandAffects: {
     save: [],
     publish: [queryKeys.keepsakes.list],
     unpublish: [queryKeys.keepsakes.list],
+    // The list is edited at once (`commandChanges`); the open editor of a removed keepsake is left.
+    remove: [queryKeys.keepsakes.list],
     saveVariant: [queryKeys.keepsakes.list],
+    saveVariants: [queryKeys.keepsakes.list],
     saveOptions: [queryKeys.keepsakes.list],
     createVariant: [queryKeys.keepsakes.list],
   },
   media: {
     upload: [queryKeys.media.list],
+    // A grant writes nothing a screen reads; a confirmed file is a new item of the library.
+    requestUpload: [],
+    confirmUpload: [queryKeys.media.list],
     // A replacement changes the file under every page that uses it; the sheet's pages are read again too.
     replace: [queryKeys.media.list, queryKeys.media.uses],
     describe: [queryKeys.media.list],
@@ -114,9 +120,9 @@ export const commandAffects: {
     publish: [queryKeys.places.list, queryKeys.places.pin],
     hide: [queryKeys.places.list, queryKeys.places.pin],
     remove: [queryKeys.places.list, queryKeys.places.pin],
-    // An upload writes a file and no collection a screen reads.
-    requestUpload: [],
-    confirmUpload: [],
+    // A lookup of a short link or of an address writes no collection a screen reads.
+    resolveMapsLink: [],
+    addressAt: [],
   },
   reports: {
     saveCosts: [queryKeys.reports.costs],

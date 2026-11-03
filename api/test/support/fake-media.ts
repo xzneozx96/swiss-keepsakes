@@ -33,6 +33,15 @@ export function createFakeMedia(seed: MediaRecord[] = []): FakeMedia {
         return row ? [row] : []
       })
     },
+    async findMany(_tx, storeId, ids) {
+      return ids.flatMap((id) => {
+        const row = own(storeId, id)
+        return row ? [row] : []
+      })
+    },
+    async findReadyByHash(_tx, storeId, hashes) {
+      return [...rows.values()].filter(row => row.storeId === storeId && row.status === 'ready' && hashes.includes(row.sha256))
+    },
     async insert(_tx, row, at) {
       const name = row.name ?? `${row.kind}-${row.id.slice(0, 8)}`
       return store({ ...mediaDefaults, ...row, name, fileName: row.fileName ?? name, createdAt: at, width: null, height: null, status: 'processing' })

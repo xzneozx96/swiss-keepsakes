@@ -15,10 +15,13 @@ afterAll(async () => {
 
 const env = createCatalogHttp(testDatabase)
 
+/** A description document of one paragraph. */
+const rich = (text: string) => ({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] })
+
 const code = () => `VX-${randomUUID().slice(0, 8).toUpperCase()}`
 
-interface Option { id: string, name: { en?: string, de?: string }, values: { id: string, label: { en?: string, de?: string }, swatch: string | null }[] }
-interface Variant { id: string, skuCode: string, priceRappen: number, status: string, values: Record<string, string> }
+interface Option { id: string, name: { en?: string, de?: string }, values: { id: string, label: { en?: string, de?: string } }[] }
+interface Variant { id: string, skuCode: string | null, mediaId: string | null, photo: { id: string } | null, priceRappen: number, status: string, values: Record<string, string> }
 interface View {
   id: string
   options: Option[]
@@ -40,7 +43,7 @@ async function setup(options: { fresh?: boolean } = {}) {
   const create = (body: object) => call(products, {
     method: 'POST',
     headers: owner.headers,
-    body: { name: { en: 'Victorinox Classic' }, text: { en: 'A Swiss knife.' }, photoIds: [photo], ...body },
+    body: { name: { en: 'Victorinox Classic' }, text: { en: rich('A Swiss knife.') }, photoIds: [photo], ...body },
   })
   // A keepsake with Size and Theme and the four combinations, as the create flow sends them.
   const withOptions = async (): Promise<View> => {
@@ -65,8 +68,9 @@ async function setup(options: { fresh?: boolean } = {}) {
   const putOptions = (id: string, ifMatch: string | number | null, body: object, headers = owner.headers) =>
     call(`${products}/${id}/options`, { method: 'PUT', headers: { ...headers, ...(ifMatch === null ? {} : { 'If-Match': String(ifMatch) }) }, body })
   const postVariant = (id: string, body: object, headers = owner.headers) => call(`${products}/${id}/variants`, { method: 'POST', headers, body })
+  const patchVariants = (id: string, body: object, headers = owner.headers) => call(`${products}/${id}/variants`, { method: 'PATCH', headers, body })
   const patchVariant = (id: string, skuId: string, body: object, headers = owner.headers) => call(`${products}/${id}/variants/${skuId}`, { method: 'PATCH', headers, body })
-  return { ...store, manager, photo, create, withOptions, plain, get, putOptions, postVariant, patchVariant, call }
+  return { ...store, manager, photo, create, withOptions, plain, get, putOptions, postVariant, patchVariant, patchVariants, call }
 }
 
 // The options as the editor sends them back: the existing ids as refs.
@@ -74,7 +78,7 @@ function asInput(options: Option[]) {
   return options.map(option => ({
     ref: option.id,
     name: option.name,
-    values: option.values.map(value => ({ ref: value.id, label: value.label, swatch: value.swatch })),
+    values: option.values.map(value => ({ ref: value.id, label: value.label })),
   }))
 }
 
@@ -95,13 +99,13 @@ describe('[E6.2][AC52] creating a keepsake with options', () => {
     expect(new Set(keys.rows.map(row => row.combination_key)).size).toBe(4)
   })
 
-  it('[E6.2][AC52] a swatch is saved, and a bad one is a 400', async () => {
+  it('[T-010] a swatch is gone: a value takes only a label, and a stray swatch key is a 400', async () => {
     const { create } = await setup()
-    const colour = { ref: 'colour', name: { en: 'Colour' }, values: [{ ref: 'red', label: { en: 'Red' }, swatch: '#c8102e' }] }
+    const colour = { ref: 'colour', name: { en: 'Colour' }, values: [{ ref: 'red', label: { en: 'Red' } }] }
 
     const ok = await create({ options: [colour], variants: [{ skuCode: code(), priceRappen: 100, values: { colour: 'red' } }] })
-    expect(((await ok.json()) as View).options[0]!.values[0]!.swatch).toBe('#c8102e')
-    const bad = await create({ options: [{ ...colour, values: [{ ref: 'red', label: { en: 'Red' }, swatch: '#C8102E' }] }], variants: [{ skuCode: code(), priceRappen: 100, values: { colour: 'red' } }] })
+    expect(((await ok.json()) as View).options[0]!.values[0]).toEqual({ id: expect.any(String), label: { en: 'Red' } })
+    const bad = await create({ options: [{ ...colour, values: [{ ref: 'red', label: { en: 'Red' }, swatch: '#c8102e' }] }], variants: [{ skuCode: code(), priceRappen: 100, values: { colour: 'red' } }] })
     expect(bad.status).toBe(400)
   })
 
@@ -186,7 +190,7 @@ describe('[E6.2][AC52] changing options and values', () => {
     const { withOptions, putOptions, get } = await setup()
     const product = await withOptions()
     const [size, theme] = asInput(product.options)
-    const reordered = { ...size!, name: { en: 'Size', de: 'Grösse' }, values: [...size!.values].reverse().concat({ ref: 'xl', label: { en: 'XL', de: 'XL' }, swatch: null }) }
+    const reordered = { ...size!, name: { en: 'Size', de: 'Grösse' }, values: [...size!.values].reverse().concat({ ref: 'xl', label: { en: 'XL', de: 'XL' } }) }
 
     expect((await putOptions(product.id, product.rowVersion, { options: [theme!, reordered] })).status).toBe(200)
     const after = await get(product.id)
@@ -213,20 +217,77 @@ describe('[E6.2][AC52] changing options and values', () => {
     expect(problem.errors).toEqual([expect.objectContaining({
       code: 'value-in-use',
       path: `options.${theme.id}.values.${lion.id}`,
-      params: { value: 'Lion', count: 2, codes: users.map(u => u.skuCode).join(', '), more: 0 },
-      message: expect.stringContaining('Used by 2 variants'),
+      params: { value: 'Lion', count: 1, archived: 1, codes: users[1]!.skuCode, more: 0 },
+      message: expect.stringContaining(`Used by 1 live (${users[1]!.skuCode}) and 1 archived variant`),
     })])
     expect(await get(product.id)).toEqual(fresh)
   })
 
-  it('[E6.2][AC52] an option that variants use cannot be deleted', async () => {
-    const { withOptions, putOptions } = await setup()
+  it('[T-020][AC1] an option that variants use is dropped from every variant, live and archived, when the rows stay distinct', async () => {
+    const { create, putOptions, get, patchVariants } = await setup({ fresh: true })
+    const option = (ref: string, values: string[]) => ({ ref, name: { en: ref }, values: values.map(v => ({ ref: `${ref}-${v}`, label: { en: v } })) })
+    const row = (theme: string, size: string, colour: string) => ({ skuCode: code(), priceRappen: 3900, values: { theme: `theme-${theme}`, size: `size-${size}`, colour: `colour-${colour}` } })
+    const sizes = ['S', 'M', 'L']
+    const response = await create({
+      options: [option('theme', ['Light', 'Dark']), option('size', sizes), option('colour', ['Red', 'Blue'])],
+      variants: [...sizes.map(size => row('Light', size, 'Red')), ...sizes.map(size => row('Dark', size, 'Blue'))],
+    })
+    expect(response.status).toBe(201)
+    const product = await response.json() as View
+    const themeSaved = product.options.find(o => o.name.en === 'theme')!
+    const darkId = themeSaved.values.find(v => v.label.en === 'Dark')!.id
+    const dark = product.variants.filter(variant => variant.values[themeSaved.id] === darkId)
+    expect((await patchVariants(product.id, { variants: dark.map(variant => ({ id: variant.id, status: 'archived' })) })).status).toBe(200)
+    const fresh = await get(product.id)
+    const colour = fresh.options.find(o => o.name.en === 'colour')!
+
+    const saved = await putOptions(product.id, fresh.rowVersion, { options: asInput(fresh.options).filter(o => o.ref !== colour.id) })
+    expect(saved.status).toBe(200)
+    const after = await saved.json() as View
+
+    expect(after.options.map(o => o.name.en)).toEqual(['theme', 'size'])
+    expect(after.variants).toHaveLength(6)
+    expect(after.variants.filter(v => v.status === 'archived')).toHaveLength(3)
+    for (const variant of after.variants)
+      expect(Object.keys(variant.values).sort()).toEqual(after.options.map(o => o.id).sort())
+    const keys = (await pool.query<{ combination_key: string }>('select combination_key from catalog.skus where product_id = $1', [product.id])).rows.map(r => r.combination_key)
+
+    expect(new Set(keys).size).toBe(6)
+    expect(keys.every(key => !key.includes(colour.id))).toBe(true)
+    expect(Number((await pool.query('select count(*) from catalog.product_option_values where option_id = $1', [colour.id])).rows[0].count)).toBe(0)
+  })
+
+  it('[T-020][AC2] dropping an option that makes two live rows the same is refused, the groups are named, and nothing changes', async () => {
+    const { withOptions, putOptions, get } = await setup({ fresh: true })
     const product = await withOptions()
 
+    // Without Theme, Small/Swan and Small/Lion are both Small, and so are the two Large rows.
     const response = await putOptions(product.id, product.rowVersion, { options: asInput(product.options).slice(0, 1) })
 
     expect(response.status).toBe(422)
-    expect((await response.json() as Problem).errors?.[0]).toMatchObject({ code: 'option-in-use', params: { option: 'Theme', count: 4 } })
+    const [error] = (await response.json() as Problem).errors!
+    expect(error).toMatchObject({ code: 'option-drop-clash', path: `options.${product.options[1]!.id}`, params: { option: 'Theme', count: 4, sold: 0 } })
+    expect(JSON.parse(String(error!.params!.groups))).toEqual([{ title: 'Small', count: 2, values: ['Swan', 'Lion'] }, { title: 'Large', count: 2, values: ['Swan', 'Lion'] }])
+    expect(error!.message).toContain('Small: 2 rows (Swan, Lion)')
+    expect(await get(product.id)).toEqual(product)
+  })
+
+  it('[T-020][AC3] the last option goes when one variant remains, and not when two would be the same', async () => {
+    const { create, putOptions, get } = await setup({ fresh: true })
+    const one = await (await create({ options: [sizeOption], variants: [{ skuCode: code(), priceRappen: 3900, values: { size: 's' } }] })).json() as View
+    const two = await (await create({ options: [sizeOption], variants: [{ skuCode: code(), priceRappen: 3900, values: { size: 's' } }, { skuCode: code(), priceRappen: 3900, values: { size: 'l' } }] })).json() as View
+
+    const refused = await putOptions(two.id, two.rowVersion, { options: [] })
+    expect(refused.status).toBe(422)
+    expect((await refused.json() as Problem).errors?.[0]).toMatchObject({ code: 'option-drop-clash', params: { count: 2 } })
+    expect(await get(two.id)).toEqual(two)
+
+    const accepted = await putOptions(one.id, one.rowVersion, { options: [] })
+    expect(accepted.status).toBe(200)
+    const after = await accepted.json() as View
+    expect(after.options).toEqual([])
+    expect(after.variants).toHaveLength(1)
+    expect(after.variants[0]!.values).toEqual({})
   })
 
   it('[E6.2][AC52] an option with no value, or no name, is refused', async () => {
@@ -254,7 +315,7 @@ describe('[E6.2][AC52] changing options and values', () => {
 })
 
 describe('[E6.2][AC52] a new option', () => {
-  const colour = { ref: 'new-colour', name: { en: 'Colour' }, values: [{ ref: 'red', label: { en: 'Red' }, swatch: '#c8102e' }, { ref: 'blue', label: { en: 'Blue' }, swatch: null }] }
+  const colour = { ref: 'new-colour', name: { en: 'Colour' }, values: [{ ref: 'red', label: { en: 'Red' } }, { ref: 'blue', label: { en: 'Blue' } }] }
 
   it('[E6.2][AC52] is refused until every variant has a value, archived ones too, and then saves in one request', async () => {
     const { withOptions, putOptions, get, patchVariant } = await setup()
@@ -276,7 +337,7 @@ describe('[E6.2][AC52] a new option', () => {
     expect(saved.status).toBe(200)
     const after = await saved.json() as View
     expect(after.options).toHaveLength(3)
-    expect(after.options[2]!.values.map(v => v.swatch)).toEqual(['#c8102e', null])
+    expect(after.options[2]!.values.map(v => v.label.en)).toEqual(['Red', 'Blue'])
     for (const variant of after.variants)
       expect(Object.keys(variant.values)).toHaveLength(3)
   })
@@ -349,7 +410,7 @@ describe('[E6.2][AC52] creating a variant', () => {
     const [size, theme] = product.options
     // A free combination: archive none, so add a third size first.
     const input = asInput(product.options)
-    input[0]!.values.push({ ref: 'xl', label: { en: 'XL' }, swatch: null })
+    input[0]!.values.push({ ref: 'xl', label: { en: 'XL' } })
     const widened = await (await putOptions(product.id, product.rowVersion, { options: input })).json() as View
     const xl = widened.options[0]!.values[2]!.id
     const swan = theme!.values[0]!.id
@@ -402,7 +463,7 @@ describe('[E6.2][AC52] changing and archiving a variant', () => {
     expect(taken.status).toBe(422)
     expect((await taken.json() as Problem).errors?.[0]).toMatchObject({ code: 'combination-taken', params: { code: small!.skuCode } })
     const widened = asInput(made.options)
-    widened[0]!.values.push({ ref: 'xl', label: { en: 'XL' }, swatch: null })
+    widened[0]!.values.push({ ref: 'xl', label: { en: 'XL' } })
     const wide = await (await putOptions(made.id, made.rowVersion, { options: widened })).json() as View
     const moved = await patchVariant(made.id, large!.id, { values: { [size.id]: wide.options[0]!.values[2]!.id } })
     expect(moved.status).toBe(200)
@@ -471,7 +532,7 @@ describe('[E6.2][AC52] stores and keepsakes are separate', () => {
     const one = await withOptions()
     const other = await plain()
     const stolen = one.options[0]!
-    const claim = { ref: stolen.id, name: { en: 'Mine' }, values: [{ ref: stolen.values[0]!.id, label: { en: 'Not yours' }, swatch: null }] }
+    const claim = { ref: stolen.id, name: { en: 'Mine' }, values: [{ ref: stolen.values[0]!.id, label: { en: 'Not yours' } }] }
 
     const response = await putOptions(other.id, other.rowVersion, { options: [claim], variantValues: [{ variantId: other.variants[0]!.id, values: { [stolen.id]: stolen.values[0]!.id } }] })
 
@@ -599,7 +660,7 @@ describe('[E6.2][412] saves that run at the same time', () => {
 
   it('[E6.2][AC52] a new option racing a new variant on the old options never leaves a variant without a value for it', async () => {
     const { create, putOptions, postVariant, get } = await setup()
-    const colour = { ref: 'new-colour', name: { en: 'Colour' }, values: [{ ref: 'red', label: { en: 'Red' }, swatch: null }] }
+    const colour = { ref: 'new-colour', name: { en: 'Colour' }, values: [{ ref: 'red', label: { en: 'Red' } }] }
 
     for (let round = 0; round < 4; round++) {
       const response = await create({
@@ -683,5 +744,344 @@ describe('[E6.2][AC52] the input limits at the API', () => {
     await refused(await create({ options: [sizeOption], variants }), 'variants')
     await refused(await create({ options: Array.from({ length: 6 }, (_, n) => ({ ref: `o${n}`, name: { en: 'x' }, values: values(1) })), variants: [{ skuCode: code(), priceRappen: 100 }] }), 'options')
     expect(((await (await call(products, { headers: owner.headers })).json()) as { items: unknown[] }).items).toHaveLength(0)
+  })
+})
+
+describe('[T-008][AC1] an options save that creates variants', () => {
+  it('[T-008][AC1] creates the new options, values and variants in one request, for sale, and moves the version once', async () => {
+    const { plain, putOptions } = await setup()
+    const product = await plain()
+    const sized = { ref: 'size', name: { en: 'Size' }, values: [{ ref: 's', label: { en: 'Small' } }, { ref: 'l', label: { en: 'Large' } }, { ref: 'm', label: { en: 'Medium' } }] }
+    const newVariants = [
+      { skuCode: code(), priceRappen: 4500, values: { size: 'l' } },
+      { skuCode: code(), priceRappen: 4700, values: { size: 'm' } },
+    ]
+
+    const saved = await putOptions(product.id, product.rowVersion, { options: [sized], variantValues: [{ variantId: product.variants[0]!.id, values: { size: 's' } }], newVariants })
+
+    expect(saved.status).toBe(200)
+    const after = await saved.json() as View
+    const [small, large, medium] = after.options[0]!.values.map(v => v.id)
+    expect(after.rowVersion).toBe(product.rowVersion + 1)
+    expect(after.variants).toHaveLength(3)
+    expect(after.variants.map(v => v.status)).toEqual(['published', 'published', 'published'])
+    expect(after.variants.map(v => v.values[after.options[0]!.id])).toEqual([small, large, medium])
+    expect(after.variants.slice(1).map(v => [v.skuCode, v.priceRappen])).toEqual(newVariants.map(v => [v.skuCode, v.priceRappen]))
+  })
+
+  it('[T-008][AC1] many new variants take one request and each gets its values, with an existing value by its id', async () => {
+    const { withOptions, putOptions } = await setup()
+    const product = await withOptions()
+    const [size, theme] = product.options
+    const extra = { ref: 'xl', label: { en: 'XL' } }
+    const options = asInput(product.options).map(o => (o.ref === size!.id ? { ...o, values: [...o.values, extra] } : o))
+    const newVariants = [
+      { skuCode: code(), priceRappen: 5000, values: { [size!.id]: 'xl', [theme!.id]: theme!.values[0]!.id } },
+      { skuCode: code(), priceRappen: 5100, values: { [size!.id]: 'xl', [theme!.id]: theme!.values[1]!.id } },
+    ]
+
+    const saved = await putOptions(product.id, product.rowVersion, { options, newVariants })
+
+    expect(saved.status).toBe(200)
+    const after = await saved.json() as View
+    const xl = after.options.find(o => o.id === size!.id)!.values[2]!.id
+    expect(after.variants).toHaveLength(6)
+    expect(after.variants.filter(v => v.values[size!.id] === xl).map(v => v.values[theme!.id]).sort()).toEqual(theme!.values.map(v => v.id).sort())
+  })
+
+  it('[T-008][AC1] a failure in the new variants writes nothing, not even the new option or value', async () => {
+    const { withOptions, putOptions, get } = await setup()
+    const product = await withOptions()
+    const [size, theme] = product.options
+    const extra = { ref: 'xl', label: { en: 'XL' } }
+    const options = asInput(product.options).map(o => (o.ref === size!.id ? { ...o, values: [...o.values, extra] } : o))
+    const clash = { skuCode: code(), priceRappen: 100, values: { [size!.id]: size!.values[0]!.id, [theme!.id]: theme!.values[0]!.id } }
+
+    const refused = await putOptions(product.id, product.rowVersion, { options, newVariants: [{ skuCode: code(), priceRappen: 100, values: { [size!.id]: 'xl', [theme!.id]: theme!.values[0]!.id } }, clash] })
+
+    expect(refused.status).toBe(422)
+    expect(await get(product.id)).toEqual(product)
+  })
+
+  it('[T-008][AC1] a new variant without a value of every option is refused and nothing stays', async () => {
+    const { withOptions, putOptions, get } = await setup()
+    const product = await withOptions()
+    const [size] = product.options
+    const refused = await putOptions(product.id, product.rowVersion, { options: asInput(product.options), newVariants: [{ skuCode: code(), priceRappen: 100, values: { [size!.id]: size!.values[0]!.id } }] })
+
+    expect(refused.status).toBe(422)
+    expect(await get(product.id)).toEqual(product)
+  })
+})
+
+describe('[T-008][AC2] new variants that clash', () => {
+  it('[T-008][AC2] a taken combination is a 422 naming the row, and nothing is written', async () => {
+    const { withOptions, putOptions, get } = await setup()
+    const product = await withOptions()
+    const [size, theme] = product.options
+    const twin = product.variants[0]!
+    const free = { skuCode: code(), priceRappen: 100, values: { [size!.id]: size!.values[0]!.id, [theme!.id]: theme!.values[0]!.id } }
+    expect(free.values).toEqual(twin.values)
+
+    const refused = await putOptions(product.id, product.rowVersion, { options: asInput(product.options), newVariants: [free] })
+
+    expect(refused.status).toBe(422)
+    expect((await refused.json() as Problem).errors).toEqual([expect.objectContaining({ code: 'combination-taken', path: 'newVariants.0.values', params: { code: twin.skuCode, archived: 0 } })])
+    expect(await get(product.id)).toEqual(product)
+  })
+
+  it('[T-008][AC2] a SKU code that the shop holds is a 422 naming the row, and nothing is written', async () => {
+    const { plain, withOptions, putOptions, get } = await setup()
+    const other = await plain()
+    const product = await withOptions()
+    const extra = { ref: 'xl', label: { en: 'XL' } }
+    const options = asInput(product.options).map((o, index) => (index === 0 ? { ...o, values: [...o.values, extra] } : o))
+    const [size, theme] = product.options
+    const rows = [
+      { skuCode: code(), priceRappen: 100, values: { [size!.id]: 'xl', [theme!.id]: theme!.values[0]!.id } },
+      { skuCode: other.variants[0]!.skuCode, priceRappen: 100, values: { [size!.id]: 'xl', [theme!.id]: theme!.values[1]!.id } },
+    ]
+
+    const refused = await putOptions(product.id, product.rowVersion, { options, newVariants: rows })
+
+    expect(refused.status).toBe(422)
+    expect((await refused.json() as Problem).errors).toEqual([expect.objectContaining({ code: 'code-taken', path: 'newVariants.1.skuCode', params: { code: rows[1]!.skuCode } })])
+    expect(await get(product.id)).toEqual(product)
+  })
+
+  it('[T-008][AC2] a code used twice in the request and a bad code are refused', async () => {
+    const { plain, putOptions, get } = await setup()
+    const product = await plain()
+    const sized = { ref: 'size', name: { en: 'Size' }, values: [{ ref: 's', label: { en: 'Small' } }, { ref: 'l', label: { en: 'Large' } }, { ref: 'm', label: { en: 'Medium' } }] }
+    const same = code()
+    const base = { options: [sized], variantValues: [{ variantId: product.variants[0]!.id, values: { size: 's' } }] }
+
+    const twice = await putOptions(product.id, product.rowVersion, { ...base, newVariants: [{ skuCode: same, priceRappen: 100, values: { size: 'l' } }, { skuCode: same.toLowerCase(), priceRappen: 100, values: { size: 'm' } }] })
+    expect(twice.status).toBe(422)
+    expect((await twice.json() as Problem).errors).toEqual([expect.objectContaining({ code: 'code-duplicate', path: 'newVariants.1.skuCode' })])
+    const bad = await putOptions(product.id, product.rowVersion, { ...base, newVariants: [{ skuCode: 'VX L', priceRappen: 100, values: { size: 'l' } }] })
+    expect(bad.status).toBe(422)
+    expect(await get(product.id)).toEqual(product)
+  })
+})
+
+describe('[T-008][AC3] changing several variants at once', () => {
+  it('[T-008][AC3] sets the price and status of several variants in one request, live, with no row version', async () => {
+    const { withOptions, patchVariants, get } = await setup()
+    const product = await withOptions()
+    const [a, b, c] = product.variants
+
+    const saved = await patchVariants(product.id, { variants: [{ id: a!.id, priceRappen: 4100 }, { id: b!.id, status: 'draft' }, { id: c!.id, priceRappen: 4200, status: 'archived' }] })
+
+    expect(saved.status).toBe(200)
+    const after = await saved.json() as View
+    expect(after.rowVersion).toBe(product.rowVersion)
+    const byId = new Map(after.variants.map(v => [v.id, v]))
+    expect(byId.get(a!.id)).toMatchObject({ priceRappen: 4100, status: 'published' })
+    expect(byId.get(b!.id)).toMatchObject({ priceRappen: b!.priceRappen, status: 'draft' })
+    expect(byId.get(c!.id)).toMatchObject({ priceRappen: 4200, status: 'archived' })
+    expect(byId.get(product.variants[3]!.id)).toEqual(product.variants[3])
+    expect(await get(product.id)).toEqual(after)
+  })
+
+  it('[T-008][AC3] an archived row refuses the whole request, and the other rows stay', async () => {
+    const { withOptions, patchVariants, patchVariant, get } = await setup()
+    const product = await withOptions()
+    await patchVariant(product.id, product.variants[1]!.id, { status: 'archived' })
+    const before = await get(product.id)
+
+    const refused = await patchVariants(product.id, { variants: [{ id: product.variants[0]!.id, priceRappen: 100 }, { id: product.variants[1]!.id, priceRappen: 200 }] })
+
+    expect(refused.status).toBe(422)
+    expect((await refused.json() as Problem).errors).toEqual([expect.objectContaining({ code: 'variant-archived', path: 'variants.1.status' })])
+    expect(await get(product.id)).toEqual(before)
+  })
+
+  it('[T-008][AC3] a variant of another keepsake in the same store is 404 and nothing is written', async () => {
+    const { withOptions, plain, patchVariants, get } = await setup()
+    const product = await withOptions()
+    const other = await plain()
+
+    const refused = await patchVariants(product.id, { variants: [{ id: product.variants[0]!.id, priceRappen: 100 }, { id: other.variants[0]!.id, priceRappen: 100 }] })
+
+    expect(refused.status).toBe(404)
+    expect(await get(product.id)).toEqual(product)
+  })
+
+  it('[T-008][AC3] another store gets 404, a signed-out visitor 401, a guest of no store 403, a bad body 400', async () => {
+    const { withOptions, patchVariants, call, products } = await setup()
+    const product = await withOptions()
+    const other = await env.storeWithStaff()
+    const stranger = await env.signIn()
+    const body = { variants: [{ id: product.variants[0]!.id, priceRappen: 100 }] }
+
+    expect((await call(`${other.products}/${product.id}/variants`, { method: 'PATCH', headers: other.owner.headers, body })).status).toBe(404)
+    expect((await call(`${products}/${product.id}/variants`, { method: 'PATCH', body })).status).toBe(401)
+    expect((await call(`${products}/${product.id}/variants`, { method: 'PATCH', headers: stranger.headers, body })).status).toBe(403)
+    expect((await patchVariants(product.id, { variants: [] })).status).toBe(400)
+  })
+})
+
+describe('[T-010] variants with no SKU code', () => {
+  const twoOptions = async (setupResult: Awaited<ReturnType<typeof setup>>, codes: (string | null)[]) => {
+    const response = await setupResult.create({
+      options: [sizeOption, themeOption],
+      variants: [
+        { ...(codes[0] !== null && { skuCode: codes[0] }), priceRappen: 3900, values: { size: 's', theme: 'swan' } },
+        { ...(codes[1] !== null && { skuCode: codes[1] }), priceRappen: 3900, values: { size: 'l', theme: 'swan' } },
+        { skuCode: codes[2], priceRappen: 4900, values: { size: 's', theme: 'lion' } },
+        { skuCode: codes[3], priceRappen: 4900, values: { size: 'l', theme: 'lion' } },
+      ],
+    })
+
+    return response
+  }
+
+  it('[T-010][AC1] a keepsake is created with no codes, null or left out, and two of them sit in one shop', async () => {
+    const env2 = await setup()
+    const first = await twoOptions(env2, [null, null, null, null])
+    const second = await twoOptions(env2, [null, null, null, null])
+
+    expect(first.status).toBe(201)
+    expect(second.status).toBe(201)
+    const view = await first.json() as View
+    expect(view.variants.map(v => v.skuCode)).toEqual([null, null, null, null])
+    const stored = await pool.query<{ n: string }>(`select count(*) as n from catalog.skus where product_id = $1 and sku_code is null`, [view.id])
+    expect(Number(stored.rows[0]!.n)).toBe(4)
+  })
+
+  it('[T-010][AC2] a code that the shop holds is still refused, and a code left out is not checked', async () => {
+    const env2 = await setup()
+    const taken = code()
+    const one = await env2.create({ variants: [{ skuCode: taken, priceRappen: 100 }] })
+    expect(one.status).toBe(201)
+
+    const clash = await env2.create({ variants: [{ skuCode: taken, priceRappen: 100 }] })
+    expect(clash.status).toBe(409)
+    expect(((await clash.json()) as Problem).type).toBe('sku-code-taken')
+    expect((await env2.create({ variants: [{ priceRappen: 100 }] })).status).toBe(201)
+  })
+
+  it('[T-010][AC1] the options save, the single create and the single save work with and without a code', async () => {
+    const { plain, putOptions, postVariant, patchVariant, get } = await setup()
+    const product = await plain()
+    const sized = { ref: 'size', name: { en: 'Size' }, values: [{ ref: 's', label: { en: 'Small' } }, { ref: 'l', label: { en: 'Large' } }, { ref: 'm', label: { en: 'Medium' } }, { ref: 'x', label: { en: 'XL' } }] }
+    const saved = await putOptions(product.id, product.rowVersion, {
+      options: [sized],
+      variantValues: [{ variantId: product.variants[0]!.id, values: { size: 's' } }],
+      newVariants: [{ priceRappen: 100, values: { size: 'l' } }, { skuCode: null, priceRappen: 100, values: { size: 'm' } }],
+    })
+
+    expect(saved.status).toBe(200)
+    const after = await saved.json() as View
+    expect(after.variants.map(v => v.skuCode === null)).toEqual([false, true, true])
+
+    const sizeId = after.options[0]!.id
+    const xl = after.options[0]!.values[3]!.id
+    expect((await postVariant(product.id, { priceRappen: 100, values: { [sizeId]: xl } })).status).toBe(201)
+    const withNew = await get(product.id)
+    expect(withNew.variants.at(-1)!.skuCode).toBeNull()
+
+    const named = code()
+    expect(((await (await patchVariant(product.id, withNew.variants.at(-1)!.id, { skuCode: named })).json()) as View).variants.at(-1)!.skuCode).toBe(named)
+    expect(((await (await patchVariant(product.id, withNew.variants.at(-1)!.id, { skuCode: null })).json()) as View).variants.at(-1)!.skuCode).toBeNull()
+    expect(((await (await patchVariant(product.id, withNew.variants.at(-1)!.id, { priceRappen: 200 })).json()) as View).variants.at(-1)!.skuCode).toBeNull()
+  })
+
+  it('[T-010][AC3] one bulk request clears every code, sets one, and refuses a taken or repeated one', async () => {
+    const env2 = await setup()
+    const product = await (await twoOptions(env2, [code(), code(), code(), code()])).json() as View
+
+    const cleared = await env2.patchVariants(product.id, { variants: product.variants.map(v => ({ id: v.id, skuCode: null })) })
+    expect(cleared.status).toBe(200)
+    expect(((await cleared.json()) as View).variants.map(v => v.skuCode)).toEqual([null, null, null, null])
+
+    const [a, b] = product.variants
+    const set = await env2.patchVariants(product.id, { variants: [{ id: a!.id, skuCode: 'BULK-A', priceRappen: 500 }, { id: b!.id }] })
+    const after = await set.json() as View
+    expect(after.variants.map(v => v.skuCode)).toEqual(['BULK-A', null, null, null])
+    expect(after.variants[0]!.priceRappen).toBe(500)
+
+    const repeated = await env2.patchVariants(product.id, { variants: [{ id: a!.id, skuCode: 'DUP-1' }, { id: b!.id, skuCode: 'dup-1' }] })
+    expect(repeated.status).toBe(422)
+    expect(((await repeated.json()) as Problem).errors).toEqual([expect.objectContaining({ code: 'code-duplicate', path: 'variants.1.skuCode' })])
+    const clash = await env2.patchVariants(product.id, { variants: [{ id: b!.id, skuCode: 'BULK-A' }] })
+    expect(clash.status).toBe(422)
+    expect(((await clash.json()) as Problem).errors).toEqual([expect.objectContaining({ code: 'code-taken', path: 'variants.0.skuCode', params: { code: 'BULK-A' } })])
+    // A row may keep or re-set its own code.
+    expect((await env2.patchVariants(product.id, { variants: [{ id: a!.id, skuCode: 'BULK-A' }] })).status).toBe(200)
+  })
+
+  it('[T-010] a refusal names a variant with no code by its values', async () => {
+    const env2 = await setup()
+    const product = await (await twoOptions(env2, [null, null, null, null])).json() as View
+    const [size, theme] = product.options
+    const refused = await env2.postVariant(product.id, { values: { [size!.id]: size!.values[0]!.id, [theme!.id]: theme!.values[0]!.id }, priceRappen: 100 })
+
+    expect(refused.status).toBe(422)
+    expect(((await refused.json()) as Problem).errors).toEqual([expect.objectContaining({ code: 'combination-taken', params: { code: 'Small / Swan', archived: 0 } })])
+  })
+
+  it('[T-010] the list names the options of every keepsake, for the editor\'s name suggestions', async () => {
+    const env2 = await setup({ fresh: true })
+
+    expect((await env2.create({ options: [sizeOption, themeOption], variants: [{ priceRappen: 100, values: { size: 's', theme: 'swan' } }] })).status).toBe(201)
+    expect((await env2.create({ variants: [{ priceRappen: 100 }] })).status).toBe(201)
+    const list = await (await env2.call(env2.products, { headers: env2.owner.headers })).json() as { items: { optionNames: { en?: string, de?: string }[] }[] }
+
+    expect(list.items.map(item => item.optionNames)).toEqual([[], [{ en: 'Size', de: 'Grösse' }, { en: 'Theme' }]])
+  })
+})
+
+describe('[T-010] the photo of a variant', () => {
+  it('[T-010][AC8] a ready photo of the library is saved by create, the options save, the single and the bulk save, and comes back ready to show', async () => {
+    const env2 = await setup({ fresh: true })
+    const second = await env.readyPhoto(env2.storeId)
+    const product = await (await env2.create({ options: [sizeOption], variants: [{ priceRappen: 100, mediaId: env2.photo, values: { size: 's' } }, { priceRappen: 100, values: { size: 'l' } }] })).json() as View
+
+    expect(product.variants.map(v => v.mediaId)).toEqual([env2.photo, null])
+    expect(product.variants.map(v => v.photo?.id ?? null)).toEqual([env2.photo, null])
+    const [small, large] = product.variants
+    const single = await (await env2.patchVariant(product.id, large!.id, { mediaId: second })).json() as View
+    expect(single.variants.map(v => v.mediaId)).toEqual([env2.photo, second])
+    const bulk = await (await env2.patchVariants(product.id, { variants: [{ id: small!.id, mediaId: null }, { id: large!.id, mediaId: env2.photo }] })).json() as View
+    expect(bulk.variants.map(v => v.mediaId)).toEqual([null, env2.photo])
+    expect(bulk.variants.map(v => v.photo?.id ?? null)).toEqual([null, env2.photo])
+
+    const sized = { ref: product.options[0]!.id, name: { en: 'Size' }, values: [...product.options[0]!.values.map(value => ({ ref: value.id, label: value.label })), { ref: 'm', label: { en: 'Medium' } }] }
+    const saved = await (await env2.putOptions(product.id, bulk.rowVersion, { options: [sized], newVariants: [{ priceRappen: 100, mediaId: second, values: { [sized.ref]: 'm' } }] })).json() as View
+    expect(saved.variants.at(-1)!.mediaId).toBe(second)
+    expect((await env2.postVariant(product.id, { priceRappen: 100, mediaId: second, values: { [sized.ref]: sized.values[0]!.ref } })).status).toBe(422)
+  })
+
+  it('[T-010][AC8] a photo of another store and a retired one are refused, and nothing is written', async () => {
+    const env2 = await setup({ fresh: true })
+    const elsewhere = await env.readyPhoto((await setup({ fresh: true })).storeId)
+    const retired = await env.readyPhoto(env2.storeId, 'retired')
+    const product = await (await env2.create({ variants: [{ priceRappen: 100 }] })).json() as View
+    const only = product.variants[0]!
+
+    for (const [mediaId, type] of [[elsewhere, 'media-invalid'], [retired, 'media-retired']] as const) {
+      const single = await env2.patchVariant(product.id, only.id, { mediaId })
+      expect(single.status).toBe(422)
+      expect(((await single.json()) as Problem).type).toBe(type)
+      expect((await env2.patchVariants(product.id, { variants: [{ id: only.id, mediaId }] })).status).toBe(422)
+      expect((await env2.create({ variants: [{ priceRappen: 100, mediaId }] })).status).toBe(422)
+    }
+    expect((await env2.get(product.id)).variants[0]!.mediaId).toBeNull()
+  })
+
+  it('[T-010][AC8] a photo still processing is saved on a variant, and publish waits for it', async () => {
+    const env2 = await setup({ fresh: true })
+    const processing = await env.readyPhoto(env2.storeId, 'processing')
+    const product = await (await env2.create({ variants: [{ priceRappen: 100 }] })).json() as View
+    const saved = await env2.patchVariant(product.id, product.variants[0]!.id, { mediaId: processing })
+
+    expect(saved.status).toBe(200)
+    expect(((await saved.json()) as View).variants[0]!.mediaId).toBe(processing)
+    const published = await env2.call(`${env2.products}/${product.id}/publish`, { method: 'POST', headers: { ...env2.owner.headers, 'If-Match': String(product.rowVersion) } })
+
+    expect(published.status).toBe(422)
+    expect(((await published.json()) as Problem).type).toBe('media-processing')
   })
 })

@@ -29,16 +29,13 @@ import { zurichDate } from '@sk/domain/catalog'
 import { dateTimeFormat } from '@sk/domain/shared'
 
 import { useState } from 'react'
+import { choiceCard } from '@/components/choice-card'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { useTourFormatting } from '@/features/tours/merchant/shared'
 import { useDepartureActions } from '../hooks/use-tour-editor'
 
 const ZONE = 'Europe/Zurich'
-
-/** Same choice card as M08 and the M04 sheets: ink frame when selected. */
-const choiceCard
-  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 const policies: TourPaymentPolicy[] = ['full', 'deposit', 'later']
 

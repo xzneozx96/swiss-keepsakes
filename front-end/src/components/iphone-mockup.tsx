@@ -9,6 +9,8 @@ import { useEffect, useRef, useState } from 'react'
 /** Points of the 16 Pro screen, and the band and bezel around it. */
 const SCREEN = { width: 402, height: 874 }
 const FRAME = 3 + 11
+const WIDE = '(min-width: 1024px)'
+const MIN_FIT = 0.6
 
 /** Signal, Wi-Fi and battery as on iOS, drawn small in the current text colour. */
 function StatusIcons() {
@@ -47,11 +49,14 @@ function SideButton({ side, top, height }: { side: 'start' | 'end', top: number,
  * The phone at its real size (the screen is 402 points wide, as on the device, so the page lays
  * out as guests see it), scaled down as one piece to fit its column and the window height minus
  * `reserve` pixels. Scaling the whole drawing keeps the island, status bar and buttons in place.
+ * With `fitPage`, from 1024px the room the page leaves above the phone is taken off as well (never below
+ * a scale of 0.6), so the whole phone shows in the window when the page is scrolled to its top.
  */
-export function IPhoneMockup({ children, label, reserve = 0 }: {
+export function IPhoneMockup({ children, label, reserve = 0, fitPage = false }: {
   children: React.ReactNode
   label: string
   reserve?: number
+  fitPage?: boolean
 }) {
   const width = SCREEN.width + 2 * FRAME
   const height = SCREEN.height + 2 * FRAME
@@ -62,7 +67,12 @@ export function IPhoneMockup({ children, label, reserve = 0 }: {
     const box = ref.current
     if (!box)
       return
-    const fit = () => setScale(Math.min(1, box.clientWidth / width, (window.innerHeight - reserve) / height))
+    const fit = () => {
+      const above = fitPage && window.matchMedia(WIDE).matches ? box.getBoundingClientRect().top + window.scrollY : 0
+      const room = (window.innerHeight - reserve - above) / height
+
+      setScale(Math.min(1, box.clientWidth / width, above > 0 ? Math.max(MIN_FIT, room) : room))
+    }
     const observer = new ResizeObserver(fit)
     observer.observe(box)
     window.addEventListener('resize', fit)
@@ -70,7 +80,7 @@ export function IPhoneMockup({ children, label, reserve = 0 }: {
       observer.disconnect()
       window.removeEventListener('resize', fit)
     }
-  }, [width, height, reserve])
+  }, [width, height, reserve, fitPage])
 
   return (
     <div ref={ref} className="w-full">

@@ -13,6 +13,11 @@ export interface PublicCategoryRow {
   position: number
 }
 
+// A row of the public category list: map categories carry their home switch, blog categories never do.
+export interface PublicCategoryListRow extends PublicCategoryRow {
+  showOnHome: boolean
+}
+
 // The published story document as stored. Stored JSON is read as written and not re-validated, so every field is
 // optional and the body is unknown: the public view copies only what it knows.
 export interface StoredStoryDoc {
@@ -48,6 +53,7 @@ export interface PublicPinRow {
   latitude: number
   longitude: number
   address: string | null
+  mapsLink: string | null
   weeklyHours: { day: number, opens: string, closes: string }[]
   stayTag: StayTag
   interests: string[]
@@ -56,12 +62,25 @@ export interface PublicPinRow {
   firstPublishedAt: Date
   // storage_key of the cover when it is a ready media row.
   photoKey: string | null
+  // Pixel width of that cover, which decides the variants that exist.
+  photoWidth: number | null
   dates: PinDate[]
   // The categories on the pin, and the parents of those that are sub-categories.
   categories: PublicCategoryRow[]
   parentCategories: PublicCategoryRow[]
   // Slug of each published version of the main story, by language. Empty: no main story, or none published.
   mainStorySlugs: Partial<Record<ContentLanguage, string>>
+}
+
+// What a pin's own read adds to the row the list shares: the outbound link, the photos in the merchant's order with the
+// text for each, and the published stories that tag the pin. The list never loads them.
+export interface PublicPinDetailRow extends PublicPinRow {
+  link: string | null
+  // The cover first, then the extra photos; only ready media.
+  photos: { key: string, width: number | null, alt: Localized }[]
+  // The main story and every story whose places include this pin, each with its published versions.
+  stories: PublicStoryRow[]
+  mainStoryId: string | null
 }
 
 export interface PublicTourStopRow {
@@ -99,10 +118,10 @@ export interface PublicReadRepository<T> {
   // The group whose published version has this slug in `language`, else in the other language.
   findPublishedStoryBySlug: (tx: T, slug: string, language: ContentLanguage) => Promise<PublicStoryRow | undefined>
   // Every category of the kind, in all stores, parents first, then by position.
-  listCategories: (tx: T, kind: 'map' | 'blog') => Promise<PublicCategoryRow[]>
+  listCategories: (tx: T, kind: 'map' | 'blog') => Promise<PublicCategoryListRow[]>
   // Pins in `content.public_pins` (published, and dated in the future or undated), newest first.
   listVisiblePins: (tx: T) => Promise<PublicPinRow[]>
-  findVisiblePin: (tx: T, id: string) => Promise<PublicPinRow | undefined>
+  findVisiblePin: (tx: T, id: string) => Promise<PublicPinDetailRow | undefined>
   // Tour guides with status `published`, in creation order newest first (id desc; a tour has no publish timestamp), without stops.
   listPublishedTours: (tx: T) => Promise<PublicTourRow[]>
   // The tour whose published slug is this one in `language`, else in the other language, with its stops.
@@ -113,4 +132,6 @@ export interface ReadDeps<T> {
   uow: UnitOfWork<T>
   reads: PublicReadRepository<T>
   clock: Clock
+  // The public address of a storage key (the original or a variant), as the merchant views build it.
+  publicUrl: (key: string) => string
 }

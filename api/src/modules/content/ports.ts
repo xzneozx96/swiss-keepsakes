@@ -1,4 +1,4 @@
-import type { ContentLanguage, FoodKind, Localized, MediaKind, Pin, PinDate, PinStoryOption, ServiceType, StayTag, StoryDraft, StoryGroup, StoryVersion, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
+import type { ContentLanguage, Localized, MediaKind, Pin, PinDate, PinListEntry, PinStoryOption, StayTag, StoryDraft, StoryGroup, StoryVersion, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
 
 // What the content use cases need. Same shapes as the identity module's ports, copied so modules do not import
 // each other (backend/architecture.md). The platform's unit of work fits the generic shape structurally.
@@ -69,6 +69,8 @@ export interface MediaReplacement {
 export interface MediaRepository<T> {
   // The rows of this store among the ids. An id of another store has no row.
   find: (tx: T, storeId: string, ids: string[]) => Promise<MediaRow[]>
+  // The whole rows of this store among the ids, for a read that shows the files. An id of another store has no row.
+  findMany: (tx: T, storeId: string, ids: string[]) => Promise<MediaRecord[]>
   // A new row, status `processing`. A row inserted without a name is named by the database (migration 0011).
   insert: (tx: T, row: { id: string, storeId: string, kind: MediaKind, storageKey: string, contentType: string, byteSize: number, sha256: string, name?: string, fileName?: string }, at: Date) => Promise<MediaRecord>
   // An id of another store has no row. `forUpdate` locks the row until the transaction ends.
@@ -82,6 +84,8 @@ export interface MediaRepository<T> {
   describe: (tx: T, row: MediaRecord, changes: { name?: string, alt?: Localized }, at: Date) => Promise<MediaRecord | undefined>
   // The new file replaces the old under the same id, version + 1. The row keeps status `ready`. undefined when the row is gone.
   replace: (tx: T, row: MediaRecord, next: MediaReplacement, at: Date) => Promise<MediaRecord | undefined>
+  // The ready (not processing, not retired) files of this store whose bytes have one of these SHA-256 hashes, oldest first.
+  findReadyByHash: (tx: T, storeId: string, hashes: string[]) => Promise<MediaRecord[]>
   // True when a tour (PDF or cover), a tour stop, a pin cover or any media_refs row points at the id.
   isReferenced: (tx: T, storeId: string, mediaId: string) => Promise<boolean>
 }
@@ -165,16 +169,16 @@ export interface PinChanges {
   title?: Localized
   tip?: Localized
   localTip?: Localized
+  // Written as it comes: the use cases set it from the title (the server makes the slug) and ignore what a client sent.
   slug?: Localized | null
   latitude?: number | null
   longitude?: number | null
   address?: string | null
+  mapsLink?: string | null
   weeklyHours?: WeeklySpan[]
   stayTag?: StayTag
   interests?: string[]
-  serviceType?: ServiceType | null
   mustVisit?: boolean
-  foodKind?: FoodKind | null
   coverMediaId?: string | null
   coverAlt?: Localized
   // The extra photos in order; the list replaces the stored one. The alt text goes to the draft, keyed by media id.
@@ -200,11 +204,19 @@ export interface PinListRow {
   stayTag: StayTag
   interests: string[]
   coverMediaId: string | null
+  // The cover file when it is ready; null when the pin has none or the file is not ready (still processing, or retired).
+  cover: MediaRecord | null
   mainStoryGroupId: string | null
   mainStoryPublished: boolean
   rowVersion: number
   updatedAt: Date
 }
+
+/** A row of the merchant pin list with its cover file: the entry of the domain plus what the view needs for the photo. */
+export type MerchantPinEntry = PinListEntry & { cover: MediaRecord | null }
+
+/** How many things use a pin: stories that link it, editorial reviews about it, tours with a stop on it. */
+export interface PinUsage { stories: number, reviews: number, tours: number }
 
 export interface PinRepository<T> {
   insert: (tx: T, storeId: string, changes: PinChanges, at: Date) => Promise<Pin>
@@ -216,11 +228,19 @@ export interface PinRepository<T> {
   // published languages (places_published_fields_check); first_published_at is kept once set.
   publish: (tx: T, pin: Pin, at: Date, slug: Localized) => Promise<Pin>
   hide: (tx: T, pin: Pin, at: Date) => Promise<Pin>
+  // What names the pin and so holds it against a delete: stories that link it, editorial reviews about it, tour stops on it.
+  usage: (tx: T, storeId: string, pinId: string) => Promise<PinUsage>
+  // Its dates, categories, photos and link go with it (ON DELETE CASCADE). Any status: migration 0020 lifted the published guard.
   remove: (tx: T, storeId: string, pinId: string) => Promise<boolean>
   // The ids among the given ones that are pins of this store, whatever their status. An id of another store is left out.
   idsInStore: (tx: T, storeId: string, ids: string[]) => Promise<string[]>
   // A read without a lock. An id of another store has no row.
   find: (tx: T, storeId: string, pinId: string) => Promise<Pin | undefined>
+  // A platform-wide advisory lock for the transaction. A write that makes a slug takes it before it reads `slugsTaken`,
+  // so two writes cannot make the same slug (the unique indexes stay the backstop).
+  lockSlugs: (tx: T) => Promise<void>
+  // The slugs in this language that pins hold, in every store, except the pin `exceptPinId`.
+  slugsTaken: (tx: T, language: ContentLanguage, exceptPinId?: string) => Promise<Set<string>>
   // Every pin of the store, most recently edited first.
   list: (tx: T, storeId: string) => Promise<PinListRow[]>
   // The story groups of the store with their titles, for the main-story picker, most recently created first.
@@ -252,6 +272,8 @@ export interface StoryRepository<T> {
   // undefined when the group already has a version in that language.
   insertVersion: (tx: T, storeId: string, groupId: string, language: ContentLanguage, changes: StoryVersionChanges, at: Date) => Promise<StoryVersion | undefined>
   findVersionForUpdate: (tx: T, storeId: string, groupId: string, language: ContentLanguage) => Promise<StoryVersion | undefined>
+  // The version without a lock, for a read.
+  findVersion: (tx: T, storeId: string, groupId: string, language: ContentLanguage) => Promise<StoryVersion | undefined>
   // Writes slug and draft, replaces the draft media_refs of the version, bumps row_version.
   saveVersion: (tx: T, version: StoryVersion, changes: StoryVersionChanges, at: Date) => Promise<StoryVersion>
   // draft becomes published and is cleared; published_at is kept once set; media_refs move from the draft slot to the published slot.
@@ -350,6 +372,8 @@ export interface CategoryRow {
   name: Localized
   slug: string
   parentId: string | null
+  // Map categories only; a blog category is never on the home.
+  showOnHome: boolean
   position: number
   childCount: number
   useCount: number
@@ -361,10 +385,47 @@ export interface CategoryRepository<T> {
   // A per store and kind advisory lock for the transaction. Every write takes it first, so two writes to one list queue up.
   lockList: (tx: T, storeId: string, kind: CategoryKind) => Promise<void>
   slugsTaken: (tx: T, storeId: string, kind: CategoryKind) => Promise<Set<string>>
-  insert: (tx: T, storeId: string, kind: CategoryKind, input: { name: Localized, slug: string, parentId: string | null, position: number }, at: Date) => Promise<CategoryRow>
-  update: (tx: T, storeId: string, kind: CategoryKind, id: string, changes: { name?: Localized, parentId?: string | null, position?: number }, at: Date) => Promise<CategoryRow>
+  insert: (tx: T, storeId: string, kind: CategoryKind, input: { name: Localized, slug: string, parentId: string | null, showOnHome: boolean, position: number }, at: Date) => Promise<CategoryRow>
+  update: (tx: T, storeId: string, kind: CategoryKind, id: string, changes: { name?: Localized, parentId?: string | null, showOnHome?: boolean, position?: number }, at: Date) => Promise<CategoryRow>
   // Positions 1..n in the order given.
   setPositions: (tx: T, storeId: string, kind: CategoryKind, orderedIds: string[], at: Date) => Promise<void>
   // false when the id has no row. A link that still names the category makes the database refuse (in-use).
   remove: (tx: T, storeId: string, kind: CategoryKind, id: string) => Promise<boolean>
+}
+
+// One step of a short link: the answer to a request that follows no redirect and reads no body. Undefined when the
+// request failed or ran out of time. A port, so the use case holds the rules and the adapter holds `fetch`.
+export interface MapsLinkStep {
+  status: number
+  location: string | null
+}
+
+export interface MapsLinks {
+  step: (url: URL, timeoutMs: number) => Promise<MapsLinkStep | undefined>
+}
+
+/** An entrance in the federal building register: its address and where it stands. */
+export interface RegisteredBuilding {
+  street: string
+  houseNumber: string
+  postcode: string
+  city: string
+  latitude: number
+  longitude: number
+}
+
+/** The address of one building as the use case returns it: the parts and the one-line form. The route's `Address` schema has the same shape. */
+export interface FoundAddress {
+  street: string
+  houseNumber: string
+  postcode: string
+  city: string
+  formatted: string
+}
+
+// The buildings the register holds around a position, in no particular order, at least those within `radiusMeters`.
+// Undefined when the register could not be read or ran out of time. A port, so the use case holds the rules and the
+// adapter holds `fetch`.
+export interface AddressRegister {
+  buildingsNear: (latitude: number, longitude: number, radiusMeters: number, timeoutMs: number) => Promise<RegisteredBuilding[] | undefined>
 }

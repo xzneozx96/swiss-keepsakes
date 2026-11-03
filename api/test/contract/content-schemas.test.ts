@@ -10,6 +10,7 @@ import {
   storyVersionMoveBodySchema,
   storyVersionSaveBodySchema,
   storyVersionSchema,
+  storyVersionTextSchema,
   tourPublishBodySchema,
   tourSchema,
   tourWriteBodySchema,
@@ -75,11 +76,14 @@ describe('[E2.6] content write schemas', () => {
     expect(ok(pinWriteBodySchema, date({ firstDay: '2026-11-01', lastDay: '2026-11-01', startTime: '10:00', endTime: null }))).toBe(true)
   })
 
-  it('[E2.6] weekly hours need opens before closes', () => {
+  it('[E2.6] weekly hours may cross midnight but opens and closes must differ', () => {
     const hours = (h: Record<string, unknown>) => ({ weeklyHours: [h] })
     expect(ok(pinWriteBodySchema, hours({ day: 1, opens: '09:00', closes: '17:30' }))).toBe(true)
     expect(ok(pinWriteBodySchema, hours({ day: 1, opens: '09:00', closes: '24:00' }))).toBe(true)
-    expect(ok(pinWriteBodySchema, hours({ day: 1, opens: '17:00', closes: '09:00' }))).toBe(false)
+    expect(ok(pinWriteBodySchema, hours({ day: 5, opens: '18:00', closes: '02:00' }))).toBe(true)
+    expect(ok(pinWriteBodySchema, hours({ day: 7, opens: '22:00', closes: '00:00' }))).toBe(true)
+    expect(ok(pinWriteBodySchema, hours({ day: 1, opens: '00:00', closes: '24:00' }))).toBe(true)
+    expect(ok(pinWriteBodySchema, hours({ day: 1, opens: '00:00', closes: '00:00' }))).toBe(false)
     expect(ok(pinWriteBodySchema, hours({ day: 1, opens: '09:00', closes: '09:00' }))).toBe(false)
     expect(ok(pinWriteBodySchema, hours({ day: 8, opens: '09:00', closes: '10:00' }))).toBe(false)
     expect(ok(pinWriteBodySchema, hours({ day: 1, opens: '24:00', closes: '24:00' }))).toBe(false)
@@ -167,6 +171,16 @@ describe('[E2.6] content write schemas', () => {
     expect(Object.keys(storyVersionSchema.parse({ ...view, draft: { ...draft, authorRole: 'x' } }).draft!)).not.toContain('authorRole')
   })
 
+  it('a story version text carries the cover and the files as media, and the body as stored', () => {
+    const iso = '2026-10-27T10:00:00.000Z'
+    const media = { id: uuid, kind: 'image', status: 'ready', name: 'a.jpg', contentType: 'image/jpeg', byteSize: 1, width: 10, height: 10, publicUrl: 'https://storage.test/a.jpg', variants: [] }
+    const text = { status: 'draft', title: 'T', cover: media, body: { type: 'doc', content: [{ type: 'image', attrs: { mediaId: uuid, alt: '' } }] }, media: [media], updatedAt: iso }
+    expect(storyVersionTextSchema.parse(text)).toEqual(text)
+    expect(ok(storyVersionTextSchema, { ...text, cover: null, media: [] })).toBe(true)
+    expect(ok(storyVersionTextSchema, { ...text, status: 'live' })).toBe(false)
+    expect(ok(storyVersionTextSchema, { ...text, updatedAt: 'yesterday' })).toBe(false)
+  })
+
   it('[E2.6] views serialise dates as ISO strings', () => {
     const iso = '2026-10-27T10:00:00.000Z'
     const pin = {
@@ -177,12 +191,11 @@ describe('[E2.6] content write schemas', () => {
       latitude: 1,
       longitude: 2,
       address: null,
+      mapsLink: null,
       weeklyHours: [],
       stayTag: 'both',
       interests: [],
-      serviceType: null,
       mustVisit: false,
-      foodKind: null,
       coverMediaId: null,
       photos: [],
       outboundUrl: null,

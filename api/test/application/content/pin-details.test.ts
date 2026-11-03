@@ -13,7 +13,7 @@ import { createManualClock } from '../../support/manual-clock.ts'
 const store = 'store-1'
 const owner: Actor = { kind: 'staff', userId: 'u1', guestId: 'g1', stores: new Map([[store, 'owner']]) }
 const outsider: Actor = { kind: 'staff', userId: 'u2', guestId: 'g2', stores: new Map([['store-2', 'owner']]) }
-const complete: PinChanges = { title: { en: 'Chapel Bridge' }, slug: { en: 'chapel-bridge' }, latitude: 47.05, longitude: 8.3 }
+const complete: PinChanges = { title: { en: 'Chapel Bridge' }, latitude: 47.05, longitude: 8.3 }
 const image = (id: string): MediaRow => ({ id, kind: 'image', status: 'ready' })
 
 function setup(media: MediaRow[] = [], now = '2026-11-12T11:00:00Z') {
@@ -121,17 +121,17 @@ describe('[E4.2][AC68] the pin details on create and save', () => {
     const s = setup()
     const pin = await created(s)
 
-    expect(pin).toMatchObject({ storeId: store, serviceType: null, mustVisit: false, foodKind: null, photos: [], outboundUrl: null })
+    expect(pin).toMatchObject({ storeId: store, mustVisit: false, photos: [], outboundUrl: null })
     expect('type' in pin).toBe(false)
   })
 
-  it('[E4.2][AC68] the home fields are stored and the local tip joins the draft document', async () => {
+  it('[E4.2][AC68] must-visit is stored and the local tip joins the draft document', async () => {
     const s = setup()
     const pin = await created(s)
 
-    const saved = await s.save(owner, store, pin.id, 1, { serviceType: 'water', mustVisit: true, foodKind: 'cafe-bakery', localTip: { en: 'Go before 9', de: 'Vor 9 Uhr' } }, null)
+    const saved = await s.save(owner, store, pin.id, 1, { mustVisit: true, localTip: { en: 'Go before 9', de: 'Vor 9 Uhr' } }, null)
 
-    expect(saved).toMatchObject({ ok: true, value: { serviceType: 'water', mustVisit: true, foodKind: 'cafe-bakery', draft: { title: { en: 'Chapel Bridge' }, localTip: { en: 'Go before 9', de: 'Vor 9 Uhr' } } } })
+    expect(saved).toMatchObject({ ok: true, value: { mustVisit: true, draft: { title: { en: 'Chapel Bridge' }, localTip: { en: 'Go before 9', de: 'Vor 9 Uhr' } } } })
   })
 
   it('[E4.2][AC63] changing the outbound link replaces it and null removes it', async () => {
@@ -142,6 +142,19 @@ describe('[E4.2][AC68] the pin details on create and save', () => {
 
     const third = await s.save(owner, store, pin.id, 2, { outboundUrl: null }, null)
     expect(third).toMatchObject({ ok: true, value: { outboundUrl: null } })
+  })
+
+  it('a Google Maps link is stored with the pin, replaced by a save and removed by null', async () => {
+    const s = setup()
+    const pin = await created(s, { ...complete, mapsLink: 'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38' })
+    expect(pin.mapsLink).toBe('https://maps.app.goo.gl/RiTbLwL8vxFxPzk38')
+
+    const kept = await s.save(owner, store, pin.id, 1, { address: 'Kapellbrücke 1, 6004 Luzern' }, null)
+    expect(kept).toMatchObject({ ok: true, value: { mapsLink: 'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38' } })
+    const replaced = await s.save(owner, store, pin.id, 2, { mapsLink: 'https://www.google.com/maps?q=47.05165,8.30496' }, null)
+    expect(replaced).toMatchObject({ ok: true, value: { mapsLink: 'https://www.google.com/maps?q=47.05165,8.30496' } })
+    const removed = await s.save(owner, store, pin.id, 3, { mapsLink: null }, null)
+    expect(removed).toMatchObject({ ok: true, value: { mapsLink: null } })
   })
 
   it('[E4.2][AC68] extra photos must be images of the store: another store, a PDF or a retired file is refused', async () => {
@@ -215,7 +228,7 @@ describe('[E4.2][AC85][AC68] publish', () => {
   })
 
   it.each([
-    ['a title in German only', { title: { de: 'Kapellbrücke' }, slug: { de: 'kapellbruecke' }, latitude: 47.05, longitude: 8.3 }, undefined],
+    ['a title in German only', { title: { de: 'Kapellbrücke' }, latitude: 47.05, longitude: 8.3 }, undefined],
   ])('[E4.2][AC68] %s publishes', async (_what, changes) => {
     const s = setup()
     const pin = await created(s, changes)
@@ -224,9 +237,8 @@ describe('[E4.2][AC85][AC68] publish', () => {
   })
 
   it.each([
-    ['no location', { title: { en: 'A' }, slug: { en: 'a' } }, ['location']],
-    ['no slug', { title: { en: 'A' }, latitude: 47, longitude: 8 }, ['slug']],
-    ['no title', { slug: { en: 'a' }, latitude: 47, longitude: 8 }, ['title']],
+    ['no location', { title: { en: 'A' } }, ['location']],
+    ['no title', { latitude: 47, longitude: 8 }, ['title']],
   ] as const)('[E4.2][AC68] %s is refused and names the gap', async (_what, changes, gaps) => {
     const s = setup()
     const pin = await created(s, { ...changes })

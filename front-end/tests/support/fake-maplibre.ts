@@ -18,9 +18,14 @@ export class FakeMap {
   addSource = vi.fn()
   addLayer = vi.fn()
   addControl = vi.fn()
+  getSource = vi.fn()
   easeTo = vi.fn()
   flyTo = vi.fn()
   fitBounds = vi.fn()
+  bearing = 0
+  zoomIn = vi.fn()
+  zoomOut = vi.fn()
+  resetNorthPitch = vi.fn()
   touchZoomRotate = { disableRotation: vi.fn() }
   keyboard = { disableRotation: vi.fn() }
 
@@ -32,6 +37,12 @@ export class FakeMap {
 
   on(event: string, listener: Listener) {
     this.listeners.set(event, [...(this.listeners.get(event) ?? []), listener])
+
+    return this
+  }
+
+  off(event: string, listener: Listener) {
+    this.listeners.set(event, (this.listeners.get(event) ?? []).filter(item => item !== listener))
 
     return this
   }
@@ -50,8 +61,24 @@ export class FakeMap {
     return this.canvas
   }
 
+  getContainer() {
+    return this.options.container as HTMLElement
+  }
+
   getZoom() {
     return this.zoom
+  }
+
+  getMinZoom() {
+    return typeof this.options.minZoom === 'number' ? this.options.minZoom : 0
+  }
+
+  getMaxZoom() {
+    return typeof this.options.maxZoom === 'number' ? this.options.maxZoom : 22
+  }
+
+  getBearing() {
+    return this.bearing
   }
 
   project([lng, lat]: [number, number]) {
@@ -67,9 +94,15 @@ export class FakeMarker {
   element: HTMLElement
   remove = vi.fn(() => this.element.remove())
 
-  constructor(options: { element: HTMLElement }) {
+  constructor(public options: { element: HTMLElement, anchor?: string, draggable?: boolean }) {
     this.element = options.element
     FakeMarker.instances.push(this)
+  }
+
+  on = vi.fn()
+
+  getLngLat() {
+    return { lng: this.lngLat[0], lat: this.lngLat[1] }
   }
 
   setLngLat(lngLat: [number, number]) {

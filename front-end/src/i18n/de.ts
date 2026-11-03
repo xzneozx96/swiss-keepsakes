@@ -1,6 +1,10 @@
 import type { MessageKey } from './en'
 
 import { mailDe } from '@sk/i18n/de'
+import { actionBarDe } from '@/components/action-bar-messages.de'
+import { mapKitDe } from '@/components/map/map-messages.de'
+import { multiSelectDe } from '@/components/multi-select-messages.de'
+import { stepsDe } from '@/components/step-messages.de'
 import { categoriesDe } from '@/features/categories/messages.de'
 import { contentMerchantDe } from '@/features/content/merchant/messages.de'
 import { contentDe } from '@/features/content/messages.de'
@@ -44,7 +48,11 @@ export const de: Record<MessageKey, string> = {
   ...keepsakesDe,
   ...mediaDe,
   ...placesDe,
+  ...actionBarDe,
+  ...multiSelectDe,
+  ...stepsDe,
   ...mapDe,
+  ...mapKitDe,
 
   'app.name': 'Swiss Keepsakes',
   'app.prototypeBadge': 'Prototyp · Beispieldaten',
@@ -94,6 +102,8 @@ export const de: Record<MessageKey, string> = {
     'Diese Seite gibt es nicht. Sie wurde im Prototyp eventuell verschoben.',
   'routeError.message': 'Diese Ansicht konnte nicht geladen werden.',
   'routeError.retry': 'Erneut versuchen',
+  'errorNotice.retry': 'Erneut versuchen',
+  'errorNotice.reference': 'Referenz: {id}',
   'apiFeedback.error.generic': 'Etwas ist schiefgelaufen. Versuchen Sie es gleich noch einmal.',
   'apiFeedback.error.network': 'Die Verbindung ist abgebrochen. Prüfen Sie sie und versuchen Sie es erneut.',
 
@@ -200,10 +210,7 @@ export const de: Record<MessageKey, string> = {
   'detail.variant.required': 'Wählen Sie eine Ausführung.',
   'detail.variant.soldOut': 'Ausverkauft',
   'detail.variant.notForSale': 'Zurzeit nicht im Verkauf',
-  'detail.engraving.label': 'Gravur (optional)',
-  'detail.engraving.description':
-    'Kostenlos. Bis zu {max} Zeichen, von Hand graviert.',
-  'detail.engraving.counter': '{count} von {max} Zeichen',
+  'detail.variant.notSold': 'Diese Kombination gibt es nicht',
   'detail.quantity.label': 'Anzahl',
   'detail.quantity.available': '{count} verfügbar',
   'detail.date.label': 'Abholdatum',
@@ -253,9 +260,8 @@ export const de: Record<MessageKey, string> = {
   'detail.bar.viewCart': 'Zum Warenkorb',
   'detail.soldOut.message': 'Dieses Andenken ist zurzeit ausverkauft.',
   'detail.soldOut.action': 'Andere Andenken ansehen',
+  'detail.rating.new': 'Neu · Noch keine Bewertungen',
   'detail.stats.new': 'Neu',
-  'detail.stats.pickup': 'Frühestens abholbar',
-  'detail.stats.now': 'Zurzeit',
   'detail.stats.reviews.one': 'Bewertung',
   'detail.stats.reviews.other': 'Bewertungen',
   'detail.seller.title': 'Verkauft von {shop}',
@@ -266,17 +272,10 @@ export const de: Record<MessageKey, string> = {
   'detail.seller.visit': 'Zum Laden',
   'detail.seller.contact': 'Kontakt',
   'detail.seller.emailSubject': 'Frage zu {name}',
-  'detail.highlight.engrave.title': 'Von Hand graviert',
-  'detail.highlight.engrave.body':
-    'Ein Name mit bis zu {max} Zeichen, kostenlos.',
   'detail.highlight.pickup.title': 'Abholen in Luzern',
   'detail.highlight.pickup.places': '{first} oder {second}',
-  'detail.highlight.pay.title': 'Jetzt nichts bezahlen',
-  'detail.highlight.pay.full':
-    'Sie bezahlen den vollen Betrag, sobald der Laden Ihr Datum bestätigt.',
-  'detail.highlight.pay.deposit':
-    'Sie leisten eine Anzahlung von {percent} %, sobald der Laden Ihr Datum bestätigt.',
-  'detail.highlight.pay.later': 'Sie bezahlen nach der Abholung.',
+  'detail.highlight.delivery.title': 'Bezahlen bei Übergabe',
+  'detail.highlight.delivery.body': 'Jetzt nichts bezahlen. Sie bezahlen bei der Abholung.',
   'detail.about.title': 'Über dieses Andenken',
   'detail.story.label': 'Die Geschichte dahinter',
   'detail.story.read': 'Geschichte lesen',
@@ -286,6 +285,10 @@ export const de: Record<MessageKey, string> = {
   'detail.sheet.add': 'In den Warenkorb · {total}',
   'detail.bar.choose': 'Datum und Ort wählen',
   'detail.bar.nothingNow': 'Jetzt nichts bezahlen',
+  'detail.preview.atCheckout': 'Wird an der Kasse gewählt',
+  'detail.preview.pickupBody': 'Abholort und Datum wählen Gäste an der Kasse.',
+  'detail.preview.cancellation': 'Die Stornobedingungen werden an der Kasse angezeigt.',
+  'detail.preview.noVariant': 'Noch keine Variante im Verkauf.',
   'gallery.label': 'Fotos von {name}',
   'gallery.photo': 'Foto {n} von {count}',
   'gallery.reviewLabel': 'Fotos aus der Bewertung von {name}',
@@ -769,7 +772,7 @@ export const de: Record<MessageKey, string> = {
   'merchantPartners.view.partners': 'Partner',
   'merchantPartners.view.analytics': 'Analysen',
   'merchantPartners.search': 'Name, Code oder E-Mail suchen',
-  'merchantPartners.filtersLabel': 'Partner filtern',
+  'merchantPartners.filtersLabel': 'Status',
   'merchantPartners.filter.all': 'Alle',
   'merchantPartners.filter.toPay': 'Zu zahlen',
   'merchantPartners.filter.revoked': 'Berichtslink widerrufen',
@@ -837,6 +840,7 @@ export const de: Record<MessageKey, string> = {
   'cartToast.viewCart': 'Zum Warenkorb',
   'cartToast.close': 'Schliessen',
   'confirm.cancel': 'Abbrechen',
+  'confirm.failed': 'Das hat nicht geklappt. Es wurde nichts geändert. Versuche es noch einmal.',
   'cart.remove.title': '{item} entfernen?',
   'cart.remove.body': '{summary} wird aus dem Warenkorb entfernt.',
   'cart.remove.confirm': 'Aus dem Warenkorb entfernen',
@@ -1592,10 +1596,17 @@ export const de: Record<MessageKey, string> = {
   'pagination.prevText': 'Zurück',
   'pagination.nextText': 'Weiter',
   'pagination.page': 'Seite {page}',
+  'table.selectAll': 'Alle auswählen',
   'table.actions': 'Aktionen',
   'filter.title': 'Filter',
   'costData.column.sale': 'Verkauf',
   'costData.column.guest': 'Gast und Datum',
+  'filter.buttonActive': '{label}, {count} ausgewählt',
+  'filter.applied': 'Angewendete Filter',
+  'filter.remove': 'Filter {name} entfernen',
+  'filter.clearAll': 'Alle löschen',
+  'filter.search': 'Optionen suchen',
+  'filter.noMatch': 'Keine passende Option',
   'costData.column.state': 'Kostendaten',
   'costData.column.value': 'Verkaufswert',
   'table.rowActions': 'Aktionen für {name}',

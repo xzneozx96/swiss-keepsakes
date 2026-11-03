@@ -59,33 +59,51 @@ function renderRoute() {
 }
 
 describe('[E4.6][shared-map] the tour route map draws through the shared map component', () => {
-  it('keeps its look: 3D with terrain, the pitch, the bearing and the compact credits', async () => {
+  it('keeps its look: 3D with terrain, the pitch and the bearing, and the shared credits', async () => {
     renderRoute()
     await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
     const map = FakeMap.instances[0]!
     const style = map.options.style as { sources: Record<string, unknown>, sky?: unknown }
 
-    expect(map.options).toMatchObject({ pitch: 55, bearing: -25, maxPitch: 65, zoom: 16.2, center: [8.3, 47.05], cooperativeGestures: true, attributionControl: { compact: true } })
+    expect(map.options).toMatchObject({ pitch: 55, bearing: -25, maxPitch: 65, zoom: 16.2, center: [8.3, 47.05], cooperativeGestures: true, attributionControl: false })
     expect(style.sources).toHaveProperty('dem')
     expect(style).toHaveProperty('sky')
     act(() => map.emit('load'))
     expect(map.setTerrain).toHaveBeenCalledWith({ source: 'dem', exaggeration: 1.3 })
   })
 
-  it('draws the route line, the zoom and fullscreen controls and one numbered pin per stop', async () => {
+  it('draws the route line, the zoom, compass and fullscreen controls and one numbered pin per stop', async () => {
     renderRoute()
     await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
     const map = FakeMap.instances[0]!
 
     act(() => map.emit('load'))
+    act(() => map.emit('idle'))
 
-    expect(map.addSource).toHaveBeenCalledWith('tour-route', expect.objectContaining({ type: 'geojson' }))
+    await waitFor(() => expect(map.addSource).toHaveBeenCalledWith('tour-route', expect.objectContaining({ type: 'geojson' })))
     expect(map.addLayer.mock.calls.map(([layer]) => layer.id)).toEqual(['tour-route-halo', 'tour-route-line'])
-    expect(map.addControl).toHaveBeenCalledTimes(2)
-    const pins = FakeMarker.instances.map(marker => marker.getElement())
+    expect(map.addControl).not.toHaveBeenCalled()
+    for (const name of [en['map.zoomIn'], en['map.zoomOut'], en['map.compass'], en['map.fullscreen']])
+      expect(screen.getByRole('button', { name })).toBeInTheDocument()
+    await waitFor(() => expect(FakeMarker.instances).toHaveLength(3))
+    const pins = FakeMarker.instances.map(marker => marker.getElement().querySelector('button')!)
 
     expect(pins.map(pin => pin.textContent)).toEqual(['1', '2', '3'])
     expect(pins.map(pin => pin.getAttribute('aria-pressed'))).toEqual(['true', 'false', 'false'])
+    expect(pins.map(pin => pin.className)).toEqual(['tour-map-marker', 'tour-map-marker', 'tour-map-marker'])
+  })
+
+  it('shows the stop card as the shared card, with the position and the first step disabled, and steps to the next stop', async () => {
+    renderRoute()
+    await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
+    act(() => FakeMap.instances[0]!.emit('load'))
+
+    expect(screen.getByText('1 of 3')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: en['tourMap.previous'] })).toBeDisabled()
+    await userEvent.click(screen.getByRole('button', { name: en['tourMap.next'] }))
+
+    expect(await screen.findByRole('heading', { level: 3, name: 'Stop 1' })).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('button', { name: en['tourMap.next'] })).toHaveFocus())
   })
 
   it('selects a stop from its pin and shows its card', async () => {
@@ -94,21 +112,33 @@ describe('[E4.6][shared-map] the tour route map draws through the shared map com
     act(() => FakeMap.instances[0]!.emit('load'))
 
     expect(screen.getByRole('heading', { level: 3, name: 'Stop 0' })).toBeInTheDocument()
-    await userEvent.click(FakeMarker.instances[1]!.getElement())
+    await waitFor(() => expect(FakeMarker.instances).toHaveLength(3))
+    await userEvent.click(FakeMarker.instances[1]!.getElement().querySelector('button')!)
 
     expect(await screen.findByRole('heading', { level: 3, name: 'Stop 1' })).toBeInTheDocument()
-    expect(FakeMarker.instances[1]!.getElement()).toHaveAttribute('aria-pressed', 'true')
+    expect(FakeMarker.instances[1]!.getElement().querySelector('button')).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('shows the unavailable message and builds a new map on Reload', async () => {
+  it('shows the shared failed notice and builds a new map on Try again', async () => {
     renderRoute()
     await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
     act(() => FakeMap.instances[0]!.emit('error'))
 
-    expect(await screen.findByText(en['tourMap.unavailable'])).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: en['tourMap.retry'] }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(en['map.failed.title'])
+    await userEvent.click(screen.getByRole('button', { name: en['map.failed.retry'] }))
 
     await waitFor(() => expect(FakeMap.instances).toHaveLength(2))
     expect(FakeMap.instances[0]!.remove).toHaveBeenCalled()
+  })
+
+  it('lifts the credits clear of the stop card and its ✕, at the bottom right', async () => {
+    renderRoute()
+    await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
+    act(() => FakeMap.instances[0]!.emit('load'))
+    const credits = document.querySelector<HTMLElement>('[data-map-credits]')!
+
+    expect(credits).toHaveClass('end-2')
+    // The card is 36 px above the bottom edge and its ✕ takes 44 px above it (jsdom has no layout, so the card is 0 px tall).
+    expect(credits.style.bottom).toContain('88px')
   })
 })

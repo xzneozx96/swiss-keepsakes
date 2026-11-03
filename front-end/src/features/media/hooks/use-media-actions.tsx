@@ -8,6 +8,7 @@ import { useRef, useState } from 'react'
 import { useConfirm } from '@/components/confirm-dialog'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem, queryKeys, useCommand } from '@/features/data-client'
+import { mapLimit } from '@/lib/map-limit'
 import { ReplaceDialog } from '../components/replace-dialog'
 import { ACCEPT, checkFile, retireCheck } from '../lib/rules'
 
@@ -23,6 +24,9 @@ const PROBLEM_KEYS: Record<string, MessageKey> = {
 }
 
 export const problemKey = (error: unknown): MessageKey => (error instanceof ApiProblem ? PROBLEM_KEYS[error.type] : undefined) ?? 'media.problem.generic'
+
+/** Deletes of one Select-mode batch in flight at once. */
+const RETIRE_CONCURRENCY = 4
 
 export type RetireOutcome = 'retired' | 'refused' | 'failed' | 'cancelled'
 
@@ -54,9 +58,9 @@ export function useMediaActions(storeId: string) {
       error: PROBLEM_KEYS,
     },
   })
-  // A file a page took while the merchant decided is shown by the sheet (`refused`); the toast says the same in short.
+  // A file a page took while the merchant decided is shown by the sheet (`refused`); a refusal shows in the confirm dialog, so the cache does not toast it.
   const retireFile = useCommand('media', 'retire', {
-    meta: { success: (_, input) => t('media.retire.done', { name: namesRef.current[input.id] ?? '' }), error: { ...PROBLEM_KEYS, 'media-in-use': 'media.retire.refusedBody' } },
+    meta: { success: (_, input) => t('media.retire.done', { name: namesRef.current[input.id] ?? '' }), silent: true },
   })
   const retireEach = useCommand('media', 'retire', { meta: { silent: true } })
   const describeFile = useCommand('media', 'describe', { meta: { success: 'media.details.saved', error: PROBLEM_KEYS } })
@@ -122,56 +126,68 @@ export function useMediaActions(storeId: string) {
   const retire = async (item: MediaItem): Promise<RetireOutcome> => {
     if (!retireCheck(item).ok)
       return 'refused'
-    const ok = await confirm({ title: t('media.retire.title', { name: item.name }), body: t('media.retire.body'), confirmLabel: t('media.retire.confirm'), cancelLabel: t('media.retire.cancel') })
-
-    if (!ok)
-      return 'cancelled'
     namesRef.current[item.id] = item.name
-    try {
-      await retireFile.mutateAsync({ storeId, id: item.id, idempotencyKey: crypto.randomUUID() })
+    let outcome: RetireOutcome = 'retired'
+    // The dialog waits for the server (spinner), then the file changes in the library at once. A refusal shows in the dialog.
+    const ok = await confirm({
+      title: t('media.retire.title', { name: item.name }),
+      body: t('media.retire.body'),
+      confirmLabel: t('media.retire.confirm'),
+      cancelLabel: t('media.retire.cancel'),
+      problem: error => t(error instanceof ApiProblem && error.type === 'media-in-use' ? 'media.retire.refusedBody' : problemKey(error)),
+      run: async () => {
+        try {
+          await retireFile.mutateAsync({ storeId, id: item.id, idempotencyKey: crypto.randomUUID() })
+        }
+        catch (error) {
+          if (error instanceof ApiProblem && error.type === 'media-in-use') {
+            // A page took the file while the merchant decided: read its use again, so the sheet says so, and close.
+            outcome = 'refused'
+            await refreshUse()
 
-      return 'retired'
-    }
-    catch (error) {
-      if (error instanceof ApiProblem && error.type === 'media-in-use') {
-        // A page took the file while the merchant decided: read its use again, so the sheet says so.
-        await refreshUse()
+            return
+          }
+          throw error
+        }
+      },
+    })
 
-        return 'refused'
-      }
-
-      return 'failed'
-    }
+    return ok ? outcome : 'cancelled'
   }
 
-  /** Retires only the files nothing uses and keeps the others. */
+  /**
+   * Retires only the files nothing uses and keeps the others. The dialog runs the batch (spinner, stays open): the
+   * deletes go out four at a time (there is no batch endpoint), each deleted file leaves the list as its answer comes
+   * (`commandChanges`), and the done text follows when the dialog closes. If every delete failed for another reason than
+   * "in use", the dialog stays open and says why; a partly failed batch toasts each failure, as before.
+   */
   const retireMany = async (items: MediaItem[], kept: number): Promise<boolean> => {
+    let retired = 0
+    let refused = 0
     const ok = await confirm({
       title: t('media.select.retireTitle', { count: items.length }),
       body: `${t('media.retire.body')}${kept ? ` ${t('media.select.blockedSentence', { count: kept })}` : ''}`,
       confirmLabel: t('media.retire.confirm'),
       cancelLabel: t('media.retire.cancel'),
+      problem: error => t(problemKey(error)),
+      run: async () => {
+        const results = await mapLimit(items, RETIRE_CONCURRENCY, item => retireEach.mutateAsync({ storeId, id: item.id, idempotencyKey: crypto.randomUUID() }))
+        const failures = results.flatMap(result => (result.status === 'rejected' ? [result.reason as unknown] : []))
+        const others = failures.filter(error => !(error instanceof ApiProblem && error.type === 'media-in-use'))
+
+        retired = results.length - failures.length
+        refused = failures.length - others.length
+        if (others.length === failures.length && others.length)
+          throw others[0]
+        for (const error of others)
+          toast.danger(t('media.retire.failed'), { description: t(problemKey(error)) })
+        if (refused)
+          await refreshUse()
+      },
     })
 
     if (!ok)
       return false
-    let retired = 0
-    let refused = 0
-
-    for (const item of items) {
-      try {
-        await retireEach.mutateAsync({ storeId, id: item.id, idempotencyKey: crypto.randomUUID() })
-        retired++
-      }
-      catch (error) {
-        if (error instanceof ApiProblem && error.type === 'media-in-use')
-          refused++
-        else
-          toast.danger(t('media.retire.failed'), { description: t(problemKey(error)) })
-      }
-    }
-    if (refused)
-      await refreshUse()
     toast.success(t(retired === 1 ? 'media.select.doneOne' : 'media.select.done', { count: retired, kept: kept + refused }))
 
     return true

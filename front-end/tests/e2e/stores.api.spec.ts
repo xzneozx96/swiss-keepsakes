@@ -114,7 +114,7 @@ test('[E2.3][S8][E3.4][AC02] the Super Admin creates the store, the Owner follow
   await expect(owner.getByRole('heading', { level: 1, name: say(language, 'stores.onboarding.title') })).toBeVisible()
   await expect(owner.getByText(say(language, 'stores.checklist.count', { met: '1', total: '4' })).locator('visible=true')).toBeVisible()
   await expect(owner.locator('[data-condition="store-information"]')).toHaveAttribute('data-state', 'met')
-  await expect(owner.locator('[data-step="payment-account"]')).not.toContainText(say(language, 'stores.condition.met'))
+  await expect(owner.getByRole('navigation', { name: say(language, 'steps.label') }).getByRole('button', { name: new RegExp(`^2\\. ${say(language, 'stores.checklist.payment-account')}`) })).not.toContainText(say(language, 'steps.status.done'))
   await goToOpenStep(owner, language)
   await expect(owner.getByRole('button', { name: say(language, 'stores.open.action', { store: name }) })).toBeDisabled()
   expect(owner.url()).not.toContain(token)
@@ -204,6 +204,6 @@ test('[E2.3][S8] a link opened in a tab that already shows A02 leaves the addres
 
 /** The Open step is reached from the step list, which on a phone is the "All steps" sheet. */
 async function goToOpenStep(owner: Page, language: Language) {
-  await owner.getByRole('button', { name: say(language, 'stores.setup.steps.all') }).click()
-  await owner.getByRole('dialog').locator('[data-step="open"] button').click()
+  await owner.getByRole('button', { name: say(language, 'steps.all') }).click()
+  await owner.getByRole('dialog').getByRole('button', { name: say(language, 'stores.setup.open') }).click()
 }

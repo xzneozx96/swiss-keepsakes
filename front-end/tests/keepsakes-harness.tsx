@@ -8,11 +8,10 @@ import { LocaleProvider } from '@/contexts/locale-context'
 import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
-import { CreateKeepsake } from '@/features/keepsakes/components/create-flow'
 import { KeepsakeEditorScreen } from '@/features/keepsakes/components/keepsake-editor'
 import { KeepsakeList } from '@/features/keepsakes/components/keepsake-list'
-import { VariantScreen } from '@/features/keepsakes/components/variant-page'
-import { isKeepsakeView } from '@/features/keepsakes/lib/search-params'
+import { NewKeepsake } from '@/features/keepsakes/components/new-keepsake-editor'
+import { keepsakeSearch } from '@/features/keepsakes/lib/search-params'
 
 // jsdom has no CSS.supports, which a module of the prototype gift editor (the CommissionCard's file) calls on load.
 vi.hoisted(() => {
@@ -35,6 +34,7 @@ export const photoId = '0198a000-0000-7000-8000-0000000000e1'
 export const media = mediaSchema.parse({
   id: photoId,
   kind: 'image',
+  name: 'photo.jpg',
   status: 'ready',
   contentType: 'image/jpeg',
   byteSize: 1000,
@@ -44,19 +44,23 @@ export const media = mediaSchema.parse({
   variants: [{ width: 320, url: 'https://storage.test/media/s/p/w320.webp' }, { width: 640, url: 'https://storage.test/media/s/p/w640.webp' }],
 })
 
+/** A description document of one paragraph, as the API stores it. */
+export const doc = (text: string) => ({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] })
+
 export function product(over: Record<string, unknown> = {}) {
   return productSchema.parse({
     id: productId,
     storeId,
     status: 'draft',
     name: { en: 'Victorinox Classic' },
-    text: { en: 'A Swiss knife.' },
+    text: { en: doc('A Swiss knife.') },
     photos: [media],
     commissionRate: 0.1,
     slug: null,
     hasUnpublishedEdits: false,
+    hasOrders: false,
     options: [],
-    variants: [{ id: variantId, skuCode: 'VX-1', priceRappen: 3900, status: 'published', values: {} }],
+    variants: [{ id: variantId, skuCode: 'VX-1', mediaId: null, photo: null, priceRappen: 3900, status: 'published', values: {} }],
     blocking: [],
     warnings: [{ code: 'other-language', card: 'basics', language: 'de' }],
     rowVersion: 1,
@@ -70,8 +74,11 @@ export function listItem(over: Record<string, unknown> = {}) {
   return {
     id: productId,
     name: { en: 'Victorinox Classic' },
+    optionNames: [],
     status: 'draft',
     hasUnpublishedEdits: false,
+    hasOrders: false,
+    rowVersion: 1,
     cover: media,
     variantCount: 1,
     soldOutCount: 0,
@@ -88,6 +95,8 @@ export interface Harness {
   /** The test's answer for a call; return undefined to let the default answer it (/api/me). */
   answer: (call: Call) => Response | undefined
   demo: ReturnType<typeof startDemo>
+  /** The router of the last `renderKeepsakes`. */
+  router?: ReturnType<typeof createRouter>
 }
 
 export const state = {} as Harness
@@ -123,6 +132,15 @@ export async function setUpHarness() {
 
     if (custom)
       return custom
+    // The photo block reads each photo it shows by id.
+    if (call.method === 'GET' && call.path.startsWith(`/api/store/${storeId}/media/`)) {
+      const id = call.path.split('/').at(-1)!
+
+      return Response.json({ ...media, id, name: id === photoId ? media.name : `photo-${id.slice(-2)}.jpg` })
+    }
+    // The photo block asks which picked files the library already holds, by content: none.
+    if (call.method === 'POST' && call.path === `/api/store/${storeId}/media/lookup`)
+      return Response.json({ items: [] })
     if (call.path === '/api/me')
       return Response.json({ guestId: storeId, stores: [{ storeId, role: 'owner', status: 'live' }] })
 
@@ -132,32 +150,25 @@ export async function setUpHarness() {
   await state.demo.ready
 }
 
-export function renderKeepsakes(initial: string) {
+export function renderKeepsakes(initial: string, history = createMemoryHistory({ initialEntries: [initial] })) {
   const root = createRootRoute({ component: Outlet })
   const index = createRoute({ getParentRoute: () => root, path: '/store/products', component: KeepsakeList })
-  const create = createRoute({ getParentRoute: () => root, path: '/store/products/gifts/new', component: CreateKeepsake })
+  const create = createRoute({ getParentRoute: () => root, path: '/store/products/gifts/new', component: NewKeepsake })
   const edit = createRoute({
     getParentRoute: () => root,
     path: '/store/products/gifts/$productId',
-    validateSearch: (search: Record<string, unknown>) => ({ view: isKeepsakeView(search.view) && search.view !== 'edit' ? search.view : undefined }),
+    validateSearch: keepsakeSearch,
     component: function Edit() {
       const { productId: id } = edit.useParams()
-      const { view = 'edit' } = edit.useSearch()
+      const { step = 'details' } = edit.useSearch()
       const navigate = edit.useNavigate()
 
-      return <KeepsakeEditorScreen id={id} view={view} onView={next => void navigate({ search: next === 'edit' ? {} : { view: next }, replace: true })} />
+      return <KeepsakeEditorScreen id={id} step={step} onStep={next => void navigate({ search: { step: next === 'details' ? undefined : next }, replace: true })} />
     },
   })
-  const variant = createRoute({
-    getParentRoute: () => root,
-    path: '/store/products/gifts/$productId/variants/$variantId',
-    component: function VariantPage() {
-      const { productId: id, variantId: variantRef } = variant.useParams()
+  const router = createRouter({ routeTree: root.addChildren([index, create, edit]), history, disableGlobalCatchBoundary: true })
 
-      return <VariantScreen id={id} variantId={variantRef} />
-    },
-  })
-  const router = createRouter({ routeTree: root.addChildren([index, create, edit, variant]), history: createMemoryHistory({ initialEntries: [initial] }), disableGlobalCatchBoundary: true })
+  state.router = router as unknown as Harness['router']
 
   render(
     <QueryClientProvider client={state.demo.queryClient}>

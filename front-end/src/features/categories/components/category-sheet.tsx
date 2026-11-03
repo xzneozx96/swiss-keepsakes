@@ -1,7 +1,7 @@
 import type { CategoryKind, MerchantCategory } from '@sk/api-contract'
 import type { MessageKey } from '@/i18n/en'
 
-import { Button, Form, Input, Label, ListBox, Select, TextField } from '@heroui/react'
+import { Button, Form, Input, Label, ListBox, Select, Switch, TextField } from '@heroui/react'
 import { useId, useState } from 'react'
 
 import { SheetFrame } from '@/components/sheet-frame'
@@ -36,6 +36,7 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
   const [nameEn, setNameEn] = useState(category?.name.en ?? '')
   const [nameDe, setNameDe] = useState(category?.name.de ?? '')
   const [parent, setParent] = useState(initialParent ?? ROOT)
+  const [showOnHome, setShowOnHome] = useState(category?.showOnHome ?? false)
   const [nameMissing, setNameMissing] = useState(false)
   // Both show their refusal inline (failureKey below), so the cache stays silent on error.
   const create = useSubmit('categories', 'create', { meta: { success: () => t('categories.toast.added'), silent: true } })
@@ -47,7 +48,7 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
     ...(nameDe.trim() === '' ? {} : { de: nameDe.trim() }),
   }
   const parentId = parent === ROOT ? null : parent
-  const key = useIdempotencyKey({ storeId, kind, id: category?.id, name, parentId })
+  const key = useIdempotencyKey({ storeId, kind, id: category?.id, name, parentId, showOnHome })
   const failure = error instanceof ApiProblem ? error : undefined
   const failureKey: MessageKey | undefined = error ? (failure ? problemTypeToMessageKey(failure.type) : 'categories.problem.generic') : undefined
   const parents = roots.filter(root => root.id !== category?.id)
@@ -73,11 +74,12 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
         id: category.id,
         name,
         ...(fixedAtTop || parentId === category.parentId ? {} : { parentId }),
+        ...(kind === 'map' && showOnHome !== category.showOnHome ? { showOnHome } : {}),
         idempotencyKey: key.next(),
       }, callbacks)
     }
     else {
-      create.submit({ storeId, kind, name, ...(parentId === null ? {} : { parentId }), idempotencyKey: key.next() }, callbacks)
+      create.submit({ storeId, kind, name, ...(parentId === null ? {} : { parentId }), ...(kind === 'map' && showOnHome ? { showOnHome } : {}), idempotencyKey: key.next() }, callbacks)
     }
   }
 
@@ -166,6 +168,27 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
                 </Select.Popover>
               </Select>
             )}
+        {kind === 'map' && (
+          <>
+            <Switch
+              isSelected={showOnHome}
+              onChange={(next) => {
+                setShowOnHome(next)
+                reset()
+              }}
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+                <span className="flex flex-col">
+                  <Label>{t('categories.home.label')}</Label>
+                  <span className="text-xs text-muted">{t('categories.home.hint')}</span>
+                </span>
+              </Switch.Content>
+            </Switch>
+          </>
+        )}
         {failureKey && (
           <p className="rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">{t(failureKey)}</p>
         )}

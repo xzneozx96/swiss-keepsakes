@@ -1,4 +1,4 @@
-import type { MediaInfo, Product } from '../ports.ts'
+import type { MediaInfo, Product, SalesDirectory } from '../ports.ts'
 import type { Failure } from './failure.ts'
 import { workingDoc } from './product-doc.ts'
 
@@ -6,16 +6,32 @@ import { workingDoc } from './product-doc.ts'
 export interface ProductDetail {
   product: Product
   photos: MediaInfo[]
+  // The photo of each variant that has one, by variant id. A file that no longer exists is left out.
+  variantPhotos: Map<string, MediaInfo>
+  // An order line names it, so removing it archives (ADR-023). False when no sales directory is wired.
+  hasOrders: boolean
+  // The variants an order line names, so removing one archives it. Empty when no sales directory is wired.
+  soldSkuIds: Set<string>
 }
 
 export interface MediaLookup<T> {
   find: (tx: T, storeId: string, ids: string[]) => Promise<MediaInfo[]>
 }
 
-export async function describe<T>(media: MediaLookup<T>, tx: T, product: Product): Promise<ProductDetail> {
+export async function describe<T>({ media, sales }: { media: MediaLookup<T>, sales?: SalesDirectory<T> }, tx: T, product: Product): Promise<ProductDetail> {
   const ids = workingDoc(product).media
-  const found = new Map((await media.find(tx, product.storeId, ids)).map(row => [row.id.toLowerCase(), row]))
-  return { product, photos: ids.flatMap(id => found.get(id.toLowerCase()) ?? []) }
+  const variantIds = product.variants.flatMap(variant => variant.mediaId ?? [])
+  // One lookup for the keepsake's photos and its variants' photos.
+  const found = new Map((await media.find(tx, product.storeId, [...ids, ...variantIds])).map(row => [row.id.toLowerCase(), row]))
+  const sold = sales ? await sales.soldProductIds(tx, product.storeId, [product.id]) : new Set<string>()
+  const soldSkuIds = sales && product.variants.length > 0 ? await sales.soldSkuIds(tx, product.storeId, product.variants.map(variant => variant.id)) : new Set<string>()
+  const variantPhotos = new Map(product.variants.flatMap((variant) => {
+    const photo = variant.mediaId ? found.get(variant.mediaId.toLowerCase()) : undefined
+
+    return photo ? [[variant.id, photo] as const] : []
+  }))
+
+  return { product, photos: ids.flatMap(id => found.get(id.toLowerCase()) ?? []), variantPhotos, hasOrders: sold.has(product.id), soldSkuIds }
 }
 
 // A retired file is reported before an unusable one, so the editor hears first about what it can fix by choosing
@@ -42,4 +58,10 @@ export async function photosProcessing<T>(media: MediaLookup<T>, tx: T, storeId:
   const rows = await media.find(tx, storeId, ids)
   const mediaIds = [...new Set(rows.filter(row => row.status === 'processing').map(row => row.id))]
   return mediaIds.length > 0 ? { reason: 'media-processing', mediaIds } : undefined
+}
+
+// The photo of a variant must be an image of this store's library and not retired. A file the worker has not finished is
+// accepted, as for a keepsake's photos (an upload is saved while the worker runs); publish refuses it (`photosProcessing`).
+export async function checkVariantPhotos<T>(media: MediaLookup<T>, tx: T, storeId: string, ids: (string | null | undefined)[]): Promise<Failure | undefined> {
+  return checkPhotos(media, tx, storeId, [...new Set(ids.flatMap(id => id ?? []))])
 }

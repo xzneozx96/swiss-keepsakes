@@ -1,22 +1,18 @@
 import type { StepStatus, TextFieldId } from '@sk/domain/catalog'
 import type { CopyKey } from './pins-merchant-copy'
 import type { PinEditor } from './pins-merchant-editor-state'
+import type { StepView } from '@/components/step-layout'
 import type { Language } from '@/contexts/locale-context'
-import type { StepView } from '@/features/merchant/products/components/step-shell'
 
 import { useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { ClockIcon, ContentIcon, LinkIcon, OptionIcon, PickupIcon } from '@/components/icons'
 import { Media } from '@/components/media'
+import { StepBar } from '@/components/step-bar'
+import { StepLayout } from '@/components/step-layout'
 import { DetailCard } from '@/features/merchant/order-detail/components/detail-card'
-import {
-  ReviewRow,
-  ReviewSection,
-  StepBar,
-  StepBody,
-  StepLayout,
-} from '@/features/merchant/products/components/step-shell'
+import { ReviewRow, ReviewSection, StepBody } from '@/features/merchant/products/components/step-shell'
 import { useCopy } from './pins-merchant-copy'
 import { categoryName, completeness, mapCategories, stories } from './pins-merchant-data'
 import { ContentFields, LinkFields, LocationFields, Need, TagFields } from './pins-merchant-fields'

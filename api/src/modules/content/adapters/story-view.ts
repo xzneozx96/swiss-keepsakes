@@ -1,5 +1,7 @@
-import type { StoryGroup as StoryGroupView, StoryVersion as StoryVersionView } from '@sk/api-contract'
+import type { StoryGroup as StoryGroupView, StoryVersionText as StoryVersionTextView, StoryVersion as StoryVersionView } from '@sk/api-contract'
 import type { StoryDraft, StoryGroup, StoryVersion } from '@sk/domain/content'
+import type { StoryVersionText } from '../application/get-story-version-text.ts'
+import { mediaView } from './media-view.ts'
 
 // The response shape of a story group: the dates as ISO strings.
 export function storyGroupView(group: StoryGroup): StoryGroupView {
@@ -42,5 +44,16 @@ export function storyVersionView(version: StoryVersion): StoryVersionView {
     rowVersion: version.rowVersion,
     createdAt: version.createdAt.toISOString(),
     updatedAt: version.updatedAt.toISOString(),
+  }
+}
+
+export function storyVersionTextView(text: StoryVersionText, publicUrl: (key: string) => string): StoryVersionTextView {
+  return {
+    status: text.status,
+    title: text.title,
+    cover: text.cover && mediaView(text.cover, publicUrl),
+    body: text.body,
+    media: text.media.map(file => mediaView(file, publicUrl)),
+    updatedAt: text.updatedAt.toISOString(),
   }
 }

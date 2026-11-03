@@ -13,7 +13,7 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 
-import { loadAerialStyle } from '@/features/tours/map/aerial-style'
+import { loadAerialStyle } from '@/components/map/map-style'
 import { useLatest } from '@/hooks/use-latest'
 
 export type MapStatus = 'loading' | 'ready' | 'error'

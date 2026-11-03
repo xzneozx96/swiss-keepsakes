@@ -1,5 +1,6 @@
 import type { ProductDoc, ProductOption, ProductVariant } from '../ports.ts'
-import { languagesOf } from '@sk/domain/content'
+import { descriptionLanguages, languagesOf } from '@sk/domain/content'
+import { variantName } from './option-rules.ts'
 
 type Language = 'en' | 'de'
 
@@ -16,7 +17,7 @@ const languages: Language[] = ['en', 'de']
 // A language is full when its name and its text are both filled in (AC30). One full language is enough to publish.
 export function fullLanguages(doc: Pick<ProductDoc, 'name' | 'text'>): Language[] {
   const named = languagesOf(doc.name)
-  const written = languagesOf(doc.text)
+  const written = descriptionLanguages(doc.text)
   return languages.filter(language => named.includes(language) && written.includes(language))
 }
 
@@ -55,7 +56,7 @@ export function publishChecks(input: { doc: ProductDoc, variants: ProductVariant
     warnings.push({ code: 'option-labels', card: 'options', count: unlabelled })
   const hidden = variants.filter(variant => variant.status === 'draft')
   if (hidden.length > 0)
-    warnings.push({ code: 'hidden', card: 'variants', count: hidden.length, codes: hidden.map(variant => variant.skuCode) })
+    warnings.push({ code: 'hidden', card: 'variants', count: hidden.length, codes: hidden.map(variant => variantName(variant, input.options)) })
   if (commissionRate === 0)
     warnings.push({ code: 'commission-zero', card: 'commission' })
 

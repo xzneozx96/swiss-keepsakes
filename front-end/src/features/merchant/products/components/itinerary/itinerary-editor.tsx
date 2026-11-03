@@ -8,13 +8,14 @@ import { pickText } from '@sk/domain/shared'
 
 import { useEffect, useRef, useState } from 'react'
 import { useConfirm } from '@/components/confirm-dialog'
-import { BookingsIcon } from '@/components/icons'
+import { EmptyState } from '@/components/empty-state'
+import { BookingsIcon, DirectionsIcon } from '@/components/icons'
+import { reducedMotion } from '@/components/map/reduced-motion'
 import { useLocale } from '@/contexts/locale-context'
 import { DetailCard } from '@/features/merchant/order-detail/components/detail-card'
-import { useStopDrag } from '@/hooks/use-stop-drag'
 
+import { useStopDrag } from '@/hooks/use-stop-drag'
 import { ItineraryMap } from './itinerary-map'
-import { reducedMotion } from './map-shared'
 import { PlaceSearch } from './place-search'
 import { StopCard } from './stop-card'
 
@@ -257,9 +258,7 @@ export function ItineraryCard({
             </div>
           )
         : (
-            <p className="rounded-2xl bg-surface-secondary p-4 text-sm text-muted">
-              {t('products.itinerary.empty')}
-            </p>
+            <EmptyState compact icon={DirectionsIcon} message={t('products.itinerary.empty')} />
           )}
       <p aria-live="polite" className="sr-only" role="status">
         {announcement}

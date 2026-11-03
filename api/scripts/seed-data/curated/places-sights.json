@@ -1,0 +1,505 @@
+[
+  {
+    "key": "chapel-bridge",
+    "title": {
+      "en": "Chapel Bridge and Water Tower",
+      "de": "Kapellbrücke und Wasserturm"
+    },
+    "tip": {
+      "en": "The covered timber bridge over the Reuss was built around 1365 as part of the town defences and was rebuilt after the fire of 18 August 1993. Its triangular panels show scenes from Swiss history. The octagonal Water Tower from around 1300 stands in the middle of the bridge and served as watchtower, archive, treasury and prison. Always open and free to cross on foot.",
+      "de": "Die gedeckte Holzbrücke über die Reuss wurde um 1365 als Teil der Stadtbefestigung erbaut und nach dem Brand vom 18. August 1993 wieder aufgebaut. Ihre dreieckigen Tafeln zeigen Szenen aus der Schweizer Geschichte. Der achteckige Wasserturm von um 1300 steht in der Mitte der Brücke und diente als Wachturm, Archiv, Schatzkammer und Gefängnis. Immer geöffnet und gratis zu Fuss begehbar."
+    },
+    "localTip": {
+      "en": "Come before 08:00: the panels stand in side light then and the bridge is empty apart from the birds on the Reuss.",
+      "de": "Kommen Sie vor 08:00 Uhr: Die Tafeln stehen dann im Seitenlicht und die Brücke ist leer."
+    },
+    "latitude": 47.051833,
+    "longitude": 8.307713,
+    "address": "Kapellbrücke, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.051833,8.307713",
+    "weeklyHours": [],
+    "stayTag": "both",
+    "interests": [
+      "history-culture"
+    ],
+    "mustVisit": true,
+    "outboundUrl": "https://www.luzern.com/en/the-city/sights/top-sights/lucernes-landmarks-the-chapel-bridge-and-its-water-tower",
+    "categories": [
+      "bridges",
+      "photo-spots"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "chapel-bridge-1.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File%3ASwitzerland_Lucerne.jpg",
+        "author": "Photo by Wojsyl.",
+        "licence": "CC BY-SA 3.0",
+        "alt": {
+          "en": "Covered Chapel Bridge over the Reuss with the Water Tower in Lucerne",
+          "de": "Gedeckte Kapellbrücke über der Reuss mit dem Wasserturm in Luzern"
+        }
+      },
+      {
+        "file": "chapel-bridge-2.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File%3A6427_-_Luzern_-_Kapellbr%C3%BCcke.JPG",
+        "author": "Andrew Bossi",
+        "licence": "CC BY-SA 2.5",
+        "alt": {
+          "en": "Chapel Bridge with its painted gable panels seen from the Reuss",
+          "de": "Kapellbrücke mit bemalten Giebeltafeln, vom Reuss aus gesehen"
+        }
+      },
+      {
+        "file": "chapel-bridge-3.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File%3A00_0213_Luzern_-_Wasserturm_und_Kapellbr%C3%BCcke.jpg",
+        "author": "W. Bulach",
+        "licence": "CC BY-SA 4.0",
+        "alt": {
+          "en": "The octagonal Water Tower standing in the middle of the Chapel Bridge",
+          "de": "Der achteckige Wasserturm in der Mitte der Kapellbrücke"
+        }
+      }
+    ],
+    "sources": [
+      "https://www.luzern.com/en/the-city/sights/top-sights/lucernes-landmarks-the-chapel-bridge-and-its-water-tower",
+      "https://de.wikipedia.org/wiki/Kapellbr%C3%BCcke",
+      "https://en.wikipedia.org/wiki/Kapellbr%C3%BCcke",
+      "https://de.wikipedia.org/wiki/Wasserturm_Luzern",
+      "https://www.openstreetmap.org/way/396669328",
+      "https://commons.wikimedia.org/wiki/File%3ASwitzerland_Lucerne.jpg",
+      "https://commons.wikimedia.org/wiki/File%3A6427_-_Luzern_-_Kapellbr%C3%BCcke.JPG",
+      "https://commons.wikimedia.org/wiki/File%3A00_0213_Luzern_-_Wasserturm_und_Kapellbr%C3%BCcke.jpg"
+    ]
+  },
+  {
+    "key": "jesuit-church",
+    "title": {
+      "en": "Jesuit Church",
+      "de": "Jesuitenkirche"
+    },
+    "tip": {
+      "en": "Built between 1666 and 1677, the Jesuit Church St. Francis Xavier is the first large baroque church in Switzerland. The white stucco and the wall paintings by the brothers Torricelli make it the finest baroque room in Lucerne. It was the school church of the Jesuit grammar school until 1966 and is still used for services.",
+      "de": "Zwischen 1666 und 1677 erbaut, ist die Jesuitenkirche St. Franz Xaver die erste grosse Barockkirche der Schweiz. Der weisse Stuck und die Wandmalereien der Brüder Torricelli machen sie zum schönsten barocken Raum Luzerns. Bis 1966 war sie Schulkirche des Jesuitengymnasiums und wird heute noch für Gottesdienste genutzt."
+    },
+    "localTip": {
+      "en": "The twin towers are younger than the church: they were added in 1893, and the church itself opens at 06:30, but on Monday and Thursday only at 09:30.",
+      "de": "Die Zwillingstürme sind jünger als die Kirche, sie wurden 1893 ergänzt; die Kirche öffnet um 06:30 Uhr, montags und donnerstags erst um 09:30 Uhr."
+    },
+    "latitude": 47.050438,
+    "longitude": 8.305149,
+    "address": "Bahnhofstrasse 11a, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050438,8.305149",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "09:30",
+        "closes": "18:30"
+      },
+      {
+        "day": 2,
+        "opens": "06:30",
+        "closes": "18:30"
+      },
+      {
+        "day": 3,
+        "opens": "06:30",
+        "closes": "18:30"
+      },
+      {
+        "day": 4,
+        "opens": "09:30",
+        "closes": "18:30"
+      },
+      {
+        "day": 5,
+        "opens": "06:30",
+        "closes": "18:30"
+      },
+      {
+        "day": 6,
+        "opens": "06:30",
+        "closes": "18:30"
+      },
+      {
+        "day": 7,
+        "opens": "06:30",
+        "closes": "18:30"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [
+      "history-culture"
+    ],
+    "mustVisit": true,
+    "outboundUrl": "https://jesuitenkirche-luzern.ch",
+    "categories": [
+      "churches"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "jesuit-church-1.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File%3ALuzern_Jesuitenkirche.jpg",
+        "author": "Ikiwaner",
+        "licence": "CC BY-SA 3.0",
+        "alt": {
+          "en": "Baroque Jesuit Church with its twin towers beside the Reuss in Lucerne",
+          "de": "Barocke Jesuitenkirche mit ihren Zwillingstürmen an der Reuss in Luzern"
+        }
+      },
+      {
+        "file": "jesuit-church-2.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File%3A2014_Jesuitenkirche_%28Jesuit_Church%29%2C_Lucerne%2C_Switzerland_%28Ank_Kumar%2C_Infosys_Limited%29_2014_Jesuitenkirche_%28Jesuit_Church%29%2C_Lucerne%2C_Switzerland_%28Ank_Kumar%2C_Infosys_Limited%29_01.jpg",
+        "author": "Ank Kumar",
+        "licence": "CC BY-SA 4.0",
+        "alt": {
+          "en": "Facade of the Jesuit Church with the portal and the volute gables",
+          "de": "Fassade der Jesuitenkirche mit Portal und Volutengiebeln"
+        }
+      }
+    ],
+    "sources": [
+      "https://jesuitenkirche-luzern.ch",
+      "https://jesuitenkirche-luzern.ch/geschichte/",
+      "https://jesuitenkirche-luzern.ch/tourismus-tourism/",
+      "https://jesuitenkirche-luzern.ch/kontakt-lage/",
+      "https://de.wikipedia.org/wiki/Jesuitenkirche_(Luzern)",
+      "https://www.luzern.com/en/the-city/sights/top-sights/jesuit-church",
+      "https://www.openstreetmap.org/way/464008694",
+      "https://commons.wikimedia.org/wiki/File%3ALuzern_Jesuitenkirche.jpg",
+      "https://commons.wikimedia.org/wiki/File%3A2014_Jesuitenkirche_%28Jesuit_Church%29%2C_Lucerne%2C_Switzerland_%28Ank_Kumar%2C_Infosys_Limited%29_2014_Jesuitenkirche_%28Jesuit_Church%29%2C_Lucerne%2C_Switzerland_%28Ank_Kumar%2C_Infosys_Limited%29_01.jpg"
+    ]
+  },
+  {
+    "key": "alte-suidtersche-apotheke",
+    "title": {
+      "en": "Alte Suidtersche Apotheke",
+      "de": "Alte Südtersche Apotheke"
+    },
+    "tip": {
+      "en": "The Alte Suidtersche Apotheke is the old pharmacy in the Clooshaus, the house at Bahnhofstrasse 21 in the old town, a few minutes on foot from the Kornmarkt and the Weinmarkt. The pharmacy still trades in the building, and its name is painted in Gothic letters on the wall. The counter is open Monday to Friday from 08:00 to 18:30 and on Saturday from 08:00 to 16:00, with a break around midday.",
+      "de": "Die Alte Südtersche Apotheke ist die alte Apotheke im Clooshaus, dem Haus an der Bahnhofstrasse 21 in der Altstadt, wenige Schritte vom Kornmarkt und vom Weinmarkt entfernt. Die Apotheke handelt heute noch im Haus, ihr Name steht in gotischer Schrift an der Fassade. Der Schalter ist montags bis freitags von 08:00 bis 18:30 Uhr und samstags von 08:00 bis 16:00 Uhr offen, mit einer Pause am Mittag."
+    },
+    "localTip": {
+      "en": "Come in the afternoon: the counter closes at 18:30, but the house and its painted name can be seen from the street at any time.",
+      "de": "Kommen Sie am Nachmittag: Der Schalter schliesst um 18:30 Uhr, Haus und gemalter Name sind aber jederzeit von der Strasse aus zu sehen."
+    },
+    "latitude": 47.050173,
+    "longitude": 8.302944,
+    "address": "Bahnhofstrasse 21, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050173,8.302944",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "08:00",
+        "closes": "18:30"
+      },
+      {
+        "day": 2,
+        "opens": "08:00",
+        "closes": "18:30"
+      },
+      {
+        "day": 3,
+        "opens": "08:00",
+        "closes": "18:30"
+      },
+      {
+        "day": 4,
+        "opens": "08:00",
+        "closes": "18:30"
+      },
+      {
+        "day": 5,
+        "opens": "08:00",
+        "closes": "18:30"
+      },
+      {
+        "day": 6,
+        "opens": "08:00",
+        "closes": "16:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [
+      "history-culture"
+    ],
+    "mustVisit": true,
+    "outboundUrl": null,
+    "categories": [
+      "historic-buildings"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "alte-suidtersche-apotheke-1.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File%3ALucerne_Alte_Suidtersche_Apotheke.jpg",
+        "author": "Ymblanter",
+        "licence": "CC BY-SA 4.0",
+        "alt": {
+          "en": "Clooshaus with the painted Suidtersche-Apotheke lettering and a gilded pharmacy emblem",
+          "de": "Clooshaus mit der gemalten Aufschrift Suidtersche-Apotheke und goldenem Apotheker-Emblem"
+        }
+      }
+    ],
+    "sources": [
+      "https://www.openstreetmap.org/way/95985697",
+      "https://www.openstreetmap.org/node/1292267745",
+      "https://commons.wikimedia.org/wiki/File%3ALucerne_Alte_Suidtersche_Apotheke.jpg"
+    ]
+  },
+  {
+    "key": "spreuer-bridge",
+    "title": {
+      "en": "Spreuer Bridge",
+      "de": "Spreuerbrücke"
+    },
+    "tip": {
+      "en": "The third covered timber bridge of Lucerne was finished in 1408 and links the Mühlenplatz with the Kasernenplatz. In the gables 45 of the original 67 painted panels show the Dance of Death, painted between 1626 and 1632 under Kaspar Meglinger after Holbein's example. Always open and free to cross on foot.",
+      "de": "Die dritte gedeckte Holzbrücke Luzerns wurde 1408 vollendet und verbindet den Mühlenplatz mit dem Kasernenplatz. In den Giebelfeldern zeigen 45 der ursprünglich 67 bemalten Tafeln den Totentanz, gemalt zwischen 1626 und 1632 unter Kaspar Meglinger nach dem Vorbild Holbeins. Immer geöffnet und gratis zu Fuss begehbar."
+    },
+    "localTip": {
+      "en": "Look up while you walk: the Dance of Death panels hang high in the gables and are easy to miss from the street.",
+      "de": "Schauen Sie beim Gehen nach oben: Die Totentanztafeln hängen hoch in den Giebelfeldern und sind von der Strasse aus leicht zu übersehen."
+    },
+    "latitude": 47.05187,
+    "longitude": 8.301695,
+    "address": "Spreuerbrücke, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.05187,8.301695",
+    "weeklyHours": [],
+    "stayTag": "both",
+    "interests": [
+      "history-culture"
+    ],
+    "mustVisit": true,
+    "outboundUrl": "https://www.luzern.com/en/the-city/sights/top-sights/spreuer-bridge",
+    "categories": [
+      "bridges",
+      "photo-spots"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "spreuer-bridge-1.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File%3ALuzern_-_Spreuerbr%C3%BCcke.JPG",
+        "author": "Wolf-Dieter",
+        "licence": "CC BY 2.5",
+        "alt": {
+          "en": "Covered Spreuer Bridge over the Reuss with the painted gables in Lucerne",
+          "de": "Gedeckte Spreuerbrücke über der Reuss mit bemalten Giebeln in Luzern"
+        }
+      },
+      {
+        "file": "spreuer-bridge-2.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File%3A6457_-_Luzern_-_Spreuerbr%C3%BCcke.JPG",
+        "author": "Andrew Bossi",
+        "licence": "CC BY-SA 2.5",
+        "alt": {
+          "en": "Spreuer Bridge seen from the Mühlenplatz with the Musegg wall behind",
+          "de": "Spreuerbrücke vom Mühlenplatz aus gesehen, dahinter die Museggmauer"
+        }
+      },
+      {
+        "file": "spreuer-bridge-3.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File%3ALuzerner_Totentanz-8.jpg",
+        "author": "Foto-Max 1234",
+        "licence": "CC BY-SA 4.0",
+        "alt": {
+          "en": "Painted Dance of Death panel with riders, coats of arms and a verse under the bridge roof",
+          "de": "Gemalte Totentanztafel mit Reitern, Wappen und Vers unter dem Brückendach"
+        }
+      }
+    ],
+    "sources": [
+      "https://www.luzern.com/en/the-city/sights/top-sights/spreuer-bridge",
+      "https://de.wikipedia.org/wiki/Spreuerbr%C3%BCcke",
+      "https://en.wikipedia.org/wiki/Spreuer_Bridge",
+      "https://www.openstreetmap.org/way/396669333",
+      "https://commons.wikimedia.org/wiki/File%3ALuzern_-_Spreuerbr%C3%BCcke.JPG",
+      "https://commons.wikimedia.org/wiki/File%3A6457_-_Luzern_-_Spreuerbr%C3%BCcke.JPG",
+      "https://commons.wikimedia.org/wiki/File%3ALuzerner_Totentanz-8.jpg"
+    ]
+  },
+  {
+    "key": "weinmarkt",
+    "title": {
+      "en": "Weinmarkt",
+      "de": "Weinmarkt"
+    },
+    "tip": {
+      "en": "The Weinmarkt is the small square at the top of the old town where wine was once traded. Its houses carry painted façades from the 16th century with coats of arms, dates and sayings. In the middle stands the Weinmarktbrunnen, a listed fountain with drinking water. Always open, and a good place to pause.",
+      "de": "Der Weinmarkt ist der kleine Platz am oberen Ende der Altstadt, wo einst Wein gehandelt wurde. Seine Häuser tragen gemalte Fassaden aus dem 16. Jahrhundert mit Wappen, Jahreszahlen und Sprüchen. In der Mitte steht der Weinmarktbrunnen, ein gelisteter Brunnen mit Trinkwasser. Immer geöffnet und ein guter Ort für eine Pause."
+    },
+    "localTip": {
+      "en": "Stand at the fountain and look up: the painted façades with their coats of arms are the reason to come to this square.",
+      "de": "Stellen Sie sich an den Brunnen und schauen Sie hoch: Die gemalten Fassaden mit ihren Wappen sind der Grund, diesen Platz aufzusuchen."
+    },
+    "latitude": 47.052009,
+    "longitude": 8.304816,
+    "address": "Weinmarkt, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.052009,8.304816",
+    "weeklyHours": [],
+    "stayTag": "both",
+    "interests": [
+      "history-culture"
+    ],
+    "mustVisit": true,
+    "outboundUrl": null,
+    "categories": [
+      "squares",
+      "photo-spots"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "weinmarkt-1.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File%3ALucerne_Weinmarktbrunnen.jpg",
+        "author": "Ymblanter",
+        "licence": "CC BY-SA 4.0",
+        "alt": {
+          "en": "The Weinmarktbrunnen in the middle of the Weinmarkt square in Lucerne",
+          "de": "Der Weinmarktbrunnen in der Mitte des Weinmarkts in Luzern"
+        }
+      },
+      {
+        "file": "weinmarkt-2.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File%3AH%C3%A4user_am_Weinmarkt_in_Luzern.jpg",
+        "author": "JoachimKohler-HB",
+        "licence": "CC BY-SA 4.0",
+        "alt": {
+          "en": "Painted façades of the early 16th century houses on the Weinmarkt",
+          "de": "Gemalte Fassaden der Häuser aus dem frühen 16. Jahrhundert am Weinmarkt"
+        }
+      },
+      {
+        "file": "weinmarkt-3.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File%3AWeinmarktbrunnen_Nah.jpg",
+        "author": "Caahlo",
+        "licence": "CC BY-SA 4.0",
+        "alt": {
+          "en": "Close view of the stone basin of the Weinmarktbrunnen",
+          "de": "Nahaufnahme des steinernen Beckens des Weinmarktbrunnens"
+        }
+      }
+    ],
+    "sources": [
+      "https://de.wikipedia.org/wiki/Liste_von_Stra%C3%9Fennamen_und_Pl%C3%A4tzen_in_Luzern",
+      "https://www.openstreetmap.org/way/134989600",
+      "https://www.openstreetmap.org/node/1014206739",
+      "https://commons.wikimedia.org/wiki/File%3ALucerne_Weinmarktbrunnen.jpg",
+      "https://commons.wikimedia.org/wiki/File%3AH%C3%A4user_am_Weinmarkt_in_Luzern.jpg",
+      "https://commons.wikimedia.org/wiki/File%3AWeinmarktbrunnen_Nah.jpg"
+    ]
+  },
+  {
+    "key": "haus-zum-fritschi",
+    "title": {
+      "en": "Haus zum Fritschi",
+      "de": "Haus zum Fritschi"
+    },
+    "tip": {
+      "en": "The house on Sternenplatz carries one of the most striking painted façades of the old town: masks, jesters and figures of the Lucerne carnival cover the upper floors. Fritschi is the carnival figure of the Zunft zu Safran, and the Fritschi fountain stands nearby on Kapellplatz. The ground floor is the Restaurant Fritschi.",
+      "de": "Das Haus am Sternenplatz trägt eine der auffälligsten bemalten Fassaden der Altstadt: Masken, Narren und Figuren der Luzerner Fasnacht bedecken die oberen Stockwerke. Fritschi ist die Fasnachtsfigur der Zunft zu Safran, der Fritschibrunnen steht ganz in der Nähe auf dem Kapellplatz. Im Erdgeschoss ist das Restaurant Fritschi."
+    },
+    "localTip": {
+      "en": "Step back to the far side of the square to fit the whole façade in one photo.",
+      "de": "Gehen Sie auf die andere Seite des Platzes, dann passt die ganze Fassade auf ein Foto."
+    },
+    "latitude": 47.053105,
+    "longitude": 8.307103,
+    "address": "Sternenplatz 5, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.053105,8.307103",
+    "weeklyHours": [],
+    "stayTag": "both",
+    "interests": [
+      "history-culture"
+    ],
+    "mustVisit": true,
+    "outboundUrl": null,
+    "categories": [
+      "historic-buildings",
+      "photo-spots"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "haus-zum-fritschi-1.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Haus_am_Sternenplatz.jpg",
+        "author": "Gfischt2",
+        "licence": "CC BY-SA 3.0",
+        "alt": {
+          "en": "The painted carnival façade of the Haus zum Fritschi on Sternenplatz",
+          "de": "Die bemalte Fasnachtsfassade des Hauses zum Fritschi am Sternenplatz"
+        }
+      }
+    ],
+    "sources": [
+      "https://www.openstreetmap.org/#map=19/47.05310/8.30710",
+      "https://commons.wikimedia.org/wiki/File:Haus_am_Sternenplatz.jpg",
+      "https://explorial.com/de/sights/luzern-fritschi-haus-de/",
+      "https://www.luzern.com/de/stadt/sehenswuerdigkeiten/plaetze-parks/malerische-altstadtplaetze"
+    ]
+  },
+  {
+    "key": "lion-monument",
+    "title": {
+      "en": "Lion Monument",
+      "de": "Löwendenkmal"
+    },
+    "tip": {
+      "en": "The dying lion carved into the rock face by Lukas Ahorn was made between 1820 and 1821 after a design by Bertel Thorvaldsen and marks the Swiss Guards who fell in Paris on 10 August 1792. The inscription above it reads HELVETIORUM FIDEI AC VIRTUTI. Always open, with the Glacier Garden and the Bourbaki Panorama next door.",
+      "de": "Der sterbende Löwe, den Lukas Ahorn zwischen 1820 und 1821 in die Felswand gemeisselt hat, folgt einem Entwurf von Bertel Thorvaldsen und erinnert an die Schweizergardisten, die am 10. August 1792 in Paris fielen. Die Inschrift darüber lautet HELVETIORUM FIDEI AC VIRTUTI. Immer geöffnet, daneben liegen der Gletschergarten und das Bourbaki-Panorama."
+    },
+    "localTip": {
+      "en": "The soft sandstone drinks in water: a drain above the lion has to be cleared regularly, which is why the stone looks darker after rain.",
+      "de": "Der weiche Sandstein nimmt Wasser auf: Über dem Löwen muss ein Stollen regelmässig freigemacht werden, deshalb sieht der Stein nach Regen dunkler aus."
+    },
+    "latitude": 47.058447,
+    "longitude": 8.310885,
+    "address": "Denkmalstrasse, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.058447,8.310885",
+    "weeklyHours": [],
+    "stayTag": "both",
+    "interests": [
+      "history-culture"
+    ],
+    "mustVisit": true,
+    "outboundUrl": "https://www.luzern.com/en/the-city/sights/top-sights/lion-monument",
+    "categories": [
+      "monuments",
+      "photo-spots"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "lion-monument-1.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File%3A6308_-_Luzern_-_L%C3%B6wendenkmal.JPG",
+        "author": "Andrew Bossi",
+        "licence": "CC BY-SA 2.5",
+        "alt": {
+          "en": "The dying lion carved into the rock above the pond at the Lion Monument",
+          "de": "Der sterbende Löwe, in den Felsen gemeisselt, über dem Teich beim Löwendenkmal"
+        }
+      },
+      {
+        "file": "lion-monument-2.jpg",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File%3A6310-6311_-_Luzern_-_L%C3%B6wendenkmal.jpg",
+        "author": "Andrew Bossi",
+        "licence": "CC BY-SA 2.5",
+        "alt": {
+          "en": "Lion Monument with the carved names of the officers and the Latin inscription",
+          "de": "Löwendenkmal mit den eingemeisselten Namen der Offiziere und der lateinischen Inschrift"
+        }
+      }
+    ],
+    "sources": [
+      "https://www.luzern.com/en/the-city/sights/top-sights/lion-monument",
+      "https://de.wikipedia.org/wiki/L%C3%B6wendenkmal_Luzern",
+      "https://en.wikipedia.org/wiki/Lion_Monument",
+      "https://www.openstreetmap.org/node/1485039642",
+      "https://commons.wikimedia.org/wiki/File%3A6308_-_Luzern_-_L%C3%B6wendenkmal.JPG",
+      "https://commons.wikimedia.org/wiki/File%3A6310-6311_-_Luzern_-_L%C3%B6wendenkmal.jpg"
+    ]
+  }
+]

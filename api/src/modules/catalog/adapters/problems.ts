@@ -22,9 +22,23 @@ const plural = (count: number, one: string, other: string) => (count === 1 ? one
 function usedBy(params: Refusal['params']): string {
   const count = Number(params?.count ?? 0)
   const more = Number(params?.more ?? 0)
+  const archived = Number(params?.archived ?? 0)
   const codes = `${params?.codes ?? ''}${more > 0 ? ` and ${more} more` : ''}`
 
+  // The live variants are named; the archived ones are counted apart.
+  if (archived > 0)
+    return count > 0 ? `Used by ${count} live (${codes}) and ${archived} archived ${plural(archived, 'variant', 'variants')}` : `Used only by ${archived} archived ${plural(archived, 'variant', 'variants')}`
+
   return `Used by ${count} ${plural(count, 'variant', 'variants')} (${codes})`
+}
+
+// "Light / Small: 2 rows (Red, Blue)", one line per group, then what to do.
+function dropClash(params: Refusal['params']): string {
+  const groups = JSON.parse(String(params?.groups ?? '[]')) as { title: string, count: number, values: string[] }[]
+  const lines = groups.map(group => `${group.title || 'All variants'}: ${group.count} rows (${group.values.join(', ')})`).join('; ')
+  const sold = Number(params?.sold ?? 0)
+
+  return `Can’t delete ${params?.option}. These variants would become the same: ${lines}. Delete all but one of each first.${sold > 0 ? ` ${sold} of them ${plural(sold, 'was', 'were')} sold and ${plural(sold, 'stays', 'stay')} archived.` : ''}`
 }
 
 // The merchant's words for a refusal, in English. A screen translates from `code` and `params`, so this is for a client
@@ -34,7 +48,7 @@ export function refusalMessage({ code, params }: Refusal): string {
     case 'option-name-required': return 'Name the option in English or German.'
     case 'value-name-required': return 'Name the value in English or German.'
     case 'option-needs-value': return `${params?.option || 'This option'} needs at least one value.`
-    case 'option-in-use': return `Can’t delete ${params?.option}. ${usedBy(params)}. Every variant has one of its values.`
+    case 'option-drop-clash': return dropClash(params)
     case 'value-in-use': return `Can’t delete ${params?.value}. ${usedBy(params)}. Archive or change those first.`
     case 'values-missing': return `${params?.code || 'A variant'} needs a ${String(params?.option || 'value').toLowerCase()}.`
     case 'value-unknown': return 'That value does not belong to this option.'
@@ -43,6 +57,7 @@ export function refusalMessage({ code, params }: Refusal): string {
     case 'no-options-one-variant': return `A keepsake without options has one variant only (${params?.code}). Add an option to sell more.`
     case 'refs-invalid': return 'This request names an option, a value or a variant twice, or one that is not this keepsake’s.'
     case 'code-duplicate': return `${params?.code} is used twice in this request.`
+    case 'code-taken': return `${params?.code} is already used in your shop.`
     case 'variant-reserved': return `Can’t archive ${params?.code}. ${params?.count} ${plural(Number(params?.count), 'unit is', 'units are')} reserved by open orders. Archive it once they are handed over or released.`
     case 'variant-archived': return `${params?.code} is archived and can’t be changed.`
   }
@@ -76,6 +91,7 @@ export function failureProblem(failure: Failure): FailureProblem {
     case 'media-retired': return { status: 422, type: 'media-retired', title: 'A photo you chose has been removed. Choose another.' }
     case 'media-invalid': return { status: 422, type: 'media-invalid', title: 'A file you chose is not available here, or is not a photo.' }
     case 'media-processing': return { status: 422, type: 'media-processing', title: 'A photo is still being processed. Try again in a moment.', mediaIds: failure.mediaIds }
+    case 'archived': return { status: 409, type: 'keepsake-archived', title: 'This keepsake is archived and can’t be changed.' }
     case 'not-published': return { status: 409, type: 'not-published', title: 'This keepsake is not published.' }
     case 'slug-conflict': return { status: 409, type: 'slug-conflict', title: 'Another keepsake just took this web address. Publish again.' }
     case 'sku-code-taken': return { status: 409, type: 'sku-code-taken', title: 'This SKU code is already used in your shop.' }

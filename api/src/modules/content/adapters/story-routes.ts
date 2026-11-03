@@ -4,15 +4,16 @@ import type { Actor } from '@sk/domain/identity'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { StoryGroupInput } from '../application/create-story-group.ts'
 import type { Result } from '../application/failure.ts'
+import type { StoryVersionText } from '../application/get-story-version-text.ts'
 import type { StoryGroupChanges, StoryVersionChanges } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { storyGroupCreateBodySchema, storyGroupSaveBodySchema, storyGroupSchema, storyVersionCreateBodySchema, storyVersionMoveBodySchema, storyVersionSaveBodySchema, storyVersionSchema } from '@sk/api-contract'
+import { storyGroupCreateBodySchema, storyGroupSaveBodySchema, storyGroupSchema, storyVersionCreateBodySchema, storyVersionMoveBodySchema, storyVersionSaveBodySchema, storyVersionSchema, storyVersionTextSchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
 import { failureProblem } from './problems.ts'
 import { etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
-import { storyGroupView, storyVersionView } from './story-view.ts'
+import { storyGroupView, storyVersionTextView, storyVersionView } from './story-view.ts'
 
 type Language = StoryVersion['language']
 
@@ -25,6 +26,9 @@ export interface StoryUseCases {
   publishStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, requestId: string | null) => Promise<Result<StoryVersion>>
   unpublishStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, requestId: string | null) => Promise<Result<StoryVersion>>
   moveStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, targetGroupId: string, requestId: string | null) => Promise<Result<StoryVersion>>
+  getStoryVersionText: (actor: Actor, storeId: string, groupId: string, language: Language) => Promise<Result<StoryVersionText>>
+  // Turns a stored file key into its public URL, for the files a text names.
+  publicUrl: (key: string) => string
   deleteStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, requestId: string | null) => Promise<Result<{ groupId: string, language: Language }>>
 }
 
@@ -51,6 +55,16 @@ function bodyRefused<I>(...[result, c]: Parameters<Hook<I, AppEnv, string, never
 
 const groupsPath = '/api/store/{storeId}/story-groups'
 const versionPath = `${groupsPath}/{groupId}/versions/{language}`
+
+const getVersionTextRoute = createRoute({
+  method: 'get',
+  path: versionPath,
+  request: { params: versionParams },
+  responses: {
+    200: { description: 'The text of the version as the editor last left it, for a preview. 404 when the group has no version in the language', headers: requestIdHeader, content: json(storyVersionTextSchema) },
+    ...problemResponses,
+  },
+})
 
 const createGroupRoute = createRoute({
   method: 'post',
@@ -135,6 +149,14 @@ const deleteVersionRoute = createRoute({
 // The Idempotency-Key middleware and the store guard sit before these (createApp), so the handlers read the
 // verified store from `c.get('store')`, never from the path.
 export function registerStoryRoutes(app: OpenAPIHono<AppEnv>, useCases: StoryUseCases): void {
+  app.openapi(getVersionTextRoute, async (c) => {
+    const { groupId, language } = c.req.valid('param')
+    const result = await useCases.getStoryVersionText(c.get('actor'), c.get('store').storeId, groupId, language)
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json(storyVersionTextView(result.value, useCases.publicUrl), 200)
+  })
+
   app.openapi(createGroupRoute, async (c) => {
     const { kind, subjectPlaceId, ...changes } = c.req.valid('json')
     const result = await useCases.createStoryGroup(c.get('actor'), c.get('store').storeId, { kind, subjectPlaceId: subjectPlaceId ?? null, ...changes }, c.get('requestId'))

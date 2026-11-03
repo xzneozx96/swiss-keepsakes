@@ -16,7 +16,7 @@ afterAll(async () => {
   await pool.end()
 })
 
-const deps = { uow: createUnitOfWork(db), reads: createPublicReadRepository(), clock: systemClock }
+const deps = { uow: createUnitOfWork(db), reads: createPublicReadRepository(), clock: systemClock, publicUrl: (key: string) => `https://media.test/${key}` }
 const list = makeListStories(deps)
 const get = makeGetStory(deps)
 const categories = makeListCategories(deps)
@@ -177,7 +177,7 @@ describe('public story reads over the database', () => {
     const ours = items.filter(i => i.id === parent.id || i.id === child.rows[0]!.id)
 
     expect(ours).toEqual([
-      { id: parent.id, slug: parent.slug, name: { en: 'Food', de: 'Essen' }, parentId: null, position: 1 },
+      { id: parent.id, slug: parent.slug, name: { en: 'Food', de: 'Essen' }, parentId: null, showOnHome: false, position: 1 },
       expect.objectContaining({ id: child.rows[0]!.id, name: { en: 'Cafes', de: 'Cafés' }, parentId: parent.id }),
     ])
     expect((await categories('map')).items.some(i => i.id === parent.id)).toBe(false)

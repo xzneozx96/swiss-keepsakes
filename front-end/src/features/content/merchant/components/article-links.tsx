@@ -6,6 +6,8 @@ import type {
 
 import { Button } from '@heroui/react'
 
+import { EmptyState } from '@/components/empty-state'
+
 import {
   ExploreIcon,
   GiftIcon,
@@ -85,7 +87,7 @@ export function LinksCard({
       <p className="text-sm text-muted">{t('merchantArticles.links.help')}</p>
       {links.items.length === 0
         ? (
-            <p className="text-sm">{t('merchantArticles.links.empty')}</p>
+            <EmptyState compact action={{ label: t('merchantArticles.links.add'), onPress: onAdd }} icon={GiftIcon} message={t('merchantArticles.links.empty')} />
           )
         : (
             <ol className="flex flex-col divide-y divide-separator">
@@ -134,16 +136,18 @@ export function LinksCard({
             </ol>
           )}
       {links.isFull && <InfoNote text={t('merchantArticles.links.limit')} />}
-      <Button
-        className="self-start"
-        isDisabled={links.isFull}
-        size="sm"
-        variant="tertiary"
-        onPress={onAdd}
-      >
-        <PlusIcon aria-hidden size={16} />
-        {t('merchantArticles.links.add')}
-      </Button>
+      {links.items.length > 0 && (
+        <Button
+          className="self-start"
+          isDisabled={links.isFull}
+          size="sm"
+          variant="tertiary"
+          onPress={onAdd}
+        >
+          <PlusIcon aria-hidden size={16} />
+          {t('merchantArticles.links.add')}
+        </Button>
+      )}
     </DetailCard>
   )
 }
@@ -177,9 +181,7 @@ export function RelatedCard({
       </p>
       {related.items.length === 0
         ? (
-            <p className="text-sm">
-              {t('merchantArticles.related.empty', { language: languageName })}
-            </p>
+            <EmptyState compact action={{ label: t('merchantArticles.related.add'), onPress: onAdd }} icon={ExploreIcon} message={t('merchantArticles.related.empty', { language: languageName })} />
           )
         : (
             <ol className="flex flex-col divide-y divide-separator">
@@ -226,16 +228,18 @@ export function RelatedCard({
       {related.isFull && (
         <InfoNote text={t('merchantArticles.related.limit')} />
       )}
-      <Button
-        className="self-start"
-        isDisabled={related.isFull}
-        size="sm"
-        variant="tertiary"
-        onPress={onAdd}
-      >
-        <PlusIcon aria-hidden size={16} />
-        {t('merchantArticles.related.add')}
-      </Button>
+      {related.items.length > 0 && (
+        <Button
+          className="self-start"
+          isDisabled={related.isFull}
+          size="sm"
+          variant="tertiary"
+          onPress={onAdd}
+        >
+          <PlusIcon aria-hidden size={16} />
+          {t('merchantArticles.related.add')}
+        </Button>
+      )}
     </DetailCard>
   )
 }
@@ -388,9 +392,7 @@ export function StorySheet({
       )}
       {related.candidates.length === 0
         ? (
-            <p className="text-sm">
-              {t('merchantArticles.relatedSheet.none', { language: languageName })}
-            </p>
+            <EmptyState compact icon={ExploreIcon} message={t('merchantArticles.relatedSheet.none', { language: languageName })} />
           )
         : (
             <ul className="flex flex-col divide-y divide-separator">

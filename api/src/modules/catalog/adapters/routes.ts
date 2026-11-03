@@ -2,12 +2,13 @@ import type { OpenAPIHono } from '@hono/zod-openapi'
 import type { Actor } from '@sk/domain/identity'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { CreateProductInput } from '../application/create-product.ts'
+import type { ProductRemoval } from '../application/delete-product.ts'
 import type { Result } from '../application/failure.ts'
 import type { ProductListEntry } from '../application/list-products.ts'
 import type { ProductDetail } from '../application/product-detail.ts'
-import type { OptionInput, OptionsSave, ProductChanges, VariantChanges, VariantInput } from '../ports.ts'
+import type { OptionInput, OptionsSave, ProductChanges, VariantBatchRequest, VariantChangeRequest, VariantInput } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { optionsSaveBodySchema, productCreateBodySchema, productListSchema, productSaveBodySchema, productSchema, variantCreateBodySchema, variantSaveBodySchema } from '@sk/api-contract'
+import { optionsSaveBodySchema, productCreateBodySchema, productListSchema, productRemovalSchema, productSaveBodySchema, productSchema, variantCreateBodySchema, variantSaveBodySchema, variantsSaveBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
@@ -21,9 +22,11 @@ export interface CatalogUseCases {
   getProduct: (actor: Actor, storeId: string, productId: string) => Promise<Result<ProductDetail>>
   createProduct: (actor: Actor, storeId: string, input: CreateProductInput, requestId: string | null) => Promise<Result<ProductDetail>>
   saveProduct: (actor: Actor, storeId: string, productId: string, ifMatch: number, changes: ProductChanges, requestId: string | null) => Promise<Result<ProductDetail>>
+  deleteProduct: (actor: Actor, storeId: string, productId: string, ifMatch: number, requestId: string | null) => Promise<Result<ProductRemoval>>
   publishProduct: (actor: Actor, storeId: string, productId: string, ifMatch: number, requestId: string | null) => Promise<Result<ProductDetail>>
   unpublishProduct: (actor: Actor, storeId: string, productId: string, ifMatch: number, requestId: string | null) => Promise<Result<ProductDetail>>
-  saveVariant: (actor: Actor, storeId: string, productId: string, skuId: string, changes: VariantChanges, requestId: string | null) => Promise<Result<ProductDetail>>
+  saveVariant: (actor: Actor, storeId: string, productId: string, skuId: string, changes: VariantChangeRequest, requestId: string | null) => Promise<Result<ProductDetail>>
+  saveVariants: (actor: Actor, storeId: string, productId: string, changes: VariantBatchRequest[], requestId: string | null) => Promise<Result<ProductDetail>>
   saveOptions: (actor: Actor, storeId: string, productId: string, ifMatch: number, input: OptionsSave, requestId: string | null) => Promise<Result<ProductDetail>>
   createVariant: (actor: Actor, storeId: string, productId: string, input: VariantInput, requestId: string | null) => Promise<Result<ProductDetail>>
 }
@@ -73,6 +76,16 @@ const saveRoute = createRoute({
   },
 })
 
+const deleteRoute = createRoute({
+  method: 'delete',
+  path: `${productsPath}/{productId}`,
+  request: { params: productParams, ...withIfMatch },
+  responses: {
+    200: { description: 'The keepsake is removed. `deleted`: it never had an order and is gone, its photos stay in the library. `archived`: it has orders, so it stays for them and guests no longer see it. Final', headers: requestIdHeader, content: json(productRemovalSchema) },
+    ...problemResponses,
+  },
+})
+
 const publishRoute = createRoute({
   method: 'post',
   path: `${productsPath}/{productId}/publish`,
@@ -98,7 +111,7 @@ const optionsRoute = createRoute({
   path: `${productsPath}/{productId}/options`,
   request: { params: productParams, ...withIfMatch, body: { required: true, content: json(optionsSaveBodySchema) } },
   responses: {
-    200: { description: 'The options are saved with the new values of the variants, all or nothing. The row version moves', headers: etagHeaders, content: json(productSchema) },
+    200: { description: 'The options are saved with the new values of the variants and the new variants (for sale), all or nothing. The row version moves', headers: etagHeaders, content: json(productSchema) },
     ...problemResponses,
   },
 })
@@ -118,7 +131,17 @@ const variantRoute = createRoute({
   path: `${productsPath}/{productId}/variants/{skuId}`,
   request: { params: variantParams, body: { required: true, content: json(variantSaveBodySchema) } },
   responses: {
-    200: { description: 'The keepsake with the variant changed. The change is live at once and takes no row version. Archiving is final', headers: etagHeaders, content: json(productSchema) },
+    200: { description: 'The keepsake with the variant changed. The change is live at once and takes no row version. Removed deletes a variant that no order line names and archives one that does. Archiving is final', headers: etagHeaders, content: json(productSchema) },
+    ...problemResponses,
+  },
+})
+
+const variantsRoute = createRoute({
+  method: 'patch',
+  path: `${productsPath}/{productId}/variants`,
+  request: { params: productParams, body: { required: true, content: json(variantsSaveBodySchema) } },
+  responses: {
+    200: { description: 'The keepsake with the price or status of every listed variant changed, all or nothing. The change is live at once and takes no row version. Removed deletes the variants that no order line names and archives the others. An archived variant, or one of another keepsake, refuses the whole request', headers: etagHeaders, content: json(productSchema) },
     ...problemResponses,
   },
 })
@@ -129,7 +152,7 @@ function optionInput(option: OptionBody): OptionInput {
   return {
     ref: option.ref,
     name: option.name,
-    values: option.values.map(value => ({ ref: value.ref, label: value.label, swatch: value.swatch ?? null })),
+    values: option.values.map(value => ({ ref: value.ref, label: value.label })),
   }
 }
 
@@ -151,7 +174,7 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
       photoIds: photoIds ?? [],
       commissionRate: commissionRate ?? 0,
       options: (options ?? []).map(optionInput),
-      variants: variants.map(({ skuCode, priceRappen, values }) => ({ skuCode, priceRappen, status: 'published' as const, values: values ?? {} })),
+      variants: variants.map(({ skuCode, mediaId, priceRappen, values }) => ({ skuCode: skuCode ?? null, mediaId: mediaId ?? null, priceRappen, status: 'published' as const, values: values ?? {} })),
     }, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
@@ -182,6 +205,16 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
     return c.json(productView(result.value), 200, etag(result.value.product))
   })
 
+  app.openapi(deleteRoute, async (c) => {
+    const ifMatch = readIfMatch(c)
+    if (!ifMatch.ok)
+      return ifMatch.response
+    const result = await useCases.deleteProduct(c.get('actor'), c.get('store').storeId, c.req.valid('param').productId, ifMatch.version, c.get('requestId'))
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json(result.value, 200)
+  })
+
   app.openapi(publishRoute, async (c) => {
     const ifMatch = readIfMatch(c)
     if (!ifMatch.ok)
@@ -204,9 +237,10 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
 
   app.openapi(variantRoute, async (c) => {
     const { productId, skuId } = c.req.valid('param')
-    const { skuCode, priceRappen, status, values } = c.req.valid('json')
-    const changes: VariantChanges = {
+    const { skuCode, mediaId, priceRappen, status, values } = c.req.valid('json')
+    const changes: VariantChangeRequest = {
       ...(skuCode !== undefined && { skuCode }),
+      ...(mediaId !== undefined && { mediaId }),
       ...(priceRappen !== undefined && { priceRappen }),
       ...(status !== undefined && { status }),
       ...(values !== undefined && { values }),
@@ -217,14 +251,30 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
     return c.json(productView(result.value), 200, etag(result.value.product))
   })
 
+  app.openapi(variantsRoute, async (c) => {
+    const { variants } = c.req.valid('json')
+    const changes: VariantBatchRequest[] = variants.map(({ id, priceRappen, status, skuCode, mediaId }) => ({
+      id,
+      ...(skuCode !== undefined && { skuCode }),
+      ...(mediaId !== undefined && { mediaId }),
+      ...(priceRappen !== undefined && { priceRappen }),
+      ...(status !== undefined && { status }),
+    }))
+    const result = await useCases.saveVariants(c.get('actor'), c.get('store').storeId, c.req.valid('param').productId, changes, c.get('requestId'))
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json(productView(result.value), 200, etag(result.value.product))
+  })
+
   app.openapi(optionsRoute, async (c) => {
     const ifMatch = readIfMatch(c)
     if (!ifMatch.ok)
       return ifMatch.response
-    const { options, variantValues } = c.req.valid('json')
+    const { options, variantValues, newVariants } = c.req.valid('json')
     const result = await useCases.saveOptions(c.get('actor'), c.get('store').storeId, c.req.valid('param').productId, ifMatch.version, {
       options: options.map(optionInput),
       variantValues: variantValues ?? [],
+      newVariants: (newVariants ?? []).map(({ skuCode, mediaId, priceRappen, values }) => ({ skuCode: skuCode ?? null, mediaId: mediaId ?? null, priceRappen, status: 'published' as const, values: values ?? {} })),
     }, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
@@ -232,9 +282,10 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
   })
 
   app.openapi(createVariantRoute, async (c) => {
-    const { skuCode, priceRappen, status, values } = c.req.valid('json')
+    const { skuCode, mediaId, priceRappen, status, values } = c.req.valid('json')
     const result = await useCases.createVariant(c.get('actor'), c.get('store').storeId, c.req.valid('param').productId, {
-      skuCode,
+      skuCode: skuCode ?? null,
+      mediaId: mediaId ?? null,
       priceRappen,
       status: status ?? 'published',
       values: values ?? {},

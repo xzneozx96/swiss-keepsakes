@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
+import { RouterProvider } from '@heroui/react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { useRouterState } from '@tanstack/react-router'
+import { useRouter, useRouterState } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
 import {
@@ -58,6 +59,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
     select: state => state.matches.every(match => match.ssr === true),
   })
   // The initializer runs once per server request, and once in the browser.
+  const router = useRouter()
   const [demo] = useState(startSeedDemo)
   const [restored, setRestored] = useState(false)
   // Once a server-rendered page is on screen it stays mounted, also when the guest moves on to a
@@ -81,14 +83,18 @@ export function AppProviders({ children }: { children: ReactNode }) {
   if (!restored && !shown)
     return null
 
+  // React Aria links (a DataTable row with `getRowHref`, a Link-styled Button) navigate through the router, not with a
+  // full page load (react-spectrum.adobe.com/react-aria/routing.html, TanStack Router).
   return (
-    <QueryClientProvider client={demo.queryClient}>
-      <DataClientProvider client={demo.dataClient}>
-        <LocaleProvider>
-          <ApiFeedbackBridge feedback={demo.feedback} />
-          <DemoProvider store={demo.store}>{children}</DemoProvider>
-        </LocaleProvider>
-      </DataClientProvider>
-    </QueryClientProvider>
+    <RouterProvider navigate={to => void router.navigate({ to })} useHref={to => router.buildLocation({ to }).href}>
+      <QueryClientProvider client={demo.queryClient}>
+        <DataClientProvider client={demo.dataClient}>
+          <LocaleProvider>
+            <ApiFeedbackBridge feedback={demo.feedback} />
+            <DemoProvider store={demo.store}>{children}</DemoProvider>
+          </LocaleProvider>
+        </DataClientProvider>
+      </QueryClientProvider>
+    </RouterProvider>
   )
 }

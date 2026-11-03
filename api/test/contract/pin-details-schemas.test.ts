@@ -1,6 +1,7 @@
-import { pinListSchema, pinSchema, pinStoryOptionListSchema, pinWriteBodySchema, storyGroupCreateBodySchema, tourWriteBodySchema } from '@sk/api-contract'
+import { isGoogleMapsHost, pinListSchema, pinSchema, pinStoryOptionListSchema, pinWriteBodySchema, storyGroupCreateBodySchema, tourWriteBodySchema } from '@sk/api-contract'
 import { interestCodes } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
+import { isGoogleMapsHost as apiIsGoogleMapsHost } from '../../src/modules/content/application/maps-link.ts'
 
 const uuid = '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d'
 const uuid2 = '4f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2e'
@@ -28,14 +29,10 @@ describe('[E4.2][AC41] five fixed interests', () => {
 })
 
 describe('[E4.2][AC68] the home fields and photos on a pin body', () => {
-  it('[E4.2][AC68] service type and food kind accept only their codes and null', () => {
-    for (const code of ['water', 'toilets', 'connect', 'transport', 'lockers', 'cash'])
-      expect(ok(pinWriteBodySchema, { serviceType: code })).toBe(true)
-    expect(ok(pinWriteBodySchema, { serviceType: null, foodKind: null })).toBe(true)
-    expect(ok(pinWriteBodySchema, { serviceType: 'wifi' })).toBe(false)
-    for (const code of ['restaurant', 'cafe-bakery', 'pub-bar', 'market'])
-      expect(ok(pinWriteBodySchema, { foodKind: code })).toBe(true)
-    expect(ok(pinWriteBodySchema, { foodKind: 'bakery' })).toBe(false)
+  it('[T-009][AC5] service type and food kind are gone from the pin body: they come from the categories', () => {
+    expect(ok(pinWriteBodySchema, { serviceType: 'water' })).toBe(false)
+    expect(ok(pinWriteBodySchema, { foodKind: 'market' })).toBe(false)
+    expect(ok(pinWriteBodySchema, { mustVisit: true })).toBe(true)
   })
 
   it('[E4.2][AC68] must-visit is a boolean and the local tip is a short localized text', () => {
@@ -77,6 +74,46 @@ describe('[E4.2][AC63] the outbound link', () => {
   })
 })
 
+describe('a stored Google Maps link', () => {
+  it.each([
+    'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38',
+    'https://goo.gl/maps/abc123',
+    'https://www.google.com/maps/place/Kapellbr%C3%BCcke/@47.0516489,8.3049602,17z/data=!3d47.05!4d8.30',
+    'https://www.google.com/maps?q=47.05165,8.30496',
+    'https://www.google.ch/maps/search/?api=1&query=47.05,8.3',
+    'https://maps.google.com/maps?q=47.05,8.3',
+  ])('%s is accepted', (url) => {
+    expect(ok(pinWriteBodySchema, { mapsLink: url })).toBe(true)
+  })
+
+  it.each([
+    'http://maps.app.goo.gl/abc',
+    'https://maps.app.goo.gl/',
+    'https://goo.gl/other/abc',
+    'https://www.google.com/search?q=maps',
+    'https://evil.example/maps/place',
+    'https://www.google.com.evil.example/maps',
+    'https://user:pw@www.google.com/maps',
+    'https://www.google.com:8443/maps',
+    'https://www.google.com/maps with space',
+    'javascript:alert(1)',
+    'maps.app.goo.gl/abc',
+    '',
+    `https://www.google.com/maps?q=${'x'.repeat(2000)}`,
+  ])('%j is refused', (url) => {
+    expect(ok(pinWriteBodySchema, { mapsLink: url })).toBe(false)
+  })
+
+  it('null removes the link', () => {
+    expect(ok(pinWriteBodySchema, { mapsLink: null })).toBe(true)
+  })
+
+  it('knows the same hosts as the link reader of the API', () => {
+    for (const host of ['maps.app.goo.gl', 'goo.gl', 'www.google.com', 'maps.google.ch', 'google.co.uk', 'evil.example', 'google.com.evil.example'])
+      expect(isGoogleMapsHost(host)).toBe(apiIsGoogleMapsHost(host))
+  })
+})
+
 describe('[E4.2][AC86] a date entry', () => {
   const day = (over: object) => ({ dates: [{ firstDay: '2026-11-14', lastDay: '2026-11-14', ...over }] })
 
@@ -97,12 +134,11 @@ describe('[E4.2][AC68] the response shapes', () => {
     latitude: null,
     longitude: null,
     address: null,
+    mapsLink: null,
     weeklyHours: [],
     stayTag: 'both',
     interests: [],
-    serviceType: null,
     mustVisit: false,
-    foodKind: null,
     coverMediaId: null,
     photos: [],
     outboundUrl: null,
@@ -119,7 +155,7 @@ describe('[E4.2][AC68] the response shapes', () => {
 
   it('[E4.2][AC68] a pin response carries the new fields and no type', () => {
     expect(ok(pinSchema, pin)).toBe(true)
-    expect(ok(pinSchema, { ...pin, serviceType: undefined })).toBe(false)
+    expect(ok(pinSchema, { ...pin, mustVisit: undefined })).toBe(false)
   })
 
   it('[E4.2][AC68] the alt text of the photos is in the draft, by media id, and a photo is only its media id', () => {
@@ -131,14 +167,26 @@ describe('[E4.2][AC68] the response shapes', () => {
   })
 
   it('[E4.2][AC86] a list item may have the status ended and a warning for a story with no published version', () => {
-    const item = { id: uuid, status: 'ended', title: { en: 'Blues' }, slug: { en: 'blues' }, located: true, categoryIds: [], hasDates: true, nextDate: null, stayTag: 'both', interests: [], coverMediaId: null, mainStory: { groupId: uuid2, published: false }, rowVersion: 3, updatedAt: '2026-10-30T10:00:00.000Z' }
+    const item = { id: uuid, status: 'ended', title: { en: 'Blues' }, slug: { en: 'blues' }, located: true, categoryIds: [], hasDates: true, nextDate: null, stayTag: 'both', interests: [], coverMediaId: null, cover: null, mainStory: { groupId: uuid2, published: false }, rowVersion: 3, updatedAt: '2026-10-30T10:00:00.000Z' }
 
     expect(ok(pinListSchema, { items: [item] })).toBe(true)
     expect(ok(pinListSchema, { items: [{ ...item, status: 'archived' }] })).toBe(false)
   })
 
-  it('[E4.2][AC68] a story option carries its live languages', () => {
-    expect(ok(pinStoryOptionListSchema, { items: [{ groupId: uuid, kind: 'story', title: { en: 'Chapel Bridge' }, publishedLanguages: ['en'] }] })).toBe(true)
-    expect(ok(pinStoryOptionListSchema, { items: [{ groupId: uuid, kind: 'story', title: {}, publishedLanguages: ['fr'] }] })).toBe(false)
+  it('[T-011] a list item has a cover that is null or a media file, and the field is required', () => {
+    const item = { id: uuid, status: 'draft', title: { en: 'Bridge' }, slug: null, located: true, categoryIds: [], hasDates: false, nextDate: null, stayTag: 'both', interests: [], coverMediaId: uuid2, cover: null, mainStory: null, rowVersion: 1, updatedAt: '2026-10-30T10:00:00.000Z' }
+    const file = { id: uuid2, kind: 'image', status: 'ready', name: 'bridge.jpg', contentType: 'image/jpeg', byteSize: 10, width: 640, height: 480, publicUrl: 'https://media.test/a.jpg', variants: [{ width: 320, url: 'https://media.test/a-320.jpg' }] }
+
+    expect(ok(pinListSchema, { items: [item] })).toBe(true)
+    expect(ok(pinListSchema, { items: [{ ...item, cover: file }] })).toBe(true)
+    expect(ok(pinListSchema, { items: [{ ...item, cover: { ...file, kind: 'video' } }] })).toBe(false)
+    expect(ok(pinListSchema, { items: [{ ...item, cover: undefined }] })).toBe(false)
+  })
+
+  it('[E4.2][AC68] a story option carries its live languages and the state of each language', () => {
+    const languages = { en: 'published', de: 'none' }
+    expect(ok(pinStoryOptionListSchema, { items: [{ groupId: uuid, kind: 'story', title: { en: 'Chapel Bridge' }, languages, publishedLanguages: ['en'] }] })).toBe(true)
+    expect(ok(pinStoryOptionListSchema, { items: [{ groupId: uuid, kind: 'story', title: {}, languages, publishedLanguages: ['fr'] }] })).toBe(false)
+    expect(ok(pinStoryOptionListSchema, { items: [{ groupId: uuid, kind: 'story', title: {}, languages: { en: 'live', de: 'none' }, publishedLanguages: [] }] })).toBe(false)
   })
 })

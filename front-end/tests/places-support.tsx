@@ -17,7 +17,12 @@ export const uuid = (n: number) => `0198a000-0000-7000-8000-${String(n).padStart
 
 export interface Call { method: string, path: string, key: string | null, ifMatch: string | null, body: unknown }
 
-export const problem = (status: number, type: string) => Response.json(problemSchema.parse({ type, status, title: type, instance: '/x', requestId: 'req-1' }), { status })
+export const problem = (status: number, type: string, errors?: { in: string, path: string, message: string, code?: string, params?: Record<string, string | number> }[]) => Response.json(problemSchema.parse({ type, status, title: type, instance: '/x', requestId: 'req-1', errors }), { status })
+
+/** The refusal of a delete: a pin that stories, reviews or tours use (T-016). */
+export function pinInUse(uses: { stories?: number, reviews?: number, tours?: number }) {
+  return problem(409, 'content-in-use', [{ in: 'path', path: 'pin', message: 'in use', code: 'pin-in-use', params: { stories: 0, reviews: 0, tours: 0, ...uses } }])
+}
 
 export function listItem(over: Partial<PinListItem> = {}): PinListItem {
   return {
@@ -32,6 +37,7 @@ export function listItem(over: Partial<PinListItem> = {}): PinListItem {
     stayTag: 'both',
     interests: [],
     coverMediaId: null,
+    cover: null,
     mainStory: null,
     rowVersion: 1,
     updatedAt: '2026-10-29T10:00:00.000Z',
@@ -48,12 +54,11 @@ export function pinOf(over: Partial<Pin> = {}): Pin {
     latitude: null,
     longitude: null,
     address: null,
+    mapsLink: null,
     weeklyHours: [],
     stayTag: 'both',
     interests: [],
-    serviceType: null,
     mustVisit: false,
-    foodKind: null,
     coverMediaId: null,
     photos: [],
     outboundUrl: null,
@@ -93,6 +98,9 @@ async function handle(input: RequestInfo | URL, init?: RequestInit): Promise<Res
   const call: Call = { method: request.method, path: url.pathname + url.search, key: request.headers.get('idempotency-key'), ifMatch: request.headers.get('if-match'), body: text && request.headers.get('content-type')?.includes('json') ? JSON.parse(text) : undefined }
 
   api.calls.push(call)
+  // The photo block asks which picked files the library holds, by content, before any upload: none, and never held.
+  if (call.method === 'POST' && call.path === `/api/store/${storeId}/media/lookup` && !api.answer?.(call))
+    return Response.json({ items: [] })
   await api.hold
   const custom = api.answer?.(call)
 

@@ -1,7 +1,9 @@
-import type { Pin, PinDate, PinDraft, PinStoryOption } from '@sk/domain/content'
+import type { ContentLanguage, Pin, PinDate, PinDraft, PinStoryOption } from '@sk/domain/content'
 import type { Tx } from '../../../platform/db/client.ts'
-import type { PinChanges, PinListRow, PinRepository } from '../ports.ts'
+import type { MediaRecord, PinChanges, PinListRow, PinRepository } from '../ports.ts'
+import { contentLanguages } from '@sk/domain/content'
 import { sql } from 'drizzle-orm'
+import { record } from './media-repository.ts'
 
 // The document stores the title under `name`: places_published_fields_check reads published->'name'.
 interface PinDocument { name?: PinDraft['title'], tip?: PinDraft['tip'], localTip?: PinDraft['localTip'], coverAlt?: PinDraft['coverAlt'], photoAlt?: PinDraft['photoAlt'] }
@@ -14,12 +16,11 @@ interface PinRow {
   latitude: number | null
   longitude: number | null
   address: string | null
+  maps_link: string | null
   weekly_hours: Pin['weeklyHours']
   stay_tag: Pin['stayTag']
   interests: string[]
-  service_type: Pin['serviceType']
   must_visit: boolean
-  food_kind: Pin['foodKind']
   cover_media_id: string | null
   main_story_group_id: string | null
   draft: PinDocument | null
@@ -33,8 +34,8 @@ interface PinRow {
 // A mapped type, not the interface: execute<> wants an index signature.
 type DateRow = { [K in keyof PinDate]: PinDate[K] }
 
-const columns = sql`id, store_id, status, slug, latitude, longitude, address, weekly_hours, stay_tag, interests,
-  service_type, must_visit, food_kind, cover_media_id, main_story_group_id, draft, published,
+const columns = sql`id, store_id, status, slug, latitude, longitude, address, maps_link, weekly_hours, stay_tag, interests,
+  must_visit, cover_media_id, main_story_group_id, draft, published,
   first_published_at, row_version, created_at, updated_at`
 
 function toDraft(document: PinDocument | null): PinDraft | null {
@@ -88,12 +89,11 @@ async function load(tx: Tx, storeId: string, pinId: string, lock: boolean): Prom
     latitude: row.latitude,
     longitude: row.longitude,
     address: row.address,
+    mapsLink: row.maps_link,
     weeklyHours: row.weekly_hours,
     stayTag: row.stay_tag,
     interests: row.interests,
-    serviceType: row.service_type,
     mustVisit: row.must_visit,
-    foodKind: row.food_kind,
     coverMediaId: row.cover_media_id,
     photos: photos.rows,
     outboundUrl: link.rows[0]?.url ?? null,
@@ -165,12 +165,32 @@ interface ListRow {
   updated_at: Date
   dates: PinDate[]
   category_ids: string[]
+  cm_id: string | null
+  cm_store_id: string
+  cm_kind: MediaRecord['kind']
+  cm_storage_key: string
+  cm_content_type: string
+  cm_byte_size: string | number
+  cm_sha256: string
+  cm_width: number | null
+  cm_height: number | null
+  cm_status: MediaRecord['status']
+  cm_name: string
+  cm_file_name: string
+  cm_alt: MediaRecord['alt']
+  cm_duration_seconds: number | null
+  cm_version: number
+  cm_created_at: string | Date
 }
 
 // One query for the whole list: the dates and category ids are aggregated per pin, so a store with hundreds of pins is one round trip.
 async function listRows(tx: Tx, storeId: string): Promise<PinListRow[]> {
   const found = await tx.execute<ListRow & Record<string, unknown>>(sql`
     select p.id, p.status, p.slug, p.latitude, p.longitude, p.stay_tag, p.interests, p.cover_media_id, p.main_story_group_id,
+           cm.id as cm_id, cm.store_id as cm_store_id, cm.kind as cm_kind, cm.storage_key as cm_storage_key, cm.content_type as cm_content_type,
+           cm.byte_size as cm_byte_size, cm.sha256 as cm_sha256, cm.width as cm_width, cm.height as cm_height, cm.status as cm_status,
+           cm.name as cm_name, cm.file_name as cm_file_name, cm.alt as cm_alt, cm.duration_seconds as cm_duration_seconds,
+           cm.version as cm_version, cm.created_at as cm_created_at,
            p.draft, p.published, p.row_version, p.updated_at,
            coalesce((select jsonb_agg(jsonb_build_object('id', d.id, 'firstDay', d.first_day::text, 'lastDay', d.last_day::text,
                                                           'startTime', to_char(d.start_time, 'HH24:MI'), 'endTime', to_char(d.end_time, 'HH24:MI'))
@@ -179,6 +199,7 @@ async function listRows(tx: Tx, storeId: string): Promise<PinListRow[]> {
            coalesce((select array_agg(c.category_id::text order by c.category_id) from content.place_categories c where c.place_id = p.id), '{}'::text[]) as category_ids,
            exists (select 1 from content.story_versions v where v.group_id = p.main_story_group_id and v.status = 'published') as main_story_published
       from content.places p
+      left join content.media cm on cm.id = p.cover_media_id and cm.store_id = p.store_id and cm.status = 'ready'
      where p.store_id = ${storeId}
      order by p.updated_at desc, p.id`)
   return found.rows.map(row => ({
@@ -194,6 +215,7 @@ async function listRows(tx: Tx, storeId: string): Promise<PinListRow[]> {
     stayTag: row.stay_tag,
     interests: row.interests,
     coverMediaId: row.cover_media_id,
+    cover: row.cm_id === null ? null : record({ id: row.cm_id, store_id: row.cm_store_id, kind: row.cm_kind, storage_key: row.cm_storage_key, content_type: row.cm_content_type, byte_size: row.cm_byte_size, sha256: row.cm_sha256, width: row.cm_width, height: row.cm_height, status: row.cm_status, name: row.cm_name, file_name: row.cm_file_name, alt: row.cm_alt, duration_seconds: row.cm_duration_seconds, version: row.cm_version, created_at: row.cm_created_at }),
     mainStoryGroupId: row.main_story_group_id,
     mainStoryPublished: row.main_story_published,
     rowVersion: row.row_version,
@@ -202,17 +224,20 @@ async function listRows(tx: Tx, storeId: string): Promise<PinListRow[]> {
 }
 
 async function storyOptionRows(tx: Tx, storeId: string): Promise<PinStoryOption[]> {
-  const found = await tx.execute<{ group_id: string, kind: PinStoryOption['kind'], title: PinStoryOption['title'], published_languages: PinStoryOption['publishedLanguages'] } & Record<string, unknown>>(sql`
+  const found = await tx.execute<{ group_id: string, kind: PinStoryOption['kind'], title: PinStoryOption['title'], statuses: Partial<Record<ContentLanguage, 'draft' | 'published'>> } & Record<string, unknown>>(sql`
     select g.id as group_id, g.kind,
            coalesce(jsonb_object_agg(v.language, coalesce(v.published->>'title', v.draft->>'title'))
                     filter (where coalesce(v.published->>'title', v.draft->>'title') is not null), '{}'::jsonb) as title,
-           coalesce(array_agg(v.language order by v.language) filter (where v.status = 'published'), '{}'::text[]) as published_languages
+           coalesce(jsonb_object_agg(v.language, v.status) filter (where v.language is not null), '{}'::jsonb) as statuses
       from content.story_groups g
       left join content.story_versions v on v.group_id = g.id and v.store_id = g.store_id
      where g.store_id = ${storeId}
      group by g.id, g.kind, g.created_at
      order by g.created_at desc, g.id`)
-  return found.rows.map(row => ({ groupId: row.group_id, kind: row.kind, title: row.title, publishedLanguages: row.published_languages }))
+  return found.rows.map((row) => {
+    const languages = { en: row.statuses.en ?? 'none', de: row.statuses.de ?? 'none' } as const
+    return { groupId: row.group_id, kind: row.kind, title: row.title, languages, publishedLanguages: contentLanguages.filter(language => languages[language] === 'published') }
+  })
 }
 
 export function createPinRepository(): PinRepository<Tx> {
@@ -220,12 +245,12 @@ export function createPinRepository(): PinRepository<Tx> {
     async insert(tx, storeId, changes, at) {
       const draft = documentOf(changes, emptyText) ?? null
       const inserted = await tx.execute<{ id: string }>(sql`
-        insert into content.places (store_id, slug, latitude, longitude, address, weekly_hours, stay_tag, interests,
-                                    service_type, must_visit, food_kind, cover_media_id, main_story_group_id, draft, created_at, updated_at)
+        insert into content.places (store_id, slug, latitude, longitude, address, maps_link, weekly_hours, stay_tag, interests,
+                                    must_visit, cover_media_id, main_story_group_id, draft, created_at, updated_at)
         values (${storeId}, ${json(changes.slug ?? null)}::jsonb, ${changes.latitude ?? null}, ${changes.longitude ?? null},
-                ${changes.address ?? null}, ${JSON.stringify(changes.weeklyHours ?? [])}::jsonb, ${changes.stayTag ?? 'both'},
-                ${sql.param(changes.interests ?? [])}::text[], ${changes.serviceType ?? null}, ${changes.mustVisit ?? false},
-                ${changes.foodKind ?? null}, ${changes.coverMediaId ?? null},
+                ${changes.address ?? null}, ${changes.mapsLink ?? null}, ${JSON.stringify(changes.weeklyHours ?? [])}::jsonb, ${changes.stayTag ?? 'both'},
+                ${sql.param(changes.interests ?? [])}::text[], ${changes.mustVisit ?? false},
+                ${changes.coverMediaId ?? null},
                 ${changes.mainStoryGroupId ?? null}, ${json(draft)}::jsonb, ${at}, ${at})
         returning id`)
       const id = inserted.rows[0]!.id
@@ -244,12 +269,11 @@ export function createPinRepository(): PinRepository<Tx> {
           latitude = ${has('latitude') ? changes.latitude : pin.latitude},
           longitude = ${has('longitude') ? changes.longitude : pin.longitude},
           address = ${has('address') ? changes.address : pin.address},
+          maps_link = ${has('mapsLink') ? changes.mapsLink : pin.mapsLink},
           weekly_hours = ${JSON.stringify(changes.weeklyHours ?? pin.weeklyHours)}::jsonb,
           stay_tag = ${changes.stayTag ?? pin.stayTag},
           interests = ${sql.param(changes.interests ?? pin.interests)}::text[],
-          service_type = ${has('serviceType') ? changes.serviceType : pin.serviceType},
           must_visit = ${changes.mustVisit ?? pin.mustVisit},
-          food_kind = ${has('foodKind') ? changes.foodKind : pin.foodKind},
           cover_media_id = ${has('coverMediaId') ? changes.coverMediaId : pin.coverMediaId},
           main_story_group_id = ${has('mainStoryGroupId') ? changes.mainStoryGroupId : pin.mainStoryGroupId},
           draft = ${draft ? JSON.stringify(draft) : pin.draft && JSON.stringify(toDocument(pin.draft))}::jsonb,
@@ -274,11 +298,31 @@ export function createPinRepository(): PinRepository<Tx> {
       return reload(tx, pin)
     },
 
+    async usage(tx, storeId, pinId) {
+      const { rows } = await tx.execute<{ stories: number, reviews: number, tours: number }>(sql`
+        select
+          (select count(*)::int from content.story_group_places where store_id = ${storeId} and place_id = ${pinId}) as stories,
+          (select count(*)::int from content.story_groups where store_id = ${storeId} and subject_place_id = ${pinId}) as reviews,
+          (select count(distinct tour_id)::int from content.tour_stops where store_id = ${storeId} and place_id = ${pinId}) as tours`)
+      return rows[0]!
+    },
+
     async remove(tx, storeId, pinId) {
       const deleted = await tx.execute(sql`delete from content.places where store_id = ${storeId} and id = ${pinId} returning id`)
       return deleted.rows.length > 0
     },
     find: (tx, storeId, pinId) => load(tx, storeId, pinId, false),
+
+    async lockSlugs(tx) {
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended('content.places.slug', 0))`)
+    },
+
+    async slugsTaken(tx, language, exceptPinId) {
+      const found = await tx.execute<{ taken: string }>(sql`
+        select slug->>${language}::text as taken from content.places
+         where slug ? ${language}::text${exceptPinId ? sql` and id <> ${exceptPinId}` : sql``}`)
+      return new Set(found.rows.map(row => row.taken))
+    },
 
     list: (tx, storeId) => listRows(tx, storeId),
 

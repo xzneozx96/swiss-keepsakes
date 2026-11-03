@@ -1,4 +1,4 @@
-import type { ConfirmUpload, Media, Pin, PinList, PinPublishBody, PinStoryOptionList, PinWriteBody, UploadGrant, UploadRequest } from '@sk/api-contract'
+import type { Address, MapsLinkPosition, Pin, PinList, PinPublishBody, PinStoryOptionList, PinWriteBody, StoryVersionText } from '@sk/api-contract'
 
 /** A command carries the `Idempotency-Key` of the user's intent (`useIdempotencyKey`), so a retry of it is the same request to the API. */
 export type Keyed<T> = T & { idempotencyKey: string }
@@ -11,14 +11,15 @@ export interface PlacesClient {
   list: (input: { storeId: string }) => Promise<PinList>
   get: (input: { storeId: string, id: string }) => Promise<Pin>
   storyOptions: (input: { storeId: string }) => Promise<PinStoryOptionList>
-  /** The state of an uploaded file, for the photo field. */
-  media: (input: { storeId: string, id: string }) => Promise<Media>
+  /** The text of one language version of a story as the editor last left it (the draft, else the published text). 404 when the story has no version in that language. */
+  storyVersion: (input: { storeId: string, groupId: string, language: 'en' | 'de' }) => Promise<StoryVersionText>
   create: (input: Keyed<{ storeId: string } & PinWriteBody>) => Promise<Pin>
   save: (input: Keyed<{ storeId: string, id: string, ifMatch: number } & PinWriteBody>) => Promise<Pin>
   publish: (input: Keyed<{ storeId: string, id: string, ifMatch: number } & PinPublishBody>) => Promise<Pin>
   hide: (input: Keyed<{ storeId: string, id: string, ifMatch: number }>) => Promise<Pin>
   remove: (input: Keyed<{ storeId: string, id: string, ifMatch: number }>) => Promise<void>
-  /** The grant to PUT a photo with. */
-  requestUpload: (input: Keyed<{ storeId: string } & UploadRequest>) => Promise<UploadGrant>
-  confirmUpload: (input: Keyed<{ storeId: string } & ConfirmUpload>) => Promise<Media>
+  /** The position a Google Maps short link points to; the server follows it. A refusal is `maps-link-unreadable`. */
+  resolveMapsLink: (input: { storeId: string, url: string }) => Promise<MapsLinkPosition>
+  /** The address of the building nearest to a position, from the Swiss building register. 404 `address-not-found` when none stands near, 503 `address-lookup-unavailable` when the register does not answer. */
+  addressAt: (input: { storeId: string, latitude: number, longitude: number }) => Promise<Address>
 }

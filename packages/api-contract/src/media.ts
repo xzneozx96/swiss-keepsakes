@@ -28,6 +28,7 @@ export const mediaSchema = z.object({
   id: z.uuid(),
   kind: mediaKind,
   status: z.enum(['processing', 'ready', 'retired']),
+  name: z.string().meta({ description: 'What the merchant sees and searches. It starts as the uploaded file name' }),
   contentType: z.string(),
   byteSize: z.int(),
   width: z.int().nullable(),
@@ -36,6 +37,23 @@ export const mediaSchema = z.object({
   variants: z.array(z.object({ width: z.int(), url: z.string() })).meta({ description: 'Resized copies of an image. Empty until the file is ready' }),
 }).meta({ id: 'Media', description: 'A file in the library' })
 
+export const MEDIA_LOOKUP_MAX = 500
+
+export const mediaLookupBodySchema = z.strictObject({
+  sha256: z.array(z.string().regex(/^[0-9a-f]{64}$/, 'A SHA-256 as 64 lower-case hex digits')).max(MEDIA_LOOKUP_MAX).meta({ description: 'The SHA-256 of each file the merchant picked, as 64 lower-case hex digits. Empty is allowed and finds nothing' }),
+}).meta({ id: 'MediaLookupBody', description: 'The content hashes of the files about to be uploaded' })
+
+export const mediaMatchSchema = mediaSchema.extend({
+  sha256: z.string().meta({ description: 'The hash that matched, so the caller can tell which picked file it belongs to' }),
+}).meta({ id: 'MediaMatch', description: 'A ready file of the library whose bytes equal a picked file' })
+
+export const mediaLookupSchema = z.object({
+  items: z.array(mediaMatchSchema).meta({ description: 'The ready files of this store with one of the hashes, oldest first. A retired or processing file and a file of another store never appear. Several rows may share one hash' }),
+}).meta({ id: 'MediaLookup', description: 'The files already in the library, found by content' })
+
+export type MediaLookupBody = z.infer<typeof mediaLookupBodySchema>
+export type MediaMatch = z.infer<typeof mediaMatchSchema>
+export type MediaLookup = z.infer<typeof mediaLookupSchema>
 export type ConfirmUpload = z.infer<typeof confirmUploadSchema>
 export type UploadRequest = z.infer<typeof uploadRequestSchema>
 export type UploadGrant = z.infer<typeof uploadGrantSchema>
@@ -59,7 +77,6 @@ export const mediaUseSummarySchema = z.object({
 }).meta({ id: 'MediaUseSummary' })
 
 export const mediaItemSchema = mediaSchema.extend({
-  name: z.string().meta({ description: 'What the merchant sees and searches. It starts as the uploaded file name' }),
   fileName: z.string().meta({ description: 'The file name of the latest upload' }),
   alt: mediaAltSchema,
   durationSeconds: z.int().nullable(),

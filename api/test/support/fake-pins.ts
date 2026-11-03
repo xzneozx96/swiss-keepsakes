@@ -1,5 +1,5 @@
 import type { Pin, PinDraft } from '@sk/domain/content'
-import type { PinChanges, PinRepository } from '../../src/modules/content/ports.ts'
+import type { PinChanges, PinRepository, PinUsage } from '../../src/modules/content/ports.ts'
 import { randomUUID } from 'node:crypto'
 
 // An in-memory pin repository. It copies what the SQL one does with a draft, but none of the database guards.
@@ -18,9 +18,10 @@ function textOf(changes: PinChanges, base: PinDraft): PinDraft | undefined {
   }
 }
 
-export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>, removed: string[] } {
+export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>, removed: string[], usages: Map<string, PinUsage> } {
   const rows = new Map<string, Pin>()
   const removed: string[] = []
+  const usages = new Map<string, PinUsage>()
   const store = (pin: Pin) => {
     rows.set(pin.id, pin)
     return pin
@@ -28,6 +29,10 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
   return {
     rows,
     removed,
+    usages,
+    async usage(_tx, _storeId, pinId) {
+      return usages.get(pinId) ?? { stories: 0, reviews: 0, tours: 0 }
+    },
     async idsInStore(_tx, storeId, ids) {
       return ids.map(id => id.toLowerCase()).filter(id => rows.get(id)?.storeId === storeId)
     },
@@ -49,11 +54,16 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
         stayTag: pin.stayTag,
         interests: pin.interests,
         coverMediaId: pin.coverMediaId,
+        cover: null,
         mainStoryGroupId: pin.mainStoryGroupId,
         mainStoryPublished: pin.mainStoryGroupId !== null,
         rowVersion: pin.rowVersion,
         updatedAt: pin.updatedAt,
       }))
+    },
+    async lockSlugs() {},
+    async slugsTaken(_tx, language, exceptPinId) {
+      return new Set([...rows.values()].filter(pin => pin.id !== exceptPinId).flatMap(pin => pin.slug?.[language] ?? []))
     },
     async storyOptions() {
       return []
@@ -68,12 +78,11 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
         latitude: null,
         longitude: null,
         address: null,
+        mapsLink: null,
         weeklyHours: [],
         stayTag: 'both',
         interests: [],
-        serviceType: null,
         mustVisit: false,
-        foodKind: null,
         coverMediaId: null,
         outboundUrl: null,
         mainStoryGroupId: null,

@@ -17,6 +17,7 @@ import { formatDate } from '@sk/domain/shared'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useRef, useState } from 'react'
 
+import { choiceCard } from '@/components/choice-card'
 import { useConfirm } from '@/components/confirm-dialog'
 import {
   BackIcon,
@@ -25,8 +26,8 @@ import {
   StatusSuccessIcon,
 } from '@/components/icons'
 import { MerchantBackBar } from '@/components/layout/merchant-back-bar'
-import { StatusChip } from '@/components/status-chip'
 
+import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import {
   ActionPanel,
@@ -39,11 +40,21 @@ import { ArticleSections } from './article-sections'
 import { ERROR_SELECTOR, Field, PickerField } from './editor-fields'
 import { AudioSheet, PhotoSheet } from './media-sheets'
 
-/** Same choice card as M08, M15 and the M04 sheets: ink frame when selected. */
-const choiceCard
-  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
-
 type Status = 'new' | 'draft' | 'published'
+
+function ArticleStatusChip({ status }: { status: Status }) {
+  const { t } = useLocale()
+
+  return (
+    <StatusChip tone={status === 'published' ? 'success' : 'neutral'}>
+      {t(
+        status === 'published'
+          ? 'merchantArticles.status.published'
+          : 'merchantArticles.status.draft',
+      )}
+    </StatusChip>
+  )
+}
 
 function Header({ editor, status }: { editor: Editor, status: Status }) {
   const { t } = useLocale()
@@ -53,6 +64,7 @@ function Header({ editor, status }: { editor: Editor, status: Status }) {
     <header className="flex flex-col gap-3">
       <MerchantBackBar
         label={t('merchantArticles.back')}
+        status={<ArticleStatusChip status={status} />}
         title={stored?.title || t('merchantArticles.newTitle')}
         to="/store/content"
       />
@@ -79,14 +91,11 @@ function Header({ editor, status }: { editor: Editor, status: Status }) {
               })}`}
           </p>
         </div>
-        <div className="flex flex-wrap items-start gap-2 lg:justify-end [&_svg]:shrink-0">
-          <StatusChip tone={status === 'published' ? 'success' : 'neutral'}>
-            {t(
-              status === 'published'
-                ? 'merchantArticles.status.published'
-                : 'merchantArticles.status.draft',
-            )}
-          </StatusChip>
+        <div className={`flex-wrap items-start gap-2 lg:flex lg:justify-end [&_svg]:shrink-0 ${stored && !editor.otherVersion ? 'flex' : 'hidden'}`}>
+          {/* On phones the ← bar carries the status chip. */}
+          <span className="max-lg:hidden">
+            <ArticleStatusChip status={status} />
+          </span>
           {stored && !editor.otherVersion && (
             <StatusChip tone="neutral">
               {t(`merchantArticles.missing.${editor.otherLanguage}`)}

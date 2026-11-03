@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { mediaSchema } from './media.ts'
 import { noNul } from './text.js'
 
 // Mirrors packages/domain/src/content (the contract imports only zod). Request bodies are strict, so a price, a
@@ -7,8 +8,6 @@ import { noNul } from './text.js'
 const language = z.enum(['en', 'de'])
 const stayTag = z.enum(['short_stay', 'multi_day', 'both'])
 const interests = z.array(z.enum(['history-culture', 'food-drink', 'lake-mountains', 'shopping-keepsakes', 'local-activities'])).max(5)
-const serviceType = z.enum(['water', 'toilets', 'connect', 'transport', 'lockers', 'cash'])
-const foodKind = z.enum(['restaurant', 'cafe-bakery', 'pub-bar', 'market'])
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const time = z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/, 'A time as HH:MM')
 const text = (max: number) => noNul(z.string().max(max))
@@ -31,10 +30,11 @@ const slugMapSchema = z.strictObject({
   de: z.string().max(200).regex(slugPattern, 'Lower-case letters and digits, separated by single dashes').optional(),
 }).refine(map => map.en !== undefined || map.de !== undefined, 'Give a slug in at least one language')
 
-// What a pin publish may carry: the web address for each language the publish adds (ADR-015).
+// A pin publish needs no body: the server makes the web address (slug) of each language from its title. The `slug`
+// key is still accepted so a client that sends one keeps working, and it is ignored.
 export const pinPublishBodySchema = z.strictObject({
-  slug: slugMapSchema.optional(),
-}).meta({ id: 'PinPublishBody', description: 'Optional. The slug is the web address for a language the publish adds. A live language with a different slug is refused with 409 slug-conflict, so rename it with a save' })
+  slug: slugMapSchema.optional().meta({ deprecated: true, description: 'Ignored. The server makes the slug from the title' }),
+}).meta({ id: 'PinPublishBody', description: 'Optional and empty in practice. The server makes the slug of each language from its title at the first publish and keeps it afterwards (ADR-014), so a publish never fails for a missing slug when a title exists' })
 
 // What a tour publish may carry: the same as a pin publish.
 export const tourPublishBodySchema = z.strictObject({
@@ -53,7 +53,7 @@ const weeklySpanSchema = z.strictObject({
   day: z.int().min(1).max(7).meta({ description: '1 is Monday, 7 is Sunday' }),
   opens: time,
   closes: closingTime,
-}).refine(span => span.opens < span.closes, { message: 'opens must be before closes', path: ['closes'] })
+}).refine(span => span.opens !== span.closes, { message: 'opens and closes must differ', path: ['closes'] }).meta({ description: 'A span with closes before opens closes the next morning (day 7 into day 1). 24:00 closes at midnight' })
 
 // Postgres has no year 0 and the stored dates are real ones, so a day is within 2000 to 2100.
 const pinDay = z.iso.date().refine(day => day >= '2000-01-01' && day <= '2100-12-31', 'A date from 2000 to 2100')
@@ -85,20 +85,41 @@ const pinPhotoWriteSchema = z.strictObject({
 // One plain https address with no space (ADR-011). The database checks the same.
 const outboundUrl = noNul(z.string().max(2000).regex(/^https:\/\/[^\s]+$/, 'An https address with no space'))
 
+// A Google Maps link a merchant may store on a place: the same hosts the API follows for a short link, and the pages of
+// Google Maps itself. Credentials and a port are refused. The database checks the shape only.
+const googleHost = /^(?:(?:www|maps)\.)?google\.(?:com?\.)?[a-z]{2,3}$/
+
+/** A host a Google Maps link may sit on: Google's own maps hosts and the goo.gl short-link hosts. */
+export function isGoogleMapsHost(host: string): boolean {
+  const name = host.toLowerCase()
+  return name === 'maps.app.goo.gl' || name === 'goo.gl' || googleHost.test(name)
+}
+
+/** A https link to Google Maps: `maps.app.goo.gl/<code>`, `goo.gl/maps/<code>` or `google.<cc>/maps…`. */
+export function isGoogleMapsLink(text: string): boolean {
+  const url = URL.parse(text)
+  if (!url || url.protocol !== 'https:' || url.username !== '' || url.password !== '' || url.port !== '' || !isGoogleMapsHost(url.hostname))
+    return false
+  if (url.hostname === 'maps.app.goo.gl')
+    return url.pathname.length > 1
+  return /^\/maps(?:\/|$)/.test(url.pathname)
+}
+
+const mapsLink = outboundUrl.refine(isGoogleMapsLink, 'A Google Maps link')
+
 export const pinWriteBodySchema = z.strictObject({
   title: localizedTextSchema.optional(),
   tip: localizedLongTextSchema.optional(),
   localTip: localizedTextSchema.optional(),
-  slug: slugMapSchema.nullable().optional(),
+  slug: slugMapSchema.nullable().optional().meta({ deprecated: true, description: 'Ignored. The server makes the slug (the map link) of each language from its title: before the first publish it follows the title, after it the slug is locked' }),
   latitude: z.number().min(-90).max(90).nullable().optional(),
   longitude: z.number().min(-180).max(180).nullable().optional(),
   address: noNul(z.string().trim().min(1).max(300)).nullable().optional(),
+  mapsLink: mapsLink.nullable().optional().meta({ description: 'The Google Maps link of the place (a business card link or a position link); null removes it. Live on save, like the address' }),
   weeklyHours: z.array(weeklySpanSchema).max(21).optional(),
   stayTag: stayTag.optional(),
   interests: interests.optional(),
-  serviceType: serviceType.nullable().optional(),
   mustVisit: z.boolean().optional(),
-  foodKind: foodKind.nullable().optional(),
   coverMediaId: z.uuid().nullable().optional(),
   coverAlt: localizedTextSchema.optional(),
   photos: z.array(pinPhotoWriteSchema).max(10).refine(photos => new Set(photos.map(photo => photo.mediaId.toLowerCase())).size === photos.length, 'Each photo may appear once').optional(),
@@ -118,12 +139,11 @@ export const pinSchema = z.object({
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
   address: z.string().nullable(),
+  mapsLink: z.string().nullable(),
   weeklyHours: z.array(z.object({ day: z.int(), opens: z.string(), closes: z.string() })),
   stayTag,
   interests: z.array(z.string()),
-  serviceType: serviceType.nullable(),
   mustVisit: z.boolean(),
-  foodKind: foodKind.nullable(),
   coverMediaId: z.uuid().nullable(),
   photos: z.array(z.object({ mediaId: z.uuid() })),
   outboundUrl: z.string().nullable(),
@@ -157,6 +177,7 @@ export const pinListItemSchema = z.object({
   stayTag,
   interests: z.array(z.string()),
   coverMediaId: z.uuid().nullable(),
+  cover: mediaSchema.nullable().meta({ description: 'The ready cover photo, with its address and resized copies. Null when the pin has none, or its file is not ready or was retired' }),
   mainStory: z.object({ groupId: z.uuid(), published: z.boolean() }).nullable().meta({ description: '`published` is false when the story has no published version' }),
   rowVersion: z.int(),
   updatedAt: z.iso.datetime(),
@@ -165,12 +186,38 @@ export const pinListItemSchema = z.object({
 export const pinListSchema = z.object({ items: z.array(pinListItemSchema) }).meta({ id: 'PinList', description: 'Every pin of the store, most recently edited first' })
 
 // What the main-story picker offers: the story groups of the store.
+const storyLanguageState = z.enum(['none', 'draft', 'published'])
+
 export const pinStoryOptionSchema = z.object({
   groupId: z.uuid(),
   kind: z.enum(['story', 'editorial_review']),
   title: localizedView,
-  publishedLanguages: z.array(language),
+  languages: z.object({ en: storyLanguageState, de: storyLanguageState }).meta({ description: '`none`: no version in the language, `draft`: only an unpublished one, `published`: live' }),
+  publishedLanguages: z.array(language).meta({ description: 'The languages whose state is `published`' }),
 }).meta({ id: 'PinStoryOption', description: 'A story group the pin can name as its main story' })
+
+export const mapsLinkQuerySchema = z.object({
+  url: z.string().trim().min(1).max(2000).meta({ description: 'A Google Maps short link: https://maps.app.goo.gl/<code> or https://goo.gl/maps/<code>' }),
+}).meta({ id: 'MapsLinkQuery' })
+
+export const mapsLinkPositionSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+}).meta({ id: 'MapsLinkPosition', description: 'The position a Google Maps short link points to' })
+
+// The Swiss bounding box, a little wide, so a position outside it is refused before the register is asked.
+export const addressAtQuerySchema = z.object({
+  lat: z.coerce.number().min(45.8).max(47.9).meta({ description: 'Latitude of the pin, inside Switzerland' }),
+  lng: z.coerce.number().min(5.9).max(10.6).meta({ description: 'Longitude of the pin, inside Switzerland' }),
+}).meta({ id: 'AddressAtQuery' })
+
+export const addressSchema = z.object({
+  street: z.string(),
+  houseNumber: z.string().describe('Empty when the register has no number for the entrance'),
+  postcode: z.string(),
+  city: z.string(),
+  formatted: z.string().describe('For example "Kapellbrücke 1, 6004 Luzern"'),
+}).meta({ id: 'Address', description: 'The address of the nearest building in the Swiss federal building register' })
 
 export const pinStoryOptionListSchema = z.object({ items: z.array(pinStoryOptionSchema) }).meta({ id: 'PinStoryOptionList', description: 'Story groups of the store, most recently created first' })
 
@@ -192,18 +239,22 @@ function isSafeHref(href: string): boolean {
   }
 }
 
+// The marks and the hard break are shared with the keepsake description (catalog.ts), which allows no pin link.
+export const boldMarkSchema = z.strictObject({ type: z.literal('bold') })
+export const italicMarkSchema = z.strictObject({ type: z.literal('italic') })
+export const linkMarkSchema = z.strictObject({
+  type: z.literal('link'),
+  attrs: z.strictObject({ href: noNul(z.string().max(2000)).refine(isSafeHref, 'A link is https:, http: or mailto:') }),
+})
 const bodyMarkSchema = z.discriminatedUnion('type', [
-  z.strictObject({ type: z.literal('bold') }),
-  z.strictObject({ type: z.literal('italic') }),
-  z.strictObject({
-    type: z.literal('link'),
-    attrs: z.strictObject({ href: noNul(z.string().max(2000)).refine(isSafeHref, 'A link is https:, http: or mailto:') }),
-  }),
+  boldMarkSchema,
+  italicMarkSchema,
+  linkMarkSchema,
   z.strictObject({ type: z.literal('pinLink'), attrs: z.strictObject({ pinId: z.uuid() }) }),
 ])
 
 const bodyTextSchema = z.strictObject({ type: z.literal('text'), text: noNul(z.string().min(1).max(20000)), marks: z.array(bodyMarkSchema).max(4).optional() })
-const bodyHardBreakSchema = z.strictObject({ type: z.literal('hardBreak') })
+export const bodyHardBreakSchema = z.strictObject({ type: z.literal('hardBreak') })
 const inline = [bodyTextSchema, bodyHardBreakSchema] as const
 
 const bodyParagraphSchema = z.strictObject({ type: z.literal('paragraph'), content: z.array(z.discriminatedUnion('type', inline)).optional() })
@@ -279,7 +330,7 @@ type Path = (string | number)[]
 interface Walked { type?: unknown, content?: unknown }
 
 // The first fault of the three caps, in document order for depth and media. Runs on a body the shape check passed.
-function firstCapFault(body: Walked): { path: Path, message: string } | undefined {
+export function firstCapFault(body: Walked): { path: Path, message: string } | undefined {
   if (utf8Length(JSON.stringify(body)) > STORY_BODY_LIMITS.maxBytes)
     return { path: [], message: `The body is larger than ${STORY_BODY_LIMITS.maxBytes} bytes` }
   let media = 0
@@ -390,13 +441,15 @@ const storyBodyNodeViewSchema = z.object({
   marks: z.array(z.unknown()).optional(),
 })
 
+const storyBodyViewSchema = z.object({ type: z.literal('doc'), content: z.array(storyBodyNodeViewSchema) })
+
 const storyDraftViewSchema = z.object({
   title: z.string(),
   excerpt: z.string(),
   authorName: z.string(),
   coverMediaId: z.uuid().nullable(),
   checkedOn: z.string().nullable().optional(),
-  body: z.object({ type: z.literal('doc'), content: z.array(storyBodyNodeViewSchema) }),
+  body: storyBodyViewSchema,
 })
 
 export const storyVersionSchema = z.object({
@@ -412,6 +465,15 @@ export const storyVersionSchema = z.object({
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 }).meta({ id: 'StoryVersion', description: 'One language version of a story, with its draft and its published text' })
+
+export const storyVersionTextSchema = z.object({
+  status: z.enum(['draft', 'published']).meta({ description: '`draft`: the text is not live yet (a draft, or a version taken down, or a published one with unpublished edits). `published`: it is what guests read' }),
+  title: z.string(),
+  cover: mediaSchema.nullable().meta({ description: 'The cover photo. Null when the version has none, or its file is gone' }),
+  body: storyBodyViewSchema.meta({ description: 'The stored Tiptap document, as written. An image or audio node names its file by `mediaId`, and `media` holds those files' }),
+  media: z.array(mediaSchema).meta({ description: 'The files the body\'s image and audio nodes name. A node whose file is missing here has none to show' }),
+  updatedAt: z.iso.datetime(),
+}).meta({ id: 'StoryVersionText', description: 'The text of one language version as the editor last left it: the draft if there is one, else the published text. For a preview to staff, never for guests' })
 
 const tourStopWriteSchema = z.strictObject({
   latitude: z.number().min(-90).max(90),
@@ -488,6 +550,8 @@ export type Pin = z.infer<typeof pinSchema>
 export type PinListItem = z.infer<typeof pinListItemSchema>
 export type PinList = z.infer<typeof pinListSchema>
 export type PinStoryOption = z.infer<typeof pinStoryOptionSchema>
+export type MapsLinkPosition = z.infer<typeof mapsLinkPositionSchema>
+export type Address = z.infer<typeof addressSchema>
 export type PinStoryOptionList = z.infer<typeof pinStoryOptionListSchema>
 export type StoryDraft = z.infer<typeof storyDraftSchema>
 export type StoryGroupCreateBody = z.infer<typeof storyGroupCreateBodySchema>
@@ -497,5 +561,6 @@ export type StoryVersionCreateBody = z.infer<typeof storyVersionCreateBodySchema
 export type StoryVersionSaveBody = z.infer<typeof storyVersionSaveBodySchema>
 export type StoryVersionMoveBody = z.infer<typeof storyVersionMoveBodySchema>
 export type StoryVersion = z.infer<typeof storyVersionSchema>
+export type StoryVersionText = z.infer<typeof storyVersionTextSchema>
 export type TourGuideWriteBody = z.infer<typeof tourWriteBodySchema>
 export type TourGuide = z.infer<typeof tourSchema>

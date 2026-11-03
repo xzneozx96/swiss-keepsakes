@@ -1,5 +1,26 @@
 # Keepsake catalog design: M11, M12 with N14 and N15, the variant page and Inventory N13
 
+- **Amended 2026-11-02 — read this first.** The keepsake editor is no longer the card screen of sections 4 to 6, 9, 11 and 12. Since 2026-10-30 it has been one stepped editor for a new and an existing keepsake, with the place editor's layout. Since 2026-11-02 it has three steps: Details, **Options and variants** (options typed in place as in Shopify, every combination listed, unwanted ones removed, rows grouped by the first option, changes to selected rows together), and Review and publish.
+  - An existing keepsake autosaves.
+  - A new keepsake is created only at Review and publish.
+  - One EN/DE switch serves the whole editor.
+  - The Description is rich text.
+  - Delete removes a keepsake that was never sold and archives one that was.
+  - There are no options and variants sheets (N14, N15), no "Add all combinations", and no Stock step until E6.3.
+  - Colour swatches are removed (item 20 of the decision record). The switch "Show a colour swatch for each value", the swatch input, the swatch rule "a colour is # and six digits" and the swatch in the variant thumbnail no longer exist. Migration 0017 drops the column.
+  - The SKU code is optional (item 16). A keepsake-level switch "This keepsake has SKU codes" shows or hides the code field in the Price block, the rows and the variant sheet. It is off for a new keepsake. The code stays unique per shop when present, so the refusal "Add a SKU code." and the "Use VX-S-SWAN" hint apply only while the switch is on. New rows are prefilled from the keepsake code and the value labels, such as `1.6795-XS-RED`.
+  - Option names are suggested from the shop's other keepsakes (item 17), and the starter names Size, Colour, Theme and Material show only while the shop has none. The fixed list goes.
+  - A variant has one optional photo (item 22): chosen from the keepsake's photos first, or the library with Upload a photo. The column is `catalog.skus.media_id`.
+  - Bulk actions on selected variants (price, For sale, Hidden, Archive) use the shared ActionBar, with the cart's "Select all" checkbox in the Variants header (item 18). The options save creates the new variants (`newVariants`), and `PATCH .../variants` changes many variants in one request.
+  - The Add another option button is always visible, up to five options (item 21).
+  - Later on 2026-11-02 (items 23 to 26 of the decision record):
+    - Option changes on a saved keepsake are held in the browser and saved once when the merchant leaves the step. Every way out of the editor asks first ("Save your changes?"). New combinations show as rows to come, always For sale until saved (item 23).
+    - Option and variant rows have icon actions: Edit, and Delete (bin) or Archive (box). A variant is deleted when no order names it and archived when one does. Never-sold archived variants can be deleted from the archived list. The bulk bar and the variant sheet follow the same rule (item 24).
+    - Stock will be edited in the editor too, per variant, when E6.3 is built: Quantity in the Price block and an inline quantity on each row. The Inventory page stays (item 25).
+    - An option that variants use can be deleted when the remaining rows stay distinct; its values come off every variant, archived ones included. Otherwise the dialog names the rows that would clash (item 26).
+    - With SKU codes on, wide screens show the code in its own column before the value chips (item 16).
+
+  Where this file disagrees, `docs/decisions/2026-11-02-keepsake-editor-steps.md` wins. The rules in sections 7, 13 and 15 still hold: sparse SKUs, the combination key, and archiving is final for a variant that was sold.
 - Status: **design approved** on 2026-10-29 (chat approval of the lab page `/lab/keepsake-editor`). Ten points are open (section 13). Prices, themes, colours and design rights are mock (O26).
 - Screens: M11 (the keepsake list, `/store/products`), M12 (the keepsake page, new and edit, `/store/products/gifts/new` and `/store/products/gifts/$productId`), N14 (the options sheet), N15 (the variants table and its sheet), the variant page, N13 (Inventory, `/store/products/inventory`) and the inventory item page. Slice S7, Track 2, stories E6.1, E6.2 and E6.3. The guest product page C03 is not part of this design.
 - Read first: `docs/decisions/2026-10-29-keepsake-catalog-design.md` (what was approved, what was rejected, the open points), `docs/ux/story-editor-design.md` (M17, whose flow M12 follows), `docs/adr/ADR-017`, `ADR-027` (options per product, the combination key), `ADR-009`, `ADR-016` (stock, held units, the CHECK), `ADR-022` (no locations), the data model `docs/specs/001-storytelling-pivot/data-model.md` (DM-7 and the catalog section), and PRD §7.0 to §7.2.

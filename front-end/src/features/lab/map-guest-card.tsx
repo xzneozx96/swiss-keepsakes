@@ -22,8 +22,8 @@ import { Media } from '@/components/media'
 import {
   categoryName,
   copy,
+  directionsUrl,
   findStory,
-  googleMapsUrl,
   nextDate,
   nextDateParts,
   openToday,
@@ -67,7 +67,7 @@ export function DirectionsAction({
   bare?: boolean
 }) {
   const c = copy[language]
-  const href = googleMapsUrl(pin.coordinates)
+  const href = directionsUrl(pin)
   const link = {
     'href': href,
     'target': '_blank',

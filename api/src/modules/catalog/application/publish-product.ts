@@ -12,7 +12,7 @@ import { productSlug } from './slug.ts'
 // The working copy goes live. The blocking checks of the publish card are the write validation: a full language
 // (AC30), a photo and a variant for sale. A photo retired or removed since the save is refused again here. A keepsake that was unpublished and has no pending edit goes live again
 // with the text it had.
-export function makePublishProduct<T>({ uow, products, media, audit, clock }: CatalogDeps<T>) {
+export function makePublishProduct<T>({ uow, products, media, audit, clock, sales }: CatalogDeps<T>) {
   return async (actor: Actor, storeId: string, productId: string, ifMatch: number, requestId: string | null): Promise<Result<ProductDetail>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -22,6 +22,8 @@ export function makePublishProduct<T>({ uow, products, media, audit, clock }: Ca
         return fail({ reason: 'not-found' })
       if (product.rowVersion !== ifMatch)
         return fail({ reason: 'stale' })
+      if (product.status === 'archived')
+        return fail({ reason: 'archived' })
       const doc = workingDoc(product)
       const gaps = publishGaps(publishChecks({ doc, variants: product.variants, options: product.options, commissionRate: product.commissionRate }))
       if (gaps.length > 0)
@@ -29,7 +31,7 @@ export function makePublishProduct<T>({ uow, products, media, audit, clock }: Ca
       const refused = await checkPhotos(media, tx, storeId, doc.media)
       if (refused)
         return fail(refused)
-      const processing = await photosProcessing(media, tx, storeId, doc.media)
+      const processing = await photosProcessing(media, tx, storeId, [...doc.media, ...product.variants.flatMap(variant => (variant.status === 'archived' ? [] : variant.mediaId ?? []))])
       if (processing)
         return fail(processing)
       const slug = productSlug({
@@ -48,7 +50,7 @@ export function makePublishProduct<T>({ uow, products, media, audit, clock }: Ca
         after: { status: 'published', rowVersion: published.rowVersion },
         requestId,
       })
-      return ok(await describe(media, tx, published))
+      return ok(await describe({ media, sales }, tx, published))
     })
   }
 }

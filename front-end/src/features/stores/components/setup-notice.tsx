@@ -1,5 +1,6 @@
-import { Link, useRouterState } from '@tanstack/react-router'
+import { useRouterState } from '@tanstack/react-router'
 
+import { WarningBanner } from '@/components/warning-banner'
 import { useLocale } from '@/contexts/locale-context'
 import { apiEnabled } from '@/lib/api-mode'
 import { useMe } from '../api/queries'
@@ -7,9 +8,10 @@ import { currentStore } from '../lib/current-store'
 import { ONBOARDING_PATH } from '../lib/search-params'
 
 /**
- * On every store page but the Calendar while the Owner's store is not open for sale: a line with the way back to
- * Open your store. The Calendar fills the content area to the viewport edge (merchant-shell.tsx), so a line above it
- * would push its controls out of view.
+ * On every store page but the Calendar while the Owner's store is not open for sale: a warning
+ * banner with the way back to Open your store. The banner sticks to the top of the content area and
+ * can be closed for the browser session. The Calendar fills the content area to the viewport edge
+ * (merchant-shell.tsx), so a banner above it would push its controls out of view.
  */
 export function SetupNotice() {
   const { t } = useLocale()
@@ -21,9 +23,11 @@ export function SetupNotice() {
     return null
 
   return (
-    <p className="mb-4 text-sm text-muted">
-      {`${t('stores.setup.notice')} `}
-      <Link className="font-medium text-foreground underline underline-offset-2" to={ONBOARDING_PATH}>{t('stores.onboarding.title')}</Link>
-    </p>
+    <WarningBanner
+      action={{ label: t('stores.setup.action'), to: ONBOARDING_PATH }}
+      closeLabel={t('stores.setup.close')}
+      dismissKey="sk.storeSetupNotice"
+      title={t('stores.setup.notice')}
+    />
   )
 }

@@ -64,7 +64,7 @@ describe('[E4.11][AC51] the media library in English', () => {
     expect(within(wall).getAllByRole('listitem')).toHaveLength(3)
     expect(within(wall).getByRole('button', { name: 'Sunrise.JPG' })).toBeInTheDocument()
     expect(within(wall).getByText('Unused')).toBeInTheDocument()
-    expect(within(wall).getByText('Retired')).toBeInTheDocument()
+    expect(within(wall).getByText('Deleted')).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Photos · 31' })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Audio · 2' })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'PDFs · 1' })).toBeInTheDocument()
@@ -111,7 +111,7 @@ describe('[E4.11][AC51] the media library in English', () => {
     await screen.findByRole('list', { name: 'PDFs' })
     await userEvent.click(screen.getByRole('button', { name: 'Actions for Walk.pdf' }))
 
-    expect(await screen.findByRole('menuitem', { name: 'Retire (used on 3 pages)' })).toHaveAttribute('aria-disabled', 'true')
+    expect(await screen.findByRole('menuitem', { name: 'Delete (used on 3 pages)' })).toHaveAttribute('aria-disabled', 'true')
   })
 
   it('[E4.11][AC51] the empty state of a new shop, and the no-match state', async () => {
@@ -147,8 +147,18 @@ describe('[E4.11][AC51] the media library in English', () => {
 
     expect(listCalls().at(-1)!.path).toContain('use=unused%2Cdrafts')
     expect(listCalls().at(-1)!.path).toContain('status=ready')
-    for (const chip of ['Unused', 'Only in drafts', 'Ready'])
-      expect(screen.getByRole('button', { name: new RegExp(chip) })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove filter Use: Unused, Only in drafts' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove filter Status: Ready' })).toBeInTheDocument()
+  })
+
+  it('[E4.11][AC51] Clear all takes every filter out of the address', async () => {
+    answerWith()
+    renderMedia('/store/content/media?use=unused&status=ready')
+
+    await screen.findByRole('list', { name: 'Photos' })
+    await userEvent.click(screen.getByRole('button', { name: 'Clear all' }))
+
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Clear all' })).not.toBeInTheDocument())
   })
 
   it('[E4.11][AC51] shows tiles shaped like the wall while the list is on its way', async () => {
@@ -156,6 +166,25 @@ describe('[E4.11][AC51] the media library in English', () => {
     renderMedia()
 
     await waitFor(() => expect(document.querySelectorAll('ul[aria-hidden="true"] li')).toHaveLength(12))
+  })
+
+  it('[E4.11][AC51] a filter change keeps the toolbar and swaps the wall for tiles until the new answer arrives', async () => {
+    answerWith({
+      list: path => (path.includes('use=')
+        ? Response.json(page([item({ name: 'Sunrise.JPG' })]))
+        : new Promise<Response>(resolve => setTimeout(resolve, 900, Response.json(page([item({ id: other, name: 'Fresh.jpg' })])))) as unknown as Response),
+    })
+    renderMedia('/store/content/media?use=unused')
+
+    await screen.findByText('Sunrise.JPG')
+    await userEvent.click(screen.getByRole('button', { name: 'Clear all' }))
+
+    await waitFor(() => expect(document.querySelectorAll('ul[aria-hidden="true"] li')).toHaveLength(12))
+    expect(screen.queryByText('Sunrise.JPG')).not.toBeInTheDocument()
+    expect(document.querySelector('[aria-busy="true"]')).not.toBeNull()
+    expect(screen.getByRole('searchbox', { name: 'Search by name' })).toBeInTheDocument()
+    expect(await screen.findByText('Fresh.jpg', undefined, SLOW)).toBeInTheDocument()
+    expect(document.querySelector('[aria-busy="true"]')).toBeNull()
   })
 
   it('[E4.11][AC51] a failed read says so', async () => {
@@ -182,11 +211,11 @@ describe('[E4.11][AC51] the detail sheet', () => {
     expect(within(dialog).getByText('Tour · cover')).toBeInTheDocument()
     expect(within(dialog).getByText('Fondue set')).toBeInTheDocument()
     expect(within(dialog).getByText('Keepsake · photo')).toBeInTheDocument()
-    const retire = within(dialog).getByRole('button', { name: 'Retire' })
+    const retire = within(dialog).getByRole('button', { name: 'Delete' })
 
     expect(retire).toBeDisabled()
     expect(retire).toHaveAttribute('aria-describedby', `retire-${photoId}`)
-    expect(within(dialog).getByText('Used on 3 pages. Remove it from them, or replace it, before you can retire it.')).toHaveAttribute('id', `retire-${photoId}`)
+    expect(within(dialog).getByText('Used on 3 pages. Remove it from them, or replace it, before you can delete it.')).toHaveAttribute('id', `retire-${photoId}`)
     expect(within(dialog).getByRole('button', { name: 'Replace' })).toBeEnabled()
     expect(state.calls.some(call => call.path === `${base}/${photoId}/uses`)).toBe(true)
   })
@@ -199,7 +228,7 @@ describe('[E4.11][AC51] the detail sheet', () => {
     const dialog = await sheet()
 
     expect(await within(dialog).findByText('No page uses this file.')).toBeInTheDocument()
-    expect(within(dialog).getByRole('button', { name: 'Retire' })).toBeEnabled()
+    expect(within(dialog).getByRole('button', { name: 'Delete' })).toBeEnabled()
     expect(within(dialog).getByText('IMG_4032.JPG')).toBeInTheDocument()
     expect(within(dialog).getByText('4032 × 3024')).toBeInTheDocument()
     expect(within(dialog).getByText('3.2 MB')).toBeInTheDocument()
@@ -244,8 +273,8 @@ describe('[E4.11][AC51] the detail sheet', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Kapellbruecke-Sunrise.JPG' }))
     const dialog = await sheet()
 
-    expect(within(dialog).getByText('Retired. Pages can no longer choose it, and it cannot come back.')).toBeInTheDocument()
-    expect(within(dialog).queryByRole('button', { name: 'Retire' })).not.toBeInTheDocument()
+    expect(within(dialog).getByText('Deleted. Pages can no longer choose it, and it cannot come back.')).toBeInTheDocument()
+    expect(within(dialog).queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument()
     expect(within(dialog).queryByRole('button', { name: 'Replace' })).not.toBeInTheDocument()
     expect(within(dialog).queryByRole('button', { name: 'Save name and description' })).not.toBeInTheDocument()
     expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveAttribute('readonly')
@@ -260,19 +289,19 @@ describe('[E4.11][AC51] retiring', () => {
     renderMedia()
 
     await userEvent.click(await screen.findByRole('button', { name: 'Kapellbruecke-Sunrise.JPG' }))
-    await userEvent.click(within(await sheet()).getByRole('button', { name: 'Retire' }))
+    await userEvent.click(within(await sheet()).getByRole('button', { name: 'Delete' }))
     const confirm = await screen.findByRole('alertdialog')
 
-    expect(within(confirm).getByText('Retire Kapellbruecke-Sunrise.JPG?')).toBeInTheDocument()
-    expect(within(confirm).getByText('No page uses it. Retired files leave the library and the pickers, and cannot come back.')).toBeInTheDocument()
-    await userEvent.click(within(confirm).getByRole('button', { name: 'Retire file' }))
+    expect(within(confirm).getByText('Delete Kapellbruecke-Sunrise.JPG?')).toBeInTheDocument()
+    expect(within(confirm).getByText('No page uses it. Deleted files leave the library and the pickers, and cannot come back.')).toBeInTheDocument()
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Delete file' }))
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `${base}/${photoId}/retire` })
-    await waitFor(() => expect(toasts.success).toHaveBeenCalledWith('Kapellbruecke-Sunrise.JPG retired.'))
+    await waitFor(() => expect(toasts.success).toHaveBeenCalledWith('Kapellbruecke-Sunrise.JPG deleted.'))
   })
 
-  it('[E4.11][AC51] a retire that loses the race to a draft shows "Not retired" in the sheet and keeps Retire off', async () => {
+  it('[E4.11][AC51] a retire that loses the race to a draft shows "Not deleted" in the sheet and keeps Retire off', async () => {
     let retired = false
     answerWith({
       list: () => Response.json(page([retired ? item({ usage: { pages: 1, published: 0, drafts: 1 } }) : item(unused)])),
@@ -288,17 +317,18 @@ describe('[E4.11][AC51] retiring', () => {
     renderMedia()
 
     await userEvent.click(await screen.findByRole('button', { name: 'Kapellbruecke-Sunrise.JPG' }))
-    await userEvent.click(within(await sheet()).getByRole('button', { name: 'Retire' }))
-    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Retire file' }))
+    await userEvent.click(within(await sheet()).getByRole('button', { name: 'Delete' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete file' }))
 
     const dialog = await sheet()
 
-    expect(await within(dialog).findByText('Not retired')).toBeInTheDocument()
-    expect(within(dialog).getByText('While you were deciding, a page started to use this file. A file in use cannot be retired.')).toBeInTheDocument()
-    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Retire' })).toBeDisabled())
-    expect(within(dialog).getByText('Used on 1 page. Remove it from there, or replace it, before you can retire it.')).toBeInTheDocument()
+    expect(await within(dialog).findByText('Not deleted')).toBeInTheDocument()
+    expect(within(dialog).getByText('While you were deciding, a page started to use this file. A file in use cannot be deleted.')).toBeInTheDocument()
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Delete' })).toBeDisabled())
+    expect(within(dialog).getByText('Used on 1 page. Remove it from there, or replace it, before you can delete it.')).toBeInTheDocument()
     expect(toasts.success).not.toHaveBeenCalled()
-    expect(toasts.danger).toHaveBeenCalledExactlyOnceWith('While you were deciding, a page started to use this file. A file in use cannot be retired.')
+    // The sheet says it; a refusal of a retire shows in the confirm dialog or the sheet, never as a toast too.
+    expect(toasts.danger).not.toHaveBeenCalled()
   })
 
   it('[E4.11][AC51] Select mode retires only the unused files and keeps the used ones', async () => {
@@ -309,22 +339,95 @@ describe('[E4.11][AC51] retiring', () => {
     renderMedia()
 
     await screen.findByRole('list', { name: 'Photos' })
+    expect(screen.getByRole('button', { name: 'Used.jpg' }).querySelector('.rounded-full.border-2')).toBeNull()
     await userEvent.click(screen.getByRole('button', { name: 'Select' }))
+    for (const name of ['Used.jpg', 'Free-one.jpg', 'Free-two.jpg'])
+      expect(screen.getByRole('button', { name: `Select ${name}` }).querySelector('.rounded-full.border-2')).not.toBeNull()
     for (const name of ['Used.jpg', 'Free-one.jpg', 'Free-two.jpg'])
       await userEvent.click(screen.getByRole('button', { name: `Select ${name}` }))
 
     expect(screen.getByText('3 selected')).toBeInTheDocument()
     expect(screen.getByText('1 in use, kept')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Retire 2' }))
+    const chosen = screen.getByRole('button', { name: 'Select Used.jpg' })
+
+    expect(chosen).toHaveAttribute('aria-pressed', 'true')
+    expect(chosen.querySelector('.ring-3.ring-accent.ring-inset')).not.toBeNull()
+    expect(chosen.querySelector('.rounded-full.border-2 svg')).not.toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: 'Delete 2' }))
     const confirm = await screen.findByRole('alertdialog')
 
-    expect(within(confirm).getByText('Retire 2')).toBeInTheDocument()
+    expect(within(confirm).getByText('Delete 2')).toBeInTheDocument()
     expect(within(confirm).getByText(/1 in use, kept\./)).toBeInTheDocument()
-    await userEvent.click(within(confirm).getByRole('button', { name: 'Retire file' }))
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Delete file' }))
 
     await waitFor(() => expect(writes()).toHaveLength(2))
     expect(writes().map(call => call.path).sort()).toEqual([`${base}/${other}/retire`, `${base}/${third}/retire`].sort())
-    await waitFor(() => expect(toasts.success).toHaveBeenCalledWith('2 files retired. 1 in use were kept.'))
+    await waitFor(() => expect(toasts.success).toHaveBeenCalledWith('2 files deleted. 1 in use were kept.'))
+  })
+
+  it('[E4.11][AC51] Select mode: the dialog waits with a spinner for the batch, then the deleted tiles are gone at once, with a refused file kept', async () => {
+    const gone = new Set<string>()
+    const release: Array<() => void> = []
+    const files = [item({ name: 'Used.jpg' }), item({ id: other, name: 'Free-one.jpg', ...unused }), item({ id: third, name: 'Free-two.jpg', ...unused })]
+
+    answerWith({
+      list: () => Response.json(page(files.filter(file => !gone.has(file.id)))),
+      other: (call) => {
+        if (call.method !== 'POST')
+          return undefined
+        const id = call.path.split('/').at(-2)!
+
+        // The server answers when the test says so; Free-two was taken by a page meanwhile.
+        return new Promise<Response>((resolve) => {
+          release.push(() => {
+            if (id === third)
+              return resolve(problem(409, 'media-in-use'))
+            gone.add(id)
+            resolve(Response.json(item({ id, status: 'retired' })))
+          })
+        }) as unknown as Response
+      },
+    })
+    renderMedia()
+
+    await screen.findByRole('list', { name: 'Photos' })
+    await userEvent.click(screen.getByRole('button', { name: 'Select' }))
+    for (const name of ['Free-one.jpg', 'Free-two.jpg'])
+      await userEvent.click(screen.getByRole('button', { name: `Select ${name}` }))
+    await userEvent.click(screen.getByRole('button', { name: 'Delete 2' }))
+    const confirm = await screen.findByRole('alertdialog')
+
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Delete file' }))
+    await waitFor(() => expect(release).toHaveLength(2))
+    // Both writes run together, and the dialog and the tiles stay until the server answers.
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+    expect(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Cancel' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Select Free-one.jpg', hidden: true })).toBeInTheDocument()
+    expect(toasts.success).not.toHaveBeenCalled()
+    release.forEach(answer => answer())
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: 'Free-one.jpg' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Free-two.jpg' })).toBeInTheDocument()
+    expect(toasts.success).toHaveBeenCalledWith('1 file deleted. 1 in use were kept.')
+  })
+
+  it('[E4.11][AC51] Select mode: when every delete fails the dialog stays open and says why', async () => {
+    answerWith({
+      list: () => Response.json(page([item({ id: other, name: 'Free-one.jpg', ...unused })])),
+      other: call => (call.method === 'POST' ? problem(503, 'storage-unavailable') : undefined),
+    })
+    renderMedia()
+
+    await screen.findByRole('list', { name: 'Photos' })
+    await userEvent.click(screen.getByRole('button', { name: 'Select' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Select Free-one.jpg' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Delete 1' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete file' }))
+
+    expect(await within(screen.getByRole('alertdialog')).findByRole('alert')).toBeInTheDocument()
+    expect(toasts.success).not.toHaveBeenCalled()
+    expect(toasts.danger).not.toHaveBeenCalled()
   })
 
   it('[E4.11][AC51] Select is on the photo wall only', async () => {
@@ -406,7 +509,7 @@ describe('[E4.11][AC51] replacing', () => {
     await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Choose new file' }))
     await userEvent.upload(screen.getByTestId('replace-input'), new File(['png'], 'new.png', { type: 'image/png' }))
 
-    await waitFor(() => expect(toasts.danger).toHaveBeenCalledExactlyOnceWith('This file is retired and cannot change.'))
+    await waitFor(() => expect(toasts.danger).toHaveBeenCalledExactlyOnceWith('This file is deleted and cannot change.'))
   })
 
   it.each([
@@ -512,7 +615,7 @@ describe('[E4.11][AC51] the media library in German', () => {
     expect(await within(dialog).findByText('Auf veröffentlichten Seiten (2)', undefined, SLOW)).toBeInTheDocument()
     expect(within(dialog).getByText('Nur in Entwürfen (1)')).toBeInTheDocument()
     expect(within(dialog).getByText('Geschichte · EN · Titelbild')).toBeInTheDocument()
-    expect(within(dialog).getByText('Auf 3 Seiten verwendet. Entfernen Sie sie dort oder ersetzen Sie sie, bevor Sie sie ausser Dienst nehmen können.')).toBeInTheDocument()
+    expect(within(dialog).getByText('Auf 3 Seiten verwendet. Entfernen Sie sie dort oder ersetzen Sie sie, bevor Sie sie löschen können.')).toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: 'Ersetzen' })).toBeInTheDocument()
     await userEvent.click(within(dialog).getByRole('button', { name: 'Ersetzen' }))
 

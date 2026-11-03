@@ -1,0 +1,603 @@
+[
+  {
+    "key": "coop-bahnhof-luzern",
+    "title": { "en": "Coop Bahnhof Luzern", "de": "Coop Bahnhof Luzern" },
+    "tip": {
+      "en": "The Coop in the train station sells groceries, ready meals, sandwiches, fruit and drinks from early morning until late evening. It is the quickest place to stock up on cheap food before a train ride. The shop sits in the underground level of the station.",
+      "de": "Der Coop im Bahnhof verkauft Lebensmittel, Fertigessen, Sandwiches, Obst und Getränke von frühem Morgen bis spät am Abend. Hier lassen sich vor der Zugfahrt schnell und günstig Lebensmittel besorgen. Der Laden liegt im Untergeschoss des Bahnhofs."
+    },
+    "localTip": {
+      "en": "It is in the underground level (UG), close to the escalators.",
+      "de": "Er liegt im Untergeschoss (UG), nahe den Rolltreppen."
+    },
+    "latitude": 47.050299,
+    "longitude": 8.311188,
+    "address": "Bahnhofplatz, Zentralstrasse 1, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050299,8.311188",
+    "weeklyHours": [
+      { "day": 1, "opens": "06:00", "closes": "22:00" },
+      { "day": 2, "opens": "06:00", "closes": "22:00" },
+      { "day": 3, "opens": "06:00", "closes": "22:00" },
+      { "day": 4, "opens": "06:00", "closes": "22:00" },
+      { "day": 5, "opens": "06:00", "closes": "22:00" },
+      { "day": 6, "opens": "06:00", "closes": "22:00" },
+      { "day": 7, "opens": "07:00", "closes": "22:00" }
+    ],
+    "stayTag": "both",
+    "interests": ["food-drink"],
+    "mustVisit": false,
+    "outboundUrl": "https://www.coop.ch/de/standorte/luzern-bahnhof",
+    "categories": ["supermarkets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.coop.ch/de/standorte/luzern-bahnhof",
+      "https://www.openstreetmap.org/way/379354224",
+      "https://nominatim.openstreetmap.org/search?q=Coop+Bahnhof+Luzern&format=json"
+    ]
+  },
+  {
+    "key": "migros-bahnhof-luzern",
+    "title": { "en": "Migros Bahnhof Luzern", "de": "Migros Bahnhof Luzern" },
+    "tip": {
+      "en": "The Migros in the station has fresh bread, salad, fruit, sandwiches and ready meals and opens at six in the morning. It is a good stop for a quick breakfast before the train. The smaller Migros Daily next door sells drinks and snacks for the platform.",
+      "de": "Die Migros im Bahnhof hat frisches Brot, Salate, Obst, Sandwiches und Fertigessen und öffnet um sechs Uhr morgens. Ein guter Stopp für ein schnelles Frühstück vor dem Zug. Das kleinere Migros Daily nebenan verkauft Getränke und Snacks für den Bahnsteig."
+    },
+    "localTip": {
+      "en": "It is in the underground level (UG), on the way to the platforms.",
+      "de": "Er liegt im Untergeschoss (UG), auf dem Weg zu den Bahnsteigen."
+    },
+    "latitude": 47.050775,
+    "longitude": 8.309268,
+    "address": "Bahnhofplatz, Zentralstrasse 1, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050775,8.309268",
+    "weeklyHours": [
+      { "day": 1, "opens": "06:00", "closes": "22:00" },
+      { "day": 2, "opens": "06:00", "closes": "22:00" },
+      { "day": 3, "opens": "06:00", "closes": "22:00" },
+      { "day": 4, "opens": "06:00", "closes": "22:00" },
+      { "day": 5, "opens": "06:00", "closes": "22:00" },
+      { "day": 6, "opens": "06:00", "closes": "22:00" },
+      { "day": 7, "opens": "07:00", "closes": "22:00" }
+    ],
+    "stayTag": "both",
+    "interests": ["food-drink"],
+    "mustVisit": false,
+    "outboundUrl": "https://filialen.migros.ch/de/migros-supermarkt-luzern-bahnhof",
+    "categories": ["supermarkets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://filialen.migros.ch/de/migros-supermarkt-luzern-bahnhof",
+      "https://www.openstreetmap.org/way/379342427",
+      "https://nominatim.openstreetmap.org/search?q=Migros+Bahnhof+Luzern&format=json"
+    ]
+  },
+  {
+    "key": "bachmann-bahnhof-ug",
+    "title": { "en": "Bachmann at Bahnhof Luzern UG", "de": "Bachmann am Bahnhof Luzern UG" },
+    "tip": {
+      "en": "In the underground level of the station, the Confiseur Bachmann sells sandwiches, coffee and Lucerne specialties such as the Chatzestreckerli and the pear sweet. Everything is packed for the train, so it is an easy place to buy a gift while passing through the station.",
+      "de": "Im Untergeschoss des Bahnhofs verkauft der Confiseur Bachmann Sandwiches, Kaffee und Luzerner Spezialitäten wie das Chatzestreckerli und den Birnenweggen. Alles ist für die Reise verpackt, so lässt sich beim Durchqueren des Bahnhofs leicht ein Mitbringsel kaufen."
+    },
+    "localTip": {
+      "en": "The shop is in the underground level (UG) of the station.",
+      "de": "Der Laden liegt im Untergeschoss (UG) des Bahnhofs."
+    },
+    "latitude": 47.050357,
+    "longitude": 8.309283,
+    "address": "Bahnhof Luzern, UG, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050357,8.309283",
+    "weeklyHours": [
+      { "day": 1, "opens": "06:15", "closes": "21:00" },
+      { "day": 2, "opens": "06:15", "closes": "21:00" },
+      { "day": 3, "opens": "06:15", "closes": "21:00" },
+      { "day": 4, "opens": "06:15", "closes": "21:00" },
+      { "day": 5, "opens": "06:15", "closes": "21:00" },
+      { "day": 6, "opens": "06:30", "closes": "20:00" },
+      { "day": 7, "opens": "07:30", "closes": "20:00" }
+    ],
+    "stayTag": "both",
+    "interests": ["food-drink", "shopping-keepsakes"],
+    "mustVisit": false,
+    "outboundUrl": "https://www.confiserie.ch/de/bahnhof-ug",
+    "categories": ["chocolate", "cafes"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.confiserie.ch/de/bahnhof-ug",
+      "https://www.openstreetmap.org/way/379342429",
+      "https://www.openstreetmap.org/search?query=Bachmann%20Bahnhof%20Luzern"
+    ]
+  },
+  {
+    "key": "manor-luzern",
+    "title": { "en": "Manor Luzern", "de": "Manor Luzern" },
+    "tip": {
+      "en": "The Manor department store on the Weggisgasse has a food hall on the ground floor and the Manora restaurant on the top floor, plus household goods, clothing and Swiss souvenirs. It is a good place to browse on a rainy afternoon and to pick up a gift without leaving the old town.",
+      "de": "Das Warenhaus Manor an der Weggisgasse hat im Erdgeschoss eine Food Hall und im obersten Stock das Restaurant Manora, dazu Haushaltswaren, Kleider und Schweizer Souvenirs. Ein guter Ort zum Stöbern bei Regenwetter und für ein Mitbringsel mitten in der Altstadt."
+    },
+    "localTip": {
+      "en": "The entrance is on Weggisgasse, the restaurant is on the top floor.",
+      "de": "Der Eingang liegt an der Weggisgasse, das Restaurant im obersten Stock."
+    },
+    "latitude": 47.053125,
+    "longitude": 8.306425,
+    "address": "Weggisgasse 5, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.053125,8.306425",
+    "weeklyHours": [
+      { "day": 1, "opens": "09:00", "closes": "19:00" },
+      { "day": 2, "opens": "09:00", "closes": "19:00" },
+      { "day": 3, "opens": "09:00", "closes": "19:00" },
+      { "day": 4, "opens": "09:00", "closes": "20:00" },
+      { "day": 5, "opens": "09:00", "closes": "19:00" },
+      { "day": 6, "opens": "09:00", "closes": "17:00" }
+    ],
+    "stayTag": "both",
+    "interests": ["shopping-keepsakes", "food-drink"],
+    "mustVisit": false,
+    "outboundUrl": "https://www.manor.ch/de/store-finder/store/LUZ",
+    "categories": ["department-stores", "supermarkets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.manor.ch/de/store-finder/store/LUZ",
+      "https://www.openstreetmap.org/node/4120750746",
+      "https://nominatim.openstreetmap.org/search?q=Manor+Weggisgasse+Luzern&format=json"
+    ]
+  },
+  {
+    "key": "toilets-bahnhof-mcclean",
+    "title": { "en": "Toilets in the train station (McClean)", "de": "Toiletten im Bahnhof (McClean)" },
+    "tip": {
+      "en": "The paid toilets in the station are run by McClean on the underground level. A fee is charged and the facility also has showers. They are open from 9 am on weekdays and from 10 am at the weekend. Bring a coin or a card.",
+      "de": "Die gebührenpflichtigen Toiletten im Bahnhof betreibt McClean im Untergeschoss. Es wird ein Preis berechnet, und die Anlage hat auch Duschen. Von Montag bis Freitag ab 9 Uhr, am Wochenende ab 10 Uhr geöffnet. Halten Sie eine Münze oder eine Karte bereit."
+    },
+    "localTip": {
+      "en": "Paid, so have a coin or a card ready.",
+      "de": "Gebührenpflichtig, halten Sie eine Münze oder eine Karte bereit."
+    },
+    "latitude": 47.050622,
+    "longitude": 8.311419,
+    "address": "Bahnhof Luzern, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050622,8.311419",
+    "weeklyHours": [
+      { "day": 1, "opens": "09:00", "closes": "21:00" },
+      { "day": 2, "opens": "09:00", "closes": "21:00" },
+      { "day": 3, "opens": "09:00", "closes": "21:00" },
+      { "day": 4, "opens": "09:00", "closes": "21:00" },
+      { "day": 5, "opens": "09:00", "closes": "21:00" },
+      { "day": 6, "opens": "10:00", "closes": "20:00" },
+      { "day": 7, "opens": "10:00", "closes": "20:00" }
+    ],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": null,
+    "categories": ["toilets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+      "https://www.openstreetmap.org/way/379354230"
+    ]
+  },
+  {
+    "key": "toilets-bahnhof",
+    "title": { "en": "Public toilets at the train station", "de": "Öffentliche Toiletten am Bahnhof" },
+    "tip": {
+      "en": "Next to the station building the city keeps free public toilets that are open around the clock. They are barrier-free and are cleaned at least twice a day. They are a good fallback when the paid station toilet is closed.",
+      "de": "Neben dem Bahnhofgebäude betreibt die Stadt kostenlose öffentliche Toiletten, die rund um die Uhr geöffnet sind. Sie sind hindernisfrei und werden mindestens zweimal täglich gereinigt. Sie sind eine gute Alternative, wenn die gebührenpflichtige Bahnhoftoilette geschlossen ist."
+    },
+    "localTip": {
+      "en": "Always open and free of charge.",
+      "de": "Rund um die Uhr geöffnet und kostenlos."
+    },
+    "latitude": 47.050715,
+    "longitude": 8.310378,
+    "address": "Bahnhof Luzern, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050715,8.310378",
+    "weeklyHours": [],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+    "categories": ["toilets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+      "https://www.openstreetmap.org/way/444750471"
+    ]
+  },
+  {
+    "key": "toilets-bahnhofplatz",
+    "title": { "en": "Public toilets at the station square", "de": "Öffentliche Toiletten am Bahnhofplatz" },
+    "tip": {
+      "en": "A second free public toilet stands by the bus stop on the station square. It is open around the clock and has a wheelchair-accessible cubicle, though the way in is partly stepped. It serves the platforms and the buses.",
+      "de": "Am Busstopp auf dem Bahnhofplatz steht ein zweites kostenloses öffentliches WC. Es ist rund um die Uhr geöffnet und hat eine rollstuhlgerechte Kabine, der Zugang ist aber teilweise mit Stufen versehen. Es bedient die Bahnsteige und die Busse."
+    },
+    "localTip": {
+      "en": "Always open, next to the bus stop.",
+      "de": "Rund um die Uhr geöffnet, neben dem Busstopp."
+    },
+    "latitude": 47.050777,
+    "longitude": 8.310723,
+    "address": "Bahnhofplatz, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050777,8.310723",
+    "weeklyHours": [],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+    "categories": ["toilets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+      "https://www.openstreetmap.org/node/4420507990"
+    ]
+  },
+  {
+    "key": "toilets-kkl",
+    "title": { "en": "Toilets at the KKL", "de": "Toiletten im KKL" },
+    "tip": {
+      "en": "The culture and congress centre on the Europaplatz has public toilets on the lakeside side of the building. They are free and barrier-free, which makes them a good stop on a walk along the lake. The opening hours are not published for this entrance.",
+      "de": "Das Kultur- und Kongresszentrum am Europaplatz hat auf der Seeseite öffentliche Toiletten. Sie sind kostenlos und hindernisfrei, ein guter Stopp auf einem Spaziergang am See. Die Öffnungszeiten sind für diesen Zugang nicht veröffentlicht."
+    },
+    "localTip": {
+      "en": "Free, on the lake side of the KKL.",
+      "de": "Kostenlos, auf der Seeseite des KKL."
+    },
+    "latitude": 47.050062,
+    "longitude": 8.313394,
+    "address": "Europaplatz 1, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050062,8.313394",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+    "categories": ["toilets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+      "https://www.openstreetmap.org/node/12874999529"
+    ]
+  },
+  {
+    "key": "toilets-inseli",
+    "title": { "en": "Public toilets at the Inseli", "de": "Öffentliche Toiletten auf der Inseli" },
+    "tip": {
+      "en": "The small park peninsula on the lake has free public toilets near the Inselipark fountain. One cubicle is wheelchair accessible. They are a convenient stop on a walk along the Reuss towards the KKL.",
+      "de": "Auf der kleinen Parkinsel am See gibt es nahe der Inseliparkbrunnen kostenlose öffentliche Toiletten. Eine Kabine ist rollstuhlgerecht. Praktisch auf einem Spaziergang entlang der Reuss Richtung KKL."
+    },
+    "localTip": {
+      "en": "Free, on the way to the KKL.",
+      "de": "Kostenlos, auf dem Weg zum KKL."
+    },
+    "latitude": 47.049253,
+    "longitude": 8.314228,
+    "address": "Inseliquai, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.049253,8.314228",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+    "categories": ["toilets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+      "https://www.openstreetmap.org/node/3972181414"
+    ]
+  },
+  {
+    "key": "toilets-franziskanerplatz",
+    "title": { "en": "Public toilets at the Franziskanerplatz", "de": "Öffentliche Toiletten am Franziskanerplatz" },
+    "tip": {
+      "en": "Behind the Franziskaner church in the old town there is a free public toilet that is barrier-free. It sits in a quiet corner between the Reuss and the lanes of the Altstadt. The opening hours are not published.",
+      "de": "Hinter der Franziskanerkirche in der Altstadt liegt ein kostenloses öffentliches WC, das hindernisfrei ist. Es liegt in einer ruhigen Ecke zwischen der Reuss und den Gassen der Altstadt. Die Öffnungszeiten sind nicht veröffentlicht."
+    },
+    "localTip": {
+      "en": "Free and barrier-free, behind the church.",
+      "de": "Kostenlos und hindernisfrei, hinter der Kirche."
+    },
+    "latitude": 47.049224,
+    "longitude": 8.303317,
+    "address": "Franziskanerplatz, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.049224,8.303317",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+    "categories": ["toilets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+      "https://www.openstreetmap.org/way/421084406"
+    ]
+  },
+  {
+    "key": "toilets-voegeligaertli",
+    "title": { "en": "Public toilets at the Vögeligärtli", "de": "Öffentliche Toiletten im Vögeligärtli" },
+    "tip": {
+      "en": "Next to the Vögeligärtli flea market the city keeps a free public toilet that is barrier-free. The city tested a new, vandal-resistant closing system here, so the door is easy to use. Good for the market on Saturday morning.",
+      "de": "Neben dem Flohmarkt im Vögeligärtli betreibt die Stadt ein kostenloses, hindernisfreies öffentliches WC. Hier wurde ein neues, robustes Schliesssystem getestet, die Tür ist deshalb leicht zu bedienen. Praktisch am Samstagmorgen auf dem Flohmarkt."
+    },
+    "localTip": {
+      "en": "Free, right by the Saturday flea market.",
+      "de": "Kostenlos, direkt beim Samstagsflohmarkt."
+    },
+    "latitude": 47.048797,
+    "longitude": 8.307748,
+    "address": "Vögeligärtli, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.048797,8.307748",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+    "categories": ["toilets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+      "https://www.openstreetmap.org/way/463244180"
+    ]
+  },
+  {
+    "key": "toilets-bundesplatz",
+    "title": { "en": "Public toilets at the Bundesplatz", "de": "Öffentliche Toiletten am Bundesplatz" },
+    "tip": {
+      "en": "At the Bundesplatz below the Musegg wall the city keeps a free public toilet. It is not barrier-free. It is handy before you climb the stairs up to the Musegg towers and the wall walk.",
+      "de": "Am Bundesplatz unterhalb der Museggmauer betreibt die Stadt ein kostenloses öffentliches WC. Es ist nicht hindernisfrei. Praktisch, bevor Sie die Treppe zu den Museggtürmen und dem Wallweg hinaufgehen."
+    },
+    "localTip": {
+      "en": "Free, at the foot of the Musegg wall.",
+      "de": "Kostenlos, am Fuss der Museggmauer."
+    },
+    "latitude": 47.045592,
+    "longitude": 8.308630,
+    "address": "Bundesplatz, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.045592,8.308630",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+    "categories": ["toilets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+      "https://www.openstreetmap.org/node/3018783715"
+    ]
+  },
+  {
+    "key": "toilets-loewendenkmal",
+    "title": { "en": "Public toilets at the Lion Monument", "de": "Öffentliche Toiletten beim Löwendenkmal" },
+    "tip": {
+      "en": "There is a free public toilet next to the Lion Monument at the foot of the Musegg wall. It is not barrier-free, so visitors who need one should use the facilities in the old town. A good place for a short break on the way up.",
+      "de": "Neben dem Löwendenkmal am Fuss der Museggmauer gibt es ein kostenloses öffentliches WC. Es ist nicht hindernisfrei, wer das braucht, nutzt besser die Anlagen in der Altstadt. Ein guter Ort für eine kurze Pause auf dem Weg nach oben."
+    },
+    "localTip": {
+      "en": "Free, next to the Lion Monument.",
+      "de": "Kostenlos, neben dem Löwendenkmal."
+    },
+    "latitude": 47.057982,
+    "longitude": 8.310978,
+    "address": "Denkmalstrasse, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.057982,8.310978",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+    "categories": ["toilets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+      "https://www.openstreetmap.org/node/3623167678"
+    ]
+  },
+  {
+    "key": "toilets-museggmauer",
+    "title": { "en": "Public toilets at the Musegg wall", "de": "Öffentliche Toiletten an der Museggmauer" },
+    "tip": {
+      "en": "At the foot of the Musegg wall near the Kasernenplatz there is a free public toilet. It is not barrier-free. Useful before you walk up to the towers and along the wall.",
+      "de": "Am Fuss der Museggmauer nahe dem Kasernenplatz gibt es ein kostenloses öffentliches WC. Es ist nicht hindernisfrei. Nützlich, bevor Sie zu den Türmen und über die Mauer hinweggehen."
+    },
+    "localTip": {
+      "en": "Free, at the foot of the wall.",
+      "de": "Kostenlos, am Fuss der Mauer."
+    },
+    "latitude": 47.052123,
+    "longitude": 8.300180,
+    "address": "Kasernenplatz, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.052123,8.300180",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+    "categories": ["toilets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+      "https://www.openstreetmap.org/node/4611245689"
+    ]
+  },
+  {
+    "key": "toilets-luzernerhof",
+    "title": { "en": "Public toilets at the Luzernerhof", "de": "Öffentliche Toiletten beim Luzernerhof" },
+    "tip": {
+      "en": "Near the Luzernerhof and the road up to the Lido there is a free public toilet that is barrier-free. It serves the bus stop and the paths along the lake. The opening hours are not published.",
+      "de": "Beim Luzernerhof und auf der Strasse zum Lido gibt es ein kostenloses, hindernisfreies öffentliches WC. Es bedient den Busstopp und die Wege am See. Die Öffnungszeiten sind nicht veröffentlicht."
+    },
+    "localTip": {
+      "en": "Free, on the way up to the Lido.",
+      "de": "Kostenlos, auf dem Weg zum Lido."
+    },
+    "latitude": 47.054576,
+    "longitude": 8.312304,
+    "address": "Luzernerhof, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.054576,8.312304",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+    "categories": ["toilets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+      "https://www.openstreetmap.org/node/3681734099"
+    ]
+  },
+  {
+    "key": "toilets-alpenquai",
+    "title": { "en": "Public toilets at the Alpenquai", "de": "Öffentliche Toiletten am Alpenquai" },
+    "tip": {
+      "en": "Along the Alpenquai on the lakeside promenade the city runs a free public toilet that is open around the clock. It is not barrier-free. Useful on a long walk towards the Gütsch.",
+      "de": "Am Alpenquai auf der Seepromenade betreibt die Stadt ein kostenloses öffentliches WC, das rund um die Uhr geöffnet ist. Es ist nicht hindernisfrei. Nützlich auf einem langen Spaziergang Richtung Gütsch."
+    },
+    "localTip": {
+      "en": "Always open and free of charge.",
+      "de": "Rund um die Uhr geöffnet und kostenlos."
+    },
+    "latitude": 47.046398,
+    "longitude": 8.319794,
+    "address": "Alpenquai, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.046398,8.319794",
+    "weeklyHours": [],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+    "categories": ["toilets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+      "https://www.openstreetmap.org/node/1265108862"
+    ]
+  },
+  {
+    "key": "toilets-nette-wirtschaft-zur-ente",
+    "title": { "en": "Friendly toilet at the Wirtschaft zur Ente", "de": "Nette Toilette in der Wirtschaft zur Ente" },
+    "tip": {
+      "en": "The Wirtschaft zur Ente lends its toilet to passers-by free of charge. It is a nette Toilette of the City of Lucerne, which pays the restaurant a small compensation. The kitchen runs from half past nine in the morning, the restaurant is closed on Sunday.",
+      "de": "Die Wirtschaft zur Ente stellt ihre Toilette Passanten kostenlos zur Verfügung. Es ist eine nette Toilette der Stadt Luzern, die dem Restaurant eine kleine Entschädigung zahlt. Die Küche läuft ab halb zehn Uhr morgens, sonntags ist das Restaurant geschlossen."
+    },
+    "localTip": {
+      "en": "Free during the opening hours of the restaurant.",
+      "de": "Kostenlos während der Öffnungszeiten des Restaurants."
+    },
+    "latitude": 47.050374,
+    "longitude": 8.306302,
+    "address": "Buobenmatt 1, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050374,8.306302",
+    "weeklyHours": [
+      { "day": 1, "opens": "09:30", "closes": "24:00" },
+      { "day": 2, "opens": "09:30", "closes": "24:00" },
+      { "day": 3, "opens": "09:30", "closes": "24:00" },
+      { "day": 4, "opens": "09:30", "closes": "24:00" },
+      { "day": 5, "opens": "09:30", "closes": "24:00" },
+      { "day": 6, "opens": "09:30", "closes": "24:00" }
+    ],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+    "categories": ["toilets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+      "https://www.luzern.com/en/information/planning/directions-mobility",
+      "https://www.openstreetmap.org/node/8543627997"
+    ]
+  },
+  {
+    "key": "toilets-nette-bar-capitol",
+    "title": { "en": "Friendly toilet at the Bar Capitol", "de": "Nette Toilette im Bar Capitol" },
+    "tip": {
+      "en": "The Bar Capitol on the Zentralstrasse offers its toilet to visitors free of charge. It is one of the nette Toiletten that the City of Lucerne supports with a small compensation. The bar opens at noon and stays open well past midnight.",
+      "de": "Das Bar Capitol an der Zentralstrasse stellt seine Toilette Besuchern kostenlos zur Verfügung. Es ist eine der netten Toiletten, die die Stadt Luzern mit einer kleinen Entschädigung unterstützt. Die Bar öffnet um zwölf Uhr und bleibt weit über Mitternacht offen."
+    },
+    "localTip": {
+      "en": "Free during the opening hours of the bar.",
+      "de": "Kostenlos während der Öffnungszeiten der Bar."
+    },
+    "latitude": 47.045997,
+    "longitude": 8.309911,
+    "address": "Zentralstrasse 45, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.045997,8.309911",
+    "weeklyHours": [
+      { "day": 1, "opens": "12:00", "closes": "00:30" },
+      { "day": 2, "opens": "12:00", "closes": "00:30" },
+      { "day": 3, "opens": "12:00", "closes": "00:30" },
+      { "day": 4, "opens": "12:00", "closes": "02:30" },
+      { "day": 5, "opens": "12:00", "closes": "02:30" },
+      { "day": 6, "opens": "14:00", "closes": "02:30" },
+      { "day": 7, "opens": "13:00", "closes": "00:30" }
+    ],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+    "categories": ["toilets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+      "https://www.luzern.com/en/information/planning/directions-mobility",
+      "https://www.openstreetmap.org/node/8543430051"
+    ]
+  },
+  {
+    "key": "toilets-nette-parterre",
+    "title": { "en": "Friendly toilet at the Restaurant Parterre", "de": "Nette Toilette im Restaurant Parterre" },
+    "tip": {
+      "en": "The Restaurant Parterre on the Mythenstrasse lends its toilet to passers-by for free. It is one of the nette Toiletten of the City of Lucerne. The restaurant is open from morning until late evening, also at the weekend.",
+      "de": "Das Restaurant Parterre an der Mythenstrasse stellt seine Toilette Passanten kostenlos zur Verfügung. Es ist eine der netten Toiletten der Stadt Luzern. Das Restaurant ist von morgens bis spät am Abend geöffnet, auch am Wochenende."
+    },
+    "localTip": {
+      "en": "Free during the opening hours of the restaurant.",
+      "de": "Kostenlos während der Öffnungszeiten des Restaurants."
+    },
+    "latitude": 47.044764,
+    "longitude": 8.307712,
+    "address": "Mythenstrasse 7, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.044764,8.307712",
+    "weeklyHours": [
+      { "day": 1, "opens": "08:00", "closes": "00:30" },
+      { "day": 2, "opens": "08:00", "closes": "00:30" },
+      { "day": 3, "opens": "08:00", "closes": "00:30" },
+      { "day": 4, "opens": "08:00", "closes": "00:30" },
+      { "day": 5, "opens": "08:00", "closes": "01:30" },
+      { "day": 6, "opens": "09:00", "closes": "01:30" },
+      { "day": 7, "opens": "09:00", "closes": "00:30" }
+    ],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+    "categories": ["toilets"],
+    "dates": [],
+    "photos": [],
+    "sources": [
+      "https://www.stadtluzern.ch/dienstleistungeninformation/85756",
+      "https://www.luzern.com/en/information/planning/directions-mobility",
+      "https://www.openstreetmap.org/node/8544434407"
+    ]
+  }
+]

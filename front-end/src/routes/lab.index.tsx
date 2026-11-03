@@ -10,6 +10,31 @@ export const Route = createFileRoute('/lab/')({
 
 const experiments = [
   {
+    to: '/lab/keepsake-variant-design' as const,
+    title: 'Keepsake variants, v2: three calmer designs (options for the owner to pick)',
+    note: 'After B1 to B3 were turned down as too dense: V1 a quiet grouped list that opens in place, V2 one variant at a time like a settings page, V3 a sentence (“Sell Medium Edelweiss for CHF 39”) over quiet tiles. Laptop and phone width, a sold combination, invalid SKU and price, a refused archive and a new keepsake (31.10.2026).',
+  },
+  {
+    to: '/lab/keepsake-option-design' as const,
+    title: 'Keepsake options, v2: three calmer designs (options for the owner to pick)',
+    note: 'After A1 to A3 were turned down as too dense: O1 a summary row per option that opens one at a time, O2 a plain page you type on, O3 a list and detail. English only until German is asked for; laptop and phone width, errors, a refused delete and a new option on a keepsake with variants (30.10.2026).',
+  },
+  {
+    to: '/lab/keepsake-options' as const,
+    title: 'Keepsake editor: option management and variant creation (options for the owner to pick)',
+    note: 'Three designs for managing an option and its values (type and drag, a table in a sheet, chips with a small editor) and three for creating a variant (a sheet with a live check, a grid of free cells, an open row under the table), each at laptop and phone width with a note on German text, keyboard use and trade-offs (30.10.2026).',
+  },
+  {
+    to: '/lab/location-card' as const,
+    title: 'Location card (place editor, step 1: Location on the map), approved',
+    note: 'Option C chosen 30.10.2026, built into the place editor: a clean link field, a 12 px gap, then the map in its own frame with recenter and remove as a small control group. Kept here as the reference; options A and B were removed.',
+  },
+  {
+    to: '/lab/opening-hours' as const,
+    title: 'Opening hours editor (place editor, step When), approved',
+    note: 'Option A chosen 30.10.2026, built into the place editor: compact week rows with a switch, the range, a second range and copy to other days. Kept here as the reference; the other three options were removed.',
+  },
+  {
     to: '/lab/home' as const,
     title: 'Home: a local friend’s briefing (C01, S2), approved',
     note: 'The approved home: sky hero and map, the practical bits, See these first, free routes, the food map, While you’re in town, Victorinox and the advice banner. Section order fixed; answers only order cards inside sections. English only. Search S2 “One list” (approved) below. Spec: docs/ux/home-design.md (28.10.2026).',

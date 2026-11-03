@@ -1,20 +1,23 @@
-import type { CategoryRepository, KeepsakeUses, ObjectStorage } from '../../src/modules/content/ports.ts'
+import type { AddressRegister, CategoryRepository, KeepsakeUses, MapsLinks, ObjectStorage } from '../../src/modules/content/ports.ts'
 import type { Clock } from '../../src/platform/clock.ts'
 import type { Tx } from '../../src/platform/db/client.ts'
 import type { JobQueue } from '../../src/platform/jobs/queue.ts'
 import type { openTestDatabase } from './support.ts'
 import { randomUUID } from 'node:crypto'
 import { createMediaUses } from '../../src/modules/catalog/adapters/media-uses.ts'
+import { createAddressRegister } from '../../src/modules/content/adapters/address-register-fetch.ts'
 import { createCategoryRepository } from '../../src/modules/content/adapters/category-repository.ts'
 import { guardUseCases } from '../../src/modules/content/adapters/database-errors.ts'
+import { createMapsLinks } from '../../src/modules/content/adapters/maps-link-fetch.ts'
 import { createMediaLibrary } from '../../src/modules/content/adapters/media-library-repository.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
+import { mediaLookupPath } from '../../src/modules/content/adapters/media-routes.ts'
 import { createPinRepository } from '../../src/modules/content/adapters/pin-repository.ts'
 import { createPublicReadRepository } from '../../src/modules/content/adapters/public-repository.ts'
 import { registerContentRoutes } from '../../src/modules/content/adapters/routes.ts'
 import { createStoryRepository } from '../../src/modules/content/adapters/story-repository.ts'
 import { createTourRepository } from '../../src/modules/content/adapters/tour-repository.ts'
-import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeRetireLibraryMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
+import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeFindAddressAt, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetStoryVersionText, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListTours, makeLookupMediaByHash, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeResolveMapsLink, makeRetireLibraryMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
@@ -43,7 +46,8 @@ const randomIp = () => `198.51.${Math.floor(Math.random() * 250) + 1}.${Math.flo
 // instead of a mail job, so no queue is needed.
 // `readClock` is the clock of the public reads, so a test can move the map cache's time.
 // `media` swaps the fake storage, the job queue (default: sends nothing) and the clock of the write use cases.
-export interface MediaWiring { storage?: ObjectStorage, jobs?: JobQueue<Tx>, clock?: Clock, keepsakes?: KeepsakeUses<Tx> }
+// `links` swaps what asks Google's short links (default: the real fetch, which a test must not reach).
+export interface MediaWiring { storage?: ObjectStorage, jobs?: JobQueue<Tx>, clock?: Clock, keepsakes?: KeepsakeUses<Tx>, links?: MapsLinks, register?: AddressRegister }
 
 // `categories` lets a test stand in for the category repository (the delete race).
 export function createContentHttp({ pool, db }: ReturnType<typeof openTestDatabase>, readClock: Clock = systemClock, media: MediaWiring = {}, categories: CategoryRepository<Tx> = createCategoryRepository()) {
@@ -64,7 +68,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
   const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), pins: pinDeps.pins, audit: createAuditLog(writeClock), clock: writeClock }
   const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit: createAuditLog(writeClock), clock: writeClock, jobs, graceHours: 24 }
   const categoryDeps = { uow, categories, audit: createAuditLog(writeClock), clock: writeClock }
-  const readDeps = { uow, reads: createPublicReadRepository(), clock: readClock }
+  const readDeps = { uow, reads: createPublicReadRepository(), clock: readClock, publicUrl: (key: string) => `https://media.test/${key}` }
   // Content asks the catalog which files keepsakes hold, as main.ts wires it.
   const libraryDeps = { uow, library: createMediaLibrary(), keepsakes: media.keepsakes ?? createMediaUses() }
   const writeUseCases = guardUseCases({
@@ -76,6 +80,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     publishPin: makePublishPin(pinDeps),
     hidePin: makeHidePin(pinDeps),
     deletePin: makeDeletePin(pinDeps),
+    getStoryVersionText: makeGetStoryVersionText(storyDeps),
     createStoryGroup: makeCreateStoryGroup(storyDeps),
     saveStoryGroup: makeSaveStoryGroup(storyDeps),
     createStoryVersion: makeCreateStoryVersion(storyDeps),
@@ -97,6 +102,8 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     listMedia: makeListMedia(libraryDeps),
     getMediaUses: makeGetMediaUses({ ...libraryDeps, media: createMediaRepository() }),
     describeMedia: makeDescribeMedia({ uow, media: createMediaRepository(), audit: createAuditLog(writeClock), clock: writeClock }),
+    resolveMapsLink: makeResolveMapsLink({ links: media.links ?? createMapsLinks(), clock: writeClock }),
+    findAddressAt: makeFindAddressAt({ register: media.register ?? createAddressRegister() }),
     retireLibraryMedia: makeRetireLibraryMedia({ ...libraryDeps, media: createMediaRepository(), jobs, audit: createAuditLog(writeClock), clock: writeClock, graceHours: 24 }),
   })
   // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
@@ -107,6 +114,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     requestUpload: makeRequestUpload({ storage, clock: writeClock, newId: () => randomUUID() }),
     confirmUpload: makeConfirmUpload({ uow, media: createMediaRepository(), storage, jobs, audit: createAuditLog(writeClock), clock: writeClock, newId: () => randomUUID() }),
     getMedia: makeGetMedia({ uow, media: createMediaRepository() }),
+    lookupMediaByHash: makeLookupMediaByHash({ uow, media: createMediaRepository() }),
     replaceMedia: makeReplaceMedia({ uow, media: createMediaRepository(), storage, jobs, audit: createAuditLog(writeClock), clock: writeClock, graceHours: 24 }),
     publicUrl: storage.publicUrl,
     listStories: makeListStories(readDeps),
@@ -125,6 +133,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     listMyStores: makeListMyStores({ uow, memberships: createMembershipRepository() }),
   }, {
     idempotency: idempotency({ db, clock: systemClock, actorId: idempotencyActor }),
+    withoutIdempotencyKey: [mediaLookupPath],
     routes: [routes => registerContentRoutes(routes, contentUseCases)],
   })
 

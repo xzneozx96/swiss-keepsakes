@@ -21,8 +21,6 @@ export const categoriesEn = {
   'categories.loading': 'Loading categories',
   'categories.noStore': 'You do not belong to a store yet, so there are no categories to edit.',
   'categories.loadFailed': 'The categories could not be loaded.',
-  'categories.retry': 'Try again',
-  'categories.requestId': 'Reference: {id}',
   'categories.noName.en': 'No English name',
   'categories.noName.de': 'No German name',
   'categories.moveUp': 'Move up',
@@ -89,4 +87,9 @@ export const categoriesEn = {
   'categories.phone.noSubs': 'No sub-categories',
   'categories.phone.noneUse.map': 'No pins use it',
   'categories.phone.noneUse.blog': 'No stories use it',
+  'categories.home.label': 'Show on the home',
+  'categories.home.hint': 'Lists this category on the home under “Sorted before you unpack”.',
+  'categories.home.badge': 'On the home',
+  'categories.home.off': 'Not on the home',
+  'categories.col.home': 'Home',
 } as const

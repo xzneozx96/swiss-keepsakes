@@ -149,3 +149,40 @@ export function EditorFormSkeleton({ cards = 2 }: { cards?: number }) {
     </div>
   )
 }
+
+/**
+ * A stepped editor (`components/step-layout.tsx`) while it loads: the header, the step list on the left from 1024 px
+ * (a numbered mark over two lines per step), the step bar on phones (title, All steps, progress), and the step's form cards on the right.
+ */
+export function StepEditorSkeleton({ steps = 6, cards = 2 }: { steps?: number, cards?: number }) {
+  return (
+    <div aria-hidden className="flex flex-col gap-5 lg:gap-6">
+      <DetailHeaderSkeleton chips={1} />
+      <div className="flex min-w-0 flex-col gap-5 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start lg:gap-8">
+        <ol className="hidden flex-col gap-2 lg:flex">
+          {Array.from({ length: steps }, (_, i) => (
+            <li key={i} className="flex items-start gap-3 p-1.5">
+              <Skeleton className="size-8 shrink-0 rounded-full" />
+              <span className="flex flex-col gap-1.5 pt-1">
+                <Skeleton className="h-4 w-28 rounded-lg" />
+                <Skeleton className="h-3 w-16 rounded-lg" />
+              </span>
+            </li>
+          ))}
+        </ol>
+        <div className="flex flex-col gap-3 lg:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <Skeleton className="h-6 w-44 rounded-lg" />
+            <Skeleton className="h-9 w-24 rounded-full" />
+          </div>
+          <Skeleton className="h-1 w-1/4 rounded-full" />
+        </div>
+        <div className="flex min-w-0 flex-col gap-5 lg:gap-6">
+          {Array.from({ length: cards }, (_, i) => (
+            <FormCardSkeleton key={i} fields={i === 0 ? 3 : 2} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}

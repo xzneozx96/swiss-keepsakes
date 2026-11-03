@@ -1,10 +1,11 @@
 import type { Pin, PinListItem } from '@sk/api-contract'
 import type { ListFilters } from '@/features/places/lib/list'
-import { pinPublishBodySchema, pinWriteBodySchema } from '@sk/api-contract'
+import { pinWriteBodySchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 
-import { bodyOf, emptyDate, emptyForm, formOf, isDirty, publishBodyOf, publishGaps, suggestSlug, validate } from '@/features/places/lib/form'
-import { filterItems, isFiltered, NO_CATEGORY, noFilters } from '@/features/places/lib/list'
+import { bodyOf, emptyDate, emptyForm, formOf, isDirty, photoIds, publishGaps, validate, withPhotoIds } from '@/features/places/lib/form'
+import { filterItems, isFiltered, kindOf, NO_CATEGORY, noFilters } from '@/features/places/lib/list'
+import { storableLink } from '@/features/places/lib/maps-link'
 
 const pin: Pin = {
   id: '0198a000-0000-7000-8000-000000000001',
@@ -14,12 +15,11 @@ const pin: Pin = {
   latitude: null,
   longitude: null,
   address: null,
+  mapsLink: null,
   weeklyHours: [],
   stayTag: 'both',
   interests: [],
-  serviceType: null,
   mustVisit: false,
-  foodKind: null,
   coverMediaId: null,
   photos: [],
   outboundUrl: null,
@@ -36,22 +36,12 @@ const pin: Pin = {
 
 const live: Pin = { ...pin, status: 'published', slug: { en: 'chapel-bridge' }, latitude: 47.05, longitude: 8.3, published: { title: { en: 'Chapel Bridge' }, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} }, firstPublishedAt: '2026-10-30T10:00:00.000Z' }
 
-describe('[E4.2][AC68] suggestSlug', () => {
-  it.each([
-    ['Kapellbrücke Luzern', 'kapellbruecke-luzern'],
-    ['  Café  Heini! ', 'cafe-heini'],
-    ['Straße der Löwen', 'strasse-der-loewen'],
-    ['---', ''],
-  ])('%j becomes %j', (title, slug) => {
-    expect(suggestSlug(title)).toBe(slug)
-  })
-})
-
 describe('[E4.2][AC68] what a publish needs', () => {
   it('names each gap and nothing else, and ignores every optional field', () => {
-    expect(publishGaps(emptyForm())).toEqual(['title', 'location', 'slug'])
-    expect(publishGaps({ ...emptyForm(), titleDe: 'Löwendenkmal', latitude: 47, longitude: 8, slug: 'loewendenkmal' })).toEqual([])
-    expect(publishGaps({ ...emptyForm(), titleEn: 'A', latitude: 47, longitude: 8, slug: 'Not A Slug' })).toEqual(['slug'])
+    expect(publishGaps(emptyForm())).toEqual(['title', 'location'])
+    expect(publishGaps({ ...emptyForm(), titleDe: 'Löwendenkmal', latitude: 47, longitude: 8 })).toEqual([])
+    expect(publishGaps({ ...emptyForm(), titleEn: 'A' })).toEqual(['location'])
+    expect(publishGaps({ ...emptyForm(), latitude: 47, longitude: 8 })).toEqual(['title'])
   })
 })
 
@@ -85,19 +75,23 @@ describe('[E4.2][AC86] the date and hours rules of the form', () => {
     expect(validate({ ...emptyForm(), dates: [entry({ firstDay: '14.11.2026' })] }).count).toBe(1)
   })
 
-  it('checks weekly hours: a close at or before the open is refused and 24:00 closes at midnight', () => {
+  it('checks weekly hours: a close before the open ends the next day, equal times are refused and 24:00 closes at midnight', () => {
     const hours = (opens: string, closes: string) => Object.values(validate({ ...emptyForm(), hours: [{ key: 'a', day: 1, opens, closes }] }).hours)[0]
 
     expect(hours('09:00', '18:00')).toBeUndefined()
     expect(hours('09:00', '24:00')).toBeUndefined()
-    expect(hours('18:00', '09:00')).toBe('places.error.hoursOrder')
-    expect(hours('9:00', '18:00')).toBe('places.error.hoursFormat')
-    expect(hours('09:00', '24:30')).toBe('places.error.hoursFormat')
+    expect(hours('18:00', '02:00')).toBeUndefined()
+    expect(hours('22:00', '00:00')).toBeUndefined()
+    expect(hours('09:00', '09:00')).toBe('places.error.hoursSame')
+    expect(hours('00:00', '24:00')).toBeUndefined()
+    expect(hours('', '18:00')).toBe('places.error.hoursMissing')
+    expect(hours('09:00', '')).toBe('places.error.hoursMissing')
+    expect(hours('09:00', '24:30')).toBe('places.error.hoursMissing')
   })
 
-  it('counts the errors that stop a save, and lets a slug or a link be empty', () => {
+  it('counts the errors that stop a save, and lets a link be empty', () => {
     expect(validate(emptyForm()).count).toBe(0)
-    expect(validate({ ...emptyForm(), slug: 'Bad Slug', outboundUrl: 'http://x.example' }).count).toBe(2)
+    expect(validate({ ...emptyForm(), outboundUrl: 'http://x.example' }).count).toBe(1)
     expect(validate({ ...emptyForm(), outboundUrl: 'https://hotel.example/stay' }).count).toBe(0)
   })
 })
@@ -110,20 +104,38 @@ describe('[E4.2][AC63] the outbound link in the write', () => {
   })
 })
 
-describe('[E4.2][AC68] the write of a draft', () => {
-  it('sends the slug for each language that has a title, and null with no slug', () => {
-    const form = { ...emptyForm(), titleEn: 'Chapel Bridge', titleDe: 'Kapellbrücke', slug: 'chapel-bridge' }
+describe('the stored Google Maps link in the form', () => {
+  it('loads from the pin, is sent trimmed and null when empty, and counts as a change', () => {
+    const link = 'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38'
 
-    expect(bodyOf(form).slug).toEqual({ en: 'chapel-bridge', de: 'chapel-bridge' })
-    expect(bodyOf({ ...form, titleDe: '' }).slug).toEqual({ en: 'chapel-bridge' })
-    expect(bodyOf({ ...form, slug: '' }).slug).toBeNull()
-    expect(bodyOf({ ...emptyForm(), slug: 'early' }, pin).slug).toEqual({ en: 'early' })
+    expect(formOf({ ...pin, mapsLink: link }).mapsLink).toBe(link)
+    expect(formOf(pin).mapsLink).toBe('')
+    expect(bodyOf({ ...emptyForm(), mapsLink: ` ${link} ` }).mapsLink).toBe(link)
+    expect(bodyOf(emptyForm()).mapsLink).toBeNull()
+    expect(isDirty({ ...emptyForm(), mapsLink: link }, emptyForm())).toBe(true)
+    for (const stored of [link, 'https://www.google.com/maps?q=47.05,8.3', 'https://goo.gl/maps/abc'])
+      expect(pinWriteBodySchema.safeParse({ mapsLink: storableLink(stored) }).success).toBe(true)
+  })
+})
+
+describe('[E4.2][AC68] the write of a draft', () => {
+  it('never sends the map link: the server makes it from the title', () => {
+    const body = bodyOf({ ...emptyForm(), titleEn: 'Chapel Bridge', titleDe: 'Kapellbrücke' })
+
+    expect(body).not.toHaveProperty('slug')
+    expect(bodyOf(formOf(live))).not.toHaveProperty('slug')
+    expect(formOf(live)).not.toHaveProperty('slug')
+  })
+
+  it('never sends the local tip: the editor has one tip field per language', () => {
+    expect(bodyOf({ ...emptyForm(), tipEn: 'Come at dawn' })).not.toHaveProperty('localTip')
+    expect(formOf(live)).not.toHaveProperty('localTipEn')
   })
 
   it('sends every field so a save replaces the lists and clears what was emptied', () => {
-    const body = bodyOf({ ...emptyForm(), titleEn: ' A ', address: '  ', photos: [{ mediaId: 'm', altEn: 'x', altDe: '' }], coverMediaId: null, coverAltEn: 'stale' }, pin)
+    const body = bodyOf({ ...emptyForm(), titleEn: ' A ', address: '  ', photos: [{ mediaId: 'm' }], coverMediaId: null })
 
-    expect(body).toMatchObject({ title: { en: 'A' }, address: null, photos: [{ mediaId: 'm', alt: { en: 'x' } }], coverMediaId: null, coverAlt: {}, categoryIds: [], dates: [], weeklyHours: [], mustVisit: false, serviceType: null, foodKind: null })
+    expect(body).toMatchObject({ title: { en: 'A' }, address: null, photos: [{ mediaId: 'm' }], coverMediaId: null, categoryIds: [], dates: [], weeklyHours: [], mustVisit: false })
   })
 
   it('turns a date entry into a write: a day has the same first and last day, a range has no times', () => {
@@ -139,20 +151,29 @@ describe('[E4.2][AC68] the write of a draft', () => {
   })
 })
 
-describe('[E4.2][AC79] the write of a pin that was live', () => {
-  it('leaves the slug out unless it was renamed, and renames it for the stored languages only', () => {
-    const form = formOf(live)
-
-    expect(bodyOf(form, live)).not.toHaveProperty('slug')
-    expect(bodyOf({ ...form, slug: 'chapel-bridge-lucerne', titleDe: 'Kapellbrücke' }, live).slug).toEqual({ en: 'chapel-bridge-lucerne' })
+describe('[E4.2][AC68] photos as one ordered list', () => {
+  it('maps the list onto the two API fields: the first photo is the cover, the rest are the extra photos in order', () => {
+    expect(withPhotoIds(['a', 'b', 'c'])).toEqual({ coverMediaId: 'a', photos: [{ mediaId: 'b' }, { mediaId: 'c' }] })
+    expect(withPhotoIds(['a'])).toEqual({ coverMediaId: 'a', photos: [] })
+    expect(withPhotoIds([])).toEqual({ coverMediaId: null, photos: [] })
+    expect(photoIds({ coverMediaId: 'a', photos: [{ mediaId: 'b' }, { mediaId: 'c' }] })).toEqual(['a', 'b', 'c'])
+    expect(photoIds({ coverMediaId: null, photos: [] })).toEqual([])
   })
 
-  it('adds the slug of a language the draft adds only at publish', () => {
-    const form = { ...formOf(live), titleDe: 'Kapellbrücke' }
+  it('reads a pin with a cover and extra photos in the same order, and sends them back as cover_media_id and photos', () => {
+    const form = formOf({ ...live, coverMediaId: 'c', photos: [{ mediaId: 'p1' }, { mediaId: 'p2' }] })
 
-    expect(publishBodyOf(form, live)).toEqual({ slug: { de: 'chapel-bridge' } })
-    expect(publishBodyOf(formOf(live), live)).toEqual({})
-    expect(publishBodyOf({ ...emptyForm(), titleEn: 'A', slug: 'a' }, pin)).toEqual({})
+    expect(photoIds(form)).toEqual(['c', 'p1', 'p2'])
+    expect(bodyOf(form)).toMatchObject({ coverMediaId: 'c', photos: [{ mediaId: 'p1' }, { mediaId: 'p2' }] })
+    // Moving the last photo to the front makes it the cover and the old cover the first extra photo.
+    expect(bodyOf({ ...form, ...withPhotoIds(['p2', 'c', 'p1']) })).toMatchObject({ coverMediaId: 'p2', photos: [{ mediaId: 'c' }, { mediaId: 'p1' }] })
+  })
+
+  it('no longer sends a photo description: neither for the cover nor for an extra photo', () => {
+    const body = bodyOf(formOf({ ...live, coverMediaId: 'c', photos: [{ mediaId: 'p1' }] }))
+
+    expect(body).not.toHaveProperty('coverAlt')
+    expect(body.photos).toEqual([{ mediaId: 'p1' }])
   })
 })
 
@@ -161,9 +182,11 @@ describe('[E4.2][AC68] form state', () => {
     const withData: Pin = { ...live, draft: { title: { en: 'Chapel Bridge, Lucerne' }, tip: { de: 'Früh kommen' }, localTip: { en: 'Go at dawn' }, coverAlt: {}, photoAlt: { m1: { en: 'Close' } } }, dates: [{ id: 'd1', firstDay: '2026-11-09', lastDay: '2026-11-14', startTime: null, endTime: null }], weeklyHours: [{ day: 1, opens: '09:00', closes: '18:00' }], photos: [{ mediaId: 'm1' }], interests: ['local-activities'] }
     const form = formOf(withData)
 
-    expect(form).toMatchObject({ titleEn: 'Chapel Bridge, Lucerne', tipDe: 'Früh kommen', localTipEn: 'Go at dawn', slug: 'chapel-bridge', interests: ['local-activities'] })
+    expect(form).toMatchObject({ titleEn: 'Chapel Bridge, Lucerne', tipDe: 'Früh kommen', interests: ['local-activities'] })
     expect(form.dates[0]).toMatchObject({ kind: 'range', firstDay: '2026-11-09' })
-    expect(form.photos).toEqual([{ mediaId: 'm1', altEn: 'Close', altDe: '' }])
+    // No cover and one extra photo: the list is one photo, so the first photo is the cover.
+    expect(form.coverMediaId).toBe('m1')
+    expect(form.photos).toEqual([])
     expect(isDirty(formOf(withData), form)).toBe(false)
     expect(isDirty({ ...form, mustVisit: true }, form)).toBe(true)
     expect(isDirty({ ...form, hours: form.hours.map(h => ({ ...h, key: 'other' })) }, form)).toBe(false)
@@ -171,7 +194,7 @@ describe('[E4.2][AC68] form state', () => {
 })
 
 describe('[E4.2][AC86] the list filters', () => {
-  const item = (over: object) => ({ id: 'x', status: 'draft', title: {}, slug: null, located: true, categoryIds: [], hasDates: false, nextDate: null, stayTag: 'both', interests: [], coverMediaId: null, mainStory: null, hasPendingChanges: false, rowVersion: 1, updatedAt: '2026-10-30T10:00:00.000Z', ...over }) as PinListItem
+  const item = (over: object) => ({ id: 'x', status: 'draft', title: {}, slug: null, located: true, categoryIds: [], hasDates: false, nextDate: null, stayTag: 'both', interests: [], coverMediaId: null, cover: null, mainStory: null, hasPendingChanges: false, rowVersion: 1, updatedAt: '2026-10-30T10:00:00.000Z', ...over }) as PinListItem
   const items = [
     item({ id: 'a', status: 'published', title: { en: 'Chapel Bridge' }, slug: { en: 'chapel-bridge' }, categoryIds: ['walks'] }),
     item({ id: 'b', status: 'ended', title: { de: 'Fasnacht' }, hasDates: true, stayTag: 'short_stay' }),
@@ -179,16 +202,25 @@ describe('[E4.2][AC86] the list filters', () => {
   ]
   const ids = (filters: Partial<ListFilters>) => filterItems(items, { ...noFilters, ...filters }).map(found => found.id)
 
-  it('narrows by status, category (including none), stay and dates, each group an OR and the groups together an AND', () => {
+  it('narrows by status, category (including none), stay and type, each group an OR and the groups together an AND', () => {
     expect(ids({})).toEqual(['a', 'b', 'c'])
     expect(ids({ status: ['ended'] })).toEqual(['b'])
     expect(ids({ status: ['ended', 'hidden'] })).toEqual(['b', 'c'])
     expect(ids({ category: [NO_CATEGORY] })).toEqual(['b', 'c'])
     expect(ids({ category: ['walks'] })).toEqual(['a'])
     expect(ids({ stay: ['short_stay'] })).toEqual(['b'])
-    expect(ids({ dates: ['has'] })).toEqual(['b'])
-    expect(ids({ dates: ['none'] })).toEqual(['a', 'c'])
-    expect(ids({ status: ['ended'], dates: ['none'] })).toEqual([])
+    expect(ids({ type: ['event'] })).toEqual(['b'])
+    expect(ids({ type: ['place'] })).toEqual(['a', 'c'])
+    expect(ids({ type: ['place', 'event'] })).toEqual(['a', 'b', 'c'])
+    expect(ids({ status: ['ended'], type: ['place'] })).toEqual([])
+  })
+
+  it('derives place or event from the dates and stores neither: no dates is a place, an upcoming or current date an event, all dates past an ended event', () => {
+    const upcoming = { hasDates: true, nextDate: { firstDay: '2090-11-07', lastDay: '2090-11-07', startTime: null, endTime: null } }
+
+    expect(kindOf({ hasDates: false, nextDate: null })).toBe('place')
+    expect(kindOf(upcoming)).toBe('event')
+    expect(kindOf({ hasDates: true, nextDate: null })).toBe('ended')
   })
 
   it('searches the titles in both languages and the map link, ignoring case and spaces around', () => {
@@ -207,8 +239,7 @@ describe('[E4.2][AC68] what the editor sends is what the API contract accepts', 
       titleEn: 'Chapel Bridge',
       titleDe: 'Kapellbrücke',
       tipEn: 'Walk it at dawn',
-      localTipDe: 'Früh kommen',
-      slug: 'chapel-bridge',
+      tipDe: 'Früh kommen',
       latitude: 47.05,
       longitude: 8.3,
       address: 'Kapellbrücke, Luzern',
@@ -216,18 +247,14 @@ describe('[E4.2][AC68] what the editor sends is what the API contract accepts', 
       dates: [{ ...emptyDate(), firstDay: '2026-11-14', startTime: '22:00' }, { ...emptyDate(), kind: 'range' as const, firstDay: '2026-11-09', lastDay: '2026-11-14' }],
       categoryIds: ['0198a000-0000-7000-8000-000000000020'],
       interests: ['history-culture', 'local-activities'],
-      serviceType: 'water' as const,
-      foodKind: 'cafe-bakery' as const,
       mustVisit: true,
       coverMediaId: '0198a000-0000-7000-8000-000000000040',
-      coverAltEn: 'The bridge',
-      photos: [{ mediaId: '0198a000-0000-7000-8000-000000000041', altEn: 'Close', altDe: '' }],
+      photos: [{ mediaId: '0198a000-0000-7000-8000-000000000041' }],
       outboundUrl: 'https://hotel.example/stay',
     }
 
     expect(() => pinWriteBodySchema.parse(bodyOf(emptyForm()))).not.toThrow()
     expect(() => pinWriteBodySchema.parse(bodyOf(full))).not.toThrow()
-    expect(() => pinWriteBodySchema.parse(bodyOf({ ...formOf(live), titleDe: 'Kapellbrücke', slug: 'renamed' }, live))).not.toThrow()
-    expect(() => pinPublishBodySchema.parse(publishBodyOf({ ...formOf(live), titleDe: 'Kapellbrücke' }, live))).not.toThrow()
+    expect(() => pinWriteBodySchema.parse(bodyOf({ ...formOf(live), titleDe: 'Kapellbrücke' }))).not.toThrow()
   })
 })

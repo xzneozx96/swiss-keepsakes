@@ -12,7 +12,7 @@ import { createManualClock } from '../../support/manual-clock.ts'
 const store = 'store-1'
 const owner: Actor = { kind: 'staff', userId: 'u1', guestId: 'g1', stores: new Map([[store, 'owner']]) }
 const outsider: Actor = { kind: 'staff', userId: 'u2', guestId: 'g2', stores: new Map([['store-2', 'owner']]) }
-const complete: PinChanges = { title: { en: 'Chapel Bridge' }, slug: { en: 'chapel-bridge' }, latitude: 47.05, longitude: 8.3 }
+const complete: PinChanges = { title: { en: 'Chapel Bridge' }, latitude: 47.05, longitude: 8.3 }
 
 function setup(media: MediaRow[] = []) {
   const pins = createFakePins()
@@ -71,7 +71,6 @@ describe('pin use cases', () => {
   it.each([
     ['title', { title: undefined }],
     ['location', { latitude: null }],
-    ['slug', { slug: null }],
   ] as const)('[E2.6][AC68] publishing a pin that lacks %s is incomplete naming that gap and the pin stays a draft', async (gap, lacking) => {
     const s = setup()
     const pin = await created(s, { ...complete, ...lacking })
@@ -81,10 +80,11 @@ describe('pin use cases', () => {
     expect(s.audit).toEqual([])
   })
 
-  it('[E2.6][AC68] a slug that misses a title language is a slug gap', async () => {
+  it('[E2.6][AC68] a pin with a title in two languages and no slug publishes: the server made one for each language', async () => {
     const s = setup()
-    const pin = await created(s, { ...complete, title: { en: 'A', de: 'B' } })
-    expect(await s.publish(owner, store, pin.id, 1, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['slug'] })
+    const pin = await created(s, { ...complete, title: { en: 'Lion Monument', de: 'Löwendenkmal' } })
+    expect(pin.slug).toEqual({ en: 'lion-monument', de: 'loewendenkmal' })
+    expect(await s.publish(owner, store, pin.id, 1, null)).toMatchObject({ ok: true, value: { slug: { en: 'lion-monument', de: 'loewendenkmal' } } })
   })
 
   it('[E2.6][AC68] a created pin belongs to the signed-in store', async () => {
@@ -100,20 +100,38 @@ describe('pin use cases', () => {
     expect(s.pins.rows.has(pin.id)).toBe(false)
   })
 
-  it('[E2.6][AC79] a delete with a stale If-Match is stale and the pin stays, even a published one (stale before published-cannot-be-deleted)', async () => {
+  it('[E2.6][AC79] a delete with a stale If-Match is stale and the pin stays, even a published one', async () => {
     const s = setup()
     const pin = await created(s)
     expect(await s.remove(owner, store, pin.id, 2, null)).toEqual({ ok: false, reason: 'stale' })
     expect(s.pins.rows.has(pin.id)).toBe(true)
     await s.publish(owner, store, pin.id, 1, null)
     expect(await s.remove(owner, store, pin.id, 1, null)).toEqual({ ok: false, reason: 'stale' })
+    expect(s.pins.rows.has(pin.id)).toBe(true)
   })
 
-  it('[E2.6][AC79] a published pin cannot be deleted and stays published', async () => {
+  it('[T-016][AC1] a published pin that nothing uses is deleted', async () => {
     const s = setup()
     const pin = await created(s)
     await s.publish(owner, store, pin.id, 1, null)
-    expect(await s.remove(owner, store, pin.id, 2, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
+    expect(await s.remove(owner, store, pin.id, 2, null)).toEqual({ ok: true, value: { id: pin.id } })
+    expect(s.pins.rows.has(pin.id)).toBe(false)
+  })
+
+  it('[T-016][AC2] a hidden pin that nothing uses is deleted', async () => {
+    const s = setup()
+    const pin = await created(s)
+    await s.publish(owner, store, pin.id, 1, null)
+    await s.hide(owner, store, pin.id, 2, null)
+    expect(await s.remove(owner, store, pin.id, 3, null)).toEqual({ ok: true, value: { id: pin.id } })
+  })
+
+  it('[T-016][AC3] a pin that a story, a review or a tour uses is refused with how many of each, and stays', async () => {
+    const s = setup()
+    const pin = await created(s)
+    await s.publish(owner, store, pin.id, 1, null)
+    s.pins.usages.set(pin.id, { stories: 2, reviews: 1, tours: 3 })
+    expect(await s.remove(owner, store, pin.id, 2, null)).toEqual({ ok: false, reason: 'pin-in-use', stories: 2, reviews: 1, tours: 3 })
     expect(s.pins.rows.get(pin.id)?.status).toBe('published')
   })
 
@@ -142,28 +160,19 @@ describe('pin use cases', () => {
     expect(again.ok && first.ok && again.value.firstPublishedAt).toEqual(first.ok && first.value.firstPublishedAt)
   })
 
-  it('[E2.6][AC30] a live English pin gains German: the draft adds the title and the publish carries the German slug', async () => {
+  it('[E2.6][AC30] a live English pin gains German: the publish makes the German slug and keeps the English one', async () => {
     const s = setup()
     const pin = await created(s)
     await s.publish(owner, store, pin.id, 1, null)
-    await s.save(owner, store, pin.id, 2, { title: { en: 'Chapel Bridge', de: 'Kapellbruecke' } }, null)
-    const result = await s.publish(owner, store, pin.id, 3, 'req-3', { de: 'kapellbruecke' })
-    expect(result).toMatchObject({ ok: true, value: { status: 'published', slug: { en: 'chapel-bridge', de: 'kapellbruecke' }, published: { title: { en: 'Chapel Bridge', de: 'Kapellbruecke' } }, draft: null } })
-  })
-
-  it('[E2.6][AC68] a draft that adds German with no slug for it is incomplete naming slug and the pin is unchanged', async () => {
-    const s = setup()
-    const pin = await created(s)
-    await s.publish(owner, store, pin.id, 1, null)
-    await s.save(owner, store, pin.id, 2, { title: { en: 'Chapel Bridge', de: 'Kapellbruecke' } }, null)
-    const before = s.pins.rows.get(pin.id)
-    expect(await s.publish(owner, store, pin.id, 3, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['slug'] })
-    expect(s.pins.rows.get(pin.id)).toBe(before)
+    await s.save(owner, store, pin.id, 2, { title: { en: 'Chapel Bridge', de: 'Kapellbrücke' } }, null)
+    expect(s.pins.rows.get(pin.id)?.slug).toEqual({ en: 'chapel-bridge' })
+    const result = await s.publish(owner, store, pin.id, 3, 'req-3')
+    expect(result).toMatchObject({ ok: true, value: { status: 'published', slug: { en: 'chapel-bridge', de: 'kapellbruecke' }, published: { title: { en: 'Chapel Bridge', de: 'Kapellbrücke' } }, draft: null } })
   })
 
   it('[E2.6][AC30] a draft that drops German takes the German slug with it and English stays live', async () => {
     const s = setup()
-    const pin = await created(s, { ...complete, title: { en: 'A', de: 'B' }, slug: { en: 'a', de: 'b' } })
+    const pin = await created(s, { ...complete, title: { en: 'A', de: 'B' } })
     await s.publish(owner, store, pin.id, 1, null)
     await s.save(owner, store, pin.id, 2, { title: { en: 'A' } }, null)
     const result = await s.publish(owner, store, pin.id, 3, null)
@@ -180,58 +189,80 @@ describe('pin use cases', () => {
     expect(s.pins.rows.get(pin.id)).toBe(before)
   })
 
-  it('[E2.6][AC30] a never-published pin takes the body slug over the stored one for the language it names', async () => {
+  it('[E2.6][AC30] a slug a client sends is ignored on create and on save: the slug is made from the title', async () => {
     const s = setup()
-    const pin = await created(s, { ...complete, title: { en: 'A', de: 'B' }, slug: { en: 'old-a', de: 'old-b' } })
-    const result = await s.publish(owner, store, pin.id, 1, null, { en: 'new-a' })
-    expect(result).toMatchObject({ ok: true, value: { slug: { en: 'new-a', de: 'old-b' } } })
+    const pin = await created(s, { ...complete, slug: { en: 'my-own' } })
+    expect(pin.slug).toEqual({ en: 'chapel-bridge' })
+    const saved = await s.save(owner, store, pin.id, 1, { slug: { en: 'other' }, address: 'Kapellplatz' }, null)
+    expect(saved).toMatchObject({ ok: true, value: { slug: { en: 'chapel-bridge' }, address: 'Kapellplatz' } })
   })
 
-  it('[E2.6][AC68] a live pin refuses a body slug that differs from its stored one as slug-conflict and stays unchanged', async () => {
+  it('[E2.6][AC30] before the first publish the slug follows the title, and an unchanged title keeps its slug without a -2', async () => {
+    const s = setup()
+    const pin = await created(s)
+    const same = await s.save(owner, store, pin.id, 1, { title: { en: 'Chapel Bridge' } }, null)
+    expect(same).toMatchObject({ ok: true, value: { slug: { en: 'chapel-bridge' } } })
+    const renamed = await s.save(owner, store, pin.id, 2, { title: { en: 'Kapell Bridge Lucerne' } }, null)
+    expect(renamed).toMatchObject({ ok: true, value: { slug: { en: 'kapell-bridge-lucerne' } } })
+    const cleared = await s.save(owner, store, pin.id, 3, { title: {} }, null)
+    expect(cleared).toMatchObject({ ok: true, value: { slug: null } })
+  })
+
+  it('[E2.6][AC30] a draft that already has a slug and no title change keeps it, whatever else the save changes', async () => {
+    const s = setup()
+    const pin = await created(s)
+    s.pins.rows.set(pin.id, { ...pin, slug: { en: 'custom-from-before' } })
+    const saved = await s.save(owner, store, pin.id, 1, { address: 'x' }, null)
+    expect(saved).toMatchObject({ ok: true, value: { slug: { en: 'custom-from-before' } } })
+  })
+
+  it('[E2.6][AC30] a draft with a title and no slug gets one on any save', async () => {
+    const s = setup()
+    const pin = await created(s)
+    s.pins.rows.set(pin.id, { ...pin, slug: null })
+    expect(await s.save(owner, store, pin.id, 1, { address: 'x' }, null)).toMatchObject({ ok: true, value: { slug: { en: 'chapel-bridge' } } })
+  })
+
+  it('[E2.6][AC30] two pins with one title get chapel-bridge and chapel-bridge-2, across stores', async () => {
+    const s = setup()
+    const first = await created(s)
+    const second = await s.create({ ...owner, stores: new Map([[store, 'owner'], ['store-2', 'owner']]) }, 'store-2', complete, null)
+    expect(first.slug).toEqual({ en: 'chapel-bridge' })
+    expect(second).toMatchObject({ ok: true, value: { slug: { en: 'chapel-bridge-2' } } })
+  })
+
+  it('[E2.6][AC30] after the first publish the slug is locked: a new title changes neither the slug nor the next publish', async () => {
     const s = setup()
     const pin = await created(s)
     await s.publish(owner, store, pin.id, 1, null)
-    const before = s.pins.rows.get(pin.id)
-    expect(await s.publish(owner, store, pin.id, 2, null, { en: 'renamed' })).toEqual({ ok: false, reason: 'slug-conflict' })
-    expect(s.pins.rows.get(pin.id)).toEqual(before)
+    const saved = await s.save(owner, store, pin.id, 2, { title: { en: 'Completely Different' } }, null)
+    expect(saved).toMatchObject({ ok: true, value: { slug: { en: 'chapel-bridge' }, draft: { title: { en: 'Completely Different' } } } })
+    const again = await s.publish(owner, store, pin.id, 3, null)
+    expect(again).toMatchObject({ ok: true, value: { slug: { en: 'chapel-bridge' }, published: { title: { en: 'Completely Different' } } } })
   })
 
-  it('[E2.6][AC68] a hidden pin refuses a different body slug as slug-conflict', async () => {
+  it('[E2.6][AC30] a hidden pin keeps its slug when it is saved and published again with a new title', async () => {
     const s = setup()
     const pin = await created(s)
     await s.publish(owner, store, pin.id, 1, null)
     await s.hide(owner, store, pin.id, 2, null)
-    expect(await s.publish(owner, store, pin.id, 3, null, { en: 'renamed' })).toEqual({ ok: false, reason: 'slug-conflict' })
+    await s.save(owner, store, pin.id, 3, { title: { en: 'New Name' } }, null)
+    expect(await s.publish(owner, store, pin.id, 4, null)).toMatchObject({ ok: true, value: { slug: { en: 'chapel-bridge' } } })
   })
 
-  it('[E2.6][AC30] a live pin accepts a body slug equal to its stored one', async () => {
+  it('[E2.6][AC30] a live pin saved with a German title gets no German slug yet, so the slug keeps covering the published title', async () => {
     const s = setup()
     const pin = await created(s)
     await s.publish(owner, store, pin.id, 1, null)
-    expect(await s.publish(owner, store, pin.id, 2, null, { en: 'chapel-bridge' })).toMatchObject({ ok: true, value: { slug: { en: 'chapel-bridge' } } })
+    const saved = await s.save(owner, store, pin.id, 2, { title: { en: 'Chapel Bridge', de: 'Kapellbrücke' } }, null)
+    expect(saved).toMatchObject({ ok: true, value: { slug: { en: 'chapel-bridge' } } })
   })
 
-  it('[E2.6][AC30] a draft whose stored slug misses a title language is a slug gap, and a body slug fills the missing language', async () => {
-    const s = setup()
-    const pin = await created(s, { ...complete, title: { en: 'A', de: 'B' }, slug: { en: 'a' } })
-    expect(await s.publish(owner, store, pin.id, 1, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['slug'] })
-    expect(await s.publish(owner, store, pin.id, 1, null, { de: 'b' })).toMatchObject({ ok: true, value: { slug: { en: 'a', de: 'b' } } })
-  })
-
-  it('[E2.6][AC30] a draft whose stored slug covers a language its title lacks is a slug gap, not a silent drop', async () => {
-    const s = setup()
-    const pin = await created(s, { ...complete, title: { en: 'A' }, slug: { en: 'a', de: 'b' } })
-    expect(await s.publish(owner, store, pin.id, 1, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['slug'] })
-    expect(s.pins.rows.get(pin.id)).toMatchObject({ status: 'draft', slug: { en: 'a', de: 'b' } })
-  })
-
-  it('[E2.6][AC30] a slug for a language with no title is dropped, and an empty or missing slug changes nothing', async () => {
+  it('[E2.6][AC30] a never-published draft publishes with the slug of its title only, a stored slug for a language with no title is dropped', async () => {
     const s = setup()
     const pin = await created(s)
-    expect(await s.publish(owner, store, pin.id, 1, null, { de: 'unused' })).toMatchObject({ ok: true, value: { slug: { en: 'chapel-bridge' } } })
-    await s.hide(owner, store, pin.id, 2, null)
-    expect(await s.publish(owner, store, pin.id, 3, null, { de: 'still-unused' })).toMatchObject({ ok: true, value: { slug: { en: 'chapel-bridge' }, published: { title: { en: 'Chapel Bridge' } } } })
-    expect(await s.publish(owner, store, pin.id, 4, null, {})).toMatchObject({ ok: true, value: { slug: { en: 'chapel-bridge' } } })
+    s.pins.rows.set(pin.id, { ...pin, slug: { en: 'chapel-bridge', de: 'nur-alt' } })
+    expect(await s.publish(owner, store, pin.id, 1, null)).toMatchObject({ ok: true, value: { slug: { en: 'chapel-bridge' } } })
   })
 
   it('[E2.6] AC-6 a retired cover is media-retired and the cover is unchanged', async () => {
@@ -248,13 +279,6 @@ describe('pin use cases', () => {
     await s.publish(owner, store, pin.id, 1, null)
     expect(await s.save(owner, store, pin.id, 2, { latitude: null }, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['location'] })
     expect(s.pins.rows.get(pin.id)).toMatchObject({ latitude: 47.05, rowVersion: 2 })
-  })
-
-  it('[E2.6] a save that drops a language from the slug of a published pin is incomplete naming slug', async () => {
-    const s = setup()
-    const pin = await created(s, { ...complete, title: { en: 'A', de: 'B' }, slug: { en: 'a', de: 'b' } })
-    await s.publish(owner, store, pin.id, 1, null)
-    expect(await s.save(owner, store, pin.id, 2, { slug: { en: 'a' } }, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['slug'] })
   })
 
   it('[E2.6] a member of another store\'s pin id is not-found', async () => {

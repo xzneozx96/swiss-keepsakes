@@ -116,9 +116,12 @@ const stepTitle = () => screen.getByRole('heading', { level: 2 })
 const patches = () => calls.filter(call => call.method === 'PATCH')
 const posts = () => calls.filter(call => call.method === 'POST' && call.path.endsWith('/open-for-sale'))
 
+/** A step of the shared step list, by its label; the list names each button "<number>. <label>". */
 async function pick(name: RegExp) {
   await userEvent.click((await rail()).getByRole('button', { name }))
 }
+
+const stepRow = async (label: string) => (await rail()).getByRole('button', { name: new RegExp(`^\\d\\. ${label}`) }).closest('li')!
 
 async function openSheet() {
   await userEvent.click(await screen.findByRole('button', { name: 'Edit store information' }))
@@ -145,13 +148,16 @@ describe('open your store, the steps [E2.16][E2.3]', () => {
     const steps = await rail()
 
     expect(screen.getAllByRole('navigation')).toHaveLength(1)
-    expect(steps.getByText('Open your store')).toBeInTheDocument()
-    expect(document.querySelector('[data-step="open"] .text-xs')).toBeNull()
+    expect(screen.getByRole('heading', { level: 1, name: 'Open your store' })).toBeInTheDocument()
+    expect(steps.getAllByRole('listitem')).toHaveLength(5)
+    expect(steps.getByRole('button', { name: /^1\. Store information, Done/ })).toBeInTheDocument()
+    expect(steps.getByText('Current step')).toBeInTheDocument()
+    expect(steps.getAllByText('Not started')).toHaveLength(4)
     expect(stepTitle()).toHaveTextContent('Store information')
     expect(panel().getByText('Done')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Edit store information' })).toBeInTheDocument()
-    expect(steps.getAllByText('Not available yet')).toHaveLength(3)
-    for (const name of [/^Payment account/, /^A product or a tour/, /^Policies/]) {
+    expect(screen.getByRole('status')).toHaveTextContent('1 of 4 done')
+    for (const name of [/^2\. Payment account/, /^3\. A product or a tour/, /^4\. Policies/]) {
       await pick(name)
       expect(screen.getByRole('button', { name: 'Skip for now' })).toBeInTheDocument()
       expect(panel().getByText('Not available yet')).toBeInTheDocument()
@@ -210,14 +216,12 @@ describe('open your store, the steps [E2.16][E2.3]', () => {
   it('[AC-3] skipping moves on, leaves the step not met, and the step opens again', async () => {
     renderOnboarding()
 
-    await pick(/^Payment account/)
+    await pick(/^2\. Payment account/)
     await userEvent.click(screen.getByRole('button', { name: 'Skip for now' }))
 
     expect(stepTitle()).toHaveTextContent('A product or a tour')
-    const steps = await rail()
-
-    expect(within(steps.getByText('Payment account').closest('li')!).getByText('Not available yet')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Back' }))
+    expect(within(await stepRow('Payment account')).getByText('Not started')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Previous step' }))
     expect(stepTitle()).toHaveTextContent('Payment account')
     expect(panel().getByText('Not available yet')).toBeInTheDocument()
     expect(calls.filter(call => call.method !== 'GET')).toEqual([])
@@ -237,7 +241,7 @@ describe('open your store, the last step [E2.16][E2.3]', () => {
   it('[AC-4] lists the three conditions that block opening and keeps Open disabled, with the reason', async () => {
     renderOnboarding()
 
-    await pick(/^Open for sale/)
+    await pick(/^5\. Open for sale/)
     const list = screen.getByRole('list', { name: 'Still blocking opening' })
 
     expect(within(list).getAllByRole('listitem').map(item => item.getAttribute('data-blocker'))).toEqual(['payment-account', 'catalogue', 'policies'])
@@ -254,7 +258,7 @@ describe('open your store, the last step [E2.16][E2.3]', () => {
     handlers = { [`POST /api/store/${storeId}/open-for-sale`]: () => Response.json(storeSchema.parse({ ...store, status: 'live' })) }
     renderOnboarding()
 
-    expect(await screen.findByRole('heading', { level: 2, name: 'Open for sale' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 2, name: /Open for sale$/ })).toBeInTheDocument()
     expect(screen.queryByRole('list', { name: 'Still blocking opening' })).not.toBeInTheDocument()
     expect(screen.getByText('Every step is done. You can open Chi Ngoc for sale.')).toBeInTheDocument()
     const button = screen.getByRole('button', { name: 'Open Chi Ngoc for sale' })
@@ -274,7 +278,7 @@ describe('open your store, the last step [E2.16][E2.3]', () => {
     mayOpenForSale = false
     renderOnboarding()
 
-    await pick(/^Open for sale/)
+    await pick(/^5\. Open for sale/)
     const button = screen.getByRole('button', { name: 'Open Chi Ngoc for sale' })
 
     expect(button).toBeDisabled()
@@ -288,7 +292,7 @@ describe('open your store, the last step [E2.16][E2.3]', () => {
     handlers = { [`POST /api/store/${storeId}/open-for-sale`]: () => problem(409, 'onboarding-incomplete') }
     renderOnboarding()
 
-    await pick(/^Open for sale/)
+    await pick(/^5\. Open for sale/)
     await userEvent.click(screen.getByRole('button', { name: 'Open Chi Ngoc for sale' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('The store cannot open yet. Still open: Payment account, A product or a tour, Policies.')
@@ -301,7 +305,7 @@ describe('open your store, the last step [E2.16][E2.3]', () => {
     handlers = { [`POST /api/store/${storeId}/open-for-sale`]: () => problem(403, 'forbidden') }
     renderOnboarding()
 
-    await pick(/^Open for sale/)
+    await pick(/^5\. Open for sale/)
     await userEvent.click(screen.getByRole('button', { name: 'Open Chi Ngoc for sale' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Only the Owner can open the store for sale.')
@@ -351,8 +355,8 @@ describe('open your store in German [E2.16][E2.3]', () => {
 
     const steps = await screen.findByRole('navigation', { name: 'Schritte' })
 
-    expect(within(steps).getAllByText('Noch nicht verfügbar')).toHaveLength(3)
-    await userEvent.click(within(steps).getByRole('button', { name: /^Shop-Angaben/ }))
+    expect(within(steps).getAllByText('Noch offen')).toHaveLength(3)
+    await userEvent.click(within(steps).getByRole('button', { name: /^1\. Shop-Angaben/ }))
     expect(screen.getByRole('button', { name: 'Shop-Angaben bearbeiten' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Shop-Angaben bearbeiten' }))
     const sheet = await screen.findByRole('dialog', { name: 'Shop-Angaben' })
@@ -361,9 +365,9 @@ describe('open your store in German [E2.16][E2.3]', () => {
     await userEvent.click(within(sheet).getByRole('button', { name: 'Abbrechen' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
-    await userEvent.click(within(steps).getByRole('button', { name: /^Zahlungskonto/ }))
+    await userEvent.click(within(steps).getByRole('button', { name: /^2\. Zahlungskonto/ }))
     expect(screen.getByRole('button', { name: 'Vorerst überspringen' })).toBeInTheDocument()
-    await userEvent.click(within(steps).getByRole('button', { name: /^Verkaufsstart/ }))
+    await userEvent.click(within(steps).getByRole('button', { name: /^5\. Verkaufsstart/ }))
     expect(screen.getByRole('list', { name: 'Das hält die Eröffnung noch auf' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Chi Ngoc in den Verkauf bringen' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Der Shop kann noch nicht öffnen. Noch offen: Zahlungskonto, Ein Produkt oder eine Tour, Richtlinien.')

@@ -1,9 +1,12 @@
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { useRef } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { MapCredits } from '@/components/aerial-map/map-credits'
-import { useAerialMap } from '@/components/aerial-map/use-aerial-map'
+import { MapCredits } from '@/components/map/map-credits'
+import { useMapInstance } from '@/components/map/use-map-instance'
+import { LocaleProvider } from '@/contexts/locale-context'
+import { en } from '@/i18n/en'
 import { FakeMap, resetFakeMaps } from './support/fake-maplibre'
 
 vi.mock('maplibre-gl', async () => (await import('./support/fake-maplibre')).fakeMaplibre)
@@ -11,12 +14,13 @@ vi.mock('maplibre-gl/dist/maplibre-gl.css', () => ({}))
 vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.mjs' }))
 
 function Probe({ terrain = false, options = {} }: { terrain?: boolean, options?: Record<string, unknown> }) {
-  const { containerRef, state, retry } = useAerialMap({ options, terrain })
+  const { containerRef, state, drawn, retry } = useMapInstance({ options, terrain })
 
   return (
     <div>
       <div ref={containerRef} />
       <p data-testid="state">{state}</p>
+      <p data-testid="drawn">{String(drawn)}</p>
       <button type="button" onClick={retry}>retry</button>
     </div>
   )
@@ -54,6 +58,38 @@ describe('[E4.6][G11] the shared aerial map', () => {
 
     expect(screen.getByTestId('state')).toHaveTextContent('ready')
     expect(FakeMap.instances[0]!.setTerrain).not.toHaveBeenCalled()
+  })
+
+  it('is drawn only at the first idle after the style has loaded', async () => {
+    render(<Probe />)
+    await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
+    const map = FakeMap.instances[0]!
+
+    // An idle before the load (an empty first frame) does not count.
+    act(() => map.emit('idle'))
+    expect(screen.getByTestId('drawn')).toHaveTextContent('false')
+    act(() => map.emit('load'))
+    expect(screen.getByTestId('state')).toHaveTextContent('ready')
+    expect(screen.getByTestId('drawn')).toHaveTextContent('false')
+    act(() => map.emit('idle'))
+
+    expect(screen.getByTestId('drawn')).toHaveTextContent('true')
+  })
+
+  it('counts as drawn after a while when the map never goes idle', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      render(<Probe />)
+      await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
+      act(() => FakeMap.instances[0]!.emit('load'))
+      expect(screen.getByTestId('drawn')).toHaveTextContent('false')
+      act(() => vi.advanceTimersByTime(8000))
+
+      expect(screen.getByTestId('drawn')).toHaveTextContent('true')
+    }
+    finally {
+      vi.useRealTimers()
+    }
   })
 
   it('keeps the 3D parts only when a map asks for terrain (the tour route map until E4.12)', async () => {
@@ -103,9 +139,23 @@ describe('[E4.6][G11] the shared aerial map', () => {
   })
 })
 
+function Credits() {
+  const frameRef = useRef<HTMLDivElement>(null)
+
+  return (
+    <LocaleProvider>
+      <div ref={frameRef} data-testid="frame">
+        <MapCredits watch={frameRef} />
+      </div>
+    </LocaleProvider>
+  )
+}
+
+const creditsButton = () => screen.getByRole('button', { name: en['map.credits'] })
+
 describe('[E4.6][G11] map credits', () => {
-  it('links swisstopo, OpenFreeMap, OpenMapTiles and OpenStreetMap', () => {
-    render(<MapCredits />)
+  it('shows the four credits written out at first, with the Map credits button', () => {
+    render(<Credits />)
 
     expect(screen.getAllByRole('link').map(link => link.textContent)).toEqual([
       '© swisstopo',
@@ -113,5 +163,41 @@ describe('[E4.6][G11] map credits', () => {
       '© OpenMapTiles',
       '© OpenStreetMap',
     ])
+    expect(creditsButton()).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it.each([
+    ['a click or tap', () => fireEvent.pointerDown(screen.getByTestId('frame'))],
+    ['the wheel', () => fireEvent.wheel(screen.getByTestId('frame'))],
+    ['a key', () => fireEvent.keyDown(screen.getByTestId('frame'), { key: 'ArrowLeft' })],
+  ])('folds to the button on the first interaction: %s', (_name, interact) => {
+    render(<Credits />)
+    interact()
+
+    expect(screen.queryAllByRole('link')).toHaveLength(0)
+    expect(creditsButton()).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('opens and closes with the button, and a later touch of the map does not fold them again', async () => {
+    render(<Credits />)
+    fireEvent.pointerDown(screen.getByTestId('frame'))
+    await userEvent.click(creditsButton())
+
+    expect(screen.getAllByRole('link')).toHaveLength(4)
+    expect(creditsButton()).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.pointerDown(screen.getByTestId('frame'))
+    expect(screen.getAllByRole('link')).toHaveLength(4)
+    await userEvent.click(creditsButton())
+
+    expect(screen.queryAllByRole('link')).toHaveLength(0)
+    expect(creditsButton()).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('leaves the credits as they are when the first press is on the credits themselves', async () => {
+    render(<Credits />)
+    fireEvent.pointerDown(screen.getByRole('link', { name: '© swisstopo' }))
+    fireEvent.pointerDown(screen.getByTestId('frame'))
+
+    expect(screen.getAllByRole('link')).toHaveLength(4)
   })
 })

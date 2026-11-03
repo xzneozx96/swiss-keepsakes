@@ -7,7 +7,7 @@ import { useRef, useState } from 'react'
 
 import { SKELETON_ROWS } from '@/components/data-table-skeleton'
 import { EmptyState } from '@/components/empty-state'
-import { BackIcon, ChevronRightIcon, EditIcon, InfoIcon, PlusIcon, StatusSuccessIcon, StatusWarningIcon, TrashIcon } from '@/components/icons'
+import { BackIcon, CategoryIcon, ChevronRightIcon, EditIcon, InfoIcon, PlusIcon, StatusSuccessIcon, StatusWarningIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useLevelDrag } from '../hooks/use-level-drag'
 import { childrenOf, matches, nameOf, refusalOf, rootsOf } from '../lib/category-tree'
@@ -149,10 +149,13 @@ function CategoryList({ items, kind, actions, onPage }: { items: MerchantCategor
     return (
       <button className="flex min-w-0 flex-1 items-center gap-3 py-3 pe-4 text-start outline-none focus-visible:focus-ring" type="button" onClick={() => onPage(category.id)}>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="font-semibold [overflow-wrap:anywhere]">{nameOf(category)}</span>
+          <span className="flex items-center gap-1.5">
+            <span className="font-semibold [overflow-wrap:anywhere]">{nameOf(category)}</span>
+          </span>
           {parent && <span className="text-xs text-muted">{t('categories.phone.in', { name: nameOf(parent) })}</span>}
           <OtherName category={category} />
           <span className="text-xs text-muted tabular-nums">{facts(category)}</span>
+          {category.showOnHome && <span className="text-xs text-muted">{t('categories.home.badge')}</span>}
         </span>
         <ChevronRightIcon aria-hidden className="shrink-0 text-muted" size={18} />
       </button>
@@ -217,7 +220,9 @@ function CategoryPage({ category, items, kind, actions, busy, onPage }: {
       <div className={card}>
         <span className="text-label text-muted">{parent ? t('categories.phone.subOf', { name: nameOf(parent) }) : t('categories.phone.topLevel')}</span>
         <div className="flex items-start justify-between gap-3">
-          <h2 className="min-w-0 text-heading [overflow-wrap:anywhere]">{nameOf(category)}</h2>
+          <h2 className="flex min-w-0 items-center gap-2 text-heading [overflow-wrap:anywhere]">
+            {nameOf(category)}
+          </h2>
           <Button className="min-h-11 shrink-0" variant="secondary" onPress={() => actions.edit(category)}>
             <EditIcon size={16} />
             {t('categories.edit')}
@@ -228,6 +233,12 @@ function CategoryPage({ category, items, kind, actions, busy, onPage }: {
           <dd className={category.name.en ? '' : 'text-warning-soft-foreground'}>{missing(category.name.en)}</dd>
           <dt className="text-muted">{t('categories.phone.german')}</dt>
           <dd className={`[overflow-wrap:anywhere] ${category.name.de ? '' : 'text-warning-soft-foreground'}`}>{missing(category.name.de)}</dd>
+          {kind === 'map' && (
+            <>
+              <dt className="text-muted">{t('categories.col.home')}</dt>
+              <dd className={category.showOnHome ? '' : 'text-muted'}>{category.showOnHome ? t('categories.home.badge') : t('categories.home.off')}</dd>
+            </>
+          )}
           <dt className="text-muted">{t('categories.col.usedBy')}</dt>
           <dd className="tabular-nums">{category.useCount ? uses(kind, category.useCount) : t(`categories.phone.noUses.${kind}`)}</dd>
         </dl>
@@ -243,7 +254,7 @@ function CategoryPage({ category, items, kind, actions, busy, onPage }: {
             </Button>
           </div>
           {kids.length === 0
-            ? <p className="px-4 pb-4 text-sm text-muted">{t('categories.phone.subsNone')}</p>
+            ? <EmptyState compact icon={CategoryIcon} message={t('categories.phone.subsNone')} />
             : (
                 <DragList
                   actions={actions}
@@ -253,7 +264,9 @@ function CategoryPage({ category, items, kind, actions, busy, onPage }: {
                   row={kid => (
                     <button className="flex min-w-0 flex-1 items-center gap-3 py-2.5 pe-4 text-start outline-none focus-visible:focus-ring" type="button" onClick={() => onPage(kid.id)}>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-medium [overflow-wrap:anywhere]">{nameOf(kid)}</span>
+                        <span className="flex items-center gap-1.5 text-sm font-medium">
+                          <span className="[overflow-wrap:anywhere]">{nameOf(kid)}</span>
+                        </span>
                         <OtherName category={kid} />
                       </span>
                       <span className="shrink-0 text-xs text-muted tabular-nums">{kid.useCount ? uses(kind, kid.useCount) : t('categories.unused')}</span>

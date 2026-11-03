@@ -10,12 +10,15 @@ import { fail, ok } from './failure.ts'
 
 // The new category goes last among its siblings. Its slug is made once from the name and is never changed.
 export function makeCreateCategory<T>({ uow, categories, audit, clock }: CategoryDeps<T>) {
-  return async (actor: Actor, storeId: string, kind: CategoryKind, input: { name: { en?: string | null, de?: string | null }, parentId?: string | null }, requestId: string | null): Promise<Result<CategoryRow>> => {
+  return async (actor: Actor, storeId: string, kind: CategoryKind, input: { name: { en?: string | null, de?: string | null }, parentId?: string | null, showOnHome?: boolean }, requestId: string | null): Promise<Result<CategoryRow>> => {
     if (!mayManageContent(actor, storeId))
       return fail({ reason: 'forbidden' })
     const name: Localized | undefined = normalizeCategoryName(input.name)
     if (!name)
       return fail({ reason: 'name-missing' })
+    const showOnHome = input.showOnHome ?? false
+    if (showOnHome && kind !== 'map')
+      return fail({ reason: 'show-on-home-map-only' })
     const parentId = input.parentId?.toLowerCase() ?? null
     return uow.run(async (tx) => {
       await categories.lockList(tx, storeId, kind)
@@ -28,14 +31,14 @@ export function makeCreateCategory<T>({ uow, categories, audit, clock }: Categor
           return fail({ reason: 'category-too-deep' })
       }
       const slug = nextFreeSlug(categorySlugBase(name), await categories.slugsTaken(tx, storeId, kind))
-      const created = await categories.insert(tx, storeId, kind, { name, slug, parentId, position: siblingsOf(rows, parentId).length + 1 }, clock.now())
+      const created = await categories.insert(tx, storeId, kind, { name, slug, parentId, showOnHome, position: siblingsOf(rows, parentId).length + 1 }, clock.now())
       await audit.record(tx, {
         storeId,
         actor: staffActor(actor),
         entity: categoryEntity(kind),
         entityId: created.id,
         action: 'created',
-        after: { name, slug, parentId, position: created.position },
+        after: { name, slug, parentId, showOnHome, position: created.position },
         requestId,
       })
       return ok(created)

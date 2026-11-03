@@ -7,6 +7,8 @@ Applies to: `api/src/modules/content/`, `api/src/modules/reviews/`, `api/migrati
 
 No new dependency, vendor or paid service. This is the first use of database triggers for business rules in this repository (the only earlier rule is "no trigger for `updated_at`"). Detail is in `docs/specs/001-storytelling-pivot/data-model.md`, section DM-5. It refines ADR-005.
 
+**Amended 2026-11-02 (owner, T-016): a place of any status can be deleted when nothing uses it.** Migration 0020 drops `places_keep_once_published`, so "Published rows are not deleted" no longer holds for places. What uses a place still blocks the delete through the RESTRICT keys (`story_group_places`, `story_groups.subject_place_id`, `tour_stops.place_id`), and the place's own rows (dates, categories, photos, link) go with it through ON DELETE CASCADE. The use case counts the users first and answers 409 `content-in-use` with how many stories, editorial reviews and tours use the pin, so the screen can say it and offer Hide. Kept: `first_published_at` is fixed once set while the place lives, the TRUNCATE guards, and every guard on story versions. A published story version still cannot be deleted. AC79 changes to match (PRD revision 13).
+
 **Amended 2026-10-27 (G11).** The pin rule and the fixed place type are removed. A pin publishes with or without a main story (AC85), and `content.places` has no `type`. The two constraint triggers, the row-local story CHECKs, the type-immutability trigger and the type copy on editorial reviews are gone. Every other rule below is unchanged: the draft CHECK, the delete guards, the fixed `first_published_at`, the kept published text and the TRUNCATE guards. The decision record is `docs/decisions/2026-10-27-map-pins-and-events.md` and the pin model is ADR-029. Text that G11 removed stays below, marked, so the history reads whole.
 
 ## Context
@@ -48,3 +50,4 @@ We will enforce each rule at the lowest level that can express it.
 - 2026-10-26 amended (gate G-E25-FIRSTPUB): first_published_at fixed once set
 - 2026-10-26 amended (gates G-E25-STORYKEEP, G-E25-TRUNCATE): published story text kept once set; TRUNCATE refused on guarded tables
 - 2026-10-27 amended (gate G11): pin rule, constraint triggers, fixed place type and the type copy on editorial reviews removed. Other rules unchanged
+- 2026-11-02 amended (owner: a place of any status is deleted when nothing uses it; migration 0020)

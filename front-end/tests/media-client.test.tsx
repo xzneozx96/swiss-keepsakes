@@ -4,9 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DataClientProvider, useCommand } from '@/features/data-client'
 import { uploadTimeoutMs } from '@/features/data-client/api-transport'
+import { commandAffects } from '@/features/data-client/commands'
 import { ApiProblem } from '@/features/data-client/errors'
 import { createMediaClient } from '@/features/media/api/api-client'
-import { useMediaList, useMediaUses } from '@/features/media/api/queries'
+import { useMediaFile, useMediaList, useMediaUses } from '@/features/media/api/queries'
 import { item, other, page, photoId, problem, setUpHarness, state, storeId, uses } from './media-harness'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
@@ -91,6 +92,48 @@ describe('[E4.11][AC51] the media commands', () => {
 
     expect(error).toBeInstanceOf(ApiProblem)
     expect(error).toMatchObject({ status: 409, type: 'media-in-use' })
+  })
+})
+
+describe('[T-002] the photo commands and the file read', () => {
+  const grant = { uploadKey: `${storeId}/k.jpg`, url: 'https://storage.test/uploads/k', method: 'PUT', headers: { 'Content-Type': 'image/jpeg' }, expiresAt: '2026-10-30T10:15:00.000Z', kind: 'image' }
+
+  it('[T-002] a grant and a confirm each send one keyed request, and only the confirm refreshes the library list', async () => {
+    state.answer = call => (call.path === `${base}/uploads` ? Response.json(grant) : call.path === `${base}/confirm` ? Response.json(item({ status: 'processing' }), { status: 201 }) : undefined)
+    const { result } = renderHook(() => ({ request: useCommand('media', 'requestUpload'), confirm: useCommand('media', 'confirmUpload') }), { wrapper })
+
+    await act(async () => {
+      await result.current.request.mutateAsync({ storeId, contentType: 'image/jpeg', byteSize: 3, idempotencyKey: 'k1' })
+      await result.current.confirm.mutateAsync({ storeId, uploadKey: grant.uploadKey, fileName: 'a.jpg', idempotencyKey: 'k2' })
+    })
+
+    expect(state.calls.filter(call => call.method !== 'GET')).toMatchObject([
+      { method: 'POST', path: `${base}/uploads`, key: 'k1', body: { contentType: 'image/jpeg', byteSize: 3 } },
+      { method: 'POST', path: `${base}/confirm`, key: 'k2', body: { uploadKey: grant.uploadKey, fileName: 'a.jpg' } },
+    ])
+    expect(commandAffects.media.requestUpload).toEqual([])
+    expect(commandAffects.media.confirmUpload).toEqual([['media', 'list']])
+  })
+
+  it('[T-002] a refused grant arrives as an ApiProblem with the type of the API', async () => {
+    state.answer = () => problem(422, 'media-too-large')
+    const { result } = renderHook(() => useCommand('media', 'requestUpload'), { wrapper })
+    let error: unknown
+
+    await act(async () => {
+      await result.current.mutateAsync({ storeId, contentType: 'image/jpeg', byteSize: 3, idempotencyKey: 'k' }).catch((caught: unknown) => (error = caught))
+    })
+
+    expect(error).toMatchObject({ status: 422, type: 'media-too-large' })
+  })
+
+  it('[T-002] reads one file by id, and waits while the id or the store is unknown', async () => {
+    state.answer = call => (call.path === `${base}/${photoId}` ? Response.json(item()) : undefined)
+    const known = renderHook(() => useMediaFile(storeId, photoId), { wrapper })
+    const unknown = renderHook(() => useMediaFile(storeId, null), { wrapper })
+
+    await waitFor(() => expect(known.result.current.data).toMatchObject({ id: photoId, status: 'ready' }))
+    expect(unknown.result.current.fetchStatus).toBe('idle')
   })
 })
 

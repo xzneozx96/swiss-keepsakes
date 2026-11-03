@@ -2,20 +2,22 @@ import type { ProductDoc, ProductOption, ProductVariant } from '../../../src/mod
 import { describe, expect, it } from 'vitest'
 import { fullLanguages, publishChecks, publishGaps } from '../../../src/modules/catalog/application/publish-checks.ts'
 
+const rich = (text: string) => ({ type: 'doc' as const, content: [{ type: 'paragraph', content: text.trim() ? [{ type: 'text', text }] : [] }] })
 const photo = '0190f0c2-0000-7000-8000-0000000000e1'
-const forSale: ProductVariant = { id: 'v1', skuCode: 'VX-1', priceRappen: 3900, status: 'published', values: {} }
-const doc = (over: Partial<ProductDoc> = {}): ProductDoc => ({ name: { en: 'Knife' }, text: { en: 'A knife.' }, media: [photo], ...over })
+const forSale: ProductVariant = { id: 'v1', skuCode: 'VX-1', mediaId: null, priceRappen: 3900, status: 'published', values: {} }
+const doc = (over: Partial<ProductDoc> = {}): ProductDoc => ({ name: { en: 'Knife' }, text: { en: rich('A knife.') }, media: [photo], ...over })
 function checks(over: { doc?: ProductDoc, variants?: ProductVariant[], options?: ProductOption[], commissionRate?: number } = {}) {
   return publishChecks({ doc: doc(), variants: [forSale], options: [], commissionRate: 0.1, ...over })
 }
 
 describe('[E6.1][AC30] a language is full with a name and a text', () => {
   it.each([
-    [{ name: { en: 'A' }, text: { en: 'B' } }, ['en']],
-    [{ name: { de: 'A' }, text: { de: 'B' } }, ['de']],
-    [{ name: { en: 'A', de: 'A' }, text: { en: 'B', de: 'B' } }, ['en', 'de']],
-    [{ name: { en: 'A' }, text: { de: 'B' } }, []],
-    [{ name: { en: '  ' }, text: { en: 'B' } }, []],
+    [{ name: { en: 'A' }, text: { en: rich('B') } }, ['en']],
+    [{ name: { de: 'A' }, text: { de: rich('B') } }, ['de']],
+    [{ name: { en: 'A', de: 'A' }, text: { en: rich('B'), de: rich('B') } }, ['en', 'de']],
+    [{ name: { en: 'A' }, text: { de: rich('B') } }, []],
+    [{ name: { en: 'A' }, text: { en: rich('  ') } }, []],
+    [{ name: { en: '  ' }, text: { en: rich('B') } }, []],
     [{ name: {}, text: {} }, []],
   ])('[E6.1][AC30] %j is full in %j', (input, expected) => {
     expect(fullLanguages(input)).toEqual(expected)
@@ -25,11 +27,11 @@ describe('[E6.1][AC30] a language is full with a name and a text', () => {
 describe('[E6.1][checks] the blocking checks', () => {
   it('[E6.1][AC30] one full language is enough to publish, in English or in German', () => {
     expect(checks().blocking).toEqual([])
-    expect(checks({ doc: doc({ name: { de: 'Messer' }, text: { de: 'Ein Messer.' } }) }).blocking).toEqual([])
+    expect(checks({ doc: doc({ name: { de: 'Messer' }, text: { de: rich('Ein Messer.') } }) }).blocking).toEqual([])
   })
 
   it('[E6.1][AC30] a name in one language and a text only in the other blocks', () => {
-    const result = checks({ doc: doc({ name: { en: 'Knife' }, text: { de: 'Ein Messer.' } }) })
+    const result = checks({ doc: doc({ name: { en: 'Knife' }, text: { de: rich('Ein Messer.') } }) })
 
     expect(result.blocking).toEqual([{ code: 'language', card: 'basics' }])
     expect(publishGaps(result)).toEqual(['name'])
@@ -58,17 +60,24 @@ describe('[E6.1][checks] the blocking checks', () => {
 describe('[E6.1][checks] the warnings never block', () => {
   it('[E6.1][AC30] the other language missing is a warning that names it', () => {
     expect(checks().warnings).toEqual([{ code: 'other-language', card: 'basics', language: 'de' }])
-    expect(checks({ doc: doc({ name: { de: 'M' }, text: { de: 'T' } }) }).warnings).toEqual([{ code: 'other-language', card: 'basics', language: 'en' }])
+    expect(checks({ doc: doc({ name: { de: 'M' }, text: { de: rich('T') } }) }).warnings).toEqual([{ code: 'other-language', card: 'basics', language: 'en' }])
   })
 
   it('[E6.1][checks] both languages full gives no language warning', () => {
-    expect(checks({ doc: doc({ name: { en: 'A', de: 'A' }, text: { en: 'B', de: 'B' } }) }).warnings).toEqual([])
+    expect(checks({ doc: doc({ name: { en: 'A', de: 'A' }, text: { en: rich('B'), de: rich('B') } }) }).warnings).toEqual([])
   })
 
   it('[E6.1][checks] a hidden variant is listed with its code', () => {
-    const hidden: ProductVariant = { id: 'v2', skuCode: 'VX-2', priceRappen: 100, status: 'draft', values: {} }
+    const hidden: ProductVariant = { id: 'v2', skuCode: 'VX-2', mediaId: null, priceRappen: 100, status: 'draft', values: {} }
 
     expect(checks({ variants: [forSale, hidden] }).warnings).toContainEqual({ code: 'hidden', card: 'variants', count: 1, codes: ['VX-2'] })
+  })
+
+  it('[T-010] a hidden variant with no code is listed by its values', () => {
+    const hidden: ProductVariant = { id: 'v2', skuCode: null, mediaId: null, priceRappen: 100, status: 'draft', values: { o1: 'v1' } }
+    const options = [{ id: 'o1', name: { en: 'Size' }, values: [{ id: 'v0', label: { en: 'Small' } }, { id: 'v1', label: { en: 'Large' } }] }]
+
+    expect(checks({ variants: [forSale, hidden], options }).warnings).toContainEqual({ code: 'hidden', card: 'variants', count: 1, codes: ['Large'] })
   })
 
   it('[E6.1][checks] a zero commission is a warning', () => {
@@ -80,7 +89,7 @@ describe('[E6.2][AC52] option labels', () => {
   const option = (name: { en?: string, de?: string }, values: { en?: string, de?: string }[]) => ({
     id: 'o1',
     name,
-    values: values.map((label, index) => ({ id: `v${index}`, label, swatch: null })),
+    values: values.map((label, index) => ({ id: `v${index}`, label })),
   })
 
   it('[E6.2][AC52] a German label may be empty: publishing is not blocked, and a warning counts the missing labels', () => {

@@ -1,9 +1,9 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
-import type { Localized, Pin, PinListEntry, PinStoryOption } from '@sk/domain/content'
+import type { Pin, PinStoryOption } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
-import type { PinChanges } from '../ports.ts'
+import type { MerchantPinEntry, PinChanges } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
 import { pinListSchema, pinPublishBodySchema, pinSchema, pinStoryOptionListSchema, pinWriteBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
@@ -15,12 +15,13 @@ import { acceptEmptyBody, etag, etagHeaders, json, storeParams, withIfMatch } fr
 
 // What the pin routes call. main.ts builds each from the module's use cases, wrapped by guardUseCases.
 export interface PinUseCases {
-  listMerchantPins: (actor: Actor, storeId: string) => Promise<Result<PinListEntry[]>>
+  publicUrl: (key: string) => string
+  listMerchantPins: (actor: Actor, storeId: string) => Promise<Result<MerchantPinEntry[]>>
   getMerchantPin: (actor: Actor, storeId: string, pinId: string) => Promise<Result<Pin>>
   listPinStoryOptions: (actor: Actor, storeId: string) => Promise<Result<PinStoryOption[]>>
   createPin: (actor: Actor, storeId: string, changes: PinChanges, requestId: string | null) => Promise<Result<Pin>>
   savePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, changes: PinChanges, requestId: string | null) => Promise<Result<Pin>>
-  publishPin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null, slug?: Localized) => Promise<Result<Pin>>
+  publishPin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null) => Promise<Result<Pin>>
   hidePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null) => Promise<Result<Pin>>
   deletePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null) => Promise<Result<{ id: string }>>
 }
@@ -95,7 +96,7 @@ const deletePinRoute = createRoute({
   path: '/api/store/{storeId}/pins/{pinId}',
   request: { params: pinParams, ...withIfMatch },
   responses: {
-    204: { description: 'The pin is deleted. Only a pin that was never published can be', headers: requestIdHeader },
+    204: { description: 'The pin is deleted, whatever its status, when no story, review or tour uses it', headers: requestIdHeader },
     ...problemResponses,
   },
 })
@@ -107,7 +108,7 @@ export function registerPinRoutes(app: OpenAPIHono<AppEnv>, useCases: PinUseCase
     const result = await useCases.listMerchantPins(c.get('actor'), c.get('store').storeId)
     if (!result.ok)
       return problem(c, failureProblem(result))
-    return c.json({ items: result.value.map(pinListItemView) }, 200)
+    return c.json({ items: result.value.map(entry => pinListItemView(entry, useCases.publicUrl)) }, 200)
   })
 
   app.openapi(storyOptionsRoute, async (c) => {
@@ -145,7 +146,7 @@ export function registerPinRoutes(app: OpenAPIHono<AppEnv>, useCases: PinUseCase
     const ifMatch = readIfMatch(c)
     if (!ifMatch.ok)
       return ifMatch.response
-    const result = await useCases.publishPin(c.get('actor'), c.get('store').storeId, c.req.valid('param').pinId, ifMatch.version, c.get('requestId'), c.req.valid('json').slug)
+    const result = await useCases.publishPin(c.get('actor'), c.get('store').storeId, c.req.valid('param').pinId, ifMatch.version, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(pinView(result.value), 200, etag(result.value))

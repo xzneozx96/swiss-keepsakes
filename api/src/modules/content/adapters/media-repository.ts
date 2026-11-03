@@ -55,6 +55,20 @@ export function createMediaRepository(): MediaRepository<Tx> {
         where store_id = ${storeId} and id = any(${sql.param(ids)}::uuid[])`)
       return result.rows
     },
+    async findMany(tx, storeId, ids) {
+      const result = await tx.execute<Columns>(sql`
+        select ${columns} from content.media
+        where store_id = ${storeId} and id = any(${sql.param(ids)}::uuid[])`)
+      return result.rows.map(record)
+    },
+    async findReadyByHash(tx, storeId, hashes) {
+      // One query for every hash; media_store_sha256_ready_idx (migration 0013) serves it.
+      const result = await tx.execute<Columns>(sql`
+        select ${columns} from content.media
+        where store_id = ${storeId} and status = 'ready' and sha256 = any(${sql.param(hashes)}::text[])
+        order by created_at, id`)
+      return result.rows.map(record)
+    },
     async insert(tx, row, at) {
       const result = await tx.execute<Columns>(sql`
         insert into content.media (id, store_id, kind, storage_key, content_type, byte_size, sha256, name, file_name, status, created_at, updated_at)

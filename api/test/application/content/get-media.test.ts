@@ -47,6 +47,7 @@ describe('[E2.7] the media view', () => {
       id,
       kind: 'image',
       status: 'ready',
+      name: 'file.jpg',
       contentType: 'image/jpeg',
       byteSize: 1000,
       width: 1500,

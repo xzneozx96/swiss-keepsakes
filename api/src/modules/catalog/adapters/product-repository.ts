@@ -1,7 +1,7 @@
 import type { Tx } from '../../../platform/db/client.ts'
-import type { Localized, OptionValue, Product, ProductChanges, ProductDoc, ProductListRow, ProductOption, ProductRepository, ProductVariant } from '../ports.ts'
+import type { Localized, LocalizedDoc, OptionValue, Product, ProductChanges, ProductDoc, ProductListRow, ProductOption, ProductRepository, ProductVariant } from '../ports.ts'
 import { sql } from 'drizzle-orm'
-import { writeOptions, writeSkuValues } from './option-writes.ts'
+import { writeOptions, writeSkuValues, writeVariants } from './option-writes.ts'
 
 interface ProductRow {
   id: string
@@ -9,7 +9,7 @@ interface ProductRow {
   status: Product['status']
   slug: Localized | null
   draft: ProductDoc | null
-  published: { name?: Localized, text?: Localized } | null
+  published: { name?: Localized, text?: LocalizedDoc } | null
   commission_rate: number
   row_version: number
   created_at: Date
@@ -18,7 +18,8 @@ interface ProductRow {
 
 interface VariantRow {
   id: string
-  sku_code: string
+  sku_code: string | null
+  media_id: string | null
   // bigint comes back from node-postgres as a string.
   price_rappen: string | number
   status: ProductVariant['status']
@@ -33,7 +34,6 @@ interface ValueRow {
   id: string
   option_id: string
   label: Localized
-  swatch: string | null
 }
 
 interface SkuValueRow {
@@ -47,9 +47,11 @@ interface ListRow {
   status: Product['status']
   draft: ProductDoc | null
   published: { name?: Localized } | null
+  option_names: Localized[]
   published_cover: string | null
   variant_count: number
   sold_out_count: number
+  row_version: number
   updated_at: Date
 }
 
@@ -57,13 +59,23 @@ const columns = sql`id, store_id, status, slug, draft, published, commission_rat
 
 const json = (value: unknown) => (value === null ? null : JSON.stringify(value))
 
+// Object keys sorted at every depth: jsonb stores a document with its keys in its own order, and a request body has
+// the order it was sent in, so the two must compare equal when they say the same.
+function canonical(value: unknown): unknown {
+  if (Array.isArray(value))
+    return value.map(canonical)
+  if (value !== null && typeof value === 'object')
+    return Object.fromEntries(Object.entries(value).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([key, item]) => [key, canonical(item)]))
+  return value
+}
+
 // The same text in the same order, so a draft that was edited back to the live copy is no pending edit.
 function docKey(doc: ProductDoc): string {
-  return JSON.stringify({
+  return JSON.stringify(canonical({
     name: { en: doc.name.en ?? null, de: doc.name.de ?? null },
     text: { en: doc.text.en ?? null, de: doc.text.de ?? null },
     media: doc.media,
-  })
+  }))
 }
 
 async function load(tx: Tx, storeId: string, productId: string, lock: boolean): Promise<Product | undefined> {
@@ -75,17 +87,17 @@ async function load(tx: Tx, storeId: string, productId: string, lock: boolean): 
   const media = await tx.execute<{ media_id: string }>(sql`
     select media_id from catalog.product_media where store_id = ${storeId} and product_id = ${productId} order by position`)
   const variants = await tx.execute<VariantRow & Record<string, unknown>>(sql`
-    select id, sku_code, price_rappen, status from catalog.skus where store_id = ${storeId} and product_id = ${productId} order by created_at, id`)
+    select id, sku_code, media_id, price_rappen, status from catalog.skus where store_id = ${storeId} and product_id = ${productId} order by created_at, id`)
   const optionRows = await tx.execute<OptionRow & Record<string, unknown>>(sql`
     select id, name from catalog.product_options where store_id = ${storeId} and product_id = ${productId} order by position`)
   const valueRows = await tx.execute<ValueRow & Record<string, unknown>>(sql`
-    select id, option_id, label, swatch from catalog.product_option_values where store_id = ${storeId} and product_id = ${productId} order by position`)
+    select id, option_id, label from catalog.product_option_values where store_id = ${storeId} and product_id = ${productId} order by position`)
   const skuValueRows = await tx.execute<SkuValueRow & Record<string, unknown>>(sql`
     select sku_id, option_id, value_id from catalog.sku_option_values where store_id = ${storeId} and product_id = ${productId}`)
   const options: ProductOption[] = optionRows.rows.map(option => ({
     id: option.id,
     name: option.name,
-    values: valueRows.rows.filter(value => value.option_id === option.id).map((value): OptionValue => ({ id: value.id, label: value.label, swatch: value.swatch })),
+    values: valueRows.rows.filter(value => value.option_id === option.id).map((value): OptionValue => ({ id: value.id, label: value.label })),
   }))
   const valuesOf = (skuId: string) => Object.fromEntries(skuValueRows.rows.filter(row => row.sku_id === skuId).map(row => [row.option_id, row.value_id]))
   return {
@@ -98,7 +110,7 @@ async function load(tx: Tx, storeId: string, productId: string, lock: boolean): 
     publishedMedia: media.rows.map(m => m.media_id),
     commissionRate: row.commission_rate,
     options,
-    variants: variants.rows.map(v => ({ id: v.id, skuCode: v.sku_code, priceRappen: Number(v.price_rappen), status: v.status, values: valuesOf(v.id) })),
+    variants: variants.rows.map(v => ({ id: v.id, skuCode: v.sku_code, mediaId: v.media_id, priceRappen: Number(v.price_rappen), status: v.status, values: valuesOf(v.id) })),
     rowVersion: row.row_version,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
@@ -114,7 +126,8 @@ export function createProductRepository(): ProductRepository<Tx> {
     async list(tx, storeId) {
       // soldOutCount is 0 until stock exists (E6.3 joins inventory.stock_items here).
       const result = await tx.execute<ListRow & Record<string, unknown>>(sql`
-        select p.id, p.status, p.draft, p.published, p.updated_at,
+        select p.id, p.status, p.draft, p.published, p.row_version, p.updated_at,
+               (select coalesce(jsonb_agg(o.name order by o.position), '[]'::jsonb) from catalog.product_options o where o.product_id = p.id) as option_names,
                (select media_id from catalog.product_media m where m.product_id = p.id order by m.position limit 1) as published_cover,
                (select count(*) from catalog.skus s where s.product_id = p.id and s.status <> 'archived')::int as variant_count,
                0::int as sold_out_count
@@ -124,11 +137,13 @@ export function createProductRepository(): ProductRepository<Tx> {
       return result.rows.map((row): ProductListRow => ({
         id: row.id,
         name: (row.draft ?? row.published)?.name ?? {},
+        optionNames: row.option_names,
         status: row.status,
         hasUnpublishedEdits: row.status === 'published' && row.draft !== null,
         coverMediaId: row.draft ? row.draft.media?.[0] ?? null : row.published_cover,
         variantCount: row.variant_count,
         soldOutCount: row.sold_out_count,
+        rowVersion: row.row_version,
         updatedAt: new Date(row.updated_at),
       }))
     },
@@ -145,17 +160,7 @@ export function createProductRepository(): ProductRepository<Tx> {
         returning id`)
       const id = inserted.rows[0]!.id
       const written = await writeOptions(tx, storeId, id, [], input.options, at)
-      const rows = sql.join(input.variants.map(variant => sql`(${storeId}, ${variant.skuCode}, ${id}, ${variant.priceRappen}, ${variant.status}, ${at}, ${at})`), sql`, `)
-      const skus = await tx.execute<{ id: string, sku_code: string }>(sql`
-        insert into catalog.skus (store_id, sku_code, product_id, price_rappen, status, created_at, updated_at)
-        values ${rows} returning id, sku_code`)
-      const idOfCode = new Map(skus.rows.map(row => [row.sku_code, row.id]))
-
-      for (const variant of input.variants) {
-        const values = Object.fromEntries(Object.entries(variant.values).map(([optionRef, valueRef]) => [written.optionIds.get(optionRef)!, written.valueIds.get(valueRef)!]))
-
-        await writeSkuValues(tx, storeId, id, idOfCode.get(variant.skuCode)!, values)
-      }
+      await writeVariants(tx, storeId, id, input.variants, written, at)
       return reload(tx, { storeId, id })
     },
 
@@ -202,6 +207,24 @@ export function createProductRepository(): ProductRepository<Tx> {
       return reload(tx, product)
     },
 
+    async archive(tx, product, at) {
+      await tx.execute(sql`
+        update catalog.products set status = 'archived', row_version = row_version + 1, updated_at = ${at}
+        where store_id = ${product.storeId} and id = ${product.id}`)
+      return reload(tx, product)
+    },
+
+    // Children first: the SKU rows go before the option values they point at (RESTRICT), the values before their options.
+    // The combination triggers run at commit, find no SKU and return. product_media and category links cascade.
+    async remove(tx, product) {
+      const where = sql`store_id = ${product.storeId} and product_id = ${product.id}`
+      await tx.execute(sql`delete from catalog.sku_option_values where ${where}`)
+      await tx.execute(sql`delete from catalog.skus where ${where}`)
+      await tx.execute(sql`delete from catalog.product_option_values where ${where}`)
+      await tx.execute(sql`delete from catalog.product_options where ${where}`)
+      await tx.execute(sql`delete from catalog.products where store_id = ${product.storeId} and id = ${product.id}`)
+    },
+
     async slugsTaken(tx, language) {
       const result = await tx.execute<{ taken: string }>(sql`
         select slug->>${language}::text as taken from catalog.products where slug ? ${language}::text`)
@@ -211,7 +234,8 @@ export function createProductRepository(): ProductRepository<Tx> {
     async saveVariant(tx, product, skuId, changes, at) {
       const updated = await tx.execute<{ id: string }>(sql`
         update catalog.skus set
-          sku_code = coalesce(${changes.skuCode ?? null}::text, sku_code),
+          sku_code = case when ${changes.skuCode !== undefined} then ${changes.skuCode ?? null}::text else sku_code end,
+          media_id = case when ${changes.mediaId !== undefined} then ${changes.mediaId ?? null}::uuid else media_id end,
           price_rappen = coalesce(${changes.priceRappen ?? null}::bigint, price_rappen),
           status = coalesce(${changes.status ?? null}::text, status),
           updated_at = ${at}
@@ -228,8 +252,8 @@ export function createProductRepository(): ProductRepository<Tx> {
 
     async insertVariant(tx, product, input, at) {
       const inserted = await tx.execute<{ id: string }>(sql`
-        insert into catalog.skus (store_id, sku_code, product_id, price_rappen, status, created_at, updated_at)
-        values (${product.storeId}, ${input.skuCode}, ${product.id}, ${input.priceRappen}, ${input.status}, ${at}, ${at})
+        insert into catalog.skus (store_id, sku_code, media_id, product_id, price_rappen, status, created_at, updated_at)
+        values (${product.storeId}, ${input.skuCode}, ${input.mediaId}, ${product.id}, ${input.priceRappen}, ${input.status}, ${at}, ${at})
         returning id`)
       await writeSkuValues(tx, product.storeId, product.id, inserted.rows[0]!.id, input.values)
       return reload(tx, product)
@@ -247,10 +271,53 @@ export function createProductRepository(): ProductRepository<Tx> {
         await tx.execute(sql`delete from catalog.sku_option_values where sku_id = ${entry.variantId} and option_id = any(${sql.param(optionIds)}::uuid[])`)
         await writeSkuValues(tx, product.storeId, product.id, entry.variantId, values)
       }
+      await writeVariants(tx, product.storeId, product.id, input.newVariants, written, at)
       await tx.execute(sql`
         update catalog.products set row_version = row_version + 1, updated_at = ${at}
         where store_id = ${product.storeId} and id = ${product.id}`)
       return reload(tx, product)
+    },
+
+    async saveVariants(tx, product, changes, at) {
+      // One statement for all rows. A null price or status keeps the stored one; a code or photo changes only where its
+      // flag is set, so a null there clears it.
+      await tx.execute(sql`
+        update catalog.skus s set
+          price_rappen = coalesce(c.price_rappen, s.price_rappen),
+          status = coalesce(c.status, s.status),
+          sku_code = case when c.set_code then c.sku_code else s.sku_code end,
+          media_id = case when c.set_media then c.media_id else s.media_id end,
+          updated_at = ${at}
+        from unnest(
+          ${sql.param(changes.map(change => change.id))}::uuid[],
+          ${sql.param(changes.map(change => change.priceRappen ?? null))}::bigint[],
+          ${sql.param(changes.map(change => change.status ?? null))}::text[],
+          ${sql.param(changes.map(change => change.skuCode !== undefined))}::boolean[],
+          ${sql.param(changes.map(change => change.skuCode ?? null))}::text[],
+          ${sql.param(changes.map(change => change.mediaId !== undefined))}::boolean[],
+          ${sql.param(changes.map(change => change.mediaId ?? null))}::uuid[]
+        ) as c(id, price_rappen, status, set_code, sku_code, set_media, media_id)
+        where s.store_id = ${product.storeId} and s.product_id = ${product.id} and s.id = c.id and s.status <> 'archived'`)
+      return reload(tx, product)
+    },
+
+    async removeVariants(tx, product, skuIds) {
+      const where = sql`store_id = ${product.storeId} and product_id = ${product.id} and id = any(${sql.param(skuIds)}::uuid[])`
+
+      await tx.execute(sql`
+        delete from catalog.sku_option_values
+         where sku_id in (select id from catalog.skus where ${where})`)
+      await tx.execute(sql`delete from catalog.skus where ${where}`)
+      return reload(tx, product)
+    },
+
+    async takenSkuCodes(tx, storeId, codes, except = []) {
+      if (codes.length === 0)
+        return new Set()
+      const found = await tx.execute<{ sku_code: string }>(sql`
+        select sku_code from catalog.skus
+         where store_id = ${storeId} and sku_code = any(${sql.param(codes)}::text[]) and id <> all(${sql.param(except)}::uuid[])`)
+      return new Set(found.rows.map(row => row.sku_code))
     },
   }
 }

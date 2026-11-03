@@ -1,6 +1,7 @@
 import type { PlacesClient } from './client'
 
 import { answer, keyed, loadClient, problemOf, timeout } from '@/features/data-client/api-transport'
+import { PinProblem } from '../lib/problems'
 
 const withVersion = (idempotencyKey: string, ifMatch: number) => ({ ...keyed(idempotencyKey), params: { header: { 'If-Match': String(ifMatch) } } })
 
@@ -12,8 +13,8 @@ export function createPlacesClient(): PlacesClient {
       answer((await loadClient()).GET('/api/store/{storeId}/pins/{pinId}', { ...timeout(), params: { path: { storeId, pinId: id } } })),
     storyOptions: async ({ storeId }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/pins/story-options', { ...timeout(), params: { path: { storeId } } })),
-    media: async ({ storeId, id }) =>
-      answer((await loadClient()).GET('/api/store/{storeId}/media/{mediaId}', { ...timeout(), params: { path: { storeId, mediaId: id } } })),
+    storyVersion: async ({ storeId, groupId, language }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/story-groups/{groupId}/versions/{language}', { ...timeout(), params: { path: { storeId, groupId, language } } })),
     create: async ({ storeId, idempotencyKey, ...body }) =>
       answer((await loadClient()).POST('/api/store/{storeId}/pins', { ...keyed(idempotencyKey), params: { path: { storeId } }, body })),
     save: async ({ storeId, id, ifMatch, idempotencyKey, ...body }) => {
@@ -36,11 +37,11 @@ export function createPlacesClient(): PlacesClient {
       const { error, response } = await (await loadClient()).DELETE('/api/store/{storeId}/pins/{pinId}', { ...keyed(idempotencyKey), params: { ...params, path: { storeId, pinId: id } } })
 
       if (!response.ok)
-        throw problemOf(response, error)
+        throw new PinProblem(problemOf(response, error), error)
     },
-    requestUpload: async ({ storeId, idempotencyKey, ...body }) =>
-      answer((await loadClient()).POST('/api/store/{storeId}/media/uploads', { ...keyed(idempotencyKey), params: { path: { storeId } }, body })),
-    confirmUpload: async ({ storeId, idempotencyKey, ...body }) =>
-      answer((await loadClient()).POST('/api/store/{storeId}/media/confirm', { ...keyed(idempotencyKey), params: { path: { storeId } }, body })),
+    resolveMapsLink: async ({ storeId, url }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/maps-link', { ...timeout(), params: { path: { storeId }, query: { url } } })),
+    addressAt: async ({ storeId, latitude, longitude }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/address-at', { ...timeout(), params: { path: { storeId }, query: { lat: latitude, lng: longitude } } })),
   }
 }

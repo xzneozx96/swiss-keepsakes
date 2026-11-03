@@ -4,12 +4,12 @@ import type {
   PartnerOverviewView,
   SingleFigure,
 } from '../hooks/use-partner-overview'
+import type { CommissionFilter } from '../lib/search-params'
 import type { DataTableColumn } from '@/components/data-table'
 import type { FilterGroup } from '@/components/filter-bar'
 
 import { Skeleton } from '@heroui/react'
 import { numberFormat } from '@sk/domain/shared'
-import { useState } from 'react'
 
 import {
   Bar,
@@ -24,7 +24,7 @@ import {
 import { DataTable } from '@/components/data-table'
 
 import { EmptyState } from '@/components/empty-state'
-import { filterGroup, FilterToolbar } from '@/components/filter-bar'
+import { FilterButtons, FilterChips, filterGroup } from '@/components/filter-bar'
 import { ReportsIcon } from '@/components/icons'
 import { DeltaChip } from '@/components/stat-card'
 import { StatusChip } from '@/components/status-chip'
@@ -42,8 +42,6 @@ import { WidgetSkeleton } from '@/features/merchant/today/components/overview-pa
 import { avatarUrl } from '@/lib/avatars'
 import { BalanceHero, MixWidget, MonthsWidget } from './dashboard-widgets'
 import { PaymentsWidget } from './payments-widget'
-
-type CommissionFilter = 'recorded' | 'estimated' | 'none'
 
 const tick = { fill: 'var(--muted)', fontSize: 11 }
 /** Paid out and still owed are one amount per bar: the red ramp of the other analytics screens. */
@@ -217,13 +215,16 @@ function TransactionsWidget({
   rows,
   resetKey,
   className,
+  filter,
+  onFilterChange,
 }: {
   rows: DashRow[]
   resetKey: string
   className: string
+  filter: CommissionFilter[]
+  onFilterChange: (filter: CommissionFilter[]) => void
 }) {
   const { t } = useLocale()
-  const [filter, setFilter] = useState<CommissionFilter[]>([])
   const shown = filter.length
     ? rows.filter(r => filter.includes(filterOf(r)))
     : rows
@@ -239,7 +240,7 @@ function TransactionsWidget({
         count: count(id),
       })),
       selected: filter,
-      onChange: setFilter,
+      onChange: onFilterChange,
     }),
   ]
   const columns: DataTableColumn<DashRow>[] = [
@@ -300,12 +301,15 @@ function TransactionsWidget({
 
   return (
     <Widget
-      actions={<FilterToolbar groups={groups} />}
+      actions={<FilterButtons groups={groups} />}
       className={className}
       description={t('partnerDash.transactions.description')}
       id="partner-transactions"
       title={t('partnerDash.transactions.title')}
     >
+      <div className="mb-3 empty:hidden">
+        <FilterChips groups={groups} />
+      </div>
       <DataTable
         cards={pageRows => (
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:hidden">
@@ -447,7 +451,10 @@ export interface PartnerDashboardProps {
   view: PartnerOverviewView
   period: SalesPeriodId
   custom: DayRange | null
+  /** The commission states ticked in the transactions filter; empty = every transaction. */
+  commission: CommissionFilter[]
   isLoading: boolean
+  onCommissionChange: (commission: CommissionFilter[]) => void
   onPeriodChange: (period: SalesPeriodId) => void
   onCustomChange: (range: DayRange) => void
   /** Opens a month from the months chart (its first day, YYYY-MM-DD). */
@@ -465,7 +472,9 @@ export function PartnerDashboard({
   view,
   period,
   custom,
+  commission,
   isLoading,
+  onCommissionChange,
   onPeriodChange,
   onCustomChange,
   onMonthSelect,
@@ -546,6 +555,8 @@ export function PartnerDashboard({
                 </div>
                 <TransactionsWidget
                   className=""
+                  filter={commission}
+                  onFilterChange={onCommissionChange}
                   resetKey={`${period}|${sales.rangeText}`}
                   rows={view.rows}
                 />

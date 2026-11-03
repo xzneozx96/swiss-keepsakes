@@ -22,6 +22,7 @@ import { bookingBalance, bookingPaid } from '@sk/domain/bookings'
 import { formatOrderDate } from '@sk/domain/orders'
 import { useState } from 'react'
 
+import { choiceCard } from '@/components/choice-card'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 
@@ -36,10 +37,6 @@ import { externalPaymentBlock } from './lib/transitions'
 import { useBlockText, useTourFormatting } from './shared'
 
 const ZURICH = 'Europe/Zurich'
-
-/** Same choice card as M08: ink frame when selected. */
-const choiceCard
-  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 const confirmKeys = {
   'cash': 'recordPayment.confirm.cash',

@@ -1,5 +1,5 @@
 import type { Tx } from '../../../platform/db/client.ts'
-import type { Localized, OptionInput, ProductOption } from '../ports.ts'
+import type { Localized, OptionInput, ProductOption, VariantInput } from '../ports.ts'
 import { sql } from 'drizzle-orm'
 
 // SQL for options, values and the values of SKUs. The deferred triggers of migration 0010 check at commit that every SKU
@@ -28,10 +28,14 @@ export async function writeOptions(tx: Tx, storeId: string, productId: string, e
   const keptOptions = new Set(options.map(option => option.ref))
   const keptValues = new Set(options.flatMap(option => option.values.map(value => value.ref)))
 
+  const goneOptions = existing.filter(option => !keptOptions.has(option.id)).map(option => option.id)
+  // A dropped option leaves every SKU that holds one of its values (ADR-027, amended 2026-11-02; the rules have checked that
+  // the remaining combinations stay distinct). Those rows go first: they hold the values (ON DELETE RESTRICT).
+  if (goneOptions.length > 0)
+    await tx.execute(sql`delete from catalog.sku_option_values where store_id = ${storeId} and product_id = ${productId} and option_id = any(${sql.param(goneOptions)}::uuid[])`)
   const goneValues = existing.flatMap(option => option.values.filter(value => !keptValues.has(value.id)).map(value => value.id))
   if (goneValues.length > 0)
     await tx.execute(sql`delete from catalog.product_option_values where store_id = ${storeId} and product_id = ${productId} and id = any(${sql.param(goneValues)}::uuid[])`)
-  const goneOptions = existing.filter(option => !keptOptions.has(option.id)).map(option => option.id)
   if (goneOptions.length > 0)
     await tx.execute(sql`delete from catalog.product_options where store_id = ${storeId} and product_id = ${productId} and id = any(${sql.param(goneOptions)}::uuid[])`)
 
@@ -54,25 +58,25 @@ export async function writeOptions(tx: Tx, storeId: string, productId: string, e
     }
     const optionId = optionIds.get(option.ref)!
     const existingValueIds = new Set(before?.values.map(value => value.id))
-    const fresh: { ref: string, position: number, label: Localized, swatch: string | null }[] = []
+    const fresh: { ref: string, position: number, label: Localized }[] = []
 
     for (const [valueIndex, value] of option.values.entries()) {
       const valuePosition = valueIndex + 1
 
       if (existingValueIds.has(value.ref)) {
         await tx.execute(sql`
-          update catalog.product_option_values set label = ${labelJson(value.label)}::jsonb, swatch = ${value.swatch}, position = ${valuePosition}, updated_at = ${at}
+          update catalog.product_option_values set label = ${labelJson(value.label)}::jsonb, position = ${valuePosition}, updated_at = ${at}
           where store_id = ${storeId} and product_id = ${productId} and option_id = ${optionId} and id = ${value.ref}`)
         valueIds.set(value.ref, value.ref)
       }
       else {
-        fresh.push({ ref: value.ref, position: valuePosition, label: value.label, swatch: value.swatch })
+        fresh.push({ ref: value.ref, position: valuePosition, label: value.label })
       }
     }
     if (fresh.length > 0) {
-      const rows = sql.join(fresh.map(value => sql`(${storeId}, ${productId}, ${optionId}, ${labelJson(value.label)}::jsonb, ${value.swatch}, ${value.position}, ${at}, ${at})`), sql`, `)
+      const rows = sql.join(fresh.map(value => sql`(${storeId}, ${productId}, ${optionId}, ${labelJson(value.label)}::jsonb, ${value.position}, ${at}, ${at})`), sql`, `)
       const inserted = await tx.execute<{ id: string, position: number }>(sql`
-        insert into catalog.product_option_values (store_id, product_id, option_id, label, swatch, position, created_at, updated_at)
+        insert into catalog.product_option_values (store_id, product_id, option_id, label, position, created_at, updated_at)
         values ${rows} returning id, position`)
       const byPosition = new Map(inserted.rows.map(row => [row.position, row.id]))
 
@@ -93,4 +97,26 @@ export async function writeSkuValues(tx: Tx, storeId: string, productId: string,
   const rows = sql.join(entries.map(([optionId, valueId]) => sql`(${skuId}, ${optionId}, ${valueId}, ${productId}, ${storeId})`), sql`, `)
 
   await tx.execute(sql`insert into catalog.sku_option_values (sku_id, option_id, value_id, product_id, store_id) values ${rows}`)
+}
+
+// Creates variants with their values: one insert for the SKUs, one for all their values. `ids` maps the refs of the
+// request to the ids that `writeOptions` gave, or an existing option or value to itself. A variant may have no code, so the
+// SKUs get their ids here and the values attach by id, not by code.
+export async function writeVariants(tx: Tx, storeId: string, productId: string, variants: VariantInput[], written: WrittenOptions, at: Date): Promise<void> {
+  if (variants.length === 0)
+    return
+  // uuidv7() is time ordered and steps forward within a session, so the SKUs list in the order they were sent (a list
+  // sorts by created_at, which is the same for all of them, then by id).
+  const generated = await tx.execute<{ id: string }>(sql`select uuidv7() as id from generate_series(1, ${variants.length})`)
+  const ids = generated.rows.map(row => row.id)
+  const rows = sql.join(variants.map((variant, index) => sql`(${ids[index]}, ${storeId}, ${variant.skuCode}, ${variant.mediaId}, ${productId}, ${variant.priceRappen}, ${variant.status}, ${at}, ${at})`), sql`, `)
+
+  await tx.execute(sql`
+    insert into catalog.skus (id, store_id, sku_code, media_id, product_id, price_rappen, status, created_at, updated_at)
+    values ${rows}`)
+  const valueRows = variants.flatMap((variant, index) => Object.entries(variant.values).map(([optionRef, valueRef]) =>
+    sql`(${ids[index]}, ${written.optionIds.get(optionRef)!}, ${written.valueIds.get(valueRef)!}, ${productId}, ${storeId})`))
+
+  if (valueRows.length > 0)
+    await tx.execute(sql`insert into catalog.sku_option_values (sku_id, option_id, value_id, product_id, store_id) values ${sql.join(valueRows, sql`, `)}`)
 }

@@ -12,8 +12,7 @@ export const Route = createFileRoute('/store')({
 
 function StoreLayout() {
   return (
-    <MerchantShell>
-      <SetupNotice />
+    <MerchantShell notice={<SetupNotice />}>
       <Outlet />
     </MerchantShell>
   )

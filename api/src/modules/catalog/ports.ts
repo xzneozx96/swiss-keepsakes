@@ -1,3 +1,5 @@
+import type { LocalizedDescription } from '@sk/domain/content'
+
 // What the catalog use cases need. Same shapes as the content module's ports, copied so modules do not import each
 // other (backend/architecture.md). The platform's unit of work fits the generic shape structurally.
 
@@ -26,12 +28,17 @@ export interface AuditLog<T> {
 
 export interface Localized { en?: string, de?: string }
 
+// The description of a keepsake: one Tiptap document per language (DESC-rich). The contract allows only paragraphs,
+// lists, hard breaks, bold, italic and links; the domain reads it through the description rules.
+export type LocalizedDoc = LocalizedDescription
+
 // A file in the library, as a keepsake photo shows it. main.ts builds this port from the content module's media
 // table (ADR-013: keepsake photos are plain media ids). An id of another store, or one that does not exist, is left out.
 export interface MediaInfo {
   id: string
   kind: 'image' | 'audio' | 'pdf'
   status: 'processing' | 'ready' | 'retired'
+  name: string
   contentType: string
   byteSize: number
   width: number | null
@@ -47,7 +54,7 @@ export interface MediaDirectory<T> {
 // The working copy of a keepsake's text and photos: the draft, or what is live.
 export interface ProductDoc {
   name: Localized
-  text: Localized
+  text: LocalizedDoc
   // Media ids in order. The first is the cover.
   media: string[]
 }
@@ -58,8 +65,6 @@ export type VariantStatus = 'published' | 'draft' | 'archived'
 export interface OptionValue {
   id: string
   label: Localized
-  // `#rrggbb` or null (product_option_values_swatch_check).
-  swatch: string | null
 }
 
 // An option of one keepsake (ADR-027). Its values are in the order guests see them.
@@ -71,22 +76,28 @@ export interface ProductOption {
 
 export interface ProductVariant {
   id: string
-  skuCode: string
+  // Optional (owner 2026-11-02): a variant is told apart by its id and its combination. Unique per store when present.
+  skuCode: string | null
+  // One photo of the keepsake's media, a plain id (ADR-013). Null for none.
+  mediaId: string | null
   priceRappen: number
   status: VariantStatus
   // The value of each option, by option id. A keepsake with no option has an empty map.
   values: Record<string, string>
 }
 
+// `archived` is a keepsake that has orders and was removed: off guest pages, never edited or published again, final.
+export type ProductStatus = 'draft' | 'published' | 'archived'
+
 export interface Product {
   id: string
   storeId: string
-  status: 'draft' | 'published'
+  status: ProductStatus
   slug: Localized | null
   // The pending edit, null when there is none. A save writes it, a publish clears it.
   draft: ProductDoc | null
   // What guests see. Null until the first publish. Photos are in `publishedMedia`.
-  published: { name: Localized, text: Localized } | null
+  published: { name: Localized, text: LocalizedDoc } | null
   publishedMedia: string[]
   commissionRate: number
   options: ProductOption[]
@@ -99,18 +110,22 @@ export interface Product {
 export interface ProductListRow {
   id: string
   name: Localized
-  status: 'draft' | 'published'
+  // The names of the keepsake's options, in order. The editor suggests the names the shop already uses.
+  optionNames: Localized[]
+  status: ProductStatus
   hasUnpublishedEdits: boolean
   coverMediaId: string | null
   variantCount: number
   // Always 0 until stock exists (E6.3, `inventory.stock_items`).
   soldOutCount: number
+  // The version an `If-Match` of a removal carries.
+  rowVersion: number
   updatedAt: Date
 }
 
 export interface ProductChanges {
   name?: Localized
-  text?: Localized
+  text?: LocalizedDoc
   media?: string[]
   commissionRate?: number
 }
@@ -120,7 +135,6 @@ export interface ProductChanges {
 export interface ValueInput {
   ref: string
   label: Localized
-  swatch: string | null
 }
 
 export interface OptionInput {
@@ -132,7 +146,8 @@ export interface OptionInput {
 
 // A variant to create. `values` maps an option ref to a value ref.
 export interface VariantInput {
-  skuCode: string
+  skuCode: string | null
+  mediaId: string | null
   priceRappen: number
   status: 'published' | 'draft'
   values: Record<string, string>
@@ -140,7 +155,7 @@ export interface VariantInput {
 
 export interface NewProduct {
   name: Localized
-  text: Localized
+  text: LocalizedDoc
   media: string[]
   commissionRate: number
   options: OptionInput[]
@@ -152,10 +167,31 @@ export interface NewProduct {
 export interface OptionsSave {
   options: OptionInput[]
   variantValues: { variantId: string, values: Record<string, string> }[]
+  // Variants created in the same write. Their `values` map option refs to value refs of this save.
+  newVariants: VariantInput[]
 }
 
+// The price or status of one variant, in a batch. A left-out field stays.
+export interface VariantBatchChange {
+  id: string
+  priceRappen?: number
+  status?: VariantStatus
+  // A left-out field stays; null clears the code or the photo.
+  skuCode?: string | null
+  mediaId?: string | null
+}
+
+// What a request may ask of a variant's status: 'removed' deletes a variant that no order line names and archives one that
+// does (owner, 2026-11-02). The use cases settle it before the repository sees a status.
+export type VariantRequestStatus = VariantStatus | 'removed'
+
+export type VariantChangeRequest = Omit<VariantChanges, 'status'> & { status?: VariantRequestStatus }
+export type VariantBatchRequest = Omit<VariantBatchChange, 'status'> & { status?: VariantRequestStatus }
+
 export interface VariantChanges {
-  skuCode?: string
+  // Left out keeps it, null clears it.
+  skuCode?: string | null
+  mediaId?: string | null
   priceRappen?: number
   status?: VariantStatus
   // Every option's value, by option id. Replaces the variant's values.
@@ -167,7 +203,7 @@ export type RefusalCode
   = | 'option-name-required'
     | 'value-name-required'
     | 'option-needs-value'
-    | 'option-in-use'
+    | 'option-drop-clash'
     | 'value-in-use'
     | 'values-missing'
     | 'value-unknown'
@@ -176,6 +212,7 @@ export type RefusalCode
     | 'no-options-one-variant'
     | 'refs-invalid'
     | 'code-duplicate'
+    | 'code-taken'
     | 'variant-reserved'
     | 'variant-archived'
 
@@ -189,6 +226,21 @@ export interface Refusal {
 // then nothing is wired and archiving never finds a reserved unit.
 export interface ReservationDirectory<T> {
   reservedBySku: (tx: T, storeId: string, skuIds: string[]) => Promise<Map<string, number>>
+}
+
+// Which keepsakes an order line names, by product id (ADR-023: `orders.order_lines.product_id`). The orders module fills
+// this through the composition root (ADR-013); until then nothing is wired and no keepsake counts as sold.
+export interface SalesDirectory<T> {
+  soldProductIds: (tx: T, storeId: string, productIds: string[]) => Promise<Set<string>>
+  // The same for a variant: which of these SKU ids an order line names (`orders.order_lines.sku_id`, ADR-023). A variant
+  // that none names is deleted when it is removed, one that does is archived.
+  soldSkuIds: (tx: T, storeId: string, skuIds: string[]) => Promise<Set<string>>
+}
+
+// The stories and tours that link a keepsake, by its plain id (ADR-013). The content module fills this through the
+// composition root. A delete takes the links with it, in the same transaction; an archive keeps them.
+export interface KeepsakeLinks<T> {
+  removeAll: (tx: T, storeId: string, productId: string) => Promise<void>
 }
 
 export interface ProductRepository<T> {
@@ -206,13 +258,24 @@ export interface ProductRepository<T> {
   publish: (tx: T, product: Product, slug: Localized, at: Date) => Promise<Product>
   // status goes back to draft, the live text stays.
   unpublish: (tx: T, product: Product, at: Date) => Promise<Product>
+  // status becomes archived, row_version moves. The variants stay for the old orders.
+  archive: (tx: T, product: Product, at: Date) => Promise<Product>
+  // Deletes the keepsake with its options, values, variants and photo list. The files stay in the library.
+  remove: (tx: T, product: Product) => Promise<void>
   // The slugs other products hold in this language.
   slugsTaken: (tx: T, language: 'en' | 'de') => Promise<Set<string>>
   // Writes the variant and returns the product. undefined when the variant is not this product's.
   saveVariant: (tx: T, product: Product, skuId: string, changes: VariantChanges, at: Date) => Promise<Product | undefined>
   // Adds one variant. `values` maps option ids to value ids.
   insertVariant: (tx: T, product: Product, input: VariantInput, at: Date) => Promise<Product>
-  // Writes the options, their values and order, and the new values of the variants, then bumps row_version.
+  // Updates the price or status of several variants in one statement. Archived variants are left as they are.
+  saveVariants: (tx: T, product: Product, changes: VariantBatchChange[], at: Date) => Promise<Product>
+  // Deletes variants of the keepsake with their option values, archived ones too (the use case allows that only for unsold ones). Frees their combinations.
+  removeVariants: (tx: T, product: Product, skuIds: string[]) => Promise<Product>
+  // Which of these codes another SKU of the shop already holds (skus_store_sku_code_key compares them exactly). `except`
+  // lists SKU ids whose own code does not count: a bulk save may give codes to the SKUs that hold them now.
+  takenSkuCodes: (tx: T, storeId: string, codes: string[], except?: string[]) => Promise<Set<string>>
+  // Writes the options, their values and order, and the new values of the variants, creates the new variants, then bumps row_version.
   replaceOptions: (tx: T, product: Product, input: OptionsSave, at: Date) => Promise<Product>
 }
 

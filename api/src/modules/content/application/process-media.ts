@@ -1,6 +1,7 @@
 import type { Clock, MediaRepository, MediaWarn, ObjectStorage, UnitOfWork } from '../ports.ts'
 import { confirmedKey, MEDIA_RULES, mediaPrefix } from '@sk/domain/content'
 import { buildMediaObjects, MEDIA_CACHE_CONTROL } from './build-media-objects.ts'
+import { deleteFolder } from './delete-objects.ts'
 
 export interface MediaJob {
   storeId: string
@@ -67,8 +68,7 @@ export function makeProcessMedia<T>({ uow, media, storage, clock, warn, maxInput
     }
     if (outcome !== 'marked') {
       // Retired or gone while the files were being made: nothing may stay public.
-      for (const { key } of await storage.list('media', mediaPrefix(storeId, mediaId)))
-        await storage.delete('media', key)
+      await deleteFolder(storage, 'media', mediaPrefix(storeId, mediaId))
       return
     }
     await dropSource(sourceKey)

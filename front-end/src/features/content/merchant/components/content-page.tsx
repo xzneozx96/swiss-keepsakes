@@ -44,22 +44,22 @@ export type ContentTab = 'articles' | 'comments' | 'reviews'
 
 /** The page's one filter: its options with counts, any number ticked, as on M15. */
 function Filters<Id extends string>({
+  label,
   filters,
   selected,
   onChange,
 }: {
+  label: string
   filters: { id: Id, label: string, count: number }[]
   selected: Id[]
   onChange: (ids: Id[]) => void
 }) {
-  const { t } = useLocale()
-
   return (
     <FilterToolbar
       groups={[
         filterGroup({
           id: 'filter',
-          label: t('merchantContent.filtersLabel'),
+          label,
           options: filters,
           selected,
           onChange,
@@ -99,7 +99,12 @@ function ArticlesPanel({
 
   return (
     <>
-      <Filters filters={filters} selected={filter} onChange={onFilterChange} />
+      <Filters
+        filters={filters}
+        label={t('merchantContent.filter.language')}
+        selected={filter}
+        onChange={onFilterChange}
+      />
       <ArticleRows
         empty={emptyState}
         isLoading={isLoading}
@@ -164,6 +169,7 @@ function CommentsPanel({ isLoading }: { isLoading: boolean }) {
     <>
       <Filters
         filters={comments.filters}
+        label={t('merchantContent.filter.status')}
         selected={filter}
         onChange={setFilter}
       />
@@ -215,6 +221,7 @@ function ReviewsPanel({ isLoading }: { isLoading: boolean }) {
     <>
       <Filters
         filters={reviews.filters}
+        label={t('merchantContent.filter.status')}
         selected={filter}
         onChange={setFilter}
       />

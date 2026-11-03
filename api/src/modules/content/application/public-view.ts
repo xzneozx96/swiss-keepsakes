@@ -1,13 +1,13 @@
 import type { ContentLanguage, Localized, PinDate, StayTag } from '@sk/domain/content'
-import type { PublicCategoryRow, PublicPinRow, PublicStoryRow, PublicStoryVersionRow, PublicTourRow } from '../read-ports.ts'
-import { isSafeLinkHref, languagesOf, STORY_BODY_LIMITS, storyBodyReadMinutes } from '@sk/domain/content'
+import type { PublicCategoryListRow, PublicPinDetailRow, PublicPinRow, PublicStoryRow, PublicStoryVersionRow, PublicTourRow } from '../read-ports.ts'
+import { isSafeLinkHref, languagesOf, STORY_BODY_LIMITS, storyBodyReadMinutes, variantKey, variantWidthsFor } from '@sk/domain/content'
 import { pickLanguage } from './language.ts'
 import { nextDate, withParents } from './pin-dates.ts'
 
 // Rows to the public response shapes. Nothing here reads a store or a price. The application layer may not import
 // the API contract, so the shapes are written here; the tests parse every output with the contract schemas.
 
-export interface PublicCategory { id: string, slug: string, name: { en: string | null, de: string | null }, parentId: string | null, position: number }
+export interface PublicCategory { id: string, slug: string, name: { en: string | null, de: string | null }, parentId: string | null, showOnHome: boolean, position: number }
 export interface PublicCategoryList { items: PublicCategory[] }
 
 interface LanguageNotice { language: ContentLanguage, requestedLanguage: ContentLanguage, fallback: boolean, availableLanguages: ContentLanguage[] }
@@ -160,8 +160,8 @@ function publicBody(version: PublicStoryVersionRow): PublicStoryBody {
   return { type: 'doc', content: content.flatMap(node => publicBlock(node, version)) }
 }
 
-export function toPublicCategory(row: PublicCategoryRow): PublicCategory {
-  return { id: row.id, slug: row.slug, name: { en: row.name.en ?? null, de: row.name.de ?? null }, parentId: row.parentId, position: row.position }
+export function toPublicCategory(row: PublicCategoryListRow): PublicCategory {
+  return { id: row.id, slug: row.slug, name: { en: row.name.en ?? null, de: row.name.de ?? null }, parentId: row.parentId, showOnHome: row.showOnHome, position: row.position }
 }
 
 // The version carried and the notice about it, or null when the story has no published version.
@@ -219,7 +219,13 @@ export function toPublicStory(row: PublicStoryRow, requested: ContentLanguage): 
 
 export interface PublicNextDate { firstDay: string, lastDay: string, startTime: string | null, endTime: string | null }
 
-export interface PublicPin extends LanguageNotice {
+// A photo as the public sees it: the address of the original and of each webp copy the merchant views list (320, 640, 1280, 1920 px, as far as the image is wide).
+export interface PublicPhoto { url: string, variants: { width: number, url: string }[], alt: string | null }
+
+export interface PublicPinStory { slug: string, title: string, readMinutes: number }
+
+// The fields the card and the map list share.
+interface PinCore extends LanguageNotice {
   id: string
   slug: string | null
   title: string
@@ -227,6 +233,7 @@ export interface PublicPin extends LanguageNotice {
   latitude: number
   longitude: number
   address: string | null
+  mapsLink: string | null
   weeklyHours: { day: number, opens: string, closes: string }[]
   stayTag: StayTag
   interests: string[]
@@ -234,7 +241,14 @@ export interface PublicPin extends LanguageNotice {
   nextDate: PublicNextDate | null
   hasMainStory: boolean
   mainStorySlug: string | null
-  photoKey: string | null
+}
+
+// The pin's own read: the core plus what only a card that opens needs.
+export interface PublicPin extends PinCore {
+  link: string | null
+  photos: PublicPhoto[]
+  mainStory: PublicPinStory | null
+  otherStories: PublicPinStory[]
 }
 
 export interface PublicMapItem {
@@ -250,7 +264,8 @@ export interface PublicMapItem {
   nextDate: PublicNextDate | null
   hasMainStory: boolean
   mainStorySlug: string | null
-  photoKey: string | null
+  // The smallest copy of the cover, for a pin or a card thumbnail; null when the pin has no ready cover.
+  photoUrl: string | null
 }
 
 export interface PublicMap { items: PublicMapItem[] }
@@ -292,7 +307,7 @@ function pinNextDate(row: PublicPinRow, now: Date): PublicNextDate | null | 'end
   return next === null || next === 'ended' ? next : pinNext(next)
 }
 
-export function toPublicPin(row: PublicPinRow, requested: ContentLanguage, now: Date): PublicPin | null {
+function toPinCore(row: PublicPinRow, requested: ContentLanguage, now: Date): PinCore | null {
   const info = notice(languagesOf(row.name), requested)
   const next = pinNextDate(row, now)
   if (!info || next === 'ended')
@@ -309,6 +324,7 @@ export function toPublicPin(row: PublicPinRow, requested: ContentLanguage, now: 
     latitude: row.latitude,
     longitude: row.longitude,
     address: row.address,
+    mapsLink: row.mapsLink,
     weeklyHours: row.weeklyHours,
     stayTag: row.stayTag,
     interests: row.interests,
@@ -316,13 +332,39 @@ export function toPublicPin(row: PublicPinRow, requested: ContentLanguage, now: 
     nextDate: next,
     hasMainStory: Object.keys(row.mainStorySlugs).length > 0,
     mainStorySlug: row.mainStorySlugs[info.language] ?? null,
-    photoKey: row.photoKey,
     ...info,
   }
 }
 
-export function toMapItem(row: PublicPinRow, requested: ContentLanguage, now: Date): PublicMapItem | null {
-  const pin = toPublicPin(row, requested, now)
+// A story as the pin card lists it: the version in the language the card carries, or null when it has none.
+function pinStory(row: PublicStoryRow, language: ContentLanguage): PublicPinStory | null {
+  const version = row.versions.find(v => v.language === language)
+  return version ? { slug: version.slug, title: str(version.published.title), readMinutes: storyBodyReadMinutes(publicBody(version)) } : null
+}
+
+function variantsOf(key: string, width: number | null, publicUrl: (key: string) => string) {
+  return width === null ? [] : variantWidthsFor(width).map(w => ({ width: w, url: publicUrl(variantKey(key, w)) }))
+}
+
+export function toPublicPin(row: PublicPinDetailRow, requested: ContentLanguage, now: Date, publicUrl: (key: string) => string): PublicPin | null {
+  const core = toPinCore(row, requested, now)
+  if (!core)
+    return null
+  const stories = row.stories
+    .map(story => ({ story, listed: pinStory(story, core.language), newest: Math.max(...story.versions.map(v => v.publishedAt.getTime())) }))
+    .sort((a, b) => b.newest - a.newest || (a.story.id < b.story.id ? -1 : 1))
+  const main = stories.find(entry => entry.story.id === row.mainStoryId)?.listed ?? null
+  return {
+    ...core,
+    link: row.link,
+    photos: row.photos.map(photo => ({ url: publicUrl(photo.key), variants: variantsOf(photo.key, photo.width, publicUrl), alt: photo.alt[core.language] ?? null })),
+    mainStory: main,
+    otherStories: stories.flatMap(entry => (entry.story.id !== row.mainStoryId && entry.listed ? [entry.listed] : [])),
+  }
+}
+
+export function toMapItem(row: PublicPinRow, requested: ContentLanguage, now: Date, publicUrl: (key: string) => string): PublicMapItem | null {
+  const pin = toPinCore(row, requested, now)
   if (!pin)
     return null
   const parentOf = new Map(row.categories.map(c => [c.id, c.parentId]))
@@ -339,7 +381,7 @@ export function toMapItem(row: PublicPinRow, requested: ContentLanguage, now: Da
     nextDate: pin.nextDate,
     hasMainStory: pin.hasMainStory,
     mainStorySlug: pin.mainStorySlug,
-    photoKey: pin.photoKey,
+    photoUrl: row.photoKey ? (variantsOf(row.photoKey, row.photoWidth, publicUrl)[0]?.url ?? publicUrl(row.photoKey)) : null,
   }
 }
 

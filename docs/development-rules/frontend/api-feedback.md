@@ -52,9 +52,19 @@ A call site's own `onSuccess`/`onError` is for state only: closing a sheet, sett
 - The storage-full warning, raised in the root route (`error-handling.md`'s "Storage").
 - Sign-out failing (`use-sign-out.ts`): Better Auth, not a `DataClient` command.
 
+## A destructive action's dialog
+
+Owner decision, 1.11.2026 ("spinner, then instant removal"). A delete, hide, retire or remove that needs a confirm runs its write **inside** the dialog, never after it closed:
+
+- Pass `run` (the write's promise, `useSubmit(...).submitAsync(input)`) and `problem` (the feature's own copy for a refusal) to `useConfirm`'s `confirm({ title, body, confirmLabel, run, problem })`. Without `run` the dialog closes at once, as before (demo-backed flows that answer instantly).
+- While `run` is pending the destructive button shows its spinner (`isPending`), Cancel is off, and Esc and a backdrop tap do nothing. On success the dialog closes and `confirm` resolves `true`. On a refusal the dialog stays open, shows `problem(error)` (or the generic `confirm.failed` copy) in a danger notice, and both buttons work again, so the user can retry or cancel. Nothing was changed on the server, so nothing is removed from a list.
+- The command sets `meta.silent` (the dialog shows the refusal, so the cache must not toast it too) and keeps its `meta.success`: the success toast shows once, from the cache.
+- Add the command to `commandChanges` (`api-integration.md`) so the row is gone, or changed, the moment the dialog closes. A row that is removed unmounts any dialog rendered inside it, which is fine: the write is done.
+- Do not set a page-level notice for a refusal the dialog showed.
+
 ## Optimistic updates, idempotency keys, cancellations
 
-- The cache's `onSuccess` runs, and is awaited, before the mutation's own `onSuccess` (`useCommand`'s query invalidation included). Keep `meta.success` synchronous and fast; it is not the place to read a query that the invalidation has not refreshed yet.
+- The cache's `onSuccess` runs, and is awaited, before the mutation's own `onSuccess` (`useCommand`'s query invalidation included; a command in `commandChanges` edits the lists first and does not await the re-read). Keep `meta.success` synchronous and fast; it is not the place to read a query that the invalidation has not refreshed yet.
 - `meta.success` is fixed when the hook renders, but TanStack refreshes a pending mutation's options on every render, so a function reads whatever it closes over *at success time*. Text that depends on which tap ran (the article editor's published/saved/unpublished text) goes in a ref that is written only when `submit` returns `true`, never before it: a dropped tap returns `false` and must not change the text of the send in flight (`use-article-editor.ts`).
 - A retried command keeps its `Idempotency-Key` (`api-integration.md`'s "Idempotency keys"); a replayed success still runs `meta.success` once, because the retry is a normal resolved `mutate` to the cache.
 - `isCancelledError` suppresses both the mutation and the query default, so an aborted request (a superseded search, a screen that left) never toasts.

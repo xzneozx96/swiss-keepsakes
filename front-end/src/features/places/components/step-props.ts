@@ -10,8 +10,6 @@ export interface StepProps {
   errors: FormErrors
   storeId: string
   pin: Pin | undefined
-  /** The API said another pin uses this map link. */
-  slugTaken: boolean
   /** Opens a step, for the review's Edit buttons. */
   go?: (step: string) => void
   notice?: MessageKey

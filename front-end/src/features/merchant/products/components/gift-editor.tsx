@@ -1,5 +1,5 @@
 import type { Product } from '@sk/domain/catalog'
-import type { StepView } from './step-shell'
+import type { StepView } from '@/components/step-layout'
 import type { Language } from '@/contexts/locale-context'
 
 import type { GiftStep } from '@/features/merchant/products/lib/search-params'
@@ -26,6 +26,7 @@ import { firstPhoto, formatMoney, formatShortDate, isEmptyDoc, numberFormat, pic
 import { Link } from '@tanstack/react-router'
 import { useRef } from 'react'
 
+import { choiceCard } from '@/components/choice-card'
 import {
   ClockIcon,
   ContentIcon,
@@ -38,6 +39,8 @@ import {
   PlusIcon,
 } from '@/components/icons'
 import { Media } from '@/components/media'
+import { StepBar } from '@/components/step-bar'
+import { StepLayout } from '@/components/step-layout'
 import { useLocale } from '@/contexts/locale-context'
 import { usePickupPlaces, useStoreSubcategories } from '@/features/catalog/api/queries'
 import { categories } from '@/features/catalog/categories'
@@ -59,16 +62,10 @@ import {
   ReviewOverview,
   ReviewRow,
   ReviewSection,
-  StepBar,
   StepBody,
-  StepLayout,
   useStepBar,
 } from './step-shell'
 import { StoryCard } from './story-card'
-
-/** Same choice card as M08 and the M04 sheets: ink frame when selected. */
-const choiceCard
-  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 /** A whole-number field (days, hours, units) in the M08 field style. */
 function CountField({
@@ -578,6 +575,58 @@ function PaymentCard({ editor }: { editor: Editor }) {
   )
 }
 
+/**
+ * The commission field: a number of percent, 0 to 50, with a step button each side. `help` shows the one line under it;
+ * a block that has its own help line leaves it off.
+ */
+export function CommissionField({
+  value,
+  onChange,
+  error,
+  help = true,
+}: {
+  value: number
+  onChange: (value: number) => void
+  error?: string
+  help?: boolean
+}) {
+  const { t } = useLocale()
+  const step
+    = 'size-12 shrink-0 rounded-full border-0 bg-surface-secondary text-foreground disabled:opacity-30 data-[pressed=true]:scale-95'
+
+  return (
+    <NumberField
+      aria-label={t('products.commission.rate')}
+      className="items-center gap-2"
+      formatOptions={{ maximumFractionDigits: 0, useGrouping: false }}
+      isInvalid={error !== undefined}
+      maxValue={50}
+      minValue={0}
+      step={1}
+      value={Math.round(value * 100)}
+      onChange={(points) => {
+        if (!Number.isNaN(points))
+          onChange(points / 100)
+      }}
+    >
+      <NumberField.Group className="flex h-auto items-center gap-4 overflow-visible border-0 bg-transparent shadow-none">
+        <NumberField.DecrementButton className={step} />
+        <NumberField.Input
+          className="w-28 bg-transparent p-0 text-center text-5xl leading-none font-semibold tabular-nums shadow-none"
+          inputMode="numeric"
+        />
+        <NumberField.IncrementButton className={step} />
+      </NumberField.Group>
+      {help && (
+        <Description className="text-center">
+          {t('products.commission.help')}
+        </Description>
+      )}
+      <FieldError>{error}</FieldError>
+    </NumberField>
+  )
+}
+
 /** Commission for referral partners (AC09); orders snapshot the rate (O08). */
 export function CommissionCard({
   value,
@@ -589,38 +638,10 @@ export function CommissionCard({
   error?: string
 }) {
   const { t } = useLocale()
-  const step
-    = 'size-12 shrink-0 rounded-full border-0 bg-surface-secondary text-foreground disabled:opacity-30 data-[pressed=true]:scale-95'
 
   return (
     <DetailCard icon={PartnersIcon} title={t('products.commission.title')}>
-      <NumberField
-        aria-label={t('products.commission.rate')}
-        className="items-center gap-2"
-        formatOptions={{ maximumFractionDigits: 0, useGrouping: false }}
-        isInvalid={error !== undefined}
-        maxValue={50}
-        minValue={0}
-        step={1}
-        value={Math.round(value * 100)}
-        onChange={(points) => {
-          if (!Number.isNaN(points))
-            onChange(points / 100)
-        }}
-      >
-        <NumberField.Group className="flex h-auto items-center gap-4 overflow-visible border-0 bg-transparent shadow-none">
-          <NumberField.DecrementButton className={step} />
-          <NumberField.Input
-            className="w-28 bg-transparent p-0 text-center text-5xl leading-none font-semibold tabular-nums shadow-none"
-            inputMode="numeric"
-          />
-          <NumberField.IncrementButton className={step} />
-        </NumberField.Group>
-        <Description className="text-center">
-          {t('products.commission.help')}
-        </Description>
-        <FieldError>{error}</FieldError>
-      </NumberField>
+      <CommissionField error={error} value={value} onChange={onChange} />
     </DetailCard>
   )
 }

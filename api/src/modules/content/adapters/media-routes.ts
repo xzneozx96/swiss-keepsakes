@@ -7,11 +7,11 @@ import type { MediaUses } from '../application/get-media-uses.ts'
 import type { UploadGrant } from '../application/request-upload.ts'
 import type { MediaListPage, MediaListQuery, MediaRecord } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { confirmUploadSchema, mediaItemSchema, mediaListQuerySchema, mediaListSchema, mediaPatchBodySchema, mediaSchema, mediaUsesSchema, replaceMediaBodySchema, uploadGrantSchema, uploadRequestSchema } from '@sk/api-contract'
+import { confirmUploadSchema, mediaItemSchema, mediaListQuerySchema, mediaListSchema, mediaLookupBodySchema, mediaLookupSchema, mediaPatchBodySchema, mediaSchema, mediaUsesSchema, replaceMediaBodySchema, uploadGrantSchema, uploadRequestSchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { StorageUnavailableError } from '../ports.ts'
-import { mediaItemView, mediaListView, mediaUsesView, mediaView } from './media-view.ts'
+import { mediaItemView, mediaListView, mediaLookupView, mediaUsesView, mediaView } from './media-view.ts'
 import { failureProblem } from './problems.ts'
 import { json, storeParams } from './route-parts.ts'
 
@@ -20,6 +20,7 @@ import { json, storeParams } from './route-parts.ts'
 export interface MediaUseCases {
   requestUpload: (actor: Actor, storeId: string, input: { contentType: string, byteSize: number }) => Promise<Result<UploadGrant>>
   confirmUpload: (actor: Actor, storeId: string, input: { uploadKey: string, fileName?: string }, requestId: string | null) => Promise<Result<MediaRecord>>
+  lookupMediaByHash: (actor: Actor, storeId: string, hashes: string[]) => Promise<Result<MediaRecord[]>>
   getMedia: (actor: Actor, storeId: string, mediaId: string) => Promise<Result<MediaRecord>>
   listMedia: (actor: Actor, storeId: string, query: MediaListQuery) => Promise<Result<MediaListPage>>
   getMediaUses: (actor: Actor, storeId: string, mediaId: string) => Promise<Result<MediaUses>>
@@ -46,6 +47,20 @@ const confirmUploadRoute = createRoute({
   request: { params: storeParams, body: { required: true, content: json(confirmUploadSchema) } },
   responses: {
     201: { description: 'The file was checked and is being processed. Read it until its status is ready', headers: requestIdHeader, content: json(mediaSchema) },
+    ...problemResponses,
+  },
+})
+
+// A POST because the hashes would not fit a query string for a big pick, but it only reads: it takes no Idempotency-Key
+// (createApp's `withoutIdempotencyKey`), because a replayed answer would hide a file uploaded since.
+export const mediaLookupPath = /^\/api\/store\/[^/]+\/media\/lookup$/
+
+const lookupMediaRoute = createRoute({
+  method: 'post',
+  path: '/api/store/{storeId}/media/lookup',
+  request: { params: storeParams, body: { required: true, content: json(mediaLookupBodySchema) } },
+  responses: {
+    200: { description: 'The ready files of the library whose content matches one of the hashes. Used to ask before uploading a duplicate', headers: requestIdHeader, content: json(mediaLookupSchema) },
     ...problemResponses,
   },
 })
@@ -140,6 +155,12 @@ export function registerMediaRoutes(app: OpenAPIHono<AppEnv>, useCases: MediaUse
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(mediaView(result.value, useCases.publicUrl), 201)
+  }))
+  app.openapi(lookupMediaRoute, c => withStorage(c, async () => {
+    const result = await useCases.lookupMediaByHash(c.get('actor'), c.get('store').storeId, c.req.valid('json').sha256)
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json(mediaLookupView(result.value, useCases.publicUrl), 200)
   }))
   // The view asks for a URL only when the row is ready, so a storage that is not configured fails there, not before.
   app.openapi(getMediaRoute, c => withStorage(c, async () => {

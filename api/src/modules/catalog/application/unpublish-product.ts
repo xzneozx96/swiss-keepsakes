@@ -7,7 +7,7 @@ import { fail, ok } from './failure.ts'
 import { describe } from './product-detail.ts'
 
 // Guests stop seeing the keepsake at once. Open orders are not touched, and the live text stays for a later publish.
-export function makeUnpublishProduct<T>({ uow, products, media, audit, clock }: CatalogDeps<T>) {
+export function makeUnpublishProduct<T>({ uow, products, media, audit, clock, sales }: CatalogDeps<T>) {
   return async (actor: Actor, storeId: string, productId: string, ifMatch: number, requestId: string | null): Promise<Result<ProductDetail>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -17,6 +17,8 @@ export function makeUnpublishProduct<T>({ uow, products, media, audit, clock }: 
         return fail({ reason: 'not-found' })
       if (product.rowVersion !== ifMatch)
         return fail({ reason: 'stale' })
+      if (product.status === 'archived')
+        return fail({ reason: 'archived' })
       if (product.status !== 'published')
         return fail({ reason: 'not-published' })
       const draft = await products.unpublish(tx, product, clock.now())
@@ -30,7 +32,7 @@ export function makeUnpublishProduct<T>({ uow, products, media, audit, clock }: 
         after: { status: 'draft', rowVersion: draft.rowVersion },
         requestId,
       })
-      return ok(await describe(media, tx, draft))
+      return ok(await describe({ media, sales }, tx, draft))
     })
   }
 }

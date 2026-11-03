@@ -139,6 +139,7 @@ export function CategoryTable({ items, kind, actions, busy, loading, query }: {
                         {category.parentId && <span aria-hidden className="h-4 w-3 shrink-0 rounded-bl-md border-s-2 border-b-2 border-separator" />}
                         <span className="min-w-0">
                           <span className="block [overflow-wrap:anywhere]">{nameOf(category)}</span>
+                          {category.showOnHome && <span className="block text-xs font-normal text-muted">{t('categories.home.badge')}</span>}
                           {category.name.en === null && (
                             <span className="flex items-center gap-1 text-xs font-normal text-warning-soft-foreground">
                               <StatusWarningIcon aria-hidden className="shrink-0" size={12} />

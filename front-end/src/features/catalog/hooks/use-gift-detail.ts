@@ -1,5 +1,6 @@
 import type { CalendarDate } from '@internationalized/date'
 import type { GiftDetailProps } from '../components/gift-detail'
+import type { ChoiceVariant, Chosen } from '../lib/variant-choice'
 
 import { toast } from '@heroui/react'
 import { parseDate } from '@internationalized/date'
@@ -11,8 +12,9 @@ import {
   productEarliestPickup,
   zurichDate,
 } from '@sk/domain/catalog'
+import { descriptionFromPlain } from '@sk/domain/content'
 
-import { formatMoney, formatShortDate, pickDoc, pickText } from '@sk/domain/shared'
+import { formatMoney, formatShortDate, pickText } from '@sk/domain/shared'
 import { useNavigate } from '@tanstack/react-router'
 
 import { useState } from 'react'
@@ -27,11 +29,16 @@ import {
   forgetCartToast,
   trackCartToast,
 } from '../lib/cart-toast'
-import { shop } from '../seed'
+import { galleryLabelsOf, noReviews } from '../lib/keepsake-page'
+import {
+  chosenVariant,
+  demoOptions,
+  demoValues,
+  galleryOrder,
+  pickValue,
+  valueReasons,
+} from '../lib/variant-choice'
 import { useFavourites } from './use-favourites'
-import { useProductReviews } from './use-product-reviews'
-
-const WHITESPACE = /\s/g
 
 type Field = 'variant' | 'date' | 'place'
 
@@ -49,18 +56,18 @@ export function useGiftDetail(
   const { isFavourite, toggle } = useFavourites()
 
   const product = useProducts(products => products.find(p => p.slug === slug))
-  const reviews = useProductReviews(product?.id)
   const orders = useOrders()
   const pickupPlaces = usePickupPlaces()
   const subcategories = useStoreSubcategories()
-  // The first variant that can be requested starts selected.
-  const [variantId, setVariantId] = useState<string | null>(
-    () =>
-      product?.variants.find(v => availableUnits(product, v, orders) > 0)
-        ?.id ?? null,
-  )
+  // The first variant that can be requested starts chosen: one value per option.
+  const [chosen, setChosen] = useState<Chosen>(() => {
+    const first = product?.variants.find(
+      v => !v.notForSale && availableUnits(product, v, orders) > 0,
+    )
+
+    return first ? { ...(product ? demoValues(product, first) : {}) } : {}
+  })
   const [quantity, setQuantity] = useState(1)
-  const [engraving, setEngraving] = useState('')
   const [date, setDate] = useState<CalendarDate | null>(null)
   const [placeId, setPlaceId] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
@@ -79,14 +86,36 @@ export function useGiftDetail(
     pickText(text, language).text
 
   const name = pickText(product.name, language)
-  // The long story (rich text): the guest's language, or the other with a notice (R02).
-  const storyBody = product.longStory
-    ? pickDoc(product.longStory.body, language)
-    : undefined
-  const story = pickText(product.story, language)
+  // The demo description is plain text; the page renders it as the rich-text document the API will send.
+  const description = descriptionFromPlain(pickText(product.story, language).text)
   const cancellation = pickText(product.cancellationPolicy, language)
   const soldOut = isSoldOut(product, orders)
-  const variant = product.variants.find(v => v.id === variantId)
+  const options = demoOptions(
+    product,
+    text => pick(text),
+    t('detail.variant.label'),
+    v => money(v.price),
+  )
+  const photoSlugs = [product.photo, ...(product.photos ?? [])].filter(
+    (slug): slug is string => Boolean(slug),
+  )
+  const choices = product.variants.map((v): ChoiceVariant => {
+    const units = availableUnits(product, v, orders)
+
+    return {
+      id: v.id,
+      values: demoValues(product, v),
+      price: money(v.price),
+      reason: v.notForSale
+        ? t('detail.variant.notForSale')
+        : units <= 0
+          ? t('detail.variant.soldOut')
+          : undefined,
+      photoIndex: v.photo ? photoSlugs.indexOf(v.photo) : undefined,
+    }
+  })
+  const picked = chosenVariant(options, choices, chosen)
+  const variant = product.variants.find(v => v.id === picked?.id)
   const maxQuantity = variant
     ? Math.max(1, availableUnits(product, variant, orders))
     : 1
@@ -95,11 +124,7 @@ export function useGiftDetail(
   const place = pickupPlaces.find(p => p.id === placeId)
   const iso = date?.toString()
 
-  const prepKind = product.engraving
-    ? 'engrave'
-    : product.dayMode === 'working-days'
-      ? 'working'
-      : 'calendar'
+  const prepKind = product.dayMode === 'working-days' ? 'working' : 'calendar'
   const prepReason = t(
     `detail.prep.${prepKind}.${plural(product.preparationDays)}`,
     { count: product.preparationDays },
@@ -195,7 +220,6 @@ export function useGiftDetail(
       productId: product.id,
       variantId: variant.id,
       quantity,
-      engraving: engraving.trim() || undefined,
       pickupDate: iso,
       pickupPlaceId: placeId,
     })
@@ -231,41 +255,10 @@ export function useGiftDetail(
 
   return {
     name: name.text,
-    photos: [product.photo, ...(product.photos ?? [])].filter(
-      (slug): slug is string => Boolean(slug),
-    ),
-    galleryLabels: {
-      gallery: t('gallery.label', { name: name.text }),
-      photo: (n, count) => t('gallery.photo', { n, count }),
-      previous: t('gallery.previous'),
-      next: t('gallery.next'),
-      close: t('gallery.close'),
-    },
-    // Category, then every option name (both from the catalogue), on one line.
-    subtitle: [
-      category ? pick(category.name) : undefined,
-      ...product.variants.map(v => pick(v.label)),
-    ]
-      .filter((part): part is string => Boolean(part))
-      .join(' · '),
-    story: story.text,
-    longStory:
-      product.longStory && storyBody
-        ? {
-            label: t('detail.story.label'),
-            title: pick(product.longStory.title),
-            body: storyBody.doc,
-            languageNote: storyBody.isFallback
-              ? t(
-                  storyBody.language === 'en'
-                    ? 'gifts.textInEnglish'
-                    : 'gifts.textInGerman',
-                )
-              : undefined,
-            readLabel: t('detail.story.read'),
-            closeLabel: t('detail.sheet.close'),
-          }
-        : undefined,
+    // The chosen variant's photo comes first.
+    photos: galleryOrder(photoSlugs, picked?.photoIndex),
+    galleryLabels: galleryLabelsOf(t, name.text),
+    description,
     languageNotice: name.isFallback
       ? t(
           name.language === 'en'
@@ -273,62 +266,9 @@ export function useGiftDetail(
             : 'detail.onlyInGerman',
         )
       : undefined,
-    stats: {
-      // Sold out replaces the pickup date, as on the C02 card.
-      pickup: soldOut
-        ? { value: t('gifts.soldOut'), label: t('detail.stats.now') }
-        : { value: short(earliest), label: t('detail.stats.pickup') },
-      rating: reviews.count
-        ? { value: reviews.averageText, label: reviews.averageLabel }
-        : { value: t('detail.stats.new'), label: t('detail.reviews.none') },
-      ratingValue: reviews.average,
-      hasRating: reviews.count > 0,
-      reviews: {
-        value: String(reviews.count),
-        label: t(`detail.stats.reviews.${plural(reviews.count)}`),
-      },
-    },
-    seller: {
-      name: shop.name,
-      title: t('detail.seller.title', { shop: shop.name }),
-      sub: t('detail.seller.sub'),
-      address: pickupPlaces[0].address,
-      hours: pick(pickupPlaces[0].openingHours),
-      contacts: [
-        {
-          kind: 'call',
-          label: t('detail.seller.call'),
-          href: `tel:${shop.phone.replace(WHITESPACE, '')}`,
-        },
-        {
-          kind: 'email',
-          label: t('detail.seller.email'),
-          href: `mailto:${shop.email}?subject=${encodeURIComponent(
-            t('detail.seller.emailSubject', { name: name.text }),
-          )}`,
-        },
-        {
-          kind: 'directions',
-          label: t('detail.seller.directions'),
-          href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-            pickupPlaces[0].address,
-          )}`,
-        },
-      ],
-      visitLabel: t('detail.seller.visit'),
-    },
+    // Product ratings do not exist yet (E5.5): every keepsake is new, with no reviews.
+    rating: { summary: t('detail.rating.new'), label: t('detail.reviews.none') },
     highlights: [
-      ...(product.engraving
-        ? [
-            {
-              icon: 'engrave' as const,
-              title: t('detail.highlight.engrave.title'),
-              body: t('detail.highlight.engrave.body', {
-                max: product.engraving.maxLength,
-              }),
-            },
-          ]
-        : []),
       {
         icon: 'pickup' as const,
         title: t('detail.highlight.pickup.title'),
@@ -336,13 +276,8 @@ export function useGiftDetail(
       },
       {
         icon: 'pay' as const,
-        title: t('detail.highlight.pay.title'),
-        body:
-          policy.kind === 'deposit'
-            ? t('detail.highlight.pay.deposit', {
-                percent: policy.depositPercent,
-              })
-            : t(`detail.highlight.pay.${policy.kind}`),
+        title: t('detail.highlight.delivery.title'),
+        body: t('detail.highlight.delivery.body'),
       },
     ],
     favourite: {
@@ -364,32 +299,24 @@ export function useGiftDetail(
       addLabel: t('detail.sheet.add', { total: money(lineTotal) }),
     },
     variant: {
-      label: t('detail.variant.label'),
-      options: product.variants.map((v) => {
-        const units = availableUnits(product, v, orders)
+      options,
+      variants: choices,
+      chosen,
+      reasons: valueReasons(options, choices, chosen, t('detail.variant.notSold')),
+      onChange: (optionId: string, valueId: string) => {
+        const next = pickValue(chosen, optionId, valueId)
+        const nextVariant = product.variants.find(
+          v => v.id === chosenVariant(options, choices, next)?.id,
+        )
 
-        return {
-          id: v.id,
-          label: pick(v.label),
-          price: money(v.price),
-          reason: v.notForSale
-            ? t('detail.variant.notForSale')
-            : units <= 0
-              ? t('detail.variant.soldOut')
-              : undefined,
-        }
-      }),
-      value: variantId,
-      onChange: changed((id: string) => {
-        setVariantId(id)
-        const next = product.variants.find(v => v.id === id)
-
-        if (next) {
+        setChosen(next)
+        setAdded(false)
+        if (nextVariant) {
           setQuantity(q =>
-            Math.min(q, Math.max(1, availableUnits(product, next, orders))),
+            Math.min(q, Math.max(1, availableUnits(product, nextVariant, orders))),
           )
         }
-      }),
+      },
       error: errors.variant,
     },
     quantity: {
@@ -401,21 +328,6 @@ export function useGiftDetail(
         : undefined,
       onChange: changed(setQuantity),
     },
-    engraving: product.engraving
-      ? {
-          label: t('detail.engraving.label'),
-          description: t('detail.engraving.description', {
-            max: product.engraving.maxLength,
-          }),
-          maxLength: product.engraving.maxLength,
-          counterLabel: t('detail.engraving.counter', {
-            count: engraving.length,
-            max: product.engraving.maxLength,
-          }),
-          value: engraving,
-          onChange: changed(setEngraving),
-        }
-      : undefined,
     date: {
       label: t('detail.date.label'),
       description: t('detail.date.earliest', { date: short(earliest) }),
@@ -465,10 +377,6 @@ export function useGiftDetail(
       placesTitle: t('detail.places.title'),
       dateRow: {
         title: t('detail.date.label'),
-        value:
-          iso && place
-            ? `${short(iso)} · ${pick(place.name)}`
-            : t('detail.date.earliest', { date: short(earliest) }),
         action: t('detail.bar.choose'),
       },
       paymentTitle: t('detail.payment.title'),
@@ -480,25 +388,8 @@ export function useGiftDetail(
         cancellation.language,
       ),
     },
-    reviews: {
-      ...reviews,
-      title: t('detail.reviews.title'),
-      favourite: reviews.isFavourite
-        ? {
-            title: t('detail.favourite.title'),
-            body: t('detail.favourite.body', { rating: reviews.averageText }),
-          }
-        : undefined,
-      showAllLabel: t(`detail.reviews.showAll.${plural(reviews.count)}`, {
-        count: reviews.count,
-      }),
-      showMoreLabel: t('detail.reviews.showMore'),
-      overallLabel: t('detail.reviews.overall'),
-      sheetTitle: t('detail.reviews.listTitle', { name: name.text }),
-      closeLabel: t('detail.sheet.close'),
-      rule: t('detail.reviews.rule'),
-      empty: t('detail.reviews.none'),
-    },
+    // The demo reviews stay in the demo data; this page shows the empty state until E5.5.
+    reviews: noReviews(t, name.text),
     bar: {
       price: money(lineTotal),
       summary:

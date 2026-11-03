@@ -1,6 +1,6 @@
 import type { Departure, Tour } from '@sk/domain/bookings'
 import type { LocalizedText } from '@sk/domain/catalog'
-import type { StepView } from './step-shell'
+import type { StepView } from '@/components/step-layout'
 import type { Language } from '@/contexts/locale-context'
 
 import type { TourStep } from '@/features/merchant/products/lib/search-params'
@@ -21,6 +21,7 @@ import { formatMoney, isEmptyDoc, numberFormat, pickText } from '@sk/domain/shar
 
 import { useId, useRef, useState } from 'react'
 import { DateTile } from '@/components/date-tile'
+import { EmptyState } from '@/components/empty-state'
 import {
   BookingsIcon,
   ChevronRightIcon,
@@ -32,6 +33,8 @@ import {
 } from '@/components/icons'
 import { Media } from '@/components/media'
 import { SheetFrame } from '@/components/sheet-frame'
+import { StepBar } from '@/components/step-bar'
+import { StepLayout } from '@/components/step-layout'
 import { useLocale } from '@/contexts/locale-context'
 import { rowClass } from '@/features/account/components/settings-list'
 import { DetailCard } from '@/features/merchant/order-detail/components/detail-card'
@@ -64,9 +67,7 @@ import {
   ReviewOverview,
   ReviewRow,
   ReviewSection,
-  StepBar,
   StepBody,
-  StepLayout,
   useStepBar,
 } from './step-shell'
 import { StoryCard } from './story-card'
@@ -472,9 +473,9 @@ function DeparturesCard({ tour, error }: { tour: Tour, error?: string }) {
             </ul>
           )
         : (
-            <p className={`${separate} px-4 py-4 text-sm text-muted`}>
-              {t('products.departures.none')}
-            </p>
+            <div className={separate}>
+              <EmptyState compact icon={BookingsIcon} message={t('products.departures.none')} />
+            </div>
           )}
       {upcoming.length > preview.length && (
         <div className={separate}>

@@ -133,6 +133,13 @@ async function main() {
       // Google's side is stubbed in the specs, so these are placeholders too.
       GOOGLE_CLIENT_ID: 'e2e-google-client-id.apps.googleusercontent.com',
       GOOGLE_CLIENT_SECRET: 'e2e-google-client-secret',
+      // Placeholders, so that the public reads can build the address of a photo (`publicUrl`). The API starts no media
+      // worker (ROLE=api) and the S3 client does not connect until a call, and nothing listens at the endpoint: a photo
+      // shows its address and fails to load, which the specs accept. An upload request answers 200 with a presigned PUT.
+      AWS_ACCESS_KEY_ID: 'e2e-only-key',
+      AWS_SECRET_ACCESS_KEY: 'e2e-only-secret',
+      AWS_ENDPOINT_URL_S3: 'http://127.0.0.1:9',
+      AWS_REGION: 'auto',
     },
   })
   let buffered = ''

@@ -102,7 +102,8 @@ function searchCondition(q: string | undefined): SQL | undefined {
 }
 
 function statusCondition(status: MediaListQuery['status']): SQL | undefined {
-  return status.length === 0 ? undefined : sql`status = any(${sql.param(status)}::text[])`
+  // With no status filter the list leaves retired files out; they show only under the Retired filter.
+  return status.length === 0 ? sql`status <> 'retired'` : sql`status = any(${sql.param(status)}::text[])`
 }
 
 function where(...conditions: (SQL | undefined)[]): SQL {

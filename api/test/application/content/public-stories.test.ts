@@ -1,4 +1,4 @@
-import type { PublicCategoryRow, PublicReadRepository, PublicStoryRow, PublicStoryVersionRow, StoredStoryDoc } from '../../../src/modules/content/read-ports.ts'
+import type { PublicCategoryListRow, PublicReadRepository, PublicStoryRow, PublicStoryVersionRow, StoredStoryDoc } from '../../../src/modules/content/read-ports.ts'
 import { publicCategoryListSchema, publicStoryListSchema, publicStorySchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 import { makeListCategories } from '../../../src/modules/content/application/read-categories.ts'
@@ -15,7 +15,7 @@ function story(id: string, versions: PublicStoryVersionRow[], over: Partial<Publ
   return { id, stayTag: 'both', interests: [], categories: [], versions, ...over }
 }
 
-function setup(stories: PublicStoryRow[], categories: PublicCategoryRow[] = []) {
+function setup(stories: PublicStoryRow[], categories: PublicCategoryListRow[] = []) {
   const reads: PublicReadRepository<null> = {
     listPublishedStories: async () => stories,
     findPublishedStoryBySlug: async (_tx, slug) => stories.find(s => s.versions.some(v => v.slug === slug)),
@@ -25,7 +25,7 @@ function setup(stories: PublicStoryRow[], categories: PublicCategoryRow[] = []) 
     listPublishedTours: async () => [],
     findPublishedTourBySlug: async () => undefined,
   }
-  const deps = { uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) }, reads, clock: createManualClock(new Date('2026-10-27T10:00:00Z')) }
+  const deps = { uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) }, reads, clock: createManualClock(new Date('2026-10-27T10:00:00Z')), publicUrl: (key: string) => `https://media.test/${key}` }
   const listStories = makeListStories(deps)
   const getStory = makeGetStory(deps)
   const listCategories = makeListCategories(deps)
@@ -147,14 +147,14 @@ describe('public stories', () => {
     expect(items[0]!.publishedAt).toBe('2090-02-01T00:00:00.000Z')
   })
 
-  it('[E2.12][AC45] categories keep the order given and show the names that exist, with no fill', async () => {
-    const s = setup([], [{ id: id1, slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, position: 1 }, { id: id2, slug: 'cafes', name: { en: 'Cafes' }, parentId: id1, position: 1 }])
+  it('[E2.12][AC45] categories keep the order given, show the names that exist with no fill, and carry the home switch', async () => {
+    const s = setup([], [{ id: id1, slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, showOnHome: false, position: 1 }, { id: id2, slug: 'cafes', name: { en: 'Cafes' }, parentId: id1, showOnHome: true, position: 1 }])
 
     const { items } = await s.categories('map')
 
     expect(items).toEqual([
-      { id: id1, slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, position: 1 },
-      { id: id2, slug: 'cafes', name: { en: 'Cafes', de: null }, parentId: id1, position: 1 },
+      { id: id1, slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, showOnHome: false, position: 1 },
+      { id: id2, slug: 'cafes', name: { en: 'Cafes', de: null }, parentId: id1, showOnHome: true, position: 1 },
     ])
   })
 

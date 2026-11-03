@@ -1,4 +1,8 @@
 import { mailEn } from '@sk/i18n/en'
+import { actionBarEn } from '@/components/action-bar-messages'
+import { mapKitEn } from '@/components/map/map-messages'
+import { multiSelectEn } from '@/components/multi-select-messages'
+import { stepsEn } from '@/components/step-messages'
 import { categoriesEn } from '@/features/categories/messages'
 import { contentMerchantEn } from '@/features/content/merchant/messages'
 import { contentEn } from '@/features/content/messages'
@@ -42,7 +46,11 @@ export const en = {
   ...keepsakesEn,
   ...mediaEn,
   ...placesEn,
+  ...actionBarEn,
+  ...multiSelectEn,
+  ...stepsEn,
   ...mapEn,
+  ...mapKitEn,
 
   'app.name': 'Swiss Keepsakes',
   'app.prototypeBadge': 'Prototype · mock data',
@@ -92,6 +100,8 @@ export const en = {
     'This page does not exist. It may have moved in the prototype.',
   'routeError.message': 'This screen could not load.',
   'routeError.retry': 'Try again',
+  'errorNotice.retry': 'Try again',
+  'errorNotice.reference': 'Reference: {id}',
   'apiFeedback.error.generic': 'Something went wrong. Try again in a moment.',
   'apiFeedback.error.network': 'The connection was lost. Check it and try again.',
 
@@ -192,10 +202,7 @@ export const en = {
   'detail.variant.required': 'Choose an option.',
   'detail.variant.soldOut': 'Sold out',
   'detail.variant.notForSale': 'Not on sale at the moment',
-  'detail.engraving.label': 'Engraving (optional)',
-  'detail.engraving.description':
-    'Free. Up to {max} characters, engraved by hand.',
-  'detail.engraving.counter': '{count} of {max} characters',
+  'detail.variant.notSold': 'This combination is not sold',
   'detail.quantity.label': 'Quantity',
   'detail.quantity.available': '{count} available',
   'detail.date.label': 'Pickup date',
@@ -244,9 +251,8 @@ export const en = {
   'detail.bar.viewCart': 'View cart',
   'detail.soldOut.message': 'This keepsake is sold out at the moment.',
   'detail.soldOut.action': 'See other keepsakes',
+  'detail.rating.new': 'New · No reviews yet',
   'detail.stats.new': 'New',
-  'detail.stats.pickup': 'Earliest pickup',
-  'detail.stats.now': 'At the moment',
   'detail.stats.reviews.one': 'Review',
   'detail.stats.reviews.other': 'Reviews',
   'detail.seller.title': 'Sold by {shop}',
@@ -257,17 +263,10 @@ export const en = {
   'detail.seller.visit': 'Visit shop',
   'detail.seller.contact': 'Contact',
   'detail.seller.emailSubject': 'Question about {name}',
-  'detail.highlight.engrave.title': 'Engraved by hand',
-  'detail.highlight.engrave.body':
-    'Add a name of up to {max} characters, free of charge.',
   'detail.highlight.pickup.title': 'Pick up in Luzerne',
   'detail.highlight.pickup.places': '{first} or {second}',
-  'detail.highlight.pay.title': 'Nothing to pay now',
-  'detail.highlight.pay.full':
-    'You pay in full once the seller confirms your date.',
-  'detail.highlight.pay.deposit':
-    'You pay a {percent}% deposit once the seller confirms your date.',
-  'detail.highlight.pay.later': 'You pay after pickup.',
+  'detail.highlight.delivery.title': 'Pay on delivery',
+  'detail.highlight.delivery.body': 'Nothing to pay now. You pay when you collect it.',
   'detail.about.title': 'About this keepsake',
   'detail.story.label': 'The story behind it',
   'detail.story.read': 'Read the story',
@@ -277,6 +276,10 @@ export const en = {
   'detail.sheet.add': 'Add to cart · {total}',
   'detail.bar.choose': 'Choose a date and place',
   'detail.bar.nothingNow': 'Nothing to pay now',
+  'detail.preview.atCheckout': 'Chosen at checkout',
+  'detail.preview.pickupBody': 'Guests choose the pickup place and date at checkout.',
+  'detail.preview.cancellation': 'The cancellation policy is shown at checkout.',
+  'detail.preview.noVariant': 'No variant is for sale yet.',
   'gallery.label': 'Photos of {name}',
   'gallery.photo': 'Photo {n} of {count}',
   'gallery.reviewLabel': 'Photos from {name}’s review',
@@ -738,7 +741,7 @@ export const en = {
   'merchantPartners.view.partners': 'Partners',
   'merchantPartners.view.analytics': 'Analytics',
   'merchantPartners.search': 'Search name, code or email',
-  'merchantPartners.filtersLabel': 'Filter partners',
+  'merchantPartners.filtersLabel': 'Status',
   'merchantPartners.filter.all': 'All',
   'merchantPartners.filter.toPay': 'To pay',
   'merchantPartners.filter.revoked': 'Report link revoked',
@@ -805,6 +808,7 @@ export const en = {
   'cartToast.viewCart': 'View cart',
   'cartToast.close': 'Close',
   'confirm.cancel': 'Cancel',
+  'confirm.failed': 'That did not work. Nothing was changed. Try again.',
   'cart.remove.title': 'Remove {item}?',
   'cart.remove.body': '{summary} comes out of your cart.',
   'cart.remove.confirm': 'Remove from cart',
@@ -1542,10 +1546,17 @@ export const en = {
   'pagination.prevText': 'Prev',
   'pagination.nextText': 'Next',
   'pagination.page': 'Page {page}',
+  'table.selectAll': 'Select all',
   'table.actions': 'Actions',
   'filter.title': 'Filters',
   'costData.column.sale': 'Sale',
   'costData.column.guest': 'Guest and date',
+  'filter.buttonActive': '{label}, {count} selected',
+  'filter.applied': 'Applied filters',
+  'filter.remove': 'Remove filter {name}',
+  'filter.clearAll': 'Clear all',
+  'filter.search': 'Search options',
+  'filter.noMatch': 'No option matches',
   'costData.column.state': 'Cost data',
   'costData.column.value': 'Sale value',
   'table.rowActions': 'Actions for {name}',

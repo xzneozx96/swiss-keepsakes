@@ -1,5 +1,9 @@
 # Map and pins design: N02, N03, N16 and N17
 
+- **Amended 2026-11-02 (owner).**
+  - The guest pin card has no `‹ n of m ›` steps. They are commented out in `features/map/components/place-card.tsx`, and **Show more** takes the row beside the map button. The cards still swipe.
+  - The details sheet has no note under Open in Google Maps.
+  - In the editor N17, the "Shown on the home" block (Service, Food and drink kind) goes. Must-visit moves into Recommended for (`docs/decisions/2026-11-02-map-category-show-on-home.md`, built in T-009). The Categories page (N23) gets a **Show on the home** switch on the add and edit sheet of a map category, and the table and the phone page show "On the home" as quiet text. A category has no icon (added and removed on 2026-11-02). The merchant places table shows a thumbnail before the title, the cover photo or with none the place icon on the lake blue, as on the guest map.
 - Status: **design approved** on 2026-10-28 (chat approval of the lab page `/lab/pins` as it opens). The seven differences from the original PRD v3 were settled the same day and the PRD now matches (section 5). One is still open: whether the map credits may be folded.
 - Screens: N02 guest map, N03 pin card, N16 merchant pins list, N17 merchant pin editor. Slice S4, Track 1, stories E4.2, E4.6 and E4.7. N18 (media library) is now designed (`docs/ux/media-design.md`, approved 2026-10-29). N23 (categories) is **not designed yet**.
 - Read first: `docs/decisions/2026-10-28-pins-and-map-design.md` (what was approved and the open differences), `docs/decisions/2026-10-27-map-pins-and-events.md` (the pin model), PRD §11.1 and AC42, AC62, AC63, AC64, AC67, AC68, AC79, AC85 to AC90, `docs/adr/ADR-006-browser-personalisation-and-map-data.md`, `ADR-029-one-pin-model-with-optional-dates.md`, `ADR-030-merchant-edited-map-and-blog-categories.md`.
@@ -21,7 +25,7 @@ The tour route map panel on the same page shows the tour detail's route on the s
 - **Top controls**, floating over the map: a **Categories** button (filter icon, shows "Categories" or the number chosen) and a **Map | List** switch.
 - **Pins** are photo pins. Close pins merge into a photo cluster that zooms in on tap. Pins are real buttons in the tab order, with `aria-pressed` and a 44 px hit area.
 - **Card row.** When a pin is open, a row of place cards (311 px wide, 8 px apart) sits above the tab bar and swipes in step with the pins. Swiping to a card opens its pin; tapping a pin slides its card to the middle and moves focus to the card title. The row holds only the places the filter keeps.
-- **Credits** sit just under the top buttons while the card row is up, and bottom-left above the tab bar otherwise. Option B uses the folded form (see section 5, point 5).
+- **Credits** sit bottom right: 8 px above the music button, and 8 px above the card row's ✕ while a card is open. Written out at first, a round ⓘ after the first touch (see section 5, point 5). Zoom in and out are a small pill under the top buttons (the map kit, `docs/ux/map-kit-design.md`). The card is the tour route map's card (eyebrow, serif title, tip, picture on the right, ‹ n of m ›, Read the story).
 - **Status layer** over the map for loading, empty and failed (section 2, "States").
 
 ### Categories filter
@@ -48,7 +52,7 @@ The card body is shared by the card row and the details sheet. Every optional fi
 | Main story | A link, only when the story has a published version in the visitor's language |
 | Other stories | The published stories that tag this pin, with reading time |
 | Outbound link | Optional, one per pin |
-| Directions | "Open in Google Maps": a link in a new tab, destination only. The note under it says "Opens Google Maps in a new tab. We never see where you are." The site never reads the visitor's location and draws no route (AC89, G9, AC67) |
+| Directions | "Open in Google Maps": a link in a new tab, destination only. (Amended 2026-11-02: no note under it; the owner found it useless.) The site never reads the visitor's location and draws no route (AC89, G9, AC67) |
 
 - **Details sheet.** "Show more" opens the place in the app's `SheetFrame`, laid out like the tour stop sheet: photo carousel, tip, facts, with **Previous place** and **Next place**.
 - Focus goes to the card title when a card opens. The sheet returns focus to where it was.
@@ -78,29 +82,29 @@ One responsive design: a table on desktop and rows on phones (the dashboard's li
 - **Per pin:** title (with which languages exist), status, map categories, next date, stay tag, interests, main story (with a warning when the story has no published version) and last edited.
 - **Status:** draft, published, hidden, and **ended**: published but past its last date, so it is no longer on the guests' map (AC86).
 - **Filters:** status (including ended), category (including "no category"), stay tag, has dates, and search.
-- **Actions:** edit, hide, unhide, delete. **Only a draft can be deleted.** A published pin can only be hidden (AC79).
+- **Actions:** edit, hide, unhide, delete. **Every pin can be deleted when nothing uses it** (amended 2026-11-02, owner; was: only a draft, AC79). A pin that a story, an editorial review or a tour uses is refused in words (what uses it and how many), and a pin that is not hidden yet is offered Hide instead.
 - **Add place** and **Add event** are two ways into the same editor. Add event opens it with the dates section ready.
 - **States:** normal (a list of pins), loading, empty (no pins yet) and no matches.
 
 ## 4. Merchant pin editor (N17): option S "Steps"
 
-The editor uses the **tour editor's stepper** (M13, `features/merchant/products/components/step-shell.tsx`, `StepLayout`). From 1024 px the steps are a numbered column. On phones the header reads "Step 2 of 6" with an "All steps" sheet. Each step has a done, needs-attention or error mark.
+The editor uses the **tour editor's stepper** (M13, now shared: `components/step-layout.tsx`, `StepLayout`, with `step-bar.tsx` and `step-marks.tsx`). From 1024 px the steps are a numbered column. On phones the header reads "Step 2 of 6" with an "All steps" sheet. Each step has a done, needs-attention or error mark.
 
 | Step | Content |
 | --- | --- |
-| 1 Place on the map | A map picker on the guest map's flat style (a tap places the pin, the marker drags, the arrow keys nudge it about 5 m, or about 25 m with Shift), the slug (suggested from the title, editable, must be one no other pin uses; changing the slug of a published pin warns that links already shared will go to the map without the pin), and the optional address |
-| 2 Text and photo | Title and tip in EN and DE with a completeness indicator per language, the photo and alt text in EN and DE |
+| 1 Place on the map | A Google Maps link field (paste a link and the pin moves there; short links are followed by the API), a map picker on the guest map's flat style for fine-tuning (a tap places the pin, the marker drags, the arrow keys nudge it about 5 m, or about 25 m with Shift), and the optional address. There is no map link input: the server makes the slug from the title (2026-10-30 decision) and the Review shows it read only |
+| 2 Text and photo | Title, tip and local tip on the shared language switch (EN | DE) with a state per language, and one ordered photo list (grip to drag, arrow keys, Remove, Cover under the first): the first photo is the main photo, the rest are the extra photos. No photo description fields (the guest side uses the place title) |
 | 3 Hours and dates | Weekly hours (per weekday, any number of spans, or closed) and optional date entries: one day with optional start and end times, or a range of days. An entry cannot cross midnight (for example 22:00 to 00:30 is an error); for a late event the end time stays empty. Times are Europe/Zurich. The step explains that the pin leaves the map after its last date |
-| 4 Categories and tags | Map categories (multi-select with one level of sub-categories; none is required, and no category means it shows only under All), stay tag (short-stay, multi-day or both), the five fixed interests (the fifth, Local activities, was added on 2026-10-28) and a switch for the fixed flag "Free to use" that puts a pin in the home section "Free and useful" (added 2026-10-28; see `docs/decisions/2026-10-28-home-by-interests.md`) |
+| 4 Categories and tags | Categories (the shared multi-select, chips in the input, search, one level of sub-categories; none is required, and no category means it shows only under All), stay tag (short-stay, multi-day or both), the five fixed interests (the fifth, Local activities, was added on 2026-10-28) and a switch for the fixed flag "Free to use" that puts a pin in the home section "Free and useful" (added 2026-10-28; see `docs/decisions/2026-10-28-home-by-interests.md`) |
 | 5 Story and link | An optional main-story picker that shows which language versions are published, and one optional outbound link (a warning that changing it changes every page that shows the pin) |
 | 6 Review and publish | Each step's facts with **Edit**, and the publish rules |
 
 - **New pin:** walk the steps with **Next**; **Save draft** at any time. **Existing pin:** open any step and save from any step.
 - **Publish rules** (AC68): a title in at least one language, a location and a slug. Everything else is optional. Publish is off until they hold, and the panel lists what is missing.
-- **Lifecycle:** a draft can be deleted. A published pin can only be hidden, after a confirm. A hidden pin can be shown again.
+- **Lifecycle:** any pin can be deleted after a confirm that says it cannot be undone, if nothing uses it (amended 2026-11-02, owner). A published pin can be hidden, after a confirm. A hidden pin can be shown again.
 - **Scenarios in the lab:** new place, new event, published pin, hidden pin, ended event, draft with errors (German title only, no location, a link another pin uses, a 22:00 to 00:30 entry and a link with a space).
 - **Preview** in EN and DE: the editor has "Preview EN" and "Preview DE" actions, and the lab shows the guest phone beside the editor drawing the unsaved edits. In the product the preview is an `ssr:false` route (decision D6).
-- Editor fields are bilingual and validated in the API as well as the UI (ADR-003).
+- Editor fields are bilingual and validated in the API as well as the UI (ADR-003). Every block of a step is a non-collapsible card; a card that groups several fields has an icon tile, a title and a summary, and a one-field card has none, so no heading repeats a field label.
 
 ## 5. Differences from the original PRD v3 (settled)
 
@@ -147,7 +151,7 @@ All under `front-end/src/`:
 - `features/lab/pins-lab.tsx`, `pins-lab-sync.ts`: the page layout, the shared pin list and the message sync between the dashboard frame and the phone.
 - Merchant: `pins-merchant-app.tsx`, `pins-merchant-shell.tsx`, `pins-merchant-list.tsx` (N16), `pins-merchant-steps.tsx` (N17, option S), `pins-merchant-editor.tsx` and `pins-merchant-editor-state.ts`, `pins-merchant-fields.tsx`, `pins-merchant-schedule.tsx`, `pins-merchant-map-picker.tsx`, `pins-merchant-publish.tsx`, `pins-merchant-data.ts`, `pins-merchant-copy.ts`.
 - Guest: `map-guest-lab.tsx` (the page's phone panel and the tour route panel), `map-guest-options.tsx` (`OptionCards` is the approved option B), `map-guest-card.tsx` (N03 card body), `map-guest-kit.tsx` (credits, list, states), `map-guest-map.tsx` (MapLibre), `map-guest-data.ts` (ranking, visibility, dates, hours, copy).
-- Shared-component edits the lab needs: `components/sheet-frame.tsx`, `features/merchant/products/components/step-shell.tsx`, `components/icons.ts`.
+- Shared-component edits the lab needs: `components/sheet-frame.tsx`, `components/step-layout.tsx`, `components/step-bar.tsx`, `components/icons.ts`.
 
 ## 9. Rejected options (still in the lab for reference)
 

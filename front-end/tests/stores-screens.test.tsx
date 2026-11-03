@@ -162,7 +162,7 @@ async function pickStep(name: RegExp) {
 }
 
 /** The last step, where the store opens. */
-const goToOpenStep = () => pickStep(/^Open for sale/)
+const goToOpenStep = () => pickStep(/^5\. Open for sale/)
 const openButton = () => screen.findByRole('button', { name: 'Open Chi Ngoc for sale' })
 
 async function openInformationSheet() {

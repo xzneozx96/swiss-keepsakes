@@ -13,7 +13,7 @@ import { useConfirm } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
 
 import {
-  FilterButton,
+  FilterButtons,
   FilterChips,
   filterGroup,
 } from '@/components/filter-bar'
@@ -91,12 +91,9 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
     !view.length || view.includes(r.archived ? 'archived' : 'active')
   // Keepsakes only: the store's sub-categories, ticked like the status.
   const [subs, setSubs] = useState<string[]>([])
-  const gifts = all.gifts
-    .filter(inView)
-    .filter(
-      r =>
-        !subs.length || (!!r.subcategoryId && subs.includes(r.subcategoryId)),
-    )
+  const inSubs = (r: ProductRow) =>
+    !subs.length || (!!r.subcategoryId && subs.includes(r.subcategoryId))
+  const gifts = all.gifts.filter(inView).filter(inSubs)
   const tours = all.tours.filter(inView)
   const isLoading = useSimulatedLoading()
   const tabs = [
@@ -180,7 +177,12 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
         options: (['active', 'archived'] as const).map(v => ({
           id: v,
           label: t(`products.view.${v}`),
-          count: source.filter(r => r.archived === (v === 'archived')).length,
+          // Counts follow the other group: the sub-categories ticked narrow the status counts.
+          count: source.filter(
+            r =>
+              (id === 'tours' || inSubs(r))
+              && r.archived === (v === 'archived'),
+          ).length,
         })),
         selected: view,
         onChange: setView,
@@ -197,7 +199,8 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
             .map(c => ({
               id: c.id,
               label: pickText(c.name, language).text,
-              count: source.filter(r => r.subcategoryId === c.id).length,
+              count: source.filter(r => inView(r) && r.subcategoryId === c.id)
+                .length,
             })),
           selected: subs,
           onChange: setSubs,
@@ -281,7 +284,7 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
         label={t('products.tabsLabel')}
         selected={tab}
         tabs={tabs}
-        trailing={groups && <FilterButton groups={groups} />}
+        trailing={groups && <FilterButtons groups={groups} />}
       />
       {groups && <FilterChips groups={groups} />}
       {panel(tab)}

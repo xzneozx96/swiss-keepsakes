@@ -32,11 +32,16 @@ import { Route as LabEyebrowRouteImport } from './routes/lab.eyebrow'
 import { Route as LabHeroRouteImport } from './routes/lab.hero'
 import { Route as LabHomeRouteImport } from './routes/lab.home'
 import { Route as LabKeepsakeEditorRouteImport } from './routes/lab.keepsake-editor'
+import { Route as LabKeepsakeOptionDesignRouteImport } from './routes/lab.keepsake-option-design'
+import { Route as LabKeepsakeOptionsRouteImport } from './routes/lab.keepsake-options'
+import { Route as LabKeepsakeVariantDesignRouteImport } from './routes/lab.keepsake-variant-design'
 import { Route as LabLanguageSwitchRouteImport } from './routes/lab.language-switch'
+import { Route as LabLocationCardRouteImport } from './routes/lab.location-card'
 import { Route as LabMapRouteImport } from './routes/lab.map'
 import { Route as LabMapLoadingRouteImport } from './routes/lab.map-loading'
 import { Route as LabMediaRouteImport } from './routes/lab.media'
 import { Route as LabOnboardingFullscreenRouteImport } from './routes/lab.onboarding-fullscreen'
+import { Route as LabOpeningHoursRouteImport } from './routes/lab.opening-hours'
 import { Route as LabOrderCardsRouteImport } from './routes/lab.order-cards'
 import { Route as LabPinsRouteImport } from './routes/lab.pins'
 import { Route as LabPrivateTourRouteImport } from './routes/lab.private-tour'
@@ -106,7 +111,6 @@ import { Route as StoreProductsToursTourIdRouteImport } from './routes/store/pro
 import { Route as StoreProductsToursNewRouteImport } from './routes/store/products/tours/new'
 import { Route as StoreRequestsAdviceRequestIdRouteImport } from './routes/store/requests/advice/$requestId'
 import { Route as GuestAccountOrdersOrderIdPayRouteImport } from './routes/_guest/account_.orders.$orderId_.pay'
-import { Route as StoreProductsGiftsProductIdVariantsVariantIdRouteImport } from './routes/store/products/gifts/$productId_.variants.$variantId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -222,9 +226,30 @@ const LabKeepsakeEditorRoute = LabKeepsakeEditorRouteImport.update({
   path: '/lab/keepsake-editor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LabKeepsakeOptionDesignRoute = LabKeepsakeOptionDesignRouteImport.update({
+  id: '/lab/keepsake-option-design',
+  path: '/lab/keepsake-option-design',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabKeepsakeOptionsRoute = LabKeepsakeOptionsRouteImport.update({
+  id: '/lab/keepsake-options',
+  path: '/lab/keepsake-options',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabKeepsakeVariantDesignRoute =
+  LabKeepsakeVariantDesignRouteImport.update({
+    id: '/lab/keepsake-variant-design',
+    path: '/lab/keepsake-variant-design',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LabLanguageSwitchRoute = LabLanguageSwitchRouteImport.update({
   id: '/lab/language-switch',
   path: '/lab/language-switch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabLocationCardRoute = LabLocationCardRouteImport.update({
+  id: '/lab/location-card',
+  path: '/lab/location-card',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabMapRoute = LabMapRouteImport.update({
@@ -245,6 +270,11 @@ const LabMediaRoute = LabMediaRouteImport.update({
 const LabOnboardingFullscreenRoute = LabOnboardingFullscreenRouteImport.update({
   id: '/lab/onboarding-fullscreen',
   path: '/lab/onboarding-fullscreen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabOpeningHoursRoute = LabOpeningHoursRouteImport.update({
+  id: '/lab/opening-hours',
+  path: '/lab/opening-hours',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabOrderCardsRoute = LabOrderCardsRouteImport.update({
@@ -599,12 +629,6 @@ const GuestAccountOrdersOrderIdPayRoute =
     path: '/account/orders/$orderId/pay',
     getParentRoute: () => GuestRoute,
   } as any)
-const StoreProductsGiftsProductIdVariantsVariantIdRoute =
-  StoreProductsGiftsProductIdVariantsVariantIdRouteImport.update({
-    id: '/products/gifts/$productId_/variants/$variantId',
-    path: '/products/gifts/$productId/variants/$variantId',
-    getParentRoute: () => StoreRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -629,11 +653,16 @@ export interface FileRoutesByFullPath {
   '/lab/hero': typeof LabHeroRoute
   '/lab/home': typeof LabHomeRoute
   '/lab/keepsake-editor': typeof LabKeepsakeEditorRoute
+  '/lab/keepsake-option-design': typeof LabKeepsakeOptionDesignRoute
+  '/lab/keepsake-options': typeof LabKeepsakeOptionsRoute
+  '/lab/keepsake-variant-design': typeof LabKeepsakeVariantDesignRoute
   '/lab/language-switch': typeof LabLanguageSwitchRoute
+  '/lab/location-card': typeof LabLocationCardRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/media': typeof LabMediaRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
+  '/lab/opening-hours': typeof LabOpeningHoursRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
   '/lab/pins': typeof LabPinsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
@@ -703,7 +732,6 @@ export interface FileRoutesByFullPath {
   '/store/content/places/': typeof StoreContentPlacesIndexRoute
   '/store/products/tours/': typeof StoreProductsToursIndexRoute
   '/account/orders/$orderId/pay': typeof GuestAccountOrdersOrderIdPayRoute
-  '/store/products/gifts/$productId/variants/$variantId': typeof StoreProductsGiftsProductIdVariantsVariantIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -725,11 +753,16 @@ export interface FileRoutesByTo {
   '/lab/hero': typeof LabHeroRoute
   '/lab/home': typeof LabHomeRoute
   '/lab/keepsake-editor': typeof LabKeepsakeEditorRoute
+  '/lab/keepsake-option-design': typeof LabKeepsakeOptionDesignRoute
+  '/lab/keepsake-options': typeof LabKeepsakeOptionsRoute
+  '/lab/keepsake-variant-design': typeof LabKeepsakeVariantDesignRoute
   '/lab/language-switch': typeof LabLanguageSwitchRoute
+  '/lab/location-card': typeof LabLocationCardRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/media': typeof LabMediaRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
+  '/lab/opening-hours': typeof LabOpeningHoursRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
   '/lab/pins': typeof LabPinsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
@@ -798,7 +831,6 @@ export interface FileRoutesByTo {
   '/store/content/places': typeof StoreContentPlacesIndexRoute
   '/store/products/tours': typeof StoreProductsToursIndexRoute
   '/account/orders/$orderId/pay': typeof GuestAccountOrdersOrderIdPayRoute
-  '/store/products/gifts/$productId/variants/$variantId': typeof StoreProductsGiftsProductIdVariantsVariantIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -825,11 +857,16 @@ export interface FileRoutesById {
   '/lab/hero': typeof LabHeroRoute
   '/lab/home': typeof LabHomeRoute
   '/lab/keepsake-editor': typeof LabKeepsakeEditorRoute
+  '/lab/keepsake-option-design': typeof LabKeepsakeOptionDesignRoute
+  '/lab/keepsake-options': typeof LabKeepsakeOptionsRoute
+  '/lab/keepsake-variant-design': typeof LabKeepsakeVariantDesignRoute
   '/lab/language-switch': typeof LabLanguageSwitchRoute
+  '/lab/location-card': typeof LabLocationCardRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/media': typeof LabMediaRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
+  '/lab/opening-hours': typeof LabOpeningHoursRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
   '/lab/pins': typeof LabPinsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
@@ -899,7 +936,6 @@ export interface FileRoutesById {
   '/store/content/places/': typeof StoreContentPlacesIndexRoute
   '/store/products/tours/': typeof StoreProductsToursIndexRoute
   '/_guest/account_/orders/$orderId_/pay': typeof GuestAccountOrdersOrderIdPayRoute
-  '/store/products/gifts/$productId_/variants/$variantId': typeof StoreProductsGiftsProductIdVariantsVariantIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -926,11 +962,16 @@ export interface FileRouteTypes {
     | '/lab/hero'
     | '/lab/home'
     | '/lab/keepsake-editor'
+    | '/lab/keepsake-option-design'
+    | '/lab/keepsake-options'
+    | '/lab/keepsake-variant-design'
     | '/lab/language-switch'
+    | '/lab/location-card'
     | '/lab/map'
     | '/lab/map-loading'
     | '/lab/media'
     | '/lab/onboarding-fullscreen'
+    | '/lab/opening-hours'
     | '/lab/order-cards'
     | '/lab/pins'
     | '/lab/private-tour'
@@ -1000,7 +1041,6 @@ export interface FileRouteTypes {
     | '/store/content/places/'
     | '/store/products/tours/'
     | '/account/orders/$orderId/pay'
-    | '/store/products/gifts/$productId/variants/$variantId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1022,11 +1062,16 @@ export interface FileRouteTypes {
     | '/lab/hero'
     | '/lab/home'
     | '/lab/keepsake-editor'
+    | '/lab/keepsake-option-design'
+    | '/lab/keepsake-options'
+    | '/lab/keepsake-variant-design'
     | '/lab/language-switch'
+    | '/lab/location-card'
     | '/lab/map'
     | '/lab/map-loading'
     | '/lab/media'
     | '/lab/onboarding-fullscreen'
+    | '/lab/opening-hours'
     | '/lab/order-cards'
     | '/lab/pins'
     | '/lab/private-tour'
@@ -1095,7 +1140,6 @@ export interface FileRouteTypes {
     | '/store/content/places'
     | '/store/products/tours'
     | '/account/orders/$orderId/pay'
-    | '/store/products/gifts/$productId/variants/$variantId'
   id:
     | '__root__'
     | '/'
@@ -1121,11 +1165,16 @@ export interface FileRouteTypes {
     | '/lab/hero'
     | '/lab/home'
     | '/lab/keepsake-editor'
+    | '/lab/keepsake-option-design'
+    | '/lab/keepsake-options'
+    | '/lab/keepsake-variant-design'
     | '/lab/language-switch'
+    | '/lab/location-card'
     | '/lab/map'
     | '/lab/map-loading'
     | '/lab/media'
     | '/lab/onboarding-fullscreen'
+    | '/lab/opening-hours'
     | '/lab/order-cards'
     | '/lab/pins'
     | '/lab/private-tour'
@@ -1195,7 +1244,6 @@ export interface FileRouteTypes {
     | '/store/content/places/'
     | '/store/products/tours/'
     | '/_guest/account_/orders/$orderId_/pay'
-    | '/store/products/gifts/$productId_/variants/$variantId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1218,11 +1266,16 @@ export interface RootRouteChildren {
   LabHeroRoute: typeof LabHeroRoute
   LabHomeRoute: typeof LabHomeRoute
   LabKeepsakeEditorRoute: typeof LabKeepsakeEditorRoute
+  LabKeepsakeOptionDesignRoute: typeof LabKeepsakeOptionDesignRoute
+  LabKeepsakeOptionsRoute: typeof LabKeepsakeOptionsRoute
+  LabKeepsakeVariantDesignRoute: typeof LabKeepsakeVariantDesignRoute
   LabLanguageSwitchRoute: typeof LabLanguageSwitchRoute
+  LabLocationCardRoute: typeof LabLocationCardRoute
   LabMapRoute: typeof LabMapRoute
   LabMapLoadingRoute: typeof LabMapLoadingRoute
   LabMediaRoute: typeof LabMediaRoute
   LabOnboardingFullscreenRoute: typeof LabOnboardingFullscreenRoute
+  LabOpeningHoursRoute: typeof LabOpeningHoursRoute
   LabOrderCardsRoute: typeof LabOrderCardsRoute
   LabPinsRoute: typeof LabPinsRoute
   LabPrivateTourRoute: typeof LabPrivateTourRoute
@@ -1406,11 +1459,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LabKeepsakeEditorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lab/keepsake-option-design': {
+      id: '/lab/keepsake-option-design'
+      path: '/lab/keepsake-option-design'
+      fullPath: '/lab/keepsake-option-design'
+      preLoaderRoute: typeof LabKeepsakeOptionDesignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/keepsake-options': {
+      id: '/lab/keepsake-options'
+      path: '/lab/keepsake-options'
+      fullPath: '/lab/keepsake-options'
+      preLoaderRoute: typeof LabKeepsakeOptionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/keepsake-variant-design': {
+      id: '/lab/keepsake-variant-design'
+      path: '/lab/keepsake-variant-design'
+      fullPath: '/lab/keepsake-variant-design'
+      preLoaderRoute: typeof LabKeepsakeVariantDesignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lab/language-switch': {
       id: '/lab/language-switch'
       path: '/lab/language-switch'
       fullPath: '/lab/language-switch'
       preLoaderRoute: typeof LabLanguageSwitchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/location-card': {
+      id: '/lab/location-card'
+      path: '/lab/location-card'
+      fullPath: '/lab/location-card'
+      preLoaderRoute: typeof LabLocationCardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab/map': {
@@ -1439,6 +1520,13 @@ declare module '@tanstack/react-router' {
       path: '/lab/onboarding-fullscreen'
       fullPath: '/lab/onboarding-fullscreen'
       preLoaderRoute: typeof LabOnboardingFullscreenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/opening-hours': {
+      id: '/lab/opening-hours'
+      path: '/lab/opening-hours'
+      fullPath: '/lab/opening-hours'
+      preLoaderRoute: typeof LabOpeningHoursRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab/order-cards': {
@@ -1924,13 +2012,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuestAccountOrdersOrderIdPayRouteImport
       parentRoute: typeof GuestRoute
     }
-    '/store/products/gifts/$productId_/variants/$variantId': {
-      id: '/store/products/gifts/$productId_/variants/$variantId'
-      path: '/products/gifts/$productId/variants/$variantId'
-      fullPath: '/store/products/gifts/$productId/variants/$variantId'
-      preLoaderRoute: typeof StoreProductsGiftsProductIdVariantsVariantIdRouteImport
-      parentRoute: typeof StoreRoute
-    }
   }
 }
 
@@ -2052,7 +2133,6 @@ interface StoreRouteChildren {
   StoreRequestsAdviceRequestIdRoute: typeof StoreRequestsAdviceRequestIdRoute
   StoreContentPlacesIndexRoute: typeof StoreContentPlacesIndexRoute
   StoreProductsToursIndexRoute: typeof StoreProductsToursIndexRoute
-  StoreProductsGiftsProductIdVariantsVariantIdRoute: typeof StoreProductsGiftsProductIdVariantsVariantIdRoute
 }
 
 const StoreRouteChildren: StoreRouteChildren = {
@@ -2086,8 +2166,6 @@ const StoreRouteChildren: StoreRouteChildren = {
   StoreRequestsAdviceRequestIdRoute: StoreRequestsAdviceRequestIdRoute,
   StoreContentPlacesIndexRoute: StoreContentPlacesIndexRoute,
   StoreProductsToursIndexRoute: StoreProductsToursIndexRoute,
-  StoreProductsGiftsProductIdVariantsVariantIdRoute:
-    StoreProductsGiftsProductIdVariantsVariantIdRoute,
 }
 
 const StoreRouteWithChildren = StoreRoute._addFileChildren(StoreRouteChildren)
@@ -2112,11 +2190,16 @@ const rootRouteChildren: RootRouteChildren = {
   LabHeroRoute: LabHeroRoute,
   LabHomeRoute: LabHomeRoute,
   LabKeepsakeEditorRoute: LabKeepsakeEditorRoute,
+  LabKeepsakeOptionDesignRoute: LabKeepsakeOptionDesignRoute,
+  LabKeepsakeOptionsRoute: LabKeepsakeOptionsRoute,
+  LabKeepsakeVariantDesignRoute: LabKeepsakeVariantDesignRoute,
   LabLanguageSwitchRoute: LabLanguageSwitchRoute,
+  LabLocationCardRoute: LabLocationCardRoute,
   LabMapRoute: LabMapRoute,
   LabMapLoadingRoute: LabMapLoadingRoute,
   LabMediaRoute: LabMediaRoute,
   LabOnboardingFullscreenRoute: LabOnboardingFullscreenRoute,
+  LabOpeningHoursRoute: LabOpeningHoursRoute,
   LabOrderCardsRoute: LabOrderCardsRoute,
   LabPinsRoute: LabPinsRoute,
   LabPrivateTourRoute: LabPrivateTourRoute,

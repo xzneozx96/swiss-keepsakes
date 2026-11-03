@@ -63,8 +63,16 @@ describe('[E2.12] public read schemas', () => {
   })
 
   it('[E2.12][AC88] the map item has exactly the ADR-006 fields', () => {
-    const expected = ['id', 'slug', 'latitude', 'longitude', 'title', 'language', 'categoryIds', 'stayTag', 'interests', 'nextDate', 'hasMainStory', 'mainStorySlug', 'photoKey']
+    const expected = ['id', 'slug', 'latitude', 'longitude', 'title', 'language', 'categoryIds', 'stayTag', 'interests', 'nextDate', 'hasMainStory', 'mainStorySlug', 'photoUrl']
     expect(Object.keys(publicMapItemSchema.shape).sort()).toEqual([...expected].sort())
+  })
+
+  it('[E4.7][AC49][AC42] the pin card carries the outbound link, the photos and the stories a card that opens needs, and no booking or price field', () => {
+    for (const field of ['link', 'photos', 'mainStory', 'otherStories', 'mapsLink'])
+      expect(Object.keys(publicPinSchema.shape), field).toContain(field)
+    expect(Object.keys(publicPinSchema.shape).filter(name => /book|buy|pay|cart|checkout|review|rating/i.test(name))).toEqual([])
+    const missing = publicPinSchema.safeParse({}).error?.issues.map(issue => issue.path[0])
+    expect(missing).toEqual(expect.arrayContaining(['link', 'photos', 'mainStory', 'otherStories']))
   })
 
   it('[E2.13] the public body unrolls lists as deep as the write body', () => {

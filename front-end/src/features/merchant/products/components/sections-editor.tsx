@@ -23,6 +23,7 @@ import { calendarDay, formatDate, formatMoney, pickText } from '@sk/domain/share
 import { useEffect, useRef, useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
+import { EmptyState } from '@/components/empty-state'
 import {
   ChevronDownIcon,
   ClockIcon,
@@ -523,7 +524,7 @@ function KeepsakesListSheet({
       </p>
       {ids.length === 0
         ? (
-            <p className="text-sm text-muted">{t('products.keepsakes.none')}</p>
+            <EmptyState compact icon={GiftIcon} message={t('products.keepsakes.none')} />
           )
         : (
             <div className="relative">
@@ -803,9 +804,7 @@ export function PracticalInfoStep({
     <>
       <Group title={t('products.sections.title')}>
         {sections.length === 0 && (
-          <p className="px-4 py-4 text-sm text-muted">
-            {t('products.sections.empty')}
-          </p>
+          <EmptyState compact icon={ContentIcon} message={t('products.sections.empty')} />
         )}
         {sections.length > 0 && (
           <div className="relative">

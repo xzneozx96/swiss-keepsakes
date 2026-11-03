@@ -16,13 +16,15 @@ const categoryNameInputSchema = z.strictObject({
 export const categoryWriteBodySchema = z.strictObject({
   name: categoryNameInputSchema,
   parentId: z.uuid().nullable().optional(),
+  showOnHome: z.boolean().optional().meta({ description: 'Map categories only: list it on the home\'s "Sorted before you unpack" row. A blog category with true is 422' }),
 }).meta({ id: 'CategoryWriteBody', description: 'A new category, appended last among its siblings. The slug is made from the name and never changes' })
 
 export const categoryPatchBodySchema = z.strictObject({
   name: categoryNameInputSchema.optional(),
   parentId: z.uuid().nullable().optional(),
-}).refine(body => body.name !== undefined || body.parentId !== undefined, 'Give a name or a parentId')
-  .meta({ id: 'CategoryPatchBody', description: 'A name replaces both languages. A changed parentId appends the category last under the new parent' })
+  showOnHome: z.boolean().optional().meta({ description: 'Map categories only' }),
+}).refine(body => body.name !== undefined || body.parentId !== undefined || body.showOnHome !== undefined, 'Give a name, a parentId or showOnHome')
+  .meta({ id: 'CategoryPatchBody', description: 'A name replaces both languages. A changed parentId appends the category last under the new parent. showOnHome sets the home switch' })
 
 export const categoryOrderBodySchema = z.strictObject({
   parentId: z.uuid().nullable(),
@@ -34,6 +36,7 @@ export const merchantCategorySchema = z.object({
   slug: z.string(),
   name: z.object({ en: z.string().nullable(), de: z.string().nullable() }),
   parentId: z.uuid().nullable(),
+  showOnHome: z.boolean().meta({ description: 'Always false for a blog category' }),
   position: z.int(),
   childCount: z.int(),
   useCount: z.int().meta({ description: 'Pins (map) or story groups (blog) tagged with it, whatever their status' }),

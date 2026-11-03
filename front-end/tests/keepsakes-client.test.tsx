@@ -115,7 +115,7 @@ describe('[E6.2][AC52] the options and variant commands', () => {
       saveOptions: useCommand('keepsakes', 'saveOptions'),
       createVariant: useCommand('keepsakes', 'createVariant'),
     }), { wrapper })
-    const options = [{ ref: variantId, name: { en: 'Size' }, values: [{ ref: 'new-1', label: { en: 'Small' }, swatch: null }] }]
+    const options = [{ ref: variantId, name: { en: 'Size' }, values: [{ ref: 'new-1', label: { en: 'Small' } }] }]
 
     await act(async () => {
       await result.current.saveOptions.mutateAsync({ storeId, id: productId, ifMatch: 4, options, variantValues: [{ variantId, values: { [variantId]: 'new-1' } }], idempotencyKey: 'k6' })

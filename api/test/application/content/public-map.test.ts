@@ -1,5 +1,5 @@
 import type { PinDate } from '@sk/domain/content'
-import type { PublicCategoryRow, PublicPinRow, PublicReadRepository, PublicTourRow } from '../../../src/modules/content/read-ports.ts'
+import type { PublicCategoryRow, PublicPinDetailRow, PublicReadRepository, PublicStoryRow, PublicTourRow } from '../../../src/modules/content/read-ports.ts'
 import { publicMapItemSchema, publicMapSchema, publicPinSchema, publicTourListSchema, publicTourSchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 import { makeGetMap } from '../../../src/modules/content/application/read-map.ts'
@@ -17,13 +17,21 @@ function cat(n: number, over: Partial<PublicCategoryRow> = {}): PublicCategoryRo
   return { id: uuid(900 + n), slug: `cat-${n}`, name: { en: `Cat ${n}`, de: `Kat ${n}` }, parentId: null, position: n, ...over }
 }
 
-function pin(n: number, over: Partial<PublicPinRow> = {}): PublicPinRow {
+function story(n: number, over: Partial<PublicStoryRow> & { en?: string, de?: string, at?: string } = {}): PublicStoryRow {
+  const { en, de, at = '2090-01-01T00:00:00Z', ...row } = over
+  const version = (language: 'en' | 'de', title: string) => ({ language, slug: `${language}-story-${n}`, published: { title, body: { type: 'doc', content: [] } }, publishedAt: new Date(at), mediaKeys: {} })
+
+  return { id: uuid(700 + n), stayTag: 'both', interests: [], categories: [], versions: [...(en ? [version('en', en)] : []), ...(de ? [version('de', de)] : [])], ...row }
+}
+
+function pin(n: number, over: Partial<PublicPinDetailRow> = {}): PublicPinDetailRow {
   return {
     id: uuid(n),
     slug: { en: `pin-${n}`, de: `ort-${n}` },
     latitude: 47.05,
     longitude: 8.3,
     address: null,
+    mapsLink: null,
     weeklyHours: [],
     stayTag: 'both',
     interests: [],
@@ -31,10 +39,15 @@ function pin(n: number, over: Partial<PublicPinRow> = {}): PublicPinRow {
     tip: { en: 'Tip', de: 'Tipp' },
     firstPublishedAt: new Date('2090-01-01T00:00:00Z'),
     photoKey: null,
+    photoWidth: null,
     dates: [],
     categories: [],
     parentCategories: [],
     mainStorySlugs: {},
+    link: null,
+    photos: [],
+    stories: [],
+    mainStoryId: null,
     ...over,
   }
 }
@@ -58,7 +71,7 @@ function tour(n: number, over: Partial<PublicTourRow> = {}): PublicTourRow {
   }
 }
 
-function setup(state: { pins: PublicPinRow[], tours?: PublicTourRow[] }, start = '2090-11-10T12:00:00Z') {
+function setup(state: { pins: PublicPinDetailRow[], tours?: PublicTourRow[] }, start = '2090-11-10T12:00:00Z') {
   let loads = 0
   const tours = () => state.tours ?? []
   const reads: PublicReadRepository<null> = {
@@ -74,7 +87,7 @@ function setup(state: { pins: PublicPinRow[], tours?: PublicTourRow[] }, start =
     findPublishedTourBySlug: async (_tx, slug) => tours().find(t => Object.values(t.slug).includes(slug)),
   }
   const clock = createManualClock(new Date(start))
-  const deps = { uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) }, reads, clock }
+  const deps = { uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) }, reads, clock, publicUrl: (key: string) => `https://media.test/${key}` }
   const getMap = makeGetMap(deps)
   const getPin = makeGetPin(deps)
   const listTours = makeListTours(deps)
@@ -155,12 +168,27 @@ describe('public map list', () => {
     const s = setup({ pins: [sub, two, none] })
 
     const { items } = await s.map('en')
-    const byId = (p: PublicPinRow) => items.find(i => i.id === p.id)!
+    const byId = (p: PublicPinDetailRow) => items.find(i => i.id === p.id)!
 
     expect(byId(sub).categoryIds.sort()).toEqual([child.id, parent.id].sort())
     expect(byId(two).categoryIds.sort()).toEqual([other.id, parent.id].sort())
     expect(byId(none).categoryIds).toEqual([])
     expect(Object.keys(byId(sub)).sort()).toEqual(Object.keys(publicMapItemSchema.shape).sort())
+  })
+
+  it('[E4.7][N03] the list item carries the address of the smallest copy of the cover, the original when the width is unknown, and null without a cover', async () => {
+    const wide = pin(1, { photoKey: 's/a/o.jpg', photoWidth: 1500 })
+    const unknown = pin(2, { photoKey: 's/b/o.jpg', photoWidth: null })
+    const none = pin(3)
+    const s = setup({ pins: [wide, unknown, none] })
+
+    const { items } = await s.map('en')
+    const byId = (p: PublicPinDetailRow) => items.find(i => i.id === p.id)!
+
+    expect(byId(wide).photoUrl).toBe('https://media.test/s/a/w320.webp')
+    expect(byId(unknown).photoUrl).toBe('https://media.test/s/b/o.jpg')
+    expect(byId(none).photoUrl).toBeNull()
+    expect(JSON.stringify(items)).not.toContain('photoKey')
   })
 
   it('[E2.12][AC88][D-5] a pin that falls back to English keeps the English main story slug, not the reader\'s language', async () => {
@@ -180,7 +208,7 @@ describe('public map list', () => {
     const s = setup({ pins: [withBoth, enOnly, none] })
 
     const de = (await s.map('de')).items
-    const get = (p: PublicPinRow) => de.find(i => i.id === p.id)!
+    const get = (p: PublicPinDetailRow) => de.find(i => i.id === p.id)!
 
     expect(get(withBoth)).toMatchObject({ hasMainStory: true, mainStorySlug: 'geschichte', language: 'de', title: 'Ort 1' })
     expect(get(enOnly)).toMatchObject({ hasMainStory: true, mainStorySlug: null, language: 'de' })
@@ -230,7 +258,7 @@ describe('public pin card', () => {
   it('[E2.12][AC88] carries the card fields, categories with their parent, and the next date', async () => {
     const parent = cat(1)
     const child = cat(2, { parentId: parent.id })
-    const p = pin(1, { categories: [child], parentCategories: [parent], dates: [date({})], address: 'Kapellbruecke', mainStorySlugs: { en: 'story-en' }, photoKey: 'k/1' })
+    const p = pin(1, { categories: [child], parentCategories: [parent], dates: [date({})], address: 'Kapellbruecke', mainStorySlugs: { en: 'story-en' } })
     const s = setup({ pins: [p] })
 
     const result = await s.pin(p.id, 'en')
@@ -245,7 +273,6 @@ describe('public pin card', () => {
       availableLanguages: ['de', 'en'],
       hasMainStory: true,
       mainStorySlug: 'story-en',
-      photoKey: 'k/1',
       nextDate: { firstDay: '2090-11-14', lastDay: '2090-11-14', startTime: null, endTime: null },
       categories: [{ id: parent.id, slug: 'cat-1', name: 'Cat 1' }, { id: child.id, slug: 'cat-2', name: 'Cat 2' }],
     })
@@ -275,6 +302,71 @@ describe('public pin card', () => {
     const result = await s.pin(uuid(1), 'de')
 
     expect(result.ok && result.value).toMatchObject({ title: 'Ort 1', tip: '', language: 'de' })
+  })
+
+  it('[E4.7][AC49] carries the outbound link, and null when there is none', async () => {
+    const withLink = pin(1, { link: 'https://hotel.example/rooms' })
+    const s = setup({ pins: [withLink, pin(2)] })
+
+    const linked = await s.pin(withLink.id, 'en')
+    const plain = await s.pin(uuid(2), 'en')
+
+    expect(linked.ok && linked.value.link).toBe('https://hotel.example/rooms')
+    expect(plain.ok && plain.value.link).toBeNull()
+  })
+
+  it('[E4.7][N03] carries the photos in the merchant\'s order with the text for each in the carried language, null when it has none', async () => {
+    const p = pin(1, { photos: [{ key: 's/cover/o.jpg', width: 1500, alt: { en: 'The bridge', de: 'Die Brücke' } }, { key: 's/two/o.jpg', width: null, alt: { de: 'Nur deutsch' } }] })
+    const s = setup({ pins: [p] })
+
+    const en = await s.pin(p.id, 'en')
+    const de = await s.pin(p.id, 'de')
+
+    const cover = (alt: string | null) => ({
+      url: 'https://media.test/s/cover/o.jpg',
+      variants: [320, 640, 1280].map(width => ({ width, url: `https://media.test/s/cover/w${width}.webp` })),
+      alt,
+    })
+
+    expect(en.ok && en.value.photos).toEqual([cover('The bridge'), { url: 'https://media.test/s/two/o.jpg', variants: [], alt: null }])
+    expect(de.ok && de.value.photos).toEqual([cover('Die Brücke'), { url: 'https://media.test/s/two/o.jpg', variants: [], alt: 'Nur deutsch' }])
+  })
+
+  it('[E4.7][AC42] carries the main story and the other stories that tag the pin, each with its reading time and no price', async () => {
+    const main = story(1, { en: 'Main story', de: 'Hauptgeschichte' })
+    const older = story(2, { en: 'Older', de: 'Älter', at: '2090-02-01T00:00:00Z' })
+    const newer = story(3, { en: 'Newer', de: 'Neuer', at: '2090-03-01T00:00:00Z' })
+    const p = pin(1, { stories: [main, older, newer], mainStoryId: main.id, mainStorySlugs: { en: 'en-story-1', de: 'de-story-1' } })
+    const s = setup({ pins: [p] })
+
+    const result = await s.pin(p.id, 'de')
+
+    expect(result.ok && result.value.mainStory).toEqual({ slug: 'de-story-1', title: 'Hauptgeschichte', readMinutes: 1 })
+    expect(result.ok && result.value.otherStories).toEqual([
+      { slug: 'de-story-3', title: 'Neuer', readMinutes: 1 },
+      { slug: 'de-story-2', title: 'Älter', readMinutes: 1 },
+    ])
+    expect(JSON.stringify(result)).not.toMatch(/price|CHF/i)
+  })
+
+  it('[E4.7][AC62] a pin with no story has no main story and no other stories', async () => {
+    const s = setup({ pins: [pin(1)] })
+
+    const result = await s.pin(uuid(1), 'en')
+
+    expect(result.ok && result.value).toMatchObject({ hasMainStory: false, mainStory: null, otherStories: [] })
+  })
+
+  it('[E4.7][AC64] a story with no version in the carried language is left out of the list, and a main story without one gives null', async () => {
+    const main = story(1, { en: 'Only English main' })
+    const other = story(2, { en: 'Only English', de: 'Auch deutsch' })
+    const p = pin(1, { stories: [main, other], mainStoryId: main.id, mainStorySlugs: { en: 'en-story-1' } })
+    const s = setup({ pins: [p] })
+
+    const result = await s.pin(p.id, 'de')
+
+    expect(result.ok && result.value.mainStory).toBeNull()
+    expect(result.ok && result.value.otherStories).toEqual([{ slug: 'de-story-2', title: 'Auch deutsch', readMinutes: 1 }])
   })
 
   it('[E2.12][AC45] an unknown id, and a pin whose dates have all ended, are 404', async () => {

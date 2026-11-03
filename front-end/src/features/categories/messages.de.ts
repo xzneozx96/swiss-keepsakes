@@ -22,8 +22,6 @@ export const categoriesDe: Record<keyof typeof categoriesEn, string> = {
   'categories.loading': 'Kategorien werden geladen',
   'categories.noStore': 'Sie gehören noch zu keinem Shop, daher gibt es keine Kategorien zu bearbeiten.',
   'categories.loadFailed': 'Die Kategorien konnten nicht geladen werden.',
-  'categories.retry': 'Erneut versuchen',
-  'categories.requestId': 'Referenz: {id}',
   'categories.noName.en': 'Kein englischer Name',
   'categories.noName.de': 'Kein deutscher Name',
   'categories.moveUp': 'Nach oben',
@@ -90,4 +88,9 @@ export const categoriesDe: Record<keyof typeof categoriesEn, string> = {
   'categories.phone.noSubs': 'Keine Unterkategorien',
   'categories.phone.noneUse.map': 'Kein Pin verwendet sie',
   'categories.phone.noneUse.blog': 'Keine Geschichte verwendet sie',
+  'categories.home.label': 'Auf der Startseite zeigen',
+  'categories.home.hint': 'Listet diese Kategorie auf der Startseite unter „Gut vorbereitet“.',
+  'categories.home.badge': 'Auf der Startseite',
+  'categories.home.off': 'Nicht auf der Startseite',
+  'categories.col.home': 'Startseite',
 }

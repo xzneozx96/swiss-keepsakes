@@ -1,6 +1,7 @@
 import type { Clock, KeepsakeUses, MediaRepository, ObjectStorage, UnitOfWork } from '../ports.ts'
 import type { MediaJob } from './process-media.ts'
 import { mediaPrefix } from '@sk/domain/content'
+import { deleteFolder } from './delete-objects.ts'
 
 export interface RetireMediaDeps<T> {
   uow: UnitOfWork<T>
@@ -29,7 +30,6 @@ export function makeRetireMedia<T>({ uow, media, storage, keepsakes, clock }: Re
     })
     if (!retiring)
       return
-    for (const { key } of await storage.list('media', mediaPrefix(retiring.storeId, retiring.id)))
-      await storage.delete('media', key)
+    await deleteFolder(storage, 'media', mediaPrefix(retiring.storeId, retiring.id))
   }
 }

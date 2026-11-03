@@ -1,5 +1,5 @@
-import type { Pin, PinPublishBody, PinWriteBody } from '@sk/api-contract'
-import type { FoodKind, ServiceType, StayTag } from '@sk/domain/content'
+import type { Pin, PinWriteBody } from '@sk/api-contract'
+import type { StayTag } from '@sk/domain/content'
 import type { MessageKey } from '@/i18n/en'
 
 export type Lang = 'en' | 'de'
@@ -10,7 +10,8 @@ export interface HoursSpan { key: string, day: number, opens: string, closes: st
 /** One date entry of the form: a day with optional times, or a range of days with none. */
 export interface DateEntry { key: string, kind: 'day' | 'range', firstDay: string, lastDay: string, startTime: string, endTime: string }
 
-export interface PhotoEntry { mediaId: string, altEn: string, altDe: string }
+/** An extra photo. The main photo is `coverMediaId`; together they are one ordered list in the editor (`photoIds`). */
+export interface PhotoEntry { mediaId: string }
 
 /** The whole editor state, as strings the fields can hold. `bodyOf` turns it into one write. */
 export interface PlaceForm {
@@ -18,26 +19,34 @@ export interface PlaceForm {
   titleDe: string
   tipEn: string
   tipDe: string
-  localTipEn: string
-  localTipDe: string
-  slug: string
   latitude: number | null
   longitude: number | null
   address: string
+  /** The Google Maps link of the place; empty for none. Stored with the place, live on save. */
+  mapsLink: string
   hours: HoursSpan[]
   dates: DateEntry[]
   categoryIds: string[]
   stayTag: StayTag
   interests: string[]
-  serviceType: ServiceType | null
   mustVisit: boolean
-  foodKind: FoodKind | null
   coverMediaId: string | null
-  coverAltEn: string
-  coverAltDe: string
   photos: PhotoEntry[]
   outboundUrl: string
   mainStoryGroupId: string | null
+}
+
+/** The main photo and the extra ones: at most 10 extra photos, so 11. */
+export const MAX_PHOTOS = 11
+
+/** The photos as the editor shows them, one ordered list: the first is the main photo, the rest are the extra photos. */
+export function photoIds(form: Pick<PlaceForm, 'coverMediaId' | 'photos'>): string[] {
+  return [...(form.coverMediaId ? [form.coverMediaId] : []), ...form.photos.map(photo => photo.mediaId)]
+}
+
+/** The ordered list back onto the two fields the API has: the first photo is the cover, the others are `place_photos`. */
+export function withPhotoIds(ids: string[]): Pick<PlaceForm, 'coverMediaId' | 'photos'> {
+  return { coverMediaId: ids[0] ?? null, photos: ids.slice(1).map(mediaId => ({ mediaId })) }
 }
 
 const newKey = () => crypto.randomUUID()
@@ -52,23 +61,17 @@ export function emptyForm(withDate = false): PlaceForm {
     titleDe: '',
     tipEn: '',
     tipDe: '',
-    localTipEn: '',
-    localTipDe: '',
-    slug: '',
     latitude: null,
     longitude: null,
     address: '',
+    mapsLink: '',
     hours: [],
     dates: withDate ? [emptyDate()] : [],
     categoryIds: [],
     stayTag: 'both',
     interests: [],
-    serviceType: null,
     mustVisit: false,
-    foodKind: null,
     coverMediaId: null,
-    coverAltEn: '',
-    coverAltDe: '',
     photos: [],
     outboundUrl: '',
     mainStoryGroupId: null,
@@ -80,10 +83,6 @@ function textOf(pin: Pin) {
   return pin.draft ?? pin.published ?? { title: {}, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} }
 }
 
-export function slugOfPin(pin: Pin): string {
-  return pin.slug?.en ?? pin.slug?.de ?? ''
-}
-
 export function formOf(pin: Pin): PlaceForm {
   const text = textOf(pin)
 
@@ -92,12 +91,10 @@ export function formOf(pin: Pin): PlaceForm {
     titleDe: text.title.de ?? '',
     tipEn: text.tip.en ?? '',
     tipDe: text.tip.de ?? '',
-    localTipEn: text.localTip.en ?? '',
-    localTipDe: text.localTip.de ?? '',
-    slug: slugOfPin(pin),
     latitude: pin.latitude,
     longitude: pin.longitude,
     address: pin.address ?? '',
+    mapsLink: pin.mapsLink ?? '',
     hours: pin.weeklyHours.map(span => ({ key: newKey(), day: span.day, opens: span.opens, closes: span.closes })),
     dates: pin.dates.map(date => ({
       key: date.id,
@@ -110,35 +107,11 @@ export function formOf(pin: Pin): PlaceForm {
     categoryIds: pin.categoryIds,
     stayTag: pin.stayTag,
     interests: pin.interests,
-    serviceType: pin.serviceType,
     mustVisit: pin.mustVisit,
-    foodKind: pin.foodKind,
-    coverMediaId: pin.coverMediaId,
-    coverAltEn: text.coverAlt.en ?? '',
-    coverAltDe: text.coverAlt.de ?? '',
-    photos: pin.photos.map(photo => ({ mediaId: photo.mediaId, altEn: text.photoAlt[photo.mediaId]?.en ?? '', altDe: text.photoAlt[photo.mediaId]?.de ?? '' })),
+    ...withPhotoIds([...(pin.coverMediaId ? [pin.coverMediaId] : []), ...pin.photos.map(photo => photo.mediaId)]),
     outboundUrl: pin.outboundUrl ?? '',
     mainStoryGroupId: pin.mainStoryGroupId,
   }
-}
-
-/** A suggested web address from a title: lower case, German umlauts spelled out, dashes between words. */
-const UMLAUTS: [RegExp, string][] = [[/ä/g, 'ae'], [/ö/g, 'oe'], [/ü/g, 'ue'], [/ß/g, 'ss']]
-const MARKS = /[\u0300-\u036F]/g
-const NOT_SLUG = /[^a-z0-9]+/g
-const EDGE_DASHES = /^-+|-+$/g
-const TRAILING_DASHES = /-+$/g
-
-export function suggestSlug(title: string): string {
-  const spelled = UMLAUTS.reduce((text, [pattern, to]) => text.replace(pattern, to), title.toLowerCase())
-
-  return spelled
-    .normalize('NFD')
-    .replace(MARKS, '')
-    .replace(NOT_SLUG, '-')
-    .replace(EDGE_DASHES, '')
-    .slice(0, 80)
-    .replace(TRAILING_DASHES, '')
 }
 
 function trimmed(en: string, de: string) {
@@ -148,7 +121,6 @@ function trimmed(en: string, de: string) {
   }
 }
 
-const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const OPEN_TIME = /^(?:[01]\d|2[0-3]):[0-5]\d$/
 const CLOSE_TIME = /^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$/
 const DAY = /^\d{4}-\d{2}-\d{2}$/
@@ -164,7 +136,6 @@ function isDay(value: string): boolean {
 const HTTPS = /^https:\/\/\S+$/
 
 export interface FormErrors {
-  slug?: MessageKey
   hours: Record<string, MessageKey>
   dates: Record<string, MessageKey>
   link?: MessageKey
@@ -174,13 +145,11 @@ export interface FormErrors {
 export function validate(form: PlaceForm): FormErrors {
   const errors: FormErrors = { hours: {}, dates: {}, count: 0 }
 
-  if (form.slug !== '' && !SLUG.test(form.slug))
-    errors.slug = 'places.error.slugFormat'
   for (const span of form.hours) {
     if (!OPEN_TIME.test(span.opens) || !CLOSE_TIME.test(span.closes))
-      errors.hours[span.key] = 'places.error.hoursFormat'
-    else if (span.opens >= span.closes)
-      errors.hours[span.key] = 'places.error.hoursOrder'
+      errors.hours[span.key] = 'places.error.hoursMissing'
+    else if (span.opens === span.closes)
+      errors.hours[span.key] = 'places.error.hoursSame'
   }
   for (const date of form.dates) {
     const last = date.kind === 'day' ? date.firstDay : date.lastDay
@@ -202,66 +171,34 @@ export function validate(form: PlaceForm): FormErrors {
   }
   if (form.outboundUrl.trim() !== '' && !HTTPS.test(form.outboundUrl.trim()))
     errors.link = 'places.error.linkFormat'
-  errors.count = (errors.slug ? 1 : 0) + Object.keys(errors.hours).length + Object.keys(errors.dates).length + (errors.link ? 1 : 0)
+  errors.count = Object.keys(errors.hours).length + Object.keys(errors.dates).length + (errors.link ? 1 : 0)
 
   return errors
 }
 
-/** What a publish needs (AC68). Everything else is optional. */
-export function publishGaps(form: PlaceForm): ('title' | 'location' | 'slug')[] {
+/** What a publish needs (AC68): a title and a location. The map link is made by the server from the title. */
+export function publishGaps(form: PlaceForm): ('title' | 'location')[] {
   return [
     ...(form.titleEn.trim() === '' && form.titleDe.trim() === '' ? ['title' as const] : []),
     ...(form.latitude === null || form.longitude === null ? ['location' as const] : []),
-    ...(form.slug.trim() === '' || !SLUG.test(form.slug) ? ['slug' as const] : []),
   ]
 }
 
-/** A pin that has been live (published or hidden) keeps its web addresses public, so they are renamed only by a save. */
-export const hasBeenLive = (pin: Pin | undefined) => pin !== undefined && pin.status !== 'draft'
-
-/** The languages that carry a title in the form. */
-export function titleLanguages(form: PlaceForm): Lang[] {
-  return LANGS.filter(lang => (lang === 'en' ? form.titleEn : form.titleDe).trim() !== '')
-}
-
-/**
- * The write of the whole form. A save is a PATCH where a list replaces and null clears, so every field is sent.
- * The slug follows the title: one web address text, kept for each language that has a title. A pin that was live
- * keeps the languages of its stored slug, and a language its draft adds gets its slug at publish (`publishBodyOf`).
- */
-function slugWrite(form: PlaceForm, slugText: string, pin: Pin | undefined): Pick<PinWriteBody, 'slug'> {
-  if (hasBeenLive(pin)) {
-    const stored = LANGS.filter(lang => pin?.slug?.[lang] !== undefined)
-
-    return slugText !== '' && slugText !== slugOfPin(pin!) && stored.length > 0 ? { slug: Object.fromEntries(stored.map(lang => [lang, slugText])) } : {}
-  }
-  if (slugText === '')
-    return { slug: null }
-  const languages = titleLanguages(form)
-
-  return { slug: Object.fromEntries((languages.length > 0 ? languages : ['en']).map(lang => [lang, slugText])) }
-}
-
-export function bodyOf(form: PlaceForm, pin?: Pin): PinWriteBody {
-  const slugText = form.slug.trim()
-
+/** The write of the whole form. A save is a PATCH where a list replaces and null clears, so every field is sent. The map link (slug) is never sent: the server makes it. */
+export function bodyOf(form: PlaceForm): PinWriteBody {
   return {
     title: trimmed(form.titleEn, form.titleDe),
     tip: trimmed(form.tipEn, form.tipDe),
-    localTip: trimmed(form.localTipEn, form.localTipDe),
-    ...slugWrite(form, slugText, pin),
     latitude: form.latitude,
     longitude: form.longitude,
     address: form.address.trim() === '' ? null : form.address.trim(),
+    mapsLink: form.mapsLink.trim() === '' ? null : form.mapsLink.trim(),
     weeklyHours: form.hours.map(({ day, opens, closes }) => ({ day, opens, closes })),
     stayTag: form.stayTag,
     interests: form.interests as NonNullable<PinWriteBody['interests']>,
-    serviceType: form.serviceType,
     mustVisit: form.mustVisit,
-    foodKind: form.foodKind,
     coverMediaId: form.coverMediaId,
-    coverAlt: form.coverMediaId ? trimmed(form.coverAltEn, form.coverAltDe) : {},
-    photos: form.photos.map(photo => ({ mediaId: photo.mediaId, alt: trimmed(photo.altEn, photo.altDe) })),
+    photos: form.photos.map(photo => ({ mediaId: photo.mediaId })),
     outboundUrl: form.outboundUrl.trim() === '' ? null : form.outboundUrl.trim(),
     mainStoryGroupId: form.mainStoryGroupId,
     categoryIds: form.categoryIds,
@@ -272,14 +209,6 @@ export function bodyOf(form: PlaceForm, pin?: Pin): PinWriteBody {
       endTime: date.kind === 'day' && date.endTime !== '' ? date.endTime : null,
     })),
   }
-}
-
-/** The slug a publish adds: for each title language of a live pin that has no stored web address yet. */
-export function publishBodyOf(form: PlaceForm, pin: Pin | undefined): PinPublishBody {
-  const slugText = form.slug.trim()
-  const added = hasBeenLive(pin) ? titleLanguages(form).filter(lang => pin?.slug?.[lang] === undefined) : []
-
-  return added.length > 0 && slugText !== '' ? { slug: Object.fromEntries(added.map(lang => [lang, slugText])) } : {}
 }
 
 /** True while the form differs from the pin as it was opened (or from an empty form for a new pin). */

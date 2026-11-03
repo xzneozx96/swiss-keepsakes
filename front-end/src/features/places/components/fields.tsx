@@ -1,17 +1,15 @@
-import type { ReactNode } from 'react'
 import type { MessageKey } from '@/i18n/en'
 
-import { Description, FieldError, Input, Label, TextArea, TextField } from '@heroui/react'
+import { Description, FieldError, Input, Label, TextArea, TextField, TimeField } from '@heroui/react'
 
 import { useLocale } from '@/contexts/locale-context'
-
-/** The same choice card as the other merchant screens: an ink frame when selected. */
-export const choiceCard
-  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
+import { textOf, timeOf } from '../lib/time-text'
 
 /** One text field: its label, an optional help line, and the error under it in words. */
-export function Field({ label, value, onChange, lang, description, error, rows, maxLength, placeholder, inputMode, type, className }: {
+export function Field({ label, hiddenPrefix, value, onChange, lang, description, error, rows, maxLength, placeholder, inputMode, type, className }: {
   label: string
+  /** Words only a screen reader hears before the label, such as the weekday of a card whose title already shows it. */
+  hiddenPrefix?: string
   value: string
   onChange: (value: string) => void
   /** The language of the text, for screen readers and hyphenation. */
@@ -30,7 +28,10 @@ export function Field({ label, value, onChange, lang, description, error, rows, 
 
   return (
     <TextField fullWidth className={className} isInvalid={error !== undefined} maxLength={maxLength} type={type} value={value} onChange={onChange}>
-      <Label>{label}</Label>
+      <Label>
+        {hiddenPrefix && <span className="sr-only">{`${hiddenPrefix} · `}</span>}
+        {label}
+      </Label>
       {rows
         ? <TextArea lang={lang} placeholder={placeholder} rows={rows} />
         : <Input inputMode={inputMode} lang={lang} placeholder={placeholder} />}
@@ -40,15 +41,34 @@ export function Field({ label, value, onChange, lang, description, error, rows, 
   )
 }
 
-/** A block of the step: a heading, what it is for, then the fields. */
-export function Block({ title, hint, children }: { title: string, hint?: string, children: ReactNode }) {
+/**
+ * A 24-hour time field: type the digits and the colon is placed. The value is `HH:mm` text, empty while no time is set.
+ * `compact` is for a row that already shows what the time is for: the label is read aloud, not drawn, and the error is
+ * left to the row, which shows it once for all its fields.
+ */
+export function TimeInput({ label, value, onChange, description, error, closing, compact, className }: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  description?: string
+  error?: MessageKey
+  /** A closing time: 00:00 means midnight and is kept as `24:00`. */
+  closing?: boolean
+  compact?: boolean
+  className?: string
+}) {
+  const { t } = useLocale()
+
   return (
-    <section className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1">
-        <h3 className="font-semibold">{title}</h3>
-        {hint && <p className="text-sm text-pretty text-muted">{hint}</p>}
-      </div>
-      {children}
-    </section>
+    <TimeField fullWidth className={className} hourCycle={24} isInvalid={error !== undefined} shouldForceLeadingZeros value={timeOf(value, closing)} onChange={time => onChange(textOf(time, closing))}>
+      <Label className={compact ? 'sr-only' : undefined}>{label}</Label>
+      <TimeField.Group>
+        <TimeField.Input>
+          {segment => <TimeField.Segment segment={segment} />}
+        </TimeField.Input>
+      </TimeField.Group>
+      {description && !error && <Description>{description}</Description>}
+      {error && !compact && <FieldError>{t(error)}</FieldError>}
+    </TimeField>
   )
 }

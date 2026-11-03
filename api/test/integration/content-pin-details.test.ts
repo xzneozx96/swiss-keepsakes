@@ -83,22 +83,21 @@ describe('[E4.2][AC41] migration 0010: five interests in the database', () => {
 })
 
 describe('[E4.2][AC68] migration 0010: the pin columns and the photo table', () => {
-  it.each([
-    ['service_type', 'toilets', 'wifi', 'places_service_type_check'],
-    ['food_kind', 'cafe-bakery', 'cafe', 'places_food_kind_check'],
-  ])('[E4.2][AC68] %s takes its codes and refuses %s', async (column, good, bad, constraint) => {
+  it('[T-009b][AC3] the service and food columns of the place are gone (0016), and a map category has no icon column (0018) and keeps the home switch', async () => {
     const store = randomUUID()
 
-    await pool.query(`insert into content.places (store_id, ${column}) values ($1, $2)`, [store, good])
-    expect((await failure(pool.query(`insert into content.places (store_id, ${column}) values ($1, $2)`, [store, bad]))).constraint).toBe(constraint)
-    expect(await count(pool, `select count(*) from content.places where store_id = $1 and ${column} is null`, [store])).toBe(0)
+    expect(await count(pool, `select count(*) from information_schema.columns where table_schema = 'content' and table_name = 'places' and column_name in ('service_type', 'food_kind')`)).toBe(0)
+    expect(await count(pool, `select count(*) from information_schema.columns where table_schema = 'content' and table_name = 'map_categories' and column_name = 'icon'`)).toBe(0)
+    await pool.query(`insert into content.map_categories (store_id, name, slug) values ($1, '{"en":"X"}', 'x')`, [store])
+    const { rows } = await pool.query<{ show_on_home: boolean }>(`select show_on_home from content.map_categories where store_id = $1 limit 1`, [store])
+    expect(rows[0]).toEqual({ show_on_home: false })
   })
 
   it('[E4.2][AC68] must_visit defaults to false and the old free flag does not exist', async () => {
     const store = randomUUID()
-    const { rows } = await pool.query<{ must_visit: boolean, service_type: string | null, food_kind: string | null }>('insert into content.places (store_id) values ($1) returning must_visit, service_type, food_kind', [store])
+    const { rows } = await pool.query<{ must_visit: boolean }>('insert into content.places (store_id) values ($1) returning must_visit', [store])
 
-    expect(rows[0]).toEqual({ must_visit: false, service_type: null, food_kind: null })
+    expect(rows[0]).toEqual({ must_visit: false })
     expect(await count(pool, `select count(*) from information_schema.columns where table_schema = 'content' and table_name = 'places' and column_name = 'free'`)).toBe(0)
   })
 
@@ -161,10 +160,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
       tip: { en: 'Drinking water' },
       localTip: { en: 'Bring a bottle', de: 'Flasche mitbringen' },
       ...located,
-      slug: { en: slugFor(), de: slugFor() },
-      serviceType: 'water',
       mustVisit: true,
-      foodKind: 'market',
       interests: ['local-activities', 'food-drink'],
       coverMediaId: cover,
       coverAlt: { en: 'The fountain', de: 'Der Brunnen' },
@@ -178,9 +174,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     expect(await read.json()).toMatchObject({
       id: pin.id,
       storeId: staff.storeId,
-      serviceType: 'water',
       mustVisit: true,
-      foodKind: 'market',
       interests: ['local-activities', 'food-drink'],
       coverMediaId: cover,
       photos: [{ mediaId: extra }],
@@ -196,6 +190,30 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     const list = await env.call(staff.pins, { headers: staff.owner.headers })
     expect(list.status).toBe(200)
     expect(await list.json()).toMatchObject({ items: [{ id: pin.id, status: 'draft', title: { en: 'Tap on Weinmarkt' }, located: true, hasDates: false, nextDate: null, interests: ['local-activities', 'food-drink'], coverMediaId: cover, mainStory: null }] })
+    const { items } = await (await env.call(staff.pins, { headers: staff.owner.headers })).json() as { items: { cover: { id: string, status: string, publicUrl: string | null } | null }[] }
+    expect(items[0]!.cover).toMatchObject({ id: cover, status: 'ready', publicUrl: expect.stringMatching(/^https:\/\/storage\.test\/media\//) })
+  })
+
+  it('[T-011] the list carries the ready cover of each pin in the same read, and null for no cover, a file still processing and a retired file', async () => {
+    const staff = await env.storeWithStaff()
+    const readyCover = await image(staff.storeId)
+    const withCover = await create(staff, { title: { en: 'With cover' }, ...located, coverMediaId: readyCover })
+    const without = await create(staff, { title: { en: 'Without' }, ...located })
+    const processing = await create(staff, { title: { en: 'Processing' }, ...located })
+    const retired = await create(staff, { title: { en: 'Retired' }, ...located })
+    const processingFile = await image(staff.storeId, 'processing')
+    const retiredFile = await image(staff.storeId)
+    await pool.query(`update content.media set status = 'retired', retired_at = now() where id = $1`, [retiredFile])
+    await pool.query(`update content.places set cover_media_id = $2 where id = $1`, [processing.id, processingFile])
+    await pool.query(`update content.places set cover_media_id = $2 where id = $1`, [retired.id, retiredFile])
+
+    const { items } = await (await env.call(staff.pins, { headers: staff.owner.headers })).json() as { items: { id: string, coverMediaId: string | null, cover: { id: string } | null }[] }
+    const byId = (id: string) => items.find(item => item.id === id)!
+
+    expect(byId(withCover.id).cover).toMatchObject({ id: readyCover })
+    expect(byId(without.id)).toMatchObject({ coverMediaId: null, cover: null })
+    expect(byId(processing.id)).toMatchObject({ coverMediaId: processingFile, cover: null })
+    expect(byId(retired.id)).toMatchObject({ coverMediaId: retiredFile, cover: null })
   })
 
   it('[E4.2][AC41] five codes are accepted over HTTP, another code answers 400 and writes nothing', async () => {
@@ -207,6 +225,30 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     const bad = await patch(staff, pin.id, 2, { interests: ['nightlife'] })
     expect(bad.status).toBe(400)
     expect(await count(pool, `select count(*) from content.places where id = $1 and interests = '{history-culture,food-drink,lake-mountains,shopping-keepsakes,local-activities}'`, [pin.id])).toBe(1)
+  })
+
+  it('a stored Google Maps link survives a reload, is replaced and removed by a save, and the database checks its shape', async () => {
+    const staff = await env.storeWithStaff()
+    const link = 'https://maps.app.goo.gl/RiTbLwL8vxFxPzk38'
+    const pin = await create(staff, { title: { en: 'Kapellbrücke' }, latitude: 47.05165, longitude: 8.30496, mapsLink: link })
+    expect(pin).toMatchObject({ mapsLink: link })
+
+    const read = await env.call(`${staff.pins}/${pin.id}`, { headers: staff.owner.headers })
+    expect(await read.json()).toMatchObject({ mapsLink: link })
+    const saved = await patch(staff, pin.id, 1, { address: 'Kapellbrücke 1, 6004 Luzern' })
+    expect(await saved.json()).toMatchObject({ mapsLink: link })
+
+    for (const url of ['https://evil.example/maps/place', 'http://maps.app.goo.gl/abc', 'https://www.google.com/maps with space'])
+      expect((await patch(staff, pin.id, 2, { mapsLink: url })).status).toBe(400)
+    const removed = await patch(staff, pin.id, 2, { mapsLink: null })
+    expect(await removed.json()).toMatchObject({ mapsLink: null })
+
+    const store = randomUUID()
+    const insert = (url: string) => pool.query('insert into content.places (store_id, maps_link) values ($1, $2)', [store, url])
+    await insert('https://www.google.com/maps?q=47.05,8.3')
+    expect((await failure(insert('http://www.google.com/maps'))).constraint).toBe('places_maps_link_check')
+    expect((await failure(insert('https://www.google.com/maps a'))).constraint).toBe('places_maps_link_check')
+    expect((await failure(insert(`https://www.google.com/maps?q=${'x'.repeat(2000)}`))).constraint).toBe('places_maps_link_check')
   })
 
   it('[E4.2][AC63] changing the outbound link changes what the pin shows, once, and removing it clears it', async () => {
@@ -247,7 +289,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     expect(await count(pool, 'select count(*) from content.media where id = any($1::uuid[])', [[a, b, c]])).toBe(3)
   })
 
-  it('[E4.2][AC68] an unknown service type, food kind or flag type answers 400', async () => {
+  it('[E4.2][AC68] the removed service type and food kind, and a wrong flag type, answer 400', async () => {
     const staff = await env.storeWithStaff()
     const pin = await create(staff, { title: { en: 'X' } })
 
@@ -257,7 +299,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
 
   it('[E4.2][AC68] the local tip goes live on publish with the title, and a later edit stays a draft', async () => {
     const staff = await env.storeWithStaff()
-    const pin = await create(staff, { title: { en: 'Chapel Bridge' }, localTip: { en: 'Go at sunrise' }, ...located, slug: { en: slugFor() } })
+    const pin = await create(staff, { title: { en: 'Chapel Bridge' }, localTip: { en: 'Go at sunrise' }, ...located })
 
     const published = await env.call(`${staff.pins}/${pin.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
     expect(published.status).toBe(200)
@@ -272,7 +314,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
   it('[E4.2][AC68] alt text is text: an edit on a published pin stays in the draft until publish, and the photo list itself is live (ADR-014)', async () => {
     const staff = await env.storeWithStaff()
     const [cover, extra] = [await image(staff.storeId), await image(staff.storeId)]
-    const pin = await create(staff, { title: { en: 'Chapel Bridge' }, ...located, slug: { en: slugFor() }, coverMediaId: cover, coverAlt: { en: 'Old cover' }, photos: [{ mediaId: extra, alt: { en: 'Old photo' } }] })
+    const pin = await create(staff, { title: { en: 'Chapel Bridge' }, ...located, coverMediaId: cover, coverAlt: { en: 'Old cover' }, photos: [{ mediaId: extra, alt: { en: 'Old photo' } }] })
     const published = await env.call(`${staff.pins}/${pin.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
     expect(await published.json()).toMatchObject({ draft: null, published: { coverAlt: { en: 'Old cover' }, photoAlt: { [extra]: { en: 'Old photo' } } } })
 
@@ -290,7 +332,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
   it('[E4.2][AC68] a pin whose main or extra photo is still processing is not published, and is once the file is ready', async () => {
     const staff = await env.storeWithStaff()
     const [cover, extra] = [await image(staff.storeId), await image(staff.storeId, 'processing')]
-    const pin = await create(staff, { title: { en: 'Chapel Bridge' }, ...located, slug: { en: slugFor() }, coverMediaId: cover, photos: [{ mediaId: extra }] })
+    const pin = await create(staff, { title: { en: 'Chapel Bridge' }, ...located, coverMediaId: cover, photos: [{ mediaId: extra }] })
     const publish = () => env.call(`${staff.pins}/${pin.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
 
     const refused = await publish()
@@ -304,7 +346,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
 
   it('[E4.2][AC85] a pin with no story and no category publishes and lists with no main story', async () => {
     const staff = await env.storeWithStaff()
-    const pin = await create(staff, { title: { de: 'Löwendenkmal' }, ...located, slug: { de: slugFor() } })
+    const pin = await create(staff, { title: { de: 'Löwendenkmal' }, ...located })
 
     const published = await env.call(`${staff.pins}/${pin.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
 
@@ -315,8 +357,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
 
   it.each([
     ['no location', { title: { en: 'A' } }, 'location'],
-    ['no slug', { title: { en: 'A' }, ...located }, 'slug'],
-    ['no title', { ...located, slug: { en: 'x' } }, 'title'],
+    ['no title', { ...located }, 'title'],
   ])('[E4.2][AC68] publish with %s is refused and names the gap', async (_what, body, gap) => {
     const staff = await env.storeWithStaff()
     const pin = await create(staff, body)
@@ -329,8 +370,8 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
 
   it('[E4.2][AC86] a published pin with only past dates lists as ended, one with a date ahead lists as published with its next date', async () => {
     const staff = await env.storeWithStaff()
-    const past = await create(staff, { title: { en: 'Old fair' }, ...located, slug: { en: slugFor() }, dates: [{ firstDay: '2026-01-01', lastDay: '2026-01-03' }] })
-    const ahead = await create(staff, { title: { en: 'Blues festival' }, ...located, slug: { en: slugFor() }, dates: [{ firstDay: '2090-11-09', lastDay: '2090-11-14' }] })
+    const past = await create(staff, { title: { en: 'Old fair' }, ...located, dates: [{ firstDay: '2026-01-01', lastDay: '2026-01-03' }] })
+    const ahead = await create(staff, { title: { en: 'Blues festival' }, ...located, dates: [{ firstDay: '2090-11-09', lastDay: '2090-11-14' }] })
     for (const pin of [past, ahead])
       expect((await env.call(`${staff.pins}/${pin.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })).status).toBe(200)
 
@@ -348,16 +389,18 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     expect((await failure(pool.query(`insert into content.place_dates (place_id, store_id, first_day, last_day, start_time, end_time) values ($1, $2, '2026-11-14', '2026-11-14', '22:00', '00:30')`, [pin.id, staff.storeId]))).constraint).toBe('place_dates_end_after_start_check')
   })
 
-  it('[E4.2][AC79] a draft is deleted, a published pin is refused and can be hidden, then shown again', async () => {
+  // Amended 2026-11-02 (owner, AC79): a published pin that nothing uses is deleted; hiding and showing again still work.
+  it('[E4.2][AC79] a draft and an unused published pin are deleted, and a published pin can be hidden, then shown again', async () => {
     const staff = await env.storeWithStaff()
     const draft = await create(staff, { title: { en: 'Draft' } })
-    const live = await create(staff, { title: { en: 'Live' }, ...located, slug: { en: slugFor() } })
+    const live = await create(staff, { title: { en: 'Live' }, ...located })
+    const gone = await create(staff, { title: { en: 'Gone' }, ...located })
 
     expect((await env.call(`${staff.pins}/${draft.id}`, { method: 'DELETE', headers: { ...staff.owner.headers, 'If-Match': '1' } })).status).toBe(204)
+    expect((await env.call(`${staff.pins}/${gone.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })).status).toBe(200)
+    expect((await env.call(`${staff.pins}/${gone.id}`, { method: 'DELETE', headers: { ...staff.owner.headers, 'If-Match': '2' } })).status).toBe(204)
+    expect(await count(pool, 'select count(*) from content.places where id = $1', [gone.id])).toBe(0)
     expect((await env.call(`${staff.pins}/${live.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })).status).toBe(200)
-    const refused = await env.call(`${staff.pins}/${live.id}`, { method: 'DELETE', headers: { ...staff.owner.headers, 'If-Match': '2' } })
-    expect(refused.status).toBe(409)
-    expect(await count(pool, 'select count(*) from content.places where id = $1', [live.id])).toBe(1)
 
     const hidden = await env.call(`${staff.pins}/${live.id}/hide`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '2' } })
     expect(await hidden.json()).toMatchObject({ status: 'hidden' })
@@ -389,7 +432,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
 
     const options = await env.call(`${staff.pins}/story-options`, { headers: staff.owner.headers })
     expect(options.status).toBe(200)
-    expect(await options.json()).toEqual({ items: [{ groupId: group, kind: 'story', title: { en: 'The bridge', de: 'Die Brücke' }, publishedLanguages: ['en'] }] })
+    expect(await options.json()).toEqual({ items: [{ groupId: group, kind: 'story', title: { en: 'The bridge', de: 'Die Brücke' }, languages: { en: 'published', de: 'draft' }, publishedLanguages: ['en'] }] })
 
     const pin = await create(staff, { title: { en: 'Chapel Bridge' }, mainStoryGroupId: group })
     expect(await (await env.call(staff.pins, { headers: staff.owner.headers })).json()).toMatchObject({ items: [{ id: pin.id, mainStory: { groupId: group, published: true } }] })
@@ -400,5 +443,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     const warned = await create(staff, { title: { en: 'Lion Monument' }, mainStoryGroupId: unpublished })
     const list = await (await env.call(staff.pins, { headers: staff.owner.headers })).json() as { items: { id: string, mainStory: object | null }[] }
     expect(list.items.find(item => item.id === warned.id)?.mainStory).toEqual({ groupId: unpublished, published: false })
+    const after = await (await env.call(`${staff.pins}/story-options`, { headers: staff.owner.headers })).json() as { items: { groupId: string, languages: object, publishedLanguages: string[] }[] }
+    expect(after.items.find(item => item.groupId === unpublished)).toMatchObject({ languages: { en: 'draft', de: 'none' }, publishedLanguages: [] })
   })
 })

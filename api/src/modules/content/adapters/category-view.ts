@@ -8,6 +8,7 @@ export function categoryView(row: CategoryRow): MerchantCategory {
     slug: row.slug,
     name: { en: row.name.en ?? null, de: row.name.de ?? null },
     parentId: row.parentId,
+    showOnHome: row.showOnHome,
     position: row.position,
     childCount: row.childCount,
     useCount: row.useCount,

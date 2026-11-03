@@ -1,3 +1,4 @@
+import type { SalesDirectory } from '../../src/modules/catalog/ports.ts'
 import type { Tx } from '../../src/platform/db/client.ts'
 import type { openTestDatabase } from './support.ts'
 import { randomUUID } from 'node:crypto'
@@ -5,7 +6,8 @@ import { guardUseCases } from '../../src/modules/catalog/adapters/database-error
 import { createMediaDirectory } from '../../src/modules/catalog/adapters/media-directory.ts'
 import { createProductRepository } from '../../src/modules/catalog/adapters/product-repository.ts'
 import { registerCatalogRoutes } from '../../src/modules/catalog/adapters/routes.ts'
-import { makeCreateProduct, makeCreateVariant, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
+import { makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
+import { createKeepsakeLinks } from '../../src/modules/content/adapters/keepsake-links.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
 import { mediaView } from '../../src/modules/content/adapters/media-view.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
@@ -33,7 +35,7 @@ const secret = 'test-only-secret-0123456789-abcdefghij'
 const randomIp = () => `198.51.${Math.floor(Math.random() * 250) + 1}.${Math.floor(Math.random() * 250) + 1}`
 
 // `slugsTaken` replaces the slug read, so a test can make two publishes read the same slug as free (the race).
-export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDatabase>, options: { slugsTaken?: () => Set<string> } = {}) {
+export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDatabase>, options: { slugsTaken?: () => Set<string>, sales?: SalesDirectory<Tx> } = {}) {
   const codes = new Map<string, string>()
   const uow = createUnitOfWork(db)
   const auth = createAuth({
@@ -53,6 +55,9 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
     media: createMediaDirectory({ findById: (tx: Tx, storeId: string, id: string) => contentMedia.findById(tx, storeId, id), view: row => mediaView(row, storage.publicUrl) }),
     audit: createAuditLog(systemClock),
     clock: systemClock,
+    keepsakeLinks: createKeepsakeLinks(),
+    // The orders module is not built: a test names the sold keepsakes itself.
+    ...(options.sales && { sales: options.sales }),
   }
   const useCases = guardUseCases({
     listProducts: makeListProducts(deps),
@@ -61,7 +66,9 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
     saveProduct: makeSaveProduct(deps),
     publishProduct: makePublishProduct(deps),
     unpublishProduct: makeUnpublishProduct(deps),
+    deleteProduct: makeDeleteProduct(deps),
     saveVariant: makeSaveVariant(deps),
+    saveVariants: makeSaveVariants(deps),
     saveOptions: makeSaveOptions(deps),
     createVariant: makeCreateVariant(deps),
   })

@@ -68,6 +68,8 @@ export interface Pin {
   photos: string[]
   alt?: Text
   address?: string
+  /** The Google Maps link the merchant stored for the place (the business card). "Open in Google Maps" opens it; without one, the position. */
+  mapsLink?: string
   categories: string[]
   stay?: Stay
   interests: Interest[]
@@ -301,6 +303,7 @@ export function toGuestPin(pin: MerchantPin): Pin | undefined {
     photos: pin.photo ? [pin.photo, ...pin.morePhotos] : pin.morePhotos,
     alt: textOf(pin.alt),
     address: pin.address.trim() || undefined,
+    mapsLink: pin.mapsLink,
     categories: pin.categories,
     stay: stayOf[pin.stay],
     interests: pin.interests,
@@ -560,6 +563,11 @@ export function factLine(pin: Pin, language: Language) {
  */
 export function googleMapsUrl([lng, lat]: LngLat) {
   return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+}
+
+/** Where "Open in Google Maps" goes for a place: the link the merchant stored (the business card), else its position. */
+export function directionsUrl(pin: Pick<Pin, 'coordinates' | 'mapsLink'>) {
+  return pin.mapsLink || googleMapsUrl(pin.coordinates)
 }
 
 // ---------------------------------------------------------------- content cases for the card

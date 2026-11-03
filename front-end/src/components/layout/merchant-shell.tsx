@@ -36,11 +36,10 @@ export type MerchantSection
     | 'reports'
     | 'settings'
 
-/** A page listed under its group in the sidebar. `exact: false` keeps it active on its tabs and detail screens. */
+/** A page listed under its group in the sidebar; it stays active on its own detail screens (see `activePageOf`). */
 interface NavPage {
   label: MessageKey
   to: LinkProps['to']
-  exact?: boolean
 }
 
 interface NavItem {
@@ -85,8 +84,8 @@ const sidebarItems: NavItem[] = [
     icon: OrdersIcon,
     paths: ['/store/orders', '/store/calendar'],
     pages: [
-      { label: 'nav.orders', to: '/store/orders', exact: false },
-      { label: 'nav.calendar', to: '/store/calendar', exact: false },
+      { label: 'nav.orders', to: '/store/orders' },
+      { label: 'nav.calendar', to: '/store/calendar' },
     ],
   },
   {
@@ -110,7 +109,7 @@ const sidebarItems: NavItem[] = [
     paths: ['/store/content', '/store/requests'],
     pages: [
       ...contentPages.filter(page => page.to !== '/store/content/analytics'),
-      { label: 'nav.requests', to: '/store/requests', exact: false },
+      { label: 'nav.requests', to: '/store/requests' },
       ...contentPages.filter(page => page.to === '/store/content/analytics'),
     ],
   },
@@ -193,6 +192,28 @@ function isUnder(pathname: string, base: string) {
     : pathname === base || pathname.startsWith(`${base}/`)
 }
 
+/**
+ * The page of a group that is open: the one whose path is the longest match for the URL, so a page
+ * stays active on its own detail and editor screens (Places on /store/content/places/:id, Partners
+ * on /store/partners/:id) while a shorter sibling (Articles at /store/content) yields to it.
+ */
+function activePageOf(pathname: string, pages: NavPage[]) {
+  let best: NavPage | undefined
+
+  for (const page of pages) {
+    const base = String(page.to)
+
+    if (
+      isUnder(pathname, base)
+      && (!best || base.length > String(best.to).length)
+    ) {
+      best = page
+    }
+  }
+
+  return best
+}
+
 function isInside(pathname: string, item: NavItem) {
   return item.paths.some(base => isUnder(pathname, base))
 }
@@ -257,7 +278,11 @@ const tabLink
  * Merchant dashboard frame (UX spec §3.2). Phones: bottom navigation with Dashboard,
  * Operations, Calendar and More (a sheet with the other sections). From 1024px: a sidebar.
  */
-export function MerchantShell({ children }: { children: React.ReactNode }) {
+export function MerchantShell({ children, notice }: {
+  children: React.ReactNode
+  /** A notice for every page of the area (the store-setup warning): the very top of the content column, above the phone bar. */
+  notice?: React.ReactNode
+}) {
   const { language, t } = useLocale()
   const { setRole } = useDemoActions()
   const demoRole = useDemoSelector(s => s.role)
@@ -346,8 +371,15 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
                         {pages.map(page => (
                           <li key={page.label}>
                             <Link
-                              activeOptions={{ exact: page.exact ?? true }}
+                              // The router only knows the exact path; the detail screens are
+                              // marked through inactiveProps (see activePageOf).
+                              activeOptions={{ exact: true }}
                               className={subLink}
+                              inactiveProps={
+                                page === activePageOf(pathname, pages)
+                                  ? { 'data-status': 'active' }
+                                  : undefined
+                              }
                               to={page.to}
                             >
                               {t(page.label)}
@@ -393,10 +425,21 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="group/content flex min-w-0 flex-1 flex-col">
+        {/* The page notice sits above everything, the phone bar included; it scrolls away on phones (the
+            bar pins to the top) and sticks on desktop. It takes the width and padding of the main column;
+            a notice brings its own vertical padding, so the main column drops its top padding below it. */}
+        <div
+          data-merchant-notice=""
+          className="mx-auto w-full max-w-6xl bg-background px-4 empty:hidden lg:sticky lg:top-0 lg:z-10 lg:px-8"
+        >
+          {notice}
+        </div>
+
         {/* Phones: no shop header. Detail screens dock their ← title bar here (guest pattern). */}
         <div
           ref={setBarSlot}
+          data-merchant-bar-slot=""
           className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl empty:hidden lg:hidden"
         />
 
@@ -405,7 +448,7 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
           className={
             pathname === '/store/calendar'
               ? 'flex w-full flex-1 flex-col'
-              : 'mx-auto w-full max-w-5xl flex-1 px-4 pt-4 pb-24 lg:px-8 lg:pt-8 lg:pb-8'
+              : 'mx-auto w-full max-w-6xl flex-1 px-4 pt-4 pb-24 group-has-[[data-merchant-notice]:not(:empty)]/content:lg:pt-0 lg:px-8 lg:pt-8 lg:pb-8'
           }
         >
           <MerchantBarSlotContext value={barSlot}>{children}</MerchantBarSlotContext>

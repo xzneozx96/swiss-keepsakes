@@ -92,6 +92,62 @@
       "when": 1793305430958,
       "tag": "0012_media_name",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793534406697,
+      "tag": "0013_media_sha256_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793548957616,
+      "tag": "0014_keepsake_description_rich",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1793592553729,
+      "tag": "0015_place_maps_link",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793596153729,
+      "tag": "0016_map_category_icons",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793682553729,
+      "tag": "0017_keepsake_optional_sku_variant_photo",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793768953729,
+      "tag": "0018_drop_map_category_icon",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793855353729,
+      "tag": "0019_weekly_hours_cross_midnight",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793941753729,
+      "tag": "0020_pin_delete_if_unused",
+      "breakpoints": true
     }
   ]
 }
