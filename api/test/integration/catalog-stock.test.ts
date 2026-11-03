@@ -183,6 +183,27 @@ describe('[E6.3][AC05][AC53] stock figures in the catalog', () => {
     expect(list.items.find(item => item.id === product.id)!.soldOutCount).toBe(1)
   })
 
+  it('[E6.3][AC05][AC53][E6.3c-AC-6] an archived variant keeps its stock and history, and putting it back is refused without touching them', async () => {
+    const s = await setup()
+    const product = await (await s.create([{ skuCode: code(), priceRappen: 3900, values: { size: 's' }, quantity: 6 }, { skuCode: code(), priceRappen: 3900, values: { size: 'l' } }])).json() as Product
+    const [kept] = product.variants
+    const variantPath = `${s.products}/${product.id}/variants/${kept!.id}`
+    const archive = await env.call(variantPath, { method: 'PATCH', headers: s.owner.headers, body: { status: 'archived' } })
+    const afterArchive = { stock: await s.stockOf(kept!.id), history: await s.history(kept!.id) }
+    // Restoring has no rule (an archived variant can't be put back on sale), so hidden is refused too.
+    const restore = await env.call(variantPath, { method: 'PATCH', headers: s.owner.headers, body: { status: 'draft' } })
+    const problem = JSON.stringify(await restore.json())
+
+    expect(archive.status).toBe(200)
+    expect(afterArchive.stock).toEqual([{ on_hand: 6, held: 0 }])
+    expect(afterArchive.history).toHaveLength(1)
+    expect(restore.status).toBeGreaterThanOrEqual(400)
+    expect(problem).toContain('variant-archived')
+    expect(await s.stockOf(kept!.id)).toEqual(afterArchive.stock)
+    expect(await s.history(kept!.id)).toEqual(afterArchive.history)
+    expect((await s.get(product.id)).variants.find(variant => variant.id === kept!.id)).toMatchObject({ status: 'archived', onHand: 6 })
+  })
+
   it('[E6.3][AC05][AC53] archiving a variant with a held unit is refused as variant-reserved', async () => {
     const s = await setup()
     const product = await (await s.create([{ skuCode: code(), priceRappen: 3900, values: { size: 's' }, quantity: 4 }, { skuCode: code(), priceRappen: 3900, values: { size: 'l' } }])).json() as Product

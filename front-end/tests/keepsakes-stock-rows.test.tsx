@@ -150,14 +150,18 @@ describe(`${tag} the quantity box of a variant row`, () => {
     expect(writes()).toHaveLength(0)
   })
 
-  it(`${tag} AC-6 an archived variant has no box and nothing is written for it, the live rows keep theirs`, async () => {
+  it(`${tag} AC-6 an archived variant has no box and nothing is written for it, a live row's edit writes only that row`, async () => {
     await openWith([{ onHand: 6 }, { onHand: 4 }, { onHand: 3, status: 'archived' }])
 
     expect(screen.getAllByRole('textbox', { name: /^In stock/ })).toHaveLength(2)
     expect(screen.queryByRole('textbox', { name: 'In stock, Large' })).not.toBeInTheDocument()
     expect(writes()).toHaveLength(0)
-    // The archived variant keeps the stock it had on the keepsake, as the API holds it.
-    expect(current.variants.find(variant => variant.id === id(0xA2))).toMatchObject({ status: 'archived', onHand: 3 })
+
+    await typeInto(boxOf('Small'), '8')
+
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes().map(call => call.path)).toEqual([`${stock}/${id(0xA0)}`])
+    expect(boxOf('Medium')).toHaveValue('4')
   })
 
   it(`${tag} AC-2 a saved keepsake with 6 in stock that gets the option Size with Small and Large shows 6 in both rows`, async () => {
