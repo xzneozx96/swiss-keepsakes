@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import { draftOf, fieldsOf, otherCover, startDraft } from '@/features/stories/lib/draft'
 import { blockingGaps } from '@/features/stories/lib/gaps'
+import { storyProblemKey } from '@/features/stories/lib/problems'
 import { storySearch } from '@/features/stories/lib/search-params'
 import { versionStateOf } from '@/features/stories/lib/version-state'
 
@@ -78,5 +79,13 @@ describe('[E4.3][AC30][AC45] story editor rules', () => {
     const open = version()
 
     expect(blockingGaps(group({ en: open }), open, fieldsOf(open)).sort()).toEqual(['coverMediaId', 'excerpt', 'slug', 'title'])
+  })
+
+  it('[E4.3][AC45] storyProblemKey maps precondition-failed to the stale text and an unknown type to the generic one', () => {
+    expect(storyProblemKey('precondition-failed')).toBe('storyEditor.problem.stale')
+    expect(storyProblemKey('media-retired')).toBe('storyEditor.problem.media')
+    expect(storyProblemKey('media-invalid')).toBe('storyEditor.problem.media')
+    expect(storyProblemKey('version-exists')).toBe('storyEditor.problem.versionExists')
+    expect(storyProblemKey('something-new')).toBe('storyEditor.problem.generic')
   })
 })
