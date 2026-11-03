@@ -49,6 +49,9 @@ function point(n: number, over: Record<string, unknown> = {}) {
     archived: false,
     hours: [1, 2, 3, 4, 5, 6].map(weekday => ({ weekday, opens: '10:00', closes: '18:00' })),
     rowVersion: n + 2,
+    mapsLink: 'https://maps.app.goo.gl/abc',
+    latitude: 47.05165,
+    longitude: 8.30754,
     ...over,
   })
 }

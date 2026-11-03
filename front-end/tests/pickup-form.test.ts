@@ -14,9 +14,13 @@ const place: PickupPlace = {
   archived: false,
   hours: [{ weekday: 1, opens: '09:00', closes: '12:00' }, { weekday: 1, opens: '14:00', closes: '18:00' }],
   rowVersion: 3,
+  mapsLink: 'https://www.google.com/maps/place/Shop/@47.05165,8.30754,17z',
+  latitude: 47.05165,
+  longitude: 8.30754,
 }
 
-const filled = () => ({ ...emptyForm(), name: { en: '', de: 'Laden' }, address: { en: '', de: 'Strasse 1' } })
+const link = 'https://maps.app.goo.gl/abc'
+const filled = () => ({ ...emptyForm(), name: { en: '', de: 'Laden' }, address: { en: '', de: 'Strasse 1' }, mapsLink: link })
 
 describe('[E6.6][AC26] pickup form', () => {
   it('maps a place to the form, weekday to day, and blank instructions for null', () => {
@@ -25,6 +29,8 @@ describe('[E6.6][AC26] pickup form', () => {
     expect(form.name).toEqual({ en: 'Shop', de: 'Laden' })
     expect(form.address).toEqual({ en: 'Hertensteinstrasse 1', de: '' })
     expect(form.instructions).toEqual({ en: '', de: '' })
+    expect(form.mapsLink).toBe(place.mapsLink)
+    expect(form.position).toEqual({ lat: 47.05165, lng: 8.30754 })
     expect(form.hours.map(({ day, opens, closes }) => ({ day, opens, closes }))).toEqual([
       { day: 1, opens: '09:00', closes: '12:00' },
       { day: 1, opens: '14:00', closes: '18:00' },
@@ -43,6 +49,7 @@ describe('[E6.6][AC26] pickup form', () => {
       name: { de: 'Laden' },
       address: { de: 'Strasse 1' },
       instructions: {},
+      mapsLink: link,
       hours: [
         { weekday: 2, opens: '14:00', closes: '18:00' },
         { weekday: 1, opens: '22:00', closes: '02:00' },
@@ -59,9 +66,14 @@ describe('[E6.6][AC26] pickup form', () => {
   })
 
   it('needs a name and an address in one language, blank counts as missing', () => {
-    expect(pickupErrors(emptyForm())).toMatchObject({ name: true, address: true, count: 2 })
-    expect(pickupErrors({ ...emptyForm(), name: { en: ' ', de: '' }, address: { en: 'x', de: '' } })).toMatchObject({ name: true, address: false, count: 1 })
-    expect(pickupErrors(filled())).toEqual({ name: false, address: false, hours: {}, count: 0 })
+    expect(pickupErrors(emptyForm())).toMatchObject({ name: true, address: true, mapsLink: true, count: 3 })
+    expect(pickupErrors({ ...emptyForm(), name: { en: ' ', de: '' }, address: { en: 'x', de: '' }, mapsLink: link })).toMatchObject({ name: true, address: false, mapsLink: false, count: 1 })
+    expect(pickupErrors(filled())).toEqual({ name: false, address: false, mapsLink: false, hours: {}, count: 0 })
+  })
+
+  it('needs a Google Maps link, and a blank one counts as missing', () => {
+    expect(pickupErrors({ ...filled(), mapsLink: '' })).toMatchObject({ mapsLink: true, count: 1 })
+    expect(pickupErrors({ ...filled(), mapsLink: '  ' })).toMatchObject({ mapsLink: true, count: 1 })
   })
 
   it('refuses spans through the shared hours rules and counts them', () => {
@@ -74,6 +86,7 @@ describe('[E6.6][AC26] pickup form', () => {
     expect(pickupErrors(form)).toEqual({
       name: false,
       address: false,
+      mapsLink: false,
       hours: { a: 'places.error.hoursSame', b: 'places.error.hoursMissing' },
       count: 2,
     })

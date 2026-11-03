@@ -30,6 +30,9 @@ function place(over: Record<string, unknown> = {}) {
     archived: false,
     hours: [{ weekday: 1, opens: '10:00', closes: '18:00' }],
     rowVersion: 3,
+    mapsLink: 'https://maps.app.goo.gl/abc',
+    latitude: 47.05165,
+    longitude: 8.30754,
     ...over,
   })
 }
@@ -105,7 +108,7 @@ describe('[E6.6][AC26] the pickup point commands', () => {
     const hours = [{ weekday: 1, opens: '22:00', closes: '02:00' }]
 
     await act(async () => {
-      await result.current.create.mutateAsync({ storeId, name: { de: 'Laden' }, address: { de: 'Weg 1' }, hours, idempotencyKey: 'k1' })
+      await result.current.create.mutateAsync({ storeId, name: { de: 'Laden' }, address: { de: 'Weg 1' }, mapsLink: 'https://maps.app.goo.gl/abc', hours, idempotencyKey: 'k1' })
       await result.current.save.mutateAsync({ storeId, id: placeId, ifMatch: 3, hours: [], idempotencyKey: 'k2' })
       await result.current.archive.mutateAsync({ storeId, id: placeId, ifMatch: 4, idempotencyKey: 'k3' })
       await result.current.restore.mutateAsync({ storeId, id: placeId, ifMatch: 5, idempotencyKey: 'k4' })
@@ -114,7 +117,7 @@ describe('[E6.6][AC26] the pickup point commands', () => {
     const base = `/api/store/${storeId}/pickup-places`
 
     expect(calls.filter(c => c.method !== 'GET')).toEqual([
-      { method: 'POST', path: base, key: 'k1', ifMatch: null, body: { name: { de: 'Laden' }, address: { de: 'Weg 1' }, hours } },
+      { method: 'POST', path: base, key: 'k1', ifMatch: null, body: { name: { de: 'Laden' }, address: { de: 'Weg 1' }, mapsLink: 'https://maps.app.goo.gl/abc', hours } },
       { method: 'PATCH', path: `${base}/${placeId}`, key: 'k2', ifMatch: '3', body: { hours: [] } },
       { method: 'POST', path: `${base}/${placeId}/archive`, key: 'k3', ifMatch: '4', body: undefined },
       { method: 'POST', path: `${base}/${placeId}/restore`, key: 'k4', ifMatch: '5', body: undefined },

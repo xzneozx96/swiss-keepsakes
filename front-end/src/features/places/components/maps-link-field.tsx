@@ -36,13 +36,19 @@ function openedState(link: string): State {
  * it points, so "The pin moved since you pasted this link" also shows after a reload: a long link is read in the browser,
  * a short one is followed once by the API when the field opens.
  */
-export function MapsLinkField({ storeId, link, onLink, position, onPosition }: {
+export function MapsLinkField({ storeId, link, onLink, position, onPosition, help = 'places.mapsLink.help', unreadable = 'places.mapsLink.unreadable', error }: {
   storeId: string
   link: string
   onLink: (link: string) => void
   /** Where the pin is now, so the success line goes once the pin is moved some other way. */
   position: { lat: number, lng: number } | null
   onPosition: (position: { lat: number, lng: number }) => void
+  /** The line under the field while nothing is wrong: the place editor's mentions tapping the map, which other screens have no way to do. */
+  help?: MessageKey
+  /** What a link with no readable position says. */
+  unreadable?: MessageKey
+  /** A refusal that belongs to the field but comes from the screen (a link that is required, or one the API refused). Shown in place of the help line. */
+  error?: MessageKey
 }) {
   const { t } = useLocale()
   const resolve = useCommand('places', 'resolveMapsLink', { meta: { silent: true } })
@@ -102,20 +108,20 @@ export function MapsLinkField({ storeId, link, onLink, position, onPosition }: {
           setState({ status: 'moved', lat: found.latitude, lng: found.longitude })
           onPosition({ lat: found.latitude, lng: found.longitude })
         },
-        onError: (error) => {
+        onError: (failure) => {
           if (attempt === attemptRef.current)
-            setState({ status: 'failed', message: error instanceof ApiProblem && error.type === 'maps-link-unreadable' ? 'places.mapsLink.unreadable' : 'places.mapsLink.failed' })
+            setState({ status: 'failed', message: failure instanceof ApiProblem && failure.type === 'maps-link-unreadable' ? unreadable : 'places.mapsLink.failed' })
         },
       })
     }
     else {
-      setState({ status: 'failed', message: 'places.mapsLink.unreadable' })
+      setState({ status: 'failed', message: unreadable })
     }
   }
 
   const moved = state.status === 'moved' && position?.lat === state.lat && position.lng === state.lng
   const pinLeft = (state.status === 'moved' || state.status === 'linked') && movedAway({ lat: state.lat, lng: state.lng }, position)
-  const description = state.status === 'reading' ? t('places.mapsLink.reading') : moved ? t('places.mapsLink.moved') : t('places.mapsLink.help')
+  const description = state.status === 'reading' ? t('places.mapsLink.reading') : moved ? t('places.mapsLink.moved') : t(help)
 
   // The pin is where the person put it: a link to that spot, or no link at all.
   const linkNewPin = () => {
@@ -139,7 +145,7 @@ export function MapsLinkField({ storeId, link, onLink, position, onPosition }: {
 
   return (
     <>
-      <TextField fullWidth isInvalid={state.status === 'failed'} value={value} onChange={setValue}>
+      <TextField fullWidth isInvalid={state.status === 'failed' || error !== undefined} value={value} onChange={setValue}>
         <Label>{t('places.mapsLink.label')}</Label>
         <Input
           inputMode="url"
@@ -158,8 +164,8 @@ export function MapsLinkField({ storeId, link, onLink, position, onPosition }: {
           }}
         />
         <div aria-live="polite">
-          {state.status === 'failed'
-            ? <FieldError>{t(state.message)}</FieldError>
+          {state.status === 'failed' || error !== undefined
+            ? <FieldError>{t(state.status === 'failed' ? state.message : error!)}</FieldError>
             : (
                 <Description className={`flex items-center gap-1.5 ${moved ? 'text-success' : ''}`}>
                   {state.status === 'reading' && <Spinner size="sm" />}

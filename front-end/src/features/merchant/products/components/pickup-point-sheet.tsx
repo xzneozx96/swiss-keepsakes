@@ -13,11 +13,13 @@ import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { useDataClient } from '@/features/data-client'
 import { ApiProblem } from '@/features/data-client/errors'
-import { useSubmit } from '@/features/data-client/use-command'
+import { useCommand, useSubmit } from '@/features/data-client/use-command'
 import { pickupQueries } from '@/features/pickup/api/queries'
+import { PickupMap } from '@/features/pickup/components/pickup-map'
 import { bodyOf, emptyForm, formOf, pickupErrors } from '@/features/pickup/lib/form'
 import { pickupLimitType } from '@/features/pickup/lib/problems'
 import { HoursRows } from '@/features/places/components/hours-rows'
+import { MapsLinkField } from '@/features/places/components/maps-link-field'
 import { useIdempotencyKey } from '@/features/stores/hooks/use-idempotency-key'
 import { LanguageTabs, LocalizedField, useFocusFirstInvalid } from './editor-parts'
 
@@ -56,15 +58,40 @@ export function PickupPointSheet({ storeId, place, onClose }: {
   const create = useSubmit('pickup', 'create', { meta })
   const save = useSubmit('pickup', 'save', { meta })
   const { isPending, error, reset } = place ? save : create
-  const body = bodyOf(form)
+  const addressAt = useCommand('places', 'addressAt', { meta: { silent: true } })
+  // The address the register gave for the link, so a second link may replace it while the merchant has not typed over it.
+  const filledRef = useRef<string | null>(null)
+  const [mapFailed, setMapFailed] = useState(false)
+  const full = bodyOf(form)
+  // A save sends the link only when it changed: the API follows a link on every send, and an unrelated edit must not depend on Google answering.
+  const { mapsLink: sentLink, ...rest } = full
+  const body = place && sentLink === place.mapsLink ? rest : full
   const key = useIdempotencyKey({ storeId, id: place?.id, rowVersion, body })
-  const failureKey = error && !stale
+  const linkRefused = error instanceof ApiProblem && error.type === 'maps-link-unreadable'
+  const failureKey = error && !stale && !linkRefused
     ? (error instanceof ApiProblem ? (error.type === pickupLimitType ? 'pickup.problem.limit' : 'apiFeedback.error.generic') : 'apiFeedback.error.network')
     : undefined
   const errors = pickupErrors(form)
   const missing = missingText([{ id: 'name', text: form.name }, { id: 'meetingPoint', text: form.address }])
 
   useFocusFirstInvalid(bodyRef, attempt)
+
+  /** A link was read: the pin moves, and the address is filled from the register unless the merchant has written one. */
+  const movePin = (position: { lat: number, lng: number }) => {
+    setForm(f => ({ ...f, position }))
+    addressAt.mutate({ storeId, latitude: position.lat, longitude: position.lng }, {
+      onSuccess: ({ formatted }) => {
+        setForm((f) => {
+          const empty = f.address.en === '' && f.address.de === ''
+          const mine = filledRef.current !== null && f.address.en === filledRef.current && f.address.de === filledRef.current
+
+          filledRef.current = formatted
+
+          return empty || mine ? { ...f, address: { en: formatted, de: formatted } } : f
+        })
+      },
+    })
+  }
 
   const edit = (change: Partial<typeof form>) => {
     setForm(f => ({ ...f, ...change }))
@@ -94,7 +121,7 @@ export function PickupPointSheet({ storeId, place, onClose }: {
     if (place && rowVersion !== undefined)
       save.submit({ storeId, id: place.id, ifMatch: rowVersion, ...body, idempotencyKey: key.next() }, callbacks)
     else
-      create.submit({ storeId, ...body, idempotencyKey: key.next() }, callbacks)
+      create.submit({ storeId, ...full, idempotencyKey: key.next() }, callbacks)
   }
 
   /** Reads the point again and puts its saved text in the fields, as the keepsake editor's Reload does. */
@@ -158,6 +185,24 @@ export function PickupPointSheet({ storeId, place, onClose }: {
           </Notice>
         )}
         {failureKey && <Notice status="danger">{t(failureKey)}</Notice>}
+        <section className="flex flex-col gap-3">
+          <h3 className="text-sm font-medium">{t('pickup.location.title')}</h3>
+          <p className="text-xs text-pretty text-muted">{t('pickup.location.help')}</p>
+          <MapsLinkField
+            key={rowVersion ?? 'new'}
+            error={linkRefused ? 'pickup.mapsLink.refused' : tried && errors.mapsLink ? 'pickup.mapsLink.required' : undefined}
+            help="pickup.mapsLink.help"
+            link={form.mapsLink}
+            position={form.position}
+            storeId={storeId}
+            unreadable="pickup.mapsLink.unreadable"
+            onLink={link => edit(link === '' ? { mapsLink: '', position: null } : { mapsLink: link })}
+            onPosition={movePin}
+          />
+          {mapFailed
+            ? <p className="text-sm text-danger" role="alert">{t('pickup.map.failed')}</p>
+            : <PickupMap lat={form.position?.lat ?? null} lng={form.position?.lng ?? null} title={pickText(form.name, uiLanguage).text || undefined} onFailed={() => setMapFailed(true)} />}
+        </section>
         <LanguageTabs missing={missing} selected={language} onChange={setLanguage}>
           {lang => (
             <>
