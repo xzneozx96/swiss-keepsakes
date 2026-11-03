@@ -2,7 +2,6 @@
 -- one table only, the per-day order count PostHog never receives. No account, order, partner, referral, session, address
 -- or exact time. The events table, daily_counts and the roll-up of the earlier design are not created (DM-10).
 -- The function takes the referrer class and segment from the order request, so nothing reads a session.
--- Numbers 0021 and 0022 belong to other tickets. The journal `when` is later than 0022's, because drizzle skips any migration not newer than the last applied one.
 SET lock_timeout = '3s';--> statement-breakpoint
 CREATE SCHEMA analytics;--> statement-breakpoint
 CREATE TABLE analytics.daily_funnels (
