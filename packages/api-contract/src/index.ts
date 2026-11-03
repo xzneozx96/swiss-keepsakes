@@ -53,6 +53,27 @@ export {
   merchantCategorySchema,
 } from './categories.ts'
 export {
+  STOCK_BATCH_MAX,
+  STOCK_MAX,
+  type StockFilter,
+  stockFilterSchema,
+  type StockItem,
+  stockItemSchema,
+  type StockList,
+  stockListQuerySchema,
+  stockListSchema,
+  type StockMany,
+  stockManySchema,
+  type StockManySetBody,
+  stockManySetBodySchema,
+  type StockReservation,
+  stockReservationSchema,
+  type StockRow,
+  stockRowSchema,
+  type StockSetBody,
+  stockSetBodySchema,
+} from './inventory.ts'
+export {
   BODY_LINK_PROTOCOLS,
   BODY_LIST_LEVELS,
   BODY_MARK_TYPES,

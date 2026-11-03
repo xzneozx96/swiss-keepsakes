@@ -1,7 +1,7 @@
 import { Skeleton } from '@heroui/react'
 
 /** What a column's cells hold, so its loading bars take the same shape. */
-export type SkeletonShape = 'line' | 'two-line' | 'lead' | 'chip' | 'action'
+export type SkeletonShape = 'line' | 'two-line' | 'lead' | 'chip' | 'action' | 'field'
 
 export const SKELETON_ROWS = 5
 
@@ -40,6 +40,9 @@ export function SkeletonCell({
       return <Skeleton className="h-6 w-20 rounded-full" />
     case 'action':
       return <Skeleton className="ms-auto size-8 rounded-full" />
+    // An editable field such as the quantity box: its 44px height, as wide as the box.
+    case 'field':
+      return <Skeleton className="h-11 w-40 rounded-xl" />
     default:
       return <Skeleton className={`h-4 rounded-lg ${width}`} />
   }

@@ -7,13 +7,14 @@ import { mayEditCatalog, staffActor } from './access.ts'
 import { fail, ok } from './failure.ts'
 import { checkOptionsSave } from './option-rules.ts'
 import { checkVariantPhotos, describe } from './product-detail.ts'
+import { seedNewSkus } from './seed-stock.ts'
 import { isSkuCode } from './sku-code.ts'
 
 // The options of a keepsake, the new values of its variants and its new variants, saved in one write. A save from an old
 // row version is refused (412), and so is any save that would leave a variant without a value, two variants on one
 // combination, or a value or option that a variant uses deleted (section 7 of the design). A new variant is for sale
 // and takes a combination and, when it has a code, a code that nothing else holds. A refused save changes nothing.
-export function makeSaveOptions<T>({ uow, products, media, audit, clock, sales }: CatalogDeps<T>) {
+export function makeSaveOptions<T>({ uow, products, media, audit, clock, sales, stockLevels, stock }: CatalogDeps<T>) {
   return async (actor: Actor, storeId: string, productId: string, ifMatch: number, input: OptionsSave, requestId: string | null): Promise<Result<ProductDetail>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -43,7 +44,8 @@ export function makeSaveOptions<T>({ uow, products, media, audit, clock, sales }
       const photoRefused = await checkVariantPhotos(media, tx, storeId, input.newVariants.map(variant => variant.mediaId))
       if (photoRefused)
         return fail(photoRefused)
-      const saved = await products.replaceOptions(tx, product, input, clock.now())
+      const { product: saved, createdSkuIds } = await products.replaceOptions(tx, product, input, clock.now())
+      await seedNewSkus(stock, tx, actor, storeId, createdSkuIds, input.newVariants)
       await audit.record(tx, {
         storeId,
         actor: staffActor(actor),
@@ -54,7 +56,7 @@ export function makeSaveOptions<T>({ uow, products, media, audit, clock, sales }
         after: { options: saved.options.length, variants: saved.variants.length, rowVersion: saved.rowVersion },
         requestId,
       })
-      return ok(await describe({ media, sales }, tx, saved))
+      return ok(await describe({ media, sales, stockLevels }, tx, saved))
     })
   }
 }

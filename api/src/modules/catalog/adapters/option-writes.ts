@@ -101,12 +101,10 @@ export async function writeSkuValues(tx: Tx, storeId: string, productId: string,
 
 // Creates variants with their values: one insert for the SKUs, one for all their values. `ids` maps the refs of the
 // request to the ids that `writeOptions` gave, or an existing option or value to itself. A variant may have no code, so the
-// SKUs get their ids here and the values attach by id, not by code.
-export async function writeVariants(tx: Tx, storeId: string, productId: string, variants: VariantInput[], written: WrittenOptions, at: Date): Promise<void> {
+// SKUs get their ids here and the values attach by id, not by code. Returns the new SKU ids in the order of `variants`.
+export async function writeVariants(tx: Tx, storeId: string, productId: string, variants: VariantInput[], written: WrittenOptions, at: Date): Promise<string[]> {
   if (variants.length === 0)
-    return
-  // uuidv7() is time ordered and steps forward within a session, so the SKUs list in the order they were sent (a list
-  // sorts by created_at, which is the same for all of them, then by id).
+    return []
   const generated = await tx.execute<{ id: string }>(sql`select uuidv7() as id from generate_series(1, ${variants.length})`)
   const ids = generated.rows.map(row => row.id)
   const rows = sql.join(variants.map((variant, index) => sql`(${ids[index]}, ${storeId}, ${variant.skuCode}, ${variant.mediaId}, ${productId}, ${variant.priceRappen}, ${variant.status}, ${at}, ${at})`), sql`, `)
@@ -119,4 +117,6 @@ export async function writeVariants(tx: Tx, storeId: string, productId: string, 
 
   if (valueRows.length > 0)
     await tx.execute(sql`insert into catalog.sku_option_values (sku_id, option_id, value_id, product_id, store_id) values ${sql.join(valueRows, sql`, `)}`)
+
+  return ids
 }

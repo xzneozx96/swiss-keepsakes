@@ -15,6 +15,10 @@ export const queryKeys = {
     articles: ['content', 'articles'],
     comments: ['content', 'comments'],
   },
+  inventory: {
+    list: ['inventory', 'list'],
+    detail: ['inventory', 'detail'],
+  },
   keepsakes: {
     list: ['keepsakes', 'list'],
     detail: ['keepsakes', 'detail'],

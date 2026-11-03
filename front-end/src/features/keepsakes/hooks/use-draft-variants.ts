@@ -1,12 +1,14 @@
 import type { ProductVariant, VariantCreateBody, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
 import type { OptionsPlan } from '../lib/combinations'
 import type { OptionDraft, Values } from '../lib/option-rules'
+import type { StockOutcome } from '../lib/variant-actions'
 import type { Outcome } from './use-keepsake-editor'
 
 import { useState } from 'react'
 
 import { newVariantsFor } from '../lib/combinations'
 import { asSaved, combinationKey } from '../lib/option-rules'
+import { fillNewRows } from '../lib/stock-rules'
 import { isComplete, normaliseValues } from '../lib/variant-rules'
 
 /** The one variant of a keepsake with no option yet: no price, which the Price card asks for, and no code. */
@@ -20,7 +22,7 @@ function changesOf(body: { skuCode?: string | null, mediaId?: string | null }) {
   }
 }
 
-const fresh = (made: { skuCode: string | null, priceRappen: number, values: Values }): ProductVariant => ({ id: crypto.randomUUID(), skuCode: made.skuCode, mediaId: null, photo: null, priceRappen: made.priceRappen, status: 'published', values: made.values })
+const fresh = (made: { skuCode: string | null, priceRappen: number, quantity?: number, values: Values }): ProductVariant => ({ id: crypto.randomUUID(), skuCode: made.skuCode, mediaId: null, photo: null, priceRappen: made.priceRappen, status: 'published', values: made.values, ...(made.quantity !== undefined && { onHand: made.quantity }) })
 
 /**
  * The variants of a keepsake that is only in the browser, with the same changes the saved keepsake has. It always holds one
@@ -71,7 +73,13 @@ export function useDraftVariants(options: OptionDraft[], initial: ProductVariant
     },
     /** The one variant of a keepsake with no options and none left: the Price block's first valid price. */
     create: async (body: VariantCreateBody): Promise<Outcome> => {
-      setStored(list => [...list, { ...defaultVariant(), skuCode: body.skuCode ?? null, priceRappen: body.priceRappen, status: body.status ?? 'published' }])
+      setStored(list => [...list, { ...defaultVariant(), skuCode: body.skuCode ?? null, priceRappen: body.priceRappen, status: body.status ?? 'published', ...(body.quantity !== undefined && { onHand: body.quantity }) }])
+
+      return { ok: true }
+    },
+    /** The stock a variant has in the browser: it is sent with the write that creates the variant. */
+    setStock: async (id: string, onHand: number): Promise<StockOutcome> => {
+      setStored(list => list.map(variant => (variant.id === id ? { ...variant, onHand } : variant)))
 
       return { ok: true }
     },
@@ -89,9 +97,9 @@ export function useDraftVariants(options: OptionDraft[], initial: ProductVariant
 
       return { ok: true }
     },
-    /** Combinations that no variant holds, made again at the price of the first variant. `others` are variants kept elsewhere, whose codes the new ones must not repeat. */
-    addBack: async (combinations: Values[], basePrice: number, codeBase: string | null, others: Pick<ProductVariant, 'skuCode'>[] = []): Promise<Outcome> => {
-      setStored(list => [...list, ...newVariantsFor(combinations, options, [...others, ...list], basePrice, codeBase).map(made => fresh(made))])
+    /** Combinations that no variant holds, made again at the price and the stock of the first variant (`quantity`). `others` are variants kept elsewhere, whose codes the new ones must not repeat. */
+    addBack: async (combinations: Values[], basePrice: number, codeBase: string | null, others: Pick<ProductVariant, 'skuCode'>[] = [], quantity = 0): Promise<Outcome> => {
+      setStored(list => [...list, ...fillNewRows(newVariantsFor(combinations, options, [...others, ...list], basePrice, codeBase), quantity).map(made => fresh(made))])
 
       return { ok: true }
     },

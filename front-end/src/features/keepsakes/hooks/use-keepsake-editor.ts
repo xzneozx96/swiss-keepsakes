@@ -1,4 +1,4 @@
-import type { OptionWrite, Product, ProductOption, VariantCreateBody, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
+import type { OptionWrite, Product, ProductOption, ProductVariant, VariantCreateBody, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
 import type { OptionsPlan } from '../lib/combinations'
 import type { KeepsakeText } from '../lib/keepsake-rules'
 import type { Refusal } from '../lib/option-rules'
@@ -201,7 +201,7 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
   }
 
   /** A write that is not the autosave (a price, a bulk change, an option that is done) still moves the bar: Saving, then Saved with the time. */
-  async function tracked(run: () => Promise<Outcome>): Promise<Outcome> {
+  async function tracked<T extends { ok: boolean }>(run: () => Promise<T>): Promise<T> {
     setState(current => (current === 'stale' ? current : 'saving'))
     const outcome = await run()
 
@@ -227,6 +227,7 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     saveVariant: (variantId: string, body: VariantSaveBody) => tracked(() => variantCommands.saveVariant(variantId, body)),
     saveVariants: (variants: VariantsSaveBody['variants']) => tracked(() => variantCommands.saveVariants(variants)),
     createVariant: (body: VariantCreateBody) => tracked(() => variantCommands.createVariant(body)),
+    setStock: (variant: Pick<ProductVariant, 'id' | 'reserved'>, onHand: number) => tracked(() => variantCommands.setStock(variant, onHand)),
     /**
      * The options, the values existing variants take of a new option and the new variants, in one write on the version the
      * page holds. The typed fields save first.

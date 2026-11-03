@@ -22,24 +22,24 @@ beforeEach(async () => {
   await demo.ready
 })
 
-async function renderShop(language: 'en' | 'de') {
+async function renderShop(language: 'en' | 'de', at = '/store') {
   if (language === 'de') {
     localStorage.setItem('sk.language', JSON.stringify('de'))
     await loadDictionary('de')
   }
   const root = createRootRoute({ component: Outlet })
-  const page = createRoute({
+  const pages = ['/store', '/store/products/inventory', '/store/products/inventory/$skuId'].map(path => createRoute({
     getParentRoute: () => root,
-    path: '/store',
+    path,
     component: () => (
       <MerchantShell>
         <p>page</p>
       </MerchantShell>
     ),
-  })
+  }))
   const router = createRouter({
-    routeTree: root.addChildren([page]),
-    history: createMemoryHistory({ initialEntries: ['/store'] }),
+    routeTree: root.addChildren(pages),
+    history: createMemoryHistory({ initialEntries: [at] }),
     disableGlobalCatchBoundary: true,
   })
   render(
@@ -116,7 +116,7 @@ describe.each([
     expect(hrefs.indexOf('/store/content/categories')).toBeLessThan(hrefs.indexOf('/store/content/analytics'))
   })
 
-  it('[E6.1][nav] the Products menu links Keepsakes and Pickup points', async () => {
+  it('[E6.3][AC05][AC53] AC-1 [E6.1][nav] the Products menu links Keepsakes, Inventory and Pickup points', async () => {
     const { sidebar } = await renderShop(language)
     const products = Array.from(sidebar.querySelectorAll(':scope > ul > li > button'), el => el).find(el => text(el) === dict['nav.products'])!
 
@@ -125,8 +125,16 @@ describe.each([
 
     expect(links.map(a => [a.getAttribute('href'), text(a)])).toEqual([
       ['/store/products', dict['products.tab.gifts']],
+      ['/store/products/inventory', dict['inventory.nav']],
       ['/store/products/pickup', dict['products.tab.pickup']],
     ])
+  })
+
+  it.each(['/store/products/inventory', '/store/products/inventory/0198a000-0000-7000-8000-000000000101'])('[E6.3][AC05][AC53] AC-1 Inventory is the highlighted page of Products on %s', async (path) => {
+    const { sidebar } = await renderShop(language, path)
+    const links = Array.from(sidebar.querySelectorAll('a')).filter(a => a.getAttribute('href')?.startsWith('/store/products'))
+
+    expect(links.filter(a => a.getAttribute('data-status') === 'active').map(text)).toEqual([dict['inventory.nav']])
   })
 
   it('[E4.1][AC50] no menu link is a booking path or a raw key', async () => {

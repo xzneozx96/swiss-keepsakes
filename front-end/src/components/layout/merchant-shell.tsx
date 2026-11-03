@@ -94,6 +94,7 @@ const sidebarItems: NavItem[] = [
     paths: ['/store/products'],
     pages: [
       { label: 'products.tab.gifts', to: '/store/products' },
+      { label: 'inventory.nav', to: '/store/products/inventory' },
       { label: 'products.tab.pickup', to: '/store/products/pickup' },
     ],
   },
