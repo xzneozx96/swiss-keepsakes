@@ -45,6 +45,12 @@ export function createStoriesClient(): StoriesClient {
         params: { path: { storeId, groupId, language }, header: { 'If-Match': String(ifMatch) } },
         body: body as never,
       })) as Promise<StoryVersion>,
+    saveGroup: async ({ storeId, groupId, ifMatch, idempotencyKey, ...body }) =>
+      answer((await loadClient()).PATCH('/api/store/{storeId}/story-groups/{groupId}', {
+        ...keyed(idempotencyKey),
+        params: { path: { storeId, groupId }, header: { 'If-Match': String(ifMatch) } },
+        body,
+      })),
     publishVersion: async ({ storeId, groupId, language, ifMatch, idempotencyKey }) => {
       const { data, error, response } = await (await loadClient()).POST('/api/store/{storeId}/story-groups/{groupId}/versions/{language}/publish', {
         ...keyed(idempotencyKey),

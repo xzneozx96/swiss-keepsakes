@@ -1,4 +1,4 @@
-import type { StoryGroup, StoryGroupDetail, StoryList, StoryVersion, StoryVersionCreateBody, StoryVersionSaveBody } from '@sk/api-contract'
+import type { StoryGroup, StoryGroupDetail, StoryGroupSaveBody, StoryList, StoryVersion, StoryVersionCreateBody, StoryVersionSaveBody } from '@sk/api-contract'
 
 /** A command carries the `Idempotency-Key` of the user's intent, so a retry of it is the same request to the API. */
 export type Keyed<T> = T & { idempotencyKey: string }
@@ -19,6 +19,11 @@ export interface StoriesClient {
   removeStory: (input: { storeId: string, groupId: string, versions: Keyed<{ language: 'en' | 'de', ifMatch: number }>[] }) => Promise<void>
   /** Saves the whole draft of one version (ADR-014) on the row version in `ifMatch`; a 412 is an ApiProblem of type 'precondition-failed'. */
   saveVersion: (input: Keyed<{ storeId: string, groupId: string, language: 'en' | 'de', ifMatch: number } & StoryVersionSaveBody>) => Promise<StoryVersion>
+  /**
+   * Saves the shared facts of the group (stay, interests and the lists) on the group's own row version in `ifMatch`, which
+   * no language version moves. A partial save: a field left out stays, a list replaces. A 412 is an ApiProblem of type 'precondition-failed'.
+   */
+  saveGroup: (input: Keyed<{ storeId: string, groupId: string, ifMatch: number } & StoryGroupSaveBody>) => Promise<StoryGroup>
   /** Publishes one language version (ADR-014); the draft becomes the published copy and the row version moves. A 422 `publish-incomplete` is a `PublishIncomplete` that names the gaps. */
   publishVersion: (input: Keyed<{ storeId: string, groupId: string, language: 'en' | 'de', ifMatch: number }>) => Promise<StoryVersion>
   /** Makes a live version a draft again; the published text stays. */
