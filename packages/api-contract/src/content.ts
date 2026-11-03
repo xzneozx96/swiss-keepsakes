@@ -513,6 +513,16 @@ export const storyGroupDetailSchema = z.object({
   versions: z.object({ en: storyVersionSchema.nullable(), de: storyVersionSchema.nullable() }),
 }).meta({ id: 'StoryGroupDetail', description: 'One story group with its English and German versions' })
 
+export const storyLinksSchema = z.object({
+  pins: z.int().min(0).meta({ description: 'Pins that name the story as their main story' }),
+  stories: z.int().min(0).meta({ description: 'Other stories that list the story under More to discover' }),
+}).meta({ id: 'StoryLinks', description: 'What links to a story: the counts the Delete story confirm names before the delete' })
+
+export const storyDeletedSchema = z.object({
+  pinsUnlinked: z.int().min(0).meta({ description: 'Pins whose main story was cleared' }),
+  storiesUnlinked: z.int().min(0).meta({ description: 'Other stories that no longer list the deleted one as related' }),
+}).meta({ id: 'StoryDeleted', description: 'The result of Delete story: how many links were removed with it' })
+
 const tourStopWriteSchema = z.strictObject({
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
@@ -602,6 +612,8 @@ export type StoryVersion = z.infer<typeof storyVersionSchema>
 export type StoryListVersion = z.infer<typeof storyListVersionSchema>
 export type StoryListItem = z.infer<typeof storyListItemSchema>
 export type StoryList = z.infer<typeof storyListSchema>
+export type StoryLinks = z.infer<typeof storyLinksSchema>
+export type StoryDeleted = z.infer<typeof storyDeletedSchema>
 export type StoryGroupDetail = z.infer<typeof storyGroupDetailSchema>
 export type StoryVersionText = z.infer<typeof storyVersionTextSchema>
 export type TourGuideWriteBody = z.infer<typeof tourWriteBodySchema>

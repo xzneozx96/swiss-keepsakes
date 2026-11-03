@@ -127,6 +127,8 @@ export function createFakeContentUseCases(): ContentUseCases {
     publishStoryVersion: async (_actor, storeId, groupId, language, ifMatch) => ({ ok: true, value: { ...fakeStoryVersion, storeId, groupId, language, status: 'published', rowVersion: ifMatch + 1 } }),
     unpublishStoryVersion: async (_actor, storeId, groupId, language, ifMatch) => ({ ok: true, value: { ...fakeStoryVersion, storeId, groupId, language, rowVersion: ifMatch + 1 } }),
     moveStoryVersion: async (_actor, storeId, _groupId, language, ifMatch, targetGroupId) => ({ ok: true, value: { ...fakeStoryVersion, storeId, groupId: targetGroupId, language, rowVersion: ifMatch + 1 } }),
+    getStoryLinks: async () => ({ ok: true, value: { pins: 0, stories: 0 } }),
+    deleteStoryGroup: async () => ({ ok: true, value: { pinsUnlinked: 0, storiesUnlinked: 0 } }),
     deleteStoryVersion: async (_actor, _storeId, groupId, language) => ({ ok: true, value: { groupId, language } }),
     createTour: async (_actor, storeId) => ({ ok: true, value: { ...fakeTour, storeId } }),
     saveTour: async (_actor, storeId, tourId, ifMatch) => ({ ok: true, value: { ...fakeTour, storeId, id: tourId, rowVersion: ifMatch + 1 } }),

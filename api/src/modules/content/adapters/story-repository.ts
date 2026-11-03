@@ -169,6 +169,41 @@ export function createStoryRepository(): StoryRepository<Tx> {
 
     findGroup: (tx, storeId, groupId) => loadGroup(tx, storeId, groupId, false),
 
+    async linkCounts(tx, storeId, groupId) {
+      const { rows } = await tx.execute<{ pins: number, stories: number }>(sql`
+        select
+          (select count(*)::int from content.places where store_id = ${storeId} and main_story_group_id = ${groupId}) as pins,
+          (select count(distinct group_id)::int from content.story_related where store_id = ${storeId} and related_group_id = ${groupId}) as stories`)
+      return rows[0]!
+    },
+
+    async clearMainStory(tx, storeId, groupId, at) {
+      const cleared = await tx.execute(sql`
+        update content.places set main_story_group_id = null, row_version = row_version + 1, updated_at = ${at}
+         where store_id = ${storeId} and main_story_group_id = ${groupId} returning id`)
+      return cleared.rows.length
+    },
+
+    async removeRelatedTo(tx, storeId, groupId, at) {
+      const bumped = await tx.execute(sql`
+        update content.story_groups set row_version = row_version + 1, updated_at = ${at}
+         where store_id = ${storeId} and id in (select group_id from content.story_related where store_id = ${storeId} and related_group_id = ${groupId})
+        returning id`)
+      await tx.execute(sql`delete from content.story_related where store_id = ${storeId} and related_group_id = ${groupId}`)
+      return bumped.rows.length
+    },
+
+    async removeVersions(tx, storeId, groupId) {
+      await tx.execute(sql`
+        delete from content.media_refs where store_id = ${storeId} and owner_kind = 'story_version' and owner_id = ${groupId}`)
+      await tx.execute(sql`delete from content.story_versions where store_id = ${storeId} and group_id = ${groupId}`)
+    },
+
+    async removeGroup(tx, storeId, groupId) {
+      const deleted = await tx.execute(sql`delete from content.story_groups where store_id = ${storeId} and id = ${groupId} returning id`)
+      return deleted.rows.length > 0
+    },
+
     // One query, and not the documents: a body can be 200 KB. The title and cover come from the draft when there is one,
     // else from the published text. A `case`, not `coalesce`, so a draft that cleared its cover does not show the live one.
     // The inner join leaves out a group with no version.

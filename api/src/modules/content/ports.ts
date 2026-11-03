@@ -275,6 +275,11 @@ export interface StoryListRow {
   versions: { language: ContentLanguage, status: StoryVersionStatus, title: string, coverMediaId: string | null, everPublished: boolean, editsNotLive: boolean, rowVersion: number, updatedAt: Date }[]
 }
 
+export interface StoryLinkCounts {
+  pins: number
+  stories: number
+}
+
 export interface StoryRepository<T> {
   insertGroup: (tx: T, storeId: string, input: { kind: StoryGroup['kind'], subjectPlaceId: string | null } & StoryGroupChanges, at: Date) => Promise<StoryGroup>
   // Locks the row; the lists come with it. An id of another store has no row.
@@ -294,6 +299,17 @@ export interface StoryRepository<T> {
   unpublishVersion: (tx: T, version: StoryVersion, at: Date) => Promise<StoryVersion>
   moveVersion: (tx: T, version: StoryVersion, targetGroupId: string, at: Date) => Promise<StoryVersion>
   removeVersion: (tx: T, storeId: string, groupId: string, language: ContentLanguage) => Promise<boolean>
+  // What links to the group: pins of the store that name it as main story, and other groups that list it as related.
+  linkCounts: (tx: T, storeId: string, groupId: string) => Promise<StoryLinkCounts>
+  // The pieces of Delete story, in the order the use case runs them (one transaction). Each returns how many rows it changed.
+  // The pins keep every other field; row_version and updated_at move so an open pin editor sees the change.
+  clearMainStory: (tx: T, storeId: string, groupId: string, at: Date) => Promise<number>
+  // Counts the groups that listed it, and bumps their row_version so one that is open elsewhere is stale, not saved over.
+  removeRelatedTo: (tx: T, storeId: string, groupId: string, at: Date) => Promise<number>
+  // Both language versions with their media_refs, whatever their status. Before removeGroup: the version key is RESTRICT.
+  removeVersions: (tx: T, storeId: string, groupId: string) => Promise<void>
+  // The group; its own related rows, places, keepsake links and categories go with it (CASCADE).
+  removeGroup: (tx: T, storeId: string, groupId: string) => Promise<boolean>
   // The groups of the store that have at least one version. A group with none (left by a failed create or a half-done delete) is left out.
   listGroups: (tx: T, storeId: string) => Promise<StoryListRow[]>
   // The group with its lists, without a lock. An id of another store has no row.

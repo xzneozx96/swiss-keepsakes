@@ -14631,6 +14631,26 @@
         ],
         "type": "object"
       },
+      "StoryDeleted": {
+        "description": "The result of Delete story: how many links were removed with it",
+        "properties": {
+          "pinsUnlinked": {
+            "description": "Pins whose main story was cleared",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "storiesUnlinked": {
+            "description": "Other stories that no longer list the deleted one as related",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "pinsUnlinked",
+          "storiesUnlinked"
+        ],
+        "type": "object"
+      },
       "StoryDraft": {
         "additionalProperties": false,
         "description": "The text of one story version. The title may be empty until it is published",
@@ -15026,6 +15046,26 @@
             ]
           }
         },
+        "type": "object"
+      },
+      "StoryLinks": {
+        "description": "What links to a story: the counts the Delete story confirm names before the delete",
+        "properties": {
+          "pins": {
+            "description": "Pins that name the story as their main story",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "stories": {
+            "description": "Other stories that list the story under More to discover",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "pins",
+          "stories"
+        ],
         "type": "object"
       },
       "StoryList": {
@@ -20357,6 +20397,60 @@
       }
     },
     "/api/store/{storeId}/story-groups/{groupId}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryDeleted"
+                }
+              }
+            },
+            "description": "The story is deleted with both language versions, whatever their status, in one transaction. Pins that named it lose their main story, other stories stop listing it. No If-Match: the story goes whatever its row version",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
       "get": {
         "parameters": [
           {
@@ -20475,6 +20569,62 @@
                   "type": "string"
                 }
               },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/story-groups/{groupId}/links": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryLinks"
+                }
+              }
+            },
+            "description": "How many pins name the story as their main story and how many other stories list it as related, for the Delete story confirm",
+            "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }

@@ -6,7 +6,7 @@ import { registerContentRoutes } from '../../../src/modules/content/adapters/rou
 import { makeSaveStoryVersion } from '../../../src/modules/content/application/save-story-version.ts'
 import { createFakeContentUseCases, fakeMedia, fakeStoryGroup, fakeStoryVersion } from '../../support/fake-content-use-cases.ts'
 import { createFakeStories } from '../../support/fake-stories.ts'
-import { createGuardedApp, guardedCommands, noAccess, shopOrigin, signedInAs } from '../../support/guarded-app.ts'
+import { createGuardedApp, guardedCommands, noAccess, shopOrigin, signedInAs, strictCommands } from '../../support/guarded-app.ts'
 
 const lucerne = '0190f0c2-0000-7000-8000-00000000000a'
 const zug = '0190f0c2-0000-7000-8000-00000000000b'
@@ -613,5 +613,88 @@ describe('[E4.3][AC30] the story reads', () => {
 
     expect((await send(app, 'POST', groups, {}, {})).status).toBe(201)
     expect((await send(app, 'PATCH', group, { 'If-Match': '"1"' }, {})).status).toBe(200)
+  })
+})
+
+describe('[E4.3][AC30] Delete story and its link counts', () => {
+  const links = `${group}/links`
+  const key = { 'Idempotency-Key': 'delete-story-1' }
+
+  it('[E4.3][AC30] GET links answers the two counts, and the use case gets the store from the verified path', async () => {
+    const seen: unknown[] = []
+    const app = setup({ getStoryLinks: async (actor, storeId, id) => {
+      seen.push({ kind: actor.kind, storeId, id })
+      return { ok: true, value: { pins: 1, stories: 2 } }
+    } })
+
+    const response = await send(app, 'GET', links)
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ pins: 1, stories: 2 })
+    expect(seen).toEqual([{ kind: 'staff', storeId: lucerne, id: groupId }])
+  })
+
+  it('[E4.3][AC30] DELETE of the group answers 200 with the unlink counts, needs no If-Match and reaches the use case with the verified store', async () => {
+    const seen: unknown[] = []
+    const app = setup({ deleteStoryGroup: async (_actor, storeId, id, requestId) => {
+      seen.push({ storeId, id, requestId: typeof requestId })
+      return { ok: true, value: { pinsUnlinked: 2, storiesUnlinked: 3 } }
+    } })
+
+    const response = await send(app, 'DELETE', group, key)
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ pinsUnlinked: 2, storiesUnlinked: 3 })
+    expect(seen).toEqual([{ storeId: lucerne, id: groupId, requestId: 'string' }])
+  })
+
+  it.each([
+    ['not-found', 404, 'not-found'],
+    ['forbidden', 403, 'forbidden'],
+  ] as const)('[E4.3][AC30] AC-3 a %s failure answers %i', async (reason, status, type) => {
+    const app = setup({ deleteStoryGroup: async () => ({ ok: false, reason }), getStoryLinks: async () => ({ ok: false, reason }) })
+
+    const removed = await send(app, 'DELETE', group, key)
+    const read = await send(app, 'GET', links)
+
+    expect(removed.status).toBe(status)
+    expect(await removed.json()).toMatchObject({ type })
+    expect(read.status).toBe(status)
+  })
+
+  it('[E4.3][AC30] AC-3 a member of another store never reaches the use case', async () => {
+    let calls = 0
+    const app = setup({
+      deleteStoryGroup: async () => {
+        calls++
+        return { ok: true, value: { pinsUnlinked: 0, storiesUnlinked: 0 } }
+      },
+      getStoryLinks: async () => {
+        calls++
+        return { ok: true, value: { pins: 0, stories: 0 } }
+      },
+    })
+
+    const removed = await send(app, 'DELETE', group, { ...key, ...signedInAs('ownerElsewhere') })
+    const read = await send(app, 'GET', links, signedInAs('ownerElsewhere'))
+
+    expect(removed.status).toBe(403)
+    expect(read.status).toBe(403)
+    expect(calls).toBe(0)
+  })
+
+  it('[E4.3][AC30] AC-4 a DELETE with no Idempotency-Key is 400 idempotency-key-required', async () => {
+    let calls = 0
+    const useCases = { ...createFakeContentUseCases(), deleteStoryGroup: async () => {
+      calls++
+      return { ok: true as const, value: { pinsUnlinked: 0, storiesUnlinked: 0 } }
+    } }
+    const { app } = createGuardedApp(people, undefined, { ...strictCommands, routes: [routes => registerContentRoutes(routes, useCases)] })
+
+    const response = await app.request(group, { method: 'DELETE', headers: { Origin: shopOrigin, ...signedInAs('owner') } })
+
+    expect(response.status).toBe(400)
+    expect(await response.json()).toMatchObject({ type: 'idempotency-key-required' })
+    expect(calls).toBe(0)
   })
 })

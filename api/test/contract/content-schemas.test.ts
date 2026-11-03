@@ -3,10 +3,12 @@ import {
   pinSchema,
   pinWriteBodySchema,
   problemTypes,
+  storyDeletedSchema,
   storyDraftSchema,
   storyGroupCreateBodySchema,
   storyGroupDetailSchema,
   storyGroupSaveBodySchema,
+  storyLinksSchema,
   storyListItemSchema,
   storyListSchema,
   storyVersionCreateBodySchema,
@@ -355,5 +357,17 @@ describe('[E4.3][AC30] story list and group read schemas', () => {
     const parsed = storyGroupDetailSchema.parse({ ...group, versions: { en: version, de: null } })
     expect(parsed.versions.de).toBeNull()
     expect(parsed.versions.en?.language).toBe('en')
+  })
+})
+
+describe('[E4.3][AC30] the Delete story schemas', () => {
+  it('[E4.3][AC30] the link counts and the delete result are two non-negative whole numbers each', () => {
+    expect(ok(storyLinksSchema, { pins: 1, stories: 2 })).toBe(true)
+    expect(ok(storyLinksSchema, { pins: 0, stories: 0 })).toBe(true)
+    expect(ok(storyLinksSchema, { pins: -1, stories: 0 })).toBe(false)
+    expect(ok(storyLinksSchema, { pins: 1.5, stories: 0 })).toBe(false)
+    expect(ok(storyLinksSchema, { pins: 1 })).toBe(false)
+    expect(ok(storyDeletedSchema, { pinsUnlinked: 2, storiesUnlinked: 3 })).toBe(true)
+    expect(ok(storyDeletedSchema, { pinsUnlinked: 2 })).toBe(false)
   })
 })

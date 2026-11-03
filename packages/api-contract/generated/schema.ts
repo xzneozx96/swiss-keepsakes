@@ -3066,7 +3066,40 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The story is deleted with both language versions, whatever their status, in one transaction. Pins that named it lose their main story, other stories stop listing it. No If-Match: the story goes whatever its row version */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryDeleted"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch: {
@@ -3112,6 +3145,55 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/store/{storeId}/story-groups/{groupId}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description How many pins name the story as their main story and how many other stories list it as related, for the Delete story confirm */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryLinks"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/store/{storeId}/story-groups/{groupId}/versions": {
@@ -7049,6 +7131,13 @@ export interface components {
             /** @enum {string} */
             type: "doc";
         };
+        /** @description The result of Delete story: how many links were removed with it */
+        StoryDeleted: {
+            /** @description Pins whose main story was cleared */
+            pinsUnlinked: number;
+            /** @description Other stories that no longer list the deleted one as related */
+            storiesUnlinked: number;
+        };
         /** @description The text of one story version. The title may be empty until it is published */
         StoryDraft: {
             authorName: string;
@@ -7138,6 +7227,13 @@ export interface components {
             stayTag?: "short_stay" | "multi_day" | "both";
             /** Format: uuid */
             subjectPlaceId?: string | null;
+        };
+        /** @description What links to a story: the counts the Delete story confirm names before the delete */
+        StoryLinks: {
+            /** @description Pins that name the story as their main story */
+            pins: number;
+            /** @description Other stories that list the story under More to discover */
+            stories: number;
         };
         /** @description The story groups of the store that have a version, most recently updated first */
         StoryList: {

@@ -5,7 +5,9 @@ import { randomUUID } from 'node:crypto'
 const key = (groupId: string, language: string) => `${groupId}/${language}`
 
 // An in-memory story repository. It copies what the SQL one does, but none of the database guards.
-export function createFakeStories(): StoryRepository<null> & { groups: Map<string, StoryGroup>, versions: Map<string, StoryVersion> } {
+export function createFakeStories(): StoryRepository<null> & { groups: Map<string, StoryGroup>, versions: Map<string, StoryVersion>, mainStoryOf: Map<string, { storeId: string, groupId: string | null }> } {
+  // pin id -> the main story it names; the pins themselves live in another repository.
+  const mainStoryOf = new Map<string, { storeId: string, groupId: string | null }>()
   const groups = new Map<string, StoryGroup>()
   const versions = new Map<string, StoryVersion>()
   const putGroup = (group: StoryGroup) => {
@@ -19,6 +21,7 @@ export function createFakeStories(): StoryRepository<null> & { groups: Map<strin
   return {
     groups,
     versions,
+    mainStoryOf,
     async insertGroup(_tx, storeId, input, at) {
       return putGroup({
         id: randomUUID(),
@@ -90,6 +93,35 @@ export function createFakeStories(): StoryRepository<null> & { groups: Map<strin
       if (versions.get(key(groupId, language))?.storeId !== storeId)
         return false
       return versions.delete(key(groupId, language))
+    },
+    async linkCounts(_tx, storeId, groupId) {
+      return {
+        pins: [...mainStoryOf.values()].filter(pin => pin.storeId === storeId && pin.groupId === groupId).length,
+        stories: [...groups.values()].filter(other => other.storeId === storeId && other.id !== groupId && other.relatedGroupIds.includes(groupId)).length,
+      }
+    },
+    async clearMainStory(_tx, storeId, groupId) {
+      const named = [...mainStoryOf.values()].filter(pin => pin.storeId === storeId && pin.groupId === groupId)
+      for (const pin of named)
+        pin.groupId = null
+      return named.length
+    },
+    async removeRelatedTo(_tx, storeId, groupId, at) {
+      const listing = [...groups.values()].filter(other => other.storeId === storeId && other.relatedGroupIds.includes(groupId))
+      for (const other of listing)
+        putGroup({ ...other, relatedGroupIds: other.relatedGroupIds.filter(id => id !== groupId), rowVersion: other.rowVersion + 1, updatedAt: at })
+      return listing.length
+    },
+    async removeVersions(_tx, storeId, groupId) {
+      for (const [k, version] of versions) {
+        if (version.storeId === storeId && version.groupId === groupId)
+          versions.delete(k)
+      }
+    },
+    async removeGroup(_tx, storeId, groupId) {
+      if (groups.get(groupId)?.storeId !== storeId)
+        return false
+      return groups.delete(groupId)
     },
     async listGroups(_tx, storeId) {
       return [...groups.values()].filter(group => group.storeId === storeId).flatMap((group) => {
