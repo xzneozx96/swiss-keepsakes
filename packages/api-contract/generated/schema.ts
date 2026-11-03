@@ -2942,7 +2942,39 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The story groups of the store that have a version, with the state of each language version, most recently updated first */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryList"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
         put?: never;
         post: {
             parameters: {
@@ -2996,7 +3028,42 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The group with its English and German versions. The ETag is the group's row version */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryGroupDetail"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         delete?: never;
@@ -7030,6 +7097,33 @@ export interface components {
             /** Format: uuid */
             subjectPlaceId?: string;
         };
+        /** @description One story group with its English and German versions */
+        StoryGroupDetail: {
+            categoryIds: string[];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            id: string;
+            interests: string[];
+            keepsakeProductIds: string[];
+            /** @enum {string} */
+            kind: "story" | "editorial_review";
+            placeIds: string[];
+            relatedGroupIds: string[];
+            rowVersion: number;
+            /** @enum {string} */
+            stayTag: "short_stay" | "multi_day" | "both";
+            /** Format: uuid */
+            storeId: string;
+            /** Format: uuid */
+            subjectPlaceId: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+            versions: {
+                de: components["schemas"]["StoryVersion"];
+                en: components["schemas"]["StoryVersion"];
+            };
+        };
         StoryGroupSaveBody: {
             categoryIds?: string[];
             interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes" | "local-activities")[];
@@ -7039,6 +7133,66 @@ export interface components {
             /** @enum {string} */
             stayTag?: "short_stay" | "multi_day" | "both";
         };
+        /** @description The story groups of the store that have a version, most recently updated first */
+        StoryList: {
+            items: components["schemas"]["StoryListItem"][];
+        };
+        /** @description One story group, one row of the Stories list */
+        StoryListItem: {
+            /** @description The cover of the first language that has a ready one. Null when none */
+            cover: {
+                byteSize: number;
+                contentType: string;
+                height: number | null;
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "image" | "audio" | "pdf";
+                /** @description What the merchant sees and searches. It starts as the uploaded file name */
+                name: string;
+                /** @description The public URL of the original. Null until the file is ready */
+                publicUrl: string | null;
+                /** @enum {string} */
+                status: "processing" | "ready" | "retired";
+                /** @description Resized copies of an image. Empty until the file is ready */
+                variants: {
+                    url: string;
+                    width: number;
+                }[];
+                width: number | null;
+            } | null;
+            /** Format: uuid */
+            groupId: string;
+            /** @enum {string} */
+            kind: "story" | "editorial_review";
+            /** @description Null: no version in that language */
+            languages: {
+                de: components["schemas"]["StoryListVersion"];
+                en: components["schemas"]["StoryListVersion"];
+            };
+            /** @description The non-empty title of each language, from the draft, else the published text */
+            title: {
+                de?: string;
+                en?: string;
+            };
+            /**
+             * Format: date-time
+             * @description The latest update of any version
+             */
+            updatedAt: string;
+        };
+        /** @description The state of one language version of a story, for the list */
+        StoryListVersion: {
+            /** @description True when the version is published and a draft with unpublished edits sits on top */
+            editsNotLive: boolean;
+            /** @description True when the version holds published text, live or taken down. Such a version cannot be deleted */
+            everPublished: boolean;
+            rowVersion: number;
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** Format: date-time */
+            updatedAt: string;
+        } | null;
         /** @description One language version of a story, with its draft and its published text */
         StoryVersion: {
             /** Format: date-time */
@@ -7099,7 +7253,7 @@ export interface components {
             storeId: string;
             /** Format: date-time */
             updatedAt: string;
-        };
+        } | null;
         StoryVersionCreateBody: {
             draft?: components["schemas"]["StoryDraft"];
             /** @enum {string} */

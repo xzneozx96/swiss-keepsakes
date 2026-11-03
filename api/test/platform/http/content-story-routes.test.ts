@@ -524,3 +524,58 @@ describe('the story version text read (the place editor\'s preview)', () => {
     expect((await app.request(english, { headers: { Origin: shopOrigin } })).status).toBe(401)
   })
 })
+
+describe('[E4.3][AC30] the story reads', () => {
+  const at = new Date('2026-10-27T10:00:00Z')
+  const readyCover = { ...fakeMedia, status: 'ready' as const }
+  const rowOf = (language: 'en' | 'de') => ({ language, status: 'published' as const, title: 'Die Mauer', coverMediaId: fakeMedia.id, everPublished: true, editsNotLive: false, rowVersion: 3, updatedAt: at })
+
+  it('[E4.3][AC30] GET story-groups answers the list with ISO dates and the cover urls', async () => {
+    const seen: unknown[] = []
+    const app = setup({ listStoryGroups: async (actor, storeId) => {
+      seen.push({ kind: actor.kind, storeId })
+      return { ok: true, value: [{ groupId, kind: 'story', title: { de: 'Die Mauer' }, cover: readyCover, languages: { en: null, de: rowOf('de') }, updatedAt: at }] }
+    } })
+
+    const response = await send(app, 'GET', groups)
+
+    expect(response.status).toBe(200)
+    const body = await response.json() as { items: { languages: { de: object } }[] }
+    expect(body).toMatchObject({ items: [{ groupId, kind: 'story', title: { de: 'Die Mauer' }, cover: { id: fakeMedia.id, publicUrl: `https://storage.test/media/${fakeMedia.storageKey}` }, languages: { en: null, de: { status: 'published', everPublished: true, editsNotLive: false, rowVersion: 3, updatedAt: '2026-10-27T10:00:00.000Z' } }, updatedAt: '2026-10-27T10:00:00.000Z' }] })
+    expect(Object.keys(body.items[0]!.languages.de)).not.toContain('title')
+    expect(seen).toEqual([{ kind: 'staff', storeId: lucerne }])
+  })
+
+  it('[E4.3][AC30] GET story-groups is 403 for a guest and for the owner of another store', async () => {
+    const app = setup()
+
+    expect((await send(app, 'GET', groups, signedInAs('guest'))).status).toBe(403)
+    expect((await send(app, 'GET', groups, signedInAs('ownerElsewhere'))).status).toBe(403)
+  })
+
+  it('[E4.3][AC30] GET story-groups/{groupId} answers the group with both versions and an ETag', async () => {
+    const app = setup({ getStoryGroup: async () => ({ ok: true, value: { group: { ...fakeStoryGroup, rowVersion: 4 }, versions: { en: fakeStoryVersion, de: null } } }) })
+
+    const response = await send(app, 'GET', group)
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('ETag')).toBe('"4"')
+    expect(await response.json()).toMatchObject({ id: groupId, rowVersion: 4, versions: { en: { language: 'en', groupId }, de: null } })
+  })
+
+  it('[E4.3][AC30] GET story-groups/{groupId} is 404 when the use case says not-found', async () => {
+    const app = setup({ getStoryGroup: async () => ({ ok: false, reason: 'not-found' }) })
+
+    const response = await send(app, 'GET', group)
+
+    expect(response.status).toBe(404)
+    expect(await response.json()).toMatchObject({ type: 'not-found' })
+  })
+
+  it('[E4.3][AC30] the existing PATCH and POST on story-groups still answer', async () => {
+    const app = setup()
+
+    expect((await send(app, 'POST', groups, {}, {})).status).toBe(201)
+    expect((await send(app, 'PATCH', group, { 'If-Match': '"1"' }, {})).status).toBe(200)
+  })
+})
