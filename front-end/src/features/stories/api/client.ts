@@ -19,4 +19,8 @@ export interface StoriesClient {
   removeStory: (input: { storeId: string, groupId: string, versions: Keyed<{ language: 'en' | 'de', ifMatch: number }>[] }) => Promise<void>
   /** Saves the whole draft of one version (ADR-014) on the row version in `ifMatch`; a 412 is an ApiProblem of type 'precondition-failed'. */
   saveVersion: (input: Keyed<{ storeId: string, groupId: string, language: 'en' | 'de', ifMatch: number } & StoryVersionSaveBody>) => Promise<StoryVersion>
+  /** Publishes one language version (ADR-014); the draft becomes the published copy and the row version moves. A 422 `publish-incomplete` is a `PublishIncomplete` that names the gaps. */
+  publishVersion: (input: Keyed<{ storeId: string, groupId: string, language: 'en' | 'de', ifMatch: number }>) => Promise<StoryVersion>
+  /** Makes a live version a draft again; the published text stays. */
+  unpublishVersion: (input: Keyed<{ storeId: string, groupId: string, language: 'en' | 'de', ifMatch: number }>) => Promise<StoryVersion>
 }

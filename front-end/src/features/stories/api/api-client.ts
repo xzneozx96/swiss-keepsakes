@@ -3,6 +3,7 @@ import type { StoriesClient } from './client'
 
 import { answer, keyed, loadClient, problemOf, timeout } from '@/features/data-client/api-transport'
 import { ApiProblem } from '@/features/data-client/errors'
+import { gapsOf, PublishIncomplete } from './publish-incomplete'
 
 // The generated body type reads a heading level as 2 only (openapi.json says `enum: [2]` where the schema allows 2 and 3),
 // so the domain's `emptyStoryBody` does not assign to it; the same one-paragraph document is written out here.
@@ -43,6 +44,25 @@ export function createStoriesClient(): StoriesClient {
         ...keyed(idempotencyKey),
         params: { path: { storeId, groupId, language }, header: { 'If-Match': String(ifMatch) } },
         body: body as never,
+      })) as Promise<StoryVersion>,
+    publishVersion: async ({ storeId, groupId, language, ifMatch, idempotencyKey }) => {
+      const { data, error, response } = await (await loadClient()).POST('/api/store/{storeId}/story-groups/{groupId}/versions/{language}/publish', {
+        ...keyed(idempotencyKey),
+        params: { path: { storeId, groupId, language }, header: { 'If-Match': String(ifMatch) } },
+      })
+
+      if (data === undefined) {
+        const problem = problemOf(response, error)
+
+        throw problem.type === 'publish-incomplete' ? new PublishIncomplete(problem, gapsOf(error)) : problem
+      }
+
+      return data as StoryVersion
+    },
+    unpublishVersion: async ({ storeId, groupId, language, ifMatch, idempotencyKey }) =>
+      answer((await loadClient()).POST('/api/store/{storeId}/story-groups/{groupId}/versions/{language}/unpublish', {
+        ...keyed(idempotencyKey),
+        params: { path: { storeId, groupId, language }, header: { 'If-Match': String(ifMatch) } },
       })) as Promise<StoryVersion>,
     removeStory: async ({ storeId, groupId, versions }) => {
       const client = await loadClient()

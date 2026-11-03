@@ -154,6 +154,9 @@ export const commandAffects: {
     removeStory: [queryKeys.stories.list, queryKeys.stories.group],
     // The editor writes every answer into the group query itself (as the keepsake editor does), so a save refreshes nothing.
     saveVersion: [],
+    // Likewise: the editor writes the answer into the group query itself (through `engine.exclusive`), so only the list is refreshed.
+    publishVersion: [queryKeys.stories.list],
+    unpublishVersion: [queryKeys.stories.list],
   },
   stores: {
     createStore: [queryKeys.stores.adminStores],
