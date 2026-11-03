@@ -572,6 +572,42 @@ describe('[E4.3][AC30] the story reads', () => {
     expect(await response.json()).toMatchObject({ type: 'not-found' })
   })
 
+  it('[E4.3][AC30] PATCH story-groups/{id} hands kind and subjectPlaceId to the use case', async () => {
+    const seen: unknown[] = []
+    const app = setup({ saveStoryGroup: async (_actor, _storeId, _id, _ifMatch, changes) => {
+      seen.push(changes)
+      return { ok: true, value: { ...fakeStoryGroup, rowVersion: 2 } }
+    } })
+    const pin = '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d'
+
+    expect((await send(app, 'PATCH', group, { 'If-Match': '1' }, { kind: 'editorial_review', subjectPlaceId: pin, placeIds: [pin] })).status).toBe(200)
+    expect((await send(app, 'PATCH', group, { 'If-Match': '1' }, { kind: 'story', subjectPlaceId: null })).status).toBe(200)
+    expect(seen).toEqual([{ kind: 'editorial_review', subjectPlaceId: pin, placeIds: [pin] }, { kind: 'story', subjectPlaceId: null }])
+  })
+
+  it('[E4.3][AC30] PATCH story-groups/{id} with a kind and subject place that disagree is 400 and never reaches the use case', async () => {
+    let calls = 0
+    const app = setup({ saveStoryGroup: async () => {
+      calls++
+      return { ok: true, value: fakeStoryGroup }
+    } })
+    const pin = '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d'
+
+    for (const body of [{ kind: 'editorial_review' }, { kind: 'story', subjectPlaceId: pin }, { subjectPlaceId: pin }]) {
+      const response = await send(app, 'PATCH', group, { 'If-Match': '1' }, body)
+      expect(response.status, JSON.stringify(body)).toBe(400)
+    }
+    expect(calls).toBe(0)
+  })
+
+  it('[E4.3][AC30] PATCH story-groups/{id} with a subject place of another store answers 422 reference-invalid', async () => {
+    const app = setup({ saveStoryGroup: async () => ({ ok: false, reason: 'reference-invalid' }) })
+    const response = await send(app, 'PATCH', group, { 'If-Match': '1' }, { kind: 'editorial_review', subjectPlaceId: '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d' })
+
+    expect(response.status).toBe(422)
+    expect(await response.json()).toMatchObject({ type: 'reference-invalid' })
+  })
+
   it('[E4.3][AC30] the existing PATCH and POST on story-groups still answer', async () => {
     const app = setup()
 

@@ -196,6 +196,8 @@ export function createStoryRepository(): StoryRepository<Tx> {
     async saveGroup(tx, group, changes, at) {
       await tx.execute(sql`
         update content.story_groups set
+          kind = ${changes.kind ?? group.kind},
+          subject_place_id = ${changes.kind === undefined ? group.subjectPlaceId : (changes.subjectPlaceId ?? null)},
           stay_tag = ${changes.stayTag ?? group.stayTag},
           interests = ${sql.param(changes.interests ?? group.interests)}::text[],
           row_version = row_version + 1, updated_at = ${at}

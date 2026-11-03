@@ -7130,10 +7130,14 @@ export interface components {
             categoryIds?: string[];
             interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes" | "local-activities")[];
             keepsakeProductIds?: string[];
+            /** @enum {string} */
+            kind?: "story" | "editorial_review";
             placeIds?: string[];
             relatedGroupIds?: string[];
             /** @enum {string} */
             stayTag?: "short_stay" | "multi_day" | "both";
+            /** Format: uuid */
+            subjectPlaceId?: string | null;
         };
         /** @description The story groups of the store that have a version, most recently updated first */
         StoryList: {

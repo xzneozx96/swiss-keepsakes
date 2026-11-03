@@ -408,6 +408,31 @@ describe('[E2.6] story repository on the real database', () => {
     const error2 = await thrown(() => s.uow.run(tx => pins.remove(tx, s.store, pin.id)))
     expect(mapDatabaseError(error2)).toEqual({ reason: 'in-use' })
   })
+
+  it('[E4.3][AC30] a group save sets kind and subject place together, and the database check holds', async () => {
+    const s = setup()
+    const pins = createPinRepository()
+    const pin = await s.uow.run(tx => pins.insert(tx, s.store, { title: { en: 'Chapel Bridge' } }, new Date()))
+    const foreign = await s.uow.run(tx => pins.insert(tx, randomUUID(), { title: { en: 'Elsewhere' } }, new Date()))
+    const g = await group(s)
+    const row = async () => (await pool.query<{ kind: string, subject_place_id: string | null, row_version: number }>(`select kind, subject_place_id, row_version from content.story_groups where id = $1`, [g.id])).rows[0]
+
+    expect(await s.use.saveGroup(s.actor, s.store, g.id, 1, { kind: 'editorial_review', subjectPlaceId: pin.id, placeIds: [pin.id] }, null))
+      .toMatchObject({ ok: true, value: { kind: 'editorial_review', subjectPlaceId: pin.id, placeIds: [pin.id], rowVersion: 2 } })
+    expect(await row()).toEqual({ kind: 'editorial_review', subject_place_id: pin.id, row_version: 2 })
+    // A mismatch is refused before the database and nothing changes.
+    expect(await s.use.saveGroup(s.actor, s.store, g.id, 2, { kind: 'story', subjectPlaceId: pin.id }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+    expect(await s.use.saveGroup(s.actor, s.store, g.id, 2, { kind: 'editorial_review', subjectPlaceId: null }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+    // A pin of another store, or none, is refused at commit and the group keeps its place.
+    expect(await s.use.saveGroup(s.actor, s.store, g.id, 2, { kind: 'editorial_review', subjectPlaceId: foreign.id }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+    expect(await s.use.saveGroup(s.actor, s.store, g.id, 2, { kind: 'editorial_review', subjectPlaceId: randomUUID() }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+    expect(await row()).toEqual({ kind: 'editorial_review', subject_place_id: pin.id, row_version: 2 })
+    // A save that leaves kind out keeps both.
+    expect(await s.use.saveGroup(s.actor, s.store, g.id, 2, { stayTag: 'short_stay' }, null)).toMatchObject({ ok: true, value: { kind: 'editorial_review', subjectPlaceId: pin.id, rowVersion: 3 } })
+    // Back to a story: the place is cleared.
+    expect(await s.use.saveGroup(s.actor, s.store, g.id, 3, { kind: 'story' }, null)).toMatchObject({ ok: true, value: { kind: 'story', subjectPlaceId: null, rowVersion: 4 } })
+    expect(await row()).toEqual({ kind: 'story', subject_place_id: null, row_version: 4 })
+  })
 })
 
 // The story routes over the real app: real sessions, the real Idempotency-Key middleware and the real database.
@@ -624,6 +649,36 @@ describe('[E2.6] the story routes over the real app and the database', () => {
     expect(await response.json()).toMatchObject({ type: 'media-retired' })
     expect(await versionRow(groupId)).toMatchObject({ row_version: 1 })
     expect((await versionRow(groupId))!.draft).not.toMatchObject({ coverMediaId: cover })
+  }, timeout)
+
+  it('[E4.3][AC30] the group PATCH over the real app: both pairings pass, both mismatches are 400, another store\'s group is 404, another store\'s pin is 422', async () => {
+    const lucerne = await env.storeWithStaff()
+    const zug = await env.storeWithStaff()
+    const { owner, groups } = lucerne
+    const pins = createPinRepository()
+    const [pin, foreign] = await Promise.all([
+      createUnitOfWork(db).run(tx => pins.insert(tx, lucerne.storeId, { title: { en: 'Chapel Bridge' } }, new Date())),
+      createUnitOfWork(db).run(tx => pins.insert(tx, zug.storeId, { title: { en: 'Elsewhere' } }, new Date())),
+    ]).then(rows => rows.map(r => r.id))
+    const { groupId } = await groupAndVersion(lucerne)
+    const path = `${groups}/${groupId}`
+    const patch = (version: number, body: object, base = path) => env.call(base, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': String(version) }, body })
+    const row = async () => (await pool.query(`select kind, subject_place_id, row_version from content.story_groups where id = $1`, [groupId])).rows[0]
+
+    const on = await patch(1, { kind: 'editorial_review', subjectPlaceId: pin, placeIds: [pin] })
+    expect(on.status).toBe(200)
+    expect(await on.json()).toMatchObject({ kind: 'editorial_review', subjectPlaceId: pin, rowVersion: 2 })
+    expect((await patch(2, { kind: 'editorial_review' })).status).toBe(400)
+    expect((await patch(2, { kind: 'story', subjectPlaceId: pin })).status).toBe(400)
+    expect((await patch(2, { kind: 'editorial_review', subjectPlaceId: foreign })).status).toBe(422)
+    expect(await row()).toMatchObject({ kind: 'editorial_review', subject_place_id: pin, row_version: 2 })
+    const off = await patch(2, { kind: 'story', subjectPlaceId: null })
+    expect(off.status).toBe(200)
+    expect(await off.json()).toMatchObject({ kind: 'story', subjectPlaceId: null, rowVersion: 3 })
+    expect(await row()).toMatchObject({ kind: 'story', subject_place_id: null, row_version: 3 })
+
+    const theirs = await groupAndVersion(zug)
+    expect((await patch(1, { kind: 'story', subjectPlaceId: null }, `${groups}/${theirs.groupId}`)).status).toBe(404)
   }, timeout)
 
   it('[E2.6] AC-7 the other store\'s owner gets 403 and a group of another store is 404 through my store', async () => {

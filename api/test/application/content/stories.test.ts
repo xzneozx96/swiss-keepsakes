@@ -233,6 +233,38 @@ describe('story use cases', () => {
     expect(await s.saveGroup(owner, store, g.id, 3, { placeIds: [] }, null)).toEqual({ ok: false, reason: 'stale' })
   })
 
+  it('[E4.3][AC30] saving kind and subject place changes the group and bumps the row version', async () => {
+    const s = setup()
+    const g = await group(s)
+    expect(await s.saveGroup(owner, store, g.id, 1, { kind: 'editorial_review', subjectPlaceId: 'p1', placeIds: ['p1'] }, null))
+      .toMatchObject({ ok: true, value: { kind: 'editorial_review', subjectPlaceId: 'p1', placeIds: ['p1'], rowVersion: 2 } })
+  })
+
+  it('[E4.3][AC30] switching back to story clears the subject place, also when the body leaves it out', async () => {
+    const s = setup()
+    const g = await group(s)
+    s.stories.groups.set(g.id, { ...g, kind: 'editorial_review', subjectPlaceId: 'p1' })
+    expect(await s.saveGroup(owner, store, g.id, 1, { kind: 'story' }, null))
+      .toMatchObject({ ok: true, value: { kind: 'story', subjectPlaceId: null, rowVersion: 2 } })
+  })
+
+  it('[E4.3][AC30] a save that leaves kind out keeps kind and subject place', async () => {
+    const s = setup()
+    const g = await group(s)
+    s.stories.groups.set(g.id, { ...g, kind: 'editorial_review', subjectPlaceId: 'p1' })
+    expect(await s.saveGroup(owner, store, g.id, 1, { placeIds: ['p2'] }, null))
+      .toMatchObject({ ok: true, value: { kind: 'editorial_review', subjectPlaceId: 'p1' } })
+  })
+
+  it('[E4.3][AC30] a review with no subject place, or a story with one, is reference-invalid and nothing changes', async () => {
+    const s = setup()
+    const g = await group(s)
+    expect(await s.saveGroup(owner, store, g.id, 1, { kind: 'editorial_review', subjectPlaceId: null }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+    expect(await s.saveGroup(owner, store, g.id, 1, { kind: 'editorial_review' }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+    expect(await s.saveGroup(owner, store, g.id, 1, { kind: 'story', subjectPlaceId: 'p1' }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+    expect(s.stories.groups.get(g.id)).toMatchObject({ rowVersion: 1, kind: 'story', subjectPlaceId: null })
+  })
+
   it('[E2.6] a story group listing itself as related is reference-invalid and nothing changes', async () => {
     const s = setup()
     const g = await group(s)

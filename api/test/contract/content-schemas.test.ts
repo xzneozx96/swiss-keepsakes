@@ -135,8 +135,21 @@ describe('[E2.6] content write schemas', () => {
     expect(ok(storyGroupSaveBodySchema, { keepsakeProductIds: distinct(7) })).toBe(false)
     expect(storyGroupCreateBodySchema.parse({}).kind).toBe('story')
     expect(ok(storyGroupCreateBodySchema, { kind: 'editorial_review', subjectPlaceId: uuid })).toBe(true)
-    expect(ok(storyGroupSaveBodySchema, { kind: 'story' })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'story' })).toBe(true)
     expect(ok(storyGroupSaveBodySchema, { subjectPlaceId: uuid })).toBe(false)
+  })
+
+  it('[E4.3][AC30] a group save takes kind and subjectPlaceId together: both pairings pass, every mismatch is refused', () => {
+    expect(ok(storyGroupSaveBodySchema, { kind: 'editorial_review', subjectPlaceId: uuid })).toBe(true)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'story', subjectPlaceId: null })).toBe(true)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'story' })).toBe(true)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'editorial_review' })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'editorial_review', subjectPlaceId: null })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'story', subjectPlaceId: uuid })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { subjectPlaceId: uuid })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { subjectPlaceId: null })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'editorial_review', subjectPlaceId: 'not-a-uuid' })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { kind: 'editorial_review', subjectPlaceId: uuid, placeIds: [uuid] })).toBe(true)
   })
 
   it('[E2.13] story draft: the old intro, sections and readMinutes are refused and the body is required', () => {

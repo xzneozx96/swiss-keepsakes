@@ -398,7 +398,20 @@ export const storyGroupCreateBodySchema = z.strictObject({
     ctx.addIssue({ code: 'custom', message: 'Only an editorial review has a subject place', path: ['subjectPlaceId'] })
 }).meta({ id: 'StoryGroupCreateBody' })
 
-export const storyGroupSaveBodySchema = z.strictObject(storyGroupFields).meta({ id: 'StoryGroupSaveBody' })
+// kind and subjectPlaceId travel together (story_groups_subject_check): a review names its place, and a story names none,
+// as `null` or by leaving the field out. A subject place with no kind is refused.
+export const storyGroupSaveBodySchema = z.strictObject({
+  kind: z.enum(['story', 'editorial_review']).optional(),
+  subjectPlaceId: z.uuid().nullable().optional(),
+  ...storyGroupFields,
+}).superRefine((body, ctx) => {
+  if (body.kind === undefined && body.subjectPlaceId !== undefined)
+    ctx.addIssue({ code: 'custom', message: 'A subject place needs a kind', path: ['kind'] })
+  if (body.kind === 'editorial_review' && !body.subjectPlaceId)
+    ctx.addIssue({ code: 'custom', message: 'An editorial review needs a subject place', path: ['subjectPlaceId'] })
+  if (body.kind === 'story' && body.subjectPlaceId)
+    ctx.addIssue({ code: 'custom', message: 'Only an editorial review has a subject place', path: ['subjectPlaceId'] })
+}).meta({ id: 'StoryGroupSaveBody' })
 
 export const storyGroupSchema = z.object({
   id: z.uuid(),

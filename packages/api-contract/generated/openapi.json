@@ -14987,6 +14987,13 @@
             "maxItems": 6,
             "type": "array"
           },
+          "kind": {
+            "enum": [
+              "story",
+              "editorial_review"
+            ],
+            "type": "string"
+          },
           "placeIds": {
             "items": {
               "format": "uuid",
@@ -15010,6 +15017,13 @@
               "both"
             ],
             "type": "string"
+          },
+          "subjectPlaceId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "type": "object"

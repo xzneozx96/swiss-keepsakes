@@ -16,10 +16,15 @@ export function makeSaveStoryGroup<T>({ uow, stories, clock }: StoryDeps<T>) {
         return fail({ reason: 'not-found' })
       if (group.rowVersion !== ifMatch)
         return fail({ reason: 'stale' })
+      // story_groups_subject_check, as at creation: a review needs its place, a story has none, a place needs a kind.
+      if (changes.kind === undefined ? changes.subjectPlaceId !== undefined : (changes.kind === 'editorial_review') !== (changes.subjectPlaceId != null))
+        return fail({ reason: 'reference-invalid' })
       // story_related_not_self_check; the database says the same, but as a 500.
       if (changes.relatedGroupIds?.some(id => id.toLowerCase() === groupId.toLowerCase()))
         return fail({ reason: 'reference-invalid' })
-      return ok(await stories.saveGroup(tx, group, changes, clock.now()))
+      // A story with no place in the body is a story with a null place.
+      const kindChanges = changes.kind === undefined ? changes : { ...changes, subjectPlaceId: changes.subjectPlaceId ?? null }
+      return ok(await stories.saveGroup(tx, group, kindChanges, clock.now()))
     })
   }
 }

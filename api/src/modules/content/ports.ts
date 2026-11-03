@@ -250,6 +250,9 @@ export interface PinRepository<T> {
 
 // What a story group save may change. A list replaces the whole list, in the order given.
 export interface StoryGroupChanges {
+  // Together: a review names its subject place, a story clears it (story_groups_subject_check).
+  kind?: StoryGroup['kind']
+  subjectPlaceId?: string | null
   stayTag?: StayTag
   interests?: string[]
   categoryIds?: string[]
