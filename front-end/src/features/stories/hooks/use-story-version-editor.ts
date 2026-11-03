@@ -15,6 +15,9 @@ import { createAutosave } from '../lib/autosave'
 import { draftOf, fieldsOf } from '../lib/draft'
 import { versionStateOf } from '../lib/version-state'
 
+/** What the body editor registers: `handoff` hands a pending body over now (idempotent), `cancel` drops it. */
+export interface BodyHandover { handoff: () => void, cancel: () => void }
+
 /**
  * The autosave of one language version of a story (UX section 7): the title, excerpt and cover save 1.5 s after the last
  * edit, with the row version in `If-Match`. The typed fields live here, in the engine, never in the query, so a refetch
@@ -68,8 +71,16 @@ export function useStoryVersionEditor({ storeId, group, language, accountName }:
     },
   }))
 
+  // The body editor hands its text over 300 ms after the last key; these reach into that wait. Written only by
+  // `registerHandover`, which the editor calls from an effect.
+  const handoverRef = useRef<BodyHandover | null>(null)
+
   // Leaving by any route saves what is typed: the request goes on after the screen is gone. A discard has emptied the engine first.
-  useEffect(() => () => engine.dispose(), [engine])
+  // A body still waiting for its hand-over is handed over before the engine is disposed.
+  useEffect(() => () => {
+    handoverRef.current?.handoff()
+    engine.dispose()
+  }, [engine])
 
   /** A change of some fields, or a function of the fields as they are now (the body editor of a later ticket passes `{ body }`). */
   const change = (patch: Partial<StoryFields> | ((current: StoryFields) => Partial<StoryFields>)) => {
@@ -83,25 +94,39 @@ export function useStoryVersionEditor({ storeId, group, language, accountName }:
   return {
     fields,
     change,
+    /** The state is unsaved at once and the wait restarts, with the fields as they are (a keystroke in the body, 300 ms before its hand-over). */
+    markDirty: () => engine.change(fieldsRef.current),
+    registerHandover: (handover: BodyHandover | null) => {
+      handoverRef.current = handover
+    },
     state,
     problem,
     savedAt,
     // Stale and failed edits are unsaved too: Back must ask before they are dropped.
     isUnsaved: state !== 'saved',
     versionState: versionStateOf(version, state !== 'saved'),
-    flush: engine.flush,
+    flush: () => {
+      handoverRef.current?.handoff()
+
+      return engine.flush()
+    },
     /**
      * A write on the version row that is not a save (publish, unpublish, the link): it goes through the engine so the row
      * version has one owner. Saves what is typed first, writes the answer into the group query, and is not a "Saved" moment.
      */
     run: async (write: (ifMatch: number) => Promise<StoryVersion>) => {
+      handoverRef.current?.handoff()
+
       const answer = await engine.exclusive(write)
 
       queryClient.setQueryData<StoryGroupDetail>(groupKey, current => (current ? { ...current, versions: { ...current.versions, [language]: answer } } : current))
 
       return answer
     },
-    discard: engine.discard,
+    discard: () => {
+      handoverRef.current?.cancel()
+      engine.discard()
+    },
     retry: () => void engine.flush(),
   }
 }
