@@ -10,6 +10,7 @@ vi.setConfig({ testTimeout: 180_000, hookTimeout: 120_000 })
 
 const { pool } = openTestDatabase()
 
+const off = { replaceLegacy: false, deleteSamplePins: false, refreshBodies: false }
 const out = { stdout: '', stderr: '' }
 beforeEach(() => {
   out.stdout = ''
@@ -82,11 +83,13 @@ describe('[seed-place-stories] the stories step on a scratch store', () => {
     const stories = suffixed('a1')
     const store = await scratchStore(stories, ['bachmann-at-bahnhof-luzern-ug'])
 
-    expect(await placeStoriesStep(pool, store.storeId, { dry: false, replaceLegacy: false }, stories)).toBe(0)
+    expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: false }, stories)).toBe(0)
     const first = await store.state()
 
     expect(first.groups).toHaveLength(8)
-    const review = first.groups.find(g => g.kind === 'editorial_review')
+    const reviews = first.groups.filter(g => g.kind === 'editorial_review')
+    expect(reviews).toHaveLength(1)
+    const review = reviews.find(g => g.subject_place_id === store.placeIds.get('bachmann-at-bahnhof-luzern-ug-a1'))
     expect(review.subject_place_id).toBe(store.placeIds.get('bachmann-at-bahnhof-luzern-ug-a1'))
     expect(review.versions.map((v: { s: string }) => v.s)).toEqual(['draft', 'draft'])
     expect(review.places).toEqual([review.subject_place_id])
@@ -107,13 +110,18 @@ describe('[seed-place-stories] the stories step on a scratch store', () => {
     expect(mainOf('lion-monument-a1')).toBe(lion.id)
     expect(mainOf('chapel-bridge-and-water-tower-a1')).toBe(chapel.id)
     expect(mainOf('chapel-bridge-a1')).toBe(chapel.id)
-    expect(mainOf('bachmann-at-bahnhof-luzern-ug-a1')).toBeNull()
+    // A review is the main story of its pin too, also a draft one (DM-5 allows it), and it is linked to its place.
+    for (const slug of ['bachmann-at-bahnhof-luzern-ug']) {
+      const group = reviews.find(g => g.subject_place_id === store.placeIds.get(`${slug}-a1`))
+      expect(mainOf(`${slug}-a1`), slug).toBe(group.id)
+      expect(group.places, slug).toEqual([store.placeIds.get(`${slug}-a1`)])
+    }
     // A main story set through the save use case leaves no draft behind and the pin published.
     expect(first.pins.every(p => p.no_draft && p.status === 'published')).toBe(true)
     expect(out.stdout).toContain('8 created (14 versions published)')
 
     out.stdout = ''
-    expect(await placeStoriesStep(pool, store.storeId, { dry: false, replaceLegacy: false }, stories)).toBe(0)
+    expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: false }, stories)).toBe(0)
     expect(await store.state()).toEqual(first)
     expect(out.stdout).toContain('Nothing was changed')
     expect(out.stdout).toContain('skipping 8')
@@ -123,7 +131,7 @@ describe('[seed-place-stories] the stories step on a scratch store', () => {
     const stories = suffixed('b2')
     const store = await scratchStore(stories)
     const before = await store.state()
-    expect(await placeStoriesStep(pool, store.storeId, { dry: true, replaceLegacy: true }, stories)).toBe(0)
+    expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: true, replaceLegacy: true }, stories)).toBe(0)
     expect(out.stdout).toContain('Would create 8 stories and reviews')
     expect(await store.state()).toEqual(before)
   })
@@ -132,7 +140,7 @@ describe('[seed-place-stories] the stories step on a scratch store', () => {
     const stories = suffixed('c3')
     const store = await scratchStore(stories.filter(s => s.key !== 'weinmarkt'))
     const before = await store.state()
-    expect(await placeStoriesStep(pool, store.storeId, { dry: false, replaceLegacy: false }, stories)).toBe(1)
+    expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: false }, stories)).toBe(1)
     expect(out.stderr).toContain('weinmarkt-c3')
     expect(await store.state()).toEqual(before)
   })
@@ -150,7 +158,7 @@ describe('[seed-place-stories] the stories step on a scratch store', () => {
     const mine = (await pool.query(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [store.storeId])).rows[0].id
     await pool.query(`insert into content.story_versions (group_id, language, store_id, slug, draft) values ($1, 'en', $2, $3, $4::jsonb)`, [mine, store.storeId, `my-own-story-${randomUUID().slice(0, 8)}`, JSON.stringify(draft)])
 
-    expect(await placeStoriesStep(pool, store.storeId, { dry: false, replaceLegacy: true }, stories)).toBe(0)
+    expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: false, replaceLegacy: true }, stories)).toBe(0)
     expect(out.stdout).toContain('Will delete 1 legacy stories: qa-story-c2cd1d')
     expect(out.stdout).toContain('1 deleted, 8 created')
     const groups = (await store.state()).groups
@@ -165,7 +173,7 @@ describe('[seed-place-stories] the stories step on a scratch store', () => {
 
     const after = await store.state()
     out.stdout = ''
-    expect(await placeStoriesStep(pool, store.storeId, { dry: false, replaceLegacy: true }, stories)).toBe(0)
+    expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: false, replaceLegacy: true }, stories)).toBe(0)
     expect(out.stdout).toContain('Will delete 0 legacy stories')
     expect(await store.state()).toEqual(after)
   })
@@ -176,8 +184,90 @@ describe('[seed-place-stories] the stories step on a scratch store', () => {
     const chosen = (await pool.query(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [store.storeId])).rows[0].id
     await pool.query(`insert into content.story_versions (group_id, language, store_id, slug, draft) values ($1, 'en', $2, $3, $4::jsonb)`, [chosen, store.storeId, `chosen-${randomUUID().slice(0, 8)}`, JSON.stringify({ title: 't', excerpt: '', authorName: '', coverMediaId: null, body: { type: 'doc', content: [{ type: 'paragraph' }] } })])
     await pool.query(`update content.places set main_story_group_id = $1 where id = $2`, [chosen, store.placeIds.get('weinmarkt-e5')])
-    await placeStoriesStep(pool, store.storeId, { dry: false, replaceLegacy: false }, stories)
+    await placeStoriesStep(pool, store.storeId, { ...off, dry: false }, stories)
     const pin = (await pool.query(`select main_story_group_id from content.places where id = $1`, [store.placeIds.get('weinmarkt-e5')])).rows[0]
     expect(pin.main_story_group_id).toBe(chosen)
+  })
+
+  it('--delete-sample-pins deletes an unused sample pin through the Delete pin use case, keeps a used one, and a second run deletes nothing', async () => {
+    const stories = suffixed('f6')
+    const store = await scratchStore(stories)
+    const sample = async (slug: string) => {
+      const id = randomUUID()
+      await pool.query(`insert into content.places (id, store_id, status, slug, latitude, longitude, published, first_published_at) values ($1, $2, 'hidden', $3::jsonb, 47.05, 8.3, $4::jsonb, now())`, [id, store.storeId, JSON.stringify({ en: slug }), JSON.stringify({ name: { en: slug }, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} })])
+      return id
+    }
+    const sampleId = await sample('baeckerei-weinmarkt')
+    const before = (await pool.query(`select count(*)::int n from content.places where store_id = $1`, [store.storeId])).rows[0].n
+    expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: true, deleteSamplePins: true }, stories)).toBe(0)
+    expect(out.stdout).toContain('Would delete 1 sample pins: baeckerei-weinmarkt')
+    expect((await pool.query(`select count(*)::int n from content.places where store_id = $1`, [store.storeId])).rows[0].n).toBe(before)
+
+    expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: false, deleteSamplePins: true }, stories)).toBe(0)
+    expect((await pool.query(`select count(*)::int n from content.places where id = $1`, [sampleId])).rows[0].n).toBe(0)
+    expect((await pool.query(`select count(*)::int n from content.places where store_id = $1`, [store.storeId])).rows[0].n).toBe(before - 1)
+    const after = await store.state()
+    out.stdout = ''
+    expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: false, deleteSamplePins: true }, stories)).toBe(0)
+    expect(out.stdout).toContain('Would delete 0 sample pins')
+    expect(await store.state()).toEqual(after)
+  })
+
+  it('--delete-sample-pins stops with nothing written when a story uses the sample pin', async () => {
+    const stories = suffixed('g7').filter(s => s.key === 'weinmarkt')
+    const store = await scratchStore(stories)
+    const id = randomUUID()
+    await pool.query(`insert into content.places (id, store_id, status, slug, latitude, longitude, published, first_published_at) values ($1, $2, 'hidden', $3::jsonb, 47.05, 8.3, $4::jsonb, now())`, [id, store.storeId, JSON.stringify({ en: 'baeckerei-weinmarkt' }), JSON.stringify({ name: { en: 'x' }, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} })])
+    const group = (await pool.query(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [store.storeId])).rows[0].id
+    await pool.query(`insert into content.story_group_places (group_id, place_id, store_id, position) values ($1, $2, $3, 1)`, [group, id, store.storeId])
+    expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: false, deleteSamplePins: true }, stories)).toBe(1)
+    expect(out.stderr).toContain('baeckerei-weinmarkt')
+    expect((await pool.query(`select count(*)::int n from content.places where id = $1`, [id])).rows[0].n).toBe(1)
+  })
+
+  it('--refresh-story-bodies rewrites only the body of a stored version, keeps published ones published and drafts drafts, and a second run changes nothing', async () => {
+    const stories = suffixed('h8')
+    const store = await scratchStore(stories, ['bachmann-at-bahnhof-luzern-ug'])
+    await placeStoriesStep(pool, store.storeId, { ...off, dry: false }, stories)
+    // Put an older body (with an extra line) into every stored version, as the first dev run left them.
+    const older = (body: { content: unknown[] }) => ({ ...body, content: [...body.content, { type: 'paragraph', content: [{ type: 'text', text: 'Sources: old' }] }] })
+    const rows = (await pool.query(`select group_id, language, status, draft, published from content.story_versions where store_id = $1`, [store.storeId])).rows
+    for (const row of rows) {
+      const slot = row.status === 'published' ? 'published' : 'draft'
+      const doc = row[slot]
+      await pool.query(`update content.story_versions set ${slot} = $1::jsonb where group_id = $2 and language = $3`, [JSON.stringify({ ...doc, body: older(doc.body) }), row.group_id, row.language])
+    }
+    const titles = (await pool.query(`select group_id, language, coalesce(published, draft)->>'title' t, coalesce(published, draft)->>'coverMediaId' c from content.story_versions where store_id = $1 order by 1, 2`, [store.storeId])).rows
+    expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: true, refreshBodies: true }, stories)).toBe(0)
+    expect(out.stdout).toContain('Would rewrite the body of 16 story versions')
+
+    expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: false, refreshBodies: true }, stories)).toBe(0)
+    expect(out.stdout).toContain('16 bodies rewritten')
+    const now = (await pool.query(`select group_id, language, status, draft is null no_draft, coalesce(published, draft) doc from content.story_versions where store_id = $1 order by 1, 2`, [store.storeId])).rows
+    expect(now.map(r => `${r.status}:${r.no_draft}`).sort()).toEqual(rows.map(r => `${r.status}:${r.status === 'published'}`).sort())
+    expect(JSON.stringify(now.map(r => r.doc.body))).not.toContain('Sources: old')
+    expect(now.map(r => ({ group_id: r.group_id, language: r.language, t: r.doc.title, c: r.doc.coverMediaId }))).toEqual(titles.map(r => ({ group_id: r.group_id, language: r.language, t: r.t, c: r.c })))
+
+    const after = await store.state()
+    out.stdout = ''
+    expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: false, refreshBodies: true }, stories)).toBe(0)
+    expect(out.stdout).toContain('Nothing was changed')
+    expect(await store.state()).toEqual(after)
+  })
+
+  it('links an existing story to its place when the place has no main story, once', async () => {
+    const stories = suffixed('i9')
+    const store = await scratchStore(stories)
+    await placeStoriesStep(pool, store.storeId, { ...off, dry: false }, stories)
+    const bachmann = store.placeIds.get('bachmann-at-bahnhof-luzern-ug-i9')!
+    await pool.query(`update content.places set main_story_group_id = null where id = $1`, [bachmann])
+    out.stdout = ''
+    expect(await placeStoriesStep(pool, store.storeId, { ...off, dry: false }, stories)).toBe(0)
+    expect(out.stdout).toContain('1 main stories set')
+    const row = (await pool.query(`select main_story_group_id g from content.places where id = $1`, [bachmann])).rows[0]
+    expect((await pool.query(`select subject_place_id from content.story_groups where id = $1`, [row.g])).rows[0].subject_place_id).toBe(bachmann)
+    out.stdout = ''
+    await placeStoriesStep(pool, store.storeId, { ...off, dry: false }, stories)
+    expect(out.stdout).toContain('Nothing was changed')
   })
 })

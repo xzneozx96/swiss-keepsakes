@@ -1,7 +1,7 @@
+import type { SeedStory } from '../../scripts/seed-data/stories.ts'
 import { randomUUID } from 'node:crypto'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { seedContent, seedStoryDraft } from '../../scripts/seed-content.ts'
-import { seedStories } from '../../scripts/seed-data/stories.ts'
 import { seedTours } from '../../scripts/seed-data/tours.ts'
 import { insertStore } from '../support/identity-wiring.ts'
 import { openTestDatabase } from './support.ts'
@@ -16,6 +16,14 @@ afterAll(async () => {
 
 // Slugs are unique across all stores, so this is the only test file that seeds, and it seeds a store of its own.
 const storeId = randomUUID()
+
+// The prototype stories are gone from the data (2026-11-03), so the story rules are tested on two stories of the test's own.
+const doc = (title: string) => ({ title, excerpt: 'Excerpt', intro: 'Intro.', authorName: 'Sonja', readMinutes: 2, coverMediaId: null, sections: [{ id: 's', heading: 'Heading', blocks: [{ type: 'paragraph' as const, text: 'Text.' }] }] })
+const slugSuffix = randomUUID().slice(0, 8)
+const seedStories: SeedStory[] = [
+  { slug: `sample-both-${slugSuffix}`, versions: { en: doc('Both'), de: doc('Beide') } },
+  { slug: `sample-en-${slugSuffix}`, versions: { en: doc('English only') } },
+]
 
 async function snapshot(): Promise<Record<string, string>> {
   const tables = ['story_groups', 'story_versions', 'tours', 'tour_stops']
@@ -46,11 +54,11 @@ describe('db:seed', () => {
     await pool.query(`insert into content.tours (store_id, slug) values ($1, $2::jsonb), ($1, $3::jsonb)`, [storeId, JSON.stringify({ en: heldEn!.slug.en }), JSON.stringify({ de: heldDe!.slug.de })])
     const preTours = await pool.query(`select md5(t::text) as hash from content.tours t where store_id = $1 order by 1`, [storeId])
 
-    const first = await seedContent(db, storeId)
+    const first = await seedContent(db, storeId, seedStories)
     expect(first).toEqual({ stories: seedStories.length - 1, tours: seedTours.length - 2 })
     const afterFirst = await snapshot()
 
-    const second = await seedContent(db, storeId)
+    const second = await seedContent(db, storeId, seedStories)
     expect(second).toEqual({ stories: 0, tours: 0 })
     expect(await snapshot()).toEqual(afterFirst)
 
@@ -100,7 +108,7 @@ describe('db:seed', () => {
 
     expect(rows.length).toBeGreaterThan(0)
     expect(rows.every(v => !('authorRole' in v.draft))).toBe(true)
-    expect(await seedContent(db, storeId)).toEqual({ stories: 0, tours: 0 })
+    expect(await seedContent(db, storeId, seedStories)).toEqual({ stories: 0, tours: 0 })
     expect(await snapshot()).toEqual(before)
   })
 })

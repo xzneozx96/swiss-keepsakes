@@ -275,13 +275,15 @@ function printPlan(plan: Plan, snapshot: Snapshot, photos: Map<string, Uint8Arra
 // `--stock-only` runs the opening-stock step alone: no category, place or keepsake is planned or created (owner, 2026-11-03).
 // `--stories-only` does the same for the stories step, and `--replace-legacy-stories` adds the one-time delete of the old stories to it.
 // A flag that is not known stops the run, so a typo cannot start the full seed.
-const knownFlags = ['--dry-run', '--stock-only', '--stories-only', '--replace-legacy-stories']
+const knownFlags = ['--dry-run', '--stock-only', '--stories-only', '--replace-legacy-stories', '--delete-sample-pins', '--refresh-story-bodies']
 export function parseFlags(argv: readonly string[]) {
   return {
     dry: argv.includes('--dry-run'),
     stockOnly: argv.includes('--stock-only'),
     storiesOnly: argv.includes('--stories-only'),
     replaceLegacyStories: argv.includes('--replace-legacy-stories'),
+    deleteSamplePins: argv.includes('--delete-sample-pins'),
+    refreshStoryBodies: argv.includes('--refresh-story-bodies'),
     unknown: argv.filter(arg => !knownFlags.includes(arg)),
   }
 }
@@ -313,7 +315,7 @@ export async function stockOnly(pool: Pool, storeId: string, dry: boolean): Prom
 }
 
 async function main(): Promise<number> {
-  const { dry, stockOnly: onlyStock, storiesOnly, replaceLegacyStories, unknown } = parseFlags(process.argv.slice(2))
+  const { dry, stockOnly: onlyStock, storiesOnly, replaceLegacyStories, deleteSamplePins, refreshStoryBodies, unknown } = parseFlags(process.argv.slice(2))
   if (unknown.length > 0) {
     process.stderr.write(`Unknown flag: ${unknown.join(' ')}. Known: ${knownFlags.join(', ')}. Nothing was written.\n`)
     return 2
@@ -335,7 +337,7 @@ async function main(): Promise<number> {
     if (onlyStock)
       return await stockOnly(pool, storeId, dry)
     if (storiesOnly)
-      return await placeStoriesStep(pool, storeId, { dry, replaceLegacy: replaceLegacyStories })
+      return await placeStoriesStep(pool, storeId, { dry, replaceLegacy: replaceLegacyStories, deleteSamplePins, refreshBodies: refreshStoryBodies })
     const data = loadData()
     const snapshot = await readSnapshot(pool, storeId)
     const plan = buildPlan(data, snapshot)
@@ -362,7 +364,7 @@ async function main(): Promise<number> {
         process.stdout.write('Stories: planned after the places exist.\n')
         return 0
       }
-      return await placeStoriesStep(pool, storeId, { dry, replaceLegacy: replaceLegacyStories })
+      return await placeStoriesStep(pool, storeId, { dry, replaceLegacy: replaceLegacyStories, deleteSamplePins, refreshBodies: refreshStoryBodies })
     }
     // The content use cases read the home column, so nothing can be written until migration 0016 is applied.
     if (!homeColumn) {
@@ -378,7 +380,7 @@ async function main(): Promise<number> {
     else if (await run(pool, storeId, data, plan, snapshot, files) !== 0)
       return 1
     const stockCode = await openingStock(pool, storeId, quantities)
-    return stockCode !== 0 ? stockCode : await placeStoriesStep(pool, storeId, { dry, replaceLegacy: replaceLegacyStories })
+    return stockCode !== 0 ? stockCode : await placeStoriesStep(pool, storeId, { dry, replaceLegacy: replaceLegacyStories, deleteSamplePins, refreshBodies: refreshStoryBodies })
   }
   finally {
     await pool.end()

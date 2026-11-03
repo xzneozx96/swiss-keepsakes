@@ -3,8 +3,8 @@ import type { ContentLanguage } from '@sk/domain/content'
 // New, original stories and editorial reviews for the seeded places (owner decisions of 2026-11-03, standing order 19).
 // Written from public sources, never copied: each story lists the pages it was researched from. The text is plain:
 // a string is a paragraph, `{ h }` a level 2 heading, `{ ul }` a bullet list. seed-place-stories.ts turns it into the
-// story body and adds the closing "Sources" line, which guests see (decision: a visible source line builds trust and
-// the editor already allows links).
+// story body and adds the closing "Sources" line, which guests see. The whole text is to be rewritten by another writer; replace
+// it here and run `--refresh-story-bodies` (see seed-place-stories.ts).
 // Facts that the sources gave in conflicting forms are written loosely on purpose ("in the 17th century").
 
 export type PlaceStoryBlock = string | { h: string } | { ul: string[] }
@@ -22,7 +22,7 @@ export interface PlaceStory {
   slug: Record<ContentLanguage, string>
   // English slugs of the places the story is linked to. The first one is the subject of a review.
   places: string[]
-  // Places that get this story as their main story, when they have none (stories only).
+  // Places that get this story as their main story, when they have none.
   mainStoryFor: string[]
   // The cover is the cover of this place (media the seed already holds); no new image is added.
   coverFrom: string
@@ -39,6 +39,10 @@ export interface PlaceStory {
 
 // The 13 stories on dev on 2026-11-03: the 12 prototype stories and one QA story. The delete step removes a group only
 // when its id is listed here and every slug of its versions is too.
+// Sample pins that are deleted once, when nothing uses them (owner, 2026-11-03): the hidden "Baeckerei Weinmarkt", for which no
+// real business could be found.
+export const samplePinSlugs = ['baeckerei-weinmarkt']
+
 export const legacyStoryGroups: { id: string, slugs: string[] }[] = [
   { id: '01a186d2-6d6c-7b40-a2fc-30f817179a4e', slugs: ['musegg-morning'] },
   { id: '01a186d2-7c03-75ef-a383-4f708bc2ddaa', slugs: ['lion-monument'] },
@@ -514,7 +518,8 @@ export const placeStories: PlaceStory[] = [
     kind: 'editorial_review',
     slug: { en: 'confiserie-bachmann-at-lucerne-station', de: 'confiserie-bachmann-im-bahnhof-luzern' },
     places: ['bachmann-at-bahnhof-luzern-ug'],
-    mainStoryFor: [],
+    // The rules allow a review, even a draft, to be a pin's main story (DM-5); the guest link shows once a version is published.
+    mainStoryFor: ['bachmann-at-bahnhof-luzern-ug'],
     // The place has no cover or photo on dev, so this review stays a draft until one is added.
     coverFrom: 'bachmann-at-bahnhof-luzern-ug',
     blogCategories: [],

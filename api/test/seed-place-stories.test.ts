@@ -1,5 +1,5 @@
 import type { StoryBody, StoryBodyNode } from '@sk/domain/content'
-import type { PlaceFacts, StorySnapshot } from '../scripts/seed-place-stories.ts'
+import type { PlaceFacts, StepOptions, StorySnapshot } from '../scripts/seed-place-stories.ts'
 import { storyDraftSchema } from '@sk/api-contract'
 import { interestCodes, storyBodyFacts, storyVersionPublishGaps } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
@@ -9,6 +9,7 @@ import { describePlan, placeStoryBody, placeStoryDraft, planLegacyDeletes, planP
 
 const cover = '11111111-1111-4111-8111-111111111111'
 const languages = ['en', 'de'] as const
+const none: StepOptions = { replaceLegacy: false, deleteSamplePins: false, refreshBodies: false }
 
 function textsOf(nodes: StoryBodyNode[]): string[] {
   return nodes.flatMap(n => [...(n.type === 'text' ? [n.text ?? ''] : []), ...textsOf(n.content ?? [])])
@@ -22,6 +23,8 @@ function snapshotOf(overrides: Partial<StorySnapshot> = {}, place: (slug: string
     places: new Map(slugs.map((slug, index) => [slug, { id: `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`, status: 'published', mainStoryGroupId: null, coverMediaId: cover, coverReady: true, ...place(slug) }])),
     blogCategoryIds: new Map(['history', 'old-town-history', 'legends'].map(slug => [slug, `blog-${slug}`])),
     groups: [],
+    samplePins: [],
+    versions: [],
     ...overrides,
   }
 }
@@ -98,7 +101,7 @@ describe('[seed-place-stories] the data', () => {
 
 describe('[seed-place-stories] the plan', () => {
   it('creates every story, publishes those with a cover, links places and sets main stories on pins that have none', () => {
-    const plan = planPlaceStories(placeStories, snapshotOf(), false)
+    const plan = planPlaceStories(placeStories, snapshotOf(), none)
     expect(plan.faults).toEqual([])
     expect(plan.creates).toHaveLength(8)
     expect(plan.skipped).toEqual([])
@@ -107,10 +110,12 @@ describe('[seed-place-stories] the plan', () => {
     expect(chapel.placeIds).toHaveLength(2)
     expect(chapel.mainStoryPlaceIds).toHaveLength(2)
     expect(plan.creates.every(c => c.categoryIds.length === c.story.blogCategories.length)).toBe(true)
+    // Every story and every review is the main story of the place it is about.
+    expect(plan.creates.every(c => c.mainStoryPlaceIds.length === c.story.mainStoryFor.length && c.story.mainStoryFor.length > 0)).toBe(true)
   })
 
   it('leaves a story a draft when the place has no ready cover, and says why', () => {
-    const plan = planPlaceStories(placeStories, snapshotOf({}, slug => (slug === 'bachmann-at-bahnhof-luzern-ug' ? { coverMediaId: null, coverReady: false } : {})), false)
+    const plan = planPlaceStories(placeStories, snapshotOf({}, slug => (slug === 'bachmann-at-bahnhof-luzern-ug' ? { coverMediaId: null, coverReady: false } : {})), none)
     const review = plan.creates.find(c => c.story.kind === 'editorial_review')!
     expect(review.publish).toBe(false)
     expect(review.coverMediaId).toBeNull()
@@ -120,21 +125,21 @@ describe('[seed-place-stories] the plan', () => {
   })
 
   it('does not publish a story whose cover file is not ready', () => {
-    const plan = planPlaceStories(placeStories, snapshotOf({}, slug => (slug === 'lion-monument' ? { coverReady: false } : {})), false)
+    const plan = planPlaceStories(placeStories, snapshotOf({}, slug => (slug === 'lion-monument' ? { coverReady: false } : {})), none)
     expect(plan.creates.find(c => c.story.key === 'lion-monument')!.publish).toBe(false)
   })
 
   it('skips a story when either of its slugs exists, so a second run adds nothing', () => {
-    const second = planPlaceStories(placeStories, snapshotOf({ slugs: new Set(placeStories.map(s => s.slug.en)) }), false)
+    const second = planPlaceStories(placeStories, snapshotOf({ slugs: new Set(placeStories.map(s => s.slug.en)) }), none)
     expect(second.creates).toEqual([])
     expect(second.skipped).toHaveLength(8)
-    const german = planPlaceStories(placeStories, snapshotOf({ slugs: new Set([placeStories[0]!.slug.de]) }), false)
+    const german = planPlaceStories(placeStories, snapshotOf({ slugs: new Set([placeStories[0]!.slug.de]) }), none)
     expect(german.skipped.map(s => s.key)).toEqual([placeStories[0]!.key])
     expect(german.creates).toHaveLength(7)
   })
 
   it('keeps a main story that a person chose', () => {
-    const plan = planPlaceStories(placeStories, snapshotOf({}, slug => (slug === 'weinmarkt' ? { mainStoryGroupId: 'chosen' } : {})), false)
+    const plan = planPlaceStories(placeStories, snapshotOf({}, slug => (slug === 'weinmarkt' ? { mainStoryGroupId: 'chosen' } : {})), none)
     expect(plan.creates.find(c => c.story.key === 'weinmarkt')!.mainStoryPlaceIds).toEqual([])
   })
 
@@ -142,9 +147,9 @@ describe('[seed-place-stories] the plan', () => {
     const missingPlace = snapshotOf()
     const places = new Map(missingPlace.places)
     places.delete('weinmarkt')
-    const a = planPlaceStories(placeStories, { ...missingPlace, places }, false)
+    const a = planPlaceStories(placeStories, { ...missingPlace, places }, none)
     expect(a.faults.join('\n')).toContain('weinmarkt')
-    const b = planPlaceStories(placeStories, { ...snapshotOf(), blogCategoryIds: new Map() }, false)
+    const b = planPlaceStories(placeStories, { ...snapshotOf(), blogCategoryIds: new Map() }, none)
     expect(b.faults.join('\n')).toContain('blog category history')
   })
 
@@ -152,23 +157,60 @@ describe('[seed-place-stories] the plan', () => {
     const [first, second] = legacyStoryGroups
     const groups = [{ id: first!.id, slugs: first!.slugs }, { id: second!.id, slugs: [...second!.slugs, 'something-else'] }, { id: 'not-listed', slugs: ['musegg-morning'] }]
     expect(planLegacyDeletes(groups).map(g => g.id)).toEqual([first!.id])
-    expect(planPlaceStories(placeStories, snapshotOf({ groups }), false).deletes).toEqual([])
-    expect(planPlaceStories(placeStories, snapshotOf({ groups }), true).deletes.map(g => g.id)).toEqual([first!.id])
+    expect(planPlaceStories(placeStories, snapshotOf({ groups }), none).deletes).toEqual([])
+    expect(planPlaceStories(placeStories, snapshotOf({ groups }), { ...none, replaceLegacy: true }).deletes.map(g => g.id)).toEqual([first!.id])
   })
 
   it('counts a place whose main story is about to be deleted as free, so the dry run matches the real run', () => {
     const lion = legacyStoryGroups[1]!
-    const plan = planPlaceStories(placeStories, snapshotOf({ groups: [lion] }, slug => (slug === 'lion-monument' ? { mainStoryGroupId: lion.id } : {})), true)
+    const plan = planPlaceStories(placeStories, snapshotOf({ groups: [lion] }, slug => (slug === 'lion-monument' ? { mainStoryGroupId: lion.id } : {})), { ...none, replaceLegacy: true })
     expect(plan.creates.find(c => c.story.key === 'lion-monument')!.mainStoryPlaceIds).toHaveLength(1)
-    const without = planPlaceStories(placeStories, snapshotOf({ groups: [lion] }, slug => (slug === 'lion-monument' ? { mainStoryGroupId: lion.id } : {})), false)
+    const without = planPlaceStories(placeStories, snapshotOf({ groups: [lion] }, slug => (slug === 'lion-monument' ? { mainStoryGroupId: lion.id } : {})), none)
     expect(without.creates.find(c => c.story.key === 'lion-monument')!.mainStoryPlaceIds).toEqual([])
   })
 
   it('prints a plan with counts and titles', () => {
-    const text = describePlan(planPlaceStories(placeStories, snapshotOf(), true), true)
+    const text = describePlan(planPlaceStories(placeStories, snapshotOf(), { ...none, replaceLegacy: true }), true)
     expect(text).toContain('Would delete 0 legacy stories')
     expect(text).toContain('Would create 8 stories and reviews, skipping 0')
     expect(text).toContain('crossing-the-chapel-bridge')
+  })
+})
+
+describe('[seed-place-stories] the one-time steps and links', () => {
+  const chapel = placeStories[0]!
+  const stored = (language: 'en' | 'de', status: 'draft' | 'published', body: StoryBody) => ({ groupId: 'g1', language, slug: chapel.slug[language], status, rowVersion: 3, doc: { ...placeStoryDraft(chapel, language, cover), body } })
+
+  it('deletes an unused sample pin only when asked, and stops with a fault when something uses it', () => {
+    const pins = [{ id: 'p1', slug: 'baeckerei-weinmarkt', uses: 0 }]
+    expect(planPlaceStories(placeStories, snapshotOf({ samplePins: pins }), none).pinDeletes).toEqual([])
+    expect(planPlaceStories(placeStories, snapshotOf({ samplePins: pins }), { ...none, deleteSamplePins: true }).pinDeletes).toEqual([{ id: 'p1', slug: 'baeckerei-weinmarkt' }])
+    const used = planPlaceStories(placeStories, snapshotOf({ samplePins: [{ ...pins[0]!, uses: 2 }] }), { ...none, deleteSamplePins: true })
+    expect(used.pinDeletes).toEqual([])
+    expect(used.faults.join('\n')).toContain('baeckerei-weinmarkt')
+  })
+
+  it('plans a body rewrite only for a stored version whose body differs, and none once the bodies match', () => {
+    const old = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'old' }] }] } as StoryBody
+    const differing = planPlaceStories(placeStories, snapshotOf({ slugs: new Set([chapel.slug.en, chapel.slug.de]), versions: [stored('en', 'published', old), stored('de', 'draft', placeStoryBody(chapel, 'de'))] }), { ...none, refreshBodies: true })
+    expect(differing.refreshes.map(r => `${r.key}/${r.version.language}/${r.version.status}`)).toEqual(['chapel-bridge/en/published'])
+    expect(planPlaceStories(placeStories, snapshotOf({ slugs: new Set([chapel.slug.en]), versions: [stored('en', 'published', old)] }), none).refreshes).toEqual([])
+  })
+
+  it('links an existing story to a place that has no main story, and leaves a main story a person chose', () => {
+    const slugs = new Set(placeStories.flatMap(s => [s.slug.en, s.slug.de]))
+    const versions = placeStories.map(s => ({ ...stored('en', 'published', placeStoryBody(s, 'en')), groupId: `group-${s.key}`, slug: s.slug.en }))
+    const free = planPlaceStories(placeStories, snapshotOf({ slugs, versions }), none)
+    expect(free.creates).toEqual([])
+    expect(free.links).toHaveLength(placeStories.reduce((n, s) => n + s.mainStoryFor.length, 0))
+    const chosen = planPlaceStories(placeStories, snapshotOf({ slugs, versions }, slug => (slug === 'manor-luzern' ? { mainStoryGroupId: 'mine' } : {})), none)
+    expect(chosen.links.some(l => l.key === 'manor-review')).toBe(false)
+  })
+
+  it('makes the Bachmann review the main story of its place, as subject and link', () => {
+    const review = placeStories.find(s => s.kind === 'editorial_review')!
+    expect(review.places).toEqual(['bachmann-at-bahnhof-luzern-ug'])
+    expect(review.mainStoryFor).toEqual(review.places)
   })
 })
 
@@ -177,5 +219,6 @@ describe('[seed-place-stories] the flags', () => {
     expect(parseFlags([])).toMatchObject({ storiesOnly: false, replaceLegacyStories: false, unknown: [] })
     expect(parseFlags(['--stories-only', '--dry-run'])).toMatchObject({ dry: true, storiesOnly: true, unknown: [] })
     expect(parseFlags(['--stories-only', '--replace-legacy-stories'])).toMatchObject({ storiesOnly: true, replaceLegacyStories: true, unknown: [] })
+    expect(parseFlags(['--stories-only', '--delete-sample-pins', '--refresh-story-bodies'])).toMatchObject({ deleteSamplePins: true, refreshStoryBodies: true, unknown: [] })
   })
 })

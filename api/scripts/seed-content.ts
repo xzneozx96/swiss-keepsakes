@@ -58,10 +58,10 @@ async function seedTour(db: Database, storeId: string, tour: SeedTour, at: Date)
   })
 }
 
-export async function seedContent(db: Database, storeId: string): Promise<{ stories: number, tours: number }> {
+export async function seedContent(db: Database, storeId: string, storyData: readonly SeedStory[] = seedStories): Promise<{ stories: number, tours: number }> {
   const at = new Date()
   const counts = { stories: 0, tours: 0 }
-  for (const story of seedStories) {
+  for (const story of storyData) {
     if (await seedStory(db, storeId, story, at))
       counts.stories += 1
   }
