@@ -50,7 +50,7 @@ interface ListRow {
   option_names: Localized[]
   published_cover: string | null
   variant_count: number
-  sold_out_count: number
+  live_sku_ids: string[]
   row_version: number
   updated_at: Date
 }
@@ -124,13 +124,12 @@ function reload(tx: Tx, product: Pick<Product, 'storeId' | 'id'>): Promise<Produ
 export function createProductRepository(): ProductRepository<Tx> {
   return {
     async list(tx, storeId) {
-      // soldOutCount is 0 until stock exists (E6.3 joins inventory.stock_items here).
       const result = await tx.execute<ListRow & Record<string, unknown>>(sql`
         select p.id, p.status, p.draft, p.published, p.row_version, p.updated_at,
                (select coalesce(jsonb_agg(o.name order by o.position), '[]'::jsonb) from catalog.product_options o where o.product_id = p.id) as option_names,
                (select media_id from catalog.product_media m where m.product_id = p.id order by m.position limit 1) as published_cover,
                (select count(*) from catalog.skus s where s.product_id = p.id and s.status <> 'archived')::int as variant_count,
-               0::int as sold_out_count
+               (select coalesce(array_agg(s.id::text order by s.id), '{}') from catalog.skus s where s.product_id = p.id and s.status <> 'archived') as live_sku_ids
           from catalog.products p
          where p.store_id = ${storeId}
          order by p.created_at desc, p.id desc`)
@@ -142,7 +141,7 @@ export function createProductRepository(): ProductRepository<Tx> {
         hasUnpublishedEdits: row.status === 'published' && row.draft !== null,
         coverMediaId: row.draft ? row.draft.media?.[0] ?? null : row.published_cover,
         variantCount: row.variant_count,
-        soldOutCount: row.sold_out_count,
+        liveSkuIds: row.live_sku_ids,
         rowVersion: row.row_version,
         updatedAt: new Date(row.updated_at),
       }))

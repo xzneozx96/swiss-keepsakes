@@ -4869,6 +4869,8 @@ export interface components {
             mediaId?: string | null;
             /** @description The price in Rappen, above 0 */
             priceRappen: number;
+            /** @description The units in stock when the variant is created, 0 to 9999. Left out means 0 */
+            quantity?: number;
             /** @description Letters and digits joined by - _ or ., unique in the shop. Optional: a variant may have no code */
             skuCode?: string | null;
             /** @description The value ref of each option ref. A keepsake with no option sends none */
@@ -5597,7 +5599,7 @@ export interface components {
             }[];
             /** @description The version a removal sends as If-Match */
             rowVersion: number;
-            /** @description Variants with no unit available. Always 0 until stock exists (E6.3) */
+            /** @description Variants that are not archived and have no unit available. A variant with no stock row counts */
             soldOutCount: number;
             /** @enum {string} */
             status: "draft" | "published" | "archived";
@@ -5644,6 +5646,8 @@ export interface components {
         };
         /** @description A variant (SKU) of a keepsake */
         ProductVariant: {
+            /** @description onHand minus reserved: the units a guest can still buy */
+            available?: number;
             /** @description An order line names the variant, so removing it archives instead of deleting. Left out means false; always false until the orders module is wired */
             hasOrders?: boolean;
             /** Format: uuid */
@@ -5653,6 +5657,8 @@ export interface components {
              * @description The photo of the variant, a file of the library, or null
              */
             mediaId: string | null;
+            /** @description The units on the shelf, from the inventory module. 0 when the variant has no stock row. Sent on every read; left out only by a client that builds a variant itself */
+            onHand?: number;
             /** @description The photo of the variant, ready to show. Null for none, or when the file is gone */
             photo: {
                 byteSize: number;
@@ -5676,6 +5682,8 @@ export interface components {
                 width: number | null;
             } | null;
             priceRappen: number;
+            /** @description The units that open orders hold. Never above onHand */
+            reserved?: number;
             /** @description Null when the variant has no code */
             skuCode: string | null;
             /**
@@ -7658,6 +7666,8 @@ export interface components {
              */
             mediaId?: string | null;
             priceRappen: number;
+            /** @description The units in stock when the variant is created, 0 to 9999. Left out means 0 */
+            quantity?: number;
             skuCode?: string | null;
             /**
              * @description published is for sale, draft is hidden. For sale when left out

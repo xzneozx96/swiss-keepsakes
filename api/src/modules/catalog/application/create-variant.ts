@@ -7,12 +7,13 @@ import { mayEditCatalog, staffActor } from './access.ts'
 import { fail, ok } from './failure.ts'
 import { checkVariantValues } from './option-rules.ts'
 import { checkVariantPhotos, describe } from './product-detail.ts'
+import { newVariantsOf, seedNewSkus } from './seed-stock.ts'
 import { isSkuCode } from './sku-code.ts'
 
 // One more variant: a combination that is sold. It takes one value of each option of the keepsake, and no other variant,
 // archived ones included, may hold the same combination. It is live at once and takes no row version (ADR-014). The
 // code's uniqueness in the shop is the database's (skus_store_sku_code_key).
-export function makeCreateVariant<T>({ uow, products, media, audit, clock, sales }: CatalogDeps<T>) {
+export function makeCreateVariant<T>({ uow, products, media, audit, clock, sales, stockLevels, stock }: CatalogDeps<T>) {
   return async (actor: Actor, storeId: string, productId: string, input: VariantInput, requestId: string | null): Promise<Result<ProductDetail>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -31,6 +32,7 @@ export function makeCreateVariant<T>({ uow, products, media, audit, clock, sales
       if (photoRefused)
         return fail(photoRefused)
       const saved = await products.insertVariant(tx, product, input, clock.now())
+      await seedNewSkus(stock, tx, actor, storeId, newVariantsOf(product, saved), [input])
       await audit.record(tx, {
         storeId,
         actor: staffActor(actor),
@@ -40,7 +42,7 @@ export function makeCreateVariant<T>({ uow, products, media, audit, clock, sales
         after: { skuCode: input.skuCode, status: input.status },
         requestId,
       })
-      return ok(await describe({ media, sales }, tx, saved))
+      return ok(await describe({ media, sales, stockLevels }, tx, saved))
     })
   }
 }

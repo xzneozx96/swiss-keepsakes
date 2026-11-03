@@ -8,6 +8,7 @@ import { mayEditCatalog } from './access.ts'
 import { fail, ok } from './failure.ts'
 import { checkNewProduct } from './option-rules.ts'
 import { checkPhotos, checkVariantPhotos, describe } from './product-detail.ts'
+import { seedNewSkus } from './seed-stock.ts'
 import { isSkuCode } from './sku-code.ts'
 
 export interface CreateProductInput {
@@ -22,7 +23,7 @@ export interface CreateProductInput {
 // A new keepsake is a draft with its options and its variants for sale. It needs a name in one language, valid codes (a code is optional),
 // and variants that follow the option rules (one value of each option, each combination once, one variant when there
 // is no option). A code's uniqueness in the shop is skus_store_sku_code_key, which the route maps to sku-code-taken.
-export function makeCreateProduct<T>({ uow, products, media, clock, sales }: CatalogDeps<T>) {
+export function makeCreateProduct<T>({ uow, products, media, clock, sales, stockLevels, stock }: CatalogDeps<T>) {
   return async (actor: Actor, storeId: string, input: CreateProductInput, _requestId: string | null): Promise<Result<ProductDetail>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -49,7 +50,8 @@ export function makeCreateProduct<T>({ uow, products, media, clock, sales }: Cat
         options: input.options,
         variants: input.variants,
       }, clock.now())
-      return ok(await describe({ media, sales }, tx, product))
+      await seedNewSkus(stock, tx, actor, storeId, product.variants, input.variants)
+      return ok(await describe({ media, sales, stockLevels }, tx, product))
     })
   }
 }

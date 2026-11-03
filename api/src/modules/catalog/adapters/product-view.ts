@@ -5,7 +5,7 @@ import { hasUnpublishedEdits, workingDoc } from '../application/product-doc.ts'
 import { publishChecks } from '../application/publish-checks.ts'
 
 // The response shape of a keepsake: the dates as ISO strings, the working copy, and the publish checks computed from it.
-export function productView({ product, photos, variantPhotos, hasOrders, soldSkuIds }: ProductDetail): ProductView {
+export function productView({ product, photos, variantPhotos, hasOrders, soldSkuIds, stock }: ProductDetail): ProductView {
   const doc = workingDoc(product)
   const checks = publishChecks({ doc, variants: product.variants, options: product.options, commissionRate: product.commissionRate })
   return {
@@ -21,7 +21,11 @@ export function productView({ product, photos, variantPhotos, hasOrders, soldSku
     hasUnpublishedEdits: hasUnpublishedEdits(product),
     hasOrders,
     options: product.options,
-    variants: product.variants.map(({ id, skuCode, mediaId, priceRappen, status, values }) => ({ id, skuCode, mediaId, photo: variantPhotos.get(id) ?? null, priceRappen, status, values, hasOrders: soldSkuIds.has(id) })),
+    variants: product.variants.map(({ id, skuCode, mediaId, priceRappen, status, values }) => {
+      const { onHand, reserved } = stock.get(id) ?? { onHand: 0, reserved: 0 }
+
+      return { id, skuCode, mediaId, photo: variantPhotos.get(id) ?? null, priceRappen, status, values, hasOrders: soldSkuIds.has(id), onHand, reserved, available: onHand - reserved }
+    }),
     blocking: checks.blocking,
     warnings: checks.warnings,
     rowVersion: product.rowVersion,
@@ -30,7 +34,7 @@ export function productView({ product, photos, variantPhotos, hasOrders, soldSku
   }
 }
 
-export function productListItemView({ row, cover, hasOrders }: ProductListEntry): ProductListItem {
+export function productListItemView({ row, cover, hasOrders, soldOutCount }: ProductListEntry): ProductListItem {
   return {
     id: row.id,
     name: row.name,
@@ -39,7 +43,7 @@ export function productListItemView({ row, cover, hasOrders }: ProductListEntry)
     hasUnpublishedEdits: row.hasUnpublishedEdits,
     cover,
     variantCount: row.variantCount,
-    soldOutCount: row.soldOutCount,
+    soldOutCount,
     hasOrders,
     rowVersion: row.rowVersion,
     updatedAt: row.updatedAt.toISOString(),

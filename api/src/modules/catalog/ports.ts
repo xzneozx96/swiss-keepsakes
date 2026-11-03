@@ -116,8 +116,9 @@ export interface ProductListRow {
   hasUnpublishedEdits: boolean
   coverMediaId: string | null
   variantCount: number
-  // Always 0 until stock exists (E6.3, `inventory.stock_items`).
-  soldOutCount: number
+  // The ids of the variants that are not archived. The list use case asks the stock port for their figures (ADR-013) and
+  // counts the sold-out ones itself.
+  liveSkuIds: string[]
   // The version an `If-Match` of a removal carries.
   rowVersion: number
   updatedAt: Date
@@ -151,6 +152,8 @@ export interface VariantInput {
   priceRappen: number
   status: 'published' | 'draft'
   values: Record<string, string>
+  // The units on the shelf when the variant is created, 0 to 9999. Left out means 0.
+  quantity?: number
 }
 
 export interface NewProduct {
@@ -222,10 +225,28 @@ export interface Refusal {
   params?: Record<string, string | number>
 }
 
-// The units that open orders reserve, by SKU id. E6.3 wires this from the inventory module (ADR-009, ADR-013); until
-// then nothing is wired and archiving never finds a reserved unit.
+// The units that open orders reserve, by SKU id. The composition root wires this from the inventory module (ADR-009,
+// ADR-013). Without it archiving never finds a reserved unit.
 export interface ReservationDirectory<T> {
   reservedBySku: (tx: T, storeId: string, skuIds: string[]) => Promise<Map<string, number>>
+}
+
+// Creates the stock row of every SKU a write has just created, in the same transaction (ADR-013, gate G-S8-D2). The
+// composition root wires this from the inventory module. A quantity above 0 also writes the first `set` history row, with
+// the acting user. A SKU that already has a row fails.
+export interface StockSeeding<T> {
+  seed: (tx: T, storeId: string, items: { skuId: string, quantity: number }[], actorUserId: string) => Promise<void>
+}
+
+export interface StockLevel {
+  onHand: number
+  reserved: number
+}
+
+// On hand and reserved by SKU id, archived variants included. A SKU with no stock row is left out of the map. The
+// composition root wires this from the inventory module.
+export interface StockLevels<T> {
+  levels: (tx: T, storeId: string, skuIds: string[]) => Promise<Map<string, StockLevel>>
 }
 
 // Which keepsakes an order line names, by product id (ADR-023: `orders.order_lines.product_id`). The orders module fills

@@ -39,7 +39,7 @@ import { invitationScreens, makeAcceptInvitation, makeCreateStore, makeGetOnboar
 import { guardUseCases as guardInventoryUseCases } from './modules/inventory/adapters/database-errors.ts'
 import { registerInventoryRoutes } from './modules/inventory/adapters/routes.ts'
 import { createStockRepository } from './modules/inventory/adapters/stock-repository.ts'
-import { makeGetStockItem, makeListStock, makeSetManyStock, makeSetStock } from './modules/inventory/index.ts'
+import { makeGetStockItem, makeListStock, makeReservedBySku, makeSeedStock, makeSetManyStock, makeSetStock, makeStockLevels } from './modules/inventory/index.ts'
 import { createMailJobScrubber } from './modules/notifications/adapters/job-scrubber.ts'
 import { createMailQueues, mailQueues, startMailWorkers } from './modules/notifications/adapters/jobs.ts'
 import { createLogAlert } from './modules/notifications/adapters/mail-alert.ts'
@@ -253,6 +253,9 @@ async function main() {
       getMap: makeGetMap(readDeps),
     }
     const contentMedia = createMediaRepository()
+    // The catalog gets its stock through three functions of the inventory module (ADR-013): a new SKU's row in the write's
+    // transaction, the units open orders hold, and the on hand and reserved figures.
+    const stockRepository = createStockRepository()
     const catalogDeps = {
       uow,
       products: createProductRepository(),
@@ -261,6 +264,9 @@ async function main() {
       clock: systemClock,
       // A deleted keepsake leaves no link behind in a story or a tour (ADR-013: content owns those rows).
       keepsakeLinks: createKeepsakeLinks(),
+      stock: { seed: makeSeedStock({ stock: stockRepository }) },
+      reservations: { reservedBySku: makeReservedBySku({ stock: stockRepository }) },
+      stockLevels: { levels: makeStockLevels({ stock: stockRepository }) },
     }
     const catalogUseCases = guardCatalogUseCases({
       listProducts: makeListProducts(catalogDeps),
@@ -279,7 +285,7 @@ async function main() {
     // catalog table), and the photos through the same media lookup the catalog uses.
     const inventoryDeps = {
       uow,
-      stock: createStockRepository(),
+      stock: stockRepository,
       skus: createSkuDirectory(),
       media: catalogDeps.media,
       audit,
