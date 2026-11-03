@@ -18,6 +18,7 @@ import { placesDe } from '@/features/places/messages.de'
 import { reportPagesDe } from '@/features/reports/pages-messages.de'
 import { requestsDe } from '@/features/requests/messages.de'
 import { storesDe } from '@/features/stores/messages.de'
+import { storiesMediaDe } from '@/features/stories/messages-media.de'
 import { storiesPublishDe } from '@/features/stories/messages-publish.de'
 import { storiesMerchantDe } from '@/features/stories/messages.de'
 import { tourBookingDe } from '@/features/tours/booking/messages.de'
@@ -52,6 +53,7 @@ export const de: Record<MessageKey, string> = {
   ...placesDe,
   ...storiesMerchantDe,
   ...storiesPublishDe,
+  ...storiesMediaDe,
   ...actionBarDe,
   ...multiSelectDe,
   ...stepsDe,
