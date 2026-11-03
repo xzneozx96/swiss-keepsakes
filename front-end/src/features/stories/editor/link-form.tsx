@@ -31,7 +31,7 @@ export function LinkForm({ editor, current, onDone }: { editor: Editor, current:
     if (editor.state.selection.empty && !editor.isActive('link'))
       chain.insertContent({ type: 'text', text: href, marks: [{ type: 'link', attrs: { href } }] }).run()
     else
-      chain.extendMarkRange('link').setLink({ href }).run()
+      chain.extendMarkRange('pinLink').unsetMark('pinLink').extendMarkRange('link').setLink({ href }).run()
     onDone()
   }
 
