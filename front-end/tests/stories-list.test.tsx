@@ -1,5 +1,5 @@
 import { toast } from '@heroui/react'
-import { screen, waitFor, within } from '@testing-library/react'
+import { configure, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -9,6 +9,10 @@ import { answerStories, base, listItem, listVersion, media, problem, publishedVe
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 vi.mock('@/hooks/use-is-wide', () => ({ useIsWide: () => true }))
+
+// The first test loads the generated client (the contract and Zod) on its first call, which is slow on a busy machine.
+configure({ asyncUtilTimeout: 10_000 })
+vi.setConfig({ testTimeout: 30_000 })
 
 beforeEach(setUpHarness)
 afterEach(() => vi.restoreAllMocks())
