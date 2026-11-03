@@ -2,6 +2,7 @@ import type { Access } from '@sk/domain/identity'
 import type { Logger } from 'pino'
 import type { Database } from '../../src/platform/db/client.ts'
 import type { CommandDeps } from '../../src/platform/http/app.ts'
+import { registerPickupRoutes } from '../../src/modules/catalog/adapters/pickup-routes.ts'
 import { registerCatalogRoutes } from '../../src/modules/catalog/adapters/routes.ts'
 import { registerContentRoutes } from '../../src/modules/content/adapters/routes.ts'
 import { invitationPreviewPath, registerIdentityRoutes } from '../../src/modules/identity/adapters/routes.ts'
@@ -14,6 +15,7 @@ import { noCommands } from './commands.ts'
 import { createFakeCatalogUseCases } from './fake-catalog-use-cases.ts'
 import { createFakeContentUseCases } from './fake-content-use-cases.ts'
 import { createFakeInventoryUseCases } from './fake-inventory-use-cases.ts'
+import { createFakePickupUseCases } from './fake-pickup-use-cases.ts'
 import { createFakeIdentityUseCases } from './identity-use-cases.ts'
 
 const userCookie = /(?:^|;\s*)sk-test-user=([^;]+)/
@@ -25,6 +27,7 @@ const routes: CommandDeps['routes'] = [
   app => registerContentRoutes(app, createFakeContentUseCases()),
   app => registerCatalogRoutes(app, createFakeCatalogUseCases()),
   app => registerInventoryRoutes(app, createFakeInventoryUseCases()),
+  app => registerPickupRoutes(app, createFakePickupUseCases()),
 ]
 
 // The default: no Idempotency-Key check, so a test of a guard or of the Origin rule sends no key.

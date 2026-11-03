@@ -323,3 +323,53 @@ export interface MediaUses<T> {
   // Every file of this store that a keepsake holds, once per keepsake and file.
   list: (tx: T, storeId: string) => Promise<MediaUse[]>
 }
+
+// A pickup point (E6.6). Hours are weekly spans in local times of day: weekday 1 (Monday) to 7, `HH:MM`, `closes` may
+// be `24:00`, and a `closes` before `opens` ends the next morning.
+export interface PickupSpan { weekday: number, opens: string, closes: string }
+
+export interface PickupPlace {
+  id: string
+  storeId: string
+  name: Localized
+  address: Localized
+  instructions: Localized | null
+  position: number
+  archived: boolean
+  hours: PickupSpan[]
+  rowVersion: number
+}
+
+export interface NewPickupPlace {
+  name: Localized
+  address: Localized
+  instructions: Localized | null
+  hours: PickupSpan[]
+}
+
+// Fields left out stay; `hours`, when given, replaces the whole set.
+export interface PickupPlaceChanges {
+  name?: Localized
+  address?: Localized
+  instructions?: Localized | null
+  hours?: PickupSpan[]
+}
+
+export interface PickupPlaceRepository<T> {
+  // The active points, or the archived ones, by position then id. Each carries its hours by weekday then opening time.
+  list: (tx: T, storeId: string, archived: boolean) => Promise<PickupPlace[]>
+  // An id of another store has no row. `lock` holds the row until the transaction ends.
+  find: (tx: T, storeId: string, placeId: string, lock?: boolean) => Promise<PickupPlace | undefined>
+  // Serialises writers of one store's list (create, reorder).
+  lockList: (tx: T, storeId: string) => Promise<void>
+  // How many active points the store has. Archived points do not count (gate G-S8-PICKUP-LIMIT).
+  countActive: (tx: T, storeId: string) => Promise<number>
+  // Appends the point after the last one of the store, archived points included.
+  insert: (tx: T, storeId: string, input: NewPickupPlace, at: Date) => Promise<PickupPlace>
+  // Writes the changes and bumps row_version.
+  save: (tx: T, place: PickupPlace, changes: PickupPlaceChanges, at: Date) => Promise<PickupPlace>
+  // Positions 1..n in the order given. row_version stays.
+  setPositions: (tx: T, storeId: string, ids: string[], at: Date) => Promise<void>
+  // Keeps the position and the hours; bumps row_version.
+  setArchived: (tx: T, place: PickupPlace, archived: boolean, at: Date) => Promise<PickupPlace>
+}

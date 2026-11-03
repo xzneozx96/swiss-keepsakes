@@ -1,6 +1,7 @@
 import type { Pin, PinWriteBody } from '@sk/api-contract'
 import type { StayTag } from '@sk/domain/content'
 import type { MessageKey } from '@/i18n/en'
+import { hoursErrors, OPEN_TIME } from './hours'
 
 export type Lang = 'en' | 'de'
 export const LANGS: readonly Lang[] = ['en', 'de']
@@ -121,8 +122,6 @@ function trimmed(en: string, de: string) {
   }
 }
 
-const OPEN_TIME = /^(?:[01]\d|2[0-3]):[0-5]\d$/
-const CLOSE_TIME = /^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$/
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 
 /** A whole `YYYY-MM-DD` that is a real day (the API takes only those). */
@@ -145,12 +144,7 @@ export interface FormErrors {
 export function validate(form: PlaceForm): FormErrors {
   const errors: FormErrors = { hours: {}, dates: {}, count: 0 }
 
-  for (const span of form.hours) {
-    if (!OPEN_TIME.test(span.opens) || !CLOSE_TIME.test(span.closes))
-      errors.hours[span.key] = 'places.error.hoursMissing'
-    else if (span.opens === span.closes)
-      errors.hours[span.key] = 'places.error.hoursSame'
-  }
+  errors.hours = hoursErrors(form.hours)
   for (const date of form.dates) {
     const last = date.kind === 'day' ? date.firstDay : date.lastDay
     const timed = date.kind === 'day'

@@ -4,10 +4,12 @@ import process from 'node:process'
 import { guardUseCases as guardCatalogUseCases } from './modules/catalog/adapters/database-errors.ts'
 import { createMediaDirectory } from './modules/catalog/adapters/media-directory.ts'
 import { createMediaUses } from './modules/catalog/adapters/media-uses.ts'
+import { createPickupRepository } from './modules/catalog/adapters/pickup-repository.ts'
+import { registerPickupRoutes } from './modules/catalog/adapters/pickup-routes.ts'
 import { createProductRepository } from './modules/catalog/adapters/product-repository.ts'
 import { registerCatalogRoutes } from './modules/catalog/adapters/routes.ts'
 import { createSkuDirectory } from './modules/catalog/adapters/sku-directory.ts'
-import { makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from './modules/catalog/index.ts'
+import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetPickupPlace, makeGetProduct, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from './modules/catalog/index.ts'
 import { createAddressRegister } from './modules/content/adapters/address-register-fetch.ts'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
@@ -297,10 +299,20 @@ async function main() {
       setStock: makeSetStock(inventoryDeps),
       setManyStock: makeSetManyStock(inventoryDeps),
     })
+    const pickupDeps = { uow, pickups: createPickupRepository(), audit, clock: systemClock }
+    const pickupUseCases = guardCatalogUseCases({
+      listPickupPlaces: makeListPickupPlaces(pickupDeps),
+      getPickupPlace: makeGetPickupPlace(pickupDeps),
+      createPickupPlace: makeCreatePickupPlace(pickupDeps),
+      savePickupPlace: makeSavePickupPlace(pickupDeps),
+      reorderPickupPlaces: makeReorderPickupPlaces(pickupDeps),
+      archivePickupPlace: makeArchivePickupPlace(pickupDeps),
+      restorePickupPlace: makeRestorePickupPlace(pickupDeps),
+    })
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),
       withoutIdempotencyKey: [invitationPreviewPath, mediaLookupPath],
-      routes: [app => registerIdentityRoutes(app, useCases), app => registerContentRoutes(app, contentUseCases), app => registerCatalogRoutes(app, catalogUseCases), app => registerInventoryRoutes(app, inventoryUseCases)],
+      routes: [app => registerIdentityRoutes(app, useCases), app => registerContentRoutes(app, contentUseCases), app => registerCatalogRoutes(app, catalogUseCases), app => registerInventoryRoutes(app, inventoryUseCases), app => registerPickupRoutes(app, pickupUseCases)],
     }
     const server = await startHttpServer(createApp(logger, checkHealth, identity, commands).fetch, config.HOST, config.PORT, logger)
     stops.unshift(server.close)

@@ -22,6 +22,7 @@ interface ReadsWithInput {
   inventory: 'list' | 'get'
   keepsakes: 'list' | 'get'
   media: 'list' | 'uses' | 'get' | 'lookup'
+  pickup: 'list'
   places: 'list' | 'get' | 'storyOptions' | 'storyVersion'
 }
 
@@ -118,6 +119,12 @@ export const commandAffects: {
     recordPayout: [queryKeys.partners.partnerPayouts],
     revokeReportLink: [queryKeys.partners.partners],
     issueReportLink: [queryKeys.partners.partners],
+  },
+  pickup: {
+    create: [queryKeys.pickup.list],
+    save: [queryKeys.pickup.list],
+    archive: [queryKeys.pickup.list],
+    restore: [queryKeys.pickup.list],
   },
   places: {
     create: [queryKeys.places.list, queryKeys.places.pin],

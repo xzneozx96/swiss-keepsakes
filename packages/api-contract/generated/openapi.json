@@ -5872,6 +5872,253 @@
           "null"
         ]
       },
+      "PickupAddressInput": {
+        "additionalProperties": false,
+        "description": "Address per language, at most 300 characters each. At least one language must be left or the answer is 422",
+        "properties": {
+          "de": {
+            "maxLength": 300,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 300,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PickupInstructionsInput": {
+        "additionalProperties": false,
+        "description": "Optional hand-over instructions per language, at most 600 characters each",
+        "properties": {
+          "de": {
+            "maxLength": 600,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 600,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PickupNameInput": {
+        "additionalProperties": false,
+        "description": "Name per language, at most 120 characters each. At least one language must be left or the answer is 422",
+        "properties": {
+          "de": {
+            "maxLength": 120,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 120,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PickupPlace": {
+        "properties": {
+          "address": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "archived": {
+            "type": "boolean"
+          },
+          "hours": {
+            "items": {
+              "properties": {
+                "closes": {
+                  "type": "string"
+                },
+                "opens": {
+                  "type": "string"
+                },
+                "weekday": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "weekday",
+                "opens",
+                "closes"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "instructions": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "name": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "rowVersion": {
+            "type": "integer"
+          },
+          "storeId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "storeId",
+          "name",
+          "address",
+          "instructions",
+          "position",
+          "archived",
+          "hours",
+          "rowVersion"
+        ],
+        "type": "object"
+      },
+      "PickupPlaceList": {
+        "properties": {
+          "items": {
+            "description": "By position, then id",
+            "items": {
+              "$ref": "#/components/schemas/PickupPlace"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "PickupPlaceOrderBody": {
+        "additionalProperties": false,
+        "description": "The new order of the active pickup points. ids must be exactly the active points",
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 100,
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "type": "object"
+      },
+      "PickupPlacePatchBody": {
+        "additionalProperties": false,
+        "description": "Fields left out stay as they are. Hours, when given, replace the whole set",
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/PickupAddressInput"
+          },
+          "hours": {
+            "description": "The weekly spans. Several per day are allowed, overlapping too; one day cannot repeat the same opens",
+            "items": {
+              "$ref": "#/components/schemas/PickupSpanInput"
+            },
+            "maxItems": 35,
+            "type": "array"
+          },
+          "instructions": {
+            "$ref": "#/components/schemas/PickupInstructionsInput"
+          },
+          "name": {
+            "$ref": "#/components/schemas/PickupNameInput"
+          }
+        },
+        "type": "object"
+      },
+      "PickupPlaceWriteBody": {
+        "additionalProperties": false,
+        "description": "A new pickup point, appended last",
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/PickupAddressInput"
+          },
+          "hours": {
+            "description": "The weekly spans. Several per day are allowed, overlapping too; one day cannot repeat the same opens",
+            "items": {
+              "$ref": "#/components/schemas/PickupSpanInput"
+            },
+            "maxItems": 35,
+            "type": "array"
+          },
+          "instructions": {
+            "$ref": "#/components/schemas/PickupInstructionsInput"
+          },
+          "name": {
+            "$ref": "#/components/schemas/PickupNameInput"
+          }
+        },
+        "required": [
+          "name",
+          "address",
+          "hours"
+        ],
+        "type": "object"
+      },
+      "PickupSpanInput": {
+        "additionalProperties": false,
+        "properties": {
+          "closes": {
+            "description": "HH:MM, or 24:00. Before opens means the next morning; equal to opens is refused",
+            "maxLength": 10,
+            "type": "string"
+          },
+          "opens": {
+            "description": "HH:MM",
+            "maxLength": 10,
+            "type": "string"
+          },
+          "weekday": {
+            "description": "1 (Monday) to 7 (Sunday)",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weekday",
+          "opens",
+          "closes"
+        ],
+        "type": "object"
+      },
       "Pin": {
         "description": "A map pin as the editor sees it, with its draft and its published text",
         "properties": {
@@ -19351,6 +19598,471 @@
             },
             "description": "The store is live",
             "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pickup-places": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "true lists the archived points; the default lists the active ones",
+            "in": "query",
+            "name": "archived",
+            "required": false,
+            "schema": {
+              "description": "true lists the archived points; the default lists the active ones",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPlaceList"
+                }
+              }
+            },
+            "description": "The active pickup points by position, or the archived ones with `archived=true`",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickupPlaceWriteBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPlace"
+                }
+              }
+            },
+            "description": "The new pickup point, last in the list",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pickup-places/order": {
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickupPlaceOrderBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPlaceList"
+                }
+              }
+            },
+            "description": "The active pickup points in the new order",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pickup-places/{placeId}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "placeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPlace"
+                }
+              }
+            },
+            "description": "The pickup point with its hours",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "placeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickupPlacePatchBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPlace"
+                }
+              }
+            },
+            "description": "The pickup point with the change saved. A left-out field stays; hours replace the whole set",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pickup-places/{placeId}/archive": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "placeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPlace"
+                }
+              }
+            },
+            "description": "The pickup point is archived and leaves the active list. An archived point is returned as it is. There is no delete: orders and handovers keep naming it",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pickup-places/{placeId}/restore": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "placeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPlace"
+                }
+              }
+            },
+            "description": "The pickup point is active again, with its hours and its place in the order. An active point is returned as it is",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }

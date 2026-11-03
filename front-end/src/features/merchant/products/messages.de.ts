@@ -229,15 +229,30 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'products.departure.added': 'Termin hinzugefügt',
   'products.departure.updated': 'Plätze gespeichert',
 
+  'pickup.action.add': 'Abholstelle hinzufügen',
+  'pickup.action.restore': 'Wiederherstellen',
+  'pickup.archive.body': 'Gäste können hier nicht mehr abholen. Sie können sie in der Liste Archiviert wiederherstellen.',
+  'pickup.toast.restored': '{name} wiederhergestellt',
+  'pickup.loadFailed': 'Die Abholstellen konnten nicht geladen werden.',
+  'pickup.noStore': 'Sie gehören noch zu keinem Shop, daher gibt es keine Abholstellen zu bearbeiten.',
+  'pickup.sheet.add': 'Abholstelle hinzufügen',
+  'pickup.hours.title': 'Öffnungszeiten',
+  'pickup.hours.help':
+    'Die Zeiten sind Schweizer Ortszeit. Eine Schliesszeit vor der Öffnungszeit schliesst am nächsten Morgen.',
+  'pickup.error.hoursRepeat': 'Zwei Zeitfenster am selben Tag können nicht zur gleichen Zeit öffnen.',
+  'pickup.problem.stale':
+    'Jemand hat diese Abholstelle gespeichert, nachdem Sie sie geöffnet haben. Laden Sie neu, um die Version zu sehen. Ihre letzten Änderungen sind nicht gespeichert.',
+  'pickup.problem.limit': '100 aktive Abholstellen. Archivieren Sie zuerst eine.',
+  'pickup.reload': 'Neu laden',
+  'products.place.noHours': 'Keine Öffnungszeiten angegeben',
+
   'products.place.intro':
     'Gäste sehen diese Angaben auf der Andenken-Seite, beim Bestellen, in ihren Bestellungen und in E-Mails.',
   'products.place.edit': 'Abholstelle bearbeiten',
   'products.place.open': '{name} bearbeiten',
   'products.place.save': 'Abholstelle speichern',
   'products.place.saved': '{name} gespeichert',
-  'products.place.addressError': 'Geben Sie die Adresse ein.',
-  'products.place.hoursHelp':
-    'Gäste sehen den Text so, wie er hier steht. Abholtermine lassen Sonntage weiterhin überall aus.',
+  'pickup.hours.range': '{from} bis {to}',
 
   'products.storageFull':
     'Nicht gespeichert: Der Speicher des Prototyps auf diesem Gerät ist voll. Verwenden Sie ein kleineres Foto oder weniger Uploads.',

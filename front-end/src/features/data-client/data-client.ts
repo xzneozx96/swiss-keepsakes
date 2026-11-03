@@ -8,6 +8,7 @@ import type { MediaClient } from '@/features/media/api/client'
 import type { NotificationsClient } from '@/features/notifications/api/client'
 import type { OrdersClient } from '@/features/orders/api/client'
 import type { PartnersClient } from '@/features/partners/api/client'
+import type { PickupClient } from '@/features/pickup/api/client'
 import type { PlacesClient } from '@/features/places/api/client'
 import type { ReportsClient } from '@/features/reports/api/client'
 import type { RequestsClient } from '@/features/requests/api/client'
@@ -31,6 +32,7 @@ export interface DataClient {
   notifications: NotificationsClient
   orders: OrdersClient
   partners: PartnersClient
+  pickup: PickupClient
   places: PlacesClient
   reports: ReportsClient
   requests: RequestsClient

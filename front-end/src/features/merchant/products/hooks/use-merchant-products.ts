@@ -2,11 +2,11 @@ import type { Tour } from '@sk/domain/bookings'
 import type { LanguageStatus, Product } from '@sk/domain/catalog'
 import type { MutationFeedback } from '@/features/data-client'
 
-import { availableUnits, fromPrice, giftText, isPublished, languageStatus, missingText, placeText, tourText } from '@sk/domain/catalog'
+import { availableUnits, fromPrice, giftText, isPublished, languageStatus, missingText, tourText } from '@sk/domain/catalog'
 
 import { formatMoney, numberFormat, pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-import { usePickupPlaces, useProducts, useStoreSubcategories } from '@/features/catalog/api/queries'
+import { useProducts, useStoreSubcategories } from '@/features/catalog/api/queries'
 import { useCommand } from '@/features/data-client'
 import { useDemoNow } from '@/features/demo'
 import { useOrders } from '@/features/orders/api/queries'
@@ -32,15 +32,6 @@ export interface ProductRow {
   facts: { label: string, value: string, isWarning?: boolean }[]
 }
 
-export interface PlaceRow {
-  id: string
-  name: string
-  address: string
-  hours: string
-  instructions: string
-  languages: LanguageStatus
-}
-
 /** Tours that have not started and are not cancelled, as M05 counts them. */
 function upcomingCount(
   tour: Tour,
@@ -55,14 +46,13 @@ function upcomingCount(
   ).length
 }
 
-/** M11 rows for the three tabs, in the seed's order (the shop's own order). */
+/** M11 rows for the gifts and tours tabs, in the seed's order (the shop's own order). */
 export function useMerchantProducts() {
   const { t, language, intlLocale } = useLocale()
   const now = useDemoNow()
   const products = useProducts()
   const subcategories = useStoreSubcategories()
   const orders = useOrders()
-  const pickupPlaces = usePickupPlaces()
   const tourData = useTourRecords()
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
   const percent = numberFormat(intlLocale, {
@@ -139,19 +129,9 @@ export function useMerchantProducts() {
     ],
   })
 
-  const placeRow = (place: (typeof pickupPlaces)[number]): PlaceRow => ({
-    id: place.id,
-    name: pick(place.name),
-    address: place.address,
-    hours: pick(place.openingHours),
-    instructions: pick(place.instructions),
-    languages: languageStatus(missingText(placeText(place))),
-  })
-
   return {
     gifts: products.map(giftRow),
     tours: tourData.tours.map(tourRow),
-    places: pickupPlaces.map(placeRow),
   }
 }
 

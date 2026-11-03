@@ -132,6 +132,21 @@ export {
 } from './content.ts'
 export { healthSchema } from './health.ts'
 export {
+  PICKUP_MAX_PLACES,
+  type PickupPlace,
+  type PickupPlaceList,
+  type PickupPlaceListQuery,
+  pickupPlaceListQuerySchema,
+  pickupPlaceListSchema,
+  type PickupPlaceOrderBody,
+  pickupPlaceOrderBodySchema,
+  type PickupPlacePatchBody,
+  pickupPlacePatchBodySchema,
+  pickupPlaceSchema,
+  type PickupPlaceWriteBody,
+  pickupPlaceWriteBodySchema,
+} from './pickup.ts'
+export {
   ALT_MAX,
   MEDIA_LOOKUP_MAX,
   MEDIA_NAME_MAX,
