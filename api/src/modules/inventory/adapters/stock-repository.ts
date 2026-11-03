@@ -41,6 +41,18 @@ export function createStockRepository(): StockRepository<Tx> {
       return rows.rows.map(level)
     },
 
+    async seed(tx, storeId, items, actorUserId) {
+      const rows = sql.join(items.map(({ skuId, quantity }) => sql`(${skuId}, ${storeId}, ${quantity})`), sql`, `)
+      await tx.execute(sql`insert into inventory.stock_items (sku_id, store_id, on_hand) values ${rows}`)
+      const stocked = items.filter(({ quantity }) => quantity > 0)
+      if (stocked.length === 0)
+        return
+      const history = sql.join(stocked.map(({ skuId, quantity }) => sql`(${storeId}, ${skuId}, 'set', ${quantity}, 0, ${quantity}, ${actorUserId})`), sql`, `)
+      await tx.execute(sql`
+        insert into inventory.stock_adjustments (store_id, sku_id, kind, delta, on_hand_before, on_hand_after, actor_user_id)
+        values ${history}`)
+    },
+
     async openHolds(tx, storeId, skuId) {
       const rows = await tx.execute<HoldRow>(sql`
         select order_id, quantity, created_at from inventory.stock_holds

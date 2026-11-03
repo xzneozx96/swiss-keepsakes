@@ -21,6 +21,7 @@ export function setup(skus: LiveSku[], stock: Record<string, [onHand: number, re
   const rows = new Map<string, StockLevel>(Object.entries(stock).map(([skuId, [onHand, reserved]]) => [skuId, { skuId, onHand, reserved }]))
   const sets: { skuId: string, before: number, after: number, actorUserId: string, at: Date }[] = []
   const locked: string[][] = []
+  const seeded: { storeId: string, items: { skuId: string, quantity: number }[], actorUserId: string }[] = []
   const repo: StockRepository<null> = {
     levels: async (_tx, _store, ids) => [...rows.values()].filter(row => !ids || ids.includes(row.skuId)),
     lock: async (_tx, _store, ids) => {
@@ -30,6 +31,14 @@ export function setup(skus: LiveSku[], stock: Record<string, [onHand: number, re
           rows.set(skuId, { skuId, onHand: 0, reserved: 0 })
       }
       return ids.map(skuId => ({ ...rows.get(skuId)! }))
+    },
+    seed: async (_tx, store, items, actorUserId) => {
+      seeded.push({ storeId: store, items, actorUserId })
+      for (const { skuId, quantity } of items) {
+        if (rows.has(skuId))
+          throw new Error('duplicate stock row')
+        rows.set(skuId, { skuId, onHand: quantity, reserved: 0 })
+      }
     },
     openHolds: async (_tx, _store, skuId) => holds[skuId] ?? [],
     set: async (_tx, change) => {
@@ -46,5 +55,5 @@ export function setup(skus: LiveSku[], stock: Record<string, [onHand: number, re
     audit,
     clock: { now: () => new Date('2026-11-03T08:00:00Z') },
   }
-  return { deps, rows, sets, locked, audit }
+  return { deps, rows, sets, locked, seeded, audit }
 }

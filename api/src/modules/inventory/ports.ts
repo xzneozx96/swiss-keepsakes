@@ -84,6 +84,9 @@ export interface StockRepository<T> {
   // Makes an empty row (0 on hand) for each SKU that has none, then locks the rows of these SKUs in sku_id order and
   // returns them. Holds take the same row lock, so what this reads cannot change until the transaction ends.
   lock: (tx: T, storeId: string, skuIds: string[]) => Promise<StockLevel[]>
+  // Inserts the stock row of each new SKU (on_hand = quantity, held 0) and, for a quantity above 0, one `set` adjustment
+  // (before 0) with the acting user. One statement per table. A SKU that has a row fails the statement (no ON CONFLICT).
+  seed: (tx: T, storeId: string, items: { skuId: string, quantity: number }[], actorUserId: string) => Promise<void>
   // The open holds of one SKU, oldest first.
   openHolds: (tx: T, storeId: string, skuId: string) => Promise<Reservation[]>
   // Sets on_hand and writes one `set` adjustment row (before, after, delta, actor) in the same transaction.
