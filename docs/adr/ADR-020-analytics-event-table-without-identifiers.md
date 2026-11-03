@@ -45,3 +45,4 @@ We will make the table unable to hold what a join needs.
 ## History
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
+- 2026-11-03 superseded by ADR-032 (proposed, pending owner approval)
