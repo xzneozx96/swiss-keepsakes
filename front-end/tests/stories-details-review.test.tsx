@@ -95,6 +95,17 @@ describe('[E4.3][AC30] the Editorial review card', () => {
     expect(await toggle()).toBeChecked()
   }, 40000)
 
+  it('[E4.3][AC30] CORRECTNESS-E43-1 choosing a place when the story has 50 places is refused with the Places sheet message and sends nothing', async () => {
+    serve(group({ placeIds: Array.from({ length: 50 }, (_, i) => uuid(101 + i)) }))
+    await openReview()
+    await openCard()
+    await userEvent.click(await toggle())
+    await choosePin('Pin 1')
+    expect(await screen.findByText('50 chosen, the most a story can have. Remove one to add another.')).toBeInTheDocument()
+    await new Promise(resolve => setTimeout(resolve, 1200))
+    expect(groupPatches()).toHaveLength(0)
+  }, 40000)
+
   it('[E4.3][AC30] AC-4 a pin already in the places is not added twice', async () => {
     serve(group({ placeIds: [uuid(1)] }))
     await openReview()

@@ -13,6 +13,7 @@ import { zurichToday } from '@/features/map/lib/next-date'
 import { Field } from '@/features/places/components/fields'
 import { usePinOptions } from '../hooks/use-pin-options'
 import { reviewSummary } from '../lib/details-summary'
+import { MAX_PLACES } from '../lib/linked-lists'
 import { PinChoiceSheet } from './pin-choice-sheet'
 import { CollapsibleCard } from './story-details-panel'
 
@@ -38,6 +39,8 @@ export function ReviewCard({ storeId, group, language, fields, onGroupChange, on
   // A day after today is shown with its error and never reaches the draft.
   const [refused, setRefused] = useState<string>()
   const [sheetOpen, setSheetOpen] = useState(false)
+  // The place a review names joins the story's places; at the cap the choice is refused, as in the Places sheet.
+  const [full, setFull] = useState(false)
   const placeName = placeId ? (pins.find(pin => pin.id === placeId)?.name ?? t('storyMedia.pin.unknown')) : undefined
   const summary = placeId && isLoading ? '' : reviewSummary(t, { isReview, placeName, checkedOn: fields.checkedOn, formatDay: day => formatShortDate(day, today, intlLocale) })
 
@@ -64,6 +67,7 @@ export function ReviewCard({ storeId, group, language, fields, onGroupChange, on
             <Button className="self-start max-lg:h-11" size="sm" variant="secondary" onPress={() => setSheetOpen(true)}>
               {t(placeId ? 'storyDetails.review.placeChange' : 'storyDetails.review.placeChoose')}
             </Button>
+            {full && <p className="text-xs text-pretty text-danger">{t('storyLists.places.full', { count: MAX_PLACES })}</p>}
           </div>
           <Field
             error={refused ? 'storyDetails.review.future' : undefined}
@@ -85,11 +89,18 @@ export function ReviewCard({ storeId, group, language, fields, onGroupChange, on
             language={language}
             storeId={storeId}
             title={t('storyDetails.review.placeSheet')}
-            onChoose={pin => onGroupChange(current => ({
-              kind: 'editorial_review',
-              subjectPlaceId: pin.id,
-              placeIds: current.placeIds.includes(pin.id) ? current.placeIds : [...current.placeIds, pin.id],
-            }))}
+            onChoose={(pin) => {
+              const refused = !group.placeIds.includes(pin.id) && group.placeIds.length >= MAX_PLACES
+
+              setFull(refused)
+              if (!refused) {
+                onGroupChange(current => ({
+                  kind: 'editorial_review',
+                  subjectPlaceId: pin.id,
+                  placeIds: current.placeIds.includes(pin.id) ? current.placeIds : [...current.placeIds, pin.id],
+                }))
+              }
+            }}
             onClose={() => setSheetOpen(false)}
           />
         </>
