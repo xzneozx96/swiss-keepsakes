@@ -1,7 +1,8 @@
 import type { StockRow } from '@sk/api-contract'
 
-import { useEffect, useRef } from 'react'
+import type { useStockDraft } from '../hooks/use-stock-save'
 
+import { useEffect, useRef } from 'react'
 import { QuantityBox } from '@/components/quantity-stepper'
 import { useLocale } from '@/contexts/locale-context'
 import { useStockSave } from '../hooks/use-stock-save'
@@ -10,7 +11,14 @@ import { STOCK_MAX } from '../lib/quantity'
 /** One variant's In stock box: it saves when the field is left, on Enter or on a step, and the refusal stays under it. */
 export function StockField({ storeId, row }: { storeId: string, row: StockRow }) {
   const { t } = useLocale()
-  const { draft, error, restore, step, text } = useStockSave(storeId, row)
+  const stock = useStockSave(storeId, row)
+
+  return <StockInput errorClassName="max-w-48" label={t('inventory.field', { code: row.code ?? '' })} stock={stock} />
+}
+
+/** The box and its refusal for a `useStockDraft`: the inventory list and the keepsake editor's variant rows use it. */
+export function StockInput({ label, stock, errorClassName, children }: { label: string, stock: ReturnType<typeof useStockDraft>, errorClassName: string, /** Lines between the box and its refusal. */ children?: React.ReactNode }) {
+  const { draft, error, restore, step, text } = stock
   const boxRef = useRef<HTMLDivElement>(null)
   const hadFocusRef = useRef(false)
 
@@ -27,7 +35,7 @@ export function StockField({ storeId, row }: { storeId: string, row: StockRow })
       <div ref={boxRef}>
         <QuantityBox
           key={restore}
-          label={t('inventory.field', { code: row.code ?? '' })}
+          label={label}
           max={STOCK_MAX}
           min={0}
           value={draft}
@@ -38,7 +46,8 @@ export function StockField({ storeId, row }: { storeId: string, row: StockRow })
           }}
         />
       </div>
-      {error && <p className="max-w-48 text-xs text-danger" role="alert">{error}</p>}
+      {children}
+      {error && <p className={`${errorClassName} text-xs text-danger`} role="alert">{error}</p>}
     </div>
   )
 }

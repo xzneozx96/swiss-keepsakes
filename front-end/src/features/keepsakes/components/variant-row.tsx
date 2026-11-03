@@ -1,5 +1,6 @@
 import type { ProductOption, ProductVariant } from '@sk/api-contract'
 import type { Values } from '../lib/option-rules'
+import type { SetStock } from '../lib/variant-actions'
 
 import { Button, Checkbox, Input } from '@heroui/react'
 import { useState } from 'react'
@@ -10,6 +11,7 @@ import { chf, toRappen } from '../lib/keepsake-rules'
 import { combinationName, shortLabel, variantTitle } from '../lib/option-rules'
 import { StatusText } from './status-text'
 import { VariantPhotoPicker, VariantThumb } from './variant-photo'
+import { VariantStock } from './variant-stock'
 
 const NOT_NUMBER = /[^\d.]/g
 
@@ -72,8 +74,8 @@ export function PriceInput({ priceRappen, label, onSave, className = 'w-24' }: {
   )
 }
 
-/** One variant of the table: select, photo, values, price, status and Edit. The price saves on blur. */
-export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, isSelected, onSelect, onPrice, onPhoto, onEdit, onRemove }: {
+/** One variant of the table: select, photo, values, price, stock, status and Edit. The price and the stock save when their field is left. */
+export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, isSelected, onSelect, onPrice, onStock, onPhoto, onEdit, onRemove }: {
   storeId: string
   variant: ProductVariant
   options: ProductOption[]
@@ -86,6 +88,8 @@ export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, 
   isSelected: boolean
   onSelect: (selected: boolean) => void
   onPrice: (rappen: number) => void
+  /** The units in stock this row's box was set to: saved at once, or kept in the browser for a row that is not saved yet. */
+  onStock: SetStock
   /** A photo chosen (`isNew`: the keepsake does not have it yet) or taken off (null). */
   onPhoto: (mediaId: string | null, isNew: boolean) => void
   onEdit: (focus?: 'sku') => void
@@ -102,7 +106,7 @@ export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, 
   const codeCell = skuOn && options.length > 0
 
   return (
-    <li className={`grid grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 rounded-2xl px-2 py-2 sm:grid-cols-[auto_auto_minmax(0,1fr)_auto_6.5rem_auto] ${codeCell ? 'lg:grid-cols-[auto_auto_14rem_minmax(0,1fr)_auto_6.5rem_auto]' : ''}`} data-testid="variant-row">
+    <li className={`grid grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 rounded-2xl px-2 py-2 sm:grid-cols-[auto_auto_minmax(0,1fr)_auto_auto_6.5rem_auto] ${codeCell ? 'lg:grid-cols-[auto_auto_14rem_minmax(0,1fr)_auto_auto_6.5rem_auto]' : ''}`} data-testid="variant-row">
       <Checkbox aria-label={t('keepsakes.variants.select', { name: title })} isSelected={isSelected} onChange={onSelect}>
         <Checkbox.Content>
           <Checkbox.Control>
@@ -121,8 +125,9 @@ export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, 
         )}
         {options.length > 0 ? <RowChips options={options} values={variant.values} /> : <span className="truncate font-medium">{variant.skuCode}</span>}
       </div>
-      <div className="col-start-3 flex min-w-0 items-center gap-3 sm:contents">
+      <div className="col-start-3 flex min-w-0 items-center gap-3 max-sm:flex-wrap sm:contents">
         <PriceInput key={variant.priceRappen} label={t('keepsakes.variants.priceOf', { name: title })} priceRappen={variant.priceRappen} onSave={onPrice} />
+        <VariantStock name={title} variant={variant} onSet={onStock} />
         <StatusText tone={forSale ? 'success' : 'neutral'}>{t(forSale ? 'keepsakes.variants.onSale' : 'keepsakes.variant.status.hidden')}</StatusText>
         <span className="ms-auto flex items-center gap-1 justify-self-end">
           <Button isIconOnly aria-label={t('keepsakes.variants.editVariant', { name: title })} className="max-lg:size-11" size="sm" variant="tertiary" onPress={() => onEdit()}>

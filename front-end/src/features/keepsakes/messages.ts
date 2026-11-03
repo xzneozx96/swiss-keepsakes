@@ -262,6 +262,8 @@ export const keepsakesEn = {
   'keepsakes.price.hint': 'What guests pay and how many you have. Each field saves when you leave it.',
   'keepsakes.variants.select': 'Select {name}',
   'keepsakes.variants.priceOf': 'Price of {name}, CHF',
+  'keepsakes.variants.stockOf': 'In stock, {name}',
+  'keepsakes.variants.reserved': 'Reserved {count}',
   'keepsakes.variants.editVariant': 'Edit {name}',
   'keepsakes.variants.newTag': 'New variant',
   'keepsakes.variants.selectAll': 'Select all',

@@ -19,11 +19,13 @@ const RESYNC = -1
  * 9999 is refused here and nothing is sent. Saves go one at a time and in order: a step made while a save runs is
  * sent when that one has answered, so two quick taps end at the second figure. The API refuses a figure below the
  * reserved units. A refusal is kept in `error`, `draft` goes back to the saved figure and `restore` counts up, so the
- * box remounts and drops the text it still holds. The write is `silent`: the refusal shows at the box, not as a toast.
+ * box remounts and drops the text it still holds.
+ *
+ * `write` sends one figure and answers the text of its refusal, or nothing when it was saved. The inventory list and the
+ * keepsake editor's variant rows share this box with their own write.
  */
-export function useStockSave(storeId: string, row: Pick<StockRow, 'skuId' | 'onHand' | 'reserved'>) {
+export function useStockDraft(row: { onHand: number }, write: (onHand: number) => Promise<string | undefined>) {
   const { t } = useLocale()
-  const { mutateAsync } = useCommand('inventory', 'set', { meta: { silent: true } })
   const [draft, setDraft] = useState(row.onHand)
   const [seen, setSeen] = useState(row.onHand)
   const [saving, setSaving] = useState(false)
@@ -54,13 +56,12 @@ export function useStockSave(storeId: string, row: Pick<StockRow, 'skuId' | 'onH
       const next = queuedRef.current
 
       queuedRef.current = undefined
-      try {
-        await mutateAsync({ storeId, skuId: row.skuId, onHand: next, idempotencyKey: crypto.randomUUID() })
+      const refusal = await write(next)
+
+      if (refusal === undefined)
         setError(undefined)
-      }
-      catch (failure) {
-        refuse(refusalText(t, failure, row.reserved))
-      }
+      else
+        refuse(refusal)
     }
     savingRef.current = false
     setSaving(false)
@@ -83,4 +84,19 @@ export function useStockSave(storeId: string, row: Pick<StockRow, 'skuId' | 'onH
   }
 
   return { draft, error, restore, step, text }
+}
+
+/** The inventory list's box: its write is the set command, `silent` because the refusal shows at the box, not as a toast. */
+export function useStockSave(storeId: string, row: Pick<StockRow, 'skuId' | 'onHand' | 'reserved'>) {
+  const { t } = useLocale()
+  const { mutateAsync } = useCommand('inventory', 'set', { meta: { silent: true } })
+
+  return useStockDraft(row, async (onHand) => {
+    try {
+      await mutateAsync({ storeId, skuId: row.skuId, onHand, idempotencyKey: crypto.randomUUID() })
+    }
+    catch (failure) {
+      return refusalText(t, failure, row.reserved)
+    }
+  })
 }

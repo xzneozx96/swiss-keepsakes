@@ -263,6 +263,8 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.price.hint': 'Was Gäste zahlen und wie viele Sie haben. Jedes Feld speichert, wenn Sie es verlassen.',
   'keepsakes.variants.select': '{name} auswählen',
   'keepsakes.variants.priceOf': 'Preis von {name}, CHF',
+  'keepsakes.variants.stockOf': 'Auf Lager, {name}',
+  'keepsakes.variants.reserved': 'Reserviert {count}',
   'keepsakes.variants.editVariant': '{name} bearbeiten',
   'keepsakes.variants.newTag': 'Neue Variante',
   'keepsakes.variants.selectAll': 'Alle auswählen',
