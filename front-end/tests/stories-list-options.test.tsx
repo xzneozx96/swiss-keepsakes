@@ -14,7 +14,7 @@ beforeEach(setUpStoryMedia)
 
 const detail = () => storyGroupDetail({})
 
-function KeepsakeProbe({ language = 'en' as const }) {
+function KeepsakeProbe({ language = 'en' }: { language?: 'en' | 'de' }) {
   const out = useKeepsakeOptions(storeId, language)
 
   return <p data-testid="out">{JSON.stringify({ keepsakes: out.keepsakes, isLoading: out.isLoading, isError: out.isError })}</p>
