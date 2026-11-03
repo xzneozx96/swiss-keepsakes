@@ -23,3 +23,6 @@ export const placesSummary = (t: Translate, names: string[]) => names.length > 0
 
 /** "{count} of 6". */
 export const keepsakesSummary = (t: Translate, count: number) => t('storyLists.keepsakes.summary', { count })
+
+/** "{count} of 3", or the fallback guests get when none is chosen. */
+export const relatedSummary = (t: Translate, count: number) => count > 0 ? t('storyLists.related.summary', { count }) : t('storyLists.related.summaryNone')
