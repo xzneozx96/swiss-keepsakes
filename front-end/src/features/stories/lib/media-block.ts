@@ -44,17 +44,17 @@ function describedIn(alt: MediaItem['alt'], language: StoryLanguage): string {
   return clip(alt[language] || alt[other] || '')
 }
 
-export function imageNode(item: Pick<MediaItem, 'id' | 'alt'>, language: StoryLanguage): MediaNodeInput {
+export function imageNode(item: Pick<MediaItem, 'id' | 'alt'>, language: StoryLanguage): Extract<MediaNodeInput, { type: 'image' }> {
   return { type: 'image', attrs: { mediaId: item.id, alt: describedIn(item.alt, language), caption: '' } }
 }
 
-export function audioNode(item: Pick<MediaItem, 'id' | 'name' | 'alt'>, language: StoryLanguage): MediaNodeInput {
+export function audioNode(item: Pick<MediaItem, 'id' | 'name' | 'alt'>, language: StoryLanguage): Extract<MediaNodeInput, { type: 'audio' }> {
   const title = describedIn(item.alt, language) || clip(item.name.replace(EXTENSION, '').replace(SEPARATORS, ' '))
 
   return { type: 'audio', attrs: { mediaId: item.id, title, caption: '' } }
 }
 
-export function videoNode(id: string, title: string): MediaNodeInput {
+export function videoNode(id: string, title: string): Extract<MediaNodeInput, { type: 'video' }> {
   return { type: 'video', attrs: { youtubeId: id, title: clip(title), caption: '' } }
 }
 
