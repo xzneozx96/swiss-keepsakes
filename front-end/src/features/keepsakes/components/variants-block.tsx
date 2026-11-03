@@ -5,9 +5,10 @@ import type { VariantActions } from '../lib/variant-actions'
 
 import { Button, Checkbox, Label } from '@heroui/react'
 import { useState } from 'react'
-
 import { ActionBar } from '@/components/action-bar'
+
 import { useConfirm } from '@/components/confirm-dialog'
+import { DataTable } from '@/components/data-table'
 import { Block } from '@/components/form-block'
 import { ArchiveIcon, ChevronDownIcon, ForSaleIcon, HiddenIcon, PriceIcon, ProductsIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
@@ -44,21 +45,33 @@ function ArchivedList({ variants, options, isBusy, onDelete }: { variants: Produ
         {t('keepsakes.variants.archived', { count: variants.length })}
         <ChevronDownIcon aria-hidden className="transition-transform duration-200 group-open:rotate-180" size={14} />
       </summary>
-      <ul className="mt-2 flex flex-col gap-1 text-muted">
-        {variants.map(variant => (
-          <li key={variant.id} className="flex items-center justify-between gap-3">
-            <span className="truncate">{nameOf(variant)}</span>
-            <span className="flex shrink-0 items-center gap-1">
-              {variant.skuCode && <span className="font-mono text-xs">{variant.skuCode}</span>}
-              {!variant.hasOrders && (
+      {/* The shared table, in the plain look for a table inside a block (owner 2026-11-03: "use a table here"). */}
+      <DataTable
+        hidePager
+        className="mt-2"
+        columns={[
+          { id: 'variant', isRowHeader: true, header: t('keepsakes.variants.archivedColumn.variant'), render: variant => nameOf(variant) },
+          ...(variants.some(variant => variant.skuCode)
+            ? [{ id: 'sku', header: t('keepsakes.variants.archivedColumn.sku'), cellClassName: 'font-mono text-xs text-muted', render: (variant: ProductVariant) => variant.skuCode ?? '' }]
+            : []),
+          { id: 'orders', header: t('keepsakes.variants.archivedColumn.orders'), cellClassName: 'text-muted', render: variant => t(variant.hasOrders ? 'keepsakes.variants.archivedSold' : 'keepsakes.variants.archivedNeverSold') },
+        ]}
+        contentClassName="min-w-0"
+        getRowId={variant => variant.id}
+        label={t('keepsakes.variants.archived', { count: variants.length })}
+        rowActions={{
+          headerClassName: 'w-14',
+          render: variant => (variant.hasOrders
+            ? null
+            : (
                 <Button isIconOnly aria-label={t('keepsakes.variants.deleteVariant', { name: nameOf(variant) })} className="text-danger max-lg:size-11" isDisabled={isBusy} size="sm" variant="tertiary" onPress={() => onDelete([variant])}>
                   <TrashIcon aria-hidden size={16} />
                 </Button>
-              )}
-            </span>
-          </li>
-        ))}
-      </ul>
+              )),
+        }}
+        rows={variants}
+        variant="card"
+      />
       {unsold.length > 0 && (
         <Button className="-ms-1 mt-1 text-danger max-lg:h-11" isDisabled={isBusy} size="sm" variant="ghost" onPress={() => onDelete(unsold)}>{t('keepsakes.variants.deleteNeverSold')}</Button>
       )}
