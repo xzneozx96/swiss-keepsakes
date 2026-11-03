@@ -88,8 +88,9 @@ export function useStoryGroupEditor({ storeId, group }: { storeId: string, group
     },
     state,
     problem,
-    // Stale and failed edits are unsaved too: Back must ask before they are dropped.
-    isUnsaved: state !== 'saved',
+    // Stale and failed edits are unsaved too: Back must ask before they are dropped. So is a review switched on with no
+    // place yet: it is held in the editor (`groupBody`), so the engine reads saved while the switch is still only here.
+    isUnsaved: state !== 'saved' || (typed?.kind === 'editorial_review' && !typed.subjectPlaceId),
     retry: () => void engine.flush(),
   }
 }

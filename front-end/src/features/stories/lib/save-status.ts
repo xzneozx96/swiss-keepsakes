@@ -20,3 +20,8 @@ export function saveStatusOf(t: Translate, intlLocale: Parameters<Date['toLocale
         : { status: t('storyEditor.save.notSavedYet'), tone: 'muted' }
   }
 }
+
+const WEIGHT: Record<AutosaveState, number> = { saved: 0, unsaved: 1, saving: 2, stale: 3, failed: 3 }
+
+/** The worse of two engines' states: the header shows one status for the version and the group together. */
+export const worseState = (a: AutosaveState, b: AutosaveState): AutosaveState => WEIGHT[b] > WEIGHT[a] ? b : a

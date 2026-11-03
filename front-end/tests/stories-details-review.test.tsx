@@ -80,6 +80,18 @@ describe('[E4.3][AC30] the Editorial review card', () => {
     expect(groupPatches()).toHaveLength(0)
   }, 30000)
 
+  it('[E4.3][AC30] CORRECTNESS-E43-5 a review switched on with no place counts as unsaved: Back asks before it drops the switch', async () => {
+    serve(group())
+    await openReview()
+    await openCard()
+    await userEvent.click(await toggle())
+    // The group save has run by now (it held the switch back and sent nothing): the engine reads saved.
+    await new Promise(resolve => setTimeout(resolve, 1200))
+    await userEvent.click(screen.getByRole('button', { name: 'Back to writing' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Back to Stories' }, SLOW))
+    expect(await screen.findByText('Leave without saving?', undefined, SLOW)).toBeInTheDocument()
+  }, 40000)
+
   it('[E4.3][AC30] AC-4 choosing a pin sends ONE group save with kind, subject place and the places plus the pin, and the story reloads as a review', async () => {
     serve(group({ placeIds: [uuid(2)] }, '2026-10-12'))
     await openReview()

@@ -88,6 +88,13 @@ describe('[E4.3][AC30][AC87] the group editor in the editor and the Review scree
     expect(order).toEqual(['PATCH', 'POST'])
   }, 30000)
 
+  it('[E4.3][AC30] the header says Not saved when a group save fails', async () => {
+    serveDetails(group({ categoryIds: [uuid(900)] }), call => (call.method === 'PATCH' && call.path.endsWith(groupId) ? problem(500, 'internal') : undefined))
+    await openReview()
+    await pickMultiDay()
+    expect(await screen.findByText('Not saved', undefined, SLOW)).toBeInTheDocument()
+  }, 30000)
+
   it('[E4.3][AC87] a 412 on the group shows the stale notice and keeps the choice', async () => {
     serveDetails(group({ categoryIds: [uuid(900)] }), call => (call.method === 'PATCH' && call.path.endsWith(groupId) ? problem(412, 'precondition-failed') : undefined))
     await openReview()

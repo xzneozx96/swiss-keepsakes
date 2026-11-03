@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { saveStatusOf } from '@/features/stories/lib/save-status'
+import { saveStatusOf, worseState } from '@/features/stories/lib/save-status'
 import { en } from '@/i18n/en'
 
 // A translate that reads the English file and fills `{time}`, as the app's does.
@@ -18,5 +18,14 @@ describe('[E4.3][AC45] the story save status text', () => {
     expect(saveStatusOf(t as never, 'en-GB', 'stale', at)).toEqual({ status: 'Not saved', tone: 'danger' })
     expect(saveStatusOf(t as never, 'en-GB', 'failed', at)).toEqual({ status: 'Not saved', tone: 'danger' })
     expect(saveStatusOf(t as never, 'en-GB', 'saved', null)).toEqual({ status: 'Not saved yet', tone: 'muted' })
+  })
+})
+
+describe('[E4.3][AC45] the worse of two save states', () => {
+  it('[E4.3][AC45] a failed or stale group save beats a saved version, and saving beats unsaved', () => {
+    expect(worseState('saved', 'failed')).toBe('failed')
+    expect(worseState('stale', 'saved')).toBe('stale')
+    expect(worseState('unsaved', 'saving')).toBe('saving')
+    expect(worseState('saved', 'saved')).toBe('saved')
   })
 })

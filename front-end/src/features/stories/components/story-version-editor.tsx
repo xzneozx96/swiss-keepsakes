@@ -16,7 +16,7 @@ import { useStoryGroupEditor } from '../hooks/use-story-group-editor'
 import { useStoryVersionEditor } from '../hooks/use-story-version-editor'
 import { blockingGaps } from '../lib/gaps'
 import { storyProblemKey } from '../lib/problems'
-import { saveStatusOf } from '../lib/save-status'
+import { saveStatusOf, worseState } from '../lib/save-status'
 import { STORIES_PATH } from '../lib/search-params'
 import { versionStateOf } from '../lib/version-state'
 import { CoverTitleCard } from './cover-title-card'
@@ -150,7 +150,7 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
     <>
       <StoryHeader
         language={language}
-        save={saveStatusOf(t, intlLocale, editor.state, editor.savedAt)}
+        save={saveStatusOf(t, intlLocale, worseState(editor.state, groupEditor.state), editor.savedAt)}
         screen={screen}
         switchNode={switcher(true)}
         versionState={editor.versionState}
