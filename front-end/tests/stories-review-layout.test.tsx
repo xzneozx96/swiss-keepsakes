@@ -46,7 +46,7 @@ describe('[E4.3][AC30] the Review layout', () => {
     const panel = screen.getByRole('complementary', { name: 'Publish and details' })
 
     expect(within(preview).getByText('What guests will see, on a phone as most of them read. Scroll inside the phone.')).toBeInTheDocument()
-    expect(within(preview).getByText('The preview comes with the next step of the editor.')).toBeInTheDocument()
+    expect(await within(preview).findByRole('heading', { level: 1, name: 'A morning on the Musegg wall' }, SLOW)).toBeInTheDocument()
     expect(within(panel).getByRole('button', { name: 'Publish English' })).toBeEnabled()
     expect(within(panel).getByText('Ready to publish')).toBeInTheDocument()
     expect(within(panel).getByRole('heading', { name: 'Details' })).toBeInTheDocument()
@@ -102,7 +102,7 @@ describe('[E4.3][AC30] the Review layout', () => {
 
     expect(await toggle()).toHaveTextContent('Ready to publish')
     expect(await tab('Preview')).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByText('The preview comes with the next step of the editor.')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'A morning on the Musegg wall' }, SLOW)).toBeInTheDocument()
   }, 20000)
 
   it('[E4.3][AC30] AC-7 with two warnings the bar says "Ready · 2 to look at"', async () => {

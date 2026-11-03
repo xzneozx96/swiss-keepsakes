@@ -47,7 +47,6 @@ export const storiesPublishEn = {
   'storyPublish.tab.preview': 'Preview',
   'storyPublish.panel.label': 'Publish and details',
   'storyPublish.preview.hint': 'What guests will see, on a phone as most of them read. Scroll inside the phone.',
-  'storyPublish.preview.placeholder': 'The preview comes with the next step of the editor.',
   'storyPublish.link.title': 'Link',
   'storyPublish.link.unset': 'Not set',
   'storyPublish.link.needed': 'Needed to publish.',

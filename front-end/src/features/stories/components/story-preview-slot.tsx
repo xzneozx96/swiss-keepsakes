@@ -2,15 +2,33 @@ import type { StoryGroupDetail } from '@sk/api-contract'
 import type { StoryFields } from '../lib/draft'
 import type { StoryLanguage } from '../lib/search-params'
 
-import { useLocale } from '@/contexts/locale-context'
+import { IPhoneMockup } from '@/components/iphone-mockup'
+import { LocaleOverride, useLocale } from '@/contexts/locale-context'
+import { useIsWide } from '@/hooks/use-is-wide'
+import { useStoryPreview } from '../hooks/use-story-preview'
+import { StoryPreviewPage } from './story-preview-page'
 
-/** Where the preview of the story (what guests will see, on a phone) goes. T-E4.3h replaces the body and keeps these props. */
-export function StoryPreviewSlot(_props: { group: StoryGroupDetail, language: StoryLanguage, fields: StoryFields }) {
+interface SlotProps { group: StoryGroupDetail, language: StoryLanguage, fields: StoryFields }
+
+/** Reads inside `LocaleOverride` so a failure to load a list never blanks the frame, and the labels follow the story language. */
+function PreviewContent(props: SlotProps) {
+  return <StoryPreviewPage {...useStoryPreview(props)} />
+}
+
+/**
+ * The story as guests will see it, drawn from the draft in memory: in the shared phone mockup on a laptop, in a plain
+ * phone-width outline on a phone (the same frames as the keepsake review).
+ */
+export function StoryPreviewSlot(props: SlotProps) {
   const { t } = useLocale()
-
-  return (
-    <div className="grid w-full max-w-sm flex-1 place-items-center rounded-3xl border border-separator bg-surface p-6 text-center text-sm text-muted">
-      {t('storyPublish.preview.placeholder')}
-    </div>
+  const wide = useIsWide()
+  const content = (
+    <LocaleOverride language={props.language}>
+      <PreviewContent {...props} />
+    </LocaleOverride>
   )
+
+  return wide
+    ? <IPhoneMockup label={t('storyPreview.label')} reserve={160}>{content}</IPhoneMockup>
+    : <div className="w-full max-w-[391px] overflow-hidden rounded-3xl border border-separator">{content}</div>
 }
