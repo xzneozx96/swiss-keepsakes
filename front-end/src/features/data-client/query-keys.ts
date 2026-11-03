@@ -30,6 +30,9 @@ export const queryKeys = {
   orders: {
     orders: ['orders', 'orders'],
   },
+  pickup: {
+    list: ['pickup', 'list'],
+  },
   places: {
     list: ['places', 'list'],
     pin: ['places', 'pin'],

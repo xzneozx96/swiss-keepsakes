@@ -19,6 +19,7 @@ import { createOrdersDemoClient } from '@/features/orders/api/demo-client'
 import { ordersQueries } from '@/features/orders/api/queries'
 import { createPartnersDemoClient } from '@/features/partners/api/demo-client'
 import { partnersQueries } from '@/features/partners/api/queries'
+import { createPickupClient } from '@/features/pickup/api/api-client'
 import { createPlacesClient } from '@/features/places/api/api-client'
 import { createReportsDemoClient } from '@/features/reports/api/demo-client'
 import { reportsQueries } from '@/features/reports/api/queries'
@@ -116,6 +117,7 @@ export function createDemoDataClient(store: DemoStore): DataClient {
     catalog: createCatalogDemoClient(store),
     categories: createCategoriesClient(),
     places: createPlacesClient(),
+    pickup: createPickupClient(),
     content: createContentDemoClient(store),
     keepsakes: createKeepsakesClient(),
     media: createMediaClient(),
