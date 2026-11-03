@@ -99,9 +99,4 @@ describe('[E8.7][AC37][AC60][AC-4] deviceClassOf', () => {
   it('is other when the width is not a number', () => {
     expect(deviceClassOf({ width: undefined as unknown as number })).toBe('other')
   })
-
-  it('decides by width alone, whatever touch says', () => {
-    expect(deviceClassOf({ width: 1280, touch: true })).toBe('desktop')
-    expect(deviceClassOf({ width: 400, touch: false })).toBe('phone')
-  })
 })

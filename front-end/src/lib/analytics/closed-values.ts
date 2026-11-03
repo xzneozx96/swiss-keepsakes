@@ -1,3 +1,4 @@
+import type { Language } from '@sk/domain/shared'
 import { interestCodes } from '@sk/domain/content'
 
 /**
@@ -13,8 +14,8 @@ export type PageType = typeof PAGE_TYPES[number]
 /** Pages that name one content item, so a page_view may carry its id. */
 export const CONTENT_PAGE_TYPES: readonly PageType[] = ['story', 'place', 'tour', 'keepsake']
 
-export const LANGUAGES = ['en', 'de'] as const
-export type Language = typeof LANGUAGES[number]
+/** The language type is the domain's; the list may only hold its members. */
+export const LANGUAGES = ['en', 'de'] as const satisfies readonly Language[]
 
 export const REFERRER_CLASSES = ['search', 'partner', 'social', 'direct', 'other'] as const
 export type ReferrerClass = typeof REFERRER_CLASSES[number]

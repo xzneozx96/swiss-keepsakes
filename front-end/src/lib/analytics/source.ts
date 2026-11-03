@@ -54,9 +54,9 @@ const TABLET_BELOW = 1024
 
 /**
  * The device class from the viewport width: phone under 640 px, tablet under 1024 px, desktop from there, `other` when the width
- * is not a positive finite number. `touch` is accepted and ignored: width alone decides, so a class is never sharpened into a fingerprint.
+ * is not a positive finite number. Width alone decides (there is no touch input), so a class is never sharpened into a fingerprint.
  */
-export function deviceClassOf({ width }: { width: number, touch?: boolean }): DeviceClass {
+export function deviceClassOf({ width }: { width: number }): DeviceClass {
   if (typeof width !== 'number' || !Number.isFinite(width) || width <= 0)
     return 'other'
   if (width < PHONE_BELOW)
