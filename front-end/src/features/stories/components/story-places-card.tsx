@@ -29,13 +29,13 @@ export function PlacesCard({ storeId, group, language, body, onChange }: {
   onChange: (patch: Partial<GroupFields>) => void
 }) {
   const { t } = useLocale()
-  const { pins, isLoading, isError } = usePinOptions(storeId, language)
+  const linked = storyBodyPinIds(body as Parameters<typeof storyBodyPinIds>[0])
+  // The pin list is read when the story names a pin (tagged or linked in the text); otherwise the picker reads it.
+  const { pins, isLoading, isError } = usePinOptions(storeId, language, group.placeIds.length > 0 || linked.length > 0)
   const [sheetOpen, setSheetOpen] = useState(false)
   const byId = new Map(pins.map(pin => [pin.id, pin]))
   const nameOf = (id: string) => byId.get(id)?.name ?? t('storyMedia.pin.unknown')
-  const untagged = isLoading || isError
-    ? []
-    : storyBodyPinIds(body as Parameters<typeof storyBodyPinIds>[0]).filter(id => !group.placeIds.includes(id) && byId.has(id))
+  const untagged = isLoading || isError ? [] : linked.filter(id => !group.placeIds.includes(id) && byId.has(id))
 
   return (
     <CollapsibleCard icon={PickupIcon} id="pins" summary={isLoading ? '' : placesSummary(t, group.placeIds.map(nameOf))} title={t('storyLists.places.title')}>

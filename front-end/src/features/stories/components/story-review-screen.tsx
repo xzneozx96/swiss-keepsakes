@@ -18,10 +18,13 @@ import { CategoriesCard } from './story-categories-card'
 import { StoryChecksList } from './story-checks-list'
 import { DetailsPanel, useDetailsPanel } from './story-details-panel'
 import { InterestsCard } from './story-interests-card'
+import { KeepsakesCard } from './story-keepsakes-card'
 import { StoryLinkCard } from './story-link-card'
+import { PlacesCard } from './story-places-card'
 import { StoryPreviewSlot } from './story-preview-slot'
 import { StoryPublishBar } from './story-publish-bar'
 import { StoryPublishCard } from './story-publish-card'
+import { RelatedCard } from './story-related-card'
 import { StayCard } from './story-stay-card'
 
 /**
@@ -71,8 +74,11 @@ export function StoryReviewScreen({ storeId, groupEditor, language, version, edi
     <DetailsPanel panel={panel}>
       <StoryLinkCard group={group} language={language} title={editor.fields.title} version={version} onSave={publish.saveSlug} />
       <CategoriesCard group={group} language={language} storeId={storeId} onChange={groupEditor.change} />
+      <PlacesCard body={editor.fields.body} group={group} language={language} storeId={storeId} onChange={groupEditor.change} />
       <StayCard group={group} onChange={groupEditor.change} />
       <InterestsCard group={group} onChange={groupEditor.change} />
+      <KeepsakesCard group={group} language={language} storeId={storeId} onChange={groupEditor.change} />
+      <RelatedCard group={group} language={language} storeId={storeId} onChange={groupEditor.change} />
     </DetailsPanel>
   )
   const preview = <StoryPreviewSlot fields={editor.fields} group={group} language={language} />

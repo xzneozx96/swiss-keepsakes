@@ -28,7 +28,7 @@ export function KeepsakesCard({ storeId, group, language, onChange }: {
   onChange: (patch: Partial<GroupFields>) => void
 }) {
   const { t } = useLocale()
-  const { keepsakes, isLoading, isError, refetch } = useKeepsakeOptions(storeId, language)
+  const { keepsakes, isLoading, isError, refetch } = useKeepsakeOptions(storeId, language, group.keepsakeProductIds.length > 0)
   const [sheetOpen, setSheetOpen] = useState(false)
   const byId = new Map(keepsakes.map(option => [option.id, option]))
   const ids = group.keepsakeProductIds
