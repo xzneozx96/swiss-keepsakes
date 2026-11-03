@@ -5,7 +5,10 @@ import {
   problemTypes,
   storyDraftSchema,
   storyGroupCreateBodySchema,
+  storyGroupDetailSchema,
   storyGroupSaveBodySchema,
+  storyListItemSchema,
+  storyListSchema,
   storyVersionCreateBodySchema,
   storyVersionMoveBodySchema,
   storyVersionSaveBodySchema,
@@ -315,5 +318,29 @@ describe('[E2.6] content write schemas', () => {
   it('[E2.6] every new problem code is in problemTypes', () => {
     for (const code of ['precondition-failed', 'precondition-required', 'publish-incomplete', 'media-retired', 'media-invalid', 'reference-invalid', 'content-slug-taken', 'slug-conflict', 'published-cannot-be-deleted', 'published-version-cannot-move', 'version-exists', 'not-published', 'content-in-use'])
       expect(problemTypes).toContain(code)
+  })
+})
+
+describe('[E4.3][AC30] story list and group read schemas', () => {
+  const iso = '2026-10-27T10:00:00.000Z'
+  const listVersion = { status: 'published', everPublished: true, editsNotLive: false, rowVersion: 2, updatedAt: iso }
+  const row = { groupId: uuid, kind: 'story', title: { de: 'Die Kapellbrücke' }, cover: null, languages: { en: null, de: listVersion }, updatedAt: iso }
+
+  it('[E4.3][AC30] a list row with a German version only has null for English', () => {
+    const parsed = storyListItemSchema.parse(row)
+    expect(parsed.languages.en).toBeNull()
+    expect(ok(storyListSchema, { items: [row] })).toBe(true)
+  })
+
+  it('[E4.3][AC30] a list version with an unknown status is refused', () => {
+    expect(ok(storyListItemSchema, { ...row, languages: { en: null, de: { ...listVersion, status: 'archived' } } })).toBe(false)
+  })
+
+  it('[E4.3][AC30] the group read holds both languages as StoryVersion or null', () => {
+    const version = { groupId: uuid, storeId: uuid2, language: 'en', status: 'draft', slug: null, draft: null, published: null, publishedAt: null, rowVersion: 1, createdAt: iso, updatedAt: iso }
+    const group = { id: uuid, storeId: uuid2, kind: 'story', subjectPlaceId: null, stayTag: 'both', interests: [], categoryIds: [], placeIds: [], keepsakeProductIds: [], relatedGroupIds: [], rowVersion: 1, createdAt: iso, updatedAt: iso }
+    const parsed = storyGroupDetailSchema.parse({ ...group, versions: { en: version, de: null } })
+    expect(parsed.versions.de).toBeNull()
+    expect(parsed.versions.en?.language).toBe('en')
   })
 })

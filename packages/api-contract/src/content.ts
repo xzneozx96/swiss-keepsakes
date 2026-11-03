@@ -475,6 +475,30 @@ export const storyVersionTextSchema = z.object({
   updatedAt: z.iso.datetime(),
 }).meta({ id: 'StoryVersionText', description: 'The text of one language version as the editor last left it: the draft if there is one, else the published text. For a preview to staff, never for guests' })
 
+export const storyListVersionSchema = z.object({
+  status: z.enum(['draft', 'published']),
+  everPublished: z.boolean().meta({ description: 'True when the version holds published text, live or taken down. Such a version cannot be deleted' }),
+  editsNotLive: z.boolean().meta({ description: 'True when the version is published and a draft with unpublished edits sits on top' }),
+  rowVersion: z.int(),
+  updatedAt: z.iso.datetime(),
+}).meta({ id: 'StoryListVersion', description: 'The state of one language version of a story, for the list' })
+
+export const storyListItemSchema = z.object({
+  groupId: z.uuid(),
+  kind: z.enum(['story', 'editorial_review']),
+  title: localizedView.meta({ description: 'The non-empty title of each language, from the draft, else the published text' }),
+  cover: mediaSchema.nullable().meta({ description: 'The cover of the first language that has a ready one. Null when none' }),
+  languages: z.object({ en: storyListVersionSchema.nullable(), de: storyListVersionSchema.nullable() }).meta({ description: 'Null: no version in that language' }),
+  updatedAt: z.iso.datetime().meta({ description: 'The latest update of any version' }),
+}).meta({ id: 'StoryListItem', description: 'One story group, one row of the Stories list' })
+
+export const storyListSchema = z.object({ items: z.array(storyListItemSchema) }).meta({ id: 'StoryList', description: 'The story groups of the store that have a version, most recently updated first' })
+
+export const storyGroupDetailSchema = z.object({
+  ...storyGroupSchema.shape,
+  versions: z.object({ en: storyVersionSchema.nullable(), de: storyVersionSchema.nullable() }),
+}).meta({ id: 'StoryGroupDetail', description: 'One story group with its English and German versions' })
+
 const tourStopWriteSchema = z.strictObject({
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
@@ -561,6 +585,10 @@ export type StoryVersionCreateBody = z.infer<typeof storyVersionCreateBodySchema
 export type StoryVersionSaveBody = z.infer<typeof storyVersionSaveBodySchema>
 export type StoryVersionMoveBody = z.infer<typeof storyVersionMoveBodySchema>
 export type StoryVersion = z.infer<typeof storyVersionSchema>
+export type StoryListVersion = z.infer<typeof storyListVersionSchema>
+export type StoryListItem = z.infer<typeof storyListItemSchema>
+export type StoryList = z.infer<typeof storyListSchema>
+export type StoryGroupDetail = z.infer<typeof storyGroupDetailSchema>
 export type StoryVersionText = z.infer<typeof storyVersionTextSchema>
 export type TourGuideWriteBody = z.infer<typeof tourWriteBodySchema>
 export type TourGuide = z.infer<typeof tourSchema>
