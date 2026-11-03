@@ -501,8 +501,8 @@ Terminal cases except S8-STOCK-SEED-02 and 04, which use the browser. The seed m
 
 | # | Step | Expected result |
 |---|---|---|
-| 1 | Try to add a 101st point. | The save fails and no point is added. The screen shows a general failure message, not a dedicated one. |
-| 2 | Open the archived list and restore "Old shop". | The restore fails the same way and "Old shop" stays archived. |
+| 1 | Try to add a 101st point. | The save fails and no point is added. The sheet stays open with what you typed and shows "100 active pickup points. Archive one first." (German: "100 aktive Abholstellen. Archivieren Sie zuerst eine."), not the general failure message. |
+| 2 | Open the archived list and restore "Old shop". | The restore fails, "Old shop" stays archived, and a red message shows the same words: "100 active pickup points. Archive one first." |
 | 3 | Archive one active point. | The active list now holds 99 points. |
 | 4 | Restore "Old shop". | It returns to the active list, which now holds 100. |
 

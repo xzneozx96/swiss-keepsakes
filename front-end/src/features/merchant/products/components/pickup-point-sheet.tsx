@@ -15,6 +15,7 @@ import { ApiProblem } from '@/features/data-client/errors'
 import { useSubmit } from '@/features/data-client/use-command'
 import { pickupQueries } from '@/features/pickup/api/queries'
 import { bodyOf, emptyForm, formOf, pickupErrors } from '@/features/pickup/lib/form'
+import { pickupLimitType } from '@/features/pickup/lib/problems'
 import { HoursRows } from '@/features/places/components/hours-rows'
 import { useIdempotencyKey } from '@/features/stores/hooks/use-idempotency-key'
 import { LanguageTabs, LocalizedField, useFocusFirstInvalid } from './editor-parts'
@@ -56,7 +57,9 @@ export function PickupPointSheet({ storeId, place, onClose }: {
   const { isPending, error, reset } = place ? save : create
   const body = bodyOf(form)
   const key = useIdempotencyKey({ storeId, id: place?.id, rowVersion, body })
-  const failureKey = error && !stale ? (error instanceof ApiProblem ? 'apiFeedback.error.generic' : 'apiFeedback.error.network') : undefined
+  const failureKey = error && !stale
+    ? (error instanceof ApiProblem ? (error.type === pickupLimitType ? 'pickup.problem.limit' : 'apiFeedback.error.generic') : 'apiFeedback.error.network')
+    : undefined
   const errors = pickupErrors(form)
   const missing = missingText([{ id: 'name', text: form.name }, { id: 'meetingPoint', text: form.address }])
 
