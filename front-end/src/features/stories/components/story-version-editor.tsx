@@ -160,7 +160,7 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
               {notices}
               {!isWide && <div className="max-lg:px-4">{switcher(false)}</div>}
               <CoverTitleCard accountName={accountName} fields={editor.fields} language={language} showErrors={showErrors} storeId={storeId} onChange={editor.change} />
-              <StoryBodyCard body={editor.fields.body} language={language} registerHandover={editor.registerHandover} onChange={editor.change} onDirty={editor.markDirty} />
+              <StoryBodyCard body={editor.fields.body} language={language} storeId={storeId} registerHandover={editor.registerHandover} onChange={editor.change} onDirty={editor.markDirty} />
             </div>
           )}
       {guard.dialog}

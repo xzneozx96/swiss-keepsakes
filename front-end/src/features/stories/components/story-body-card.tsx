@@ -20,7 +20,8 @@ const StoryBodyEditor = lazy(() => import('../editor/story-body-editor'))
  * uncontrolled (it starts from `body`), so `body` here is what the card last received from it, 300 ms behind typing; the
  * facts line reads it.
  */
-export function StoryBodyCard({ language, body, onChange, onDirty, registerHandover }: {
+export function StoryBodyCard({ storeId, language, body, onChange, onDirty, registerHandover }: {
+  storeId: string
   language: StoryLanguage
   body: StoryDraft['body']
   onChange: (patch: { body: StoryDraft['body'] }) => void
@@ -32,7 +33,7 @@ export function StoryBodyCard({ language, body, onChange, onDirty, registerHando
   return (
     <WriteCard icon={EditIcon} title={t('storyEditor.card.story')}>
       <Suspense fallback={<StoryBodySkeleton />}>
-        <StoryBodyEditor body={body} language={language} registerHandover={registerHandover} onChange={next => onChange({ body: next })} onDirty={onDirty} />
+        <StoryBodyEditor body={body} language={language} storeId={storeId} registerHandover={registerHandover} onChange={next => onChange({ body: next })} onDirty={onDirty} />
       </Suspense>
       <p className="text-xs text-muted tabular-nums">{bodyFactsLine(t, intlLocale, storyBodyFacts(body as StoryBody))}</p>
     </WriteCard>

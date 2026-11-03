@@ -8,9 +8,9 @@ import { LocaleProvider } from '@/contexts/locale-context'
 import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { item as mediaFile, page as mediaPage } from './media-harness'
-import { media, setUpHarness, state, storeId, uuid } from './stories-harness'
+import { media, problem, setUpHarness, state, storeId, uuid } from './stories-harness'
 
-export { media, state, storeId, uuid }
+export { media, problem, state, storeId, uuid }
 export { item as libraryItem, photoId, other as secondPhotoId } from './media-harness'
 
 const served = { pins: [] as Record<string, unknown>[], files: [] as Record<string, unknown>[], extra: (_call: (typeof state.calls)[number]): Response | undefined => undefined }

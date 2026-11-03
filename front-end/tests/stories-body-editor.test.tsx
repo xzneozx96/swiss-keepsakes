@@ -2,12 +2,14 @@ import type { Editor } from '@tiptap/react'
 import type { BodyHandover } from '@/features/stories/hooks/use-story-version-editor'
 
 import { storyBodySchema } from '@sk/api-contract'
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { LocaleProvider } from '@/contexts/locale-context'
 import StoryBodyEditor from '@/features/stories/editor/story-body-editor'
+import { renderWithStore, setUpStoryMedia, storeId } from './stories-media-harness'
+
+vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
 const view = vi.hoisted(() => ({ wide: true }))
 
@@ -33,7 +35,8 @@ beforeAll(() => {
   document.elementFromPoint = () => null
 })
 
-beforeEach(() => {
+beforeEach(async () => {
+  await setUpStoryMedia()
   view.wide = true
   localStorage.clear()
 })
@@ -42,12 +45,8 @@ function setUp(body: never = sample, language: 'en' | 'de' = 'en') {
   const onChange = vi.fn()
   const onDirty = vi.fn()
   const registered: (BodyHandover | null)[] = []
-  const props = { body, language, onChange, onDirty, registerHandover: (handover: BodyHandover | null) => void registered.push(handover) }
-  const rendered = render(
-    <LocaleProvider>
-      <StoryBodyEditor {...props} />
-    </LocaleProvider>,
-  )
+  const props = { storeId, body, language, onChange, onDirty, registerHandover: (handover: BodyHandover | null) => void registered.push(handover) }
+  const rendered = renderWithStore(<StoryBodyEditor {...props} />)
   const handover = () => registered.filter(Boolean).at(-1)!
 
   return { ...rendered, onChange, onDirty, registered, handover }

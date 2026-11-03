@@ -11,6 +11,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { useIsWide } from '@/hooks/use-is-wide'
 import { useLatest } from '@/hooks/use-latest'
 import { cleanBody } from '../lib/body'
+import { BodyEditorContext } from './body-context'
 import { createStoryExtensions, storyEditorProps } from './extensions'
 import { FormatButtons, UndoRedo, useFormatState } from './format-bar'
 import { LinkForm } from './link-form'
@@ -38,7 +39,8 @@ const proseClass = [
  * key, and `onDirty` at once on every change so the header says "Unsaved" and the leave guard asks. A body still waiting
  * is handed over by `handoff`, which the version editor calls before a save, a switch or Review, and on unmount.
  */
-export default function StoryBodyEditor({ body, language, onChange, onDirty, registerHandover }: {
+export default function StoryBodyEditor({ storeId, body, language, onChange, onDirty, registerHandover }: {
+  storeId: string
   body: StoryDraft['body']
   language: StoryLanguage
   onChange: (body: StoryDraft['body']) => void
@@ -144,7 +146,9 @@ export default function StoryBodyEditor({ body, language, onChange, onDirty, reg
 
       <div className="relative">
         {isEmpty && <p aria-hidden className="pointer-events-none absolute start-0 top-0 text-[17px] leading-8 text-muted/80">{t('storyEditor.body.placeholder')}</p>}
-        <EditorContent editor={editor} />
+        <BodyEditorContext value={{ storeId, language }}>
+          <EditorContent editor={editor} />
+        </BodyEditorContext>
       </div>
 
       {!isWide && <PhoneBar context={linkForm} editor={editor} linkOpen={linkOpen} state={state} onLink={toggleLink} />}

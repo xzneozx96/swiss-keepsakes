@@ -56,7 +56,6 @@ export const storiesMediaDe: Record<keyof typeof storiesMediaEn, string> = {
   'storyMedia.block.captionPlaceholder': 'Bildunterschrift hinzufügen (optional)',
   'storyMedia.block.alt': 'Beschreibung',
   'storyMedia.block.altPlaceholder': 'Was ein Screenreader vorliest',
-  'storyMedia.block.altFromLibrary': 'Aus der Bibliothek: {alt}',
   'storyMedia.block.title.video': 'Titel',
   'storyMedia.block.title.audio': 'Titel',
   'storyMedia.block.moveUp': '{label} nach oben',

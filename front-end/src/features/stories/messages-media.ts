@@ -55,7 +55,6 @@ export const storiesMediaEn = {
   'storyMedia.block.captionPlaceholder': 'Add a caption (optional)',
   'storyMedia.block.alt': 'Description',
   'storyMedia.block.altPlaceholder': 'What a screen reader says',
-  'storyMedia.block.altFromLibrary': 'From the library: {alt}',
   'storyMedia.block.title.video': 'Title',
   'storyMedia.block.title.audio': 'Title',
   'storyMedia.block.moveUp': 'Move {label} up',

@@ -1,10 +1,13 @@
-import type { EditorOptions, Extensions } from '@tiptap/react'
+import type { EditorOptions, Extensions, ReactNodeViewProps } from '@tiptap/react'
+import type { ComponentType } from 'react'
 
-import { Mark, mergeAttributes, Node, wrappingInputRule } from '@tiptap/react'
+import { Mark, mergeAttributes, Node, ReactNodeViewRenderer, wrappingInputRule } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 
 import { linkHref } from '../lib/link-input'
 import { pastedHtml } from '../lib/paste'
+import { AudioView, ImageView, VideoView } from './media-views'
+import { stopEvent } from './stop-event'
 
 export interface MediaLabels { image: string, video: string, audio: string }
 
@@ -69,17 +72,20 @@ function attribute(name: string) {
 }
 
 /**
- * A photo, video or recording is in the schema so a stored body is never stripped on load. It is a plain labelled box
- * here; choosing one and its player are a later ticket. `attributes` maps each of the contract's attributes to its
+ * A photo, video or recording: a React view in the editor (picture, own field, caption, move and remove), and `figure` markup for
+ * the clipboard and a stored body, so nothing is stripped on load. `attributes` maps each of the contract's attributes to its
  * `data-` name.
  */
-function mediaNode(name: 'image' | 'video' | 'audio', attributes: Record<string, string>, label: string) {
+function mediaNode(name: 'image' | 'video' | 'audio', attributes: Record<string, string>, label: string, View: ComponentType<ReactNodeViewProps>) {
   return Node.create({
     name,
     group: 'block',
     atom: true,
     draggable: true,
     selectable: true,
+    addNodeView() {
+      return ReactNodeViewRenderer(View, { stopEvent })
+    },
     addAttributes() {
       return Object.fromEntries(Object.entries(attributes).map(([id, data]) => [id, attribute(data)]))
     },
@@ -128,9 +134,9 @@ export function createStoryExtensions(labels: MediaLabels): Extensions {
     }),
     StoryBlockquote,
     StoryListItem,
-    mediaNode('image', { mediaId: 'media-id', alt: 'alt', caption: 'caption' }, labels.image),
-    mediaNode('video', { youtubeId: 'youtube-id', title: 'title', caption: 'caption' }, labels.video),
-    mediaNode('audio', { mediaId: 'media-id', title: 'title', caption: 'caption' }, labels.audio),
+    mediaNode('image', { mediaId: 'media-id', alt: 'alt', caption: 'caption' }, labels.image, ImageView),
+    mediaNode('video', { youtubeId: 'youtube-id', title: 'title', caption: 'caption' }, labels.video, VideoView),
+    mediaNode('audio', { mediaId: 'media-id', title: 'title', caption: 'caption' }, labels.audio, AudioView),
     PinLink,
   ]
 }
