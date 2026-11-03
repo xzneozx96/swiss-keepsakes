@@ -84,6 +84,7 @@ function ArchivedList({ variants, options, isBusy, selected, onSelect, onDelete 
         <ActionBar
           actions={[{ icon: TrashIcon, label: t('keepsakes.variants.delete'), tone: 'danger', isDisabled: isBusy, onPress: () => onDelete(ticked) }]}
           count={ticked.length}
+          reserveSpace={false}
           onClear={() => onSelect(new Set())}
         />
       )}
@@ -368,6 +369,7 @@ export function VariantsBlock({ storeId, options, variants, held, toCome, action
             { icon: allArchive ? ArchiveIcon : TrashIcon, label: t(allHeld ? 'keepsakes.variants.remove' : allArchive ? 'keepsakes.variant.archive' : 'keepsakes.variants.delete'), tone: 'danger', isDisabled: isPending, onPress: () => void remove(ticked, () => setSelected(new Set())) },
           ]}
           count={ticked.length}
+          reserveSpace={false}
           onClear={() => {
             setSelected(new Set())
             setPricing(false)

@@ -25,6 +25,11 @@ export interface ActionBarProps {
   actions: ActionBarAction[]
   /** A short caption above the bar, e.g. "2 in use, kept". */
   note?: string
+  /**
+   * Leave 80px of room where the bar is rendered, so the fixed bar never covers the last row of a list that ends the
+   * page (default). Off inside a card in the middle of a page, where that room shows as an empty gap (the keepsake editor).
+   */
+  reserveSpace?: boolean
 }
 
 // The ghost button's text is dark by default; on this dark surface it has to be the page colour.
@@ -35,7 +40,7 @@ const DANGER = 'h-11 min-w-11 gap-1.5 px-3 sm:h-9'
  * The floating bar of a list with bulk selection: count, actions, close. It sits centred at the bottom of
  * the content, above the phone bottom nav. Esc clears the selection.
  */
-export function ActionBar({ count, onClear, actions, note }: ActionBarProps) {
+export function ActionBar({ count, onClear, actions, note, reserveSpace = true }: ActionBarProps) {
   const { t } = useLocale()
   const [anchor, setAnchor] = useState<HTMLDivElement | null>(null)
   const [column, setColumn] = useState<{ left: number, width: number }>()
@@ -74,8 +79,8 @@ export function ActionBar({ count, onClear, actions, note }: ActionBarProps) {
 
   return (
     <>
-      {/* Room under the last row, so the fixed bar never covers it. */}
-      <div ref={setAnchor} aria-hidden className="h-20" />
+      {/* Room under the last row, so the fixed bar never covers it; also the box the bar is centred on. */}
+      <div ref={setAnchor} aria-hidden className={reserveSpace ? 'h-20' : 'h-0'} />
       <div
         className="pointer-events-none fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px)+8px)] z-10 flex flex-col items-center gap-2 lg:bottom-6"
         data-testid="action-bar"
