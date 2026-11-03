@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { MerchantProducts } from '@/features/merchant/products/components/merchant-products'
+import { PickupPage } from '@/features/merchant/products/components/pickup-page'
 
-// M11 Products › Pickup.
+// M14 Products › Pickup points: a page of its own, as Inventory.
 export const Route = createFileRoute('/store/products/pickup')({
-  component: () => <MerchantProducts tab="pickup" />,
+  component: PickupPage,
 })

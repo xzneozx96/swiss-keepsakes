@@ -226,6 +226,8 @@ export const productsEn = {
   'products.departure.added': 'Departure added',
   'products.departure.updated': 'Seats saved',
 
+  'pickup.title': 'Pickup points',
+  'pickup.description': 'Where guests collect their orders and where handovers meet.',
   'pickup.action.add': 'Add pickup point',
   'pickup.action.restore': 'Restore',
   'pickup.archive.body': 'Guests can no longer pick up here. You can restore it from the Archived list.',

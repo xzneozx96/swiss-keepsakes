@@ -1,17 +1,15 @@
-import type { PickupPlace } from '@sk/api-contract'
 import type { ProductRow } from '../hooks/use-merchant-products'
 import type { ProductAction } from './product-rows'
 import type { MutationFeedback } from '@/features/data-client'
 import type { ProductTab } from '@/features/merchant/products/lib/search-params'
 
-import { Button, buttonVariants, Skeleton } from '@heroui/react'
+import { buttonVariants } from '@heroui/react'
 import { pickText } from '@sk/domain/shared'
 import { Link, useNavigate } from '@tanstack/react-router'
 
 import { useEffect, useRef, useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
-import { EmptyState } from '@/components/empty-state'
 
 import {
   FilterButtons,
@@ -20,7 +18,6 @@ import {
 } from '@/components/filter-bar'
 import {
   GiftIcon,
-  PickupIcon,
   PlusIcon,
   TourIcon,
 } from '@/components/icons'
@@ -29,55 +26,23 @@ import { RouteTabs } from '@/components/route-tabs'
 import { useLocale } from '@/contexts/locale-context'
 import { useStoreSubcategories } from '@/features/catalog/api/queries'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
-import { apiEnabled } from '@/lib/api-mode'
 import {
   useMerchantProducts,
   useProductArchive,
 } from '../hooks/use-merchant-products'
-import { usePickupPoints } from '../hooks/use-pickup-points'
-import { PickupPointSheet } from './pickup-point-sheet'
-import { PickupPoints } from './pickup-points'
 import { ProductRows } from './product-rows'
 
 type ProductView = 'active' | 'archived'
-
-/** Pickup points: two columns of cards, each with icon tile, name, hours and instructions. */
-function PickupSkeleton() {
-  return (
-    <ul aria-hidden className="grid gap-5 lg:grid-cols-2">
-      {[0, 1, 2, 3].map(i => (
-        <li
-          key={i}
-          className="flex flex-col overflow-hidden rounded-3xl bg-surface shadow-surface"
-        >
-          <div className="flex items-center gap-4 p-4">
-            <Skeleton className="size-14 shrink-0 rounded-lg" />
-            <div className="flex flex-1 flex-col gap-2">
-              <Skeleton className="h-5 w-3/5 rounded-lg" />
-              <Skeleton className="h-3 w-4/5 rounded-lg" />
-            </div>
-          </div>
-          <div className="px-4 pb-4">
-            <Skeleton className="h-6 w-24 rounded-full" />
-          </div>
-          <div className="flex flex-col gap-2 border-t border-dashed border-separator px-4 py-3.5">
-            <Skeleton className="h-4 w-1/3 rounded-lg" />
-            <Skeleton className="h-4 w-full rounded-lg" />
-            <Skeleton className="mt-1 h-8 w-24 rounded-lg max-lg:h-11" />
-          </div>
-        </li>
-      ))}
-    </ul>
-  )
-}
+/** The tabs this screen lists; Pickup points is a page of its own and is only linked from the tab bar. */
+type ProductsTab = Exclude<ProductTab, 'pickup'>
 
 /**
- * M11 Products (spec §5.2, D3): M03's page shape. Tabs with counts (gifts, tours and,
- * until Settings arrives in Phase 6, M14 pickup points), each its own page: /store/products,
- * /tours, /pickup. Each is a list of M03 tickets on phones and a Table from 1024px. Each gift and tour shows its publish chip and its EN/DE
+ * M11 Products (spec §5.2, D3): M03's page shape. Tabs with counts (gifts and tours; the tab bar also links to
+ * the Pickup points page, which is its own screen, PickupPage), each its own page: /store/products,
+ * /tours. Each is a list of M03 tickets on phones and a Table from 1024px. Each gift and tour shows its publish chip and its EN/DE
  * completeness (R02).
  */
-export function MerchantProducts({ tab }: { tab: ProductTab }) {
+export function MerchantProducts({ tab }: { tab: ProductsTab }) {
   const { t, language } = useLocale()
   const all = useMerchantProducts()
   const subcategories = useStoreSubcategories()
@@ -88,9 +53,6 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
   const archive = useProductArchive({ gift: archivedToast, tour: archivedToast })
   const navigate = useNavigate()
   const { confirm, dialog } = useConfirm()
-  const pickup = usePickupPoints(tab === 'pickup')
-  // The point being edited (a snapshot of the ticket), or an empty object for a new one.
-  const [sheet, setSheet] = useState<{ place?: PickupPlace } | null>(null)
   // Archived gifts and tours sit under their own filter, as archived partners on M15.
   // Both ticked shows both; none ticked is no filter, the same as both.
   const [view, setView] = useState<ProductView[]>(['active'])
@@ -120,7 +82,6 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
       id: 'pickup',
       to: '/store/products/pickup',
       label: t('products.tab.pickup'),
-      badge: pickup.active.data?.items.length,
     },
   ] as const
   const selectedLabel = tabs.find(item => item.id === tab)?.label ?? ''
@@ -217,34 +178,9 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
     return groups
   }
 
-  const pickupPlaces = (archived: boolean) => (archived ? pickup.archived : pickup.active).data?.items ?? []
-  const groups = tab === 'pickup'
-    ? [viewGroup(archived => pickupPlaces(archived).length)]
-    : filterGroups(tab)
+  const groups = filterGroups(tab)
 
-  const pickupPanel = () => {
-    if (!apiEnabled)
-      return <EmptyState icon={PickupIcon} message={t('keepsakes.apiOnly')} />
-    if (pickup.me.isError || pickup.active.isError || (view.includes('archived') && pickup.archived.isError))
-      return <EmptyState alert icon={PickupIcon} message={t('pickup.loadFailed')} />
-    if (pickup.me.isPending || (pickup.storeId && (pickup.active.isPending || (view.includes('archived') && pickup.archived.isPending))))
-      return <PickupSkeleton />
-    if (!pickup.storeId)
-      return <EmptyState icon={PickupIcon} message={t('pickup.noStore')} />
-    // None ticked reads as both, as on the other tabs.
-    const showing = [
-      ...(!view.length || view.includes('active') ? pickupPlaces(false) : []),
-      ...(!view.length || view.includes('archived') ? pickupPlaces(true) : []),
-    ]
-
-    return showing.length
-      ? <PickupPoints label={selectedLabel} places={showing} onArchive={pickup.archive} onOpen={place => setSheet({ place })} onRestore={pickup.restore} />
-      : <EmptyState icon={PickupIcon} message={t(view.length === 1 && view[0] === 'archived' ? 'products.empty.archived' : 'products.empty.pickup')} />
-  }
-
-  const panel = (id: ProductTab) => {
-    if (id === 'pickup')
-      return pickupPanel()
+  const panel = (id: ProductsTab) => {
     const rows = id === 'gifts' ? gifts : tours
 
     return (
@@ -282,28 +218,19 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
     <div ref={rootRef} className="flex flex-col gap-4">
       <MerchantPageHeader
         // The screen's one red action, as M15's "Add partner".
-        action={
-          tab === 'pickup'
-            ? (
-                <Button className="shrink-0 max-lg:min-h-11" isDisabled={!pickup.storeId} size="sm" onPress={() => setSheet({})}>
-                  <PlusIcon aria-hidden size={16} />
-                  {t('pickup.action.add')}
-                </Button>
-              )
-            : (
-                <Link
-                  className={buttonVariants({ size: 'sm', className: 'shrink-0' })}
-                  to={
-                    tab === 'gifts'
-                      ? '/store/products/gifts/new'
-                      : '/store/products/tours/new'
-                  }
-                >
-                  <PlusIcon aria-hidden size={16} />
-                  {t(tab === 'gifts' ? 'products.addGift' : 'products.addTour')}
-                </Link>
-              )
-        }
+        action={(
+          <Link
+            className={buttonVariants({ size: 'sm', className: 'shrink-0' })}
+            to={
+              tab === 'gifts'
+                ? '/store/products/gifts/new'
+                : '/store/products/tours/new'
+            }
+          >
+            <PlusIcon aria-hidden size={16} />
+            {t(tab === 'gifts' ? 'products.addGift' : 'products.addTour')}
+          </Link>
+        )}
         description={t('products.intro')}
         title={t('products.title')}
       />
@@ -316,8 +243,6 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
       {groups && <FilterChips groups={groups} />}
       {panel(tab)}
       {dialog}
-      {pickup.dialog}
-      {sheet && pickup.storeId && <PickupPointSheet key={sheet.place?.id ?? 'new'} place={sheet.place} storeId={pickup.storeId} onClose={() => setSheet(null)} />}
     </div>
   )
 }

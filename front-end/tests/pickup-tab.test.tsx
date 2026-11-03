@@ -10,7 +10,7 @@ import { LocaleProvider } from '@/contexts/locale-context'
 import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
-import { MerchantProducts } from '@/features/merchant/products/components/merchant-products'
+import { PickupPage } from '@/features/merchant/products/components/pickup-page'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 vi.mock('@/hooks/use-is-wide', () => ({ useIsWide: () => true }))
@@ -118,7 +118,7 @@ async function renderTab() {
   await demo.ready
   const root = createRootRoute({ component: Outlet })
   const routes = ['/store/products', '/store/products/tours', '/store/products/pickup'].map(path =>
-    createRoute({ getParentRoute: () => root, path, component: () => <MerchantProducts tab="pickup" /> }),
+    createRoute({ getParentRoute: () => root, path, component: PickupPage }),
   )
   const router = createRouter({ routeTree: root.addChildren(routes), history: createMemoryHistory({ initialEntries: ['/store/products/pickup'] }), disableGlobalCatchBoundary: true })
 
@@ -138,12 +138,23 @@ async function renderTab() {
 
 const ticket = async (name: string) => (await screen.findByText(name)).closest('article')!
 
-describe('[E6.6][AC26] M14 the Pickup points tab on the API', { timeout: 30_000 }, () => {
+describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000 }, () => {
   it('shows the empty state when the store has no points', async () => {
     await renderTab()
 
     expect(await screen.findByText('No pickup points yet.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add pickup point' })).toBeInTheDocument()
+  })
+
+  it('is a page of its own: a Pickup points heading and description, no Keepsakes or Tours tabs', async () => {
+    await renderTab()
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Pickup points' })).toBeInTheDocument()
+    expect(screen.getByText('Where guests collect their orders and where handovers meet.')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Products' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: /Keepsakes|Tours/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Status/ })).toBeInTheDocument()
   })
 
   it('shows a skeleton that mirrors the tickets while the list loads', async () => {
@@ -160,7 +171,7 @@ describe('[E6.6][AC26] M14 the Pickup points tab on the API', { timeout: 30_000 
     expect(await screen.findByText('Point 1')).toBeInTheDocument()
   })
 
-  it('lists the points in order with name, address, hours line and instructions, and counts the active ones in the tab', async () => {
+  it('lists the points in order with name, address, hours line and instructions', async () => {
     active = [
       point(1, { instructions: { en: 'Ring the bell' } }),
       point(2, { hours: [{ weekday: 1, opens: '09:00', closes: '12:00' }, { weekday: 1, opens: '14:00', closes: '18:00' }] }),
@@ -176,7 +187,6 @@ describe('[E6.6][AC26] M14 the Pickup points tab on the API', { timeout: 30_000 
     expect(within(await ticket('Point 2')).getByText('Mon 09:00 to 12:00, 14:00 to 18:00')).toBeInTheDocument()
     expect(within(await ticket('Point 3')).getByText('No opening hours set')).toBeInTheDocument()
     expect(screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Point 1', 'Point 2', 'Point 3'])
-    expect(screen.getByRole('tab', { name: /Pickup points/ })).toHaveTextContent('3')
   })
 
   it('a german-only point shows the missing-English chip, not an error', async () => {
@@ -235,7 +245,7 @@ describe('[E6.6][AC26] M14 the Pickup points tab on the API', { timeout: 30_000 
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `${base}/0198a000-0000-7000-8000-0000000000d1/restore`, ifMatch: '3' })
-    await waitFor(() => expect(screen.getByRole('tab', { name: /Pickup points/ })).toHaveTextContent('1'))
+    await waitFor(() => expect(screen.queryByText('Point 1')).not.toBeInTheDocument())
   })
 
   it('a Restore refused at 100 active points (422 pickup-limit) toasts the reason, not the generic failure', async () => {
@@ -277,7 +287,7 @@ describe('[E6.6][AC26] M14 the Pickup points tab on the API', { timeout: 30_000 
     await userEvent.click(restore)
     release()
 
-    await waitFor(() => expect(screen.getByRole('tab', { name: /Pickup points/ })).toHaveTextContent('1'))
+    await waitFor(() => expect(screen.queryByText('Point 1')).not.toBeInTheDocument())
     expect(writes()).toHaveLength(1)
   })
 
