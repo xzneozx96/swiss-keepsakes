@@ -7,4 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_SITE_URL?: string
   /** `production` lets search engines index the site. Unset, empty or any other value sends `X-Robots-Tag: noindex`. */
   readonly VITE_SITE_ENV?: string
+  /** The PostHog EU project key. Unset: the analytics sender is off. */
+  readonly VITE_POSTHOG_KEY?: string
+  /** `true` or `false` overrides the sender switch. Unset: on unless `VITE_SITE_ENV` is `production`. */
+  readonly VITE_POSTHOG_ENABLED?: string
 }
