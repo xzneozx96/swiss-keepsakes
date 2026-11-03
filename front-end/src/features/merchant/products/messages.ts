@@ -226,6 +226,12 @@ export const productsEn = {
   'products.departure.added': 'Departure added',
   'products.departure.updated': 'Seats saved',
 
+  'pickup.action.add': 'Add pickup point',
+  'pickup.action.restore': 'Restore',
+  'pickup.archive.body': 'Guests can no longer pick up here. You can restore it from the Archived list.',
+  'pickup.toast.restored': '{name} restored',
+  'pickup.loadFailed': 'The pickup points could not be loaded.',
+  'pickup.noStore': 'You do not belong to a store yet, so there are no pickup points to edit.',
   'pickup.sheet.add': 'Add pickup point',
   'pickup.hours.title': 'Opening hours',
   'pickup.hours.help':

@@ -229,6 +229,12 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'products.departure.added': 'Termin hinzugefügt',
   'products.departure.updated': 'Plätze gespeichert',
 
+  'pickup.action.add': 'Abholstelle hinzufügen',
+  'pickup.action.restore': 'Wiederherstellen',
+  'pickup.archive.body': 'Gäste können hier nicht mehr abholen. Sie können sie in der Liste Archiviert wiederherstellen.',
+  'pickup.toast.restored': '{name} wiederhergestellt',
+  'pickup.loadFailed': 'Die Abholstellen konnten nicht geladen werden.',
+  'pickup.noStore': 'Sie gehören noch zu keinem Shop, daher gibt es keine Abholstellen zu bearbeiten.',
   'pickup.sheet.add': 'Abholstelle hinzufügen',
   'pickup.hours.title': 'Öffnungszeiten',
   'pickup.hours.help':

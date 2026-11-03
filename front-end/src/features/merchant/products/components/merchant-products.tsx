@@ -1,9 +1,10 @@
+import type { PickupPlace } from '@sk/api-contract'
 import type { ProductRow } from '../hooks/use-merchant-products'
 import type { ProductAction } from './product-rows'
 import type { MutationFeedback } from '@/features/data-client'
 import type { ProductTab } from '@/features/merchant/products/lib/search-params'
 
-import { buttonVariants, Skeleton } from '@heroui/react'
+import { Button, buttonVariants, Skeleton } from '@heroui/react'
 import { pickText } from '@sk/domain/shared'
 import { Link, useNavigate } from '@tanstack/react-router'
 
@@ -28,10 +29,13 @@ import { RouteTabs } from '@/components/route-tabs'
 import { useLocale } from '@/contexts/locale-context'
 import { useStoreSubcategories } from '@/features/catalog/api/queries'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
+import { apiEnabled } from '@/lib/api-mode'
 import {
   useMerchantProducts,
   useProductArchive,
 } from '../hooks/use-merchant-products'
+import { usePickupPoints } from '../hooks/use-pickup-points'
+import { PickupPointSheet } from './pickup-point-sheet'
 import { PickupPoints } from './pickup-points'
 import { ProductRows } from './product-rows'
 
@@ -75,7 +79,6 @@ function PickupSkeleton() {
 export function MerchantProducts({ tab }: { tab: ProductTab }) {
   const { t, language } = useLocale()
   const all = useMerchantProducts()
-  const { places } = all
   const subcategories = useStoreSubcategories()
   const nameOf = (id: string) => all.gifts.find(r => r.id === id)?.name ?? all.tours.find(r => r.id === id)?.name ?? ''
   const archivedToast: MutationFeedback<void, { id: string, archived: boolean }> = {
@@ -84,6 +87,9 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
   const archive = useProductArchive({ gift: archivedToast, tour: archivedToast })
   const navigate = useNavigate()
   const { confirm, dialog } = useConfirm()
+  const pickup = usePickupPoints(tab === 'pickup')
+  // The point being edited (a snapshot of the ticket), or an empty object for a new one.
+  const [sheet, setSheet] = useState<{ place?: PickupPlace } | null>(null)
   // Archived gifts and tours sit under their own filter, as archived partners on M15.
   // Both ticked shows both; none ticked is no filter, the same as both.
   const [view, setView] = useState<ProductView[]>(['active'])
@@ -113,7 +119,7 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
       id: 'pickup',
       to: '/store/products/pickup',
       label: t('products.tab.pickup'),
-      badge: places.length,
+      badge: pickup.active.data?.items.length,
     },
   ] as const
   const selectedLabel = tabs.find(item => item.id === tab)?.label ?? ''
@@ -167,26 +173,25 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
     archive.archive(kind, row.id)
   }
 
+  const viewGroup = (count: (archived: boolean) => number) =>
+    filterGroup({
+      id: 'view',
+      label: t('products.view.label'),
+      options: (['active', 'archived'] as const).map(v => ({
+        id: v,
+        label: t(`products.view.${v}`),
+        count: count(v === 'archived'),
+      })),
+      selected: view,
+      onChange: setView,
+    })
+
   const filterGroups = (id: 'gifts' | 'tours') => {
     const source = id === 'gifts' ? all.gifts : all.tours
 
+    // Counts follow the other group: the sub-categories ticked narrow the status counts.
     const groups = [
-      filterGroup({
-        id: 'view',
-        label: t('products.view.label'),
-        options: (['active', 'archived'] as const).map(v => ({
-          id: v,
-          label: t(`products.view.${v}`),
-          // Counts follow the other group: the sub-categories ticked narrow the status counts.
-          count: source.filter(
-            r =>
-              (id === 'tours' || inSubs(r))
-              && r.archived === (v === 'archived'),
-          ).length,
-        })),
-        selected: view,
-        onChange: setView,
-      }),
+      viewGroup(archived => source.filter(r => (id === 'tours' || inSubs(r)) && r.archived === archived).length),
     ]
 
     if (id === 'gifts') {
@@ -211,20 +216,34 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
     return groups
   }
 
-  const groups = tab === 'gifts' || tab === 'tours' ? filterGroups(tab) : null
+  const pickupPlaces = (archived: boolean) => (archived ? pickup.archived : pickup.active).data?.items ?? []
+  const groups = tab === 'pickup'
+    ? [viewGroup(archived => pickupPlaces(archived).length)]
+    : filterGroups(tab)
+
+  const pickupPanel = () => {
+    if (!apiEnabled)
+      return <EmptyState icon={PickupIcon} message={t('keepsakes.apiOnly')} />
+    if (pickup.me.isError || pickup.active.isError || (view.includes('archived') && pickup.archived.isError))
+      return <EmptyState alert icon={PickupIcon} message={t('pickup.loadFailed')} />
+    if (pickup.me.isPending || (pickup.storeId && (pickup.active.isPending || (view.includes('archived') && pickup.archived.isPending))))
+      return <PickupSkeleton />
+    if (!pickup.storeId)
+      return <EmptyState icon={PickupIcon} message={t('pickup.noStore')} />
+    // None ticked reads as both, as on the other tabs.
+    const showing = [
+      ...(!view.length || view.includes('active') ? pickupPlaces(false) : []),
+      ...(!view.length || view.includes('archived') ? pickupPlaces(true) : []),
+    ]
+
+    return showing.length
+      ? <PickupPoints label={selectedLabel} places={showing} onArchive={pickup.archive} onOpen={place => setSheet({ place })} onRestore={pickup.restore} />
+      : <EmptyState icon={PickupIcon} message={t(view.length === 1 && view[0] === 'archived' ? 'products.empty.archived' : 'products.empty.pickup')} />
+  }
 
   const panel = (id: ProductTab) => {
-    if (isLoading && id === 'pickup')
-      return <PickupSkeleton />
-    if (id === 'pickup') {
-      return places.length
-        ? (
-            <PickupPoints label={selectedLabel} rows={places} />
-          )
-        : (
-            <EmptyState icon={PickupIcon} message={t('products.empty.pickup')} />
-          )
-    }
+    if (id === 'pickup')
+      return pickupPanel()
     const rows = id === 'gifts' ? gifts : tours
 
     return (
@@ -261,21 +280,28 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
   return (
     <div ref={rootRef} className="flex flex-col gap-4">
       <MerchantPageHeader
-        // The screen's one red action, as M15's "Add partner"; none for pickup points.
+        // The screen's one red action, as M15's "Add partner".
         action={
-          tab !== 'pickup' && (
-            <Link
-              className={buttonVariants({ size: 'sm', className: 'shrink-0' })}
-              to={
-                tab === 'gifts'
-                  ? '/store/products/gifts/new'
-                  : '/store/products/tours/new'
-              }
-            >
-              <PlusIcon aria-hidden size={16} />
-              {t(tab === 'gifts' ? 'products.addGift' : 'products.addTour')}
-            </Link>
-          )
+          tab === 'pickup'
+            ? (
+                <Button className="shrink-0" isDisabled={!pickup.storeId} size="sm" onPress={() => setSheet({})}>
+                  <PlusIcon aria-hidden size={16} />
+                  {t('pickup.action.add')}
+                </Button>
+              )
+            : (
+                <Link
+                  className={buttonVariants({ size: 'sm', className: 'shrink-0' })}
+                  to={
+                    tab === 'gifts'
+                      ? '/store/products/gifts/new'
+                      : '/store/products/tours/new'
+                  }
+                >
+                  <PlusIcon aria-hidden size={16} />
+                  {t(tab === 'gifts' ? 'products.addGift' : 'products.addTour')}
+                </Link>
+              )
         }
         description={t('products.intro')}
         title={t('products.title')}
@@ -289,6 +315,8 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
       {groups && <FilterChips groups={groups} />}
       {panel(tab)}
       {dialog}
+      {pickup.dialog}
+      {sheet && pickup.storeId && <PickupPointSheet key={sheet.place?.id ?? 'new'} place={sheet.place} storeId={pickup.storeId} onClose={() => setSheet(null)} />}
     </div>
   )
 }
