@@ -70,7 +70,7 @@ describe('[E6.3][AC05][AC53] AC-1 the inventory list', () => {
     expect(within(grid).getByText('Sold out')).toHaveClass('text-danger')
     expect(within(grid).getByText('Large / Swan')).toBeInTheDocument()
     expect(within(grid).getByText('Pocket Knife')).toBeInTheDocument()
-    expect(screen.queryByText(/breadcrumb/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: /breadcrumb/i })).not.toBeInTheDocument()
   })
 
   it('[E6.3][AC05][AC53] AC-1 the Sold out tab keeps the variants with nothing available, the In stock tab the others', async () => {
@@ -139,6 +139,8 @@ describe('[E6.3][AC05][AC53] AC-1 the inventory list', () => {
     expect(items).toHaveLength(3)
     expect(within(items[0]).getByText('Sold out')).toHaveClass('text-danger')
     expect(within(items[0]).getByText('2 reserved')).toBeInTheDocument()
+    expect(within(items[0]).getByText('VX-L-SWAN')).toBeInTheDocument()
+    expect(within(items[0]).getByText('Large / Swan')).toBeInTheDocument()
     expect(within(items[1]).getByText('3 available')).toBeInTheDocument()
     expect(within(items[1]).queryByText(/reserved/)).not.toBeInTheDocument()
     expect(within(items[2]).getByRole('textbox', { name: 'In stock for VX-S-SWAN' })).toHaveValue('7')
@@ -207,6 +209,66 @@ describe('[E6.3][AC05][AC53] AC-2 editing a quantity in the list', () => {
 
     await userEvent.setup().click(within(grid).getByRole('button', { name: /increase|increment/i }))
     await waitFor(() => expect(puts().map(call => call.body)).toEqual([{ onHand: 6 }]))
+  })
+
+  it('[E6.3][AC05][AC53] AC-2 two quick steps show 7 at once and end with a save of 7, one write after the other', async () => {
+    const releases: (() => void)[] = []
+    let onHand = 5
+
+    state.answer = (call) => {
+      if (call.method === 'PUT') {
+        const figure = (call.body as { onHand: number }).onHand
+
+        return new Promise<Response>((resolve) => {
+          releases.push(() => {
+            onHand = figure
+            resolve(Response.json(stockRow({ skuId: skuOf(1), onHand, available: onHand - 2 })))
+          })
+        }) as unknown as Response
+      }
+
+      return call.method === 'GET' && call.path === base ? Response.json(stockList([{ ...rows[0], onHand, available: onHand - 2 }])) : undefined
+    }
+    renderInventory()
+    const { grid } = await loaded('VX-S-SWAN')
+    const user = userEvent.setup()
+    const increase = within(grid).getByRole('button', { name: /Increase/ })
+
+    await user.click(increase)
+    await user.click(increase)
+    expect(box(grid)).toHaveValue('7')
+    await waitFor(() => expect(puts().map(call => call.body)).toEqual([{ onHand: 6 }]))
+    releases[0]()
+    await waitFor(() => expect(puts().map(call => call.body)).toEqual([{ onHand: 6 }, { onHand: 7 }]))
+    expect(box(grid)).toHaveValue('7')
+    releases[1]()
+    await waitFor(() => expect(within(grid).getByText('5')).toBeInTheDocument())
+    expect(box(grid)).toHaveValue('7')
+  })
+
+  it('[E6.3][AC05][AC53] AC-2 Enter on a refused figure keeps the focus in the box, with the old figure and the refusal', async () => {
+    state.answer = call => (call.method === 'PUT' ? stockProblem(2) : call.method === 'GET' && call.path === base ? Response.json(stockList(rows)) : undefined)
+    renderInventory()
+    const { grid } = await loaded('VX-S-SWAN')
+    const user = userEvent.setup()
+
+    await typeInto(user, grid, '1{Enter}')
+    await within(grid).findByText('2 units are reserved by orders, so stock can’t go below the 2 reserved.')
+    expect(box(grid)).toHaveValue('5')
+    await waitFor(() => expect(box(grid)).toHaveFocus())
+    await user.tab()
+    expect(puts()).toHaveLength(1)
+  })
+
+  it('[E6.3][AC05][AC53] AC-2 a refusal that names no reserved figure uses the one of the row', async () => {
+    state.answer = call => (call.method === 'PUT' ? Response.json({ type: 'stock-below-reserved', status: 422, title: 'refused', instance: '/x', requestId: 'req-3' }, { status: 422 }) : call.method === 'GET' && call.path === base ? Response.json(stockList(rows)) : undefined)
+    renderInventory()
+    const { grid } = await loaded('VX-S-SWAN')
+    const user = userEvent.setup()
+
+    await typeInto(user, grid, '1')
+    await user.tab()
+    expect(await within(grid).findByText('2 units are reserved by orders, so stock can’t go below the 2 reserved.')).toBeInTheDocument()
   })
 
   it.each([['abc'], ['-3'], ['1.5'], ['']])('[E6.3][AC05][AC53] AC-2 typing %j shows "Enter a whole number, 0 or more." and sends nothing', async (typed) => {

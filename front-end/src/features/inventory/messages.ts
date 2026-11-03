@@ -2,7 +2,7 @@
 export const inventoryEn = {
   'inventory.nav': 'Inventory',
   'inventory.title': 'Inventory',
-  'inventory.description': 'What is in stock for each variant and what orders have reserved. Change a figure right in the list.',
+  'inventory.description': 'The stock of every variant, and what orders have reserved. Type a new figure to change it.',
   'inventory.tabsLabel': 'Stock',
   'inventory.tab.all': 'All',
   'inventory.tab.inStock': 'In stock',

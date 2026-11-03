@@ -116,7 +116,7 @@ describe.each([
     expect(hrefs.indexOf('/store/content/categories')).toBeLessThan(hrefs.indexOf('/store/content/analytics'))
   })
 
-  it('[E6.1][E6.3][nav] the Products menu links Keepsakes, Inventory and Pickup points', async () => {
+  it('[E6.3][AC05][AC53] AC-1 [E6.1][nav] the Products menu links Keepsakes, Inventory and Pickup points', async () => {
     const { sidebar } = await renderShop(language)
     const products = Array.from(sidebar.querySelectorAll(':scope > ul > li > button'), el => el).find(el => text(el) === dict['nav.products'])!
 
@@ -130,7 +130,7 @@ describe.each([
     ])
   })
 
-  it.each(['/store/products/inventory', '/store/products/inventory/0198a000-0000-7000-8000-000000000101'])('[E6.3][nav] Inventory is the highlighted page of Products on %s', async (path) => {
+  it.each(['/store/products/inventory', '/store/products/inventory/0198a000-0000-7000-8000-000000000101'])('[E6.3][AC05][AC53] AC-1 Inventory is the highlighted page of Products on %s', async (path) => {
     const { sidebar } = await renderShop(language, path)
     const links = Array.from(sidebar.querySelectorAll('a')).filter(a => a.getAttribute('href')?.startsWith('/store/products'))
 

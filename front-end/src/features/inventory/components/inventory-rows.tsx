@@ -19,8 +19,8 @@ function useRowText() {
   return { t, keepsake, variant }
 }
 
-/** Thumbnail, the variant's title (the keepsake's name when it has no options), the keepsake's name, and below 1280 px the code. */
-function VariantCell({ row, showCode }: { row: StockRow, showCode: boolean }) {
+/** Thumbnail, the variant's title (the keepsake's name when it has no options), the code and the keepsake's name. The table hides the code from 1280 px, where it has a column. */
+function VariantCell({ row, codeClassName = '' }: { row: StockRow, codeClassName?: string }) {
   const { keepsake, variant } = useRowText()
   const title = variant(row) || keepsake(row)
 
@@ -29,7 +29,7 @@ function VariantCell({ row, showCode }: { row: StockRow, showCode: boolean }) {
       <KeepsakePhoto className="size-11 shrink-0 rounded-xl" media={row.photo} width={160} />
       <span className="flex min-w-0 flex-col break-words">
         <span className="text-sm font-medium">{title}</span>
-        {showCode && row.code && <span className="font-mono text-xs text-muted xl:hidden">{row.code}</span>}
+        {row.code && <span className={`font-mono text-xs text-muted ${codeClassName}`.trim()}>{row.code}</span>}
         {variant(row) && <span className="text-xs text-muted">{keepsake(row)}</span>}
       </span>
     </div>
@@ -62,7 +62,7 @@ function StockCards({ rows, label, storeId }: { rows: StockRow[], label: string,
       {rows.map(row => (
         <li key={row.skuId} className="flex min-w-0 flex-col gap-2 py-3" data-sku={row.skuId}>
           <div className="min-w-0">
-            <VariantCell row={row} showCode={false} />
+            <VariantCell row={row} />
           </div>
           <div className="flex items-start justify-between gap-3 ps-14">
             <StockLines row={row} />
@@ -105,7 +105,7 @@ export function StockRows({ rows, isLoading, storeId, empty, resetKey }: { rows:
   const { t } = useRowText()
   const label = t('inventory.title')
   const columns: DataTableColumn<StockRow>[] = [
-    { id: 'variant', header: t('inventory.column.variant'), isRowHeader: true, skeleton: 'lead', render: row => <VariantCell row={row} showCode /> },
+    { id: 'variant', header: t('inventory.column.variant'), isRowHeader: true, skeleton: 'lead', render: row => <VariantCell codeClassName="xl:hidden" row={row} /> },
     { id: 'code', header: t('inventory.column.code'), headerClassName: 'hidden w-38 xl:table-cell', cellClassName: 'hidden xl:table-cell', render: row => <span className="font-mono text-sm">{row.code}</span> },
     { id: 'reserved', header: t('inventory.column.reserved'), headerClassName: 'w-28 text-end', cellClassName: row => `text-end tabular-nums ${row.reserved === 0 ? 'text-muted' : ''}`, render: row => row.reserved },
     { id: 'inStock', header: t('inventory.column.inStock'), headerClassName: 'w-48', skeleton: 'field', render: row => <StockField key={row.skuId} row={row} storeId={storeId} /> },

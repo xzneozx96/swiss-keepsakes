@@ -2,6 +2,8 @@ import { Description, Label, NumberField } from '@heroui/react'
 import { useRef } from 'react'
 
 const NOT_A_DIGIT = /\D/
+// A constant: react-stately drops the typed text whenever the format options are a new object.
+const NO_GROUPING = { useGrouping: false }
 
 type InputProps = Pick<React.ComponentProps<typeof NumberField.Input>, 'ref' | 'onBlurCapture' | 'onKeyDownCapture'>
 
@@ -109,7 +111,7 @@ export function QuantityBox({
     <NumberField
       aria-label={label}
       className="quantity-stepper w-auto"
-      formatOptions={onText ? { useGrouping: false } : undefined}
+      formatOptions={onText ? NO_GROUPING : undefined}
       maxValue={max}
       minValue={min}
       value={value}

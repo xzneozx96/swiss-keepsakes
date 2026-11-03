@@ -3,7 +3,7 @@ import type { inventoryEn } from './messages'
 export const inventoryDe: Record<keyof typeof inventoryEn, string> = {
   'inventory.nav': 'Lagerbestand',
   'inventory.title': 'Lagerbestand',
-  'inventory.description': 'Was von jeder Variante auf Lager ist und was Bestellungen reserviert haben. Ändern Sie eine Zahl direkt in der Liste.',
+  'inventory.description': 'Der Bestand jeder Variante und was Bestellungen reserviert haben. Geben Sie eine neue Zahl ein, um ihn zu ändern.',
   'inventory.tabsLabel': 'Bestand',
   'inventory.tab.all': 'Alle',
   'inventory.tab.inStock': 'Auf Lager',
@@ -29,8 +29,8 @@ export const inventoryDe: Record<keyof typeof inventoryEn, string> = {
 
   'inventory.error.whole': 'Geben Sie eine ganze Zahl ein, 0 oder mehr.',
   'inventory.error.most': 'Höchstens 9999.',
-  'inventory.error.belowReserved.one': '{count} Einheit ist durch Bestellungen reserviert, der Bestand kann also nicht unter die {count} reservierte fallen.',
-  'inventory.error.belowReserved.other': '{count} Einheiten sind durch Bestellungen reserviert, der Bestand kann also nicht unter die {count} reservierten fallen.',
+  'inventory.error.belowReserved.one': '{count} Einheit ist durch Bestellungen reserviert, der Bestand kann daher nicht unter die {count} reservierte Einheit fallen.',
+  'inventory.error.belowReserved.other': '{count} Einheiten sind durch Bestellungen reserviert, der Bestand kann daher nicht unter die {count} reservierten Einheiten fallen.',
   'inventory.problem.forbidden': 'Sie dürfen den Bestand dieses Shops nicht ändern.',
   'inventory.problem.notFound': 'Diese Variante gibt es nicht mehr.',
   'inventory.problem.generic': 'Der Bestand konnte nicht gespeichert werden. Versuchen Sie es erneut.',
