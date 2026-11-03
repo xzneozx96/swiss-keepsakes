@@ -8,10 +8,12 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LocaleProvider } from '@/contexts/locale-context'
+import { AnalyticsRoot } from '@/features/analytics/components/analytics-root'
 import { fetchMapCategories, fetchMapPin, fetchMapPins } from '@/features/map/api/map-client'
 import { MapScreen } from '@/features/map/components/map-screen'
 import { PlaceSheet } from '@/features/map/components/place-sheet'
 import { en } from '@/i18n/en'
+import { isTrackAllowed, setTrackAllowed } from '@/lib/analytics/track'
 import { installFakeAnalytics } from './support/fake-analytics'
 import { FakeMap, resetFakeMaps } from './support/fake-maplibre'
 
@@ -22,6 +24,26 @@ vi.mock('maplibre-gl', async () => (await import('./support/fake-maplibre')).fak
 vi.mock('maplibre-gl/dist/maplibre-gl.css', () => ({}))
 vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.mjs' }))
 vi.mock('@/lib/api-mode', () => ({ apiEnabled: true }))
+const gate = vi.hoisted(() => ({
+  sessionUser: (): Promise<unknown> => Promise.resolve(null),
+  stores: [] as unknown[],
+  meAsked: false,
+}))
+
+vi.mock('@/lib/analytics/config', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/analytics/config')>()
+
+  return { ...actual, analyticsEnabled: () => true }
+})
+vi.mock('@/features/stores/api/queries', () => ({
+  sessionUserQuery: { queryKey: ['test', 'session-user'], queryFn: () => gate.sessionUser() },
+  useMe: (enabled: boolean) => {
+    if (enabled)
+      gate.meAsked = true
+
+    return { isPending: false, isError: false, data: { stores: gate.stores } }
+  },
+}))
 vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: vi.fn(), fetchMapCategories: vi.fn(), fetchMapPin: vi.fn() }))
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
@@ -65,11 +87,15 @@ function MapAtRoute() {
   return <MapScreen place={place} />
 }
 
-async function loaded(url = '/en/map') {
+/** `withRoot` mounts the real AnalyticsRoot and its gate; without it the tests open the gate by hand, as AnalyticsRoot does for a guest. */
+async function loaded(url = '/en/map', withRoot = false) {
+  if (!withRoot)
+    setTrackAllowed(true)
   const root = createRootRoute({
     component: () => (
       <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
         <LocaleProvider>
+          {withRoot ? <AnalyticsRoot /> : null}
           <Outlet />
         </LocaleProvider>
       </QueryClientProvider>
@@ -106,6 +132,10 @@ async function openSheetOf(title: string) {
 
 beforeEach(() => {
   fake.reset()
+  setTrackAllowed(false)
+  gate.sessionUser = () => Promise.resolve(null)
+  gate.stores = []
+  gate.meAsked = false
   resetFakeMaps()
   window.scrollTo = vi.fn()
   window.HTMLElement.prototype.scrollTo = vi.fn()
@@ -197,6 +227,39 @@ describe('[E8.7][AC37][AC60][AC-8] the pin card reports pin_open, pin_to_story_c
   it('records pin_open once for a ?place= deep link', async () => {
     await loaded('/en/map?place=pin-3')
     await screen.findByRole('heading', { level: 2, name: 'Wine Market' })
+
+    expect(opens().map(event => event.props.content_id)).toEqual([id(103)])
+  })
+})
+
+describe('[E8.7][AC37][AC60][AC-5] the ?place= deep link goes through the guest gate', () => {
+  it('a signed-in merchant opening /en/map?place= records nothing, not even the deep-linked pin', async () => {
+    gate.sessionUser = () => Promise.resolve({ id: 'u1' })
+    gate.stores = [{ id: 's1' }]
+    await loaded('/en/map?place=pin-3', true)
+    await screen.findByRole('heading', { level: 2, name: 'Wine Market' })
+    await waitFor(() => expect(gate.meAsked).toBe(true))
+
+    expect(isTrackAllowed()).toBe(false)
+    expect(fake.events).toEqual([])
+  })
+
+  it('a guest opening /en/map?place= records the deep-linked pin once, also when the session answers after the card is shown', async () => {
+    let answer: (user: unknown) => void = () => {}
+
+    gate.sessionUser = () => new Promise((done) => {
+      answer = done
+    })
+    await loaded('/en/map?place=pin-3', true)
+    await screen.findByRole('heading', { level: 2, name: 'Wine Market' })
+
+    // The gate holds while the session is unresolved: the deep link is not sent, and not given up either.
+    expect(isTrackAllowed()).toBe(false)
+    expect(opens()).toEqual([])
+
+    await act(async () => answer(null))
+    await waitFor(() => expect(opens().map(event => event.props.content_id)).toEqual([id(103)]))
+    await userEvent.click(pinButton('Wine Market'))
 
     expect(opens().map(event => event.props.content_id)).toEqual([id(103)])
   })

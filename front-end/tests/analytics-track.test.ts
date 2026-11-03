@@ -8,7 +8,7 @@ function fakePosthog() {
 }
 
 /** Fresh modules and a counted posthog-js module, so a test can say whether the library was ever loaded. */
-async function load(fake: ReturnType<typeof fakePosthog> | 'rejects' = fakePosthog()) {
+async function load(fake: ReturnType<typeof fakePosthog> | 'rejects' = fakePosthog(), options: { closed?: boolean } = {}) {
   vi.resetModules()
   const factory = vi.fn(() => {
     if (fake === 'rejects')
@@ -18,6 +18,11 @@ async function load(fake: ReturnType<typeof fakePosthog> | 'rejects' = fakePosth
   })
 
   vi.doMock('posthog-js', factory)
+  const trackModule = await import('@/lib/analytics/track')
+
+  // AnalyticsRoot opens the gate in the app; a test opens it by hand unless it is about the closed start.
+  if (options.closed !== true)
+    trackModule.setTrackAllowed(true)
 
   return {
     factory,
@@ -25,7 +30,7 @@ async function load(fake: ReturnType<typeof fakePosthog> | 'rejects' = fakePosth
     track: (await import('@/lib/analytics/track')).track,
     client: await import('@/lib/analytics/client'),
     allowList: await import('@/lib/analytics/allow-list'),
-    trackModule: await import('@/lib/analytics/track'),
+    trackModule,
   }
 }
 
@@ -310,5 +315,27 @@ describe('[E8.7][AC37][AC60][AC-10] a failing PostHog does not disturb the page'
     })
 
     expect(() => trackModule.track('page_view', { pageType: 'home', language: 'en' })).not.toThrow()
+  })
+
+  it('starts closed: before AnalyticsRoot opens the gate nothing is sent, loaded or sunk, and it sends once opened', async () => {
+    const { trackModule, factory, fake } = await load(fakePosthog(), { closed: true })
+    const posthog = fake as ReturnType<typeof fakePosthog>
+    const seen: unknown[] = []
+
+    expect(trackModule.isTrackAllowed()).toBe(false)
+    trackModule.setTrackSink((name, props) => seen.push([name, props]))
+    trackModule.track('pin_open', { pageType: 'place', contentId: ID, language: 'en' })
+    trackModule.setTrackSink(undefined)
+    trackModule.track('pin_open', { pageType: 'place', contentId: ID, language: 'en' })
+    await settle()
+
+    expect(seen).toEqual([])
+    expect(factory).not.toHaveBeenCalled()
+
+    trackModule.setTrackAllowed(true)
+    trackModule.track('pin_open', { pageType: 'place', contentId: ID, language: 'en' })
+    await settle()
+
+    expect(posthog.capture).toHaveBeenCalledTimes(1)
   })
 })

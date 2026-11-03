@@ -15,7 +15,7 @@ import { mapQueries, useMapData } from '@/features/map/api/queries'
 import { categoryName, isHighlighted, keepHighlighted, pinCategoryNames, topLevelCategories } from '@/features/map/lib/categories'
 import { CARD_ROW_BOTTOM, CARD_ROW_HEIGHT, CONTROLS, MAP_BOTTOM_CLEAR } from '@/features/map/lib/layout'
 import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
-import { track } from '@/lib/analytics/track'
+import { track, useTrackAllowed } from '@/lib/analytics/track'
 import { apiEnabled } from '@/lib/api-mode'
 import { CategoriesSheet } from './categories-sheet'
 import { MapControlsSkeleton } from './map-skeleton'
@@ -119,12 +119,19 @@ export function MapScreen({ place }: { place?: string }) {
   const deepLinkedId = handledPlace !== undefined && handledPlace === place ? ranked.find(pin => pin.slug === place)?.id : undefined
   const reportedDeepLinkRef = useRef<string | undefined>(undefined)
 
-  // The deep link's card gets focus on its title, as a tapped pin's does, and counts as an opened pin once.
+  const trackAllowed = useTrackAllowed()
+
+  // The deep link counts as an opened pin once. While the guest gate holds (the session is not answered) the pin is not marked reported:
+  // it is sent when the gate opens, and never when the gate has closed for a merchant.
   useEffect(() => {
-    if (deepLinkedId && reportedDeepLinkRef.current !== deepLinkedId) {
+    if (deepLinkedId && trackAllowed && reportedDeepLinkRef.current !== deepLinkedId) {
       reportedDeepLinkRef.current = deepLinkedId
       track('pin_open', { pageType: 'place', contentId: deepLinkedId, language })
     }
+  }, [deepLinkedId, language, trackAllowed])
+
+  // The deep link's card gets focus on its title, as a tapped pin's does.
+  useEffect(() => {
     if (deepLinkedId)
       requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-card="${deepLinkedId}"] h2`)?.focus({ preventScroll: true }))
   }, [deepLinkedId, language])

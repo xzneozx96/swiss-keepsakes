@@ -1,5 +1,6 @@
 import type { Language } from '@sk/domain/shared'
 import type { EventName, PageType, ReferrerClass } from './closed-values'
+import { useSyncExternalStore } from 'react'
 import { isPrivatePath } from '@/lib/private-routes'
 import { readAudience } from './audience'
 import { startAnalytics } from './client'
@@ -15,7 +16,8 @@ export interface TrackProps {
 type Sink = (name: EventName, props: Record<string, unknown>) => void
 
 let sink: Sink | undefined
-let allowed = true
+let allowed = false
+const listeners = new Set<() => void>()
 let referrerClass: ReferrerClass | undefined
 
 /** Tests install a sink: it receives every event and nothing is loaded or sent. Pass undefined to remove it. */
@@ -25,10 +27,26 @@ export function setTrackSink(next: Sink | undefined): void {
 
 /**
  * The guest-site gate (private path, merchant browser, answer not known yet). AnalyticsRoot sets it, and every event goes through it,
- * not only page views. Open until the root says otherwise.
+ * not only page views. Closed until the root opens it, so an event from any caller that runs first is dropped.
  */
 export function setTrackAllowed(next: boolean): void {
+  if (allowed === next)
+    return
   allowed = next
+  listeners.forEach(listener => listener())
+}
+
+export function isTrackAllowed(): boolean {
+  return allowed
+}
+
+/** Whether the gate is open, as state: a caller that must not lose an event while the gate holds waits on it and sends when it opens. */
+export function useTrackAllowed(): boolean {
+  return useSyncExternalStore((listener) => {
+    listeners.add(listener)
+
+    return () => listeners.delete(listener)
+  }, isTrackAllowed, () => false)
 }
 
 function visitReferrerClass(): ReferrerClass {

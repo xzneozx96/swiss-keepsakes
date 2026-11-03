@@ -1,13 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { trackProductView, trackStoryView } from '@/lib/analytics/helpers'
+import { setTrackAllowed } from '@/lib/analytics/track'
 import { installFakeAnalytics } from './support/fake-analytics'
 
 const STORY = '3f1c2b8e-5a47-4d0e-9b6a-1c2d3e4f5a6b'
 const KEEPSAKE = '7a9d0c11-2b3e-4f56-8a77-0b1c2d3e4f5a'
 const fake = installFakeAnalytics()
 
-beforeEach(() => fake.reset())
-afterEach(() => fake.reset())
+beforeEach(() => {
+  fake.reset()
+  setTrackAllowed(true)
+})
+afterEach(() => {
+  fake.reset()
+  setTrackAllowed(false)
+})
 
 describe('[E8.7][AC37][AC60][AC-9] trackStoryView and trackProductView', () => {
   it('tracks story_view on page type story with the story id', () => {

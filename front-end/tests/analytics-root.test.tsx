@@ -3,7 +3,7 @@ import { render, waitFor } from '@testing-library/react'
 import { renderToString } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AnalyticsRoot } from '@/features/analytics/components/analytics-root'
-import { setTrackAllowed, track } from '@/lib/analytics/track'
+import { isTrackAllowed, setTrackAllowed, track } from '@/lib/analytics/track'
 import { installFakeAnalytics } from './support/fake-analytics'
 
 const state = vi.hoisted(() => ({
@@ -12,6 +12,7 @@ const state = vi.hoisted(() => ({
   path: '/en',
   sessionUser: (): Promise<unknown> => Promise.resolve(null),
   me: { isPending: false, isError: false, data: { stores: [] as unknown[] } },
+  meAsked: false,
 }))
 
 vi.mock('@/lib/api-mode', () => ({
@@ -26,7 +27,12 @@ vi.mock('@/lib/analytics/config', async (importOriginal) => {
 })
 vi.mock('@/features/stores/api/queries', () => ({
   sessionUserQuery: { queryKey: ['test', 'session-user'], queryFn: () => state.sessionUser() },
-  useMe: () => state.me,
+  useMe: (enabled: boolean) => {
+    if (enabled)
+      state.meAsked = true
+
+    return state.me
+  },
 }))
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
@@ -36,7 +42,8 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
 
 const fake = installFakeAnalytics()
 const MERCHANT = { id: 'u1' }
-const settle = () => new Promise(resolve => setTimeout(resolve, 20))
+const SESSION_KEY = ['test', 'session-user']
+const gateOpen = () => waitFor(() => expect(isTrackAllowed()).toBe(true))
 
 function tree(client: QueryClient) {
   return (
@@ -50,7 +57,7 @@ function mount() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const view = render(tree(client))
 
-  return { client, go(path: string) {
+  return { client, unmount: view.unmount, go(path: string) {
     state.path = path
     view.rerender(tree(client))
   }, again() {
@@ -62,10 +69,11 @@ const pageViews = () => fake.events.filter(event => event.name === 'page_view').
 
 beforeEach(() => {
   fake.reset()
-  setTrackAllowed(true)
+  setTrackAllowed(false)
   window.localStorage.clear()
   state.api = false
   state.on = true
+  state.meAsked = false
   state.path = '/en'
   state.sessionUser = () => Promise.resolve(null)
   state.me = { isPending: false, isError: false, data: { stores: [] } }
@@ -95,7 +103,6 @@ describe('[E8.7][AC37][AC60][AC-4] AnalyticsRoot tracks a page_view on each gues
     await waitFor(() => expect(pageViews()).toHaveLength(1))
     view.again()
     view.go('/en')
-    await settle()
 
     expect(pageViews()).toHaveLength(1)
   })
@@ -112,7 +119,7 @@ describe('[E8.7][AC37][AC60][AC-5] private areas and merchants send nothing', ()
   it.each(['/store/orders', '/partner/report', '/admin', '/en/plan', '/account', '/cart', '/sign-in', '/lab/x'])('%s sends nothing', async (path) => {
     state.path = path
     mount()
-    await settle()
+    await gateOpen()
 
     expect(fake.events).toEqual([])
   })
@@ -122,7 +129,6 @@ describe('[E8.7][AC37][AC60][AC-5] private areas and merchants send nothing', ()
 
     await waitFor(() => expect(pageViews()).toHaveLength(1))
     view.go('/store/orders')
-    await settle()
     view.go('/en/map')
     await waitFor(() => expect(pageViews()).toHaveLength(2))
 
@@ -150,10 +156,11 @@ describe('[E8.7][AC37][AC60][AC-5] private areas and merchants send nothing', ()
     state.me = { isPending: false, isError: false, data: { stores: [{ id: 's1' }] } }
     const view = mount()
 
-    await settle()
+    // The stores lookup was made and answered "a merchant": the gate is closed for good, not held.
+    await waitFor(() => expect(state.meAsked).toBe(true))
     view.go('/en/map')
-    await settle()
 
+    expect(isTrackAllowed()).toBe(false)
     expect(fake.events).toEqual([])
   })
 
@@ -161,8 +168,9 @@ describe('[E8.7][AC37][AC60][AC-5] private areas and merchants send nothing', ()
     state.api = true
     state.sessionUser = () => Promise.resolve(MERCHANT)
     state.me = { isPending: false, isError: false, data: { stores: [{ id: 's1' }] } }
-    mount()
-    await settle()
+    const merchantView = mount()
+
+    await waitFor(() => expect(state.meAsked).toBe(true))
     const pin = { pageType: 'place', contentId: '00000000-0000-4000-8000-000000000101', language: 'en' } as const
 
     track('pin_open', pin)
@@ -170,6 +178,7 @@ describe('[E8.7][AC37][AC60][AC-5] private areas and merchants send nothing', ()
     track('outbound_click', pin)
     expect(fake.events).toEqual([])
 
+    merchantView.unmount()
     fake.reset()
     state.me = { isPending: false, isError: false, data: { stores: [] } }
     mount()
@@ -185,8 +194,10 @@ describe('[E8.7][AC37][AC60][AC-5] private areas and merchants send nothing', ()
     state.sessionUser = () => new Promise((done) => {
       resolve = done
     })
-    mount()
-    await settle()
+    const view = mount()
+
+    await waitFor(() => expect(view.client.isFetching({ queryKey: SESSION_KEY })).toBe(1))
+    expect(isTrackAllowed()).toBe(false)
     expect(fake.events).toEqual([])
 
     resolve(null)
@@ -199,14 +210,14 @@ describe('[E8.7][AC37][AC60][AC-5] private areas and merchants send nothing', ()
     state.me = { isPending: true, isError: false, data: undefined as never }
     const view = mount()
 
-    await settle()
+    await waitFor(() => expect(state.meAsked).toBe(true))
+    expect(isTrackAllowed()).toBe(false)
     expect(fake.events).toEqual([])
 
     state.me = { isPending: false, isError: false, data: { stores: [] } }
     view.again()
     await waitFor(() => expect(pageViews()).toHaveLength(1))
     view.again()
-    await settle()
     expect(pageViews()).toHaveLength(1)
   })
 
@@ -214,21 +225,31 @@ describe('[E8.7][AC37][AC60][AC-5] private areas and merchants send nothing', ()
     state.api = true
     state.sessionUser = () => Promise.resolve(MERCHANT)
     state.me = { isPending: false, isError: true, data: undefined as never }
-    mount()
+    const view = mount()
 
-    await settle()
-
+    await waitFor(() => expect(state.meAsked).toBe(true))
+    expect(isTrackAllowed()).toBe(false)
     expect(fake.events).toEqual([])
+
+    // A hold, not a skip: when the stores read succeeds with no stores, the held page is reported.
+    state.me = { isPending: false, isError: false, data: { stores: [] } }
+    view.again()
+    await waitFor(() => expect(pageViews()).toHaveLength(1))
   })
 
   it('holds, and sends nothing, when the session read itself fails', async () => {
     state.api = true
     state.sessionUser = () => Promise.reject(new Error('offline'))
-    mount()
+    const view = mount()
 
-    await settle()
-
+    await waitFor(() => expect(view.client.getQueryState(SESSION_KEY)?.status).toBe('error'))
+    expect(isTrackAllowed()).toBe(false)
     expect(fake.events).toEqual([])
+
+    // A hold, not a skip: when the read works again, the held page is reported.
+    state.sessionUser = () => Promise.resolve(null)
+    await view.client.refetchQueries({ queryKey: SESSION_KEY })
+    await waitFor(() => expect(pageViews()).toHaveLength(1))
   })
 
   it('with the API on and the sender off, makes no session or stores lookup', async () => {
@@ -238,7 +259,7 @@ describe('[E8.7][AC37][AC60][AC-5] private areas and merchants send nothing', ()
 
     state.sessionUser = lookup
     mount()
-    await settle()
+    await gateOpen()
     expect(lookup).not.toHaveBeenCalled()
   })
 
