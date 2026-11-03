@@ -102,7 +102,7 @@ export function InsertSheet({ storeId, language, isOpen, firstTab, getMediaCount
         onSelect={setTab}
       >
         <TabPanel className="mt-4" id="image">
-          <LibraryChoice readyOnly single waitForReady room={1} selected={photos} storeId={storeId} used={[]} onSelectedChange={setPhotos} />
+          <LibraryChoice readyOnly single room={1} selected={photos} storeId={storeId} used={[]} onSelectedChange={setPhotos} />
         </TabPanel>
         <TabPanel className="mt-4" id="video">
           <InsertVideo link={link} title={title} onLink={setLink} onTitle={setTitle} />

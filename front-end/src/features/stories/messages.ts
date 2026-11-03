@@ -40,6 +40,7 @@ export const storiesMerchantEn = {
   'merchantStories.apiOnly': 'This screen works with the live API only.',
   'merchantStories.noStore': 'You do not belong to a store yet, so there are no stories to edit.',
   'merchantStories.loadFailed': 'The stories could not be loaded.',
+  'merchantStories.problem.forbidden': 'You may not edit the stories of this store.',
   'merchantStories.loading': 'Loading stories',
   'storyEditor.back.toStories': 'Back to Stories',
   'storyEditor.back.toWriting': 'Back to writing',

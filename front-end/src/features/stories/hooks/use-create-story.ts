@@ -3,9 +3,8 @@ import { useNavigate } from '@tanstack/react-router'
 
 import { useSubmit } from '@/features/data-client/use-command'
 import { sessionUserQuery } from '@/features/stores/api/queries'
+import { accountNameOf } from '../lib/draft'
 import { STORY_PATH } from '../lib/search-params'
-
-const AUTHOR_NAME_MAX = 120
 
 /**
  * New story: the group, then its English draft (the client posts both), then the editor opens on the group. The draft is
@@ -16,7 +15,7 @@ export function useCreateStory(storeId: string) {
   const navigate = useNavigate()
   const session = useQuery(sessionUserQuery)
   const { submit, isPending } = useSubmit('stories', 'createStory', { meta: { error: { 'story-not-created': 'merchantStories.toast.notCreated' } } })
-  const authorName = (typeof session.data?.name === 'string' ? session.data.name : '').trim().slice(0, AUTHOR_NAME_MAX)
+  const authorName = accountNameOf(session.data)
 
   return {
     isPending,

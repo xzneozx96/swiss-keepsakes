@@ -36,6 +36,12 @@ describe('[E4.3][AC30][AC45] story body rules', () => {
     expect(bodyFactsLine(en, 'en-CH', storyBodyFacts(bodyOf(150, 1)))).toBe('150 words · 1 min read · No contents list (needs 2 headings)')
   })
 
+  it('[E4.3][AC45] SIMPLICITY-E43-6 two empty H2 headings read "No contents list", as the preview shows no contents bar for them', () => {
+    const empty = { type: 'heading', attrs: { level: 2 } }
+
+    expect(bodyFactsLine(en, 'en-CH', storyBodyFacts({ type: 'doc', content: [empty, empty] }))).toBe('0 words · 1 min read · No contents list (needs 2 headings)')
+  })
+
   it('[E4.3][AC45] one word reads "1 word", and the German line reads "400 Wörter · 2 Min. Lesezeit · Inhalt: 2 Abschnitte"', () => {
     expect(bodyFactsLine(en, 'en-CH', storyBodyFacts(bodyOf(1, 0)))).toBe('1 word · 1 min read · No contents list (needs 2 headings)')
     expect(bodyFactsLine(de, 'de-CH', storyBodyFacts(bodyOf(400, 2)))).toBe('400 Wörter · 2 Min. Lesezeit · Inhalt: 2 Abschnitte')

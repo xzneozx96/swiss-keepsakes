@@ -4,6 +4,7 @@ import { EmptyState } from '@/components/empty-state'
 import { InfoIcon } from '@/components/icons'
 import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
 import { useLocale } from '@/contexts/locale-context'
+import { ApiProblem } from '@/features/data-client/errors'
 import { useMe } from '@/features/stores/api/queries'
 import { currentStore } from '@/features/stores/lib/current-store'
 import { apiEnabled } from '@/lib/api-mode'
@@ -11,7 +12,7 @@ import { apiEnabled } from '@/lib/api-mode'
 /**
  * The stories screens work on the live API only, in the store the person belongs to (`currentStore`, the rule the
  * stores screens use). While the store is unknown `fallback` shows, shaped like the screen. The other states keep the
- * page title above their message.
+ * page title above their message. A refusal (not a 401) says the person may not edit, as the Media and Keepsake gates do.
  */
 export function StoriesGate({ fallback, children }: { fallback: React.ReactNode, children: (storeId: string) => React.ReactNode }) {
   const { t } = useLocale()
@@ -22,7 +23,7 @@ export function StoriesGate({ fallback, children }: { fallback: React.ReactNode,
   if (!apiEnabled)
     message = 'merchantStories.apiOnly'
   else if (me.isError)
-    message = 'merchantStories.loadFailed'
+    message = me.error instanceof ApiProblem && me.error.status !== 401 ? 'merchantStories.problem.forbidden' : 'merchantStories.loadFailed'
   else if (!me.isPending && !current)
     message = 'merchantStories.noStore'
 

@@ -10,7 +10,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { sessionUserQuery } from '@/features/stores/api/queries'
 import { useStoryGroup } from '../api/queries'
-import { AUTHOR_MAX } from '../lib/draft'
+import { accountNameOf } from '../lib/draft'
 import { STORIES_PATH } from '../lib/search-params'
 import { StoriesGate } from './stories-gate'
 import { StoryEditorSkeleton } from './story-editor-skeleton'
@@ -49,7 +49,7 @@ function LoadedEditor({ storeId, groupId, language, screen, onLanguage, onScreen
   return (
     <StoryVersionEditor
       key={`${group.id}:${open}:${generation}`}
-      accountName={(typeof session.data?.name === 'string' ? session.data.name : '').trim().slice(0, AUTHOR_MAX)}
+      accountName={accountNameOf(session.data)}
       group={group}
       language={open}
       screen={screen}

@@ -1,7 +1,6 @@
 import { emptyStoryBody } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
 
-import { bodyFacts } from '@/features/stories/lib/body-facts'
 import { checkText } from '@/features/stories/lib/check-text'
 import { linkPath, normalizeSlug, slugSuggestion } from '@/features/stories/lib/link'
 import { publishChecks } from '@/features/stories/lib/publish-checks'
@@ -63,11 +62,12 @@ describe('[E4.3][AC30] publish checks', () => {
     expect(codes(empty.warnings)).toEqual(['no-text', 'no-category'])
   })
 
-  it('[E4.3] bodyFacts counts photos without alt, media without caption, and ignores blank text', () => {
-    expect(bodyFacts(emptyBody)).toEqual({ hasText: false, photosWithoutAlt: 0, mediaWithoutCaption: 0 })
-    expect(bodyFacts(body(text('   ')))).toMatchObject({ hasText: false })
-    expect(bodyFacts(body(text('Hi'), image({ alt: 'a', caption: 'c' }), image({ alt: ' ' }), { type: 'video', attrs: { mediaId: 'v' } }, { type: 'audio', attrs: { mediaId: 'a', caption: 'x' } })))
-      .toEqual({ hasText: true, photosWithoutAlt: 1, mediaWithoutCaption: 2 })
+  it('[E4.3] the warnings count photos without alt and media without caption, and blank text is no text (the domain facts)', () => {
+    const warned = (content: Body) => checks({ fields: { ...filled, body: content } }).warnings.map(warning => [warning.code, warning.count])
+
+    expect(warned(body(text('   ')))).toContainEqual(['no-text', undefined])
+    expect(warned(body(text('Hi'), image({ alt: 'a', caption: 'c' }), image({ alt: ' ' }), { type: 'video', attrs: { mediaId: 'v' } }, { type: 'audio', attrs: { mediaId: 'a', caption: 'x' } })))
+      .toEqual(expect.arrayContaining([['no-alt', 1], ['no-caption', 2]]))
   })
 
   it('[E4.3] pin, related and keepsake warnings come from the facts, and an id missing from the facts adds nothing', () => {

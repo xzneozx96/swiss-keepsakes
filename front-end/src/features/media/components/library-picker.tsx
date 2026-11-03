@@ -203,17 +203,16 @@ function PickerBody({ storeId, used, selected, room, single, readyOnly, uploads,
  * The photo wall of the library with its uploads, to sit inside a sheet of its own: the same list, search and paging as the Media screen
  * (images, ready or still processing), "Upload a photo" (duplicate check, request, PUT, confirm) and the duplicates dialog. The parent owns
  * `selected` and the sheet around it. A new upload and a library duplicate the merchant chose to reuse are chosen at once, except with
- * `waitForReady`: a new upload is chosen only when its file is ready (a story's photo block must not name a file that is still being made),
- * and a line says which file is awaited. `onLateUpload` gets an id that lands after the wall was closed. A file that is not a photo shows
+ * `readyOnly`: a photo still processing cannot be chosen, and a new upload is chosen only when its file is ready (a story's photo or cover
+ * must not name a file that is still being made), with a line that says which file is awaited. `onLateUpload` gets an id that lands after the wall was closed. A file that is not a photo shows
  * a toast, as on the Media screen, and its row says why.
  */
-export function LibraryChoice({ storeId, used, room, single = false, readyOnly = false, waitForReady = false, selected, onSelectedChange, onLateUpload }: {
+export function LibraryChoice({ storeId, used, room, single = false, readyOnly = false, selected, onSelectedChange, onLateUpload }: {
   storeId: string
   used: string[]
   room: number
   single?: boolean
   readyOnly?: boolean
-  waitForReady?: boolean
   selected: string[]
   onSelectedChange: (ids: string[]) => void
   onLateUpload?: (id: string) => void
@@ -228,7 +227,7 @@ export function LibraryChoice({ storeId, used, room, single = false, readyOnly =
   const uploads = usePendingPhotos(storeId, (id) => {
     if (!mountedRef.current)
       latest.current.onLateUpload?.(id)
-    else if (waitForReady)
+    else if (readyOnly)
       setAwaiting(current => [...current, id])
     else
       choose([id])

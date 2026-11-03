@@ -2,7 +2,7 @@ import type { StoryGroupDetail } from '@sk/api-contract'
 
 import { describe, expect, it } from 'vitest'
 
-import { draftOf, fieldsOf, otherCheckedOn, otherCover, startDraft } from '@/features/stories/lib/draft'
+import { accountNameOf, draftOf, fieldsOf, otherCheckedOn, otherCover, startDraft } from '@/features/stories/lib/draft'
 import { blockingGaps } from '@/features/stories/lib/gaps'
 import { storyProblemKey } from '@/features/stories/lib/problems'
 import { storySearch } from '@/features/stories/lib/search-params'
@@ -44,8 +44,15 @@ describe('[E4.3][AC30][AC45] story editor rules', () => {
     const fields = fieldsOf(version({ draft: doc() }))
 
     expect(draftOf(fields, 'Anna Keller', 'Stored Author').authorName).toBe('Anna Keller')
-    expect(draftOf(fields, '  ', 'Stored Author').authorName).toBe('Stored Author')
-    expect(draftOf(fields, 'x'.repeat(130), '').authorName).toHaveLength(120)
+    expect(draftOf(fields, accountNameOf({ name: '  ' }), 'Stored Author').authorName).toBe('Stored Author')
+    expect(draftOf(fields, accountNameOf({ name: 'x'.repeat(130) }), '').authorName).toHaveLength(120)
+  })
+
+  it('[E4.3][AC30] SIMPLICITY-E43-7 accountNameOf trims and cuts the session name once, and reads no name as empty', () => {
+    expect(accountNameOf({ name: '  Anna Keller ' })).toBe('Anna Keller')
+    expect(accountNameOf({ name: 'x'.repeat(130) })).toHaveLength(120)
+    expect(accountNameOf({ name: 7 })).toBe('')
+    expect(accountNameOf(undefined)).toBe('')
   })
 
   it('[E4.3][AC30] AC-6 draftOf cuts a 141-character title to 140 and a 301-character excerpt to 300', () => {

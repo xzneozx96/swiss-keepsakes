@@ -41,6 +41,7 @@ export const storiesMerchantDe: Record<keyof typeof storiesMerchantEn, string> =
   'merchantStories.apiOnly': 'Diese Ansicht funktioniert nur mit der Live-API.',
   'merchantStories.noStore': 'Sie gehören noch zu keinem Shop, daher gibt es keine Geschichten zu bearbeiten.',
   'merchantStories.loadFailed': 'Die Geschichten konnten nicht geladen werden.',
+  'merchantStories.problem.forbidden': 'Sie dürfen die Geschichten dieses Shops nicht bearbeiten.',
   'merchantStories.loading': 'Geschichten werden geladen',
   'storyEditor.back.toStories': 'Zurück zu den Geschichten',
   'storyEditor.more': 'Weitere Aktionen',

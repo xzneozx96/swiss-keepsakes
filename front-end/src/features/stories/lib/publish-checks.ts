@@ -1,11 +1,9 @@
 import type { StoryGroupDetail } from '@sk/api-contract'
-import type { PublishGap } from '@sk/domain/content'
+import type { PublishGap, StoryBody } from '@sk/domain/content'
 import type { StoryFields } from './draft'
 import type { StoryLanguage } from './search-params'
 
-import { storyBodyPinIds, storyVersionPublishGaps } from '@sk/domain/content'
-
-import { bodyFacts } from './body-facts'
+import { storyBodyFacts, storyBodyPinIds, storyVersionPublishGaps } from '@sk/domain/content'
 
 export type CheckTarget = 'cover' | 'title' | 'excerpt' | 'body' | 'language' | 'link' | 'review' | 'categories' | 'pins' | 'keepsakes' | 'related'
 export type CheckCode = 'cover' | 'title' | 'excerpt' | 'link' | 'review-place' | 'review-date' | 'no-text' | 'no-alt' | 'no-caption' | 'pin-unpublished' | 'no-category' | 'related-language' | 'keepsake-unpublished' | 'other-language'
@@ -69,10 +67,10 @@ export function publishChecks({ group, language, slug, fields, otherExists, fact
 
   const blocking = Object.keys(BLOCKING).filter(code => found.has(code as CheckCode)).map(code => ({ code: code as CheckCode, ...BLOCKING[code]! }))
   const warnings: Check[] = []
-  const body = bodyFacts(fields.body)
+  const body = storyBodyFacts(fields.body as StoryBody)
   const other: StoryLanguage = language === 'en' ? 'de' : 'en'
 
-  if (!body.hasText)
+  if (!body.hasContent)
     warnings.push({ code: 'no-text', step: 'write', target: 'body' })
   if (body.photosWithoutAlt > 0)
     warnings.push({ code: 'no-alt', step: 'write', target: 'body', count: body.photosWithoutAlt })

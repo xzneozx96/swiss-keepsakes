@@ -71,9 +71,9 @@ describe('[E4.3][AC45] the library wall inside another sheet', () => {
     expect(selection).toEqual([photoId])
   })
 
-  it('[E4.3][AC45] AC-1 an upload with waitForReady is chosen only once its file is ready', async () => {
+  it('[E4.3][AC45] AC-1 SIMPLICITY-E43-4 with readyOnly an upload is chosen only once its file is ready (the one flag, as the cover picker passes it)', async () => {
     serveUpload()
-    renderWithStore(<Host readyOnly waitForReady />)
+    renderWithStore(<Host readyOnly />)
     await screen.findByRole('checkbox', { name: 'Ready.JPG' })
     await userEvent.upload(screen.getByTestId('picker-input'), new File(['abc'], 'new.jpg', { type: 'image/jpeg' }))
 
@@ -84,7 +84,7 @@ describe('[E4.3][AC45] the library wall inside another sheet', () => {
     expect(screen.queryByText(/Waiting for/)).not.toBeInTheDocument()
   }, 15_000)
 
-  it('[E4.3][AC45] without waitForReady a finished upload is chosen at once', async () => {
+  it('[E4.3][AC45] without readyOnly a finished upload is chosen at once', async () => {
     serveUpload()
     renderWithStore(<Host />)
     await screen.findByRole('checkbox', { name: 'Ready.JPG' })

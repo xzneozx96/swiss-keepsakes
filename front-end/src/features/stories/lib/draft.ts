@@ -7,6 +7,11 @@ export const TITLE_MAX = 140
 export const EXCERPT_MAX = 300
 export const AUTHOR_MAX = 120
 
+/** The signed-in account's name as a story's author: trimmed and cut to what the API allows, or empty while the session is unknown. */
+export function accountNameOf(session: { name?: unknown } | null | undefined): string {
+  return (typeof session?.name === 'string' ? session.name : '').trim().slice(0, AUTHOR_MAX)
+}
+
 /** What the editor holds while it is typed: the fields of one version's document. */
 export interface StoryFields {
   title: string
@@ -36,16 +41,14 @@ export function fieldsOf(version: StoryVersion): StoryFields {
 }
 
 /**
- * The whole document a save sends (ADR-014: a save replaces the draft). The author is the signed-in account's name; with
- * no known name the stored one stays, so a save never blanks it.
+ * The whole document a save sends (ADR-014: a save replaces the draft). The author is the signed-in account's name
+ * (`accountNameOf`); with no known name the stored one stays, so a save never blanks it.
  */
 export function draftOf(fields: StoryFields, authorName: string, stored: string): StoryDraft {
-  const author = authorName.trim().slice(0, AUTHOR_MAX)
-
   return {
     title: fields.title.slice(0, TITLE_MAX),
     excerpt: fields.excerpt.slice(0, EXCERPT_MAX),
-    authorName: author === '' ? stored : author,
+    authorName: authorName === '' ? stored : authorName,
     coverMediaId: fields.coverMediaId,
     body: fields.body,
     ...(fields.checkedOn !== undefined && { checkedOn: fields.checkedOn }),
@@ -57,7 +60,7 @@ export function draftOf(fields: StoryFields, authorName: string, stored: string)
  * date (the facts were checked once; each version can change the date afterwards).
  */
 export function startDraft(authorName: string, coverMediaId: string | null, checkedOn?: string | null): StoryDraft {
-  return { title: '', excerpt: '', authorName: authorName.trim().slice(0, AUTHOR_MAX), coverMediaId, body: emptyBody, ...(checkedOn && { checkedOn }) }
+  return { title: '', excerpt: '', authorName, coverMediaId, body: emptyBody, ...(checkedOn && { checkedOn }) }
 }
 
 /** The cover of the other language's version, draft before published. */

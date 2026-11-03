@@ -90,9 +90,9 @@ describe('[E4.3][AC45] storyBodyFacts', () => {
   const h = (level: number, text: string) => ({ type: 'heading', attrs: { level }, content: [{ type: 'text', text }] })
 
   it.each([
-    [0, 0, { words: 0, minutes: 1, sections: 0 }],
-    [400, 2, { words: 400, minutes: 2, sections: 2 }],
-    [150, 1, { words: 150, minutes: 1, sections: 1 }],
+    [0, 0, { words: 0, minutes: 1, sections: 0, hasContent: false, photosWithoutAlt: 0, mediaWithoutCaption: 0 }],
+    [400, 2, { words: 400, minutes: 2, sections: 2, hasContent: true, photosWithoutAlt: 0, mediaWithoutCaption: 0 }],
+    [150, 1, { words: 150, minutes: 1, sections: 1, hasContent: true, photosWithoutAlt: 0, mediaWithoutCaption: 0 }],
   ])('[E4.3][AC45] AC-3 outline: %i words and %i H2', (count, h2, expected) => {
     const headings = Array.from({ length: h2 }, () => h(2, 'a'))
     const body = doc(...headings, ...(count > 0 ? [para(words(count - h2))] : []))
@@ -105,7 +105,21 @@ describe('[E4.3][AC45] storyBodyFacts', () => {
       h(3, 'small'),
       { type: 'image', attrs: { mediaId: 'm', alt: '', caption: 'a b c' } },
     )
-    expect(storyBodyFacts(body)).toEqual({ words: 3, minutes: 1, sections: 0 })
+    expect(storyBodyFacts(body)).toMatchObject({ words: 3, minutes: 1, sections: 0 })
+  })
+
+  it('[E4.3][AC45] SIMPLICITY-E43-6 an H2 with no text is not a section (the preview contents bar leaves it out too)', () => {
+    expect(storyBodyFacts(doc(h(2, ''), h(2, '  '))).sections).toBe(0)
+    expect(storyBodyFacts(doc(h(2, 'One'), h(2, ''), h(2, 'Two'))).sections).toBe(2)
+  })
+
+  it('[E4.3][AC45] a photo, video or recording is content, blank text is not; photos without alt and media without caption are counted', () => {
+    const media = (type: string, attrs: Record<string, unknown>) => ({ type, attrs })
+
+    expect(storyBodyFacts(doc(para('   '))).hasContent).toBe(false)
+    expect(storyBodyFacts(doc(media('image', { mediaId: 'm' }))).hasContent).toBe(true)
+    expect(storyBodyFacts(doc(para('Hi'), media('image', { alt: 'a', caption: 'c' }), media('image', { alt: ' ' }), media('video', { youtubeId: 'v' }), media('audio', { mediaId: 'a', caption: 'x' }))))
+      .toMatchObject({ hasContent: true, photosWithoutAlt: 1, mediaWithoutCaption: 2 })
   })
 
   it('[E4.3][AC45] an H2 inside nothing else counts, and storyBodyReadMinutes still returns the minutes of the facts', () => {

@@ -388,6 +388,13 @@ describe('[E4.3][AC30] loading and failure', () => {
     expect(screen.queryByText('No stories yet. Start the first one.')).not.toBeInTheDocument()
   })
 
+  it('[E4.3][AC30] SIMPLICITY-E43-8 the store gate shows "forbidden" for a 403 on the account read, as the Media and Keepsake gates do', async () => {
+    answerStories([], call => (call.path === '/api/me' ? problem(403, 'forbidden') : undefined))
+    renderStories()
+    expect(await screen.findByText('You may not edit the stories of this store.')).toBeInTheDocument()
+    expect(screen.queryByText('The stories could not be loaded.')).not.toBeInTheDocument()
+  })
+
   it('[E4.3][AC30] a failed list read shows the notice with Try again', async () => {
     answerStories([], call => call.method === 'GET' && call.path === base ? problem(500, 'internal-error') : undefined)
     renderStories()
