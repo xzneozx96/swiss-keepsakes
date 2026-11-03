@@ -36,7 +36,7 @@ function conditions(payment: Condition['state'] = 'pending'): Condition[] {
 }
 
 const ownerEntry = { storeId, role: 'owner' as const, status: 'onboarding' as const }
-const meBody = (stores: Array<typeof ownerEntry | { storeId: string, role: 'manager', status: 'onboarding' }>) => Response.json(meSchema.parse({ guestId: '0198a000-0000-7000-8000-0000000000f1', stores }))
+const meBody = (stores: Array<typeof ownerEntry | { storeId: string, role: 'manager', status: 'onboarding' }>) => Response.json(meSchema.parse({ guestId: '0198a000-0000-7000-8000-0000000000f1', platformAdmin: false, stores }))
 function previewBody(overrides: Partial<{ storeName: string, role: 'owner' | 'manager', inviterName: string | null, state: 'open' | 'expired' | 'revoked' | 'accepted' }> = {}) {
   return Response.json(invitationPreviewSchema.parse({ storeName: 'Chi Ngoc', role: 'owner', inviterName: null, state: 'open', ...overrides }))
 }

@@ -48,7 +48,7 @@ function answerFor(call: Call): Response {
   if (handler)
     return handler()
   if (call.path === '/api/me')
-    return Response.json(meSchema.parse({ guestId: '0198a000-0000-7000-8000-0000000000f1', stores: [{ storeId, role: 'owner', status: meStatus }] }))
+    return Response.json(meSchema.parse({ guestId: '0198a000-0000-7000-8000-0000000000f1', platformAdmin: false, stores: [{ storeId, role: 'owner', status: meStatus }] }))
   if (call.path === '/api/auth/get-session')
     return Response.json({ session: { id: 's', userId: 'u', expiresAt: new Date(Date.now() + 1e7).toISOString() }, user: { id: 'u', email: 'o@example.ch', name: 'Mia' } })
   if (call.path === `/api/store/${storeId}/onboarding`)
