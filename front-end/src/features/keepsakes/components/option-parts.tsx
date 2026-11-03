@@ -7,7 +7,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { labelOf, shortLabel } from '../lib/option-rules'
 
 /** The app's selected option (as the story editor's tags): a red border and the mark. */
-const ACCENT_TAG = 'group relative h-auto min-h-11 items-center justify-start gap-2 rounded-2xl border-2 border-transparent px-3 py-2 before:hidden data-[selected=true]:border-accent data-[selected=true]:bg-default data-[selected=true]:hover:bg-default-hover'
+export const ACCENT_TAG = 'group relative h-auto min-h-11 items-center justify-start gap-2 rounded-2xl border-2 border-transparent px-3 py-2 before:hidden data-[selected=true]:border-accent data-[selected=true]:bg-default data-[selected=true]:hover:bg-default-hover'
 
 /** A colour dot. Not used by the editor any more (swatches are gone, 2026-11-02); the lab's mock-ups still draw it. */
 export function Swatch({ color, className = 'size-4' }: { color: string | null, className?: string }) {

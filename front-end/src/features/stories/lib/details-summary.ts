@@ -1,0 +1,16 @@
+import type { StoryGroupDetail } from '@sk/api-contract'
+import type { MessageKey } from '@/i18n/en'
+
+import { interestCodes } from '@sk/domain/content'
+
+type Translate = (key: MessageKey) => string
+
+/** The closed summary of the Stay card. */
+export const staySummary = (t: Translate, stayTag: StoryGroupDetail['stayTag']) => t(`storyDetails.stay.${stayTag}`)
+
+/** The chosen interests by name in the fixed order of the five, or "None". */
+export function interestsSummary(t: Translate, interests: string[]) {
+  const chosen = interestCodes.filter(code => interests.includes(code)).map(code => t(`storyDetails.interest.${code}`))
+
+  return chosen.length > 0 ? chosen.join(', ') : t('storyDetails.none')
+}

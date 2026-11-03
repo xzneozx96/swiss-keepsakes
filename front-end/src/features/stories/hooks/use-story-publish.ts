@@ -22,7 +22,7 @@ type Write = (ifMatch: number) => Promise<StoryVersion>
  * `run` (the engine's `exclusive`), so it saves what is typed first and the row version has one owner. Publish toasts;
  * Unpublish and the link answer silently, because the confirm dialog and the link field show their own refusal.
  */
-export function useStoryPublish({ storeId, groupId, language, run, fields, slug }: {
+export function useStoryPublish({ storeId, groupId, language, run, fields, slug, before }: {
   storeId: string
   groupId: string
   language: StoryLanguage
@@ -30,6 +30,8 @@ export function useStoryPublish({ storeId, groupId, language, run, fields, slug 
   /** The typed fields and the saved link now: a refusal counts only while neither has changed. */
   fields: StoryFields
   slug: string | null
+  /** Runs before a write and resolves false when what it saves (the group's pending change) failed: nothing is sent then. */
+  before?: () => Promise<boolean>
 }) {
   const { t } = useLocale()
   const languageName = (code: StoryLanguage) => t(`storyEditor.language.${code}`)
@@ -53,6 +55,8 @@ export function useStoryPublish({ storeId, groupId, language, run, fields, slug 
     busyRef.current = true
     setBusy(true)
     try {
+      if (before && !(await before()))
+        return { ok: false, type: 'not-saved' }
       await run(write)
 
       return { ok: true }

@@ -1,5 +1,6 @@
-import type { StoryGroupDetail, StoryVersion } from '@sk/api-contract'
+import type { StoryVersion } from '@sk/api-contract'
 import type { ReactNode } from 'react'
+import type { useStoryGroupEditor } from '../hooks/use-story-group-editor'
 import type { useStoryVersionEditor } from '../hooks/use-story-version-editor'
 import type { Check, CheckTarget } from '../lib/publish-checks'
 import type { StoryLanguage } from '../lib/search-params'
@@ -15,30 +16,34 @@ import { useStoryPublish } from '../hooks/use-story-publish'
 import { publishChecks } from '../lib/publish-checks'
 import { StoryChecksList } from './story-checks-list'
 import { DetailsPanel, useDetailsPanel } from './story-details-panel'
+import { InterestsCard } from './story-interests-card'
 import { StoryLinkCard } from './story-link-card'
 import { StoryPreviewSlot } from './story-preview-slot'
 import { StoryPublishBar } from './story-publish-bar'
 import { StoryPublishCard } from './story-publish-card'
+import { StayCard } from './story-stay-card'
 
 /**
  * Review and publish. Laptop: the preview on the left and a 440 px panel on the right (the publish card, the checks, the
  * Details cards). Phone: the card head, a Details and Preview switch, and the fixed bar that holds the checks and Publish.
  * Only one of the two trees renders, so no id is on the page twice. T-E4.3f and g add their cards inside `DetailsPanel`.
  */
-export function StoryReviewScreen({ storeId, group, language, version, editor, switchNode, onEdit }: {
+export function StoryReviewScreen({ storeId, groupEditor, language, version, editor, switchNode, onEdit }: {
   storeId: string
-  group: StoryGroupDetail
   language: StoryLanguage
   version: StoryVersion
   editor: ReturnType<typeof useStoryVersionEditor>
+  /** The group's own autosave; the screen reads the group through it, so what is typed counts at once. */
+  groupEditor: ReturnType<typeof useStoryGroupEditor>
   switchNode: ReactNode
   /** Goes to the Write card that fixes a check and puts its field in view. */
   onEdit: (target: CheckTarget) => void
 }) {
   const { t } = useLocale()
+  const group = groupEditor.group
   const isWide = useIsWide()
   const other = language === 'en' ? 'de' : 'en'
-  const publish = useStoryPublish({ storeId, groupId: group.id, language, run: editor.run, fields: editor.fields, slug: version.slug })
+  const publish = useStoryPublish({ storeId, groupId: group.id, language, run: editor.run, fields: editor.fields, slug: version.slug, before: groupEditor.flush })
   const facts = useStoryPublishFacts({ storeId, group, language, body: editor.fields.body })
   const checks = publishChecks({ group, language, slug: version.slug, fields: editor.fields, otherExists: group.versions[other] !== null, facts, refused: publish.refused })
   const panel = useDetailsPanel(checks)
@@ -64,6 +69,8 @@ export function StoryReviewScreen({ storeId, group, language, version, editor, s
   const details = (
     <DetailsPanel panel={panel}>
       <StoryLinkCard group={group} language={language} title={editor.fields.title} version={version} onSave={publish.saveSlug} />
+      <StayCard group={group} onChange={groupEditor.change} />
+      <InterestsCard group={group} onChange={groupEditor.change} />
     </DetailsPanel>
   )
   const preview = <StoryPreviewSlot fields={editor.fields} group={group} language={language} />

@@ -11,6 +11,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { useLeaveGuard } from '@/features/keepsakes/components/use-leave-guard'
 import { useIsWide } from '@/hooks/use-is-wide'
 import { useStartVersion } from '../hooks/use-start-version'
+import { useStoryGroupEditor } from '../hooks/use-story-group-editor'
 import { useStoryVersionEditor } from '../hooks/use-story-version-editor'
 import { blockingGaps } from '../lib/gaps'
 import { storyProblemKey } from '../lib/problems'
@@ -43,6 +44,8 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
   const navigate = useNavigate()
   const isWide = useIsWide()
   const editor = useStoryVersionEditor({ storeId, group, language, accountName })
+  // The shared facts of the group have their own row version and their own autosave.
+  const groupEditor = useStoryGroupEditor({ storeId, group })
   const starter = useStartVersion({ storeId, group, accountName })
   const [showErrors, setShowErrors] = useState(false)
   // The field a check sent the merchant to: scrolled to once Write has rendered.
@@ -57,11 +60,12 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
   // Back with edits that are not saved asks first, and "Leave without saving" drops them: the engine is emptied, so
   // nothing is sent when the screen goes. Judgment call 1 of the plan: this is the one place that decides it.
   const guard = useLeaveGuard({
-    isUnsaved: editor.isUnsaved,
+    isUnsaved: editor.isUnsaved || groupEditor.isUnsaved,
     copy: 'leave',
     blockNavigation: true,
     onSave: async () => {
       editor.discard()
+      groupEditor.discard()
 
       return true
     },
@@ -90,7 +94,12 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
 
   /** Saves what is typed first (a failure keeps the merchant here), starts a version that does not exist, then switches. */
   async function choose(next: StoryLanguage) {
-    if (next === language || !(await editor.flush()))
+    if (next === language)
+      return
+    // Both are saved before either is judged, so one failure does not leave the other pending.
+    const saved = await Promise.all([editor.flush(), groupEditor.flush()])
+
+    if (saved.includes(false))
       return
     if (group.versions[next] === null && !(await starter.start(next)))
       return
@@ -106,9 +115,11 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
 
   /** Review saves what is typed, so the checks and the preview are of what is on screen; a blocking check turns the field errors on. */
   async function review() {
-    if (!(await editor.flush()))
+    const saved = await Promise.all([editor.flush(), groupEditor.flush()])
+
+    if (saved.includes(false))
       return
-    if (blockingGaps(group, group.versions[language]!, editor.fields).length > 0)
+    if (blockingGaps(groupEditor.group, group.versions[language]!, editor.fields).length > 0)
       setShowErrors(true)
     onScreen('review')
     window.scrollTo?.({ top: 0 })
@@ -116,12 +127,13 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
 
   const notices = (
     <>
-      {editor.state === 'stale' && (
+      {(editor.state === 'stale' || groupEditor.state === 'stale') && (
         <div className="max-lg:px-4">
           <StoryStaleNotice onReload={onReload} />
         </div>
       )}
       {editor.state === 'failed' && <ErrorNotice compact message={t(storyProblemKey(editor.problem ?? 'unknown'))} onRetry={editor.retry} />}
+      {groupEditor.state === 'failed' && <ErrorNotice compact message={t(storyProblemKey(groupEditor.problem ?? 'unknown'))} onRetry={groupEditor.retry} />}
     </>
   )
 
@@ -139,8 +151,8 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
       {screen === 'review'
         ? (
             <>
-              {(editor.state === 'stale' || editor.state === 'failed') && <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4 pt-4 max-lg:-mx-4">{notices}</div>}
-              <StoryReviewScreen editor={editor} group={group} language={language} storeId={storeId} switchNode={switcher(false, true)} onEdit={edit} version={group.versions[language]!} />
+              {[editor.state, groupEditor.state].some(state => state === 'stale' || state === 'failed') && <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4 pt-4 max-lg:-mx-4">{notices}</div>}
+              <StoryReviewScreen editor={editor} groupEditor={groupEditor} language={language} storeId={storeId} switchNode={switcher(false, true)} onEdit={edit} version={group.versions[language]!} />
             </>
           )
         : (
