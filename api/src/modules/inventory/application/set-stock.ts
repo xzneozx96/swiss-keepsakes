@@ -11,9 +11,11 @@ import { entryOf, withPhotos } from './stock-entry.ts'
 // value writes nothing (no adjustment, no audit entry). Otherwise one `set` adjustment with the acting user and one audit
 // entry are written in this transaction.
 export function makeSetStock<T>({ uow, stock, skus, media, audit, clock }: InventoryDeps<T>) {
-  return async (actor: Actor, storeId: string, skuId: string, onHand: number, requestId: string | null): Promise<Result<StockEntry>> => {
+  return async (actor: Actor, storeId: string, requested: string, onHand: number, requestId: string | null): Promise<Result<StockEntry>> => {
     if (!mayEditCatalog(actor, storeId) || actor.kind !== 'staff')
       return fail({ reason: 'forbidden' })
+    // The database answers ids in lower case, the contract accepts upper case.
+    const skuId = requested.toLowerCase()
     return uow.run(async (tx) => {
       const sku = (await skus.liveSkus(tx, storeId, [skuId])).find(live => live.skuId === skuId)
       if (!sku)

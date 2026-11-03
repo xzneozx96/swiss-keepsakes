@@ -93,6 +93,13 @@ describe('[E6.3][AC05][AC53] reading one item', () => {
     expect(await makeGetStockItem(deps)(owner, storeId, id(2))).toEqual({ ok: false, reason: 'not-found' })
   })
 
+  it('[E6.3][AC05][AC53][CORRECTNESS-7] an upper-case SKU id finds the same variant', async () => {
+    const lower = '0190f0c2-0000-7000-8000-00000000abcd'
+    const result = await makeGetStockItem(setup([sku(1, { skuId: lower })], { [lower]: [5, 0] }).deps)(owner, storeId, lower.toUpperCase())
+
+    expect(result.ok && result.value).toMatchObject({ onHand: 5 })
+  })
+
   it('[E6.3][AC05][AC53][AC-8] only staff with edit-catalog read an item', async () => {
     expect(await makeGetStockItem(setup([sku(1)]).deps)(outsider, storeId, id(1))).toEqual({ ok: false, reason: 'forbidden' })
   })

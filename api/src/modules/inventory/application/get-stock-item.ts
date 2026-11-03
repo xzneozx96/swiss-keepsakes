@@ -14,9 +14,11 @@ export interface StockItemEntry extends StockEntry {
 
 // One live variant with the orders that hold its units. A SKU of another store, an archived one and an unknown one are not found.
 export function makeGetStockItem<T>({ uow, stock, skus, media }: InventoryDeps<T>) {
-  return async (actor: Actor, storeId: string, skuId: string): Promise<Result<StockItemEntry>> => {
+  return async (actor: Actor, storeId: string, requested: string): Promise<Result<StockItemEntry>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
+    // The database answers ids in lower case, the contract accepts upper case.
+    const skuId = requested.toLowerCase()
     return uow.run(async (tx) => {
       const sku = (await skus.liveSkus(tx, storeId, [skuId])).find(live => live.skuId === skuId)
       if (!sku)
