@@ -14,7 +14,7 @@ vi.mock('@/hooks/use-is-wide', () => ({ useIsWide: () => view.wide }))
 const save = { status: 'Saved 14:05', tone: 'success' as const }
 
 function renderHeader(props: Partial<Parameters<typeof StoryHeader>[0]> = {}) {
-  const handlers = { onBack: vi.fn(), onReview: vi.fn() }
+  const handlers = { onBack: vi.fn(), onReview: vi.fn(), onDelete: vi.fn() }
 
   render(
     <LocaleProvider>

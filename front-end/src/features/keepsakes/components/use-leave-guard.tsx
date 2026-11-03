@@ -63,5 +63,6 @@ export function useLeaveGuard({ isUnsaved, copy = 'leave', blockNavigation = fal
     />
   )
 
-  return { leave: () => (isUnsaved ? setOpen(true) : onLeave()), dialog }
+  // For a way out that has already thrown the edits away (the story was deleted): the navigation that follows is not asked about.
+  return { leave: () => (isUnsaved ? setOpen(true) : onLeave()), dialog, bypass: () => { leavingRef.current = true } }
 }

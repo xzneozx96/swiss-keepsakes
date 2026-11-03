@@ -17,6 +17,8 @@ export function createStoriesClient(): StoriesClient {
       answer((await loadClient()).GET('/api/store/{storeId}/story-groups', { ...timeout(), params: { path: { storeId } } })),
     group: async ({ storeId, groupId }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/story-groups/{groupId}', { ...timeout(), params: { path: { storeId, groupId } } })) as Promise<StoryGroupDetail>,
+    links: async ({ storeId, groupId }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/story-groups/{groupId}/links', { ...timeout(), params: { path: { storeId, groupId } } })),
     createStory: async ({ storeId, authorName, idempotencyKey, versionIdempotencyKey }) => {
       try {
         const client = await loadClient()
@@ -70,19 +72,7 @@ export function createStoriesClient(): StoriesClient {
         ...keyed(idempotencyKey),
         params: { path: { storeId, groupId, language }, header: { 'If-Match': String(ifMatch) } },
       })) as Promise<StoryVersion>,
-    removeStory: async ({ storeId, groupId, versions }) => {
-      const client = await loadClient()
-      // One DELETE per version, none depends on another.
-      const results = await Promise.all(versions.map(({ language, ifMatch, idempotencyKey }) =>
-        client.DELETE('/api/store/{storeId}/story-groups/{groupId}/versions/{language}', {
-          ...keyed(idempotencyKey),
-          params: { header: { 'If-Match': String(ifMatch) }, path: { storeId, groupId, language } },
-        }),
-      ))
-      const failed = results.find(({ response }) => !response.ok)
-
-      if (failed)
-        throw problemOf(failed.response, failed.error)
-    },
+    removeStory: async ({ storeId, groupId, idempotencyKey }) =>
+      answer((await loadClient()).DELETE('/api/store/{storeId}/story-groups/{groupId}', { ...keyed(idempotencyKey), params: { path: { storeId, groupId } } })),
   }
 }

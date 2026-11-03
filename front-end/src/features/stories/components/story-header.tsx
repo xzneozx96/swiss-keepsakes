@@ -3,7 +3,8 @@ import type { VersionState } from '../lib/version-state'
 
 import { Button } from '@heroui/react'
 
-import { BackIcon } from '@/components/icons'
+import { BackIcon, TrashIcon } from '@/components/icons'
+import { RowActions } from '@/components/row-actions'
 import { useLocale } from '@/contexts/locale-context'
 import { useIsWide } from '@/hooks/use-is-wide'
 
@@ -13,7 +14,7 @@ const toneText = { muted: 'text-muted', warning: 'font-medium text-warning', dan
  * The bar of the story editor, pinned at the top: Back, what is open and its save state, and (on Write) the language
  * switch from 1024 px and the Review button. It bleeds out of the merchant shell's padding, as the sticky tab rows do.
  */
-export function StoryHeader({ screen, language, versionState, save, onBack, onReview, switchNode }: {
+export function StoryHeader({ screen, language, versionState, save, onBack, onReview, onDelete, switchNode }: {
   screen: 'write' | 'review'
   language: StoryLanguage
   versionState: VersionState
@@ -21,6 +22,8 @@ export function StoryHeader({ screen, language, versionState, save, onBack, onRe
   onBack: () => void
   /** Unused on the review screen. */
   onReview: () => void
+  /** Delete story, from the more menu. */
+  onDelete: () => void
   /** The compact switch, shown from 1024 px on Write. */
   switchNode: React.ReactNode
 }) {
@@ -48,6 +51,11 @@ export function StoryHeader({ screen, language, versionState, save, onBack, onRe
             <Button className="shrink-0 max-lg:h-11" onPress={onReview}>{t(isWide ? 'storyEditor.review.button' : 'storyEditor.review.short')}</Button>
           </>
         )}
+        <RowActions
+          actions={[{ id: 'delete', label: t('storyEditor.menu.delete'), icon: TrashIcon, isDanger: true }]}
+          label={t('storyEditor.more')}
+          onAction={id => id === 'delete' && onDelete()}
+        />
       </div>
     </div>
   )

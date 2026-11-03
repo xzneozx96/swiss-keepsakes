@@ -10,11 +10,11 @@ import { dateTimeFormat } from '@sk/domain/shared'
 import { Link } from '@tanstack/react-router'
 
 import { DataTable } from '@/components/data-table'
-import { EditIcon, InfoIcon, StatusNeutralIcon, StatusSuccessIcon, StatusWarningIcon, TrashIcon } from '@/components/icons'
+import { EditIcon, StatusNeutralIcon, StatusSuccessIcon, StatusWarningIcon, TrashIcon } from '@/components/icons'
 import { RowActions } from '@/components/row-actions'
 import { useLocale } from '@/contexts/locale-context'
 import { KeepsakePhoto } from '@/features/keepsakes/components/keepsake-photo'
-import { deleteBlock, languageState, storyTitle } from '../lib/list'
+import { languageState, storyTitle } from '../lib/list'
 import { STORY_PATH } from '../lib/search-params'
 
 const editorHref = (item: StoryListItem) => `/store/content/articles/${item.groupId}`
@@ -51,18 +51,15 @@ function State({ state, prefix }: { state: LanguageState, prefix?: string }) {
   )
 }
 
-/** A story that cannot be deleted says why, in a disabled item, and is never labelled Delete. */
+/** Open and Delete, for a draft and for a published story alike; the dialog says which it is. */
 function RowMenu({ item, onDelete }: { item: StoryListItem, onDelete: (item: StoryListItem) => void }) {
   const { t, title } = useRowText()
-  const block = deleteBlock(item)
 
   return (
     <RowActions
       actions={[
         { id: 'open', label: t('merchantStories.row.open'), icon: EditIcon, href: editorHref(item) },
-        block === null
-          ? { id: 'delete', label: t('merchantStories.row.delete'), icon: TrashIcon, isDanger: true }
-          : { id: 'blocked', label: t(block === 'published' ? 'merchantStories.row.unpublishFirst' : 'merchantStories.row.wasPublished'), icon: InfoIcon, isDisabled: true },
+        { id: 'delete', label: t('merchantStories.row.delete'), icon: TrashIcon, isDanger: true },
       ]}
       label={t('merchantStories.row.actions', { name: title(item) })}
       onAction={id => id === 'delete' && onDelete(item)}

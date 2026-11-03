@@ -1,4 +1,4 @@
-import type { StoryGroup, StoryGroupDetail, StoryGroupSaveBody, StoryList, StoryVersion, StoryVersionCreateBody, StoryVersionSaveBody } from '@sk/api-contract'
+import type { StoryDeleted, StoryGroup, StoryGroupDetail, StoryGroupSaveBody, StoryLinks, StoryList, StoryVersion, StoryVersionCreateBody, StoryVersionSaveBody } from '@sk/api-contract'
 
 /** A command carries the `Idempotency-Key` of the user's intent, so a retry of it is the same request to the API. */
 export type Keyed<T> = T & { idempotencyKey: string }
@@ -15,8 +15,10 @@ export interface StoriesClient {
   /** Creates the group, then its English draft. A failure of either is an ApiProblem of type 'story-not-created' (same status and request id). */
   createStory: (input: { storeId: string, authorName: string, idempotencyKey: string, versionIdempotencyKey: string }) => Promise<{ group: StoryGroup, version: StoryVersion }>
   createVersion: (input: Keyed<{ storeId: string, groupId: string } & StoryVersionCreateBody>) => Promise<StoryVersion>
-  /** Deletes the given versions in parallel, one DELETE each with its own If-Match and Idempotency-Key. One command, so one success toast and one refresh. */
-  removeStory: (input: { storeId: string, groupId: string, versions: Keyed<{ language: 'en' | 'de', ifMatch: number }>[] }) => Promise<void>
+  /** How many pins name the story as their main story and how many other stories list it, for the Delete story confirm. */
+  links: (input: { storeId: string, groupId: string }) => Promise<StoryLinks>
+  /** Deletes the whole story, both versions and its links, in one request (published or not); no If-Match. The answer counts the links removed. */
+  removeStory: (input: Keyed<{ storeId: string, groupId: string }>) => Promise<StoryDeleted>
   /** Saves the whole draft of one version (ADR-014) on the row version in `ifMatch`; a 412 is an ApiProblem of type 'precondition-failed'. */
   saveVersion: (input: Keyed<{ storeId: string, groupId: string, language: 'en' | 'de', ifMatch: number } & StoryVersionSaveBody>) => Promise<StoryVersion>
   /**

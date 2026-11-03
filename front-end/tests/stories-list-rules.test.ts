@@ -1,7 +1,7 @@
 import type { StoryListItem, StoryListVersion } from '@sk/api-contract'
 
 import { describe, expect, it } from 'vitest'
-import { deleteBlock, filterStories, languageState, storyTitle, tabCounts } from '@/features/stories/lib/list'
+import { filterStories, languageState, storyTitle, tabCounts } from '@/features/stories/lib/list'
 
 const version = (over: Partial<StoryListVersion> = {}): StoryListVersion => ({ status: 'draft', everPublished: false, editsNotLive: false, rowVersion: 1, updatedAt: '2026-11-03T08:00:00.000Z', ...over })
 const published = (over: Partial<StoryListVersion> = {}) => version({ status: 'published', everPublished: true, ...over })
@@ -68,14 +68,5 @@ describe('[E4.3][AC30] story list rules', () => {
     expect(tabCounts(items, 'o')).toEqual({ all: 2, published: 0, drafts: 2 })
     expect(filterStories(items, 'published', 'zzz')).toEqual([])
     expect(filterStories([story({ title: { en: 'Bridge', de: 'Brücke' } })], 'all', 'brü')).toHaveLength(1)
-  })
-
-  it('[E4.3][AC30] AC-4 deleteBlock is published, was-published or null', () => {
-    expect(deleteBlock(story({ en: published() }))).toBe('published')
-    expect(deleteBlock(story({ en: version(), de: published() }))).toBe('published')
-    expect(deleteBlock(story({ en: version({ everPublished: true }) }))).toBe('was-published')
-    expect(deleteBlock(story({ en: version(), de: version({ everPublished: true }) }))).toBe('was-published')
-    expect(deleteBlock(story({ en: version(), de: version() }))).toBeNull()
-    expect(deleteBlock(story({ en: null, de: version() }))).toBeNull()
   })
 })

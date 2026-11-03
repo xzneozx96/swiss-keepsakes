@@ -4,7 +4,7 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DataClientProvider, useCommand } from '@/features/data-client'
 import { commandAffects } from '@/features/data-client/commands'
-import { useStories, useStoryGroup } from '@/features/stories/api/queries'
+import { useStories, useStoryGroup, useStoryLinks } from '@/features/stories/api/queries'
 import { problem, setUpHarness, state, storeId } from './keepsakes-harness'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
@@ -82,30 +82,39 @@ describe('[E4.3][AC30] the stories queries and commands', () => {
     })
   })
 
-  it('[E4.3][AC30] AC-4 removeStory sends one DELETE per version in parallel, each with its own If-Match and Idempotency-Key, and fails when one DELETE fails', async () => {
+  it('[E4.3][AC30] AC-7 removeStory sends one DELETE of the group with an Idempotency-Key and no If-Match, answers the unlink counts, and fails on a refusal', async () => {
     const remove = renderHook(() => useCommand('stories', 'removeStory'), { wrapper })
-    const versions = [{ language: 'en' as const, ifMatch: 3, idempotencyKey: 'k-en' }, { language: 'de' as const, ifMatch: 7, idempotencyKey: 'k-de' }]
+    let result: unknown
 
-    state.answer = call => call.method === 'DELETE' ? new Response(null, { status: 204 }) : undefined
+    state.answer = call => call.method === 'DELETE' ? Response.json({ pinsUnlinked: 2, storiesUnlinked: 3 }) : undefined
     await act(async () => {
-      await remove.result.current.mutateAsync({ storeId, groupId, versions })
+      result = await remove.result.current.mutateAsync({ storeId, groupId, idempotencyKey: 'k-delete' })
     })
-    const deletes = state.calls.filter(call => call.method === 'DELETE')
 
-    expect(deletes).toEqual([
-      expect.objectContaining({ path: `${base}/${groupId}/versions/en`, key: 'k-en', ifMatch: '3' }),
-      expect.objectContaining({ path: `${base}/${groupId}/versions/de`, key: 'k-de', ifMatch: '7' }),
-    ])
+    expect(result).toEqual({ pinsUnlinked: 2, storiesUnlinked: 3 })
+    expect(state.calls.filter(call => call.method === 'DELETE')).toEqual([expect.objectContaining({ path: `${base}/${groupId}`, key: 'k-delete', ifMatch: null })])
 
-    state.answer = call => call.method === 'DELETE' && call.path.endsWith('/de') ? problem(412, 'precondition-failed') : call.method === 'DELETE' ? new Response(null, { status: 204 }) : undefined
+    state.answer = call => call.method === 'DELETE' ? problem(404, 'not-found') : undefined
     await act(async () => {
-      await expect(remove.result.current.mutateAsync({ storeId, groupId, versions })).rejects.toMatchObject({ type: 'precondition-failed', status: 412 })
+      await expect(remove.result.current.mutateAsync({ storeId, groupId, idempotencyKey: 'k-again' })).rejects.toMatchObject({ type: 'not-found', status: 404 })
     })
   })
 
+  it('[E4.3][AC30] AC-5 reads the link counts from GET story-groups/{groupId}/links, and waits for a store id', async () => {
+    state.answer = call => (call.method === 'GET' && call.path === `${base}/${groupId}/links` ? Response.json({ pins: 1, stories: 2 }) : undefined)
+    const waiting = renderHook(() => useStoryLinks(undefined, groupId), { wrapper })
+
+    expect(waiting.result.current.fetchStatus).toBe('idle')
+    const read = renderHook(() => useStoryLinks(storeId, groupId), { wrapper })
+
+    await waitFor(() => expect(read.result.current.data).toEqual({ pins: 1, stories: 2 }))
+  })
+
   it('[E4.3][AC30] commandAffects lists the stories list for every command', () => {
-    for (const command of ['createStory', 'createVersion', 'removeStory'] as const)
+    for (const command of ['createStory', 'createVersion'] as const)
       expect(commandAffects.stories[command]).toEqual([['stories', 'list'], ['stories', 'group']])
+    // The group of a deleted story is not read again (it would answer 404 while the editor is still on screen); the screen drops it.
+    expect(commandAffects.stories.removeStory).toEqual([['stories', 'list']])
   })
 
   it('[E4.3][AC45] reads the group with both versions from GET story-groups/{groupId}', async () => {

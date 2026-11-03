@@ -45,15 +45,3 @@ export function filterStories(items: StoryListItem[], tab: StoryTab, query: stri
 export function tabCounts(items: StoryListItem[], query: string): Record<StoryTab, number> {
   return { all: filterStories(items, 'all', query).length, published: filterStories(items, 'published', query).length, drafts: filterStories(items, 'drafts', query).length }
 }
-
-/** Why a story cannot be deleted. `published`: a version is live. `was-published`: none is live, but one holds published text (ADR-014). */
-export type DeleteBlock = 'published' | 'was-published' | null
-
-export function deleteBlock(item: StoryListItem): DeleteBlock {
-  const versions = [item.languages.en, item.languages.de]
-
-  if (isPublishedStory(item))
-    return 'published'
-
-  return versions.some(version => version?.everPublished) ? 'was-published' : null
-}

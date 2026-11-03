@@ -10,6 +10,7 @@ import { ErrorNotice } from '@/components/error-notice'
 import { useLocale } from '@/contexts/locale-context'
 import { useLeaveGuard } from '@/features/keepsakes/components/use-leave-guard'
 import { useIsWide } from '@/hooks/use-is-wide'
+import { useDeleteStory } from '../hooks/use-delete-story'
 import { useStartVersion } from '../hooks/use-start-version'
 import { useStoryGroupEditor } from '../hooks/use-story-group-editor'
 import { useStoryVersionEditor } from '../hooks/use-story-version-editor'
@@ -70,6 +71,14 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
       return true
     },
     onLeave: () => void navigate({ to: STORIES_PATH }),
+  })
+  // The story is gone: what is typed is dropped (nothing is saved to a deleted story), the guard is not asked, the list opens.
+  const remove = useDeleteStory(storeId, () => {
+    editor.discard()
+    groupEditor.discard()
+    guard.bypass()
+
+    return navigate({ to: STORIES_PATH })
   })
   const other = language === 'en' ? 'de' : 'en'
   const publishedOn = (dated: boolean) => dated
@@ -146,6 +155,7 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
         switchNode={switcher(true)}
         versionState={editor.versionState}
         onBack={screen === 'review' ? () => onScreen('write') : guard.leave}
+        onDelete={() => void remove.ask({ groupId: group.id, name: editor.fields.title.trim() || t('merchantStories.untitled'), published: [group.versions.en, group.versions.de].some(version => version?.status === 'published') })}
         onReview={() => void review()}
       />
       {screen === 'review'
@@ -164,6 +174,7 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
             </div>
           )}
       {guard.dialog}
+      {remove.dialog}
     </>
   )
 }

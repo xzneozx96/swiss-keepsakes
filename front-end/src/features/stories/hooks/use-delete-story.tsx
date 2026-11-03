@@ -1,50 +1,54 @@
-import type { StoryListItem } from '@sk/api-contract'
-
 import { useQueryClient } from '@tanstack/react-query'
+import { useRef } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { useLocale } from '@/contexts/locale-context'
-import { queryKeys } from '@/features/data-client'
-import { ApiProblem } from '@/features/data-client/errors'
+import { queryKeys, useDataClient } from '@/features/data-client'
 import { useSubmit } from '@/features/data-client/use-command'
-import { deleteBlock, storyTitle } from '../lib/list'
+import { storiesQueries } from '../api/queries'
+import { deleteStoryText } from '../lib/delete-text'
 
-const LANGUAGES = ['en', 'de'] as const
+/** What the dialog needs of a story: the list row and the open editor both have these. */
+export interface DeletableStory {
+  groupId: string
+  name: string
+  /** A version is live for guests. */
+  published: boolean
+}
 
 /**
- * Deleting a story that was never published: one confirm, then one DELETE per language version (the API has no
- * group delete), run inside the dialog so a refusal shows there. The row leaves the list when the dialog closes
- * (`commandChanges`). When one version refuses (it changed meanwhile) the other may already be gone, so the list is
- * read again and no row is dropped here.
+ * Delete a whole story, published or not: both language versions, its links and its media references go in one request.
+ * The dialog first reads how many pins and stories link to it (a failed read does not stop the delete: the dialog says the
+ * links could not be checked), then runs the write inside itself: spinner, a refusal shown in the dialog, and on success the
+ * row leaves the cached list at once (`commandChanges`) and a toast says so. `onDeleted` runs before the dialog closes (the editor
+ * opens the list there). The cached group of the deleted story is dropped afterwards. `dialog` must be rendered by the caller.
  */
-export function useDeleteStory(storeId: string) {
+export function useDeleteStory(storeId: string, onDeleted?: () => void | Promise<unknown>) {
   const { t } = useLocale()
+  const client = useDataClient()
   const queryClient = useQueryClient()
   const { confirm, dialog } = useConfirm()
   const remove = useSubmit('stories', 'removeStory', { meta: { success: 'merchantStories.toast.deleted', silent: true } })
-  const problem = (error: unknown) => t(error instanceof ApiProblem && error.type === 'precondition-failed' ? 'merchantStories.problem.stale' : 'merchantStories.problem.generic')
+  // A second tap while the counts are being read must not open a second dialog.
+  const askingRef = useRef(false)
 
   return {
     dialog,
-    ask: (item: StoryListItem) => {
-      if (deleteBlock(item) !== null)
+    ask: async (story: DeletableStory) => {
+      if (askingRef.current || remove.isPending)
         return
-      const versions = LANGUAGES.flatMap((language) => {
-        const version = item.languages[language]
+      askingRef.current = true
+      const links = await queryClient.fetchQuery(storiesQueries.links(client, storeId, story.groupId)).catch(() => null)
 
-        return version ? [{ language, ifMatch: version.rowVersion, idempotencyKey: crypto.randomUUID() }] : []
-      })
-
+      askingRef.current = false
       void confirm({
-        title: t('merchantStories.delete.title', { name: storyTitle(item) || t('merchantStories.untitled') }),
-        body: t('merchantStories.delete.body'),
-        confirmLabel: t('merchantStories.delete.confirm'),
-        problem,
-        run: () => remove.submitAsync({ storeId, groupId: item.groupId, versions }).catch((error: unknown) => {
-          void queryClient.invalidateQueries({ queryKey: [...queryKeys.stories.list, storeId] })
-
-          throw error
-        }),
+        ...deleteStoryText(t, { name: story.name, published: story.published, links }),
+        problem: () => t('merchantStories.problem.generic'),
+        run: async () => {
+          await remove.submitAsync({ storeId, groupId: story.groupId, idempotencyKey: crypto.randomUUID() })
+          await onDeleted?.()
+          queryClient.removeQueries({ queryKey: [...queryKeys.stories.group, storeId, story.groupId] })
+        },
       })
     },
   }

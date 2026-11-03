@@ -56,6 +56,7 @@ export const queryKeys = {
   stories: {
     list: ['stories', 'list'],
     group: ['stories', 'group'],
+    links: ['stories', 'links'],
   },
   stores: {
     adminStores: ['stores', 'adminStores'],

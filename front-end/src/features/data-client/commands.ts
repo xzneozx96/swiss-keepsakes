@@ -22,7 +22,7 @@ interface ReadsWithInput {
   keepsakes: 'list' | 'get'
   media: 'list' | 'uses' | 'get' | 'lookup'
   places: 'list' | 'get' | 'storyOptions' | 'storyVersion'
-  stories: 'list' | 'group'
+  stories: 'list' | 'group' | 'links'
 }
 
 /**
@@ -151,7 +151,8 @@ export const commandAffects: {
   stories: {
     createStory: [queryKeys.stories.list, queryKeys.stories.group],
     createVersion: [queryKeys.stories.list, queryKeys.stories.group],
-    removeStory: [queryKeys.stories.list, queryKeys.stories.group],
+    // Not the group: a deleted story's group answers 404, and the editor is still on screen when the delete is answered. The screen drops it.
+    removeStory: [queryKeys.stories.list],
     // The editor writes every answer into the group query itself (as the keepsake editor does), so a save refreshes nothing.
     saveVersion: [],
     // The group editor writes the answer into the group query itself; the list carries `kind`, so it is refreshed.

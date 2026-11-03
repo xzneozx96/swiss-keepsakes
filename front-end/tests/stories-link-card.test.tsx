@@ -194,7 +194,8 @@ describe('[E4.3][AC30][AC45] the Details panel and the Link card', () => {
 
     expect(await screen.findByRole('heading', { name: 'Details' }, SLOW)).toBeInTheDocument()
     expect(screen.getByText('Shared by English and Deutsch.')).toBeInTheDocument()
-    for (const control of document.querySelectorAll('[aria-expanded]'))
+    // The header's more menu (Delete story) also has aria-expanded; it is not a Details control.
+    for (const control of document.querySelectorAll('[aria-expanded]:not([aria-label="More actions"])'))
       expect(control.getAttribute('aria-controls') ?? control.textContent).toMatch(/details-|Link/)
   }, 20000)
 })

@@ -13,7 +13,7 @@ import { ApiProblem } from '@/features/data-client/errors'
 import { useStories } from '../api/queries'
 import { useCreateStory } from '../hooks/use-create-story'
 import { useDeleteStory } from '../hooks/use-delete-story'
-import { filterStories, STORY_TABS, tabCounts } from '../lib/list'
+import { filterStories, isPublishedStory, STORY_TABS, storyTitle, tabCounts } from '../lib/list'
 import { StoriesGate } from './stories-gate'
 import { StoryRows } from './story-rows'
 
@@ -113,7 +113,7 @@ function LoadedStories({ storeId }: { storeId: string }) {
         isLoading={list.isPending}
         items={list.data?.items ?? []}
         newPending={create.isPending}
-        onDelete={remove.ask}
+        onDelete={item => void remove.ask({ groupId: item.groupId, name: storyTitle(item) || t('merchantStories.untitled'), published: isPublishedStory(item) })}
         onNew={create.create}
       />
       {remove.dialog}
@@ -123,7 +123,7 @@ function LoadedStories({ storeId }: { storeId: string }) {
 
 /**
  * M17, Content > Stories: one row per story with the state of each language version, status tabs with counts, a
- * search on the title, New story and a delete for a story that was never published. A table from 1024 px, cards below.
+ * search on the title, New story and a delete for any story, published or not. A table from 1024 px, cards below.
  */
 export function StoriesScreen() {
   return (

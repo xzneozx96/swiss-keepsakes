@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Route as ContentRoute } from '@/routes/store/content/index'
-import { answerStories, base, listItem, listVersion, media, problem, publishedVersion, renderStories, setUpHarness, state, storeId, uuid } from './stories-harness'
+import { answerStories, base, listItem, listVersion, media, problem, publishedVersion, renderStories, setUpHarness, state, storeId, storyList, uuid } from './stories-harness'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 vi.mock('@/hooks/use-is-wide', () => ({ useIsWide: () => true }))
@@ -175,91 +175,198 @@ describe('[E4.3][AC30] New story', () => {
   })
 })
 
-describe('[E4.3][AC30] deleting a story that was never published', () => {
-  it('[E4.3][AC30] AC-4 a story with a published version has no Delete and says to unpublish it first', async () => {
-    answerStories([listItem(1, { title: { en: 'Live' }, languages: { en: publishedVersion(), de: listVersion() } })])
-    renderStories()
-    await loaded('Live')
-
-    await openMenu('Live')
-    expect(await screen.findByRole('menuitem', { name: 'Open' })).toHaveAttribute('href', `/store/content/articles/${uuid(1)}`)
-    expect(screen.getByRole('menuitem', { name: 'Unpublish it in the editor first' })).toHaveAttribute('aria-disabled', 'true')
-    expect(screen.queryByRole('menuitem', { name: 'Delete' })).not.toBeInTheDocument()
-  })
-
-  it('[E4.3][AC30] AC-4 a story that was published and then unpublished has no Delete and says it was published once', async () => {
-    answerStories([listItem(1, { title: { en: 'Taken down' }, languages: { en: listVersion({ everPublished: true }), de: null } })])
-    renderStories()
-    const { grid } = await loaded('Taken down')
-
-    // It counts under Drafts, but it cannot be deleted.
-    expect(tab('Drafts', 1)).toBeInTheDocument()
-    expect(rowsOf(grid)).toHaveLength(1)
-    await openMenu('Taken down')
-    expect(await screen.findByRole('menuitem', { name: 'Published once, it cannot be deleted' })).toHaveAttribute('aria-disabled', 'true')
-    expect(screen.queryByRole('menuitem', { name: 'Delete' })).not.toBeInTheDocument()
-  })
-
+describe('[E4.3][AC30] deleting a story from the list', () => {
   const draftStory = () => listItem(1, { title: { en: 'Draft story' }, languages: { en: listVersion({ rowVersion: 3 }), de: listVersion({ rowVersion: 7 }) } })
+  const liveStory = () => listItem(2, { title: { en: 'Live story' }, languages: { en: publishedVersion(), de: listVersion() } })
+  const linksPath = (n: number) => `${base}/${uuid(n)}/links`
+  const groupPath = (n: number) => `${base}/${uuid(n)}`
+  const noLinks = () => Response.json({ pins: 0, stories: 0 })
+  const chooseDelete = async (name: string) => {
+    await openMenu(name)
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Delete' }))
 
-  it('[E4.3][AC30] AC-4 deleting a draft story in both languages sends one DELETE per version with its row version, shows one success toast, then the row is gone', async () => {
-    const success = vi.spyOn(toast, 'success')
-    let deleted = false
+    return screen.findByRole('alertdialog')
+  }
+  /** Answers the links read, and a delete of group `n` with `onDelete` (default: success, and the list reads without it afterwards). */
+  const server = (items: Record<string, unknown>[], links: () => Response, onDelete?: (call: (typeof state.calls)[number]) => Response) => {
+    let deleted: string | undefined
 
-    answerStories([draftStory()], (call) => {
+    answerStories(items, (call) => {
+      if (call.method === 'GET' && call.path.endsWith('/links'))
+        return links()
       if (call.method === 'DELETE') {
-        deleted = true
+        const answer = onDelete?.(call) ?? Response.json({ pinsUnlinked: 0, storiesUnlinked: 0 })
 
-        return new Response(null, { status: 204 })
+        if (answer.ok)
+          deleted = call.path
+
+        return answer
       }
 
-      return call.method === 'GET' && call.path === base && deleted ? Response.json({ items: [] }) : undefined
+      return call.method === 'GET' && call.path === base && deleted
+        ? Response.json(storyList(items.filter(item => `${base}/${item.groupId as string}` !== deleted)))
+        : undefined
     })
+  }
+
+  it('[E4.3][AC30] AC-5 a published story and a story that was published once both have Delete in the row menu, and no row is disabled', async () => {
+    server([liveStory(), listItem(3, { title: { en: 'Taken down' }, languages: { en: listVersion({ everPublished: true }), de: null } })], noLinks)
+    renderStories()
+    await loaded('Live story')
+
+    await openMenu('Live story')
+    expect(await screen.findByRole('menuitem', { name: 'Open' })).toHaveAttribute('href', `/store/content/articles/${uuid(2)}`)
+    expect(screen.getByRole('menuitem', { name: 'Delete' })).not.toHaveAttribute('aria-disabled')
+    expect(screen.queryByText('Unpublish it in the editor first')).not.toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    await openMenu('Taken down')
+    expect(await screen.findByRole('menuitem', { name: 'Delete' })).not.toHaveAttribute('aria-disabled')
+    expect(screen.queryByText('Published once, it cannot be deleted')).not.toBeInTheDocument()
+  })
+
+  it('[E4.3][AC30] AC-6 the dialog of a draft says the draft will be deleted, with no live line and no link line, and loads the links first', async () => {
+    server([draftStory()], noLinks)
+    renderStories()
+    await loaded('Draft story')
+    const dialog = await chooseDelete('Draft story')
+
+    expect(within(dialog).getByText('Delete Draft story?')).toBeInTheDocument()
+    expect(dialog).toHaveTextContent('The draft will be deleted.')
+    expect(dialog).not.toHaveTextContent('live for guests')
+    expect(dialog).not.toHaveTextContent('main story')
+    expect(state.calls.filter(call => call.method === 'GET' && call.path === linksPath(1))).toHaveLength(1)
+    expect(within(dialog).getByRole('button', { name: 'Delete story' })).toBeInTheDocument()
+  })
+
+  it('[E4.3][AC30] AC-5 AC-6 the dialog of a published story is live for guests, names the 1 pin and the 2 stories, and says the links are removed', async () => {
+    server([liveStory()], () => Response.json({ pins: 1, stories: 2 }))
+    renderStories()
+    await loaded('Live story')
+    const dialog = await chooseDelete('Live story')
+
+    expect(dialog).toHaveTextContent('live for guests and will disappear')
+    expect(dialog).toHaveTextContent('This story is the main story of 1 pin and is linked from 2 other stories. Deleting it removes those links.')
+    expect(dialog).not.toHaveTextContent('The draft will be deleted')
+  })
+
+  it('[E4.3][AC30] AC-5 when the links cannot be read the dialog still opens and says they could not be checked', async () => {
+    server([draftStory()], () => problem(500, 'internal-error'))
+    renderStories()
+    await loaded('Draft story')
+    const dialog = await chooseDelete('Draft story')
+
+    expect(dialog).toHaveTextContent('could not be checked')
+  })
+
+  it('[E4.3][AC30] AC-7 deleting from the list sends one DELETE of the group with an Idempotency-Key and no If-Match, drops the row at once, updates the tab counts and shows one toast', async () => {
+    const success = vi.spyOn(toast, 'success')
+
+    server([draftStory(), liveStory()], noLinks)
     renderStories()
     const { grid } = await loaded('Draft story')
 
-    await openMenu('Draft story')
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Delete' }))
-    const dialog = await screen.findByRole('alertdialog')
+    expect(tab('All', 2)).toBeInTheDocument()
+    const dialog = await chooseDelete('Draft story')
 
-    expect(within(dialog).getByText('Delete Draft story?')).toBeInTheDocument()
     await userEvent.click(within(dialog).getByRole('button', { name: 'Delete story' }))
-
     await waitFor(() => expect(within(grid).queryByText('Draft story')).not.toBeInTheDocument())
     const deletes = state.calls.filter(call => call.method === 'DELETE')
 
-    expect(deletes).toEqual([
-      expect.objectContaining({ path: `${base}/${uuid(1)}/versions/en`, ifMatch: '3' }),
-      expect.objectContaining({ path: `${base}/${uuid(1)}/versions/de`, ifMatch: '7' }),
-    ])
+    expect(deletes).toEqual([expect.objectContaining({ path: groupPath(1), ifMatch: null })])
     expect(deletes[0]!.key).toBeTruthy()
-    expect(deletes[0]!.key).not.toBe(deletes[1]!.key)
+    expect(tab('All', 1)).toBeInTheDocument()
+    expect(tab('Drafts', 0)).toBeInTheDocument()
+    expect(tab('Published', 1)).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
     expect(success).toHaveBeenCalledExactlyOnceWith('Story deleted.')
-    expect((await screen.findAllByText('No stories yet. Start the first one.')).length).toBeGreaterThan(0)
+    expect(within(grid).getByText('Live story')).toBeInTheDocument()
   })
 
-  it('[E4.3][AC30] AC-4 a refused delete (412) keeps the dialog open with the refusal, keeps the row and reads the list again', async () => {
+  it('[E4.3][AC30] AC-7 a refused delete keeps the dialog open with the refusal in a danger notice, keeps the row, and both buttons work again; a second try deletes it', async () => {
     const success = vi.spyOn(toast, 'success')
     const danger = vi.spyOn(toast, 'danger')
+    let refuse = true
 
-    answerStories([draftStory()], call => call.method === 'DELETE' && call.path.endsWith('/de') ? problem(412, 'precondition-failed') : call.method === 'DELETE' ? new Response(null, { status: 204 }) : undefined)
+    server([draftStory()], noLinks, () => (refuse ? problem(500, 'internal-error') : Response.json({ pinsUnlinked: 0, storiesUnlinked: 0 })))
     renderStories()
     const { grid } = await loaded('Draft story')
-    const reads = () => state.calls.filter(call => call.method === 'GET' && call.path === base).length
-    const before = reads()
-
-    await openMenu('Draft story')
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Delete' }))
-    const dialog = await screen.findByRole('alertdialog')
+    const dialog = await chooseDelete('Draft story')
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Delete story' }))
 
-    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Someone changed this story after the list was read.')
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Something went wrong. Try again in a moment.')
     expect(screen.getByRole('alertdialog')).toBeInTheDocument()
     expect(within(grid).getByText('Draft story')).toBeInTheDocument()
-    await waitFor(() => expect(reads()).toBeGreaterThan(before))
+    expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeEnabled()
+    expect(within(dialog).getByRole('button', { name: 'Delete story' })).toBeEnabled()
     expect(success).not.toHaveBeenCalled()
     expect(danger).not.toHaveBeenCalled()
+    refuse = false
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete story' }))
+    await waitFor(() => expect(within(grid).queryByText('Draft story')).not.toBeInTheDocument())
+    expect(success).toHaveBeenCalledExactlyOnceWith('Story deleted.')
+  })
+
+  it('[E4.3][AC30] AC-7 a lost connection is shown the same way, and the row stays', async () => {
+    server([draftStory()], noLinks, () => { throw new TypeError('Failed to fetch') })
+    renderStories()
+    const { grid } = await loaded('Draft story')
+    const dialog = await chooseDelete('Draft story')
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete story' }))
+    expect(await within(dialog).findByRole('alert')).toBeInTheDocument()
+    expect(within(grid).getByText('Draft story')).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeEnabled()
+  })
+
+  it('[E4.3][AC30] AC-7 while the server has not answered the button shows a spinner, Cancel is off, and Esc and a tap outside do nothing', async () => {
+    let release: (answer: Response) => void = () => undefined
+    const slow = new Promise<Response>((resolve) => {
+      release = resolve
+    })
+
+    server([draftStory()], noLinks, () => slow as unknown as Response)
+    renderStories()
+    await loaded('Draft story')
+    const dialog = await chooseDelete('Draft story')
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete story' }))
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeDisabled())
+    expect(dialog.querySelector('[role="progressbar"], .spinner')).not.toBeNull()
+    await userEvent.keyboard('{Escape}')
+    await userEvent.click(document.body)
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+    release(Response.json({ pinsUnlinked: 0, storiesUnlinked: 0 }))
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+  })
+
+  it('[E4.3][AC30] AC-7 Cancel closes the dialog and sends no DELETE', async () => {
+    server([draftStory()], noLinks)
+    renderStories()
+    await loaded('Draft story')
+    const dialog = await chooseDelete('Draft story')
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(state.calls.filter(call => call.method === 'DELETE')).toHaveLength(0)
+  })
+
+  it('[E4.3][AC30] AC-8 in German the menu item, the dialog with its counts, and the toast are German', async () => {
+    const success = vi.spyOn(toast, 'success')
+
+    localStorage.setItem('sk.language', JSON.stringify('de'))
+    server([liveStory()], () => Response.json({ pins: 1, stories: 2 }))
+    renderStories()
+    await screen.findAllByText('Live story')
+    await userEvent.click((await screen.findAllByRole('button', { name: 'Aktionen für Live story' }))[0]!)
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Löschen' }))
+    const dialog = await screen.findByRole('alertdialog')
+
+    expect(dialog).toHaveTextContent('Live story löschen?')
+    expect(dialog).toHaveTextContent('für Gäste sichtbar')
+    expect(dialog).toHaveTextContent('ist die Hauptgeschichte von 1 Pin und wird von 2 anderen Geschichten verlinkt')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Geschichte löschen' }))
+    await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('Geschichte gelöscht.'))
   })
 })
 
