@@ -107,6 +107,7 @@ import { Route as StoreContentPlacesPlaceIdRouteImport } from './routes/store/co
 import { Route as StoreProductsGiftsProductIdRouteImport } from './routes/store/products/gifts/$productId'
 import { Route as StoreProductsGiftsNewRouteImport } from './routes/store/products/gifts/new'
 import { Route as StoreProductsInventoryIndexRouteImport } from './routes/store/products/inventory/index'
+import { Route as StoreProductsInventorySkuIdRouteImport } from './routes/store/products/inventory/$skuId'
 import { Route as StoreProductsToursIndexRouteImport } from './routes/store/products/tours/index'
 import { Route as StoreProductsToursTourIdRouteImport } from './routes/store/products/tours/$tourId'
 import { Route as StoreProductsToursNewRouteImport } from './routes/store/products/tours/new'
@@ -608,6 +609,12 @@ const StoreProductsInventoryIndexRoute =
     path: '/products/inventory/',
     getParentRoute: () => StoreRoute,
   } as any)
+const StoreProductsInventorySkuIdRoute =
+  StoreProductsInventorySkuIdRouteImport.update({
+    id: '/products/inventory/$skuId',
+    path: '/products/inventory/$skuId',
+    getParentRoute: () => StoreRoute,
+  } as any)
 const StoreProductsToursIndexRoute = StoreProductsToursIndexRouteImport.update({
   id: '/products/tours/',
   path: '/products/tours/',
@@ -730,6 +737,7 @@ export interface FileRoutesByFullPath {
   '/store/content/places/$placeId': typeof StoreContentPlacesPlaceIdRoute
   '/store/products/gifts/$productId': typeof StoreProductsGiftsProductIdRoute
   '/store/products/gifts/new': typeof StoreProductsGiftsNewRoute
+  '/store/products/inventory/$skuId': typeof StoreProductsInventorySkuIdRoute
   '/store/products/tours/$tourId': typeof StoreProductsToursTourIdRoute
   '/store/products/tours/new': typeof StoreProductsToursNewRoute
   '/store/requests/advice/$requestId': typeof StoreRequestsAdviceRequestIdRoute
@@ -830,6 +838,7 @@ export interface FileRoutesByTo {
   '/store/content/places/$placeId': typeof StoreContentPlacesPlaceIdRoute
   '/store/products/gifts/$productId': typeof StoreProductsGiftsProductIdRoute
   '/store/products/gifts/new': typeof StoreProductsGiftsNewRoute
+  '/store/products/inventory/$skuId': typeof StoreProductsInventorySkuIdRoute
   '/store/products/tours/$tourId': typeof StoreProductsToursTourIdRoute
   '/store/products/tours/new': typeof StoreProductsToursNewRoute
   '/store/requests/advice/$requestId': typeof StoreRequestsAdviceRequestIdRoute
@@ -936,6 +945,7 @@ export interface FileRoutesById {
   '/store/content/places/$placeId': typeof StoreContentPlacesPlaceIdRoute
   '/store/products/gifts/$productId': typeof StoreProductsGiftsProductIdRoute
   '/store/products/gifts/new': typeof StoreProductsGiftsNewRoute
+  '/store/products/inventory/$skuId': typeof StoreProductsInventorySkuIdRoute
   '/store/products/tours/$tourId': typeof StoreProductsToursTourIdRoute
   '/store/products/tours/new': typeof StoreProductsToursNewRoute
   '/store/requests/advice/$requestId': typeof StoreRequestsAdviceRequestIdRoute
@@ -1042,6 +1052,7 @@ export interface FileRouteTypes {
     | '/store/content/places/$placeId'
     | '/store/products/gifts/$productId'
     | '/store/products/gifts/new'
+    | '/store/products/inventory/$skuId'
     | '/store/products/tours/$tourId'
     | '/store/products/tours/new'
     | '/store/requests/advice/$requestId'
@@ -1142,6 +1153,7 @@ export interface FileRouteTypes {
     | '/store/content/places/$placeId'
     | '/store/products/gifts/$productId'
     | '/store/products/gifts/new'
+    | '/store/products/inventory/$skuId'
     | '/store/products/tours/$tourId'
     | '/store/products/tours/new'
     | '/store/requests/advice/$requestId'
@@ -1247,6 +1259,7 @@ export interface FileRouteTypes {
     | '/store/content/places/$placeId'
     | '/store/products/gifts/$productId'
     | '/store/products/gifts/new'
+    | '/store/products/inventory/$skuId'
     | '/store/products/tours/$tourId'
     | '/store/products/tours/new'
     | '/store/requests/advice/$requestId'
@@ -1997,6 +2010,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreProductsInventoryIndexRouteImport
       parentRoute: typeof StoreRoute
     }
+    '/store/products/inventory/$skuId': {
+      id: '/store/products/inventory/$skuId'
+      path: '/products/inventory/$skuId'
+      fullPath: '/store/products/inventory/$skuId'
+      preLoaderRoute: typeof StoreProductsInventorySkuIdRouteImport
+      parentRoute: typeof StoreRoute
+    }
     '/store/products/tours/': {
       id: '/store/products/tours/'
       path: '/products/tours'
@@ -2148,6 +2168,7 @@ interface StoreRouteChildren {
   StoreContentPlacesPlaceIdRoute: typeof StoreContentPlacesPlaceIdRoute
   StoreProductsGiftsProductIdRoute: typeof StoreProductsGiftsProductIdRoute
   StoreProductsGiftsNewRoute: typeof StoreProductsGiftsNewRoute
+  StoreProductsInventorySkuIdRoute: typeof StoreProductsInventorySkuIdRoute
   StoreProductsToursTourIdRoute: typeof StoreProductsToursTourIdRoute
   StoreProductsToursNewRoute: typeof StoreProductsToursNewRoute
   StoreRequestsAdviceRequestIdRoute: typeof StoreRequestsAdviceRequestIdRoute
@@ -2182,6 +2203,7 @@ const StoreRouteChildren: StoreRouteChildren = {
   StoreContentPlacesPlaceIdRoute: StoreContentPlacesPlaceIdRoute,
   StoreProductsGiftsProductIdRoute: StoreProductsGiftsProductIdRoute,
   StoreProductsGiftsNewRoute: StoreProductsGiftsNewRoute,
+  StoreProductsInventorySkuIdRoute: StoreProductsInventorySkuIdRoute,
   StoreProductsToursTourIdRoute: StoreProductsToursTourIdRoute,
   StoreProductsToursNewRoute: StoreProductsToursNewRoute,
   StoreRequestsAdviceRequestIdRoute: StoreRequestsAdviceRequestIdRoute,
