@@ -87,7 +87,13 @@ describe('[E6.3][AC05][AC53] migration 0021_inventory', () => {
       await hold(store, sku, 1, first)
       // The second insert waits on the stock row lock the first one holds, so both are in flight together.
       const waiting = hold(store, sku, 1, second).then(() => 'stored', (error: { constraint?: string }) => error.constraint)
-      await new Promise(resolve => setTimeout(resolve, 300))
+      // Proof that the second insert is waiting on the row lock: poll until Postgres reports a lock wait.
+      for (let tries = 0; tries < 100; tries++) {
+        const { rowCount } = await pool.query(`select 1 from pg_stat_activity where wait_event_type = 'Lock' and query like '%inventory.stock_holds%'`)
+        if (rowCount)
+          break
+        await new Promise(resolve => setTimeout(resolve, 50))
+      }
       await first.query('commit')
       expect(await waiting).toBe('stock_items_held_within_on_hand')
       await second.query('rollback')
@@ -110,7 +116,7 @@ describe('[E6.3][AC05][AC53] migration 0021_inventory', () => {
     expect(await item(sku)).toEqual({ on_hand: 3, held: 3 })
   })
 
-  it('[E6.3][AC05][AC53] AC-3: held cannot be written directly, on_hand can', async () => {
+  it('[E6.3][ADR-016] AC-3: held cannot be written directly, on_hand can', async () => {
     const { sku } = await stock(5)
     await expect(pool.query(`update inventory.stock_items set held = 1 where sku_id = $1`, [sku])).rejects.toThrow(/maintained by a trigger/)
     await pool.query(`update inventory.stock_items set on_hand = 7 where sku_id = $1`, [sku])
@@ -118,7 +124,7 @@ describe('[E6.3][AC05][AC53] migration 0021_inventory', () => {
     await expect(pool.query(`update inventory.stock_items set on_hand = 0, held = 0 where sku_id = $1`, [sku])).resolves.toBeDefined()
   })
 
-  it('[E6.3][AC05][AC53] AC-5: an adjustment is never changed or deleted, and a set needs an actor', async () => {
+  it('[E6.3][AC05][AC53] AC-5 (DM-6): an adjustment is never changed or deleted, and a set needs an actor', async () => {
     const { store, sku } = await stock(0)
     const actor = randomUUID()
     const { rows } = await pool.query<{ id: string }>(
@@ -126,8 +132,8 @@ describe('[E6.3][AC05][AC53] migration 0021_inventory', () => {
       [store, sku, actor],
     )
     const id = rows[0]!.id
-    await expect(pool.query(`update inventory.stock_adjustments set reason = 'x' where id = $1`, [id])).rejects.toThrow()
-    await expect(pool.query(`delete from inventory.stock_adjustments where id = $1`, [id])).rejects.toThrow()
+    await expect(pool.query(`update inventory.stock_adjustments set reason = 'x' where id = $1`, [id])).rejects.toThrow(/append-only/)
+    await expect(pool.query(`delete from inventory.stock_adjustments where id = $1`, [id])).rejects.toThrow(/append-only/)
     await expect(pool.query(
       `insert into inventory.stock_adjustments (store_id, sku_id, kind, delta, on_hand_before, on_hand_after) values ($1, $2, 'set', 1, 4, 5)`,
       [store, sku],
@@ -135,11 +141,28 @@ describe('[E6.3][AC05][AC53] migration 0021_inventory', () => {
     expect((await pool.query(`select 1 from inventory.stock_adjustments where id = $1`, [id])).rowCount).toBe(1)
   })
 
+  it('[E6.3][AC05][AC53] AC-5: an issue adjustment needs an order, the arithmetic must add up, a hold starts as held, and a hold needs its stock row of the same store', async () => {
+    const { store, sku } = await stock(5)
+    await expect(pool.query(
+      `insert into inventory.stock_adjustments (store_id, sku_id, kind, delta, on_hand_before, on_hand_after) values ($1, $2, 'issue', -1, 5, 4)`,
+      [store, sku],
+    )).rejects.toMatchObject({ constraint: 'stock_adjustments_who_check' })
+    await expect(pool.query(
+      `insert into inventory.stock_adjustments (store_id, sku_id, kind, delta, on_hand_before, on_hand_after, actor_user_id) values ($1, $2, 'set', 3, 5, 9, $3)`,
+      [store, sku, randomUUID()],
+    )).rejects.toMatchObject({ constraint: 'stock_adjustments_arithmetic_check' })
+    await expect(pool.query(
+      `insert into inventory.stock_holds (store_id, sku_id, order_id, order_line_id, quantity, state, resolved_at) values ($1, $2, $3, $4, 1, 'released', now())`,
+      [store, sku, randomUUID(), randomUUID()],
+    )).rejects.toThrow(/starts as held/)
+    await expect(hold(randomUUID(), sku, 1)).rejects.toMatchObject({ constraint: 'stock_holds_item_fkey' })
+  })
+
   it('[E6.3][AC05][AC53] AC-5: holds are never deleted; an issued hold moves on_hand and writes an issue adjustment; a release frees held', async () => {
     const { store, sku } = await stock(5)
     const issued = await hold(store, sku, 2)
     const released = await hold(store, sku, 1)
-    await expect(pool.query(`delete from inventory.stock_holds where id = $1`, [issued])).rejects.toThrow()
+    await expect(pool.query(`delete from inventory.stock_holds where id = $1`, [issued])).rejects.toThrow(/append-only/)
 
     await pool.query(`update inventory.stock_holds set state = 'released', resolved_at = now() where id = $1`, [released])
     expect(await item(sku)).toEqual({ on_hand: 5, held: 2 })
@@ -152,10 +175,10 @@ describe('[E6.3][AC05][AC53] migration 0021_inventory', () => {
     )
     expect(rows).toEqual([{ kind: 'issue', delta: -2, on_hand_before: 5, on_hand_after: 3, order_id: expect.any(String) }])
     await expect(pool.query(`update inventory.stock_holds set state = 'released', resolved_at = now() where id = $1`, [issued])).rejects.toThrow(/resolved hold/)
-    await expect(pool.query(`delete from inventory.stock_holds where id = $1`, [released])).rejects.toThrow()
+    await expect(pool.query(`delete from inventory.stock_holds where id = $1`, [released])).rejects.toThrow(/append-only/)
   })
 
-  it('[E6.3][AC05][AC53] AC-9: back-fills one empty stock row per SKU, archived included, writes no history, and runs twice', async () => {
+  it('[E6.3][G-S8-D2] AC-9: back-fills one empty stock row per SKU, archived included, writes no history, and runs twice', async () => {
     const database = `sk_test_${randomBytes(6).toString('hex')}`
     scratchDatabases.push(database)
     await admin(`create database ${database}`)
