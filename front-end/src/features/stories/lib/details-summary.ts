@@ -17,3 +17,6 @@ export function interestsSummary(t: Translate, interests: string[]) {
 
 /** The chosen category names, or "None". */
 export const categoriesSummary = (t: Translate, names: string[]) => names.length > 0 ? names.join(', ') : t('storyDetails.none')
+
+/** The linked place names in the story's order, or "None". */
+export const placesSummary = (t: Translate, names: string[]) => names.length > 0 ? names.join(', ') : t('storyDetails.none')

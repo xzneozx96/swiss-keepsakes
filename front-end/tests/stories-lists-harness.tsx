@@ -1,8 +1,16 @@
+/* eslint-disable react-refresh/only-export-components -- a test helper, not a hot-reloaded module */
+import type { StoryGroupDetail } from '@sk/api-contract'
+import type { ReactNode } from 'react'
+
 import { pinListSchema } from '@sk/api-contract'
 
+import { useStoryGroup } from '@/features/stories/api/queries'
+import { DetailsPanel, useDetailsPanel } from '@/features/stories/components/story-details-panel'
+import { useStoryGroupEditor } from '@/features/stories/hooks/use-story-group-editor'
 import { list as keepsakeList } from './keepsakes-harness'
 import { serveDetails } from './stories-details-harness'
-import { storeId, storyList } from './stories-harness'
+import { groupId, storeId, storyList } from './stories-harness'
+import { renderWithStore } from './stories-media-harness'
 
 type Detail = Parameters<typeof serveDetails>[0]
 type Rows = Record<string, unknown>[]
@@ -40,3 +48,22 @@ export function serveLists(initial: Detail, rows: { pins?: Rows, keepsakes?: Row
 
   return server
 }
+
+function Panel({ group, children }: { group: StoryGroupDetail, children: (editor: ReturnType<typeof useStoryGroupEditor>) => ReactNode }) {
+  const editor = useStoryGroupEditor({ storeId, group })
+  const panel = useDetailsPanel({ blocking: [], warnings: [] })
+
+  return <DetailsPanel panel={panel}>{children(editor)}</DetailsPanel>
+}
+
+function Host({ children }: { children: (editor: ReturnType<typeof useStoryGroupEditor>) => ReactNode }) {
+  const group = useStoryGroup(storeId, groupId).data
+
+  return group ? <Panel group={group}>{children}</Panel> : null
+}
+
+/**
+ * One Details card on its own, inside the real panel and the real group autosave: `card` gets the editor (`editor.group`,
+ * `editor.change`). The group is read from the server the harness serves, so a reload is a second render.
+ */
+export const renderLinkedCard = (card: (editor: ReturnType<typeof useStoryGroupEditor>) => ReactNode) => renderWithStore(<Host>{card}</Host>)

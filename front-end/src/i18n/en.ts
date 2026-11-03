@@ -17,6 +17,7 @@ import { reportPagesEn } from '@/features/reports/pages-messages'
 import { requestsEn } from '@/features/requests/messages'
 import { storesEn } from '@/features/stores/messages'
 import { storiesMerchantEn } from '@/features/stories/messages'
+import { storiesListsEn } from '@/features/stories/messages-lists'
 import { storiesMediaEn } from '@/features/stories/messages-media'
 import { storiesPreviewEn } from '@/features/stories/messages-preview'
 import { storiesPublishEn } from '@/features/stories/messages-publish'
@@ -54,6 +55,7 @@ export const en = {
   ...storiesPublishEn,
   ...storiesPreviewEn,
   ...storiesMediaEn,
+  ...storiesListsEn,
   ...actionBarEn,
   ...multiSelectEn,
   ...stepsEn,
