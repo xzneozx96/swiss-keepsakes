@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { SkeletonShape } from '@/components/data-table-skeleton'
 import type { EmptyStateProps } from '@/components/empty-state'
 
-import { Table } from '@heroui/react'
+import { Checkbox, Table } from '@heroui/react'
 import { useEffect, useRef } from 'react'
 
 import {
@@ -90,6 +90,16 @@ interface DataTableProps<T> {
    * (HeroUI's secondary variant) because the widget already is the card (owner 15.10.2026).
    */
   variant?: 'page' | 'card'
+  /**
+   * Rows can be ticked (HeroUI's table selection: a checkbox column with select all). The caller shows the shared
+   * `ActionBar` while `selected` is not empty, for the actions on the ticked rows (docs/development-rules/frontend/
+   * bulk-selection.md). A row that `isSelectable` refuses shows no checkbox and can't be ticked.
+   */
+  selection?: {
+    selected: ReadonlySet<string>
+    onChange: (ids: Set<string>) => void
+    isSelectable?: (row: T) => boolean
+  }
   className?: string
   /** Classes for the table element itself, e.g. "table-fixed"; a `min-w-*` replaces the default minimum width. */
   contentClassName?: string
@@ -113,6 +123,7 @@ export function DataTable<T>({
   isLoading,
   rowActions,
   variant,
+  selection,
   className,
   contentClassName,
 }: DataTableProps<T>) {
@@ -121,6 +132,27 @@ export function DataTable<T>({
   const { pageItems: pagedItems, pager } = usePaged(rows, resetKey)
   const pageItems = hidePager ? rows : pagedItems
   const isOnPage = variant !== 'card'
+  const selectable = selection ? pageItems.filter(row => selection.isSelectable?.(row) ?? true).map(getRowId) : []
+  const disabledKeys = selection ? pageItems.map(getRowId).filter(id => !selectable.includes(id)) : []
+  const selectionProps = selection
+    ? {
+        selectionMode: 'multiple' as const,
+        disabledBehavior: 'selection' as const,
+        disabledKeys,
+        selectedKeys: new Set([...selection.selected].filter(id => selectable.includes(id))),
+        // "all" stands for every row that can be ticked on this page.
+        onSelectionChange: (keys: 'all' | Set<string | number>) => selection.onChange(new Set(keys === 'all' ? selectable : Array.from(keys, String))),
+      }
+    : {}
+  const box = (label?: string) => (
+    <Checkbox aria-label={label} slot="selection">
+      <Checkbox.Content>
+        <Checkbox.Control>
+          <Checkbox.Indicator />
+        </Checkbox.Control>
+      </Checkbox.Content>
+    </Checkbox>
+  )
   const allColumns: DataTableColumn<T>[] = rowActions
     ? [
         ...columns,
@@ -181,8 +213,10 @@ export function DataTable<T>({
             ref={gridRef}
             aria-label={label}
             className={contentClasses}
+            {...selectionProps}
           >
             <Table.Header>
+              {selection && <Table.Column className="w-10 pe-0">{box(t('table.selectAll'))}</Table.Column>}
               {allColumns.map(column => (
                 <Table.Column
                   key={column.id}
@@ -203,6 +237,7 @@ export function DataTable<T>({
               {isLoading
                 && Array.from({ length: SKELETON_ROWS }, (_, index) => (
                   <Table.Row key={`loading-${index}`}>
+                    {selection && <Table.Cell className="pe-0" />}
                     {allColumns.map(column => (
                       <Table.Cell key={column.id}>
                         <SkeletonCell index={index} shape={column.skeleton} />
@@ -216,7 +251,9 @@ export function DataTable<T>({
                     key={getRowId(row)}
                     className={getRowHref ? 'cursor-pointer' : undefined}
                     href={getRowHref?.(row)}
+                    id={getRowId(row)}
                   >
+                    {selection && <Table.Cell className="pe-0">{selectable.includes(getRowId(row)) ? box() : null}</Table.Cell>}
                     {allColumns.map(column => (
                       <Table.Cell
                         key={column.id}

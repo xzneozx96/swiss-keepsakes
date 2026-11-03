@@ -280,7 +280,6 @@ export const keepsakesEn = {
   'keepsakes.variants.archiveMany.body.other': 'They leave the keepsake page, and their combinations stay taken. Old orders keep them. They can’t be put back on sale.',
   'keepsakes.variant.archive': 'Archive',
   'keepsakes.variants.archiveVariant': 'Archive {name}',
-  'keepsakes.variants.deleteNeverSold': 'Delete all never sold',
   'keepsakes.variants.delete': 'Delete',
   'keepsakes.variants.deleteVariant': 'Delete {name}',
   'keepsakes.variants.deleteConfirm': 'Delete',

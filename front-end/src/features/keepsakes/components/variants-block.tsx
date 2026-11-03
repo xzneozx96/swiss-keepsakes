@@ -10,7 +10,7 @@ import { ActionBar } from '@/components/action-bar'
 import { useConfirm } from '@/components/confirm-dialog'
 import { DataTable } from '@/components/data-table'
 import { Block } from '@/components/form-block'
-import { ArchiveIcon, ChevronDownIcon, ForSaleIcon, HiddenIcon, PriceIcon, ProductsIcon, TrashIcon } from '@/components/icons'
+import { ArchiveIcon, ChevronDownIcon, ForSaleIcon, HiddenIcon, InfoIcon, PriceIcon, ProductsIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { groupByFirstOption, priceRange } from '../lib/combinations'
 import { chf } from '../lib/keepsake-rules'
@@ -31,12 +31,12 @@ function failureText(t: ReturnType<typeof useLocale>['t'], outcome: Extract<Outc
  * Archived variants, folded away: they stay for old orders, keep their combination and can't be put back on sale. One that
  * no order line names was archived by mistake of the old rule and can be deleted, by its icon or all together; a sold one stays.
  */
-function ArchivedList({ variants, options, isBusy, onDelete }: { variants: ProductVariant[], options: ProductOption[], isBusy: boolean, onDelete: (rows: ProductVariant[]) => void }) {
+function ArchivedList({ variants, options, isBusy, selected, onSelect, onDelete }: { variants: ProductVariant[], options: ProductOption[], isBusy: boolean, selected: ReadonlySet<string>, onSelect: (ids: Set<string>) => void, onDelete: (rows: ProductVariant[]) => void }) {
   const { t, language } = useLocale()
 
   if (variants.length === 0)
     return null
-  const unsold = variants.filter(variant => !variant.hasOrders)
+  const ticked = variants.filter(variant => selected.has(variant.id) && !variant.hasOrders)
   const nameOf = (variant: ProductVariant) => (options.length > 0 ? variantTitle(variant.values, options, language) : variant.skuCode ?? '')
 
   return (
@@ -45,6 +45,11 @@ function ArchivedList({ variants, options, isBusy, onDelete }: { variants: Produ
         {t('keepsakes.variants.archived', { count: variants.length })}
         <ChevronDownIcon aria-hidden className="transition-transform duration-200 group-open:rotate-180" size={14} />
       </summary>
+      {/* What archived means, at the top where it is read (owner 2026-11-03: at the bottom it was missed). */}
+      <p className="mt-2 flex items-start gap-1.5 text-sm text-muted">
+        <InfoIcon aria-hidden className="mt-0.5 shrink-0" size={16} />
+        {t('keepsakes.variants.archivedNote')}
+      </p>
       {/* The shared table, in the plain look for a table inside a block (owner 2026-11-03: "use a table here"). */}
       <DataTable
         hidePager
@@ -70,12 +75,18 @@ function ArchivedList({ variants, options, isBusy, onDelete }: { variants: Produ
               )),
         }}
         rows={variants}
+        // Only a never-sold variant can be ticked; a sold one stays for its orders.
+        selection={{ selected, onChange: onSelect, isSelectable: variant => !variant.hasOrders }}
         variant="card"
       />
-      {unsold.length > 0 && (
-        <Button className="-ms-1 mt-1 text-danger max-lg:h-11" isDisabled={isBusy} size="sm" variant="ghost" onPress={() => onDelete(unsold)}>{t('keepsakes.variants.deleteNeverSold')}</Button>
+      {/* Bulk actions on the ticked rows: the shared ActionBar (docs/development-rules/frontend/bulk-selection.md). */}
+      {ticked.length > 0 && (
+        <ActionBar
+          actions={[{ icon: TrashIcon, label: t('keepsakes.variants.delete'), tone: 'danger', isDisabled: isBusy, onPress: () => onDelete(ticked) }]}
+          count={ticked.length}
+          onClear={() => onSelect(new Set())}
+        />
       )}
-      <p className="mt-2 text-xs text-muted">{t('keepsakes.variants.archivedNote')}</p>
     </details>
   )
 }
@@ -106,7 +117,14 @@ export function VariantsBlock({ storeId, options, variants, held, toCome, action
 }) {
   const { t, language, intlLocale } = useLocale()
   const { confirm, dialog } = useConfirm()
-  const [selected, setSelected] = useState<ReadonlySet<string>>(() => new Set())
+  const [liveSelected, setLiveSelected] = useState<ReadonlySet<string>>(() => new Set())
+  const selected = liveSelected
+  // The archived table's own selection; one selection at a time, so ticking live rows clears it.
+  const [archivedTicked, setArchivedTicked] = useState<ReadonlySet<string>>(() => new Set())
+  const setSelected: typeof setLiveSelected = (next) => {
+    setLiveSelected(next)
+    setArchivedTicked(new Set())
+  }
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set())
   const [editing, setEditing] = useState<string>()
   /** Set when the sheet opened from a row's SKU code: the code field takes the focus. */
@@ -304,7 +322,19 @@ export function VariantsBlock({ storeId, options, variants, held, toCome, action
           <Button className="max-lg:h-11" isDisabled={isPending} size="sm" variant="ghost" onPress={() => void run(() => actions.addBack(notSold, sku.codeBase))}>{t('keepsakes.variants.addBack')}</Button>
         </p>
       )}
-      <ArchivedList isBusy={isPending} options={options} variants={archived} onDelete={rows => void remove(rows, () => undefined)} />
+      <ArchivedList
+        isBusy={isPending}
+        options={options}
+        selected={archivedTicked}
+        variants={archived}
+        onDelete={rows => void remove(rows, () => setArchivedTicked(new Set()))}
+        // One selection at a time: ticking archived rows clears the live rows' selection, so only one ActionBar shows.
+        onSelect={(ids) => {
+          setArchivedTicked(ids)
+          if (ids.size > 0)
+            setLiveSelected(new Set())
+        }}
+      />
 
       {editingVariant && (
         <VariantSheet

@@ -1596,6 +1596,7 @@ export const de: Record<MessageKey, string> = {
   'pagination.prevText': 'Zurück',
   'pagination.nextText': 'Weiter',
   'pagination.page': 'Seite {page}',
+  'table.selectAll': 'Alle auswählen',
   'table.actions': 'Aktionen',
   'filter.title': 'Filter',
   'costData.column.sale': 'Verkauf',

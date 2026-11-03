@@ -281,7 +281,6 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.variants.archiveMany.body.other': 'Sie verschwinden von der Andenken-Seite, und ihre Kombinationen bleiben vergeben. Alte Bestellungen behalten sie. Sie können nicht wieder in den Verkauf.',
   'keepsakes.variant.archive': 'Archivieren',
   'keepsakes.variants.archiveVariant': '{name} archivieren',
-  'keepsakes.variants.deleteNeverSold': 'Alle nie verkauften löschen',
   'keepsakes.variants.delete': 'Löschen',
   'keepsakes.variants.deleteVariant': '{name} löschen',
   'keepsakes.variants.deleteConfirm': 'Löschen',

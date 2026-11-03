@@ -1546,6 +1546,7 @@ export const en = {
   'pagination.prevText': 'Prev',
   'pagination.nextText': 'Next',
   'pagination.page': 'Page {page}',
+  'table.selectAll': 'Select all',
   'table.actions': 'Actions',
   'filter.title': 'Filters',
   'costData.column.sale': 'Sale',

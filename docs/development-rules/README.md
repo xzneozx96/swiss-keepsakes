@@ -28,6 +28,7 @@ These files tell people and AI coding agents how to build in this repo. `AGENTS.
 | `frontend/api-feedback.md` | a `useCommand` or `useSubmit` call needs a success or error toast |
 | `frontend/performance.md` | touch first load, lists, typing, scrolling, streaming, dependencies or icons |
 | `frontend/heroui-and-styling.md` | build or restyle UI |
+| `frontend/bulk-selection.md` | add an action that works on several rows, tiles or items at once |
 | `frontend/linting.md` | change lint config, add a rule, or format code |
 | `frontend/stack-notes.md` | need Vite, React, router or compiler facts and traps |
 | `frontend/tanstack-start.md` | add or change a route, a loader, server code, the document head or anything that renders on the server |

@@ -452,7 +452,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     expect(screen.queryByTestId('not-sold')).not.toBeInTheDocument()
   })
 
-  it('[T-019][AC7] archived variants that were never sold have a Delete icon and a Delete all never sold; sold ones have none', async () => {
+  it('[T-019][AC7] archived variants that were never sold have a Delete icon and a checkbox for the ActionBar; sold ones have neither', async () => {
     current = product({ options: [sizeOption, colourOption], variants: all.map((variant, index) => (index === 0 ? { ...variant, status: 'archived' as const } : index === 1 ? { ...variant, status: 'archived' as const, hasOrders: true } : index === 2 ? { ...variant, status: 'archived' as const } : variant)) })
     serve()
     await openStep()
@@ -469,7 +469,11 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     await waitFor(() => expect(patches()).toHaveLength(1))
     expect(patches()[0]).toMatchObject({ path: `${detail}/variants/${all[0]!.id}`, body: { status: 'removed' } })
     await waitFor(() => expect(within(variantsBlock()).getByText('2 archived')).toBeInTheDocument())
-    await userEvent.click(within(variantsBlock()).getByRole('button', { name: 'Delete all never sold' }))
+    // Sold rows have no checkbox; ticking a never-sold row opens the shared ActionBar with Delete.
+    const archivedTable = within(variantsBlock()).getByRole('grid', { name: '2 archived' })
+    expect(within(within(archivedTable).getByRole('row', { name: /XS \/ Blue/ })).queryByRole('checkbox')).not.toBeInTheDocument()
+    await userEvent.click(within(within(archivedTable).getByRole('row', { name: /S \/ Red/ })).getByRole('checkbox'))
+    await userEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: /Delete/ }))
     const dialog = await screen.findByRole('alertdialog')
 
     expect(dialog).toHaveTextContent('Delete S / Red?')
@@ -478,7 +482,7 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     await waitFor(() => expect(patches()).toHaveLength(2))
     expect(patches()[1]).toMatchObject({ path: `${detail}/variants/${all[2]!.id}`, body: { status: 'removed' } })
     await waitFor(() => expect(within(variantsBlock()).getByText('1 archived')).toBeInTheDocument())
-    expect(within(variantsBlock()).queryByRole('button', { name: 'Delete all never sold' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('toolbar')).not.toBeInTheDocument()
   })
 
   it('[T-019][AC8] a value that live and archived variants use says how many of each', async () => {
