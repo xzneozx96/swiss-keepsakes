@@ -11,6 +11,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { basePriceOf, refsOf, savedRefsOf } from '../lib/combinations'
 import { optionsBody, refusalText } from '../lib/option-rules'
 import { problemMessageKey } from '../lib/problems'
+import { baseQuantityOf } from '../lib/stock-rules'
 import { variantsBody } from '../lib/variant-rules'
 import { useDraftVariants } from './use-draft-variants'
 
@@ -32,7 +33,7 @@ export interface OptionsStepHandle {
  *
  * `committed` holds the refs of the options and values that were finished with Done, as in a new keepsake.
  */
-export function useHeldOptions({ keepsake, draft, handle, saveOptions, saveVariant, saveVariants, createVariant, addPhoto }: {
+export function useHeldOptions({ keepsake, draft, handle, saveOptions, saveVariant, saveVariants, createVariant, setStock, addPhoto }: {
   keepsake: Product
   draft: OptionsDraftState
   handle: RefObject<OptionsStepHandle | null>
@@ -40,6 +41,7 @@ export function useHeldOptions({ keepsake, draft, handle, saveOptions, saveVaria
   saveVariant: VariantActions['saveVariant']
   saveVariants: VariantActions['saveVariants']
   createVariant: VariantActions['createVariant']
+  setStock: VariantActions['setStock']
   addPhoto: VariantActions['addPhoto']
 }) {
   const { t } = useLocale()
@@ -66,6 +68,7 @@ export function useHeldOptions({ keepsake, draft, handle, saveOptions, saveVaria
       return others.length > 0 ? saveVariants(others) : { ok: true }
     },
     createVariant,
+    setStock: (variant, onHand) => (toCome.has(variant.id) ? rows.setStock(variant.id, onHand) : setStock(variant, onHand)),
     commit: async ({ drafts, plan }) => {
       const outcome = await rows.apply(drafts, plan)
 
@@ -74,7 +77,7 @@ export function useHeldOptions({ keepsake, draft, handle, saveOptions, saveVaria
 
       return outcome
     },
-    addBack: (combinations, codeBase) => rows.addBack(combinations, basePriceOf(variants), codeBase, saved),
+    addBack: (combinations, codeBase) => rows.addBack(combinations, basePriceOf(variants), codeBase, saved, baseQuantityOf(variants)),
     addPhoto,
   }
 

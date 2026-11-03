@@ -42,7 +42,7 @@ export function makeCreateProduct<T>({ uow, products, media, clock, sales, stock
       const photoRefused = await checkVariantPhotos(media, tx, storeId, input.variants.map(variant => variant.mediaId))
       if (photoRefused)
         return fail(photoRefused)
-      const product = await products.insert(tx, storeId, {
+      const { product, createdSkuIds } = await products.insert(tx, storeId, {
         name: input.name,
         text: input.text,
         media: input.photoIds,
@@ -50,7 +50,7 @@ export function makeCreateProduct<T>({ uow, products, media, clock, sales, stock
         options: input.options,
         variants: input.variants,
       }, clock.now())
-      await seedNewSkus(stock, tx, actor, storeId, product.variants, input.variants)
+      await seedNewSkus(stock, tx, actor, storeId, createdSkuIds, input.variants)
       return ok(await describe({ media, sales, stockLevels }, tx, product))
     })
   }

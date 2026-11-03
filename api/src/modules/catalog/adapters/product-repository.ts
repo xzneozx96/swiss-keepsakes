@@ -159,8 +159,8 @@ export function createProductRepository(): ProductRepository<Tx> {
         returning id`)
       const id = inserted.rows[0]!.id
       const written = await writeOptions(tx, storeId, id, [], input.options, at)
-      await writeVariants(tx, storeId, id, input.variants, written, at)
-      return reload(tx, { storeId, id })
+      const createdSkuIds = await writeVariants(tx, storeId, id, input.variants, written, at)
+      return { product: await reload(tx, { storeId, id }), createdSkuIds }
     },
 
     async save(tx, product, changes: ProductChanges, at) {
@@ -254,8 +254,9 @@ export function createProductRepository(): ProductRepository<Tx> {
         insert into catalog.skus (store_id, sku_code, media_id, product_id, price_rappen, status, created_at, updated_at)
         values (${product.storeId}, ${input.skuCode}, ${input.mediaId}, ${product.id}, ${input.priceRappen}, ${input.status}, ${at}, ${at})
         returning id`)
-      await writeSkuValues(tx, product.storeId, product.id, inserted.rows[0]!.id, input.values)
-      return reload(tx, product)
+      const skuId = inserted.rows[0]!.id
+      await writeSkuValues(tx, product.storeId, product.id, skuId, input.values)
+      return { product: await reload(tx, product), createdSkuIds: [skuId] }
     },
 
     async replaceOptions(tx, product, input, at) {
@@ -270,11 +271,11 @@ export function createProductRepository(): ProductRepository<Tx> {
         await tx.execute(sql`delete from catalog.sku_option_values where sku_id = ${entry.variantId} and option_id = any(${sql.param(optionIds)}::uuid[])`)
         await writeSkuValues(tx, product.storeId, product.id, entry.variantId, values)
       }
-      await writeVariants(tx, product.storeId, product.id, input.newVariants, written, at)
+      const createdSkuIds = await writeVariants(tx, product.storeId, product.id, input.newVariants, written, at)
       await tx.execute(sql`
         update catalog.products set row_version = row_version + 1, updated_at = ${at}
         where store_id = ${product.storeId} and id = ${product.id}`)
-      return reload(tx, product)
+      return { product: await reload(tx, product), createdSkuIds }
     },
 
     async saveVariants(tx, product, changes, at) {

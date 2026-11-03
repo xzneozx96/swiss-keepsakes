@@ -11,9 +11,11 @@ import { entryOf, withPhotos } from './stock-entry.ts'
 // the first one that is not found, or that falls below its reserved units, refuses the request and names it. The rows
 // come back in the order of the request.
 export function makeSetManyStock<T>({ uow, stock, skus, media, audit, clock }: InventoryDeps<T>) {
-  return async (actor: Actor, storeId: string, items: { skuId: string, onHand: number }[], requestId: string | null): Promise<Result<StockEntry[]>> => {
+  return async (actor: Actor, storeId: string, requested: { skuId: string, onHand: number }[], requestId: string | null): Promise<Result<StockEntry[]>> => {
     if (!mayEditCatalog(actor, storeId) || actor.kind !== 'staff')
       return fail({ reason: 'forbidden' })
+    // The database answers ids in lower case, the contract accepts upper case.
+    const items = requested.map(item => ({ ...item, skuId: item.skuId.toLowerCase() }))
     return uow.run(async (tx) => {
       const sorted = [...items].sort((a, b) => (a.skuId < b.skuId ? -1 : a.skuId > b.skuId ? 1 : 0))
       const ids = sorted.map(item => item.skuId)

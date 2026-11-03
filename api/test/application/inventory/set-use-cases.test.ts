@@ -91,6 +91,28 @@ describe('[E6.3][AC05][AC53] setting stock for one variant', () => {
   })
 })
 
+// The database answers a uuid in lower case; the contract accepts upper case (CORRECTNESS-7).
+const lower = '0190f0c2-0000-7000-8000-00000000abcd'
+const upper = lower.toUpperCase()
+
+describe('[E6.3][AC05][AC53] an upper-case SKU id finds the same variant', () => {
+  it('[E6.3][AC05][AC53][CORRECTNESS-7] set stock with an upper-case id sets the variant', async () => {
+    const { deps, sets } = setup([sku(1, { skuId: lower })], { [lower]: [5, 0] })
+    const result = await makeSetStock(deps)(owner, storeId, upper, 8, null)
+
+    expect(result.ok && result.value).toMatchObject({ onHand: 8 })
+    expect(sets.map(set => set.skuId)).toEqual([lower])
+  })
+
+  it('[E6.3][AC05][AC53][CORRECTNESS-7] set many with upper-case ids sets them and returns them in the request order', async () => {
+    const { deps, sets } = setup([sku(1, { skuId: lower }), sku(2)], { [lower]: [5, 0], [id(2)]: [1, 0] })
+    const result = await makeSetManyStock(deps)(owner, storeId, [{ skuId: upper, onHand: 7 }, { skuId: id(2), onHand: 3 }], null)
+
+    expect(result.ok && result.value.map(row => [row.sku.skuId, row.onHand])).toEqual([[lower, 7], [id(2), 3]])
+    expect(sets).toHaveLength(2)
+  })
+})
+
 describe('[E6.3][AC05][AC53] setting stock for many variants', () => {
   const three = () => setup([sku(1), sku(2), sku(3)], { [id(1)]: [5, 0], [id(2)]: [5, 2], [id(3)]: [1, 0] })
 

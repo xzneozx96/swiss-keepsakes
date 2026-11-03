@@ -7,7 +7,7 @@ import { mayEditCatalog, staffActor } from './access.ts'
 import { fail, ok } from './failure.ts'
 import { checkVariantValues } from './option-rules.ts'
 import { checkVariantPhotos, describe } from './product-detail.ts'
-import { newVariantsOf, seedNewSkus } from './seed-stock.ts'
+import { seedNewSkus } from './seed-stock.ts'
 import { isSkuCode } from './sku-code.ts'
 
 // One more variant: a combination that is sold. It takes one value of each option of the keepsake, and no other variant,
@@ -31,8 +31,8 @@ export function makeCreateVariant<T>({ uow, products, media, audit, clock, sales
       const photoRefused = await checkVariantPhotos(media, tx, storeId, [input.mediaId])
       if (photoRefused)
         return fail(photoRefused)
-      const saved = await products.insertVariant(tx, product, input, clock.now())
-      await seedNewSkus(stock, tx, actor, storeId, newVariantsOf(product, saved), [input])
+      const { product: saved, createdSkuIds } = await products.insertVariant(tx, product, input, clock.now())
+      await seedNewSkus(stock, tx, actor, storeId, createdSkuIds, [input])
       await audit.record(tx, {
         storeId,
         actor: staffActor(actor),

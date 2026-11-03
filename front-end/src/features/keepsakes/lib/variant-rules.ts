@@ -40,9 +40,9 @@ export function codeProblem(code: string | null, others: Pick<ProductVariant, 's
   return others.some(other => other.skuCode?.toLowerCase() === trimmed.toLowerCase()) ? 'taken' : undefined
 }
 
-/** The variants a new keepsake sends: code (none when empty), photo, price and values, in the order they were added. */
-export function variantsBody(variants: Pick<ProductVariant, 'skuCode' | 'mediaId' | 'priceRappen' | 'values'>[]) {
-  return variants.map(variant => ({ skuCode: variant.skuCode?.trim() || null, mediaId: variant.mediaId, priceRappen: variant.priceRappen, values: variant.values }))
+/** The variants a new keepsake sends: code (none when empty), photo, price, stock (`quantity`, when the variant has a figure) and values, in the order they were added. */
+export function variantsBody(variants: Pick<ProductVariant, 'skuCode' | 'mediaId' | 'priceRappen' | 'values' | 'onHand'>[]) {
+  return variants.map(variant => ({ skuCode: variant.skuCode?.trim() || null, mediaId: variant.mediaId, priceRappen: variant.priceRappen, ...(variant.onHand !== undefined && { quantity: variant.onHand }), values: variant.values }))
 }
 
 /** Every combination of the options that no variant holds, archived ones counted as taken (they keep their combination). None for a keepsake with no option. */

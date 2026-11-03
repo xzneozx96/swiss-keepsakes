@@ -1,4 +1,5 @@
-import type { VariantCreateBody, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
+import type { ProductVariant, VariantCreateBody, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
+import type { StockOutcome } from '../lib/variant-actions'
 import type { Outcome } from './use-keepsake-editor'
 
 import { useQueryClient } from '@tanstack/react-query'
@@ -6,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useLocale } from '@/contexts/locale-context'
 import { useDataClient } from '@/features/data-client'
 import { useCommand } from '@/features/data-client/use-command'
+import { refusalText } from '@/features/inventory/lib/problems'
 import { keepsakesQueries } from '../api/queries'
 import { variantName } from '../lib/option-rules'
 import { problemTypeOf, refusalsOf } from '../lib/problems'
@@ -41,6 +43,8 @@ export function useVariantCommands({ storeId, id }: { storeId: string, id: strin
     },
   })
   const createVariant = useCommand('keepsakes', 'createVariant', { meta: { silent: true } })
+  // The refusal shows under the Quantity field, so the write is silent. It reads the keepsake again (the command's own invalidation).
+  const setStock = useCommand('inventory', 'set', { meta: { silent: true } })
   const detailKey = keepsakesQueries.detail(client, storeId, id).queryKey
 
   return {
@@ -62,6 +66,17 @@ export function useVariantCommands({ storeId, id }: { storeId: string, id: strin
       }
       catch (error) {
         return { ok: false, type: problemTypeOf(error), refusals: refusalsOf(error) }
+      }
+    },
+    /** One saved variant's stock, written through the inventory module. A refusal comes back as the text for the field. */
+    setStock: async (variant: Pick<ProductVariant, 'id' | 'reserved'>, onHand: number): Promise<StockOutcome> => {
+      try {
+        await setStock.mutateAsync({ storeId, skuId: variant.id, onHand, idempotencyKey: crypto.randomUUID() })
+
+        return { ok: true }
+      }
+      catch (error) {
+        return { ok: false, message: refusalText(t, error, variant.reserved ?? 0) }
       }
     },
     saveVariants: async (variants: VariantsSaveBody['variants']): Promise<Outcome> => {

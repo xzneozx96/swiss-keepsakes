@@ -12,9 +12,11 @@ import { entryOf, withPhotos } from './stock-entry.ts'
 // entry are written in this transaction. The optional reason (the seed's "Opening stock (seed)") goes to the adjustment's
 // `reason`; the PUT route does not pass one.
 export function makeSetStock<T>({ uow, stock, skus, media, audit, clock }: InventoryDeps<T>) {
-  return async (actor: Actor, storeId: string, skuId: string, onHand: number, requestId: string | null, reason?: string): Promise<Result<StockEntry>> => {
+  return async (actor: Actor, storeId: string, requested: string, onHand: number, requestId: string | null, reason?: string): Promise<Result<StockEntry>> => {
     if (!mayEditCatalog(actor, storeId) || actor.kind !== 'staff')
       return fail({ reason: 'forbidden' })
+    // The database answers ids in lower case, the contract accepts upper case.
+    const skuId = requested.toLowerCase()
     return uow.run(async (tx) => {
       const sku = (await skus.liveSkus(tx, storeId, [skuId])).find(live => live.skuId === skuId)
       if (!sku)

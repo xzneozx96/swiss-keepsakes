@@ -63,6 +63,20 @@ describe('[E6.3][AC05][AC53][AC-10] a new SKU has its stock row', () => {
     expect(first).toMatchObject({ onHand: 12, available: 12 })
   })
 
+  it('[E6.3][AC05][AC53][E6.3c-AC-5] a SKU code already in use refuses the whole create and writes no stock row for any variant', async () => {
+    const s = await setup()
+    const taken = code()
+    await s.create([{ skuCode: taken, priceRappen: 3900, values: { size: 's' } }])
+    const before = Number((await pool.query('select count(*) from inventory.stock_items where store_id = $1', [s.storeId])).rows[0].count)
+    const response = await s.create([{ skuCode: code(), priceRappen: 3900, values: { size: 's' }, quantity: 4 }, { skuCode: taken, priceRappen: 3900, values: { size: 'l' }, quantity: 5 }])
+    const after = Number((await pool.query('select count(*) from inventory.stock_items where store_id = $1', [s.storeId])).rows[0].count)
+    const history = Number((await pool.query('select count(*) from inventory.stock_adjustments where store_id = $1', [s.storeId])).rows[0].count)
+
+    expect(response.status).toBe(409)
+    expect(after).toBe(before)
+    expect(history).toBe(0)
+  })
+
   it('[E6.3][AC05][AC53][AC-10] a new variant on an existing keepsake has a row of 0, or its quantity', async () => {
     const s = await setup()
     const product = await (await s.create([{ skuCode: code(), priceRappen: 3900, values: { size: 's' } }])).json() as Product
@@ -77,6 +91,31 @@ describe('[E6.3][AC05][AC53][AC-10] a new SKU has its stock row', () => {
     expect(added.map(variant => variant.onHand).sort()).toEqual([0, 7])
     for (const variant of added)
       expect(await s.stockOf(variant.id)).toHaveLength(1)
+  })
+
+  it.each([10000, -1, 1.5])('[E6.3][AC05][AC53][TQ-9] a quantity of %s is refused on a create and on a new variant, and writes nothing', async (quantity) => {
+    const s = await setup()
+    const count = async (table: string) => Number((await pool.query(`select count(*) from ${table} where store_id = $1`, [s.storeId])).rows[0].count)
+    const refusedCreate = await s.create([{ skuCode: code(), priceRappen: 3900, values: { size: 's' }, quantity }])
+    const product = await (await s.create([{ skuCode: code(), priceRappen: 3900, values: { size: 's' } }])).json() as Product
+    const optionId = Object.keys(product.variants[0]!.values)[0]!
+    const detail = await (await env.call(`${s.products}/${product.id}`, { headers: s.owner.headers })).json() as { options: { values: { id: string, label: { en: string } }[] }[] }
+    const large = detail.options[0]!.values.find(v => v.label.en === 'Large')!.id
+    const refusedVariant = await s.post(`${s.products}/${product.id}/variants`, { skuCode: code(), priceRappen: 3900, values: { [optionId]: large }, quantity })
+
+    expect([refusedCreate.status, refusedVariant.status]).toEqual([400, 400])
+    expect(await count('catalog.products')).toBe(1)
+    expect(await count('catalog.skus')).toBe(1)
+    expect(await count('inventory.stock_items')).toBe(1)
+  })
+
+  it('[E6.3][AC05][AC53][TQ-9] a quantity of 9999 is accepted', async () => {
+    const s = await setup()
+    const response = await s.create([{ skuCode: code(), priceRappen: 3900, values: { size: 's' }, quantity: 9999 }])
+    const product = await response.json() as Product
+
+    expect(response.status).toBe(201)
+    expect(product.variants[0]).toMatchObject({ onHand: 9999 })
   })
 
   it('[E6.3][AC05][AC53][AC-10] an options save seeds the variants it creates', async () => {
@@ -142,6 +181,27 @@ describe('[E6.3][AC05][AC53] stock figures in the catalog', () => {
     expect(detail.variants.find(variant => variant.id === bare!.id)).toMatchObject({ onHand: 0, reserved: 0, available: 0 })
     expect(detail.variants.find(variant => variant.id === gone!.id)).toMatchObject({ status: 'archived', onHand: 3 })
     expect(list.items.find(item => item.id === product.id)!.soldOutCount).toBe(1)
+  })
+
+  it('[E6.3][AC05][AC53][E6.3c-AC-6] an archived variant keeps its stock and history, and putting it back is refused without touching them', async () => {
+    const s = await setup()
+    const product = await (await s.create([{ skuCode: code(), priceRappen: 3900, values: { size: 's' }, quantity: 6 }, { skuCode: code(), priceRappen: 3900, values: { size: 'l' } }])).json() as Product
+    const [kept] = product.variants
+    const variantPath = `${s.products}/${product.id}/variants/${kept!.id}`
+    const archive = await env.call(variantPath, { method: 'PATCH', headers: s.owner.headers, body: { status: 'archived' } })
+    const afterArchive = { stock: await s.stockOf(kept!.id), history: await s.history(kept!.id) }
+    // Restoring has no rule (an archived variant can't be put back on sale), so hidden is refused too.
+    const restore = await env.call(variantPath, { method: 'PATCH', headers: s.owner.headers, body: { status: 'draft' } })
+    const problem = JSON.stringify(await restore.json())
+
+    expect(archive.status).toBe(200)
+    expect(afterArchive.stock).toEqual([{ on_hand: 6, held: 0 }])
+    expect(afterArchive.history).toHaveLength(1)
+    expect(restore.status).toBeGreaterThanOrEqual(400)
+    expect(problem).toContain('variant-archived')
+    expect(await s.stockOf(kept!.id)).toEqual(afterArchive.stock)
+    expect(await s.history(kept!.id)).toEqual(afterArchive.history)
+    expect((await s.get(product.id)).variants.find(variant => variant.id === kept!.id)).toMatchObject({ status: 'archived', onHand: 6 })
   })
 
   it('[E6.3][AC05][AC53] archiving a variant with a held unit is refused as variant-reserved', async () => {

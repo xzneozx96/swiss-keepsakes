@@ -264,6 +264,12 @@ export interface KeepsakeLinks<T> {
   removeAll: (tx: T, storeId: string, productId: string) => Promise<void>
 }
 
+// A product after a write that created SKUs, with the ids of those SKUs in the order the request listed their variants.
+export interface WrittenProduct {
+  product: Product
+  createdSkuIds: string[]
+}
+
 export interface ProductRepository<T> {
   list: (tx: T, storeId: string) => Promise<ProductListRow[]>
   // An id of another store has no row.
@@ -271,7 +277,7 @@ export interface ProductRepository<T> {
   // Locks the row. An id of another store has no row.
   findForUpdate: (tx: T, storeId: string, productId: string) => Promise<Product | undefined>
   // A draft product with its options and its variants for sale, in one transaction.
-  insert: (tx: T, storeId: string, input: NewProduct, at: Date) => Promise<Product>
+  insert: (tx: T, storeId: string, input: NewProduct, at: Date) => Promise<WrittenProduct>
   // Writes the draft document and the commission, bumps row_version.
   save: (tx: T, product: Product, changes: ProductChanges, at: Date) => Promise<Product>
   // The draft becomes the live text and is cleared, the photos replace product_media, the slug is written in the
@@ -288,7 +294,7 @@ export interface ProductRepository<T> {
   // Writes the variant and returns the product. undefined when the variant is not this product's.
   saveVariant: (tx: T, product: Product, skuId: string, changes: VariantChanges, at: Date) => Promise<Product | undefined>
   // Adds one variant. `values` maps option ids to value ids.
-  insertVariant: (tx: T, product: Product, input: VariantInput, at: Date) => Promise<Product>
+  insertVariant: (tx: T, product: Product, input: VariantInput, at: Date) => Promise<WrittenProduct>
   // Updates the price or status of several variants in one statement. Archived variants are left as they are.
   saveVariants: (tx: T, product: Product, changes: VariantBatchChange[], at: Date) => Promise<Product>
   // Deletes variants of the keepsake with their option values, archived ones too (the use case allows that only for unsold ones). Frees their combinations.
@@ -297,7 +303,7 @@ export interface ProductRepository<T> {
   // lists SKU ids whose own code does not count: a bulk save may give codes to the SKUs that hold them now.
   takenSkuCodes: (tx: T, storeId: string, codes: string[], except?: string[]) => Promise<Set<string>>
   // Writes the options, their values and order, and the new values of the variants, creates the new variants, then bumps row_version.
-  replaceOptions: (tx: T, product: Product, input: OptionsSave, at: Date) => Promise<Product>
+  replaceOptions: (tx: T, product: Product, input: OptionsSave, at: Date) => Promise<WrittenProduct>
 }
 
 // One keepsake that holds a file as a photo. The content module's media library reads this to count keepsakes as uses

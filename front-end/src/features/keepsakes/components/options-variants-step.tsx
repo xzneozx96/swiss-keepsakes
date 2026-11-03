@@ -102,7 +102,7 @@ export function OptionsAndVariantsStep({ storeId, keepsakeId, draft, language, h
 
   return (
     <>
-      {showsPrice && <PriceCard key={only?.id ?? 'none'} held={held} showErrors={showErrors} sku={sku} variant={only} onCreate={actions.createVariant} onSave={actions.saveVariant} />}
+      {showsPrice && <PriceCard key={only?.id ?? 'none'} held={held} showErrors={showErrors} sku={sku} variant={only} onCreate={actions.createVariant} onSave={actions.saveVariant} onSetStock={actions.setStock} />}
       <OptionsBlock committed={committed} draft={draft} flow={flow} language={language} suggestions={suggestions} />
       {(tableOptions.length > 0 || preview) && <VariantsBlock actions={actions} held={held} toCome={toCome} notSold={missingCombinations(tableOptions, variants)} options={tableOptions} ownPhotos={photoIds} preview={preview} sku={sku} storeId={storeId} variants={variants} />}
       {dialog}
