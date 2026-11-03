@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { Route as ContentRoute } from '@/routes/store/content/index'
 import { answerStories, base, listItem, listVersion, media, problem, publishedVersion, renderStories, setUpHarness, state, storeId, uuid } from './stories-harness'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
@@ -286,5 +287,22 @@ describe('[E4.3][AC30] loading and failure', () => {
     expect(alert).toHaveTextContent('Reference: req-1')
     await userEvent.click(within(alert).getByRole('button', { name: 'Try again' }))
     await waitFor(() => expect(state.calls.filter(call => call.method === 'GET' && call.path === base)).toHaveLength(2))
+  })
+})
+
+describe('[E4.3][AC30] the Content route', () => {
+  it('[E4.3][AC30] the Content route renders the stories list and still redirects ?tab=comments', async () => {
+    answerStories([listItem(1, { title: { en: 'Routed story' } })])
+    renderStories('/store/content', ContentRoute.options.component)
+
+    expect((await screen.findAllByText('Routed story')).length).toBeGreaterThan(0)
+    expect(screen.getByTestId('stories-screen')).toBeInTheDocument()
+
+    const beforeLoad = ContentRoute.options.beforeLoad as (context: { search: { tab?: string } }) => void
+
+    expect(() => beforeLoad({ search: { tab: 'comments' } })).toThrow(expect.objectContaining({ options: expect.objectContaining({ to: '/store/content/comments' }) }))
+    expect(() => beforeLoad({ search: { tab: 'reviews' } })).toThrow(expect.objectContaining({ options: expect.objectContaining({ to: '/store/content/reviews' }) }))
+    expect(() => beforeLoad({ search: {} })).not.toThrow()
+    expect((ContentRoute.options.validateSearch as (search: Record<string, unknown>) => unknown)({ tab: 'reviews', lang: ['en'] })).toEqual({ tab: 'reviews' })
   })
 })

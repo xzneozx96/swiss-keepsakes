@@ -19,11 +19,7 @@ function Page() {
       section="content"
       title={t('nav.content')}
     >
-      <ContentPage
-        articleFilter={[]}
-        tab="reviews"
-        onArticleFilterChange={() => {}}
-      />
+      <ContentPage tab="reviews" />
     </SectionFrame>
   )
 }
