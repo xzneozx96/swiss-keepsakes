@@ -85,6 +85,19 @@ describe('[E4.3][AC30] the Places card and picker', () => {
     expect(screen.getByText('The review is about this place. Change the reviewed place to remove it.')).toBeInTheDocument()
   }, 30000)
 
+  it('[E4.3][AC30] CORRECTNESS-E43-3 the sheet cannot untick the reviewed place either: its row stays chosen and the note shows', async () => {
+    serve({ kind: 'editorial_review', subjectPlaceId: uuid(1), placeIds: [uuid(1), uuid(2)] })
+    await openCard()
+    await openSheet()
+    await userEvent.click(await sheetRow('Pin 1'))
+    await userEvent.click(await sheetRow('Pin 2'))
+    expect(screen.getByRole('button', { name: 'Save 1 place' })).toBeInTheDocument()
+    expect(screen.getAllByText('The review is about this place. Change the reviewed place to remove it.').length).toBeGreaterThan(0)
+    await userEvent.click(screen.getByRole('button', { name: 'Save 1 place' }))
+    await waitFor(() => expect(groupPatches()).toHaveLength(1), SLOW)
+    expect(groupPatches()[0]!.body).toEqual({ placeIds: [uuid(1)] })
+  }, 30000)
+
   it('[E4.3][AC30] Review Focus 5: the 51st place changes nothing', async () => {
     const many = Array.from({ length: 51 }, (_, i) => pinItem(i + 1))
 

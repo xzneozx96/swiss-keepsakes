@@ -82,6 +82,7 @@ export function PlacesCard({ storeId, group, language, body, onChange }: {
       {sheetOpen && (
         <PlacesSheet
           language={language}
+          locked={group.kind === 'editorial_review' ? (group.subjectPlaceId ?? undefined) : undefined}
           storeId={storeId}
           value={group.placeIds}
           onClose={() => setSheetOpen(false)}
