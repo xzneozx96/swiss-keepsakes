@@ -40,6 +40,8 @@ export interface PlaceFacts {
   mainStoryGroupId: string | null
   coverMediaId: string | null
   coverReady: boolean
+  // A person's unpublished changes are waiting on the pin: publishing its cover would publish them too.
+  hasDraft?: boolean
 }
 
 export interface StorySnapshot {
@@ -62,6 +64,8 @@ export interface StoredVersion {
   status: 'draft' | 'published'
   rowVersion: number
   doc: StoryDraft
+  // A published version with a draft beside it: a person is editing it.
+  pendingDraft?: boolean
 }
 
 export interface PlannedStory {
@@ -84,6 +88,8 @@ export interface StoryPlan {
   refreshes: { key: string, version: StoredVersion, draft: StoryDraft }[]
   // Places with no cover that get the photo as their cover.
   placeCovers: { placeId: string, slug: string, photo: StoryPhoto }[]
+  // Places that would get a cover but hold unpublished changes of a person: left alone.
+  coversSkipped: string[]
   // Stories that exist already whose place has no main story yet: the link is set, and only that.
   links: { key: string, groupId: string, placeId: string }[]
   creates: PlannedStory[]
@@ -158,7 +164,7 @@ function sameDraft(stored: StoryDraft, target: StoryDraft): boolean {
 }
 
 export function planPlaceStories(stories: readonly PlaceStory[], snapshot: StorySnapshot, photos: readonly StoryPhoto[] = storyPhotos, covers: typeof placeCovers = placeCovers): StoryPlan {
-  const plan: StoryPlan = { refs: new Map(), uploads: [], refreshes: [], placeCovers: [], links: [], creates: [], skipped: [], faults: [] }
+  const plan: StoryPlan = { refs: new Map(), uploads: [], refreshes: [], placeCovers: [], coversSkipped: [], links: [], creates: [], skipped: [], faults: [] }
   const refs = photoRefs(snapshot.photoMedia, photos)
   plan.refs = refs
   const wanted = new Set([...stories.flatMap(storyPhotoKeys), ...covers.map(entry => entry.photo)])
@@ -174,8 +180,12 @@ export function planPlaceStories(stories: readonly PlaceStory[], snapshot: Story
     const ref = refs.get(entry.photo)
     if (!place)
       plan.faults.push(`The cover of the place ${entry.place} names a place the store does not have.`)
-    else if (ref && place.coverMediaId === null && place.status !== 'draft')
-      plan.placeCovers.push({ placeId: place.id, slug: entry.place, photo: ref.photo })
+    else if (ref && place.coverMediaId === null && place.status !== 'draft') {
+      if (place.hasDraft)
+        plan.coversSkipped.push(entry.place)
+      else
+        plan.placeCovers.push({ placeId: place.id, slug: entry.place, photo: ref.photo })
+    }
   }
 
   // The cover of a story: its own photo, else the cover of the place it names.
@@ -197,6 +207,10 @@ export function planPlaceStories(stories: readonly PlaceStory[], snapshot: Story
           continue
         if (cover === null) {
           plan.faults.push(`Story ${story.key} (${language}) has no cover: no cover photo, and the place ${story.coverFrom} has none.`)
+          continue
+        }
+        if (stored.pendingDraft) {
+          plan.faults.push(`Story ${story.key} (${language}) is published and a person has an unpublished draft of it. Publish or discard the draft first.`)
           continue
         }
         const draft = placeStoryDraft(story, language, cover, refs)
@@ -254,15 +268,15 @@ export async function readStorySnapshot(pool: Pool, storeId: string, stories: re
   const hashes = new Map(photos.filter(photo => used.has(photo.key) || covers.some(entry => entry.photo === photo.key)).map(photo => [photo.key, createHash('sha256').update(photoBytes(photo)).digest('hex')]))
   const [slugs, places, categories, versions, media] = await Promise.all([
     pool.query<{ slug: string }>(`select slug from content.story_versions where slug is not null`),
-    pool.query<{ id: string, status: string, slug: string, main_story_group_id: string | null, cover_media_id: string | null, ready: boolean }>(
-      `select p.id, p.status, p.slug->>'en' as slug, p.main_story_group_id, p.cover_media_id,
+    pool.query<{ id: string, status: string, slug: string, main_story_group_id: string | null, cover_media_id: string | null, ready: boolean, has_draft: boolean }>(
+      `select p.id, p.status, p.slug->>'en' as slug, p.main_story_group_id, p.cover_media_id, p.draft is not null as has_draft,
               coalesce((select m.status = 'ready' from content.media m where m.id = p.cover_media_id), false) as ready
          from content.places p where p.store_id = $1 and p.slug->>'en' is not null`,
       [storeId],
     ),
     pool.query<{ id: string, slug: string }>(`select id, slug from content.blog_categories where store_id = $1`, [storeId]),
-    pool.query<{ group_id: string, language: ContentLanguage, slug: string, status: 'draft' | 'published', row_version: number, doc: StoryDraft }>(
-      `select group_id, language, slug, status, row_version, coalesce(draft, published) as doc
+    pool.query<{ group_id: string, language: ContentLanguage, slug: string, status: 'draft' | 'published', row_version: number, doc: StoryDraft, pending: boolean }>(
+      `select group_id, language, slug, status, row_version, coalesce(draft, published) as doc, (status = 'published' and draft is not null) as pending
          from content.story_versions where store_id = $1 and slug = any($2::text[])`,
       [storeId, stories.flatMap(story => [story.slug.en, story.slug.de])],
     ),
@@ -274,9 +288,9 @@ export async function readStorySnapshot(pool: Pool, storeId: string, stories: re
   const idBySha = new Map(media.rows.map(row => [row.sha256, row.id]))
   return {
     slugs: new Set(slugs.rows.map(row => row.slug)),
-    places: new Map(places.rows.map(row => [row.slug, { id: row.id, status: row.status, mainStoryGroupId: row.main_story_group_id, coverMediaId: row.cover_media_id, coverReady: row.ready }])),
+    places: new Map(places.rows.map(row => [row.slug, { id: row.id, status: row.status, mainStoryGroupId: row.main_story_group_id, coverMediaId: row.cover_media_id, coverReady: row.ready, hasDraft: row.has_draft }])),
     blogCategoryIds: new Map(categories.rows.map(row => [row.slug, row.id])),
-    versions: versions.rows.map(row => ({ groupId: row.group_id, language: row.language, slug: row.slug, status: row.status, rowVersion: row.row_version, doc: row.doc })),
+    versions: versions.rows.map(row => ({ groupId: row.group_id, language: row.language, slug: row.slug, status: row.status, rowVersion: row.row_version, doc: row.doc, pendingDraft: row.pending })),
     photoMedia: new Map([...hashes].flatMap(([key, sha]) => (idBySha.has(sha) ? [[key, idBySha.get(sha)!] as const] : []))),
   }
 }
@@ -285,7 +299,7 @@ export function describePlan(plan: StoryPlan, dry: boolean): string {
   const verb = dry ? 'Would' : 'Will'
   const lines = [
     `${verb} upload ${plan.uploads.length} photos: ${plan.uploads.map(photo => photo.key).join(', ') || '-'}`,
-    `${verb} set the cover of ${plan.placeCovers.length} places: ${plan.placeCovers.map(entry => entry.slug).join(', ') || '-'}`,
+    `${verb} set the cover of ${plan.placeCovers.length} places: ${plan.placeCovers.map(entry => entry.slug).join(', ') || '-'}${plan.coversSkipped.length ? ` (skipping ${plan.coversSkipped.join(', ')}: unpublished changes of a person)` : ''}`,
     `${verb} rewrite and publish ${plan.refreshes.length} story versions: ${plan.refreshes.map(r => `${r.key}/${r.version.language}`).join(', ') || '-'}`,
     `${verb} set the main story of ${plan.links.length} places for existing stories`,
     `${verb} create ${plan.creates.length} stories and reviews, skipping ${plan.skipped.length}${plan.skipped.length ? ` (${plan.skipped.map(s => s.key).join(', ')})` : ''}:`,

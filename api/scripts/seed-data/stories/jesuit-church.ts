@@ -27,7 +27,7 @@ export const jesuitChurch: PlaceStory = {
         { photo: 'jc-nave' },
         { h: 'What to look at inside' },
         'Look first at how the room is built. In older churches the stonemason shaped the walls and pillars. Here the stucco workers did it, so the pillars, cornices and altars are modelled in plaster. The art historian Adolf Reinle wrote that a visitor feels as if standing in a mighty cave. Large windows on three levels, in the side chapels, the galleries and above them, fill the room with light.',
-        'The stucco of the side chapels is the work of the Jesuit brother Heinrich Meyer, who also supervised the interior. The German Wikipedia counts it as the oldest stucco in Switzerland in the style of the Wessobrunn school, from 1672 and 1673.',
+        'The stucco of the side chapels is the work of the Jesuit brother Heinrich Meyer, who also supervised the interior. It counts as the oldest stucco in Switzerland in the style of the Wessobrunn school, from 1672 and 1673.',
         { photo: 'jc-altar' },
         'The high altar is huge. Columns stand in rows in front of the wall, and above them a gilded sunburst surrounds the eye of God. The altar painting shows Saint Francis Xavier kneeling on a cloud in glory, with the Virgin Mary above him among angels. Xavier is the saint of the church, and since 1654 he has also been the patron saint of the city of Lucerne.',
         { photo: 'jc-xaver-painting' },
@@ -43,7 +43,7 @@ export const jesuitChurch: PlaceStory = {
         { photo: 'jc-old-view' },
         'The towers came later. They were added in 1893, which is why older pictures show a plain façade. The order of the Jesuits was dissolved in 1773, but the school carried on and became the cantonal school, which moved out in 1966. The church still belongs to the canton of Lucerne, and the Catholic parish uses it for services. Four masses are held on Sundays.',
         { h: 'Music and teaching' },
-        'The church is a concert venue and a teaching space. The Lucerne tourist board notes its particularly fine acoustics and that organists are taught here. The Metzler organ of 1982 has three manuals and purely mechanical action, and a choir organ by Goll was added in 1984. The professors of the theology faculty of the University of Lucerne look after the church together with its prefect, and the Lucerne School of Music uses it for church music. Organ vespers have been held since 1982 in Advent and Christmas time and in Lent and Easter time.',
+        'The church is a concert venue and a teaching space. The church has particularly fine acoustics, and organists are taught here. The Metzler organ of 1982 has three manuals and purely mechanical action, and a choir organ by Goll was added in 1984. The professors of the theology faculty of the University of Lucerne look after the church together with its prefect, and the Lucerne School of Music uses it for church music. Organ vespers have been held since 1982 in Advent and Christmas time and in Lent and Easter time.',
         { h: 'Visiting' },
         {
           ul: [
@@ -74,7 +74,7 @@ export const jesuitChurch: PlaceStory = {
         { photo: 'jc-nave' },
         { h: 'Was Sie im Innern ansehen sollten' },
         'Schauen Sie zuerst, wie der Raum gebaut ist. In älteren Kirchen formte der Steinmetz die Wände und Pfeiler. Hier taten es die Stuckateure, und deshalb sind Pfeiler, Gesimse und Altäre in Gips modelliert. Der Kunsthistoriker Adolf Reinle schrieb, man habe das Gefühl, in einer mächtigen Höhle zu stehen. Grosse Fenster auf drei Ebenen, in den Seitenkapellen, auf den Emporen und darüber, füllen den Raum mit Licht.',
-        'Der Stuck der Seitenkapellen stammt vom Jesuitenbruder Heinrich Meyer, der auch die Innengestaltung leitete. Die deutsche Wikipedia nennt ihn den ältesten Stuck der Schweiz im Stil der Wessobrunner Schule, aus den Jahren 1672 und 1673.',
+        'Der Stuck der Seitenkapellen stammt vom Jesuitenbruder Heinrich Meyer, der auch die Innengestaltung leitete. Er gilt als ältester Stuck der Schweiz im Stil der Wessobrunner Schule, aus den Jahren 1672 und 1673.',
         { photo: 'jc-altar' },
         'Der Hochaltar ist gewaltig. Säulen stehen in Reihen vor der Wand, darüber umgibt ein vergoldeter Strahlenkranz das Auge Gottes. Das Altarbild zeigt den heiligen Franz Xaver kniend auf einer Wolke in der Glorie, über ihm die Jungfrau Maria unter Engeln. Xaver ist der Heilige der Kirche, und seit 1654 ist er auch Schutzpatron der Stadt Luzern.',
         { photo: 'jc-xaver-painting' },
@@ -90,7 +90,7 @@ export const jesuitChurch: PlaceStory = {
         { photo: 'jc-old-view' },
         'Die Türme kamen später dazu. Sie wurden 1893 aufgesetzt, deshalb zeigen ältere Bilder eine schlichte Fassade. Der Jesuitenorden wurde 1773 aufgehoben, die Schule bestand aber weiter und wurde zur Kantonsschule, die 1966 auszog. Die Kirche gehört bis heute dem Kanton Luzern, und die katholische Kirchgemeinde nutzt sie für Gottesdienste. Sonntags finden vier Messen statt.',
         { h: 'Musik und Lehre' },
-        'Die Kirche ist ein Konzertort und ein Ort der Lehre. Luzern Tourismus verweist auf die besonders gute Akustik und darauf, dass hier Organisten unterrichtet werden. Die Metzler-Orgel von 1982 hat drei Manuale und rein mechanische Traktur, 1984 kam eine Chororgel von Goll dazu. Die Professorinnen und Professoren der Theologischen Fakultät der Universität Luzern betreuen die Kirche gemeinsam mit dem Präfekten, und die Musikhochschule Luzern nutzt sie für Kirchenmusik. Orgelvespern finden seit 1982 in der Advents- und Weihnachtszeit sowie in der Fasten- und Osterzeit statt.',
+        'Die Kirche ist ein Konzertort und ein Ort der Lehre. Die Kirche hat eine besonders gute Akustik, und hier werden Organisten unterrichtet. Die Metzler-Orgel von 1982 hat drei Manuale und rein mechanische Traktur, 1984 kam eine Chororgel von Goll dazu. Die Professorinnen und Professoren der Theologischen Fakultät der Universität Luzern betreuen die Kirche gemeinsam mit dem Präfekten, und die Musikhochschule Luzern nutzt sie für Kirchenmusik. Orgelvespern finden seit 1982 in der Advents- und Weihnachtszeit sowie in der Fasten- und Osterzeit statt.',
         { h: 'Gut zu wissen' },
         {
           ul: [

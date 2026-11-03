@@ -42,13 +42,13 @@ export const spreuerBridge: PlaceStory = {
         { photo: 'sp-chapel' },
         { h: 'Who paid for the paintings' },
         'In 1611 the town council decided to decorate the Chapel Bridge with pictures, and it already planned panels for the Spreuer Bridge. The Dance of Death began in 1616. Two panels were paid for by the council, one each by the papal nuncio Ranuccio Scotti and his brother Odoardo, and the rest by members of the council. The panels were restored several times, in 1727 to 1730, around 1756, in 1923 and 1924 and after the Chapel Bridge fire of 1993.',
-        'The sources do not agree on the dates and numbers. The cycle is dated 1616 to 1637 by Lucerne Tourism and the English Wikipedia, 1626 to 1632 by the German Wikipedia and 1626 to 1635 by the city. Of the original 67 panels, according to Wikipedia, 45 remain. Lucerne Tourism thinks there were probably 71.',
+        'Sources differ on the dates and numbers. The cycle is dated 1616 to 1637 in some sources, 1626 to 1632 in others and 1626 to 1635 in a third. Of the original 67 panels, 45 remain. Some sources think there were probably 71.',
         'One more story: the English artist Mary Hemsworth (1869 to 1940) liked the bridge so much after a visit to Lucerne that she had it copied faithfully on her estate in Yorkshire.',
         { h: 'Visiting' },
         {
           ul: [
             'Where: the bridge links the Mühlenplatz on the old-town bank with the Kasernenplatz and the Historical Museum on the other bank. From the station it is about 11 minutes on foot. Walk to the Jesuit Church, then keep following the river downstream, about 5 more minutes.',
-            'Open at all hours and free. About 8,400 people cross it every day, according to Lucerne Tourism.',
+            'Open at all hours and free. About 8,400 people cross it every day.',
             'Time: 5 minutes to cross, about 20 if you read the panels.',
             'The panels hang high in the gables, so a phone camera with zoom helps. The verses are in German.',
             'The Historical Museum, a few steps from the bridge, lends an audio guide with a tour of the Dance of Death panels. Ask there about price and hours.',
@@ -87,13 +87,13 @@ export const spreuerBridge: PlaceStory = {
         { photo: 'sp-chapel' },
         { h: 'Wer die Bilder bezahlt hat' },
         '1611 beschloss der Rat, die Kapellbrücke mit Bildern zu schmücken, und er plante schon damals Tafeln für die Spreuerbrücke. Der Totentanz entstand ab 1616. Zwei Tafeln stiftete der Rat, je eine der päpstliche Nuntius Ranuccio Scotti und sein Bruder Odoardo, die übrigen Ratspersonen. Restauriert wurden die Tafeln mehrmals, 1727 bis 1730, um 1756, 1923 und 1924 und nach dem Brand der Kapellbrücke 1993.',
-        'Bei den Daten und Zahlen sind sich die Quellen nicht einig. Luzern Tourismus und die englische Wikipedia datieren den Zyklus auf 1616 bis 1637, die deutsche Wikipedia auf 1626 bis 1632, die Stadt auf 1626 bis 1635. Von ursprünglich 67 Tafeln sind nach Wikipedia 45 erhalten. Luzern Tourismus vermutet, dass es wahrscheinlich 71 waren.',
+        'Bei den Daten und Zahlen sind sich die Quellen nicht einig. Der Zyklus wird in einigen Quellen auf 1616 bis 1637 datiert, in anderen auf 1626 bis 1632 und in einer dritten auf 1626 bis 1635. Von ursprünglich 67 Tafeln sind 45 erhalten. Manche Quellen vermuten, dass es wahrscheinlich 71 waren.',
         'Noch eine Geschichte: Die englische Künstlerin Mary Hemsworth (1869 bis 1940) gefiel die Brücke nach einem Besuch in Luzern so gut, dass sie sie auf ihrem Anwesen in Yorkshire originalgetreu nachbauen liess.',
         { h: 'Gut zu wissen' },
         {
           ul: [
             'Lage: Die Brücke verbindet den Mühlenplatz am Altstadtufer mit dem Kasernenplatz und dem Historischen Museum am anderen Ufer. Vom Bahnhof gehen Sie etwa 11 Minuten. Gehen Sie zur Jesuitenkirche und folgen Sie dann dem Fluss flussabwärts, noch etwa 5 Minuten.',
-            'Zu jeder Zeit offen und gratis. Laut Luzern Tourismus queren täglich rund 8400 Menschen die Brücke.',
+            'Zu jeder Zeit offen und gratis. Täglich queren rund 8400 Menschen die Brücke.',
             'Dauer: 5 Minuten für die Überquerung, etwa 20, wenn Sie die Tafeln lesen.',
             'Die Tafeln hängen hoch im Giebel, mit dem Zoom Ihrer Handykamera sehen Sie mehr. Die Verse sind auf Deutsch.',
             'Das Historische Museum, wenige Schritte von der Brücke, verleiht einen Audioguide mit einem Rundgang zu den Totentanzbildern. Fragen Sie dort nach Preis und Öffnungszeiten.',

@@ -43,7 +43,7 @@ export const lionMonument: PlaceStory = {
         { photo: 'lion-twain' },
         'In his travel book A Tramp Abroad, Twain described the scene: the lion lies in his lair in the face of a low cliff, carved from the living rock. His head is bowed, the broken spear sticks in his shoulder and his protecting paw rests upon the lilies of France. Vines hang down the cliff, a clear stream trickles from above into the pond, and the lion is mirrored among the water-lilies.',
         'The park now has ten information panels in German and English on the history and the different meanings of the monument. French and Italian versions are available through a QR code.',
-        'The sources also record some of the men. Major Karl Josef von Bachmann, in command at the Tuileries, was tried and guillotined in September, still in his red guard uniform. In 1817 the Swiss Federal Diet awarded the commemorative medal Treue und Ehre, loyalty and honour, to 389 survivors of the regiment. Next to the entrance to the park stands a small memorial chapel that Louis Pfyffer von Wyher designed.',
+        'Some of the men are known by name. Major Karl Josef von Bachmann, in command at the Tuileries, was tried and guillotined in September, still in his red guard uniform. In 1817 the Swiss Federal Diet awarded the commemorative medal Treue und Ehre, loyalty and honour, to 389 survivors of the regiment. Next to the entrance to the park stands a small memorial chapel that Louis Pfyffer von Wyher designed.',
         { h: 'Visiting' },
         {
           ul: [
@@ -90,7 +90,7 @@ export const lionMonument: PlaceStory = {
         { photo: 'lion-twain' },
         'In seinem Reisebuch A Tramp Abroad beschrieb Twain die Szene: Der Löwe liegt in seiner Höhle in der Wand einer niedrigen Felswand, aus dem lebenden Fels gehauen. Sein Kopf ist gesenkt, der abgebrochene Speer steckt in seiner Schulter, und seine schützende Pranke ruht auf den Lilien Frankreichs. Ranken hängen die Wand herab, von oben rinnt ein klarer Bach in den Teich, und der Löwe spiegelt sich zwischen den Seerosen.',
         'Im Park erklären heute zehn Tafeln auf Deutsch und Englisch die Geschichte und die verschiedenen Bedeutungen des Denkmals. Französische und italienische Fassungen sind über einen QR-Code abrufbar.',
-        'Die Quellen halten auch das Schicksal einiger Männer fest. Major Karl Josef von Bachmann, der die Verteidigung der Tuilerien befehligte, wurde im September vor Gericht gestellt und in seiner roten Gardeuniform guillotiniert. 1817 verlieh die Eidgenössische Tagsatzung 389 Überlebenden des Regiments die Gedenkmedaille Treue und Ehre. Neben dem Parkeingang steht eine kleine Gedächtniskapelle, die Louis Pfyffer von Wyher entwarf.',
+        'Einige der Männer kennt man mit Namen. Major Karl Josef von Bachmann, der die Verteidigung der Tuilerien befehligte, wurde im September vor Gericht gestellt und in seiner roten Gardeuniform guillotiniert. 1817 verlieh die Eidgenössische Tagsatzung 389 Überlebenden des Regiments die Gedenkmedaille Treue und Ehre. Neben dem Parkeingang steht eine kleine Gedächtniskapelle, die Louis Pfyffer von Wyher entwarf.',
         { h: 'Gut zu wissen' },
         {
           ul: [
