@@ -278,18 +278,23 @@ export function parseFlags(argv: readonly string[]) {
   }
 }
 
-async function stockOnly(pool: Pool, storeId: string, dry: boolean): Promise<number> {
+// Prints the opening-stock plan. Returns 1 when it has faults (nothing is written then), otherwise undefined.
+function reportStockPlan(plan: Awaited<ReturnType<typeof planFromDatabase>>): 1 | undefined {
+  process.stdout.write(`Opening stock, acting as owner ${plan.ownerUserId ?? '(none)'}:\n${plan.decisions.map(decision => `  ${describeDecision(decision)}`).join('\n')}\n`)
+  if (plan.faults.length === 0)
+    return undefined
+  process.stderr.write(`${plan.faults.join('\n')}\nNothing was written.\n`)
+  return 1
+}
+
+// Exported for the integration test of the dry run.
+export async function stockOnly(pool: Pool, storeId: string, dry: boolean): Promise<number> {
   const quantities = loadOpeningStock()
   const inventoryReady = await openingStockReady(pool)
   process.stdout.write(`Inventory tables (migration 0021): ${inventoryReady ? 'present' : 'missing'}\n`)
   const stockPlan = inventoryReady ? await planFromDatabase(pool, storeId, quantities) : undefined
-  if (stockPlan) {
-    process.stdout.write(`Opening stock, acting as owner ${stockPlan.ownerUserId ?? '(none)'}:\n${stockPlan.decisions.map(decision => `  ${describeDecision(decision)}`).join('\n')}\n`)
-    if (stockPlan.faults.length > 0) {
-      process.stderr.write(`${stockPlan.faults.join('\n')}\nNothing was written.\n`)
-      return 1
-    }
-  }
+  if (stockPlan && reportStockPlan(stockPlan))
+    return 1
   if (dry)
     return 0
   if (!inventoryReady) {
@@ -339,13 +344,8 @@ async function main(): Promise<number> {
     process.stdout.write(`Inventory tables (migration 0021): ${inventoryReady ? 'present' : 'missing'}\n`)
     // Planned before any write, with the keepsakes still to be created counted as 0 to their quantity.
     const stockPlan = inventoryReady ? await planFromDatabase(pool, storeId, quantities, new Set(plan.keepsakesToCreate.map(record => record.skuCode))) : undefined
-    if (stockPlan) {
-      process.stdout.write(`Opening stock, acting as owner ${stockPlan.ownerUserId ?? '(none)'}:\n${stockPlan.decisions.map(decision => `  ${describeDecision(decision)}`).join('\n')}\n`)
-      if (stockPlan.faults.length > 0) {
-        process.stderr.write(`${stockPlan.faults.join('\n')}\nNothing was written.\n`)
-        return 1
-      }
-    }
+    if (stockPlan && reportStockPlan(stockPlan))
+      return 1
     if (dry)
       return 0
     // The content use cases read the home column, so nothing can be written until migration 0016 is applied.

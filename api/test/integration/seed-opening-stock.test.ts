@@ -1,6 +1,6 @@
 import type { Actor } from '@sk/domain/identity'
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { loadData, openingStock } from '../../scripts/seed-curated.ts'
+import { loadData, openingStock, stockOnly } from '../../scripts/seed-curated.ts'
 import { loadOpeningStock } from '../../scripts/seed-opening-stock.ts'
 import { createSkuDirectory } from '../../src/modules/catalog/adapters/sku-directory.ts'
 import { createStockRepository } from '../../src/modules/inventory/adapters/stock-repository.ts'
@@ -164,6 +164,33 @@ describe('[E6.5][AC52][AC53] the opening stock of the seeded knives', () => {
     expect(out.stderr).toContain(s.storeId)
     expect(await s.counts()).toEqual(before)
     expect(await s.stock(s.skuIds.get('A')!)).toEqual([0])
+  })
+})
+
+describe('[E6.5][AC52][AC53][AC-2] the dry run of the stock step', () => {
+  it('[E6.5][AC52][AC53][AC-2] lists the sets and the skipped row, names the owner, and writes nothing', async () => {
+    const s = await scratchStore(knifeCodes)
+    await s.personSets(knifeCodes[0]!, 7)
+    const before = await s.counts()
+    const code = await stockOnly(pool, s.storeId, true)
+
+    expect(code).toBe(0)
+    expect(out.stdout).toContain(`acting as owner ${s.owner.userId}`)
+    expect(out.stdout).toContain(`${knifeCodes[0]}: skipped`)
+    expect(out.stdout).toContain(`${knifeCodes[1]}: 0 to 100`)
+    expect(out.stdout).not.toContain('Opening stock:')
+    expect(await s.counts()).toEqual(before)
+    for (const code of knifeCodes.slice(1))
+      expect(await s.stock(s.skuIds.get(code)!)).toEqual([0])
+  })
+
+  it('[E6.5][AC52][AC53][AC-4] a fault in the dry run exits 1 and writes nothing', async () => {
+    const s = await scratchStore(knifeCodes.slice(1))
+    const before = await s.counts()
+
+    expect(await stockOnly(pool, s.storeId, true)).toBe(1)
+    expect(out.stderr).toContain('Nothing was written')
+    expect(await s.counts()).toEqual(before)
   })
 })
 
