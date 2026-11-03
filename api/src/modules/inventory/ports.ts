@@ -89,6 +89,6 @@ export interface StockRepository<T> {
   seed: (tx: T, storeId: string, items: { skuId: string, quantity: number }[], actorUserId: string) => Promise<void>
   // The open holds of one SKU, oldest first.
   openHolds: (tx: T, storeId: string, skuId: string) => Promise<Reservation[]>
-  // Sets on_hand and writes one `set` adjustment row (before, after, delta, actor) in the same transaction.
-  set: (tx: T, change: { storeId: string, skuId: string, before: number, after: number, actorUserId: string, at: Date }) => Promise<void>
+  // Sets on_hand and writes one `set` adjustment row (before, after, delta, actor, and the reason when given) in the same transaction.
+  set: (tx: T, change: { storeId: string, skuId: string, before: number, after: number, actorUserId: string, at: Date, reason?: string }) => Promise<void>
 }

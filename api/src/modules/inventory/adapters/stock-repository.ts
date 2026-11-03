@@ -61,13 +61,13 @@ export function createStockRepository(): StockRepository<Tx> {
       return rows.rows.map((row): Reservation => ({ orderId: row.order_id, acceptedAt: new Date(row.created_at), quantity: row.quantity }))
     },
 
-    async set(tx, { storeId, skuId, before, after, actorUserId, at }) {
+    async set(tx, { storeId, skuId, before, after, actorUserId, at, reason }) {
       await tx.execute(sql`
         update inventory.stock_items set on_hand = ${after}, row_version = row_version + 1, updated_at = ${at}
          where store_id = ${storeId} and sku_id = ${skuId}`)
       await tx.execute(sql`
-        insert into inventory.stock_adjustments (store_id, sku_id, kind, delta, on_hand_before, on_hand_after, actor_user_id, at)
-        values (${storeId}, ${skuId}, 'set', ${after - before}, ${before}, ${after}, ${actorUserId}, ${at})`)
+        insert into inventory.stock_adjustments (store_id, sku_id, kind, delta, on_hand_before, on_hand_after, actor_user_id, at, reason)
+        values (${storeId}, ${skuId}, 'set', ${after - before}, ${before}, ${after}, ${actorUserId}, ${at}, ${reason ?? null})`)
     },
   }
 }
