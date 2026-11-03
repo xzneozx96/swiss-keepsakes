@@ -148,6 +148,13 @@
       "when": 1793941753729,
       "tag": "0020_pin_delete_if_unused",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794028153729,
+      "tag": "0021_inventory",
+      "breakpoints": true
     }
   ]
 }
