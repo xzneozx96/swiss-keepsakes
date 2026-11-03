@@ -28,6 +28,7 @@ import { createUnitOfWork } from '../src/platform/db/unit-of-work.ts'
 import { createS3Client } from '../src/platform/storage.ts'
 import { isLocalDatabaseUrl } from './seed-guard.ts'
 import { applyOpeningStock, describeDecision, loadOpeningStock, openingStockReady, planFromDatabase } from './seed-opening-stock.ts'
+import { placeStoriesStep } from './seed-place-stories.ts'
 
 // `pnpm --filter @sk/api db:seed:curated [--dry-run] [--stock-only]` loads the curated places, categories and keepsakes of
 // `seed-data/curated/` into one store (owner, 2026-11-02). It only adds: a category, place or keepsake that exists is
@@ -38,6 +39,9 @@ import { applyOpeningStock, describeDecision, loadOpeningStock, openingStockRead
 // One step is not add-only (standing order 16): the opening stock of `seed-data/curated/opening-stock.json` sets a stock row
 // that still holds the migration's 0 with no history, through the inventory set-stock use case, as the store's owner.
 // Faults in that plan (an unknown code, a SKU with no row, no owner) stop the run before anything is written.
+// The last step adds the stories and editorial reviews of `seed-data/place-stories.ts` (seed-place-stories.ts, standing order 19):
+// add-only, and a story becomes the main story of a place that has none. `--replace-legacy-stories` also deletes the 13 old
+// stories once, through the Delete story use case. `--stories-only` runs that step alone.
 
 // Its message names a record and a reason, never the connection string, so the entry point may print it.
 class SeedError extends Error {
@@ -269,12 +273,16 @@ function printPlan(plan: Plan, snapshot: Snapshot, photos: Map<string, Uint8Arra
 }
 
 // `--stock-only` runs the opening-stock step alone: no category, place or keepsake is planned or created (owner, 2026-11-03).
+// `--stories-only` does the same for the stories step, and `--replace-legacy-stories` adds the one-time delete of the old stories to it.
 // A flag that is not known stops the run, so a typo cannot start the full seed.
+const knownFlags = ['--dry-run', '--stock-only', '--stories-only', '--replace-legacy-stories']
 export function parseFlags(argv: readonly string[]) {
   return {
     dry: argv.includes('--dry-run'),
     stockOnly: argv.includes('--stock-only'),
-    unknown: argv.filter(arg => arg !== '--dry-run' && arg !== '--stock-only'),
+    storiesOnly: argv.includes('--stories-only'),
+    replaceLegacyStories: argv.includes('--replace-legacy-stories'),
+    unknown: argv.filter(arg => !knownFlags.includes(arg)),
   }
 }
 
@@ -305,9 +313,9 @@ export async function stockOnly(pool: Pool, storeId: string, dry: boolean): Prom
 }
 
 async function main(): Promise<number> {
-  const { dry, stockOnly: onlyStock, unknown } = parseFlags(process.argv.slice(2))
+  const { dry, stockOnly: onlyStock, storiesOnly, replaceLegacyStories, unknown } = parseFlags(process.argv.slice(2))
   if (unknown.length > 0) {
-    process.stderr.write(`Unknown flag: ${unknown.join(' ')}. Known: --dry-run, --stock-only. Nothing was written.\n`)
+    process.stderr.write(`Unknown flag: ${unknown.join(' ')}. Known: ${knownFlags.join(', ')}. Nothing was written.\n`)
     return 2
   }
   const url = process.env.DATABASE_URL
@@ -326,6 +334,8 @@ async function main(): Promise<number> {
       return 1
     if (onlyStock)
       return await stockOnly(pool, storeId, dry)
+    if (storiesOnly)
+      return await placeStoriesStep(pool, storeId, { dry, replaceLegacy: replaceLegacyStories })
     const data = loadData()
     const snapshot = await readSnapshot(pool, storeId)
     const plan = buildPlan(data, snapshot)
@@ -346,8 +356,14 @@ async function main(): Promise<number> {
     const stockPlan = inventoryReady ? await planFromDatabase(pool, storeId, quantities, new Set(plan.keepsakesToCreate.map(record => record.skuCode))) : undefined
     if (stockPlan && reportStockPlan(stockPlan))
       return 1
-    if (dry)
-      return 0
+    if (dry) {
+      // The stories need their places; on a database that has none yet they are planned after the places exist.
+      if (plan.placesToCreate.length > 0) {
+        process.stdout.write('Stories: planned after the places exist.\n')
+        return 0
+      }
+      return await placeStoriesStep(pool, storeId, { dry, replaceLegacy: replaceLegacyStories })
+    }
     // The content use cases read the home column, so nothing can be written until migration 0016 is applied.
     if (!homeColumn) {
       process.stderr.write('Migration 0016 is not applied to this database. Nothing was written.\n')
@@ -361,7 +377,8 @@ async function main(): Promise<number> {
       process.stdout.write('Nothing to create.\n')
     else if (await run(pool, storeId, data, plan, snapshot, files) !== 0)
       return 1
-    return await openingStock(pool, storeId, quantities)
+    const stockCode = await openingStock(pool, storeId, quantities)
+    return stockCode !== 0 ? stockCode : await placeStoriesStep(pool, storeId, { dry, replaceLegacy: replaceLegacyStories })
   }
   finally {
     await pool.end()

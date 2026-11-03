@@ -84,13 +84,13 @@ describe('[seed-curated] the curated data maps to writes', () => {
 
 describe('[seed-curated] the flags pick the steps', () => {
   it('runs every step by default and with --dry-run alone', () => {
-    expect(parseFlags([])).toEqual({ dry: false, stockOnly: false, unknown: [] })
-    expect(parseFlags(['--dry-run'])).toEqual({ dry: true, stockOnly: false, unknown: [] })
+    expect(parseFlags([])).toEqual({ dry: false, stockOnly: false, storiesOnly: false, replaceLegacyStories: false, unknown: [] })
+    expect(parseFlags(['--dry-run'])).toEqual({ dry: true, stockOnly: false, storiesOnly: false, replaceLegacyStories: false, unknown: [] })
   })
 
   it('--stock-only keeps only the opening stock step, with or without --dry-run', () => {
-    expect(parseFlags(['--stock-only'])).toEqual({ dry: false, stockOnly: true, unknown: [] })
-    expect(parseFlags(['--stock-only', '--dry-run'])).toEqual({ dry: true, stockOnly: true, unknown: [] })
+    expect(parseFlags(['--stock-only'])).toEqual({ dry: false, stockOnly: true, storiesOnly: false, replaceLegacyStories: false, unknown: [] })
+    expect(parseFlags(['--stock-only', '--dry-run'])).toEqual({ dry: true, stockOnly: true, storiesOnly: false, replaceLegacyStories: false, unknown: [] })
   })
 
   it('reports a flag it does not know, so a typo cannot start the full seed', () => {
