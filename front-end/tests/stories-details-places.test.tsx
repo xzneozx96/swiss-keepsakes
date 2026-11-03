@@ -77,6 +77,14 @@ describe('[E4.3][AC30] the Places card and picker', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   }, 30000)
 
+  it('[E4.3][AC30] CORRECTNESS-E43-3 while the story is a review, the reviewed place cannot be removed and a note says to change it first', async () => {
+    serve({ kind: 'editorial_review', subjectPlaceId: uuid(1), placeIds: [uuid(1), uuid(2)] })
+    await openCard()
+    expect(await screen.findByRole('button', { name: 'Remove Pin 1' }, SLOW)).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Remove Pin 2' })).toBeEnabled()
+    expect(screen.getByText('The review is about this place. Change the reviewed place to remove it.')).toBeInTheDocument()
+  }, 30000)
+
   it('[E4.3][AC30] Review Focus 5: the 51st place changes nothing', async () => {
     const many = Array.from({ length: 51 }, (_, i) => pinItem(i + 1))
 

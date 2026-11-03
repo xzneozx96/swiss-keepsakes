@@ -46,6 +46,8 @@ export function PlacesCard({ storeId, group, language, body, onChange }: {
           {group.placeIds.map((id) => {
             const pin = byId.get(id)
             const name = nameOf(id)
+            // A review's place stays among the places (gate G-S8-E43-REVIEWPLACE): it is changed in the Review card first.
+            const reviewed = group.kind === 'editorial_review' && group.subjectPlaceId === id
 
             return (
               <li key={id} className="flex items-center gap-2 py-1.5">
@@ -55,11 +57,13 @@ export function PlacesCard({ storeId, group, language, body, onChange }: {
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate text-sm font-medium" title={name}>{name}</span>
                   {pin && pin.status !== 'published' && <span className="truncate text-xs text-muted">{t('storyLists.places.notPublished')}</span>}
+                  {reviewed && <span className="text-xs text-pretty text-muted">{t('storyLists.places.reviewed')}</span>}
                 </span>
                 <Button
                   isIconOnly
                   aria-label={t('storyLists.remove', { name })}
                   className="shrink-0 text-danger max-lg:size-11"
+                  isDisabled={reviewed}
                   size="sm"
                   variant="tertiary"
                   onPress={() => onChange({ placeIds: group.placeIds.filter(item => item !== id) })}

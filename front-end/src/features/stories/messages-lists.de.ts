@@ -12,6 +12,7 @@ export const storiesListsDe: Record<keyof typeof storiesListsEn, string> = {
   'storyLists.places.notPublished': 'Nicht veröffentlicht',
   'storyLists.places.untagged': 'Im Text verlinkt, aber nicht zugeordnet: {names}. Ein Pin-Link ordnet den Ort nicht zu.',
   'storyLists.places.full': '{count} gewählt, mehr geht nicht. Entfernen Sie einen, um einen anderen zu wählen.',
+  'storyLists.places.reviewed': 'Die Besprechung handelt von diesem Ort. Ändern Sie zuerst den besprochenen Ort, um ihn zu entfernen.',
   'storyLists.keepsakes.title': 'Andenken',
   'storyLists.keepsakes.help': 'Bis zu 6 veröffentlichte Andenken in Ihrer Reihenfolge, ohne Preise.',
   'storyLists.keepsakes.choose': 'Andenken wählen · {count} von 6',

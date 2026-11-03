@@ -11,6 +11,7 @@ export const storiesListsEn = {
   'storyLists.places.notPublished': 'Not published',
   'storyLists.places.untagged': 'Linked in the text but not tagged: {names}. A pin link does not tag the place.',
   'storyLists.places.full': '{count} chosen, the most a story can have. Remove one to add another.',
+  'storyLists.places.reviewed': 'The review is about this place. Change the reviewed place to remove it.',
   'storyLists.keepsakes.title': 'Keepsakes',
   'storyLists.keepsakes.help': 'Up to 6 published keepsakes, in your order, shown without prices.',
   'storyLists.keepsakes.choose': 'Choose keepsakes · {count} of 6',
