@@ -207,6 +207,16 @@ describe('[E2.10] /api/me still answers staff and the Super Admin, who are guest
     expect(await stores('ownerElsewhere')).toEqual([{ storeId: zug, role: 'owner', status: 'live' }])
   })
 
+  it('[E8.7] /api/me says whether the caller is the Super Admin: true for one, false for a guest and for staff', async () => {
+    const { app } = createGuardedApp(people)
+    const flag = async (who: string) => ((await (await app.request('/api/me', { headers: signedInAs(who) })).json()) as { platformAdmin: boolean }).platformAdmin
+
+    expect(await flag('superAdmin')).toBe(true)
+    expect(await flag('guest')).toBe(false)
+    expect(await flag('owner')).toBe(false)
+    expect(await flag('both')).toBe(false)
+  })
+
   it('[E2.10] an anonymous request still gets 401', async () => {
     const { app } = createGuardedApp(people)
 

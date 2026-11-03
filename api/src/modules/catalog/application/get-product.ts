@@ -6,13 +6,13 @@ import { mayEditCatalog } from './access.ts'
 import { fail, ok } from './failure.ts'
 import { describe } from './product-detail.ts'
 
-export function makeGetProduct<T>({ uow, products, media, sales }: CatalogDeps<T>) {
+export function makeGetProduct<T>({ uow, products, media, sales, stockLevels }: CatalogDeps<T>) {
   return async (actor: Actor, storeId: string, productId: string): Promise<Result<ProductDetail>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
     return uow.run(async (tx) => {
       const product = await products.find(tx, storeId, productId)
-      return product ? ok(await describe({ media, sales }, tx, product)) : fail({ reason: 'not-found' })
+      return product ? ok(await describe({ media, sales, stockLevels }, tx, product)) : fail({ reason: 'not-found' })
     })
   }
 }

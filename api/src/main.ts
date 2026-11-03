@@ -4,9 +4,12 @@ import process from 'node:process'
 import { guardUseCases as guardCatalogUseCases } from './modules/catalog/adapters/database-errors.ts'
 import { createMediaDirectory } from './modules/catalog/adapters/media-directory.ts'
 import { createMediaUses } from './modules/catalog/adapters/media-uses.ts'
+import { createPickupRepository } from './modules/catalog/adapters/pickup-repository.ts'
+import { registerPickupRoutes } from './modules/catalog/adapters/pickup-routes.ts'
 import { createProductRepository } from './modules/catalog/adapters/product-repository.ts'
 import { registerCatalogRoutes } from './modules/catalog/adapters/routes.ts'
-import { makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from './modules/catalog/index.ts'
+import { createSkuDirectory } from './modules/catalog/adapters/sku-directory.ts'
+import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetPickupPlace, makeGetProduct, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from './modules/catalog/index.ts'
 import { createAddressRegister } from './modules/content/adapters/address-register-fetch.ts'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
@@ -35,6 +38,10 @@ import { invitationPreviewPath, registerIdentityRoutes } from './modules/identit
 import { createStoreRepository } from './modules/identity/adapters/store-repository.ts'
 import { createUserDirectory } from './modules/identity/adapters/user-directory.ts'
 import { invitationScreens, makeAcceptInvitation, makeCreateStore, makeGetOnboarding, makeInvitationLink, makeInviteManager, makeListMembers, makeListMyStores, makeListStores, makeLoadIdentity, makeOpenStoreForSale, makePreviewInvitation, makeRemoveMember, makeResendManagerInvitation, makeResendOwnerInvitation, makeRevokeInvitation, makeUpdateStoreInformation, newInvitationToken } from './modules/identity/index.ts'
+import { guardUseCases as guardInventoryUseCases } from './modules/inventory/adapters/database-errors.ts'
+import { registerInventoryRoutes } from './modules/inventory/adapters/routes.ts'
+import { createStockRepository } from './modules/inventory/adapters/stock-repository.ts'
+import { makeGetStockItem, makeListStock, makeReservedBySku, makeSeedStock, makeSetManyStock, makeSetStock, makeStockLevels } from './modules/inventory/index.ts'
 import { createMailJobScrubber } from './modules/notifications/adapters/job-scrubber.ts'
 import { createMailQueues, mailQueues, startMailWorkers } from './modules/notifications/adapters/jobs.ts'
 import { createLogAlert } from './modules/notifications/adapters/mail-alert.ts'
@@ -252,6 +259,9 @@ async function main() {
       getMap: makeGetMap(readDeps),
     }
     const contentMedia = createMediaRepository()
+    // The catalog gets its stock through three functions of the inventory module (ADR-013): a new SKU's row in the write's
+    // transaction, the units open orders hold, and the on hand and reserved figures.
+    const stockRepository = createStockRepository()
     const catalogDeps = {
       uow,
       products: createProductRepository(),
@@ -260,6 +270,9 @@ async function main() {
       clock: systemClock,
       // A deleted keepsake leaves no link behind in a story or a tour (ADR-013: content owns those rows).
       keepsakeLinks: createKeepsakeLinks(),
+      stock: { seed: makeSeedStock({ stock: stockRepository }) },
+      reservations: { reservedBySku: makeReservedBySku({ stock: stockRepository }) },
+      stockLevels: { levels: makeStockLevels({ stock: stockRepository }) },
     }
     const catalogUseCases = guardCatalogUseCases({
       listProducts: makeListProducts(catalogDeps),
@@ -274,10 +287,36 @@ async function main() {
       saveOptions: makeSaveOptions(catalogDeps),
       createVariant: makeCreateVariant(catalogDeps),
     })
+    // Inventory reads the live variants through a directory built from the catalog's data (ADR-013: it never joins a
+    // catalog table), and the photos through the same media lookup the catalog uses.
+    const inventoryDeps = {
+      uow,
+      stock: stockRepository,
+      skus: createSkuDirectory(),
+      media: catalogDeps.media,
+      audit,
+      clock: systemClock,
+    }
+    const inventoryUseCases = guardInventoryUseCases({
+      listStock: makeListStock(inventoryDeps),
+      getStockItem: makeGetStockItem(inventoryDeps),
+      setStock: makeSetStock(inventoryDeps),
+      setManyStock: makeSetManyStock(inventoryDeps),
+    })
+    const pickupDeps = { uow, pickups: createPickupRepository(), audit, clock: systemClock }
+    const pickupUseCases = guardCatalogUseCases({
+      listPickupPlaces: makeListPickupPlaces(pickupDeps),
+      getPickupPlace: makeGetPickupPlace(pickupDeps),
+      createPickupPlace: makeCreatePickupPlace(pickupDeps),
+      savePickupPlace: makeSavePickupPlace(pickupDeps),
+      reorderPickupPlaces: makeReorderPickupPlaces(pickupDeps),
+      archivePickupPlace: makeArchivePickupPlace(pickupDeps),
+      restorePickupPlace: makeRestorePickupPlace(pickupDeps),
+    })
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),
       withoutIdempotencyKey: [invitationPreviewPath, mediaLookupPath],
-      routes: [app => registerIdentityRoutes(app, useCases), app => registerContentRoutes(app, contentUseCases), app => registerCatalogRoutes(app, catalogUseCases)],
+      routes: [app => registerIdentityRoutes(app, useCases), app => registerContentRoutes(app, contentUseCases), app => registerCatalogRoutes(app, catalogUseCases), app => registerInventoryRoutes(app, inventoryUseCases), app => registerPickupRoutes(app, pickupUseCases)],
     }
     const server = await startHttpServer(createApp(logger, checkHealth, identity, commands).fetch, config.HOST, config.PORT, logger)
     stops.unshift(server.close)

@@ -1,4 +1,4 @@
-import type { MediaInfo, Product, SalesDirectory } from '../ports.ts'
+import type { MediaInfo, Product, SalesDirectory, StockLevel, StockLevels } from '../ports.ts'
 import type { Failure } from './failure.ts'
 import { workingDoc } from './product-doc.ts'
 
@@ -12,26 +12,29 @@ export interface ProductDetail {
   hasOrders: boolean
   // The variants an order line names, so removing one archives it. Empty when no sales directory is wired.
   soldSkuIds: Set<string>
+  // On hand and reserved by variant id, archived ones too. A variant with no row (or no stock port wired) is not in it.
+  stock: Map<string, StockLevel>
 }
 
 export interface MediaLookup<T> {
   find: (tx: T, storeId: string, ids: string[]) => Promise<MediaInfo[]>
 }
 
-export async function describe<T>({ media, sales }: { media: MediaLookup<T>, sales?: SalesDirectory<T> }, tx: T, product: Product): Promise<ProductDetail> {
+export async function describe<T>({ media, sales, stockLevels }: { media: MediaLookup<T>, sales?: SalesDirectory<T>, stockLevels?: StockLevels<T> }, tx: T, product: Product): Promise<ProductDetail> {
   const ids = workingDoc(product).media
   const variantIds = product.variants.flatMap(variant => variant.mediaId ?? [])
   // One lookup for the keepsake's photos and its variants' photos.
   const found = new Map((await media.find(tx, product.storeId, [...ids, ...variantIds])).map(row => [row.id.toLowerCase(), row]))
   const sold = sales ? await sales.soldProductIds(tx, product.storeId, [product.id]) : new Set<string>()
   const soldSkuIds = sales && product.variants.length > 0 ? await sales.soldSkuIds(tx, product.storeId, product.variants.map(variant => variant.id)) : new Set<string>()
+  const stock = stockLevels && product.variants.length > 0 ? await stockLevels.levels(tx, product.storeId, product.variants.map(variant => variant.id)) : new Map<string, StockLevel>()
   const variantPhotos = new Map(product.variants.flatMap((variant) => {
     const photo = variant.mediaId ? found.get(variant.mediaId.toLowerCase()) : undefined
 
     return photo ? [[variant.id, photo] as const] : []
   }))
 
-  return { product, photos: ids.flatMap(id => found.get(id.toLowerCase()) ?? []), variantPhotos, hasOrders: sold.has(product.id), soldSkuIds }
+  return { product, photos: ids.flatMap(id => found.get(id.toLowerCase()) ?? []), variantPhotos, hasOrders: sold.has(product.id), soldSkuIds, stock }
 }
 
 // A retired file is reported before an unusable one, so the editor hears first about what it can fix by choosing

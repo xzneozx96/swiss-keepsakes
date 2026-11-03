@@ -16,7 +16,7 @@ import { isSkuCode } from './sku-code.ts'
 // open orders reserve units. Removed (owner, 2026-11-02) is the keepsake's rule for a variant: one that no order line
 // names is deleted and frees its combination, one that does is archived. Hiding the last variant for sale on a published keepsake is allowed: guests then find
 // nothing to buy, and the publish card says so.
-export function makeSaveVariant<T>({ uow, products, media, audit, clock, reservations, sales }: CatalogDeps<T>) {
+export function makeSaveVariant<T>({ uow, products, media, audit, clock, reservations, sales, stockLevels }: CatalogDeps<T>) {
   return async (actor: Actor, storeId: string, productId: string, skuId: string, request: VariantChangeRequest, requestId: string | null): Promise<Result<ProductDetail>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -57,7 +57,7 @@ export function makeSaveVariant<T>({ uow, products, media, audit, clock, reserva
           before: { status: variant.status, skuCode: variant.skuCode },
           requestId,
         })
-        return ok(await describe({ media, sales }, tx, left))
+        return ok(await describe({ media, sales, stockLevels }, tx, left))
       }
       const photoRefused = await checkVariantPhotos(media, tx, storeId, [changes.mediaId])
       if (photoRefused)
@@ -77,7 +77,7 @@ export function makeSaveVariant<T>({ uow, products, media, audit, clock, reserva
           requestId,
         })
       }
-      return ok(await describe({ media, sales }, tx, saved))
+      return ok(await describe({ media, sales, stockLevels }, tx, saved))
     })
   }
 }

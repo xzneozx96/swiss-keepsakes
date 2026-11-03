@@ -9,6 +9,7 @@ import {
   LocaleProvider,
   storedLanguage,
 } from '@/contexts/locale-context'
+import { AnalyticsRoot } from '@/features/analytics/components/analytics-root'
 import { followSession } from '@/features/auth/lib/session-sync'
 import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
@@ -91,6 +92,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <DataClientProvider client={demo.dataClient}>
           <LocaleProvider>
             <ApiFeedbackBridge feedback={demo.feedback} />
+            <AnalyticsRoot />
             <DemoProvider store={demo.store}>{children}</DemoProvider>
           </LocaleProvider>
         </DataClientProvider>

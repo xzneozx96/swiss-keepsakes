@@ -447,11 +447,12 @@ describe('[E6.1][list] the keepsake list', () => {
     const second = await created({ name: { de: 'Zweites' }, photoIds: [] })
     await act(first.id, 'publish', 1)
 
+    // The variants are created with no quantity, so each has 0 in stock and counts as sold out (E6.3).
     const list = await (await call(products, { headers: owner.headers })).json() as { items: { id: string, name: object, status: string, cover: { id: string } | null, variantCount: number, soldOutCount: number }[] }
 
     expect(list.items.map(item => item.id)).toEqual([second.id, first.id])
-    expect(list.items[0]).toMatchObject({ name: { de: 'Zweites' }, status: 'draft', cover: null, variantCount: 1, soldOutCount: 0 })
-    expect(list.items[1]).toMatchObject({ name: { en: 'First' }, status: 'published', cover: { id: photo }, variantCount: 1, soldOutCount: 0 })
+    expect(list.items[0]).toMatchObject({ name: { de: 'Zweites' }, status: 'draft', cover: null, variantCount: 1, soldOutCount: 1 })
+    expect(list.items[1]).toMatchObject({ name: { en: 'First' }, status: 'published', cover: { id: photo }, variantCount: 1, soldOutCount: 1 })
   })
 
   it('[E6.1][list] counts only the variants that are not archived, and shows the draft photo of a published keepsake', async () => {

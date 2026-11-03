@@ -1,12 +1,16 @@
-import type { SalesDirectory } from '../../src/modules/catalog/ports.ts'
+import type { OpenAPIHono } from '@hono/zod-openapi'
+import type { SalesDirectory, StockSeeding } from '../../src/modules/catalog/ports.ts'
 import type { Tx } from '../../src/platform/db/client.ts'
+import type { AppEnv } from '../../src/platform/http/app.ts'
 import type { openTestDatabase } from './support.ts'
 import { randomUUID } from 'node:crypto'
 import { guardUseCases } from '../../src/modules/catalog/adapters/database-errors.ts'
 import { createMediaDirectory } from '../../src/modules/catalog/adapters/media-directory.ts'
+import { createPickupRepository } from '../../src/modules/catalog/adapters/pickup-repository.ts'
+import { registerPickupRoutes } from '../../src/modules/catalog/adapters/pickup-routes.ts'
 import { createProductRepository } from '../../src/modules/catalog/adapters/product-repository.ts'
 import { registerCatalogRoutes } from '../../src/modules/catalog/adapters/routes.ts'
-import { makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
+import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetPickupPlace, makeGetProduct, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
 import { createKeepsakeLinks } from '../../src/modules/content/adapters/keepsake-links.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
 import { mediaView } from '../../src/modules/content/adapters/media-view.ts'
@@ -14,6 +18,8 @@ import { createAccessRepository } from '../../src/modules/identity/adapters/acce
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
 import { makeListMyStores, makeLoadIdentity } from '../../src/modules/identity/index.ts'
+import { createStockRepository } from '../../src/modules/inventory/adapters/stock-repository.ts'
+import { makeReservedBySku, makeSeedStock, makeStockLevels } from '../../src/modules/inventory/index.ts'
 import { createAuditLog } from '../../src/platform/audit.ts'
 import { createAuth, createSessionReader, ownOrigin } from '../../src/platform/auth.ts'
 import { systemClock } from '../../src/platform/clock.ts'
@@ -35,7 +41,7 @@ const secret = 'test-only-secret-0123456789-abcdefghij'
 const randomIp = () => `198.51.${Math.floor(Math.random() * 250) + 1}.${Math.floor(Math.random() * 250) + 1}`
 
 // `slugsTaken` replaces the slug read, so a test can make two publishes read the same slug as free (the race).
-export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDatabase>, options: { slugsTaken?: () => Set<string>, sales?: SalesDirectory<Tx> } = {}) {
+export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDatabase>, options: { slugsTaken?: () => Set<string>, sales?: SalesDirectory<Tx>, extraRoutes?: ((app: OpenAPIHono<AppEnv>) => void)[], wrapSeed?: (seed: StockSeeding<Tx>['seed']) => StockSeeding<Tx>['seed'] } = {}) {
   const codes = new Map<string, string>()
   const uow = createUnitOfWork(db)
   const auth = createAuth({
@@ -49,6 +55,9 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
   })
   const storage = createFakeStorage(systemClock)
   const contentMedia = createMediaRepository()
+  // The inventory functions the composition root hands the catalog. `wrapSeed` lets a test fail a write after the real seed.
+  const stockRepository = createStockRepository()
+  const seed = makeSeedStock({ stock: stockRepository })
   const deps = {
     uow,
     products: options.slugsTaken ? { ...createProductRepository(), slugsTaken: async () => options.slugsTaken!() } : createProductRepository(),
@@ -56,6 +65,9 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
     audit: createAuditLog(systemClock),
     clock: systemClock,
     keepsakeLinks: createKeepsakeLinks(),
+    stock: { seed: options.wrapSeed ? options.wrapSeed(seed) : seed },
+    reservations: { reservedBySku: makeReservedBySku({ stock: stockRepository }) },
+    stockLevels: { levels: makeStockLevels({ stock: stockRepository }) },
     // The orders module is not built: a test names the sold keepsakes itself.
     ...(options.sales && { sales: options.sales }),
   }
@@ -72,6 +84,16 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
     saveOptions: makeSaveOptions(deps),
     createVariant: makeCreateVariant(deps),
   })
+  const pickupDeps = { uow, pickups: createPickupRepository(), audit: deps.audit, clock: systemClock }
+  const pickupUseCases = guardUseCases({
+    listPickupPlaces: makeListPickupPlaces(pickupDeps),
+    getPickupPlace: makeGetPickupPlace(pickupDeps),
+    createPickupPlace: makeCreatePickupPlace(pickupDeps),
+    savePickupPlace: makeSavePickupPlace(pickupDeps),
+    reorderPickupPlaces: makeReorderPickupPlaces(pickupDeps),
+    archivePickupPlace: makeArchivePickupPlace(pickupDeps),
+    restorePickupPlace: makeRestorePickupPlace(pickupDeps),
+  })
   const app = createApp(createLogger('silent'), async () => ({ database: true, jobs: true }), {
     authHandler: auth.handler,
     origin,
@@ -80,7 +102,7 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
     listMyStores: makeListMyStores({ uow, memberships: createMembershipRepository() }),
   }, {
     idempotency: idempotency({ db, clock: systemClock, actorId: idempotencyActor }),
-    routes: [routes => registerCatalogRoutes(routes, useCases)],
+    routes: [routes => registerCatalogRoutes(routes, useCases), routes => registerPickupRoutes(routes, pickupUseCases), ...(options.extraRoutes ?? [])],
   })
 
   async function call(path: string, init: { method?: string, headers?: Record<string, string>, body?: object, key?: string | null } = {}) {

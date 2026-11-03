@@ -2,7 +2,7 @@ import type { PublicMapItem } from '@sk/api-contract'
 
 import { Button } from '@heroui/react'
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useId, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 
 import { BulletListIcon, CloseIcon, FilterIcon, PickupIcon } from '@/components/icons'
 import { useMap } from '@/components/map/map-context'
@@ -15,6 +15,7 @@ import { mapQueries, useMapData } from '@/features/map/api/queries'
 import { categoryName, isHighlighted, keepHighlighted, pinCategoryNames, topLevelCategories } from '@/features/map/lib/categories'
 import { CARD_ROW_BOTTOM, CARD_ROW_HEIGHT, CONTROLS, MAP_BOTTOM_CLEAR } from '@/features/map/lib/layout'
 import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
+import { track, useTrackAllowed } from '@/lib/analytics/track'
 import { apiEnabled } from '@/lib/api-mode'
 import { CategoriesSheet } from './categories-sheet'
 import { MapControlsSkeleton } from './map-skeleton'
@@ -116,16 +117,36 @@ export function MapScreen({ place }: { place?: string }) {
       setSelectedId(kept[0]!.id)
   }
   const deepLinkedId = handledPlace !== undefined && handledPlace === place ? ranked.find(pin => pin.slug === place)?.id : undefined
+  const reportedDeepLinkRef = useRef<string | undefined>(undefined)
+
+  const trackAllowed = useTrackAllowed()
+
+  // The deep link counts as an opened pin once. While the guest gate holds (the session is not answered) the pin is not marked reported:
+  // it is sent when the gate opens, and never when the gate has closed for a merchant.
+  useEffect(() => {
+    if (deepLinkedId && trackAllowed && reportedDeepLinkRef.current !== deepLinkedId) {
+      reportedDeepLinkRef.current = deepLinkedId
+      track('pin_open', { pageType: 'place', contentId: deepLinkedId, language })
+    }
+  }, [deepLinkedId, language, trackAllowed])
 
   // The deep link's card gets focus on its title, as a tapped pin's does.
   useEffect(() => {
     if (deepLinkedId)
       requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-card="${deepLinkedId}"] h2`)?.focus({ preventScroll: true }))
-  }, [deepLinkedId])
+  }, [deepLinkedId, language])
+
+  // Every way a guest opens a pin other than the automatic first card and the deep link (reported in the effect above): the pin opens
+  // for analytics (ADR-032) unless it is the card already open.
+  function select(id: string | undefined) {
+    if (id !== undefined && id !== openId)
+      track('pin_open', { pageType: 'place', contentId: id, language })
+    setSelectedId(id)
+  }
 
   // A pin tap, a list row or an applied filter moves focus to the card's title; a swipe leaves focus alone.
   function openCard(id: string) {
-    setSelectedId(id)
+    select(id)
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-card="${id}"] h2`)?.focus({ preventScroll: true }))
   }
 
@@ -218,15 +239,15 @@ export function MapScreen({ place }: { place?: string }) {
           <PlaceCardRow
             extrasOf={pin => ({
               categories: pinCategoryNames(pin, data.categories, language),
-              // Only the open card has read its pin: the others show no tip until they open, and open the position.
-              ...(pin.id === openId && detail.data ? { tip: detail.data.tip ? { text: detail.data.tip, language: detail.data.language } : undefined, mapsLink: detail.data.mapsLink } : {}),
+              // Only the open card has read its pin: the others open the position. The card shows no tip (owner 2026-11-03), so it never changes size when the read arrives.
+              ...(pin.id === openId && detail.data ? { mapsLink: detail.data.mapsLink } : {}),
             })}
             photoOf={pin => pin.photoUrl ?? undefined}
             pins={kept}
             selectedId={openId}
             onClose={closeCard}
             onMore={() => setMoreOpen(true)}
-            onSelect={setSelectedId}
+            onSelect={select}
           />
         )}
       </MapView>
@@ -273,7 +294,9 @@ export function MapScreen({ place }: { place?: string }) {
           position={{ index, count: kept.length }}
           onClose={() => setMoreOpen(false)}
           onRetry={() => void detail.refetch()}
-          onStep={delta => setSelectedId(kept[index + delta]?.id)}
+          onStep={delta => select(kept[index + delta]?.id)}
+          onStoryClick={() => track('pin_to_story_click', { pageType: 'place', contentId: openPin.id, language })}
+          onOutboundClick={() => track('outbound_click', { pageType: 'place', contentId: openPin.id, language })}
         />
       )}
 

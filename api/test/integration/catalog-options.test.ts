@@ -441,6 +441,23 @@ describe('[E6.2][AC52] creating a variant', () => {
     expect((await response.json() as Problem).errors?.[0]).toMatchObject({ code: 'no-options-one-variant', params: { code: product.variants[0]!.skuCode } })
   })
 
+  it('[FIX-one-variant][AC3] a keepsake with no option and no variant gets its one variant from the create route, with no values', async () => {
+    const { plain, postVariant, patchVariant, get } = await setup()
+    const product = await plain()
+
+    // The merchant deleted the only variant (T-019): nothing is left in the database.
+    expect((await patchVariant(product.id, product.variants[0]!.id, { status: 'removed' })).status).toBe(200)
+    expect((await get(product.id)).variants).toEqual([])
+    const response = await postVariant(product.id, { skuCode: null, priceRappen: 3900 })
+
+    expect(response.status).toBe(201)
+    const created = await response.json() as View
+    expect(created.options).toEqual([])
+    expect(created.variants).toEqual([expect.objectContaining({ skuCode: null, priceRappen: 3900, status: 'published', values: {} })])
+    expect((await pool.query('select count(*)::int as n from catalog.skus where product_id = $1', [product.id])).rows[0].n).toBe(1)
+    expect((await postVariant(product.id, { skuCode: null, priceRappen: 100 })).status).toBe(422)
+  })
+
   it('[E6.2][AC52] a manager may create a variant', async () => {
     const { create, postVariant, manager } = await setup()
     const made = await (await create({ options: [sizeOption], variants: [{ skuCode: code(), priceRappen: 100, values: { size: 's' } }] })).json() as View

@@ -19,8 +19,10 @@ export type CommandName<F extends Feature> = Exclude<
 interface ReadsWithInput {
   stores: 'onboarding' | 'members' | 'previewInvitation'
   categories: 'list'
+  inventory: 'list' | 'get'
   keepsakes: 'list' | 'get'
   media: 'list' | 'uses' | 'get' | 'lookup'
+  pickup: 'list'
   places: 'list' | 'get' | 'storyOptions' | 'storyVersion'
   stories: 'list' | 'group' | 'links'
 }
@@ -59,6 +61,10 @@ export const commandAffects: {
     replyAsShop: [queryKeys.content.comments],
     setCommentHidden: [queryKeys.content.comments],
     deleteComment: [queryKeys.content.comments],
+  },
+  inventory: {
+    // The stock figure is also on the keepsake list (sold-out count) and the keepsake page (a variant's stock).
+    set: [queryKeys.inventory.list, queryKeys.inventory.detail, queryKeys.keepsakes.list, queryKeys.keepsakes.detail],
   },
   keepsakes: {
     create: [queryKeys.keepsakes.list],
@@ -114,6 +120,12 @@ export const commandAffects: {
     recordPayout: [queryKeys.partners.partnerPayouts],
     revokeReportLink: [queryKeys.partners.partners],
     issueReportLink: [queryKeys.partners.partners],
+  },
+  pickup: {
+    create: [queryKeys.pickup.list],
+    save: [queryKeys.pickup.list],
+    archive: [queryKeys.pickup.list],
+    restore: [queryKeys.pickup.list],
   },
   places: {
     create: [queryKeys.places.list, queryKeys.places.pin],
