@@ -147,6 +147,16 @@ describe('[E6.3][AC05][AC53] AC-1 the inventory list', () => {
   })
 })
 
+describe('[E6.3][AC05][AC53] AC-3 a row opens the item page', () => {
+  it('[E6.3][AC05][AC53] AC-3 links the variant of each row to its item page', async () => {
+    answerWith(three)
+    renderInventory()
+    const { grid } = await loaded('VX-L-SWAN')
+
+    expect(within(grid).getByRole('link', { name: /Large \/ Swan/ })).toHaveAttribute('href', `/store/products/inventory/${skuOf(1)}`)
+  })
+})
+
 describe('[E6.3][AC05][AC53] AC-2 editing a quantity in the list', () => {
   const rows = [{ skuId: skuOf(1), code: 'VX-S-SWAN', onHand: 5, reserved: 2, available: 3 }]
   const box = (grid: HTMLElement) => within(grid).getByRole('textbox', { name: 'In stock for VX-S-SWAN' })

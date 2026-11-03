@@ -2,6 +2,7 @@ import type { StockRow } from '@sk/api-contract'
 import type { DataTableColumn } from '@/components/data-table'
 
 import { Skeleton } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
 
 import { DataTable } from '@/components/data-table'
 import { OrdersIcon } from '@/components/icons'
@@ -19,20 +20,20 @@ function useRowText() {
   return { t, keepsake, variant }
 }
 
-/** Thumbnail, the variant's title (the keepsake's name when it has no options), the code and the keepsake's name. The table hides the code from 1280 px, where it has a column. */
+/** A link to the item page: the thumbnail, the variant's title (the keepsake's name when it has no options), the code and the keepsake's name. The table hides the code from 1280 px, where it has a column. */
 function VariantCell({ row, codeClassName = '' }: { row: StockRow, codeClassName?: string }) {
   const { keepsake, variant } = useRowText()
   const title = variant(row) || keepsake(row)
 
   return (
-    <div className="flex min-w-0 items-center gap-3">
+    <Link className="flex min-w-0 items-center gap-3 rounded-xl outline-none focus-visible:focus-ring" params={{ skuId: row.skuId }} to="/store/products/inventory/$skuId">
       <KeepsakePhoto className="size-11 shrink-0 rounded-xl" media={row.photo} width={160} />
       <span className="flex min-w-0 flex-col break-words">
         <span className="text-sm font-medium">{title}</span>
         {row.code && <span className={`font-mono text-xs text-muted ${codeClassName}`.trim()}>{row.code}</span>}
         {variant(row) && <span className="text-xs text-muted">{keepsake(row)}</span>}
       </span>
-    </div>
+    </Link>
   )
 }
 
