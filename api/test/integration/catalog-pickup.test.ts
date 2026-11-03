@@ -26,7 +26,7 @@ interface View {
   hours: Span[]
   rowVersion: number
 }
-interface Problem { type: string, errors?: { in: string, path: string, message: string }[] }
+interface Problem { type: string, errors?: { in: string, path: string, message: string, code?: string }[] }
 
 const monToSat = [1, 2, 3, 4, 5, 6].map(weekday => ({ weekday, opens: '10:00', closes: '18:00' }))
 
@@ -205,6 +205,48 @@ describe('[E6.6][AC26] pickup points over HTTP', () => {
     const response = await env.call(base, { headers: stranger.headers })
 
     expect(response.status).toBe(403)
+  })
+
+  it('[E6.6][AC26] a non-member gets 403 on every write and nothing changes', async () => {
+    const { base, created, send, list } = await setup({ fresh: true })
+    const point = await created()
+    const stranger = await env.signIn()
+    const as = { ...stranger.headers, 'If-Match': '1' }
+    const body = { name: { en: 'Shop' }, address: { en: 'Hertensteinstrasse 1' }, hours: monToSat }
+    const calls = [
+      env.call(base, { method: 'POST', headers: stranger.headers, body }),
+      env.call(`${base}/${point.id}`, { method: 'PATCH', headers: as, body: { name: { en: 'Mine' } } }),
+      env.call(`${base}/order`, { method: 'PUT', headers: stranger.headers, body: { ids: [point.id] } }),
+      env.call(`${base}/${point.id}/archive`, { method: 'POST', headers: as }),
+      env.call(`${base}/${point.id}/restore`, { method: 'POST', headers: as }),
+    ]
+
+    expect((await Promise.all(calls)).map(response => response.status)).toEqual([403, 403, 403, 403, 403])
+    expect(await list()).toEqual([point])
+    expect((await send(`/${point.id}`, 'GET')).status).toBe(200)
+  })
+
+  it('[E6.6][AC26] archive with a stale If-Match is 412 and changes nothing', async () => {
+    const { created, send, withVersion, list } = await setup({ fresh: true })
+    const point = await created()
+    expect((await send(`/${point.id}`, 'PATCH', { name: { en: 'Second' } }, withVersion(1))).status).toBe(200)
+
+    expect((await send(`/${point.id}/archive`, 'POST', undefined, withVersion(1))).status).toBe(412)
+    expect(await list()).toEqual([expect.objectContaining({ id: point.id, archived: false, rowVersion: 2 })])
+  })
+
+  it('[E6.6][AC26] the 101st point is 422 pickup-limit on name, archived points counted', async () => {
+    const { store, create, created, list } = await setup({ fresh: true })
+    const first = await created()
+    await pool.query(
+      `insert into catalog.pickup_places (store_id, name, address, position, archived_at) select $1, '{"en":"Bulk"}'::jsonb, '{"en":"Bulk"}'::jsonb, g, now() from generate_series(2, 100) g`,
+      [store.storeId],
+    )
+
+    const refused = await create({})
+    expect(refused.status).toBe(422)
+    expect((await refused.json() as Problem).errors).toEqual([expect.objectContaining({ path: 'name', code: 'pickup-limit' })])
+    expect(await list()).toEqual([first])
   })
 
   it('[E6.6][AC26] a create and an archive each write one audit entry', async () => {

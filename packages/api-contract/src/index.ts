@@ -112,7 +112,6 @@ export {
 export { healthSchema } from './health.ts'
 export {
   PICKUP_MAX_PLACES,
-  PICKUP_MAX_SPANS,
   type PickupPlace,
   type PickupPlaceList,
   type PickupPlaceListQuery,

@@ -1,8 +1,10 @@
 import type { Actor } from '@sk/domain/identity'
 import type { PickupDeps } from '../../../src/modules/catalog/application/deps.ts'
 import type { PickupPlace, PickupPlaceRepository } from '../../../src/modules/catalog/ports.ts'
+import { PICKUP_MAX_PLACES as CONTRACT_MAX_PLACES } from '@sk/api-contract'
 import { describe, expect, it, vi } from 'vitest'
-import { makeArchivePickupPlace, makeCreatePickupPlace, makeReorderPickupPlaces, makeRestorePickupPlace, makeSavePickupPlace } from '../../../src/modules/catalog/application/pickup-places.ts'
+import { PICKUP_MAX_PLACES } from '../../../src/modules/catalog/application/pickup-rules.ts'
+import { makeArchivePickupPlace, makeCreatePickupPlace, makeGetPickupPlace, makeListPickupPlaces, makeReorderPickupPlaces, makeRestorePickupPlace, makeSavePickupPlace } from '../../../src/modules/catalog/application/pickup-places.ts'
 
 const storeId = '0190f0c2-0000-7000-8000-00000000000a'
 const owner: Actor = { kind: 'staff', userId: 'u1', guestId: 'g-u1', stores: new Map([[storeId, 'owner']]) }
@@ -27,6 +29,7 @@ function setup(rows: PickupPlace[] = [place('a'), place('b', { position: 2 })]) 
   const repo = {
     find: vi.fn(async (_tx: null, _store: string, id: string) => rows.find(row => row.id === id)),
     lockList: vi.fn(async () => {}),
+    count: vi.fn(async () => rows.length),
     list: vi.fn(async (_tx: null, _store: string, archived: boolean) => rows.filter(row => row.archived === archived)),
     insert: vi.fn(async (_tx: null, _store: string, input: { name: object }) => place('new', { ...input })),
     save: vi.fn(async (_tx: null, current: PickupPlace) => current),
@@ -45,13 +48,38 @@ function setup(rows: PickupPlace[] = [place('a'), place('b', { position: 2 })]) 
 const body = { name: { en: 'Hotel' }, address: { de: 'Strasse 2' }, hours: [{ weekday: 1, opens: '10:00', closes: '18:00' }] }
 
 describe('[E6.6][AC26] pickup point use cases', () => {
-  it('[E6.6][AC26] a guest is forbidden and nothing is written', async () => {
+  it('[E6.6][AC26] a guest is forbidden on every use case and the repository is not touched', async () => {
     const { repo, deps } = setup()
+    const results = [
+      await makeListPickupPlaces(deps)(guest, storeId, false),
+      await makeGetPickupPlace(deps)(guest, storeId, 'a'),
+      await makeCreatePickupPlace(deps)(guest, storeId, body, null),
+      await makeSavePickupPlace(deps)(guest, storeId, 'a', 3, { name: { en: 'X' } }, null),
+      await makeReorderPickupPlaces(deps)(guest, storeId, ['a', 'b'], null),
+      await makeArchivePickupPlace(deps)(guest, storeId, 'a', 3, null),
+      await makeRestorePickupPlace(deps)(guest, storeId, 'a', 3, null),
+    ]
 
-    expect(await makeCreatePickupPlace(deps)(guest, storeId, body, null)).toMatchObject({ ok: false, reason: 'forbidden' })
-    expect(await makeReorderPickupPlaces(deps)(guest, storeId, ['a', 'b'], null)).toMatchObject({ reason: 'forbidden' })
+    for (const result of results)
+      expect(result).toMatchObject({ ok: false, reason: 'forbidden' })
+    for (const call of Object.values(repo))
+      expect(call).not.toHaveBeenCalled()
+    expect(deps.audit.record).not.toHaveBeenCalled()
+  })
+
+  it('[E6.6][AC26] the use case limit equals the cap on the order body', () => {
+    expect(PICKUP_MAX_PLACES).toBe(CONTRACT_MAX_PLACES)
+  })
+
+  it('[E6.6][AC26] create at the limit of points, archived ones counted, is too-many and writes nothing', async () => {
+    const { repo, deps } = setup()
+    vi.mocked(repo.count).mockResolvedValue(PICKUP_MAX_PLACES)
+
+    expect(await makeCreatePickupPlace(deps)(owner, storeId, body, null)).toMatchObject({ ok: false, reason: 'too-many' })
     expect(repo.insert).not.toHaveBeenCalled()
-    expect(repo.setPositions).not.toHaveBeenCalled()
+    expect(deps.audit.record).not.toHaveBeenCalled()
+    vi.mocked(repo.count).mockResolvedValue(PICKUP_MAX_PLACES - 1)
+    expect(await makeCreatePickupPlace(deps)(owner, storeId, body, null)).toMatchObject({ ok: true })
   })
 
   it('[E6.6][AC26] create answers invalid with every wrong path and writes nothing', async () => {

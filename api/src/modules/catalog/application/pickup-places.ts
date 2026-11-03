@@ -5,7 +5,7 @@ import type { Result } from './failure.ts'
 import type { PickupTextInput } from './pickup-rules.ts'
 import { mayEditCatalog, staffActor } from './access.ts'
 import { fail, ok } from './failure.ts'
-import { checkHours, checkPickupText } from './pickup-rules.ts'
+import { checkHours, checkPickupText, PICKUP_MAX_PLACES } from './pickup-rules.ts'
 
 // The merchant's pickup points (E6.6). Every use case needs edit-catalog in the store. A point is archived, never deleted
 // (ADR-013: handovers and orders name it by plain id). The rules of the text and the hours are in pickup-rules.ts.
@@ -41,6 +41,9 @@ export function makeCreatePickupPlace<T>({ uow, pickups, audit, clock }: PickupD
       return fail({ reason: 'invalid', errors: [...('errors' in text ? text.errors : []), ...hoursErrors] })
     return uow.run(async (tx) => {
       await pickups.lockList(tx, storeId)
+      // Archived points count too, so a reorder of the active ones can never go over the limit the order body allows.
+      if (await pickups.count(tx, storeId) >= PICKUP_MAX_PLACES)
+        return fail({ reason: 'too-many' })
       const place = await pickups.insert(tx, storeId, { ...text.value, hours: input.hours }, clock.now())
       await audit.record(tx, { storeId, actor: staffActor(actor), entity: 'pickup_place', entityId: place.id, action: 'created', after: audited(place), requestId })
       return ok(place)

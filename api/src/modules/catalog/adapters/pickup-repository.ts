@@ -83,6 +83,11 @@ export function createPickupRepository(): PickupPlaceRepository<Tx> {
       await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`pickup_places:${storeId}`}, 0))`)
     },
 
+    async count(tx, storeId) {
+      const counted = await tx.execute<{ n: number }>(sql`select count(*)::int as n from catalog.pickup_places where store_id = ${storeId}`)
+      return counted.rows[0]!.n
+    },
+
     async insert(tx, storeId, input, at) {
       const inserted = await tx.execute<{ id: string }>(sql`
         insert into catalog.pickup_places (store_id, name, address, instructions, position, created_at, updated_at)
