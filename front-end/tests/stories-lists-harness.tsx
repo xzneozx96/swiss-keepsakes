@@ -3,6 +3,8 @@ import type { StoryGroupDetail } from '@sk/api-contract'
 import type { ReactNode } from 'react'
 
 import { pinListSchema } from '@sk/api-contract'
+import { fireEvent } from '@testing-library/react'
+import { vi } from 'vitest'
 
 import { useStoryGroup } from '@/features/stories/api/queries'
 import { DetailsPanel, useDetailsPanel } from '@/features/stories/components/story-details-panel'
@@ -67,3 +69,23 @@ function Host({ children }: { children: (editor: ReturnType<typeof useStoryGroup
  * `editor.change`). The group is read from the server the harness serves, so a reload is a second render.
  */
 export const renderLinkedCard = (card: (editor: ReturnType<typeof useStoryGroupEditor>) => ReactNode) => renderWithStore(<Host>{card}</Host>)
+
+/** jsdom has no layout: give each row of a list a place (60 px apart, 50 px high) so a drag can tell where it lands. Call in a test; undo with `vi.restoreAllMocks()`. */
+export function stubRowLayout() {
+  const index = (node: HTMLElement) => Array.from(node.parentElement?.children ?? []).indexOf(node)
+
+  vi.spyOn(HTMLElement.prototype, 'offsetTop', 'get').mockImplementation(function (this: HTMLElement) {
+    return index(this) * 60
+  })
+  vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(50)
+}
+
+/** Presses a grip, moves it `dy` px down in two moves (the first only passes the threshold), and lets go; with `escape` the drag is cancelled first. */
+export function dragGrip(grip: HTMLElement, dy: number, escape = false) {
+  fireEvent.pointerDown(grip, { button: 0, pointerId: 1, clientY: 10 })
+  fireEvent.pointerMove(grip, { pointerId: 1, clientY: 20 })
+  fireEvent.pointerMove(grip, { pointerId: 1, clientY: 10 + dy })
+  if (escape)
+    fireEvent.keyDown(grip, { key: 'Escape' })
+  fireEvent.pointerUp(grip, { pointerId: 1 })
+}
