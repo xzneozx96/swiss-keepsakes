@@ -41,6 +41,10 @@ describe('mapDatabaseError', () => {
     expect(mapDatabaseError(pg('23001', 'x_fkey', 'update or delete on table "media" violates RESTRICT'))).toEqual({ reason: 'in-use' })
   })
 
+  it.each([['40P01', 'a deadlock'], ['40001', 'a serialization failure']])('[E4.3] %s (%s) is stale, so the caller retries on a fresh read', (code) => {
+    expect(mapDatabaseError(pg(code))).toEqual({ reason: 'stale' })
+  })
+
   it('[E2.6] a foreign key violation raised by a delete is in-use', () => {
     const message = 'update or delete on table "places" violates foreign key constraint "x_fkey" on table "story_groups"'
     expect(mapDatabaseError(pg('23503', 'x_fkey', message))).toEqual({ reason: 'in-use' })
@@ -65,7 +69,7 @@ describe('mapDatabaseError', () => {
   })
 
   it('[E2.6] an unknown pg error maps to undefined', () => {
-    expect(mapDatabaseError(pg('40001', undefined, 'could not serialize'))).toBeUndefined()
+    expect(mapDatabaseError(pg('57014', undefined, 'canceling statement due to statement timeout'))).toBeUndefined()
     expect(mapDatabaseError(pg('23514', 'other_check'))).toBeUndefined()
     expect(mapDatabaseError(new Error('boom'))).toBeUndefined()
     expect(mapDatabaseError(undefined)).toBeUndefined()

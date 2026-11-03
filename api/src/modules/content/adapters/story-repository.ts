@@ -178,6 +178,15 @@ export function createStoryRepository(): StoryRepository<Tx> {
     },
 
     async deleteGroup(tx, storeId, groupId, at) {
+      // The rows this delete updates are locked first, in the order a save takes them (its own row, then the key check on the group
+      // it names), and by id among themselves. A story save locks its story and then inserts a link to this group, which waits on the
+      // FOR UPDATE below; locking the story second would wait for that save, a deadlock.
+      await tx.execute(sql`
+        select id from content.places where store_id = ${storeId} and main_story_group_id = ${groupId} order by id for no key update`)
+      await tx.execute(sql`
+        select id from content.story_groups
+         where store_id = ${storeId} and id in (select group_id from content.story_related where store_id = ${storeId} and related_group_id = ${groupId})
+         order by id for no key update`)
       // FOR UPDATE, not the FOR NO KEY UPDATE of a save: the key check of a pin or story save that names this group takes KEY SHARE,
       // which only FOR UPDATE conflicts with. That save then waits for this commit instead of slipping in between the steps below.
       const locked = await tx.execute(sql`select id from content.story_groups where store_id = ${storeId} and id = ${groupId} for update`)

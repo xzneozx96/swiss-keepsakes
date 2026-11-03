@@ -59,6 +59,22 @@ async function related(store: string, group: string, target: string, position = 
   await pool.query('insert into content.story_related (group_id, store_id, position, related_group_id) values ($1, $2, $3, $4)', [group, store, position, target])
 }
 
+// Polls until a backend is waiting on a lock held by `holderPid`, so a test acts only once the other side is really blocked.
+async function waitUntilBlockedBy(holderPid: number): Promise<void> {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const { rows } = await pool.query<{ waiting: number }>(
+      `select count(*)::int as waiting from pg_stat_activity where wait_event_type = 'Lock' and $1 = any(pg_blocking_pids(pid))`,
+      [holderPid],
+    )
+    if (rows[0]!.waiting > 0)
+      return
+    await new Promise(resolve => setTimeout(resolve, 50))
+  }
+  throw new Error(`nothing waited on a lock held by backend ${holderPid} within 10 s`)
+}
+
+const backendPid = async (client: { query: (text: string) => Promise<{ rows: { pid: number }[] }> }) => (await client.query('select pg_backend_pid() as pid')).rows[0]!.pid
+
 const rows = (table: string, column: string, id: string) => count(pool, `select count(*) from content.${table} where ${column} = $1`, [id])
 
 describe('[E4.3][AC30] AC-1 Delete story removes the whole story and keeps what it pointed at', () => {
@@ -195,6 +211,46 @@ describe('[E4.3][AC30] SECURITY-E43-2 a pin saved at the same moment waits for t
     }
     expect((await pool.query<{ main_story_group_id: string | null }>('select main_story_group_id from content.places where id = $1', [racing])).rows[0]?.main_story_group_id).toBeNull()
     expect(await rows('story_groups', 'id', s.id)).toBe(0)
+  })
+})
+
+describe('[E4.3][AC30] CORRECTNESS-E43-R2-1 a save of a story that lists this one runs at the same moment as the delete', () => {
+  it('[E4.3][AC30] the save of B with related [A] and the delete of A both finish, with no 500 and no deadlock', async () => {
+    const staff = await env.storeWithStaff()
+    const a = await story(staff)
+    const b = await story(staff)
+    await related(staff.storeId, b.id, a.id)
+    const client = await pool.connect()
+    let removed: Response | undefined
+    let saveError: unknown
+
+    try {
+      // The statements of a related-list save of B, in its order: lock B, replace its links.
+      await client.query('begin')
+      await client.query('select id from content.story_groups where id = $1 for no key update', [b.id])
+      await client.query('delete from content.story_related where group_id = $1', [b.id])
+      const removing = env.call(a.path, { method: 'DELETE', headers: staff.owner.headers })
+
+      await waitUntilBlockedBy(await backendPid(client))
+      try {
+        // The key check of this insert needs KEY SHARE on A, which the delete's FOR UPDATE would block if it already held A.
+        await client.query('insert into content.story_related (group_id, store_id, position, related_group_id) values ($1, $2, 1, $3)', [b.id, staff.storeId, a.id])
+        await client.query('commit')
+      }
+      catch (error) {
+        saveError = error
+      }
+      removed = await removing
+    }
+    finally {
+      await client.query('rollback').catch(() => {})
+      client.release()
+    }
+
+    // The delete takes its locks in the save's order, so the save commits first and the delete follows: no deadlock victim on either side.
+    expect(saveError).toBeUndefined()
+    expect(removed!.status).toBe(200)
+    expect(await removed!.json()).toEqual({ pinsUnlinked: 0, storiesUnlinked: 1 })
   })
 })
 
