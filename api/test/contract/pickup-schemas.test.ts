@@ -25,8 +25,8 @@ describe('pickup point schemas [E6.6][AC26]', () => {
     expect(accepts(pickupPlaceWriteBodySchema, place({ address: { en: 'x'.repeat(301) } }))).toBe(false)
     expect(accepts(pickupPlaceWriteBodySchema, place({ instructions: { en: 'x'.repeat(601) } }))).toBe(false)
     const span = { weekday: 1, opens: '10:00', closes: '11:00' }
-    expect(accepts(pickupPlaceWriteBodySchema, place({ hours: Array.from({ length: 35 }, () => span) }))).toBe(true)
-    expect(accepts(pickupPlaceWriteBodySchema, place({ hours: Array.from({ length: 36 }, () => span) }))).toBe(false)
+    expect(accepts(pickupPlaceWriteBodySchema, place({ hours: Array.from({ length: 35 }).fill(span) }))).toBe(true)
+    expect(accepts(pickupPlaceWriteBodySchema, place({ hours: Array.from({ length: 36 }).fill(span) }))).toBe(false)
   })
 
   it('refuses a NUL in text', () => {
