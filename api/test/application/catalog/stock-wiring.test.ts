@@ -1,6 +1,6 @@
 import type { Actor } from '@sk/domain/identity'
 import type { CatalogDeps } from '../../../src/modules/catalog/application/deps.ts'
-import type { Product, ProductListRow, ProductRepository, ProductVariant } from '../../../src/modules/catalog/ports.ts'
+import type { Product, ProductListRow, ProductRepository, ProductVariant, WrittenProduct } from '../../../src/modules/catalog/ports.ts'
 import { describe, expect, it, vi } from 'vitest'
 import { makeCreateProduct } from '../../../src/modules/catalog/application/create-product.ts'
 import { makeCreateVariant } from '../../../src/modules/catalog/application/create-variant.ts'
@@ -35,9 +35,11 @@ function product(variants: ProductVariant[]): Product {
 function setup(before: Product, after: Product, levels: Record<string, [onHand: number, reserved: number]> = {}) {
   const state = { skus: before.variants.map(v => v.id), stock: new Map<string, number>(Object.entries(levels).map(([id, [onHand]]) => [id, onHand])) }
   const seeds: { storeId: string, items: { skuId: string, quantity: number }[], actorUserId: string }[] = []
-  const written = (): Product => {
+  const written = (): WrittenProduct => {
+    const known = new Set(before.variants.map(v => v.id))
+
     state.skus = after.variants.map(v => v.id)
-    return after
+    return { product: after, createdSkuIds: after.variants.filter(v => !known.has(v.id)).map(v => v.id) }
   }
   const repo = {
     insert: vi.fn(async () => written()),
@@ -102,7 +104,7 @@ function newProduct(quantities: (number | undefined)[]) {
 describe('[E6.3][AC05][AC53][AC-10] a new SKU gets its stock row in the same transaction', () => {
   it('[E6.3][AC05][AC53][AC-10] a new keepsake with no quantity: one row of 0', async () => {
     const created = product([variant('a', { size: 's' })])
-    const { deps, seeds } = setup(created, created)
+    const { deps, seeds } = setup(product([]), created)
 
     expect((await makeCreateProduct(deps)(owner, storeId, newProduct([undefined]), null)).ok).toBe(true)
     expect(seeds).toEqual([{ storeId, items: [{ skuId: 'a', quantity: 0 }], actorUserId: 'u1' }])
@@ -110,10 +112,20 @@ describe('[E6.3][AC05][AC53][AC-10] a new SKU gets its stock row in the same tra
 
   it('[E6.3][AC05][AC53][AC-10] a new keepsake with a quantity of 12: a row of 12, and 0 for the other variant', async () => {
     const created = product([variant('a', { size: 's' }), variant('b', { size: 'l' })])
-    const { deps, seeds } = setup(created, created)
+    const { deps, seeds } = setup(product([]), created)
 
     await makeCreateProduct(deps)(owner, storeId, newProduct([12, undefined]), null)
     expect(seeds[0]!.items).toEqual([{ skuId: 'a', quantity: 12 }, { skuId: 'b', quantity: 0 }])
+  })
+
+  it('[E6.3][AC05][AC53][CORRECTNESS-8] each quantity goes to the SKU the repository made for that variant, whatever order the product lists them in', async () => {
+    // The product lists b before a; the repository says a was made for the first variant sent and b for the second.
+    const listed = product([variant('b', { size: 'l' }), variant('a', { size: 's' })])
+    const { deps, seeds, repo } = setup(listed, listed)
+
+    vi.mocked(repo.insert).mockResolvedValue({ product: listed, createdSkuIds: ['a', 'b'] } as never)
+    await makeCreateProduct(deps)(owner, storeId, newProduct([12, 3]), null)
+    expect(seeds[0]!.items).toEqual([{ skuId: 'a', quantity: 12 }, { skuId: 'b', quantity: 3 }])
   })
 
   it('[E6.3][AC05][AC53][AC-10] a new variant on an existing keepsake: one row of 0, for the new SKU only', async () => {

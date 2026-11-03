@@ -7,7 +7,7 @@ import { mayEditCatalog, staffActor } from './access.ts'
 import { fail, ok } from './failure.ts'
 import { checkOptionsSave } from './option-rules.ts'
 import { checkVariantPhotos, describe } from './product-detail.ts'
-import { newVariantsOf, seedNewSkus } from './seed-stock.ts'
+import { seedNewSkus } from './seed-stock.ts'
 import { isSkuCode } from './sku-code.ts'
 
 // The options of a keepsake, the new values of its variants and its new variants, saved in one write. A save from an old
@@ -44,8 +44,8 @@ export function makeSaveOptions<T>({ uow, products, media, audit, clock, sales, 
       const photoRefused = await checkVariantPhotos(media, tx, storeId, input.newVariants.map(variant => variant.mediaId))
       if (photoRefused)
         return fail(photoRefused)
-      const saved = await products.replaceOptions(tx, product, input, clock.now())
-      await seedNewSkus(stock, tx, actor, storeId, newVariantsOf(product, saved), input.newVariants)
+      const { product: saved, createdSkuIds } = await products.replaceOptions(tx, product, input, clock.now())
+      await seedNewSkus(stock, tx, actor, storeId, createdSkuIds, input.newVariants)
       await audit.record(tx, {
         storeId,
         actor: staffActor(actor),
