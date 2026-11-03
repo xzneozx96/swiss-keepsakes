@@ -10,6 +10,7 @@ import { descriptionFromPlain } from '@sk/domain/content'
 import { Pool } from 'pg'
 import { createMediaDirectory } from '../src/modules/catalog/adapters/media-directory.ts'
 import { createProductRepository } from '../src/modules/catalog/adapters/product-repository.ts'
+import { createSkuDirectory } from '../src/modules/catalog/adapters/sku-directory.ts'
 import { makeCreateProduct, makePublishProduct } from '../src/modules/catalog/index.ts'
 import { createCategoryRepository } from '../src/modules/content/adapters/category-repository.ts'
 import { createKeepsakeLinks } from '../src/modules/content/adapters/keepsake-links.ts'
@@ -18,19 +19,25 @@ import { mediaView } from '../src/modules/content/adapters/media-view.ts'
 import { createPinRepository } from '../src/modules/content/adapters/pin-repository.ts'
 import { createS3Storage } from '../src/modules/content/adapters/s3-storage.ts'
 import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeDescribeMedia, makeProcessMedia, makePublishPin, makeRequestUpload } from '../src/modules/content/index.ts'
+import { createStockRepository } from '../src/modules/inventory/adapters/stock-repository.ts'
+import { makeReservedBySku, makeSeedStock, makeSetStock, makeStockLevels } from '../src/modules/inventory/index.ts'
 import { createAuditLog } from '../src/platform/audit.ts'
 import { systemClock } from '../src/platform/clock.ts'
 import { createDatabase } from '../src/platform/db/client.ts'
 import { createUnitOfWork } from '../src/platform/db/unit-of-work.ts'
 import { createS3Client } from '../src/platform/storage.ts'
 import { isLocalDatabaseUrl } from './seed-guard.ts'
+import { applyOpeningStock, describeDecision, loadOpeningStock, openingStockReady, planFromDatabase } from './seed-opening-stock.ts'
 
-// `pnpm --filter @sk/api db:seed:curated [--dry-run]` loads the curated places, categories and keepsakes of
+// `pnpm --filter @sk/api db:seed:curated [--dry-run] [--stock-only]` loads the curated places, categories and keepsakes of
 // `seed-data/curated/` into one store (owner, 2026-11-02). It only adds: a category, place or keepsake that exists is
 // left alone, and nothing is updated or deleted. Everything goes through the content and catalog use cases, so the
 // database rules, the audit rows and the publish checks hold. Photos go through the media path (signed PUT, confirm,
 // process) and are deduplicated by sha256, so a second run uploads nothing. The guard and the store pick are those of
 // `db:seed`: DATABASE_URL only, a remote host needs SEED_ALLOW_REMOTE_DATABASE=1, and the URL is never printed.
+// One step is not add-only (standing order 16): the opening stock of `seed-data/curated/opening-stock.json` sets a stock row
+// that still holds the migration's 0 with no history, through the inventory set-stock use case, as the store's owner.
+// Faults in that plan (an unknown code, a SKU with no row, no owner) stop the run before anything is written.
 
 // Its message names a record and a reason, never the connection string, so the entry point may print it.
 class SeedError extends Error {
@@ -261,8 +268,48 @@ function printPlan(plan: Plan, snapshot: Snapshot, photos: Map<string, Uint8Arra
   process.stdout.write(`${lines.join('\n')}\n`)
 }
 
+// `--stock-only` runs the opening-stock step alone: no category, place or keepsake is planned or created (owner, 2026-11-03).
+// A flag that is not known stops the run, so a typo cannot start the full seed.
+export function parseFlags(argv: readonly string[]) {
+  return {
+    dry: argv.includes('--dry-run'),
+    stockOnly: argv.includes('--stock-only'),
+    unknown: argv.filter(arg => arg !== '--dry-run' && arg !== '--stock-only'),
+  }
+}
+
+// Prints the opening-stock plan. Returns 1 when it has faults (nothing is written then), otherwise undefined.
+function reportStockPlan(plan: Awaited<ReturnType<typeof planFromDatabase>>): 1 | undefined {
+  process.stdout.write(`Opening stock, acting as owner ${plan.ownerUserId ?? '(none)'}:\n${plan.decisions.map(decision => `  ${describeDecision(decision)}`).join('\n')}\n`)
+  if (plan.faults.length === 0)
+    return undefined
+  process.stderr.write(`${plan.faults.join('\n')}\nNothing was written.\n`)
+  return 1
+}
+
+// Exported for the integration test of the dry run.
+export async function stockOnly(pool: Pool, storeId: string, dry: boolean): Promise<number> {
+  const quantities = loadOpeningStock()
+  const inventoryReady = await openingStockReady(pool)
+  process.stdout.write(`Inventory tables (migration 0021): ${inventoryReady ? 'present' : 'missing'}\n`)
+  const stockPlan = inventoryReady ? await planFromDatabase(pool, storeId, quantities) : undefined
+  if (stockPlan && reportStockPlan(stockPlan))
+    return 1
+  if (dry)
+    return 0
+  if (!inventoryReady) {
+    process.stderr.write('Migration 0021 is not applied to this database. Nothing was written.\n')
+    return 3
+  }
+  return await openingStock(pool, storeId, quantities)
+}
+
 async function main(): Promise<number> {
-  const dry = process.argv.includes('--dry-run')
+  const { dry, stockOnly: onlyStock, unknown } = parseFlags(process.argv.slice(2))
+  if (unknown.length > 0) {
+    process.stderr.write(`Unknown flag: ${unknown.join(' ')}. Known: --dry-run, --stock-only. Nothing was written.\n`)
+    return 2
+  }
   const url = process.env.DATABASE_URL
   if (!url) {
     process.stderr.write('DATABASE_URL is not set.\n')
@@ -277,6 +324,8 @@ async function main(): Promise<number> {
     const storeId = await pickStore(pool)
     if (!storeId)
       return 1
+    if (onlyStock)
+      return await stockOnly(pool, storeId, dry)
     const data = loadData()
     const snapshot = await readSnapshot(pool, storeId)
     const plan = buildPlan(data, snapshot)
@@ -290,6 +339,13 @@ async function main(): Promise<number> {
     const homeColumn = await hasHomeColumn(pool)
     printPlan(plan, snapshot, files, dry)
     process.stdout.write(`Home column (migration 0016): ${homeColumn ? 'present' : 'missing'}\n`)
+    const quantities = loadOpeningStock()
+    const inventoryReady = await openingStockReady(pool)
+    process.stdout.write(`Inventory tables (migration 0021): ${inventoryReady ? 'present' : 'missing'}\n`)
+    // Planned before any write, with the keepsakes still to be created counted as 0 to their quantity.
+    const stockPlan = inventoryReady ? await planFromDatabase(pool, storeId, quantities, new Set(plan.keepsakesToCreate.map(record => record.skuCode))) : undefined
+    if (stockPlan && reportStockPlan(stockPlan))
+      return 1
     if (dry)
       return 0
     // The content use cases read the home column, so nothing can be written until migration 0016 is applied.
@@ -297,15 +353,34 @@ async function main(): Promise<number> {
       process.stderr.write('Migration 0016 is not applied to this database. Nothing was written.\n')
       return 3
     }
-    if (plan.categoriesToCreate.length + plan.placesToCreate.length + plan.keepsakesToCreate.length === 0) {
-      process.stdout.write('Nothing to create.\n')
-      return 0
+    if (!inventoryReady) {
+      process.stderr.write('Migration 0021 is not applied to this database. Nothing was written.\n')
+      return 3
     }
-    return await run(pool, storeId, data, plan, snapshot, files)
+    if (plan.categoriesToCreate.length + plan.placesToCreate.length + plan.keepsakesToCreate.length === 0)
+      process.stdout.write('Nothing to create.\n')
+    else if (await run(pool, storeId, data, plan, snapshot, files) !== 0)
+      return 1
+    return await openingStock(pool, storeId, quantities)
   }
   finally {
     await pool.end()
   }
+}
+
+// Runs after the keepsakes exist, also on a second run. The plan is read again from the database, so a row that a person
+// set in between is skipped.
+export async function openingStock(pool: Pool, storeId: string, quantities: Record<string, number>): Promise<number> {
+  const plan = await planFromDatabase(pool, storeId, quantities)
+  if (plan.faults.length > 0 || !plan.ownerUserId) {
+    process.stderr.write(`${plan.faults.join('\n')}\nNo opening stock was written.\n`)
+    return 1
+  }
+  const stock = createStockRepository()
+  const inventoryDeps = { uow: createUnitOfWork(createDatabase(pool)), stock, skus: createSkuDirectory(), media: { find: async () => [] }, audit: createAuditLog(systemClock), clock: systemClock }
+  const changed = await applyOpeningStock(makeSetStock(inventoryDeps), storeId, plan.ownerUserId, plan.decisions)
+  process.stdout.write(`Opening stock: ${changed} set, ${plan.decisions.length - changed} skipped.${changed === 0 ? ' Nothing was changed.' : ''}\n`)
+  return 0
 }
 
 async function run(pool: Pool, storeId: string, data: Data, plan: Plan, snapshot: Snapshot, files: Map<string, Uint8Array>): Promise<number> {
@@ -331,6 +406,7 @@ async function run(pool: Pool, storeId: string, data: Data, plan: Plan, snapshot
   const describeMedia = makeDescribeMedia({ uow, media, audit, clock: systemClock })
   const createPin = makeCreatePin(pinDeps)
   const publishPin = makePublishPin(pinDeps)
+  const stockRepository = createStockRepository()
   const catalogDeps = {
     uow,
     products: createProductRepository(),
@@ -338,6 +414,10 @@ async function run(pool: Pool, storeId: string, data: Data, plan: Plan, snapshot
     audit,
     clock: systemClock,
     keepsakeLinks: createKeepsakeLinks(),
+    // A new keepsake gets its stock row of 0 in its own write (ADR-013); the opening stock is set afterwards.
+    stock: { seed: makeSeedStock({ stock: stockRepository }) },
+    reservations: { reservedBySku: makeReservedBySku({ stock: stockRepository }) },
+    stockLevels: { levels: makeStockLevels({ stock: stockRepository }) },
   }
   const createProduct = makeCreateProduct(catalogDeps)
   const publishProduct = makePublishProduct(catalogDeps)

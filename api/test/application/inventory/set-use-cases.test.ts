@@ -35,6 +35,20 @@ describe('[E6.3][AC05][AC53] setting stock for one variant', () => {
     expect(audit.record).toHaveBeenCalledWith(null, { storeId, actor: 'staff:u1', entity: 'stock', entityId: id(1), action: 'set', before: { onHand: 3 }, after: { onHand: 7 }, requestId: 'req-1' })
   })
 
+  it('[E6.5][AC52][AC53][AC-1] a reason is passed to the set row, and the audit entry is unchanged', async () => {
+    const { deps, sets } = setup([sku(1)], { [id(1)]: [0, 0] })
+    await makeSetStock(deps)(owner, storeId, id(1), 100, null, 'Opening stock (seed)')
+
+    expect(sets).toEqual([expect.objectContaining({ before: 0, after: 100, reason: 'Opening stock (seed)' })])
+  })
+
+  it('[E6.5][AC52][AC53][AC-1] without a reason the set row has none', async () => {
+    const { deps, sets } = setup([sku(1)], { [id(1)]: [0, 0] })
+    await makeSetStock(deps)(owner, storeId, id(1), 100, null)
+
+    expect(sets[0]!.reason).toBeUndefined()
+  })
+
   it('[E6.3][AC05][AC53][AC-5] the same value writes no adjustment and no audit entry', async () => {
     const { deps, sets, audit } = setup([sku(1)], { [id(1)]: [3, 0] })
     const result = await makeSetStock(deps)(owner, storeId, id(1), 3, null)

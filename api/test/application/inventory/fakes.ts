@@ -19,7 +19,7 @@ export const file = (fileId: string): MediaInfo => ({ id: fileId, kind: 'image',
 // An in-memory stock table. `sets` records each write, so a test can say that nothing was written.
 export function setup(skus: LiveSku[], stock: Record<string, [onHand: number, reserved: number]> = {}, holds: Record<string, Reservation[]> = {}, files: string[] = []) {
   const rows = new Map<string, StockLevel>(Object.entries(stock).map(([skuId, [onHand, reserved]]) => [skuId, { skuId, onHand, reserved }]))
-  const sets: { skuId: string, before: number, after: number, actorUserId: string, at: Date }[] = []
+  const sets: { skuId: string, before: number, after: number, actorUserId: string, at: Date, reason?: string }[] = []
   const locked: string[][] = []
   const seeded: { storeId: string, items: { skuId: string, quantity: number }[], actorUserId: string }[] = []
   const repo: StockRepository<null> = {
@@ -42,7 +42,7 @@ export function setup(skus: LiveSku[], stock: Record<string, [onHand: number, re
     },
     openHolds: async (_tx, _store, skuId) => holds[skuId] ?? [],
     set: async (_tx, change) => {
-      sets.push({ skuId: change.skuId, before: change.before, after: change.after, actorUserId: change.actorUserId, at: change.at })
+      sets.push({ skuId: change.skuId, before: change.before, after: change.after, actorUserId: change.actorUserId, at: change.at, reason: change.reason })
       rows.get(change.skuId)!.onHand = change.after
     },
   }
