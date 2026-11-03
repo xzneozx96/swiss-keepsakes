@@ -12,6 +12,21 @@ export interface Autosave<D> {
   /** Clears the timer and saves a pending draft (leaving a screen keeps what was typed). */
   dispose: () => void
   state: () => AutosaveState
+  /**
+   * Runs one write on the row (publish, unpublish, a link save) that bumps the row version. Saves what is pending first
+   * and resolves only after; throws NotSaved when that save fails or the engine is stale (nothing is sent). The write takes
+   * the engine's current version in `ifMatch`; its answer's `rowVersion` becomes the engine's, and an edit made meanwhile is
+   * saved after it with that version. A rejection whose `isStale` is true puts the engine in `stale`. Never two writes at once.
+   */
+  exclusive: <R extends { rowVersion: number }>(write: (ifMatch: number) => Promise<R>) => Promise<R>
+}
+
+/** A write was not sent because the edits before it could not be saved. */
+export class NotSaved extends Error {
+  constructor() {
+    super('The last edits are not saved')
+    this.name = 'NotSaved'
+  }
 }
 
 /**
@@ -84,7 +99,48 @@ export function createAutosave<D>({ version, delayMs = STORY_AUTOSAVE_MS, save, 
     return started
   }
 
+  async function exclusive<R extends { rowVersion: number }>(write: (ifMatch: number) => Promise<R>): Promise<R> {
+    // Wait for a save or write in flight, then save what is pending; look again, because another caller may have taken the slot.
+    do {
+      if (!(await flush()))
+        throw new NotSaved()
+    } while (running)
+
+    let answer: R | undefined
+    let failure: { error: unknown } | undefined
+    const started = (async () => {
+      try {
+        answer = await write(rowVersion)
+        rowVersion = answer.rowVersion
+      }
+      catch (error) {
+        failure = { error }
+        if (isStale(error)) {
+          stale = true
+          set('stale', error)
+
+          return false
+        }
+      }
+
+      // An edit made meanwhile goes now, with the version this write left.
+      return run()
+    })()
+
+    running = started
+    void started.finally(() => {
+      if (running === started)
+        running = undefined
+    })
+    await started
+    if (failure)
+      throw failure.error
+
+    return answer as R
+  }
+
   return {
+    exclusive,
     change(draft) {
       pending = draft
       dirty = true

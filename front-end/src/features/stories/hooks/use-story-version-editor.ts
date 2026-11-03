@@ -1,4 +1,4 @@
-import type { StoryGroupDetail } from '@sk/api-contract'
+import type { StoryGroupDetail, StoryVersion } from '@sk/api-contract'
 import type { AutosaveState } from '../lib/autosave'
 import type { StoryFields } from '../lib/draft'
 import type { StoryLanguage } from '../lib/search-params'
@@ -90,6 +90,17 @@ export function useStoryVersionEditor({ storeId, group, language, accountName }:
     isUnsaved: state !== 'saved',
     versionState: versionStateOf(version, state !== 'saved'),
     flush: engine.flush,
+    /**
+     * A write on the version row that is not a save (publish, unpublish, the link): it goes through the engine so the row
+     * version has one owner. Saves what is typed first, writes the answer into the group query, and is not a "Saved" moment.
+     */
+    run: async (write: (ifMatch: number) => Promise<StoryVersion>) => {
+      const answer = await engine.exclusive(write)
+
+      queryClient.setQueryData<StoryGroupDetail>(groupKey, current => (current ? { ...current, versions: { ...current.versions, [language]: answer } } : current))
+
+      return answer
+    },
     discard: engine.discard,
     retry: () => void engine.flush(),
   }
