@@ -19,7 +19,7 @@ import { CARD_ROW_HEIGHT, CONTROLS } from '@/features/map/lib/layout'
 import { mediaQueries, useMediaFile } from '@/features/media/api/queries'
 import { useStoryOptions, useStoryVersion } from '../api/queries'
 import { photoIds } from '../lib/form'
-import { PREVIEW_PIN_ID, previewDetail, previewItem, tipIn } from '../lib/preview'
+import { PREVIEW_PIN_ID, previewDetail, previewItem } from '../lib/preview'
 import { StorySheet } from './story-sheet'
 
 const NO_PINS: PublicMapItem[] = []
@@ -68,7 +68,7 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
   const extras = useMemo<CardExtras>(() => {
     const names = new Map((categories.data?.items ?? []).map(category => [category.id, category.name[language] ?? category.name[language === 'en' ? 'de' : 'en'] ?? '']))
 
-    return { tip: tipIn(form, language), categories: form.categoryIds.flatMap(id => names.get(id) || []), mapsLink: form.mapsLink.trim() === '' ? null : form.mapsLink.trim() }
+    return { categories: form.categoryIds.flatMap(id => names.get(id) || []), mapsLink: form.mapsLink.trim() === '' ? null : form.mapsLink.trim() }
   }, [categories.data, form, language])
   const pins = useMemo(() => (located ? [item] : NO_PINS), [item, located])
   const [frame, setFrame] = useState<HTMLDivElement | null>(null)

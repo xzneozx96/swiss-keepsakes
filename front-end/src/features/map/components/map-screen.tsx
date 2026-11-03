@@ -232,8 +232,8 @@ export function MapScreen({ place }: { place?: string }) {
           <PlaceCardRow
             extrasOf={pin => ({
               categories: pinCategoryNames(pin, data.categories, language),
-              // Only the open card has read its pin: the others show no tip until they open, and open the position.
-              ...(pin.id === openId && detail.data ? { tip: detail.data.tip ? { text: detail.data.tip, language: detail.data.language } : undefined, mapsLink: detail.data.mapsLink } : {}),
+              // Only the open card has read its pin: the others open the position. The card shows no tip (owner 2026-11-03), so it never changes size when the read arrives.
+              ...(pin.id === openId && detail.data ? { mapsLink: detail.data.mapsLink } : {}),
             })}
             photoOf={pin => pin.photoUrl ?? undefined}
             pins={kept}

@@ -1,5 +1,4 @@
 import type { PublicMapItem } from '@sk/api-contract'
-import type { Language } from '@sk/domain/shared'
 
 import { Button } from '@heroui/react'
 
@@ -10,10 +9,8 @@ import { CARD_ROW_BOTTOM } from '@/features/map/lib/layout'
 import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
 import { DirectionsLink } from './directions-link'
 
-/** The words a card shows besides the pin's own fields, when the caller has them (the guest map's category names; the place editor's preview adds the tip). */
+/** The words a card shows besides the pin's own fields, when the caller has them (the category names and the map link). The card shows no tip (owner 2026-11-03): the details sheet has it. */
 export interface CardExtras {
-  /** The tips from a local, in the language they are written in. */
-  tip?: { text: string, language: Language }
   /** The names of the pin's categories, the most specific first. */
   categories?: string[]
   /** The Google Maps link the merchant stored for the place; the card's map button opens it in place of the position. */
@@ -22,7 +19,7 @@ export interface CardExtras {
 
 /**
  * The card of one pin (N03): a thumbnail slot on the left that is always there (the place icon when there is no
- * photo), the title, the first category and the next date (or the language notice) and the tip (two lines) beside it,
+ * photo), the title, the first category and the next date (or the language notice) beside it,
  * centred against the picture, Show more (the details sheet, full width) and the Google Maps button. No price, no
  * booking or payment button, no review summary. The `‹ n of m ›` steps are commented out (owner 2026-11-02): the cards
  * still swipe, and Show more takes the row.
@@ -58,8 +55,6 @@ function PlaceCard({ pin, active, photoSrc, extras, /* nav, */ directions, onMor
       id={pin.id}
       layout="pin"
       // nav={nav}
-      text={extras?.tip?.text}
-      textLang={extras?.tip?.language}
       thumb={<MapThumb className="size-full" iconSize={32} src={photoSrc} />}
       title={pin.title}
       titleLang={pin.language}
@@ -88,7 +83,7 @@ export function PlaceCardRow({
   selectedId: string
   /** The picture of a pin, when the caller knows it (the place editor's preview); without it a card shows the place icon. */
   photoOf?: (pin: PublicMapItem) => string | undefined
-  /** The category names and tips of a pin, when the caller knows them; without them a card shows neither. */
+  /** The category names and map link of a pin, when the caller knows them. */
   extrasOf?: (pin: PublicMapItem) => CardExtras | undefined
   /** Space under the row (px). The guest map keeps `CARD_ROW_BOTTOM`; the editor's preview has no tab bar or music button. */
   bottom?: number
