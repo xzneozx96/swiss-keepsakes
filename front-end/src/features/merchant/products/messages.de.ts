@@ -229,6 +229,8 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'products.departure.added': 'Termin hinzugefügt',
   'products.departure.updated': 'Plätze gespeichert',
 
+  'pickup.title': 'Abholstellen',
+  'pickup.description': 'Wo Gäste ihre Bestellungen abholen und wo Übergaben stattfinden.',
   'pickup.action.add': 'Abholstelle hinzufügen',
   'pickup.action.restore': 'Wiederherstellen',
   'pickup.archive.body': 'Gäste können hier nicht mehr abholen. Sie können sie in der Liste Archiviert wiederherstellen.',
