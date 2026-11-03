@@ -328,15 +328,12 @@ describe('[E2.6] story repository on the real database', () => {
     expect(await refs(a.id, 'draft')).toBe(0)
   })
 
-  it('[E2.6][AC79] a direct delete of a version that kept published text raises restrict_violation and mapDatabaseError says published-cannot-be-deleted', async () => {
+  it('[E2.6][AC79] the use case refuses to delete a version that kept published text, even though the database no longer does (migration 0024)', async () => {
     const s = setup()
     const g = await group(s)
     await version(s, g.id, 'en', await complete(s.store))
     await s.use.publish(s.actor, s.store, g.id, 'en', 1, null)
     await s.use.unpublish(s.actor, s.store, g.id, 'en', 2, null)
-    const error = await thrown(() => s.uow.run(tx => s.stories.removeVersion(tx, s.store, g.id, 'en')))
-    expect(error).toMatchObject({ cause: { code: '23001' } })
-    expect(mapDatabaseError(error)).toEqual({ reason: 'published-cannot-be-deleted' })
     expect(await s.use.remove(s.actor, s.store, g.id, 'en', 3, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
     expect(await versionRow(g.id)).toMatchObject({ status: 'draft' })
     const lone = await version(s, g.id, 'de', { slug: slug() })

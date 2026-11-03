@@ -148,6 +148,13 @@
       "when": 1793941753729,
       "tag": "0020_pin_delete_if_unused",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794287353729,
+      "tag": "0024_story_delete",
+      "breakpoints": true
     }
   ]
 }
