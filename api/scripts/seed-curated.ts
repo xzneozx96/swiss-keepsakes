@@ -29,7 +29,7 @@ import { createS3Client } from '../src/platform/storage.ts'
 import { isLocalDatabaseUrl } from './seed-guard.ts'
 import { applyOpeningStock, describeDecision, loadOpeningStock, openingStockReady, planFromDatabase } from './seed-opening-stock.ts'
 
-// `pnpm --filter @sk/api db:seed:curated [--dry-run]` loads the curated places, categories and keepsakes of
+// `pnpm --filter @sk/api db:seed:curated [--dry-run] [--stock-only]` loads the curated places, categories and keepsakes of
 // `seed-data/curated/` into one store (owner, 2026-11-02). It only adds: a category, place or keepsake that exists is
 // left alone, and nothing is updated or deleted. Everything goes through the content and catalog use cases, so the
 // database rules, the audit rows and the publish checks hold. Photos go through the media path (signed PUT, confirm,
@@ -268,8 +268,43 @@ function printPlan(plan: Plan, snapshot: Snapshot, photos: Map<string, Uint8Arra
   process.stdout.write(`${lines.join('\n')}\n`)
 }
 
+// `--stock-only` runs the opening-stock step alone: no category, place or keepsake is planned or created (owner, 2026-11-03).
+// A flag that is not known stops the run, so a typo cannot start the full seed.
+export function parseFlags(argv: readonly string[]) {
+  return {
+    dry: argv.includes('--dry-run'),
+    stockOnly: argv.includes('--stock-only'),
+    unknown: argv.filter(arg => arg !== '--dry-run' && arg !== '--stock-only'),
+  }
+}
+
+async function stockOnly(pool: Pool, storeId: string, dry: boolean): Promise<number> {
+  const quantities = loadOpeningStock()
+  const inventoryReady = await openingStockReady(pool)
+  process.stdout.write(`Inventory tables (migration 0021): ${inventoryReady ? 'present' : 'missing'}\n`)
+  const stockPlan = inventoryReady ? await planFromDatabase(pool, storeId, quantities) : undefined
+  if (stockPlan) {
+    process.stdout.write(`Opening stock, acting as owner ${stockPlan.ownerUserId ?? '(none)'}:\n${stockPlan.decisions.map(decision => `  ${describeDecision(decision)}`).join('\n')}\n`)
+    if (stockPlan.faults.length > 0) {
+      process.stderr.write(`${stockPlan.faults.join('\n')}\nNothing was written.\n`)
+      return 1
+    }
+  }
+  if (dry)
+    return 0
+  if (!inventoryReady) {
+    process.stderr.write('Migration 0021 is not applied to this database. Nothing was written.\n')
+    return 3
+  }
+  return await openingStock(pool, storeId, quantities)
+}
+
 async function main(): Promise<number> {
-  const dry = process.argv.includes('--dry-run')
+  const { dry, stockOnly: onlyStock, unknown } = parseFlags(process.argv.slice(2))
+  if (unknown.length > 0) {
+    process.stderr.write(`Unknown flag: ${unknown.join(' ')}. Known: --dry-run, --stock-only. Nothing was written.\n`)
+    return 2
+  }
   const url = process.env.DATABASE_URL
   if (!url) {
     process.stderr.write('DATABASE_URL is not set.\n')
@@ -284,6 +319,8 @@ async function main(): Promise<number> {
     const storeId = await pickStore(pool)
     if (!storeId)
       return 1
+    if (onlyStock)
+      return await stockOnly(pool, storeId, dry)
     const data = loadData()
     const snapshot = await readSnapshot(pool, storeId)
     const plan = buildPlan(data, snapshot)

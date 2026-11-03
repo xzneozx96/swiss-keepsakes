@@ -1,6 +1,6 @@
 import { descriptionLength, interestCodes } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
-import { buildPlan, categorySpecs, loadData, placeChanges, productInput } from '../scripts/seed-curated.ts'
+import { buildPlan, categorySpecs, loadData, parseFlags, placeChanges, productInput } from '../scripts/seed-curated.ts'
 
 const data = loadData()
 const empty = { categories: [], placeTitles: new Set<string>(), keepsakeNames: new Set<string>(), hashes: new Set<string>() }
@@ -79,5 +79,21 @@ describe('[seed-curated] the curated data maps to writes', () => {
   it('reuses a category by its English name when the slug differs', () => {
     const plan = buildPlan(data, { ...empty, categories: [{ id: 'x', slug: 'public-holidays', nameEn: 'Public holidays' }] })
     expect(plan.categoriesToCreate.map(c => c.slug)).not.toContain('holidays')
+  })
+})
+
+describe('[seed-curated] the flags pick the steps', () => {
+  it('runs every step by default and with --dry-run alone', () => {
+    expect(parseFlags([])).toEqual({ dry: false, stockOnly: false, unknown: [] })
+    expect(parseFlags(['--dry-run'])).toEqual({ dry: true, stockOnly: false, unknown: [] })
+  })
+
+  it('--stock-only keeps only the opening stock step, with or without --dry-run', () => {
+    expect(parseFlags(['--stock-only'])).toEqual({ dry: false, stockOnly: true, unknown: [] })
+    expect(parseFlags(['--stock-only', '--dry-run'])).toEqual({ dry: true, stockOnly: true, unknown: [] })
+  })
+
+  it('reports a flag it does not know, so a typo cannot start the full seed', () => {
+    expect(parseFlags(['--stock-onyl']).unknown).toEqual(['--stock-onyl'])
   })
 })
