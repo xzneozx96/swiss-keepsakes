@@ -1,3 +1,4 @@
+import { toast } from '@heroui/react'
 import { pickupPlaceListSchema, pickupPlaceSchema, problemSchema } from '@sk/api-contract'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
@@ -205,8 +206,25 @@ describe('[E6.6][AC26] the pickup point sheet', { timeout: 30_000 }, () => {
 
     await waitFor(() => expect(screen.getByLabelText('Address')).toHaveValue('Their address'))
     expect(screen.queryByText(/Someone saved this pickup point/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     await press('Save pickup point')
     await waitFor(() => expect(writes().at(-1)!.ifMatch).toBe('5'))
+  })
+
+  it('the stale notice stays while the merchant types, shows no toast, and the typed text stays', async () => {
+    const danger = vi.spyOn(toast, 'danger')
+
+    await renderSheet(point())
+    answer = call => (call.method === 'PATCH' ? problem(412, 'precondition-failed') : undefined)
+    await press('Save pickup point')
+    expect(await screen.findByText(/Someone saved this pickup point after you opened it/)).toBeInTheDocument()
+
+    await type('Address', ' 2')
+
+    expect(screen.getByText(/Someone saved this pickup point after you opened it/)).toBeInTheDocument()
+    expect(screen.getByLabelText('Address')).toHaveValue('Hertensteinstrasse 1, Lucerne 2')
+    expect(danger).not.toHaveBeenCalled()
+    danger.mockRestore()
   })
 
   it('two quick taps on Save send one request', async () => {

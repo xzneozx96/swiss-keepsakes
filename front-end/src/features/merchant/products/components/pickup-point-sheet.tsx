@@ -43,17 +43,20 @@ export function PickupPointSheet({ storeId, place, onClose }: {
   const [tried, setTried] = useState(false)
   const [attempt, setAttempt] = useState(0)
   const [reloading, setReloading] = useState(false)
+  // Set on the 412, cleared only by a successful Reload: typing must not hide it.
+  const [stale, setStale] = useState(false)
   const bodyRef = useRef<HTMLDivElement>(null)
+  // Every refusal shows inline (the stale notice or the failure line), so the cache stays silent on error.
   const meta = {
     success: (result: PickupPlace) => t('products.place.saved', { name: pickText(result.name, uiLanguage).text }),
-    error: { 'precondition-failed': 'pickup.problem.stale' as const },
+    silent: true,
   }
   const create = useSubmit('pickup', 'create', { meta })
   const save = useSubmit('pickup', 'save', { meta })
   const { isPending, error, reset } = place ? save : create
   const body = bodyOf(form)
   const key = useIdempotencyKey({ storeId, id: place?.id, rowVersion, body })
-  const stale = error instanceof ApiProblem && error.type === 'precondition-failed'
+  const failureKey = error && !stale ? (error instanceof ApiProblem ? 'apiFeedback.error.generic' : 'apiFeedback.error.network') : undefined
   const errors = pickupErrors(form)
   const missing = missingText([{ id: 'name', text: form.name }, { id: 'meetingPoint', text: form.address }])
 
@@ -61,7 +64,6 @@ export function PickupPointSheet({ storeId, place, onClose }: {
 
   const edit = (change: Partial<typeof form>) => {
     setForm(f => ({ ...f, ...change }))
-    reset()
   }
 
   const submit = () => {
@@ -78,7 +80,11 @@ export function PickupPointSheet({ storeId, place, onClose }: {
         key.settled()
         onClose()
       },
-      onError: (failed: Error) => key.settled(failed),
+      onError: (failed: Error) => {
+        key.settled(failed)
+        if (failed instanceof ApiProblem && failed.type === 'precondition-failed')
+          setStale(true)
+      },
     }
 
     if (place && rowVersion !== undefined)
@@ -103,6 +109,7 @@ export function PickupPointSheet({ storeId, place, onClose }: {
       }
       setForm(formOf(fresh))
       setRowVersion(fresh.rowVersion)
+      setStale(false)
       reset()
     }
     catch {
@@ -147,6 +154,7 @@ export function PickupPointSheet({ storeId, place, onClose }: {
             <Button className="min-h-11" isPending={reloading} variant="secondary" onPress={() => void reload()}>{t('pickup.reload')}</Button>
           </div>
         )}
+        {failureKey && <p className="rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">{t(failureKey)}</p>}
         <LanguageTabs missing={missing} selected={language} onChange={setLanguage}>
           {lang => (
             <>
