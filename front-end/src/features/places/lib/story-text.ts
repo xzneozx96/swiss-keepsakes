@@ -6,8 +6,10 @@ import { safeHref } from '@sk/domain/shared'
 
 type Media = StoryVersionText['media'][number]
 
-/** A run of text with the marks the story editor allows. A pin link draws as plain text: the preview has no pin to open. */
-export interface Inline { text: string, bold?: true, italic?: true, href?: string }
+/** A run of text with the marks the story editor allows. A pin link carries `pinHref` only when the caller can resolve its pin. */
+export interface Inline { text: string, bold?: true, italic?: true, href?: string, pinHref?: string }
+
+export interface StoryBlocksOptions { pinHref?: (pinId: string) => string | null }
 
 export type StoryBlock
   = | { type: 'heading', level: 2 | 3, inlines: (Inline | 'break')[] }
@@ -23,7 +25,7 @@ const IMAGE_WIDTH = 800
 
 const text = (value: unknown) => (typeof value === 'string' ? value : '')
 
-function inlinesOf(nodes: BodyNode[] | undefined): (Inline | 'break')[] {
+function inlinesOf(nodes: BodyNode[] | undefined, options: StoryBlocksOptions): (Inline | 'break')[] {
   return (nodes ?? []).flatMap((node): (Inline | 'break')[] => {
     if (node.type === 'hardBreak')
       return ['break']
@@ -44,6 +46,12 @@ function inlinesOf(nodes: BodyNode[] | undefined): (Inline | 'break')[] {
         if (href)
           inline.href = href
       }
+      else if (mark.type === 'pinLink' && typeof mark.attrs?.pinId === 'string') {
+        const pinHref = options.pinHref?.(mark.attrs.pinId)
+
+        if (pinHref)
+          inline.pinHref = pinHref
+      }
     }
 
     return [inline]
@@ -60,16 +68,16 @@ function imageUrl(file: Media) {
  * The stored Tiptap document as blocks the sheet draws, walking only the nodes the story editor allows (ADR-014):
  * a node it does not know, and an image or audio whose file is not among `media`, is skipped and never throws.
  */
-export function storyBlocks(body: StoryVersionText['body'], media: readonly Media[]): StoryBlock[] {
+export function storyBlocks(body: StoryVersionText['body'], media: readonly Media[], options: StoryBlocksOptions = {}): StoryBlock[] {
   const files = new Map(media.map(file => [file.id.toLowerCase(), file]))
   const fileOf = (node: BodyNode) => files.get(text(node.attrs?.mediaId).toLowerCase())
 
   function blockOf(node: BodyNode): StoryBlock[] {
     switch (node.type) {
       case 'paragraph':
-        return [{ type: 'paragraph', inlines: inlinesOf(node.content) }]
+        return [{ type: 'paragraph', inlines: inlinesOf(node.content, options) }]
       case 'heading':
-        return [{ type: 'heading', level: node.attrs?.level === 3 ? 3 : 2, inlines: inlinesOf(node.content) }]
+        return [{ type: 'heading', level: node.attrs?.level === 3 ? 3 : 2, inlines: inlinesOf(node.content, options) }]
       case 'blockquote':
         return [{ type: 'quote', blocks: blocksOf(node.content) }]
       case 'bulletList':
