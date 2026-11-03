@@ -24,7 +24,7 @@ vi.hoisted(() => {
     Object.defineProperty(globalThis, 'CSS', { value: { supports: () => false }, configurable: true })
 })
 
-interface Call { method: string, path: string, ifMatch: string | null }
+interface Call { method: string, path: string, ifMatch: string | null, key: string | null }
 
 const storeId = '0198a000-0000-7000-8000-000000000001'
 const base = `/api/store/${storeId}/pickup-places`
@@ -33,6 +33,7 @@ let calls: Call[]
 let active: ReturnType<typeof point>[]
 let archivedPoints: ReturnType<typeof point>[]
 let hold: Promise<void> | undefined
+let failNext: boolean
 
 function point(n: number, over: Record<string, unknown> = {}) {
   return pickupPlaceSchema.parse({
@@ -60,10 +61,11 @@ beforeEach(async () => {
   active = []
   archivedPoints = []
   hold = undefined
+  failNext = false
   vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
     const request = input instanceof Request ? input : new Request(input, init)
     const url = new URL(request.url)
-    const call: Call = { method: request.method, path: url.pathname + url.search, ifMatch: request.headers.get('if-match') }
+    const call: Call = { method: request.method, path: url.pathname + url.search, ifMatch: request.headers.get('if-match'), key: request.headers.get('idempotency-key') }
 
     calls.push(call)
     if (url.pathname === '/api/me')
@@ -80,6 +82,11 @@ beforeEach(async () => {
       archivedPoints = [...archivedPoints, { ...found, archived: true }]
 
       return Response.json({ ...found, archived: true })
+    }
+    if (action === 'restore' && failNext) {
+      failNext = false
+
+      return Response.json({ type: 'unavailable', status: 503 }, { status: 503, headers: { 'content-type': 'application/problem+json' } })
     }
     if (action === 'restore') {
       const found = archivedPoints.find(p => p.id === id)!
@@ -218,5 +225,51 @@ describe('[E6.6][AC26] M14 the Pickup points tab on the API', { timeout: 30_000 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `${base}/0198a000-0000-7000-8000-0000000000d1/restore`, ifMatch: '3' })
     await waitFor(() => expect(screen.getByRole('tab', { name: /Pickup points/ })).toHaveTextContent('1'))
+  })
+
+  it('two quick presses on Restore send one request', async () => {
+    archivedPoints = [point(1, { archived: true })]
+    await renderTab()
+    await screen.findByText('No pickup points yet.')
+
+    await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
+    await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
+    await userEvent.click(await screen.findByRole('checkbox', { name: /Active/ }))
+    await userEvent.keyboard('{Escape}')
+    const card = await ticket('Point 1')
+    let release: () => void = () => {}
+
+    hold = new Promise((resolve) => {
+      release = resolve
+    })
+    const restore = within(card).getByRole('button', { name: 'Restore Point 1' })
+
+    await userEvent.click(restore)
+    await userEvent.click(restore)
+    release()
+
+    await waitFor(() => expect(screen.getByRole('tab', { name: /Pickup points/ })).toHaveTextContent('1'))
+    expect(writes()).toHaveLength(1)
+  })
+
+  it('a retry of Restore after a lost answer sends the same Idempotency-Key', async () => {
+    archivedPoints = [point(1, { archived: true })]
+    failNext = true
+    await renderTab()
+    await screen.findByText('No pickup points yet.')
+
+    await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
+    await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
+    await userEvent.click(await screen.findByRole('checkbox', { name: /Active/ }))
+    await userEvent.keyboard('{Escape}')
+    const restore = within(await ticket('Point 1')).getByRole('button', { name: 'Restore Point 1' })
+
+    await userEvent.click(restore)
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    await userEvent.click(restore)
+    await waitFor(() => expect(writes()).toHaveLength(2))
+
+    expect(writes()[0]!.key).toBeTruthy()
+    expect(writes()[1]!.key).toBe(writes()[0]!.key)
   })
 })

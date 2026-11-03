@@ -1,12 +1,14 @@
 import type { PickupPlace } from '@sk/api-contract'
 
 import { pickText } from '@sk/domain/shared'
+import { useRef } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { useLocale } from '@/contexts/locale-context'
 import { useSubmit } from '@/features/data-client/use-command'
 import { usePickupPlaces } from '@/features/pickup/api/queries'
 import { useMe } from '@/features/stores/api/queries'
+import { keepsKey } from '@/features/stores/hooks/use-idempotency-key'
 import { currentStore } from '@/features/stores/lib/current-store'
 import { apiEnabled } from '@/lib/api-mode'
 
@@ -26,6 +28,22 @@ export function usePickupPoints(isOpen: boolean) {
   const archiveCommand = useSubmit('pickup', 'archive', { meta: { success: place => t('products.archivedToast', { name: nameOf(place) }), silent: true } })
   const restoreCommand = useSubmit('pickup', 'restore', { meta: { success: place => t('pickup.toast.restored', { name: nameOf(place) }) } })
 
+  // One key per intent (this action on this row version), kept while a retry is safe, as `useIdempotencyKey` does
+  // for the sheet; the places differ per press, so the keys sit in a map.
+  const keysRef = useRef(new Map<string, string>())
+  const keyFor = (action: string, place: PickupPlace) => {
+    const intent = `${action}:${place.id}:${place.rowVersion}`
+
+    if (!keysRef.current.has(intent))
+      keysRef.current.set(intent, crypto.randomUUID())
+
+    return { intent, key: keysRef.current.get(intent)! }
+  }
+  const settle = (intent: string, error?: Error) => {
+    if (!error || !keepsKey(error))
+      keysRef.current.delete(intent)
+  }
+
   const archive = (place: PickupPlace) => {
     if (!storeId || archiveCommand.isPending)
       return
@@ -33,13 +51,31 @@ export function usePickupPoints(isOpen: boolean) {
       title: t('products.archive.title', { name: nameOf(place) }),
       body: t('pickup.archive.body'),
       confirmLabel: t('products.action.archive'),
-      run: () => archiveCommand.submitAsync({ storeId, id: place.id, ifMatch: place.rowVersion, idempotencyKey: crypto.randomUUID() }),
+      run: () => {
+        const { intent, key } = keyFor('archive', place)
+
+        return archiveCommand.submitAsync({ storeId, id: place.id, ifMatch: place.rowVersion, idempotencyKey: key })
+          .then((result) => {
+            settle(intent)
+
+            return result
+          }, (error: Error) => {
+            settle(intent, error)
+            throw error
+          })
+      },
     })
   }
 
   const restore = (place: PickupPlace) => {
-    if (storeId)
-      restoreCommand.submit({ storeId, id: place.id, ifMatch: place.rowVersion, idempotencyKey: crypto.randomUUID() })
+    if (!storeId)
+      return
+    const { intent, key } = keyFor('restore', place)
+
+    restoreCommand.submit(
+      { storeId, id: place.id, ifMatch: place.rowVersion, idempotencyKey: key },
+      { onSuccess: () => settle(intent), onError: error => settle(intent, error) },
+    )
   }
 
   return { storeId, me, active, archived, archive, restore, dialog }

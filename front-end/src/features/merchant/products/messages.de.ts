@@ -250,10 +250,7 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'products.place.open': '{name} bearbeiten',
   'products.place.save': 'Abholstelle speichern',
   'products.place.saved': '{name} gespeichert',
-  'products.place.addressError': 'Geben Sie die Adresse ein.',
   'pickup.hours.range': '{from} bis {to}',
-  'products.place.hoursHelp':
-    'Gäste sehen den Text so, wie er hier steht. Abholtermine lassen Sonntage weiterhin überall aus.',
 
   'products.storageFull':
     'Nicht gespeichert: Der Speicher des Prototyps auf diesem Gerät ist voll. Verwenden Sie ein kleineres Foto oder weniger Uploads.',

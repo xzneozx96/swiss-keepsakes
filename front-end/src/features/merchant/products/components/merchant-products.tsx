@@ -63,6 +63,7 @@ function PickupSkeleton() {
           <div className="flex flex-col gap-2 border-t border-dashed border-separator px-4 py-3.5">
             <Skeleton className="h-4 w-1/3 rounded-lg" />
             <Skeleton className="h-4 w-full rounded-lg" />
+            <Skeleton className="mt-1 h-8 w-24 rounded-lg max-lg:h-11" />
           </div>
         </li>
       ))}
@@ -284,7 +285,7 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
         action={
           tab === 'pickup'
             ? (
-                <Button className="shrink-0" isDisabled={!pickup.storeId} size="sm" onPress={() => setSheet({})}>
+                <Button className="shrink-0 max-lg:min-h-11" isDisabled={!pickup.storeId} size="sm" onPress={() => setSheet({})}>
                   <PlusIcon aria-hidden size={16} />
                   {t('pickup.action.add')}
                 </Button>
