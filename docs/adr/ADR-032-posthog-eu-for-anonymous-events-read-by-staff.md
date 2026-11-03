@@ -1,13 +1,14 @@
 # ADR-032: Send anonymous visitor events to PostHog EU, read by our team in PostHog
 
-Status: proposed
+Status: accepted
 Date: 2026-11-03
-Source: gate G-S8-D6
+Supersedes: ADR-007
+Source: gate G-S8-D6, G-S8-ADR032, G-S8-SEGMENT, G-S8-CONSENT, G-S8-DEP-POSTHOG
 Applies to: `front-end/src/lib/analytics/`, `packages/api-contract/`, `api/src/modules/analytics/`, `api/src/modules/reporting/`, `api/migrations/`
 
-Supersedes ADR-007 and ADR-020 once the owner approves. The header has no `Supersedes:` line yet, because `adr.ts` takes one id and needs the old status flipped at approval.
+Supersedes ADR-007. It also replaces ADR-020 apart from the per-day order counter, which stays (see the amendment on ADR-020). `adr.ts` takes one id in `Supersedes:`, so ADR-020 is amended instead of marked superseded.
 
-New dependency: `posthog-js` 1.444.4 (version from the research of 2026-11-03). The owner approves it with this ADR. This reverses gate D2 of 2026-10-26 (no third-party analytics tool).
+New dependency: `posthog-js` 1.444.4 (version from the research of 2026-11-03). The owner approved it with this ADR on 2026-11-03 (gate G-S8-DEP-POSTHOG). It is front-end only. `posthog-node` is not used. This reverses gate D2 of 2026-10-26 (no third-party analytics tool).
 
 ## Context
 ADR-007 and ADR-020 record anonymous events in our own database. The table holds no identifier, time is cut to the hour, CHECKs close every value, and `order_submit` is never stored. The owner chose that design on 2026-10-26 (gate D2) and rejected Plausible and GA4.
@@ -35,6 +36,7 @@ We will send anonymous visitor events to PostHog EU cloud and read them in PostH
 **Allow-list in `before_send`**
 - Event names are closed. They are `page_view`, `pin_open`, `pin_to_story_click`, `story_view`, `product_view` and `outbound_click`.
 - Property names and values are closed. They come from the contract in `packages/api-contract`.
+- Segment and interests are sent, as closed values only: the anonymous audience values from the onboarding answers, never free text (owner gate G-S8-SEGMENT, 2026-11-03). The lawyer reviews this with O32 and O33.
 - `before_send` drops the URL, path, referrer, user agent and every other `$` property. An event that breaks the list is dropped, not repaired.
 - No account, order, partner or referral id goes on an event.
 - Referrer class and device class are derived in the browser, as in ADR-007.
@@ -47,10 +49,11 @@ We will send anonymous visitor events to PostHog EU cloud and read them in PostH
 - No reverse proxy at first. We accept the loss from ad blockers. We revisit if the numbers look thin.
 
 **Consent**
-- Open. It is decided with O32 (sprint 17), using PostHog's opt-in and opt-out calls.
+- Sending is on for dev and staging. The switch is off for production until O32 is answered in sprint 17 (owner gate G-S8-CONSENT, 2026-11-03). The answer then uses PostHog's opt-in and opt-out calls.
 
 **Before production**
 - The owner signs PostHog's DPA.
+- The lawyer reviews the segment and interests values with O32 and O33.
 - The sub-processor list and a Swiss nFADP check by the lawyer are done.
 
 ## Consequences
@@ -88,3 +91,4 @@ We will send anonymous visitor events to PostHog EU cloud and read them in PostH
 
 ## History
 - 2026-11-03 proposed (gate G-S8-D6)
+- 2026-11-03 accepted by the owner 2026-11-03 (gate G-S8-ADR032)

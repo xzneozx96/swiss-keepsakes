@@ -36,6 +36,9 @@ We will make the table unable to hold what a join needs.
 - The browser derives the referrer class and never sends the referrer URL.
 - Whether an in-memory session id needs consent is a lawyer question (O14, O32). If consent is needed, the browser stops sending, and the table does not change.
 
+## Amendments
+- 2026-11-03 (gate G-S8-ADR032): superseded by ADR-032, except the per-day order counter. `analytics.events` and `analytics.daily_counts` are no longer planned, and the hour-only time, closed CHECKs and event-shape rules apply to no table. `analytics.daily_funnels` and the rule that `order_submit` is counted per day and never stored stay in force. DM-10 carries the matching amendment.
+
 ## Considered options
 - **Store `occurred_at` to the second.** Gives exact ordering and a correlation channel to orders. Rejected.
 - **Store `order_submit` with a bare session id and an hour.** Matches ADR-007 and still lets a reader guess the session of a single order in a quiet hour. Rejected, because the gates forbid it.
@@ -45,4 +48,4 @@ We will make the table unable to hold what a join needs.
 ## History
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
-- 2026-11-03 superseded by ADR-032 (proposed, pending owner approval)
+- 2026-11-03 amended (gate G-S8-ADR032): superseded by ADR-032 except the `daily_funnels` counter
