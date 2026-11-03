@@ -91,5 +91,24 @@ export function createFakeStories(): StoryRepository<null> & { groups: Map<strin
         return false
       return versions.delete(key(groupId, language))
     },
+    async listGroups(_tx, storeId) {
+      return [...groups.values()].filter(group => group.storeId === storeId).flatMap((group) => {
+        const own = [...versions.values()].filter(version => version.storeId === storeId && version.groupId === group.id)
+        if (own.length === 0)
+          return []
+        return [{
+          groupId: group.id,
+          kind: group.kind,
+          versions: own.map((version) => {
+            const doc = version.draft ?? version.published
+            return { language: version.language, status: version.status, title: doc?.title ?? '', coverMediaId: doc?.coverMediaId ?? null, everPublished: version.published !== null, editsNotLive: version.status === 'published' && version.draft !== null, rowVersion: version.rowVersion, updatedAt: version.updatedAt }
+          }),
+        }]
+      })
+    },
+    async findGroup(_tx, storeId, groupId) {
+      const group = groups.get(groupId)
+      return group?.storeId === storeId ? group : undefined
+    },
   }
 }

@@ -1,4 +1,4 @@
-import type { ContentLanguage, Localized, MediaKind, Pin, PinDate, PinListEntry, PinStoryOption, StayTag, StoryDraft, StoryGroup, StoryVersion, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
+import type { ContentLanguage, Localized, MediaKind, Pin, PinDate, PinListEntry, PinStoryOption, StayTag, StoryDraft, StoryGroup, StoryVersion, StoryVersionStatus, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
 
 // What the content use cases need. Same shapes as the identity module's ports, copied so modules do not import
 // each other (backend/architecture.md). The platform's unit of work fits the generic shape structurally.
@@ -263,6 +263,14 @@ export interface StoryVersionChanges {
   draft?: StoryDraft
 }
 
+// One story group for the list: only what the list shows, never the documents (a body can be 200 KB). Title and cover
+// id come from the draft when the version has one, else from the published text.
+export interface StoryListRow {
+  groupId: string
+  kind: StoryGroup['kind']
+  versions: { language: ContentLanguage, status: StoryVersionStatus, title: string, coverMediaId: string | null, everPublished: boolean, editsNotLive: boolean, rowVersion: number, updatedAt: Date }[]
+}
+
 export interface StoryRepository<T> {
   insertGroup: (tx: T, storeId: string, input: { kind: StoryGroup['kind'], subjectPlaceId: string | null } & StoryGroupChanges, at: Date) => Promise<StoryGroup>
   // Locks the row; the lists come with it. An id of another store has no row.
@@ -282,6 +290,10 @@ export interface StoryRepository<T> {
   unpublishVersion: (tx: T, version: StoryVersion, at: Date) => Promise<StoryVersion>
   moveVersion: (tx: T, version: StoryVersion, targetGroupId: string, at: Date) => Promise<StoryVersion>
   removeVersion: (tx: T, storeId: string, groupId: string, language: ContentLanguage) => Promise<boolean>
+  // The groups of the store that have at least one version. A group with none (left by a failed create or a half-done delete) is left out.
+  listGroups: (tx: T, storeId: string) => Promise<StoryListRow[]>
+  // The group with its lists, without a lock. An id of another store has no row.
+  findGroup: (tx: T, storeId: string, groupId: string) => Promise<StoryGroup | undefined>
 }
 
 // What a tour guide save may change. A tour guide has no price and no departure. `stops` and `keepsakeProductIds`
