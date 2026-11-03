@@ -1,4 +1,5 @@
 import type { Actor } from '@sk/domain/identity'
+import type { AuditEntry } from '../../../src/modules/content/ports.ts'
 import { describe, expect, it } from 'vitest'
 import { makeDeleteStoryGroup } from '../../../src/modules/content/application/delete-story-group.ts'
 import { makeGetStoryLinks } from '../../../src/modules/content/application/get-story-links.ts'
@@ -13,15 +14,16 @@ const anonymous: Actor = { kind: 'anonymous' }
 
 function setup() {
   const stories = createFakeStories()
+  const audit: AuditEntry[] = []
   const deps = {
     uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) },
     stories,
     media: { find: async () => [] },
     pins: { idsInStore: async () => [] },
-    audit: { record: async () => {} },
+    audit: { record: async (_tx: null, entry: AuditEntry) => void audit.push(entry) },
     clock: createManualClock(new Date('2026-11-03T10:00:00Z')),
   }
-  return { stories, remove: makeDeleteStoryGroup(deps), links: makeGetStoryLinks(deps) }
+  return { stories, audit, remove: makeDeleteStoryGroup(deps), links: makeGetStoryLinks(deps) }
 }
 
 type Setup = ReturnType<typeof setup>
@@ -56,6 +58,40 @@ describe('[E4.3][AC30] AC-1 Delete story removes the group and both versions', (
 
     expect(await s.remove(owner, store, g.id, null)).toMatchObject({ ok: true })
     expect(s.stories.versions.size).toBe(0)
+  })
+})
+
+describe('[E4.3][AC30] CORRECTNESS-E43-4 Delete story is audited like unpublish', () => {
+  it('[E4.3][AC30] one audit row names the group, the status of both versions, the two unlink counts, the actor and the request', async () => {
+    const s = setup()
+    const g = await story(s)
+    const en = s.stories.versions.get(`${g.id}/en`)!
+    s.stories.versions.set(`${g.id}/en`, { ...en, status: 'published' })
+    await story(s, { relatedGroupIds: [g.id] })
+    s.stories.mainStoryOf.set('pin-1', { storeId: store, groupId: g.id })
+
+    await s.remove(owner, store, g.id, 'req-9')
+
+    expect(s.audit).toEqual([{
+      storeId: store,
+      actor: 'staff:u1',
+      entity: 'story-group',
+      entityId: g.id,
+      action: 'deleted',
+      before: { versions: [{ language: 'de', status: 'draft' }, { language: 'en', status: 'published' }] },
+      after: { pinsUnlinked: 1, storiesUnlinked: 1 },
+      requestId: 'req-9',
+    }])
+  })
+
+  it('[E4.3][AC30] a refused or missing story writes no audit row', async () => {
+    const s = setup()
+    const g = await story(s)
+
+    await s.remove(outsider, store, g.id, null)
+    await s.remove(owner, store, 'missing', null)
+
+    expect(s.audit).toEqual([])
   })
 })
 

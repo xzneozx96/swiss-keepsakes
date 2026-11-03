@@ -43,7 +43,8 @@ export function createFakeStories(): StoryRepository<null> & { groups: Map<strin
       return group?.storeId === storeId ? group : undefined
     },
     async saveGroup(_tx, group, changes, at) {
-      return putGroup({ ...group, ...changes, rowVersion: group.rowVersion + 1, updatedAt: at })
+      // As the SQL: a kind with no place stores no place, and a save that leaves kind out keeps both.
+      return putGroup({ ...group, ...changes, subjectPlaceId: changes.kind === undefined ? group.subjectPlaceId : (changes.subjectPlaceId ?? null), rowVersion: group.rowVersion + 1, updatedAt: at })
     },
     async insertVersion(_tx, storeId, groupId, language, changes, at) {
       if (versions.has(key(groupId, language)))
@@ -100,28 +101,24 @@ export function createFakeStories(): StoryRepository<null> & { groups: Map<strin
         stories: [...groups.values()].filter(other => other.storeId === storeId && other.id !== groupId && other.relatedGroupIds.includes(groupId)).length,
       }
     },
-    async clearMainStory(_tx, storeId, groupId) {
+    async deleteGroup(_tx, storeId, groupId, at) {
+      if (groups.get(groupId)?.storeId !== storeId)
+        return undefined
       const named = [...mainStoryOf.values()].filter(pin => pin.storeId === storeId && pin.groupId === groupId)
       for (const pin of named)
         pin.groupId = null
-      return named.length
-    },
-    async removeRelatedTo(_tx, storeId, groupId, at) {
       const listing = [...groups.values()].filter(other => other.storeId === storeId && other.relatedGroupIds.includes(groupId))
       for (const other of listing)
         putGroup({ ...other, relatedGroupIds: other.relatedGroupIds.filter(id => id !== groupId), rowVersion: other.rowVersion + 1, updatedAt: at })
-      return listing.length
-    },
-    async removeVersions(_tx, storeId, groupId) {
+      const gone: { language: StoryVersion['language'], status: StoryVersion['status'] }[] = []
       for (const [k, version] of versions) {
-        if (version.storeId === storeId && version.groupId === groupId)
+        if (version.storeId === storeId && version.groupId === groupId) {
+          gone.push({ language: version.language, status: version.status })
           versions.delete(k)
+        }
       }
-    },
-    async removeGroup(_tx, storeId, groupId) {
-      if (groups.get(groupId)?.storeId !== storeId)
-        return false
-      return groups.delete(groupId)
+      groups.delete(groupId)
+      return { pinsUnlinked: named.length, storiesUnlinked: listing.length, versions: gone }
     },
     async listGroups(_tx, storeId) {
       return [...groups.values()].filter(group => group.storeId === storeId).flatMap((group) => {

@@ -177,31 +177,29 @@ export function createStoryRepository(): StoryRepository<Tx> {
       return rows[0]!
     },
 
-    async clearMainStory(tx, storeId, groupId, at) {
+    async deleteGroup(tx, storeId, groupId, at) {
+      // FOR UPDATE, not the FOR NO KEY UPDATE of a save: the key check of a pin or story save that names this group takes KEY SHARE,
+      // which only FOR UPDATE conflicts with. That save then waits for this commit instead of slipping in between the steps below.
+      const locked = await tx.execute(sql`select id from content.story_groups where store_id = ${storeId} and id = ${groupId} for update`)
+      if (locked.rows.length === 0)
+        return undefined
       const cleared = await tx.execute(sql`
         update content.places set main_story_group_id = null, row_version = row_version + 1, updated_at = ${at}
          where store_id = ${storeId} and main_story_group_id = ${groupId} returning id`)
-      return cleared.rows.length
-    },
-
-    async removeRelatedTo(tx, storeId, groupId, at) {
       const bumped = await tx.execute(sql`
         update content.story_groups set row_version = row_version + 1, updated_at = ${at}
          where store_id = ${storeId} and id in (select group_id from content.story_related where store_id = ${storeId} and related_group_id = ${groupId})
         returning id`)
       await tx.execute(sql`delete from content.story_related where store_id = ${storeId} and related_group_id = ${groupId}`)
-      return bumped.rows.length
-    },
-
-    async removeVersions(tx, storeId, groupId) {
-      await tx.execute(sql`
-        delete from content.media_refs where store_id = ${storeId} and owner_kind = 'story_version' and owner_id = ${groupId}`)
-      await tx.execute(sql`delete from content.story_versions where store_id = ${storeId} and group_id = ${groupId}`)
-    },
-
-    async removeGroup(tx, storeId, groupId) {
-      const deleted = await tx.execute(sql`delete from content.story_groups where store_id = ${storeId} and id = ${groupId} returning id`)
-      return deleted.rows.length > 0
+      await tx.execute(sql`delete from content.media_refs where store_id = ${storeId} and owner_kind = 'story_version' and owner_id = ${groupId}`)
+      const versions = await tx.execute<{ language: StoryVersion['language'], status: StoryVersion['status'] } & Record<string, unknown>>(sql`
+        delete from content.story_versions where store_id = ${storeId} and group_id = ${groupId} returning language, status`)
+      await tx.execute(sql`delete from content.story_groups where store_id = ${storeId} and id = ${groupId}`)
+      return {
+        pinsUnlinked: cleared.rows.length,
+        storiesUnlinked: bumped.rows.length,
+        versions: versions.rows.map(({ language, status }) => ({ language, status })),
+      }
     },
 
     // One query, and not the documents: a body can be 200 KB. The title and cover come from the draft when there is one,

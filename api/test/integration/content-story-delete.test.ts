@@ -7,7 +7,6 @@ import { createMediaRepository } from '../../src/modules/content/adapters/media-
 import { createPinRepository } from '../../src/modules/content/adapters/pin-repository.ts'
 import { createStoryRepository } from '../../src/modules/content/adapters/story-repository.ts'
 import { makeDeleteStoryGroup } from '../../src/modules/content/application/delete-story-group.ts'
-import { createAuditLog } from '../../src/platform/audit.ts'
 import { systemClock } from '../../src/platform/clock.ts'
 import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import { createContentHttp } from './content-http.ts'
@@ -96,6 +95,8 @@ describe('[E4.3][AC30] AC-2 pins and related stories are unlinked in the same tr
     for (const other of others)
       await related(staff.storeId, other.id, s.id)
     const bystanderPin = await place(staff.storeId, others[0]!.id)
+    // A related row between two other stories, and another story's media references: the delete must leave both alone.
+    await related(staff.storeId, others[0]!.id, others[1]!.id, 2)
     return { s, pins, others, bystanderPin }
   }
 
@@ -117,20 +118,23 @@ describe('[E4.3][AC30] AC-2 pins and related stories are unlinked in the same tr
     expect(await count(pool, 'select count(*) from content.story_groups where id = any($1::uuid[])', [others.map(o => o.id)])).toBe(3)
     expect(await count(pool, 'select count(*) from content.story_groups where id = any($1::uuid[]) and row_version = 2', [others.map(o => o.id)])).toBe(3)
     expect((await pool.query<{ main_story_group_id: string }>('select main_story_group_id from content.places where id = $1', [bystanderPin])).rows[0]?.main_story_group_id).toBe(others[0]!.id)
+    expect(await count(pool, 'select count(*) from content.story_related where group_id = $1 and related_group_id = $2', [others[0]!.id, others[1]!.id])).toBe(1)
+    expect(await rows('media_refs', 'owner_id', others[0]!.id)).toBeGreaterThanOrEqual(2)
     expect((await env.call(`${s.path}/links`, { headers: staff.owner.headers })).status).toBe(404)
   })
 
-  it('[E4.3][AC30] a delete that fails after the pins were cleared changes nothing', async () => {
+  it('[E4.3][AC30] a delete that fails after every row was changed (the audit write) changes nothing', async () => {
     const staff = await env.storeWithStaff()
     const { s, pins, others } = await linked(staff)
     const actor: Actor = { kind: 'staff', userId: staff.owner.userId, guestId: randomUUID(), stores: new Map([[staff.storeId, 'owner']]) }
     const stories = createStoryRepository()
     const failing = makeDeleteStoryGroup({
       uow: createUnitOfWork(db),
-      stories: { ...stories, removeVersions: async () => { throw new Error('forced failure') } },
+      stories,
       media: createMediaRepository(),
       pins: createPinRepository(),
-      audit: createAuditLog(systemClock),
+      // The audit row is written after every row was changed, so a failure here must roll all of them back.
+      audit: { record: async () => { throw new Error('forced failure') } },
       clock: systemClock,
     })
 
@@ -142,6 +146,55 @@ describe('[E4.3][AC30] AC-2 pins and related stories are unlinked in the same tr
     expect(await count(pool, 'select count(*) from content.story_groups where id = any($1::uuid[]) and row_version = 1', [others.map(o => o.id)])).toBe(3)
     expect(await rows('story_versions', 'group_id', s.id)).toBe(2)
     expect(await rows('story_groups', 'id', s.id)).toBe(1)
+  })
+})
+
+describe('[E4.3][AC30] CORRECTNESS-E43-4 the delete is audited', () => {
+  it('[E4.3][AC30] one audit row names the story, both versions and the unlink counts', async () => {
+    const staff = await env.storeWithStaff()
+    const s = await story(staff)
+    await place(staff.storeId, s.id)
+
+    expect((await env.call(s.path, { method: 'DELETE', headers: staff.owner.headers })).status).toBe(200)
+
+    const { rows: audit } = await pool.query<{ action: string, before: unknown, after: unknown }>(
+      `select action, before, after from platform.audit_log where entity = 'story-group' and entity_id = $1`,
+      [s.id],
+    )
+    expect(audit).toEqual([{
+      action: 'deleted',
+      before: { versions: [{ language: 'de', status: 'published' }, { language: 'en', status: 'draft' }] },
+      after: { pinsUnlinked: 1, storiesUnlinked: 0 },
+    }])
+  })
+})
+
+describe('[E4.3][AC30] SECURITY-E43-2 a pin saved at the same moment waits for the delete instead of failing it', () => {
+  it('[E4.3][AC30] a pin that names the story and commits while the delete runs is unlinked, and the delete answers 200', async () => {
+    const staff = await env.storeWithStaff()
+    const s = await story(staff)
+    const client = await pool.connect()
+    let racing = ''
+
+    try {
+      await client.query('begin')
+      // The foreign key check of this insert holds a KEY SHARE lock on the group until the commit.
+      racing = (await client.query<{ id: string }>('insert into content.places (store_id, main_story_group_id) values ($1, $2) returning id', [staff.storeId, s.id])).rows[0]!.id
+      const removing = env.call(s.path, { method: 'DELETE', headers: staff.owner.headers })
+
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      await client.query('commit')
+      const removed = await removing
+
+      expect(removed.status).toBe(200)
+      expect(await removed.json()).toEqual({ pinsUnlinked: 1, storiesUnlinked: 0 })
+    }
+    finally {
+      await client.query('rollback').catch(() => {})
+      client.release()
+    }
+    expect((await pool.query<{ main_story_group_id: string | null }>('select main_story_group_id from content.places where id = $1', [racing])).rows[0]?.main_story_group_id).toBeNull()
+    expect(await rows('story_groups', 'id', s.id)).toBe(0)
   })
 })
 
@@ -179,6 +232,7 @@ describe('[E4.3][AC30] AC-4 idempotency', () => {
     const staff = await env.storeWithStaff()
     const s = await story(staff)
     const bystander = await story(staff)
+    const bystanderRefs = await rows('media_refs', 'owner_id', bystander.id)
     const key = `delete-${randomUUID()}`
 
     const first = await env.call(s.path, { method: 'DELETE', headers: staff.owner.headers, key })
@@ -191,6 +245,8 @@ describe('[E4.3][AC30] AC-4 idempotency', () => {
     expect(await again.json()).toEqual({ pinsUnlinked: 0, storiesUnlinked: 0 })
     expect(await rows('story_groups', 'id', bystander.id)).toBe(1)
     expect(await rows('story_versions', 'group_id', bystander.id)).toBe(2)
+    expect(bystanderRefs).toBeGreaterThanOrEqual(2)
+    expect(await rows('media_refs', 'owner_id', bystander.id)).toBe(bystanderRefs)
   })
 
   it('[E4.3][AC30] a delete with no Idempotency-Key is 400 idempotency-key-required and the story stays', async () => {

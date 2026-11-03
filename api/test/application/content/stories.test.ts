@@ -262,6 +262,8 @@ describe('story use cases', () => {
     expect(await s.saveGroup(owner, store, g.id, 1, { kind: 'editorial_review', subjectPlaceId: null }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
     expect(await s.saveGroup(owner, store, g.id, 1, { kind: 'editorial_review' }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
     expect(await s.saveGroup(owner, store, g.id, 1, { kind: 'story', subjectPlaceId: 'p1' }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+    // A place with no kind to go with it (TEST-E43-2): the contract refuses it over HTTP, the use case refuses it for any other caller.
+    expect(await s.saveGroup(owner, store, g.id, 1, { subjectPlaceId: 'p1' }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
     expect(s.stories.groups.get(g.id)).toMatchObject({ rowVersion: 1, kind: 'story', subjectPlaceId: null })
   })
 
