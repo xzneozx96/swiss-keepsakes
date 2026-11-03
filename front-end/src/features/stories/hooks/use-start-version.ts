@@ -7,11 +7,11 @@ import { useDataClient } from '@/features/data-client'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useCommand } from '@/features/data-client/use-command'
 import { storiesQueries } from '../api/queries'
-import { otherCover, startDraft } from '../lib/draft'
+import { otherCheckedOn, otherCover, startDraft } from '../lib/draft'
 import { storyProblemKeys } from '../lib/problems'
 
 /**
- * Starts the language version a story does not have yet: an empty draft that takes the other language's cover (AC30: one
+ * Starts the language version a story does not have yet: an empty draft that takes the other language's cover and check date (AC30: one
  * language is enough, so nothing starts a version unasked). The command refreshes the group before it resolves. A refusal
  * toasts its copy; "this version exists" means another session started it, so the group is read again and the switch goes on.
  */
@@ -24,7 +24,7 @@ export function useStartVersion({ storeId, group, accountName }: { storeId: stri
     isPending: create.isPending,
     start: async (language: StoryLanguage): Promise<boolean> => {
       try {
-        await create.mutateAsync({ storeId, groupId: group.id, language, draft: startDraft(accountName, otherCover(group.versions, language)), idempotencyKey: crypto.randomUUID() })
+        await create.mutateAsync({ storeId, groupId: group.id, language, draft: startDraft(accountName, otherCover(group.versions, language), otherCheckedOn(group.versions, language)), idempotencyKey: crypto.randomUUID() })
 
         return true
       }

@@ -195,6 +195,18 @@ describe('[E4.3][AC30][AC45] the story editor', () => {
     expect(await titleField()).toHaveValue('')
   })
 
+  it('[E4.3][AC30] AC-4 starting the German version of a review copies the English check date and leaves the English version as it was', async () => {
+    const server = serveStory(storyGroupDetail({ en: storyVersion('en', { draft: storyDoc({ checkedOn: '2026-10-12' }) }) }, { kind: 'editorial_review', subjectPlaceId: coverId }))
+
+    await openEditor()
+    await userEvent.click(screen.getByRole('tab', { name: /Deutsch/ }))
+    expect(await headings('Deutsch · Draft')).toHaveLength(2)
+    const post = state.calls.find(call => call.method === 'POST' && call.path === `${base}/versions`)
+
+    expect(post?.body).toMatchObject({ language: 'de', draft: { title: '', checkedOn: '2026-10-12' } })
+    expect((server.group.versions.en as { draft: { checkedOn: string } }).draft.checkedOn).toBe('2026-10-12')
+  })
+
   it('[E4.3][AC30] AC-5 ?lang=de on a story with no German falls back to English', async () => {
     serveStory(storyGroupDetail({ en: storyVersion('en') }))
     await openEditor('?lang=de')

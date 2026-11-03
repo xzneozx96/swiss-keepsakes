@@ -2,7 +2,7 @@ import type { StoryGroupDetail } from '@sk/api-contract'
 
 import { describe, expect, it } from 'vitest'
 
-import { draftOf, fieldsOf, otherCover, startDraft } from '@/features/stories/lib/draft'
+import { draftOf, fieldsOf, otherCheckedOn, otherCover, startDraft } from '@/features/stories/lib/draft'
 import { blockingGaps } from '@/features/stories/lib/gaps'
 import { storyProblemKey } from '@/features/stories/lib/problems'
 import { storySearch } from '@/features/stories/lib/search-params'
@@ -63,6 +63,18 @@ describe('[E4.3][AC30][AC45] story editor rules', () => {
     expect(otherCover(both, 'de')).toBe(id(3))
     expect(otherCover(group({ en: version({ published: doc({ coverMediaId: id(4) }) }) }).versions, 'de')).toBe(id(4))
     expect(otherCover(both, 'en')).toBeNull()
+  })
+
+  it('[E4.3][AC30] AC-4 startDraft copies the other version\'s check date when it has one, and otherCheckedOn reads the draft before the published copy', () => {
+    expect(startDraft('Anna', null, '2026-10-12')).toMatchObject({ title: '', checkedOn: '2026-10-12' })
+    expect(startDraft('Anna', null, null)).not.toHaveProperty('checkedOn')
+    expect(startDraft('Anna', null)).not.toHaveProperty('checkedOn')
+    const both = group({ en: version({ draft: doc({ checkedOn: '2026-10-12' }), published: doc({ checkedOn: '2026-09-01' }) }) }).versions
+
+    expect(otherCheckedOn(both, 'de')).toBe('2026-10-12')
+    expect(otherCheckedOn(group({ en: version({ published: doc({ checkedOn: '2026-09-01' }) }) }).versions, 'de')).toBe('2026-09-01')
+    expect(otherCheckedOn(both, 'en')).toBeNull()
+    expect(otherCheckedOn(group({ en: version({ draft: doc({ checkedOn: null }) }) }).versions, 'de')).toBeNull()
   })
 
   it('[E4.3][AC45] AC-4 versionStateOf: published plus a draft, or plus local edits, is editsNotLive; published alone is published; a version with no document is draft; null is none', () => {
