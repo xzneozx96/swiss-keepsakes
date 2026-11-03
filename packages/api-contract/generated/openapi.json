@@ -5978,6 +5978,17 @@
               "null"
             ]
           },
+          "latitude": {
+            "description": "The pin, read from the link when it was saved",
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "mapsLink": {
+            "description": "The Google Maps link the merchant stored; guests open it for directions",
+            "type": "string"
+          },
           "name": {
             "properties": {
               "de": {
@@ -6005,6 +6016,9 @@
           "storeId",
           "name",
           "address",
+          "mapsLink",
+          "latitude",
+          "longitude",
           "instructions",
           "position",
           "archived",
@@ -6048,7 +6062,7 @@
       },
       "PickupPlacePatchBody": {
         "additionalProperties": false,
-        "description": "Fields left out stay as they are. Hours, when given, replace the whole set",
+        "description": "Fields left out stay as they are. A new Google Maps link moves the pin to the position read from it; the link cannot be removed. Hours, when given, replace the whole set",
         "properties": {
           "address": {
             "$ref": "#/components/schemas/PickupAddressInput"
@@ -6063,6 +6077,12 @@
           },
           "instructions": {
             "$ref": "#/components/schemas/PickupInstructionsInput"
+          },
+          "mapsLink": {
+            "description": "The Google Maps link of the point: a short link (maps.app.goo.gl) or a full Google Maps address. The server reads the pin from it, following a short link through Google hosts only. 422 `maps-link-unreadable` when it holds no position",
+            "maxLength": 2000,
+            "pattern": "^https:\\/\\/[^\\s]+$",
+            "type": "string"
           },
           "name": {
             "$ref": "#/components/schemas/PickupNameInput"
@@ -6072,7 +6092,7 @@
       },
       "PickupPlaceWriteBody": {
         "additionalProperties": false,
-        "description": "A new pickup point, appended last",
+        "description": "A new pickup point, appended last. The Google Maps link is required; the position (latitude, longitude) is read from it",
         "properties": {
           "address": {
             "$ref": "#/components/schemas/PickupAddressInput"
@@ -6088,6 +6108,12 @@
           "instructions": {
             "$ref": "#/components/schemas/PickupInstructionsInput"
           },
+          "mapsLink": {
+            "description": "The Google Maps link of the point: a short link (maps.app.goo.gl) or a full Google Maps address. The server reads the pin from it, following a short link through Google hosts only. 422 `maps-link-unreadable` when it holds no position",
+            "maxLength": 2000,
+            "pattern": "^https:\\/\\/[^\\s]+$",
+            "type": "string"
+          },
           "name": {
             "$ref": "#/components/schemas/PickupNameInput"
           }
@@ -6095,6 +6121,7 @@
         "required": [
           "name",
           "address",
+          "mapsLink",
           "hours"
         ],
         "type": "object"
@@ -20094,7 +20121,7 @@
                 }
               }
             },
-            "description": "The new pickup point, last in the list",
+            "description": "The new pickup point, last in the list. 422 `maps-link-unreadable` when the link holds no position",
             "headers": {
               "ETag": {
                 "description": "The row version, as `\"<rowVersion>\"`",
@@ -20293,7 +20320,7 @@
                 }
               }
             },
-            "description": "The pickup point with the change saved. A left-out field stays; hours replace the whole set",
+            "description": "The pickup point with the change saved. A left-out field stays; a new Google Maps link moves the pin (422 `maps-link-unreadable` when the link holds no position); hours replace the whole set",
             "headers": {
               "ETag": {
                 "description": "The row version, as `\"<rowVersion>\"`",

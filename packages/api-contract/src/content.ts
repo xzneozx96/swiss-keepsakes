@@ -105,7 +105,7 @@ export function isGoogleMapsLink(text: string): boolean {
   return /^\/maps(?:\/|$)/.test(url.pathname)
 }
 
-const mapsLink = outboundUrl.refine(isGoogleMapsLink, 'A Google Maps link')
+export const mapsLink = outboundUrl.refine(isGoogleMapsLink, 'A Google Maps link')
 
 export const pinWriteBodySchema = z.strictObject({
   title: localizedTextSchema.optional(),

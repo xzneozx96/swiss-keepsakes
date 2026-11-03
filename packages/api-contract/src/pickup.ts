@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { mapsLink } from './content.js'
 import { noNul } from './text.js'
 
 // The merchant's pickup points and their weekly hours (E6.6). Request bodies are strict. Text accepts blank: the use
@@ -25,22 +26,25 @@ const spanInputSchema = z.strictObject({
 const nameInput = localizedInput(NAME_MAX).meta({ id: 'PickupNameInput', description: 'Name per language, at most 120 characters each. At least one language must be left or the answer is 422' })
 const addressInput = localizedInput(ADDRESS_MAX).meta({ id: 'PickupAddressInput', description: 'Address per language, at most 300 characters each. At least one language must be left or the answer is 422' })
 const instructionsInput = localizedInput(INSTRUCTIONS_MAX).meta({ id: 'PickupInstructionsInput', description: 'Optional hand-over instructions per language, at most 600 characters each' })
+const mapsLinkInput = mapsLink.meta({ description: 'The Google Maps link of the point: a short link (maps.app.goo.gl) or a full Google Maps address. The server reads the pin from it, following a short link through Google hosts only. 422 `maps-link-unreadable` when it holds no position' })
 const hoursInput = z.array(spanInputSchema).max(PICKUP_MAX_SPANS).meta({ description: 'The weekly spans. Several per day are allowed, overlapping too; one day cannot repeat the same opens' })
 
 export const pickupPlaceWriteBodySchema = z.strictObject({
   name: nameInput,
   address: addressInput,
+  mapsLink: mapsLinkInput,
   instructions: instructionsInput.optional(),
   hours: hoursInput,
-}).meta({ id: 'PickupPlaceWriteBody', description: 'A new pickup point, appended last' })
+}).meta({ id: 'PickupPlaceWriteBody', description: 'A new pickup point, appended last. The Google Maps link is required; the position (latitude, longitude) is read from it' })
 
 export const pickupPlacePatchBodySchema = z.strictObject({
   name: nameInput.optional(),
   address: addressInput.optional(),
+  mapsLink: mapsLinkInput.optional(),
   instructions: instructionsInput.optional(),
   hours: hoursInput.optional(),
-}).refine(body => Object.values(body).some(value => value !== undefined), 'Give a name, an address, instructions or hours')
-  .meta({ id: 'PickupPlacePatchBody', description: 'Fields left out stay as they are. Hours, when given, replace the whole set' })
+}).refine(body => Object.values(body).some(value => value !== undefined), 'Give a name, an address, a Google Maps link, instructions or hours')
+  .meta({ id: 'PickupPlacePatchBody', description: 'Fields left out stay as they are. A new Google Maps link moves the pin to the position read from it; the link cannot be removed. Hours, when given, replace the whole set' })
 
 export const pickupPlaceOrderBodySchema = z.strictObject({
   ids: z.array(z.uuid()).max(PICKUP_MAX_PLACES),
@@ -53,6 +57,9 @@ export const pickupPlaceSchema = z.object({
   storeId: z.uuid(),
   name: localizedOut,
   address: localizedOut,
+  mapsLink: z.string().meta({ description: 'The Google Maps link the merchant stored; guests open it for directions' }),
+  latitude: z.number().meta({ description: 'The pin, read from the link when it was saved' }),
+  longitude: z.number(),
   instructions: localizedOut.nullable(),
   position: z.int(),
   archived: z.boolean(),

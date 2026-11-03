@@ -2265,7 +2265,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description The new pickup point, last in the list */
+                /** @description The new pickup point, last in the list. 422 `maps-link-unreadable` when the link holds no position */
                 201: {
                     headers: {
                         /** @description The row version, as `"<rowVersion>"` */
@@ -2362,7 +2362,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description The pickup point with the change saved. A left-out field stays; hours replace the whole set */
+                /** @description The pickup point with the change saved. A left-out field stays; a new Google Maps link moves the pin (422 `maps-link-unreadable` when the link holds no position); hours replace the whole set */
                 200: {
                     headers: {
                         /** @description The row version, as `"<rowVersion>"` */
@@ -5715,6 +5715,11 @@ export interface components {
                 de?: string;
                 en?: string;
             } | null;
+            /** @description The pin, read from the link when it was saved */
+            latitude: number;
+            longitude: number;
+            /** @description The Google Maps link the merchant stored; guests open it for directions */
+            mapsLink: string;
             name: {
                 de?: string;
                 en?: string;
@@ -5732,20 +5737,24 @@ export interface components {
         PickupPlaceOrderBody: {
             ids: string[];
         };
-        /** @description Fields left out stay as they are. Hours, when given, replace the whole set */
+        /** @description Fields left out stay as they are. A new Google Maps link moves the pin to the position read from it; the link cannot be removed. Hours, when given, replace the whole set */
         PickupPlacePatchBody: {
             address?: components["schemas"]["PickupAddressInput"];
             /** @description The weekly spans. Several per day are allowed, overlapping too; one day cannot repeat the same opens */
             hours?: components["schemas"]["PickupSpanInput"][];
             instructions?: components["schemas"]["PickupInstructionsInput"];
+            /** @description The Google Maps link of the point: a short link (maps.app.goo.gl) or a full Google Maps address. The server reads the pin from it, following a short link through Google hosts only. 422 `maps-link-unreadable` when it holds no position */
+            mapsLink?: string;
             name?: components["schemas"]["PickupNameInput"];
         };
-        /** @description A new pickup point, appended last */
+        /** @description A new pickup point, appended last. The Google Maps link is required; the position (latitude, longitude) is read from it */
         PickupPlaceWriteBody: {
             address: components["schemas"]["PickupAddressInput"];
             /** @description The weekly spans. Several per day are allowed, overlapping too; one day cannot repeat the same opens */
             hours: components["schemas"]["PickupSpanInput"][];
             instructions?: components["schemas"]["PickupInstructionsInput"];
+            /** @description The Google Maps link of the point: a short link (maps.app.goo.gl) or a full Google Maps address. The server reads the pin from it, following a short link through Google hosts only. 422 `maps-link-unreadable` when it holds no position */
+            mapsLink: string;
             name: components["schemas"]["PickupNameInput"];
         };
         PickupSpanInput: {
