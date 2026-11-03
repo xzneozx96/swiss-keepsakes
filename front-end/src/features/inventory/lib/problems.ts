@@ -21,3 +21,21 @@ const problemKeys: Partial<Record<string, MessageKey>> = {
 }
 
 export const problemMessageKey = (type: string): MessageKey => problemKeys[type] ?? 'inventory.problem.generic'
+
+/** The "{n} unit(s) reserved by orders, so stock can’t go below" text for `count` reserved units. */
+export function belowReservedText(count: number): MessageKey {
+  return count === 1 ? 'inventory.error.belowReserved.one' : 'inventory.error.belowReserved.other'
+}
+
+type Translate = (key: MessageKey, params?: Record<string, string | number>) => string
+
+/** The text of a refused stock write: the reserved units for `stock-below-reserved` (the API's figure, else `reserved`), else the problem's own copy. */
+export function refusalText(t: Translate, failure: unknown, reserved: number): string {
+  if (!(failure instanceof InventoryProblem))
+    return t(problemMessageKey('unknown'))
+  if (failure.type !== 'stock-below-reserved')
+    return t(problemMessageKey(failure.type))
+  const count = failure.reserved ?? reserved
+
+  return t(belowReservedText(count), { count })
+}

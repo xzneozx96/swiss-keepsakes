@@ -1,4 +1,4 @@
-import { stockListSchema, stockRowSchema } from '@sk/api-contract'
+import { stockItemSchema, stockListSchema, stockRowSchema } from '@sk/api-contract'
 
 import { media, storeId } from './keepsakes-harness'
 
@@ -32,3 +32,19 @@ export function stockList(rows: Record<string, unknown>[], counts?: { all: numbe
 }
 
 export const stockProblem = (reserved: number) => Response.json({ type: 'stock-below-reserved', status: 422, title: 'refused', instance: '/x', requestId: 'req-2', reserved }, { status: 422 })
+
+/** The item answer: a row with the open orders that reserve its units. */
+export function stockItem(over: Record<string, unknown> = {}, reservations: Record<string, unknown>[] = []) {
+  return stockItemSchema.parse({ ...stockRow(over), reservations })
+}
+
+export function reservation(over: Record<string, unknown> = {}) {
+  return {
+    orderId: '0198a000-0000-7000-8000-0000000002a1',
+    orderRef: 'SK-1044',
+    guestName: 'Anna Meier',
+    acceptedAt: '2026-10-28T09:30:00.000Z',
+    quantity: 2,
+    ...over,
+  }
+}

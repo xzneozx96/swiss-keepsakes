@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
 import { useCommand } from '@/features/data-client/use-command'
-import { InventoryProblem, problemMessageKey } from '../lib/problems'
+import { refusalText } from '../lib/problems'
 import { parseQuantity } from '../lib/quantity'
 
 /** Not a stock figure, so the next idle render takes the saved figure. */
@@ -43,16 +43,6 @@ export function useStockSave(storeId: string, row: Pick<StockRow, 'skuId' | 'onH
     setRestore(count => count + 1)
   }
 
-  const messageOf = (failure: unknown) => {
-    if (!(failure instanceof InventoryProblem))
-      return t(problemMessageKey('unknown'))
-    if (failure.type !== 'stock-below-reserved')
-      return t(problemMessageKey(failure.type))
-    const reserved = failure.reserved ?? row.reserved
-
-    return t(reserved === 1 ? 'inventory.error.belowReserved.one' : 'inventory.error.belowReserved.other', { count: reserved })
-  }
-
   const send = async (onHand: number) => {
     queuedRef.current = onHand
     if (savingRef.current)
@@ -69,7 +59,7 @@ export function useStockSave(storeId: string, row: Pick<StockRow, 'skuId' | 'onH
         setError(undefined)
       }
       catch (failure) {
-        refuse(messageOf(failure))
+        refuse(refusalText(t, failure, row.reserved))
       }
     }
     savingRef.current = false
