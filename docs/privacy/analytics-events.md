@@ -12,7 +12,7 @@ A key and a switch control this:
 - `VITE_POSTHOG_ENABLED` must be exactly `true`.
 - `VITE_SITE_ENV` must be `development`, `staging` or `test`. A missing, `production` or unknown value counts as production, so a host that forgets to set it sends nothing.
 
-Pages under `/store`, `/partner`, `/admin` and the other private paths send nothing. A signed-in merchant browsing the guest site sends nothing either. While the browser does not yet know whether the visitor is a merchant, it sends nothing.
+Pages under `/store`, `/partner`, `/admin` and the other private paths send nothing. A signed-in merchant or Super Admin browsing the guest site sends nothing either. While the browser does not yet know whether the visitor is a merchant or the Super Admin, it sends nothing.
 
 ## What is sent
 

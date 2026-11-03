@@ -16,7 +16,7 @@ type Gate = 'allow' | 'hold' | 'skip'
 
 /**
  * Whether the guest site may report for this browser (R5, ADR-032). With the API off there is no session, so yes. With it on, a
- * signed-out visitor or a signed-in guest may be reported; a signed-in merchant (one or more stores) is not; while the session or the stores
+ * signed-out visitor or a signed-in guest may be reported; a signed-in merchant (one or more stores) and the Super Admin are not; while the session or the stores
  * are unresolved or failed the answer is `hold`, and nothing is reported.
  */
 function useGate(): Gate {
@@ -35,7 +35,7 @@ function useGate(): Gate {
   if (me.isPending || me.isError)
     return 'hold'
 
-  return me.data.stores.length > 0 ? 'skip' : 'allow'
+  return me.data.platformAdmin || me.data.stores.length > 0 ? 'skip' : 'allow'
 }
 
 /** Reports a `page_view` on each change of the guest path. It renders nothing and does its work in an effect, so never on the server. */

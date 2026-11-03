@@ -92,3 +92,6 @@ We will send anonymous visitor events to PostHog EU cloud and read them in PostH
 ## History
 - 2026-11-03 proposed (gate G-S8-D6)
 - 2026-11-03 accepted by the owner 2026-11-03 (gate G-S8-ADR032)
+
+## Amendments
+- 2026-11-03: a signed-in Super Admin browsing the guest site sends nothing, the same as a merchant (store member). The browser learns this from `platformAdmin` on `GET /api/me`. Until that answer is known the gate stays closed. Source: owner 2026-11-03.

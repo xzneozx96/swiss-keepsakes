@@ -164,6 +164,26 @@ describe('[E8.7][AC37][AC60][AC-5] private areas and merchants send nothing', ()
     expect(fake.events).toEqual([])
   })
 
+  it('with the API on, a signed-in Super Admin sends nothing on a guest page, pin events included, and holds while me is unresolved', async () => {
+    state.api = true
+    state.sessionUser = () => Promise.resolve(MERCHANT)
+    state.me = { isPending: true, isError: false, data: undefined as never }
+    const view = mount()
+
+    await waitFor(() => expect(state.meAsked).toBe(true))
+    expect(isTrackAllowed()).toBe(false)
+
+    state.me = { isPending: false, isError: false, data: { stores: [], platformAdmin: true } as never }
+    view.again()
+    const pin = { pageType: 'place', contentId: '00000000-0000-4000-8000-000000000101', language: 'en' } as const
+
+    view.go('/en/map')
+    track('pin_open', pin)
+
+    expect(isTrackAllowed()).toBe(false)
+    expect(fake.events).toEqual([])
+  })
+
   it('a signed-in merchant who opens a pin, follows its story or its website sends nothing; a guest does', async () => {
     state.api = true
     state.sessionUser = () => Promise.resolve(MERCHANT)
