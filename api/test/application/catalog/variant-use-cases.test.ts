@@ -37,12 +37,12 @@ function setup(found: Product | undefined, reserved = new Map<string, number>(),
   const repo = {
     findForUpdate: vi.fn(async () => found),
     saveVariant: vi.fn(async () => found),
-    insertVariant: vi.fn(async () => found!),
-    replaceOptions: vi.fn(async () => found!),
+    insertVariant: vi.fn(async () => ({ product: found!, createdSkuIds: [] })),
+    replaceOptions: vi.fn(async () => ({ product: found!, createdSkuIds: [] })),
     saveVariants: vi.fn(async () => found!),
     removeVariants: vi.fn(async () => found!),
     takenSkuCodes: vi.fn(async (_tx: null, _store: string, codes: string[]) => new Set(codes.filter(code => taken.has(code)))),
-    insert: vi.fn(async () => found!),
+    insert: vi.fn(async () => ({ product: found!, createdSkuIds: [] })),
   } as unknown as ProductRepository<null>
   const deps: CatalogDeps<null> = {
     uow: { run: work => work(null) },

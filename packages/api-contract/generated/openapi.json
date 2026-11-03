@@ -4770,6 +4770,12 @@
             "minimum": 1,
             "type": "integer"
           },
+          "quantity": {
+            "description": "The units in stock when the variant is created, 0 to 9999. Left out means 0",
+            "maximum": 9999,
+            "minimum": 0,
+            "type": "integer"
+          },
           "skuCode": {
             "description": "Letters and digits joined by - _ or ., unique in the shop. Optional: a variant may have no code",
             "maxLength": 60,
@@ -5866,6 +5872,253 @@
           "null"
         ]
       },
+      "PickupAddressInput": {
+        "additionalProperties": false,
+        "description": "Address per language, at most 300 characters each. At least one language must be left or the answer is 422",
+        "properties": {
+          "de": {
+            "maxLength": 300,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 300,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PickupInstructionsInput": {
+        "additionalProperties": false,
+        "description": "Optional hand-over instructions per language, at most 600 characters each",
+        "properties": {
+          "de": {
+            "maxLength": 600,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 600,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PickupNameInput": {
+        "additionalProperties": false,
+        "description": "Name per language, at most 120 characters each. At least one language must be left or the answer is 422",
+        "properties": {
+          "de": {
+            "maxLength": 120,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 120,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PickupPlace": {
+        "properties": {
+          "address": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "archived": {
+            "type": "boolean"
+          },
+          "hours": {
+            "items": {
+              "properties": {
+                "closes": {
+                  "type": "string"
+                },
+                "opens": {
+                  "type": "string"
+                },
+                "weekday": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "weekday",
+                "opens",
+                "closes"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "instructions": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "name": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "rowVersion": {
+            "type": "integer"
+          },
+          "storeId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "storeId",
+          "name",
+          "address",
+          "instructions",
+          "position",
+          "archived",
+          "hours",
+          "rowVersion"
+        ],
+        "type": "object"
+      },
+      "PickupPlaceList": {
+        "properties": {
+          "items": {
+            "description": "By position, then id",
+            "items": {
+              "$ref": "#/components/schemas/PickupPlace"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "PickupPlaceOrderBody": {
+        "additionalProperties": false,
+        "description": "The new order of the active pickup points. ids must be exactly the active points",
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 100,
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "type": "object"
+      },
+      "PickupPlacePatchBody": {
+        "additionalProperties": false,
+        "description": "Fields left out stay as they are. Hours, when given, replace the whole set",
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/PickupAddressInput"
+          },
+          "hours": {
+            "description": "The weekly spans. Several per day are allowed, overlapping too; one day cannot repeat the same opens",
+            "items": {
+              "$ref": "#/components/schemas/PickupSpanInput"
+            },
+            "maxItems": 35,
+            "type": "array"
+          },
+          "instructions": {
+            "$ref": "#/components/schemas/PickupInstructionsInput"
+          },
+          "name": {
+            "$ref": "#/components/schemas/PickupNameInput"
+          }
+        },
+        "type": "object"
+      },
+      "PickupPlaceWriteBody": {
+        "additionalProperties": false,
+        "description": "A new pickup point, appended last",
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/PickupAddressInput"
+          },
+          "hours": {
+            "description": "The weekly spans. Several per day are allowed, overlapping too; one day cannot repeat the same opens",
+            "items": {
+              "$ref": "#/components/schemas/PickupSpanInput"
+            },
+            "maxItems": 35,
+            "type": "array"
+          },
+          "instructions": {
+            "$ref": "#/components/schemas/PickupInstructionsInput"
+          },
+          "name": {
+            "$ref": "#/components/schemas/PickupNameInput"
+          }
+        },
+        "required": [
+          "name",
+          "address",
+          "hours"
+        ],
+        "type": "object"
+      },
+      "PickupSpanInput": {
+        "additionalProperties": false,
+        "properties": {
+          "closes": {
+            "description": "HH:MM, or 24:00. Before opens means the next morning; equal to opens is refused",
+            "maxLength": 10,
+            "type": "string"
+          },
+          "opens": {
+            "description": "HH:MM",
+            "maxLength": 10,
+            "type": "string"
+          },
+          "weekday": {
+            "description": "1 (Monday) to 7 (Sunday)",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weekday",
+          "opens",
+          "closes"
+        ],
+        "type": "object"
+      },
       "Pin": {
         "description": "A map pin as the editor sees it, with its draft and its published text",
         "properties": {
@@ -6905,6 +7158,14 @@
             "description": "The server's id for this request, also sent as X-Request-Id",
             "type": "string"
           },
+          "reserved": {
+            "description": "With stock-below-reserved: the units open orders hold. Set the stock to at least this",
+            "type": "integer"
+          },
+          "skuId": {
+            "description": "With stock-below-reserved on a batch: the variant that was refused",
+            "type": "string"
+          },
           "status": {
             "maximum": 599,
             "minimum": 400,
@@ -6914,7 +7175,7 @@
             "type": "string"
           },
           "type": {
-            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, keepsake-archived, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, maps-link-unreadable, address-not-found, address-lookup-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other",
+            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, keepsake-archived, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, maps-link-unreadable, address-not-found, address-lookup-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken, stock-below-reserved. Show generic copy for any other",
             "type": "string"
           }
         },
@@ -7341,7 +7602,7 @@
             "type": "integer"
           },
           "soldOutCount": {
-            "description": "Variants with no unit available. Always 0 until stock exists (E6.3)",
+            "description": "Variants that are not archived and have no unit available. A variant with no stock row counts",
             "type": "integer"
           },
           "status": {
@@ -7482,6 +7743,10 @@
       "ProductVariant": {
         "description": "A variant (SKU) of a keepsake",
         "properties": {
+          "available": {
+            "description": "onHand minus reserved: the units a guest can still buy",
+            "type": "integer"
+          },
           "hasOrders": {
             "description": "An order line names the variant, so removing it archives instead of deleting. Left out means false; always false until the orders module is wired",
             "type": "boolean"
@@ -7497,6 +7762,10 @@
               "string",
               "null"
             ]
+          },
+          "onHand": {
+            "description": "The units on the shelf, from the inventory module. 0 when the variant has no stock row. Sent on every read; left out only by a client that builds a variant itself",
+            "type": "integer"
           },
           "photo": {
             "description": "The photo of the variant, ready to show. Null for none, or when the file is gone",
@@ -7588,6 +7857,10 @@
             ]
           },
           "priceRappen": {
+            "type": "integer"
+          },
+          "reserved": {
+            "description": "The units that open orders hold. Never above onHand",
             "type": "integer"
           },
           "skuCode": {
@@ -11566,6 +11839,466 @@
               "en",
               "de"
             ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "StockFilter": {
+        "description": "`in-stock`: at least one unit available. `sold-out`: none available",
+        "enum": [
+          "all",
+          "in-stock",
+          "sold-out"
+        ],
+        "type": "string"
+      },
+      "StockItem": {
+        "description": "The stock of one variant with the orders that hold it",
+        "properties": {
+          "available": {
+            "type": "integer"
+          },
+          "code": {
+            "description": "The SKU code. Null when the variant has none",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "keepsakeName": {
+            "$ref": "#/components/schemas/StockText"
+          },
+          "onHand": {
+            "type": "integer"
+          },
+          "photo": {
+            "description": "The photo of the variant, else the first photo of the keepsake. Null for none",
+            "properties": {
+              "byteSize": {
+                "type": "integer"
+              },
+              "contentType": {
+                "type": "string"
+              },
+              "height": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "image",
+                  "audio",
+                  "pdf"
+                ],
+                "type": "string"
+              },
+              "name": {
+                "description": "What the merchant sees and searches. It starts as the uploaded file name",
+                "type": "string"
+              },
+              "publicUrl": {
+                "description": "The public URL of the original. Null until the file is ready",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "processing",
+                  "ready",
+                  "retired"
+                ],
+                "type": "string"
+              },
+              "variants": {
+                "description": "Resized copies of an image. Empty until the file is ready",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "width": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "status",
+              "name",
+              "contentType",
+              "byteSize",
+              "width",
+              "height",
+              "publicUrl",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "productId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "reservations": {
+            "description": "The open holds, oldest first. Empty when nothing is reserved",
+            "items": {
+              "$ref": "#/components/schemas/StockReservation"
+            },
+            "type": "array"
+          },
+          "reserved": {
+            "type": "integer"
+          },
+          "skuId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "variantTitle": {
+            "description": "The option values joined by \" / \" (\"XS / Red\"). Empty for a keepsake with no option",
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "required": [
+          "skuId",
+          "productId",
+          "code",
+          "keepsakeName",
+          "variantTitle",
+          "photo",
+          "onHand",
+          "reserved",
+          "available",
+          "reservations"
+        ],
+        "type": "object"
+      },
+      "StockList": {
+        "description": "The live variants of the store with their stock",
+        "properties": {
+          "counts": {
+            "description": "The tab figures of the whole store, counted before the filter and the search",
+            "properties": {
+              "all": {
+                "type": "integer"
+              },
+              "inStock": {
+                "type": "integer"
+              },
+              "soldOut": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "all",
+              "inStock",
+              "soldOut"
+            ],
+            "type": "object"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StockRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "counts"
+        ],
+        "type": "object"
+      },
+      "StockMany": {
+        "description": "The rows that were set, in the order of the request",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StockRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "StockManySetBody": {
+        "additionalProperties": false,
+        "description": "The units in stock for up to 200 variants, set in one transaction: all or nothing",
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "onHand": {
+                  "description": "The units on the shelf, 0 to 9999. Never below the reserved units",
+                  "maximum": 9999,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "skuId": {
+                  "format": "uuid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "skuId",
+                "onHand"
+              ],
+              "type": "object"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "StockReservation": {
+        "description": "An open order that holds units of the variant",
+        "properties": {
+          "acceptedAt": {
+            "description": "When the hold was made",
+            "format": "date-time",
+            "type": "string"
+          },
+          "guestName": {
+            "description": "The guest. Null until the orders module exists",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "orderId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "orderRef": {
+            "description": "The order reference. Null until the orders module exists",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "quantity": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "orderId",
+          "orderRef",
+          "guestName",
+          "acceptedAt",
+          "quantity"
+        ],
+        "type": "object"
+      },
+      "StockRow": {
+        "description": "The stock of one live variant",
+        "properties": {
+          "available": {
+            "type": "integer"
+          },
+          "code": {
+            "description": "The SKU code. Null when the variant has none",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "keepsakeName": {
+            "$ref": "#/components/schemas/StockText"
+          },
+          "onHand": {
+            "type": "integer"
+          },
+          "photo": {
+            "description": "The photo of the variant, else the first photo of the keepsake. Null for none",
+            "properties": {
+              "byteSize": {
+                "type": "integer"
+              },
+              "contentType": {
+                "type": "string"
+              },
+              "height": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "image",
+                  "audio",
+                  "pdf"
+                ],
+                "type": "string"
+              },
+              "name": {
+                "description": "What the merchant sees and searches. It starts as the uploaded file name",
+                "type": "string"
+              },
+              "publicUrl": {
+                "description": "The public URL of the original. Null until the file is ready",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "processing",
+                  "ready",
+                  "retired"
+                ],
+                "type": "string"
+              },
+              "variants": {
+                "description": "Resized copies of an image. Empty until the file is ready",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "width": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "status",
+              "name",
+              "contentType",
+              "byteSize",
+              "width",
+              "height",
+              "publicUrl",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "productId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "reserved": {
+            "type": "integer"
+          },
+          "skuId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "variantTitle": {
+            "description": "The option values joined by \" / \" (\"XS / Red\"). Empty for a keepsake with no option",
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "required": [
+          "skuId",
+          "productId",
+          "code",
+          "keepsakeName",
+          "variantTitle",
+          "photo",
+          "onHand",
+          "reserved",
+          "available"
+        ],
+        "type": "object"
+      },
+      "StockSetBody": {
+        "additionalProperties": false,
+        "description": "The units in stock for one variant",
+        "properties": {
+          "onHand": {
+            "description": "The units on the shelf, 0 to 9999. Never below the reserved units",
+            "maximum": 9999,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "onHand"
+        ],
+        "type": "object"
+      },
+      "StockText": {
+        "description": "A text per language. A language with no text is left out",
+        "properties": {
+          "de": {
+            "type": "string"
+          },
+          "en": {
             "type": "string"
           }
         },
@@ -15991,6 +16724,12 @@
             "minimum": 1,
             "type": "integer"
           },
+          "quantity": {
+            "description": "The units in stock when the variant is created, 0 to 9999. Left out means 0",
+            "maximum": 9999,
+            "minimum": 0,
+            "type": "integer"
+          },
           "skuCode": {
             "maxLength": 60,
             "minLength": 1,
@@ -17627,6 +18366,248 @@
         }
       }
     },
+    "/api/store/{storeId}/inventory": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`in-stock`: at least one unit available. `sold-out`: none available",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/StockFilter"
+            }
+          },
+          {
+            "description": "Matches the code, the variant title or the keepsake name, in any case",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "description": "Matches the code, the variant title or the keepsake name, in any case",
+              "maxLength": 200,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockList"
+                }
+              }
+            },
+            "description": "The live variants of the store with their stock, and the tab counts of the whole store",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockManySetBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockMany"
+                }
+              }
+            },
+            "description": "The stock of every listed variant is set, all or nothing. A value below the reserved units refuses the whole request with stock-below-reserved, naming the variant",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/inventory/{skuId}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "skuId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockItem"
+                }
+              }
+            },
+            "description": "One variant with the open orders that hold its units",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "skuId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockSetBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockRow"
+                }
+              }
+            },
+            "description": "The stock is set. A value below the reserved units is refused with stock-below-reserved and the reserved count. The same value changes nothing",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/store/{storeId}/maps-link": {
       "get": {
         "parameters": [
@@ -18617,6 +19598,471 @@
             },
             "description": "The store is live",
             "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pickup-places": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "true lists the archived points; the default lists the active ones",
+            "in": "query",
+            "name": "archived",
+            "required": false,
+            "schema": {
+              "description": "true lists the archived points; the default lists the active ones",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPlaceList"
+                }
+              }
+            },
+            "description": "The active pickup points by position, or the archived ones with `archived=true`",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickupPlaceWriteBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPlace"
+                }
+              }
+            },
+            "description": "The new pickup point, last in the list",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pickup-places/order": {
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickupPlaceOrderBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPlaceList"
+                }
+              }
+            },
+            "description": "The active pickup points in the new order",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pickup-places/{placeId}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "placeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPlace"
+                }
+              }
+            },
+            "description": "The pickup point with its hours",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "placeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickupPlacePatchBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPlace"
+                }
+              }
+            },
+            "description": "The pickup point with the change saved. A left-out field stays; hours replace the whole set",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pickup-places/{placeId}/archive": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "placeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPlace"
+                }
+              }
+            },
+            "description": "The pickup point is archived and leaves the active list. An archived point is returned as it is. There is no delete: orders and handovers keep naming it",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pickup-places/{placeId}/restore": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "placeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPlace"
+                }
+              }
+            },
+            "description": "The pickup point is active again, with its hours and its place in the order. An active point is returned as it is",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }

@@ -11,6 +11,7 @@ import { createCategoriesClient } from '@/features/categories/api/api-client'
 import { createContentDemoClient } from '@/features/content/api/demo-client'
 import { contentQueries } from '@/features/content/api/queries'
 import { createApiQueryClient, createFeedback } from '@/features/data-client'
+import { createInventoryClient } from '@/features/inventory/api/api-client'
 import { createKeepsakesClient } from '@/features/keepsakes/api/api-client'
 import { createMediaClient } from '@/features/media/api/api-client'
 import { createNotificationsDemoClient } from '@/features/notifications/api/demo-client'
@@ -19,6 +20,7 @@ import { createOrdersDemoClient } from '@/features/orders/api/demo-client'
 import { ordersQueries } from '@/features/orders/api/queries'
 import { createPartnersDemoClient } from '@/features/partners/api/demo-client'
 import { partnersQueries } from '@/features/partners/api/queries'
+import { createPickupClient } from '@/features/pickup/api/api-client'
 import { createPlacesClient } from '@/features/places/api/api-client'
 import { createReportsDemoClient } from '@/features/reports/api/demo-client'
 import { reportsQueries } from '@/features/reports/api/queries'
@@ -116,7 +118,9 @@ export function createDemoDataClient(store: DemoStore): DataClient {
     catalog: createCatalogDemoClient(store),
     categories: createCategoriesClient(),
     places: createPlacesClient(),
+    pickup: createPickupClient(),
     content: createContentDemoClient(store),
+    inventory: createInventoryClient(),
     keepsakes: createKeepsakesClient(),
     media: createMediaClient(),
     notifications: createNotificationsDemoClient(store),

@@ -62,6 +62,13 @@ function serve(extra: (call: Call) => Response | undefined = () => undefined) {
 
       return Response.json(current)
     }
+    if (call.method === 'POST' && call.path === `${detail}/variants`) {
+      const body = call.body as { skuCode?: string | null, priceRappen: number, status?: Variant['status'], values?: Record<string, string> }
+
+      current = product({ ...current, variants: [...current.variants, { id: id(0xF0), skuCode: body.skuCode ?? null, mediaId: null, photo: null, priceRappen: body.priceRappen, status: body.status ?? 'published', values: body.values ?? {} }] })
+
+      return Response.json(current, { status: 201 })
+    }
     if (call.method === 'PATCH' && call.path === `${detail}/variants`) {
       const rows = (call.body as { variants: { id: string, priceRappen?: number, status?: Variant['status'] | 'removed', skuCode?: string | null, mediaId?: string | null }[] }).variants
       // Like the API: removed deletes a variant that no order line names and archives one that does.
@@ -729,6 +736,45 @@ describe('[T-008] options and variants of a keepsake that has them', () => {
     await waitFor(() => expect(puts()).toHaveLength(1))
     expect((puts()[0]!.body as OptionsPut).options.map(option => option.ref)).toEqual([optColour, optSize])
     expect((puts()[0]!.body as OptionsPut).newVariants).toBeUndefined()
+  })
+})
+
+describe('[FIX-one-variant] a keepsake with no options always has its Price block', () => {
+  const colourId = id(0xC4)
+  const colourOption = { id: colourId, name: { en: 'Colour' }, values: ['Red', 'Blue'].map((label, index) => ({ id: id(0xC5 + index * 0x10), label: { en: label } })) }
+  const twins = colourOption.values.map((value, index) => ({ id: id(0xA0 + index), skuCode: null, mediaId: null, photo: null, priceRappen: 4000, status: 'published' as const, values: { [colourId]: value.id } }))
+
+  it('[AC1] with no option and no variant the Price block has empty fields, and a price creates the one variant for sale', async () => {
+    current = product({ variants: [] })
+    serve()
+    await openStep()
+    const card = screen.getByRole('region', { name: 'Price' })
+    const price = within(card).getByLabelText('Price, CHF')
+
+    expect(price).toHaveValue('')
+    await userEvent.type(price, '39')
+    await userEvent.tab()
+
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]).toMatchObject({ method: 'POST', path: `${detail}/variants`, body: { priceRappen: 3900, skuCode: null, status: 'published' } })
+    await waitFor(() => expect(within(screen.getByRole('region', { name: 'Price' })).getByLabelText('Price, CHF')).toHaveValue('39.00'))
+    expect(current.variants).toHaveLength(1)
+  })
+
+  it('[AC2] delete every variant, then every option: the Price block shows', { timeout: 20_000 }, async () => {
+    current = product({ options: [colourOption], variants: twins })
+    serve()
+    await openStep()
+    expect(screen.queryByRole('region', { name: 'Price' })).not.toBeInTheDocument()
+    await userEvent.click(within(variantsBlock()).getByRole('checkbox', { name: 'Select all' }))
+    await userEvent.click(within(screen.getByRole('toolbar')).getByRole('button', { name: 'Delete' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete' }))
+    await waitFor(() => expect(current.variants).toHaveLength(0))
+    await userEvent.click(await within(optionsBlock()).findByRole('button', { name: 'Delete Colour' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete option' }))
+
+    expect(await screen.findByRole('region', { name: 'Price' })).toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: 'Price' })).getByLabelText('Price, CHF')).toHaveValue('')
   })
 })
 

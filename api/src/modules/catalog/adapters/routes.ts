@@ -174,7 +174,7 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
       photoIds: photoIds ?? [],
       commissionRate: commissionRate ?? 0,
       options: (options ?? []).map(optionInput),
-      variants: variants.map(({ skuCode, mediaId, priceRappen, values }) => ({ skuCode: skuCode ?? null, mediaId: mediaId ?? null, priceRappen, status: 'published' as const, values: values ?? {} })),
+      variants: variants.map(({ skuCode, mediaId, priceRappen, values, quantity }) => ({ skuCode: skuCode ?? null, mediaId: mediaId ?? null, priceRappen, status: 'published' as const, values: values ?? {}, ...(quantity !== undefined && { quantity }) })),
     }, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
@@ -274,7 +274,7 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
     const result = await useCases.saveOptions(c.get('actor'), c.get('store').storeId, c.req.valid('param').productId, ifMatch.version, {
       options: options.map(optionInput),
       variantValues: variantValues ?? [],
-      newVariants: (newVariants ?? []).map(({ skuCode, mediaId, priceRappen, values }) => ({ skuCode: skuCode ?? null, mediaId: mediaId ?? null, priceRappen, status: 'published' as const, values: values ?? {} })),
+      newVariants: (newVariants ?? []).map(({ skuCode, mediaId, priceRappen, values, quantity }) => ({ skuCode: skuCode ?? null, mediaId: mediaId ?? null, priceRappen, status: 'published' as const, values: values ?? {}, ...(quantity !== undefined && { quantity }) })),
     }, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
@@ -282,13 +282,14 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
   })
 
   app.openapi(createVariantRoute, async (c) => {
-    const { skuCode, mediaId, priceRappen, status, values } = c.req.valid('json')
+    const { skuCode, mediaId, priceRappen, status, values, quantity } = c.req.valid('json')
     const result = await useCases.createVariant(c.get('actor'), c.get('store').storeId, c.req.valid('param').productId, {
       skuCode: skuCode ?? null,
       mediaId: mediaId ?? null,
       priceRappen,
       status: status ?? 'published',
       values: values ?? {},
+      ...(quantity !== undefined && { quantity }),
     }, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))

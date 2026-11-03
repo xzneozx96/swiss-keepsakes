@@ -2,11 +2,13 @@ import type { AccountClient } from '@/features/account/api/client'
 import type { CatalogClient } from '@/features/catalog/api/client'
 import type { CategoriesClient } from '@/features/categories/api/client'
 import type { ContentClient } from '@/features/content/api/client'
+import type { InventoryClient } from '@/features/inventory/api/client'
 import type { KeepsakesClient } from '@/features/keepsakes/api/client'
 import type { MediaClient } from '@/features/media/api/client'
 import type { NotificationsClient } from '@/features/notifications/api/client'
 import type { OrdersClient } from '@/features/orders/api/client'
 import type { PartnersClient } from '@/features/partners/api/client'
+import type { PickupClient } from '@/features/pickup/api/client'
 import type { PlacesClient } from '@/features/places/api/client'
 import type { ReportsClient } from '@/features/reports/api/client'
 import type { RequestsClient } from '@/features/requests/api/client'
@@ -24,11 +26,13 @@ export interface DataClient {
   catalog: CatalogClient
   categories: CategoriesClient
   content: ContentClient
+  inventory: InventoryClient
   keepsakes: KeepsakesClient
   media: MediaClient
   notifications: NotificationsClient
   orders: OrdersClient
   partners: PartnersClient
+  pickup: PickupClient
   places: PlacesClient
   reports: ReportsClient
   requests: RequestsClient

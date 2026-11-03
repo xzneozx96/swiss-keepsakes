@@ -226,15 +226,29 @@ export const productsEn = {
   'products.departure.added': 'Departure added',
   'products.departure.updated': 'Seats saved',
 
+  'pickup.action.add': 'Add pickup point',
+  'pickup.action.restore': 'Restore',
+  'pickup.archive.body': 'Guests can no longer pick up here. You can restore it from the Archived list.',
+  'pickup.toast.restored': '{name} restored',
+  'pickup.loadFailed': 'The pickup points could not be loaded.',
+  'pickup.noStore': 'You do not belong to a store yet, so there are no pickup points to edit.',
+  'pickup.sheet.add': 'Add pickup point',
+  'pickup.hours.title': 'Opening hours',
+  'pickup.hours.help':
+    'Hours are Swiss local time. A closing time before the opening time closes the next morning.',
+  'pickup.error.hoursRepeat': 'Two time ranges on one day cannot open at the same time.',
+  'pickup.problem.stale':
+    'Someone saved this pickup point after you opened it. Reload to see their version. Your last edits are not saved.',
+  'pickup.reload': 'Reload',
+  'products.place.noHours': 'No opening hours set',
+
   'products.place.intro':
     'Guests see these on the keepsake page, at checkout, in their orders and in emails.',
   'products.place.edit': 'Edit pickup point',
   'products.place.open': 'Edit {name}',
   'products.place.save': 'Save pickup point',
   'products.place.saved': '{name} saved',
-  'products.place.addressError': 'Enter the address.',
-  'products.place.hoursHelp':
-    'Shown to guests as written. Pickup dates still skip Sundays at every place.',
+  'pickup.hours.range': '{from} to {to}',
 
   // Revision 1 (owner, 15.10.2026): rich long story, Add gift and Add tour.
   'products.storageFull':
