@@ -1,4 +1,4 @@
-import type { AuditLog, Clock, KeepsakeLinks, MediaDirectory, ProductRepository, ReservationDirectory, SalesDirectory, UnitOfWork } from '../ports.ts'
+import type { AuditLog, Clock, KeepsakeLinks, MediaDirectory, PickupPlaceRepository, ProductRepository, ReservationDirectory, SalesDirectory, UnitOfWork } from '../ports.ts'
 
 export interface CatalogDeps<T> {
   uow: UnitOfWork<T>
@@ -11,4 +11,11 @@ export interface CatalogDeps<T> {
   reservations?: ReservationDirectory<T>
   // Left out until the orders module wires the order lines. Without it no keepsake counts as sold, so a removal deletes.
   sales?: SalesDirectory<T>
+}
+
+export interface PickupDeps<T> {
+  uow: UnitOfWork<T>
+  pickups: PickupPlaceRepository<T>
+  audit: AuditLog<T>
+  clock: Clock
 }

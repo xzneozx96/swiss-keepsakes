@@ -4,9 +4,11 @@ import type { openTestDatabase } from './support.ts'
 import { randomUUID } from 'node:crypto'
 import { guardUseCases } from '../../src/modules/catalog/adapters/database-errors.ts'
 import { createMediaDirectory } from '../../src/modules/catalog/adapters/media-directory.ts'
+import { createPickupRepository } from '../../src/modules/catalog/adapters/pickup-repository.ts'
+import { registerPickupRoutes } from '../../src/modules/catalog/adapters/pickup-routes.ts'
 import { createProductRepository } from '../../src/modules/catalog/adapters/product-repository.ts'
 import { registerCatalogRoutes } from '../../src/modules/catalog/adapters/routes.ts'
-import { makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
+import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetPickupPlace, makeGetProduct, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
 import { createKeepsakeLinks } from '../../src/modules/content/adapters/keepsake-links.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
 import { mediaView } from '../../src/modules/content/adapters/media-view.ts'
@@ -72,6 +74,16 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
     saveOptions: makeSaveOptions(deps),
     createVariant: makeCreateVariant(deps),
   })
+  const pickupDeps = { uow, pickups: createPickupRepository(), audit: deps.audit, clock: systemClock }
+  const pickupUseCases = guardUseCases({
+    listPickupPlaces: makeListPickupPlaces(pickupDeps),
+    getPickupPlace: makeGetPickupPlace(pickupDeps),
+    createPickupPlace: makeCreatePickupPlace(pickupDeps),
+    savePickupPlace: makeSavePickupPlace(pickupDeps),
+    reorderPickupPlaces: makeReorderPickupPlaces(pickupDeps),
+    archivePickupPlace: makeArchivePickupPlace(pickupDeps),
+    restorePickupPlace: makeRestorePickupPlace(pickupDeps),
+  })
   const app = createApp(createLogger('silent'), async () => ({ database: true, jobs: true }), {
     authHandler: auth.handler,
     origin,
@@ -80,7 +92,7 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
     listMyStores: makeListMyStores({ uow, memberships: createMembershipRepository() }),
   }, {
     idempotency: idempotency({ db, clock: systemClock, actorId: idempotencyActor }),
-    routes: [routes => registerCatalogRoutes(routes, useCases)],
+    routes: [routes => registerCatalogRoutes(routes, useCases), routes => registerPickupRoutes(routes, pickupUseCases)],
   })
 
   async function call(path: string, init: { method?: string, headers?: Record<string, string>, body?: object, key?: string | null } = {}) {

@@ -2031,6 +2031,348 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/store/{storeId}/pickup-places": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    /** @description true lists the archived points; the default lists the active ones */
+                    archived?: "true" | "false";
+                };
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The active pickup points by position, or the archived ones with `archived=true` */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PickupPlaceList"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PickupPlaceWriteBody"];
+                };
+            };
+            responses: {
+                /** @description The new pickup point, last in the list */
+                201: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PickupPlace"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/pickup-places/{placeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    placeId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The pickup point with its hours */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PickupPlace"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    placeId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PickupPlacePatchBody"];
+                };
+            };
+            responses: {
+                /** @description The pickup point with the change saved. A left-out field stays; hours replace the whole set */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PickupPlace"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/store/{storeId}/pickup-places/{placeId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    placeId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The pickup point is archived and leaves the active list. An archived point is returned as it is. There is no delete: orders and handovers keep naming it */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PickupPlace"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/pickup-places/{placeId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    placeId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The pickup point is active again, with its hours and its place in the order. An active point is returned as it is */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PickupPlace"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/pickup-places/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PickupPlaceOrderBody"];
+                };
+            };
+            responses: {
+                /** @description The active pickup points in the new order */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PickupPlaceList"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/store/{storeId}/pins": {
         parameters: {
             query?: never;
@@ -5013,6 +5355,79 @@ export interface components {
             /** @enum {string} */
             state: "open" | "accepted" | "revoked" | "expired";
         } | null;
+        /** @description Address per language, at most 300 characters each. At least one language must be left or the answer is 422 */
+        PickupAddressInput: {
+            de?: string;
+            en?: string;
+        };
+        /** @description Optional hand-over instructions per language, at most 600 characters each */
+        PickupInstructionsInput: {
+            de?: string;
+            en?: string;
+        };
+        /** @description Name per language, at most 120 characters each. At least one language must be left or the answer is 422 */
+        PickupNameInput: {
+            de?: string;
+            en?: string;
+        };
+        PickupPlace: {
+            address: {
+                de?: string;
+                en?: string;
+            };
+            archived: boolean;
+            hours: {
+                closes: string;
+                opens: string;
+                weekday: number;
+            }[];
+            /** Format: uuid */
+            id: string;
+            instructions: {
+                de?: string;
+                en?: string;
+            } | null;
+            name: {
+                de?: string;
+                en?: string;
+            };
+            position: number;
+            rowVersion: number;
+            /** Format: uuid */
+            storeId: string;
+        };
+        PickupPlaceList: {
+            /** @description By position, then id */
+            items: components["schemas"]["PickupPlace"][];
+        };
+        /** @description The new order of the active pickup points. ids must be exactly the active points */
+        PickupPlaceOrderBody: {
+            ids: string[];
+        };
+        /** @description Fields left out stay as they are. Hours, when given, replace the whole set */
+        PickupPlacePatchBody: {
+            address?: components["schemas"]["PickupAddressInput"];
+            /** @description The weekly spans. Several per day are allowed, overlapping too; one day cannot repeat the same opens */
+            hours?: components["schemas"]["PickupSpanInput"][];
+            instructions?: components["schemas"]["PickupInstructionsInput"];
+            name?: components["schemas"]["PickupNameInput"];
+        };
+        /** @description A new pickup point, appended last */
+        PickupPlaceWriteBody: {
+            address: components["schemas"]["PickupAddressInput"];
+            /** @description The weekly spans. Several per day are allowed, overlapping too; one day cannot repeat the same opens */
+            hours: components["schemas"]["PickupSpanInput"][];
+            instructions?: components["schemas"]["PickupInstructionsInput"];
+            name: components["schemas"]["PickupNameInput"];
+        };
+        PickupSpanInput: {
+            /** @description HH:MM, or 24:00. Before opens means the next morning; equal to opens is refused */
+            closes: string;
+            /** @description HH:MM */
+            opens: string;
+            /** @description 1 (Monday) to 7 (Sunday) */
+            weekday: number;
+        };
         /** @description A map pin as the editor sees it, with its draft and its published text */
         Pin: {
             address: string | null;

@@ -102,6 +102,10 @@ export function failureProblem(failure: Failure): FailureProblem {
         title: 'This can’t be saved. See what needs a fix.',
         errors: failure.refusals.map(refusal => ({ in: 'body' as const, path: refusal.path, message: refusalMessage(refusal), code: refusal.code, ...(refusal.params && { params: refusal.params }) })),
       }
+    case 'invalid':
+      return { status: 422, type: 'validation-failed', title: 'This can’t be saved. See what needs a fix.', errors: failure.errors.map(error => ({ in: 'body' as const, path: error.path, message: error.message })) }
+    case 'order-mismatch':
+      return { status: 422, type: 'validation-failed', title: 'The list changed. Reload it and move the point again.', errors: [{ in: 'body', path: 'ids', message: 'Send exactly the active pickup points' }] }
     case 'name-required':
       return { status: 422, type: 'validation-failed', title: 'Add a name in English or German.', errors: [{ in: 'body', path: 'name', message: 'Add a name in English or German' }] }
     case 'sku-code-invalid':
