@@ -269,6 +269,17 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     expect(await count(pool, 'select count(*) from content.place_links where place_id = $1', [pin.id])).toBe(0)
   })
 
+  it('[E4.3][AC45] AC-4 the pin list returns each pin\'s outbound link, or null', async () => {
+    const staff = await env.storeWithStaff()
+    const withLink = await create(staff, { title: { en: 'Zyt tower' }, outboundUrl: 'https://zyt.example/tower' })
+    const without = await create(staff, { title: { en: 'Lion' } })
+
+    const { items } = await (await env.call(staff.pins, { headers: staff.owner.headers })).json() as { items: { id: string, outboundUrl?: string | null }[] }
+
+    expect(items.find(item => item.id === withLink.id)!.outboundUrl).toBe('https://zyt.example/tower')
+    expect(items.find(item => item.id === without.id)!.outboundUrl).toBeNull()
+  })
+
   it('[E4.2][AC68] extra photos keep the order the merchant sets, with alt text, and refuse an image of another store or a PDF', async () => {
     const staff = await env.storeWithStaff()
     const [a, b, c] = [await image(staff.storeId), await image(staff.storeId), await image(staff.storeId)]

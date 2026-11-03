@@ -204,6 +204,7 @@ export interface PinListRow {
   stayTag: StayTag
   interests: string[]
   coverMediaId: string | null
+  outboundUrl: string | null
   // The cover file when it is ready; null when the pin has none or the file is not ready (still processing, or retired).
   cover: MediaRecord | null
   mainStoryGroupId: string | null

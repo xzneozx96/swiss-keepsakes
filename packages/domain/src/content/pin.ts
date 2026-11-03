@@ -66,6 +66,8 @@ export interface PinListEntry {
   stayTag: StayTag
   interests: string[]
   coverMediaId: string | null
+  /** The pin's one outbound link, or null. */
+  outboundUrl: string | null
   /** `published` is false when the story has no published version. */
   mainStory: { groupId: string, published: boolean } | null
   rowVersion: number

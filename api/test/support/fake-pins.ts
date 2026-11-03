@@ -54,6 +54,7 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
         stayTag: pin.stayTag,
         interests: pin.interests,
         coverMediaId: pin.coverMediaId,
+        outboundUrl: pin.outboundUrl,
         cover: null,
         mainStoryGroupId: pin.mainStoryGroupId,
         mainStoryPublished: pin.mainStoryGroupId !== null,

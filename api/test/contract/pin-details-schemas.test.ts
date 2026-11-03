@@ -167,14 +167,14 @@ describe('[E4.2][AC68] the response shapes', () => {
   })
 
   it('[E4.2][AC86] a list item may have the status ended and a warning for a story with no published version', () => {
-    const item = { id: uuid, status: 'ended', title: { en: 'Blues' }, slug: { en: 'blues' }, located: true, categoryIds: [], hasDates: true, nextDate: null, stayTag: 'both', interests: [], coverMediaId: null, cover: null, mainStory: { groupId: uuid2, published: false }, rowVersion: 3, updatedAt: '2026-10-30T10:00:00.000Z' }
+    const item = { id: uuid, status: 'ended', title: { en: 'Blues' }, slug: { en: 'blues' }, located: true, categoryIds: [], hasDates: true, nextDate: null, stayTag: 'both', interests: [], coverMediaId: null, outboundUrl: null, cover: null, mainStory: { groupId: uuid2, published: false }, rowVersion: 3, updatedAt: '2026-10-30T10:00:00.000Z' }
 
     expect(ok(pinListSchema, { items: [item] })).toBe(true)
     expect(ok(pinListSchema, { items: [{ ...item, status: 'archived' }] })).toBe(false)
   })
 
   it('[T-011] a list item has a cover that is null or a media file, and the field is required', () => {
-    const item = { id: uuid, status: 'draft', title: { en: 'Bridge' }, slug: null, located: true, categoryIds: [], hasDates: false, nextDate: null, stayTag: 'both', interests: [], coverMediaId: uuid2, cover: null, mainStory: null, rowVersion: 1, updatedAt: '2026-10-30T10:00:00.000Z' }
+    const item = { id: uuid, status: 'draft', title: { en: 'Bridge' }, slug: null, located: true, categoryIds: [], hasDates: false, nextDate: null, stayTag: 'both', interests: [], coverMediaId: uuid2, outboundUrl: null, cover: null, mainStory: null, rowVersion: 1, updatedAt: '2026-10-30T10:00:00.000Z' }
     const file = { id: uuid2, kind: 'image', status: 'ready', name: 'bridge.jpg', contentType: 'image/jpeg', byteSize: 10, width: 640, height: 480, publicUrl: 'https://media.test/a.jpg', variants: [{ width: 320, url: 'https://media.test/a-320.jpg' }] }
 
     expect(ok(pinListSchema, { items: [item] })).toBe(true)

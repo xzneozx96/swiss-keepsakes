@@ -5227,6 +5227,8 @@ export interface components {
                 lastDay: string;
                 startTime: string | null;
             } | null;
+            /** @description The pin's one outbound link, or null */
+            outboundUrl: string | null;
             rowVersion: number;
             slug: {
                 de?: string;

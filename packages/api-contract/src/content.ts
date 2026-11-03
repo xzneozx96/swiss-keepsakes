@@ -177,6 +177,7 @@ export const pinListItemSchema = z.object({
   stayTag,
   interests: z.array(z.string()),
   coverMediaId: z.uuid().nullable(),
+  outboundUrl: z.string().nullable().meta({ description: 'The pin\'s one outbound link, or null' }),
   cover: mediaSchema.nullable().meta({ description: 'The ready cover photo, with its address and resized copies. Null when the pin has none, or its file is not ready or was retired' }),
   mainStory: z.object({ groupId: z.uuid(), published: z.boolean() }).nullable().meta({ description: '`published` is false when the story has no published version' }),
   rowVersion: z.int(),

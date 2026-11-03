@@ -6423,6 +6423,13 @@
               "null"
             ]
           },
+          "outboundUrl": {
+            "description": "The pin's one outbound link, or null",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "rowVersion": {
             "type": "integer"
           },
@@ -6486,6 +6493,7 @@
           "stayTag",
           "interests",
           "coverMediaId",
+          "outboundUrl",
           "cover",
           "mainStory",
           "rowVersion",
