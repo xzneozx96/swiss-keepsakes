@@ -10,11 +10,11 @@ export function posthogKey(env: AnalyticsEnv = import.meta.env): string | undefi
 }
 
 /** The only environments that may send. A missing or any other `VITE_SITE_ENV` counts as production. */
-const SENDING_ENVIRONMENTS: readonly string[] = ['development', 'staging']
+const SENDING_ENVIRONMENTS: readonly string[] = ['development', 'staging', 'test']
 
 /**
  * The one sender switch (ADR-032, gate G-S8-CONSENT), fail closed. It sends only when all three hold: a key is set,
- * `VITE_POSTHOG_ENABLED` is exactly `true` (compared without case or spaces), and `VITE_SITE_ENV` is `development` or `staging`.
+ * `VITE_POSTHOG_ENABLED` is exactly `true` (compared without case or spaces), and `VITE_SITE_ENV` is `development`, `staging` or `test`.
  * A missing, empty, `production` or unknown `VITE_SITE_ENV` counts as production and sends nothing, whatever the other two say.
  * Off means the caller never loads or starts PostHog.
  */
