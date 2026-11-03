@@ -2,14 +2,14 @@ import type { MediaItem } from '@sk/api-contract'
 import type { MediaSearch, StatusFilter, UseFilter } from '../lib/search-params'
 import type { PagerState } from '@/components/list-pagination'
 
-import { Button, Skeleton, toast } from '@heroui/react'
+import { Skeleton, toast } from '@heroui/react'
 import { useEffect, useState } from 'react'
 
 import { ActionBar } from '@/components/action-bar'
 import { EmptyState } from '@/components/empty-state'
 import { FilterChips, filterGroup } from '@/components/filter-bar'
 import { PhotoAddIcon, SearchIcon, TrashIcon, UploadIcon } from '@/components/icons'
-import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
+import { ListAction, ListHeader, ListToolbar } from '@/components/layout/list-toolbar'
 import { Pager } from '@/components/list-pagination'
 import { useLocale } from '@/contexts/locale-context'
 import { useIsWide } from '@/hooks/use-is-wide'
@@ -38,10 +38,7 @@ function UploadButton({ isBusy, onFiles }: { isBusy: boolean, onFiles: (files: F
 
   return (
     <>
-      <Button className="shrink-0 max-lg:h-11 max-lg:w-full" isPending={isBusy} onPress={() => input?.click()}>
-        <UploadIcon aria-hidden size={16} />
-        {t('media.upload')}
-      </Button>
+      <ListAction icon={UploadIcon} isPending={isBusy} onPress={() => input?.click()}>{t('media.upload')}</ListAction>
       <input
         ref={setInput}
         hidden
@@ -63,7 +60,7 @@ function UploadButton({ isBusy, onFiles }: { isBusy: boolean, onFiles: (files: F
 function Header({ upload }: { upload: React.ReactNode }) {
   const { t } = useLocale()
 
-  return <MerchantPageHeader action={upload} className="max-lg:flex-col max-lg:items-stretch" description={t('media.intro')} title={t('media.title')} />
+  return <ListHeader action={upload} description={t('media.intro')} title={t('media.title')} />
 }
 
 /** The toolbar's shape while the store is unknown: tabs, search and the first tiles. */
@@ -73,7 +70,7 @@ function LoadingScreen() {
   return (
     <div aria-busy aria-label={t('media.loading')} className="flex flex-col gap-4" role="status">
       <Header upload={<Skeleton className="h-9 w-28 rounded-full max-lg:h-11 max-lg:w-full" />} />
-      <Skeleton className="h-10 w-full rounded-xl lg:w-72" />
+      <ListToolbar search={<Skeleton className="h-10 w-full rounded-xl" />} tabs={<Skeleton className="h-10 w-full rounded-full lg:w-80" />} />
       <WallSkeleton />
     </div>
   )

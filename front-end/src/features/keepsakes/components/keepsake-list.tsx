@@ -3,7 +3,7 @@ import type { KeepsakeFilters, StatusFilter } from '../lib/list'
 import type { DataTableColumn } from '@/components/data-table'
 import type { MessageKey } from '@/i18n/en'
 
-import { Button, buttonVariants, SearchField, Skeleton } from '@heroui/react'
+import { Button, Skeleton } from '@heroui/react'
 import { dateTimeFormat } from '@sk/domain/shared'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
@@ -11,7 +11,7 @@ import { useState } from 'react'
 import { DataTable } from '@/components/data-table'
 import { FilterButtons, FilterChips, filterGroup } from '@/components/filter-bar'
 import { EditIcon, GiftIcon, PlusIcon, TrashIcon } from '@/components/icons'
-import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
+import { ListAction, ListHeader, ListSearch, ListToolbar } from '@/components/layout/list-toolbar'
 import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
@@ -174,16 +174,10 @@ function KeepsakeBody({ items, isLoading, filters, onChange, failure, onRemove }
 
   return (
     <>
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-        <SearchField aria-label={t('keepsakes.list.search')} className="w-full lg:w-80" isDisabled={isLoading} value={filters.query} onChange={query => onChange({ query })}>
-          <SearchField.Group>
-            <SearchField.SearchIcon />
-            <SearchField.Input placeholder={t('keepsakes.list.search')} />
-            <SearchField.ClearButton />
-          </SearchField.Group>
-        </SearchField>
-        <FilterButtons groups={[group]} />
-      </div>
+      <ListToolbar
+        search={<ListSearch isDisabled={isLoading} label={t('keepsakes.list.search')} value={filters.query} onChange={query => onChange({ query })} />}
+        filters={<FilterButtons groups={[group]} />}
+      />
       <FilterChips groups={[group]} />
       {failure
         ?? (
@@ -226,13 +220,8 @@ export function KeepsakeList() {
 
   return (
     <div className="flex flex-col gap-4" data-testid="keepsake-list">
-      <MerchantPageHeader
-        action={(
-          <Link className={`${buttonVariants({ size: 'sm' })} shrink-0 max-lg:min-h-11`} to={NEW_KEEPSAKE_PATH}>
-            <PlusIcon aria-hidden size={16} />
-            {t('keepsakes.create')}
-          </Link>
-        )}
+      <ListHeader
+        action={<ListAction icon={PlusIcon} link={{ to: NEW_KEEPSAKE_PATH }}>{t('keepsakes.create')}</ListAction>}
         description={t('keepsakes.list.description')}
         title={t('keepsakes.title')}
       />

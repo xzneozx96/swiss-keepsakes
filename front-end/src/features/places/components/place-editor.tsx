@@ -7,6 +7,7 @@ import { buttonVariants } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 import { BackIcon } from '@/components/icons'
 import { MerchantBackBar } from '@/components/layout/merchant-back-bar'
+import { Notice } from '@/components/notice'
 import { StatusChip } from '@/components/status-chip'
 import { StepBar } from '@/components/step-bar'
 import { StepLayout } from '@/components/step-layout'
@@ -63,7 +64,7 @@ export function PlaceEditor({ storeId, initial, start }: { storeId: string, init
         <h1 className="min-w-0 text-title text-pretty [overflow-wrap:anywhere] max-lg:sr-only">{title}</h1>
         <StatusLine status={editor.pin?.status ?? 'new'} />
       </header>
-      {editor.notice && <p className="rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">{t(editor.notice)}</p>}
+      {editor.notice && <Notice status="danger">{t(editor.notice)}</Notice>}
       <StepLayout canGo={editor.canGo} current={editor.step} quietTitle steps={editor.steps} onGo={editor.go}>
         {body[editor.step]}
         <StepBar {...editor.bar} />

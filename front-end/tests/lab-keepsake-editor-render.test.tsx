@@ -113,7 +113,7 @@ describe('the screens link and save', () => {
     fireEvent.click(screen.getByRole('button', { name: /Next: Stock/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Create keepsake' }))
     expect(screen.getByRole('heading', { level: 1, name: 'Victorinox SwissCard, Lucerne designs' })).toBeTruthy()
-    expect(screen.getByRole('tab', { name: /^All\s*7$/ })).toBeTruthy()
+    expect(screen.getByRole('tab', { name: /^All · 7$/ })).toBeTruthy()
     unmount()
   })
 

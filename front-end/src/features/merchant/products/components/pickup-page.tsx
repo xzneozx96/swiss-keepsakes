@@ -1,19 +1,19 @@
 import type { PickupPlace } from '@sk/api-contract'
 
-import { Button, Skeleton } from '@heroui/react'
-import { useState } from 'react'
+import type { PickupView } from '@/features/pickup/lib/list'
+import { Skeleton } from '@heroui/react'
 
+import { useState } from 'react'
 import { EmptyState } from '@/components/empty-state'
 import { FilterButtons, FilterChips, filterGroup } from '@/components/filter-bar'
 import { PickupIcon, PlusIcon } from '@/components/icons'
-import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
+import { ListAction, ListHeader, ListSearch, ListToolbar } from '@/components/layout/list-toolbar'
 import { useLocale } from '@/contexts/locale-context'
+import { filterPickup } from '@/features/pickup/lib/list'
 import { apiEnabled } from '@/lib/api-mode'
 import { usePickupPoints } from '../hooks/use-pickup-points'
 import { PickupPointSheet } from './pickup-point-sheet'
 import { PickupPoints } from './pickup-points'
-
-type PickupView = 'active' | 'archived'
 
 /** Pickup points: two columns of cards, each with icon tile, name, hours and instructions. */
 function PickupSkeleton() {
@@ -54,8 +54,9 @@ export function PickupPage() {
   const pickup = usePickupPoints(true)
   // The point being edited (a snapshot of the ticket), or an empty object for a new one.
   const [sheet, setSheet] = useState<{ place?: PickupPlace } | null>(null)
-  // Both ticked shows both; none ticked is no filter, the same as both.
-  const [view, setView] = useState<PickupView[]>(['active'])
+  // None ticked shows the active points; Archived alone shows those; both shows both.
+  const [view, setView] = useState<PickupView[]>([])
+  const [query, setQuery] = useState('')
   const places = (archived: boolean) => (archived ? pickup.archived : pickup.active).data?.items ?? []
   const groups = [
     filterGroup({
@@ -80,32 +81,30 @@ export function PickupPage() {
       return <PickupSkeleton />
     if (!pickup.storeId)
       return <EmptyState icon={PickupIcon} message={t('pickup.noStore')} />
-    const showing = [
-      ...(!view.length || view.includes('active') ? places(false) : []),
-      ...(!view.length || view.includes('archived') ? places(true) : []),
-    ]
+    const showing = filterPickup(places(false), places(true), view, query)
 
-    return showing.length
-      ? <PickupPoints label={t('pickup.title')} places={showing} onArchive={pickup.archive} onOpen={place => setSheet({ place })} onRestore={pickup.restore} />
-      : <EmptyState icon={PickupIcon} message={t(view.length === 1 && view[0] === 'archived' ? 'products.empty.archived' : 'products.empty.pickup')} />
+    if (!showing.length) {
+      if (query.trim() !== '')
+        return <EmptyState action={{ label: t('pickup.clear'), onPress: () => { setQuery(''); setView([]) } }} icon={PickupIcon} message={t('pickup.empty.filtered')} />
+
+      return <EmptyState icon={PickupIcon} message={t(view.length === 1 && view[0] === 'archived' ? 'products.empty.archived' : 'products.empty.pickup')} />
+    }
+
+    return <PickupPoints label={t('pickup.title')} places={showing} onArchive={pickup.archive} onOpen={place => setSheet({ place })} onRestore={pickup.restore} />
   }
 
   return (
     <div className="flex flex-col gap-4" data-testid="pickup-page">
-      <MerchantPageHeader
+      <ListHeader
         // The screen's one red action, as M15's "Add partner".
-        action={(
-          <Button className="shrink-0 max-lg:min-h-11" isDisabled={!pickup.storeId} size="sm" onPress={() => setSheet({})}>
-            <PlusIcon aria-hidden size={16} />
-            {t('pickup.action.add')}
-          </Button>
-        )}
+        action={<ListAction icon={PlusIcon} isDisabled={!pickup.storeId} onPress={() => setSheet({})}>{t('pickup.action.add')}</ListAction>}
         description={t('pickup.description')}
         title={t('pickup.title')}
       />
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-        <FilterButtons groups={groups} />
-      </div>
+      <ListToolbar
+        search={<ListSearch isDisabled={!pickup.storeId} label={t('pickup.search')} value={query} onChange={setQuery} />}
+        filters={<FilterButtons groups={groups} />}
+      />
       <FilterChips groups={groups} />
       {panel()}
       {pickup.dialog}

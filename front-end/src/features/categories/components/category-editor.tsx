@@ -6,6 +6,8 @@ import { useState } from 'react'
 import { ErrorNotice } from '@/components/error-notice'
 
 import { PlusIcon } from '@/components/icons'
+import { ListAction, ListHeader, ListToolbar } from '@/components/layout/list-toolbar'
+import { Notice } from '@/components/notice'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
@@ -40,26 +42,18 @@ export function CategoryEditor({ storeId, kind, tabs }: { storeId: string | unde
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-title">{t('categories.title')}</h1>
-          <p className="text-sm text-pretty text-muted">{t('categories.subtitle')}</p>
-        </div>
-        <Button className="min-h-11 shrink-0" isDisabled={!loaded} onPress={actions.add}>
-          <PlusIcon size={18} />
-          {t('categories.add')}
-        </Button>
-      </div>
-      {wide
-        ? (
-            <div className="flex items-center justify-between gap-3">
-              {tabs}
-              {!categories.isError && <CategorySearch disabled={!loaded} value={query} onChange={text => setSearch({ kind, text })} />}
-            </div>
-          )
-        : tabs}
+      <ListHeader
+        action={<ListAction icon={PlusIcon} isDisabled={!loaded} onPress={actions.add}>{t('categories.add')}</ListAction>}
+        description={t('categories.subtitle')}
+        title={t('categories.title')}
+      />
+      {/* On phones the drill-in has its own search under the tabs. */}
+      <ListToolbar
+        search={wide && !categories.isError ? <CategorySearch disabled={!loaded} value={query} onChange={text => setSearch({ kind, text })} /> : undefined}
+        tabs={tabs}
+      />
       {notice && (
-        <p className="rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">{t(notice)}</p>
+        <Notice status="danger">{t(notice)}</Notice>
       )}
       {categories.isError
         ? (

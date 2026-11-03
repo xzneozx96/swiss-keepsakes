@@ -1,11 +1,12 @@
 import { dateTimeFormat } from '@sk/domain/shared'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { writeStored } from '@/lib/storage'
+
 import { list, listItem, problem, productId, renderKeepsakes, setUpHarness, state, storeId } from './keepsakes-harness'
+import { expectListChrome } from './list-screens-helper'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 vi.mock('@/hooks/use-is-wide', () => ({ useIsWide: () => true }))
@@ -235,5 +236,15 @@ describe('[E6.1][i18n] M11 the keepsake list in German', () => {
     expect(within(grid).getByText('Entwurf')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Erstellen' })).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/keepsakes\.[a-z]/)
+  })
+})
+
+describe('[S8-UI-01][list] the keepsake list uses the shared list header and toolbar', () => {
+  it('[S8-UI-01] Create has the Media button style and the Status filter sits before the search box', async () => {
+    answerWith([listItem()])
+    renderKeepsakes('/store/products')
+
+    await loaded('Victorinox Classic')
+    expectListChrome({ action: screen.getByRole('link', { name: 'Create' }), start: screen.getByRole('button', { name: 'Status' }), search: screen.getByRole('searchbox', { name: 'Search by name' }) })
   })
 })

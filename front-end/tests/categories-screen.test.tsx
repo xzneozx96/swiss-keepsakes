@@ -3,11 +3,12 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
+
 import { CategoriesScreen } from '@/features/categories/components/categories-screen'
 import { DataClientProvider } from '@/features/data-client'
 import { startDemo } from '@/features/demo/data-client'
+import { expectListChrome } from './list-screens-helper'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -206,7 +207,7 @@ describe('[E4.18][AC87] the category editor in English', () => {
     const search = screen.getByRole('searchbox', { name: 'Search categories' })
 
     expect(search).toBeDisabled()
-    expect(search.closest('.justify-between')).toContainElement(screen.getByRole('tablist'))
+    expect(search.closest('[data-testid="list-toolbar"]')).toContainElement(screen.getByRole('tablist'))
   })
 
   it('starts the other tab with an empty search box', async () => {
@@ -698,5 +699,14 @@ describe('[E4.18][AC87] the category editor on a phone in German', () => {
     release()
     await waitFor(() => expect(screen.getByRole('button', { name: 'Kategorie löschen' })).toBeEnabled())
     expect(writes('DELETE')).toHaveLength(0)
+  })
+})
+
+describe('[S8-UI-01] the categories screen uses the shared list header and toolbar', () => {
+  it('[S8-UI-01] Add has the Media button style and the tabs sit before the search box', () => {
+    renderScreen()
+
+    expectListChrome({ start: screen.getByRole('tablist'), search: screen.getByRole('searchbox', { name: 'Search categories' }) })
+    expectListChrome({ action: screen.getByRole('button', { name: /^Add/ }) })
   })
 })

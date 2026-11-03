@@ -1,12 +1,11 @@
 import type { StoryTab } from '../lib/list'
 import type { MessageKey } from '@/i18n/en'
 
-import { Button, SearchField } from '@heroui/react'
 import { useState } from 'react'
 
 import { ErrorNotice } from '@/components/error-notice'
 import { ContentIcon, PlusIcon } from '@/components/icons'
-import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
+import { ListAction, ListHeader, ListSearch, ListToolbar } from '@/components/layout/list-toolbar'
 import { PageTabs } from '@/components/page-tabs'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
@@ -21,13 +20,8 @@ function Header({ onNew, isDisabled }: { onNew?: () => void, isDisabled: boolean
   const { t } = useLocale()
 
   return (
-    <MerchantPageHeader
-      action={(
-        <Button className="shrink-0 max-lg:min-h-11" isDisabled={isDisabled} size="sm" onPress={onNew}>
-          <PlusIcon aria-hidden size={16} />
-          {t('merchantStories.new')}
-        </Button>
-      )}
+    <ListHeader
+      action={<ListAction icon={PlusIcon} isDisabled={isDisabled} onPress={onNew}>{t('merchantStories.new')}</ListAction>}
       description={t('merchantStories.description')}
       title={t('merchantStories.title')}
     />
@@ -64,20 +58,18 @@ function StoriesBody({ items, isLoading, failure, onNew, newPending, onDelete }:
   return (
     <>
       <Header isDisabled={onNew === undefined || newPending} onNew={onNew} />
-      <PageTabs
-        fill
-        label={t('merchantStories.tabs.label')}
-        selected={tab}
-        tabs={STORY_TABS.map(id => ({ id, label: t(`merchantStories.tab.${id}`), badge: isLoading ? undefined : counts[id] }))}
-        onSelect={setTab}
+      <ListToolbar
+        search={<ListSearch isDisabled={isLoading} label={t('merchantStories.search')} value={query} onChange={setQuery} />}
+        tabs={(
+          <PageTabs
+            fill
+            label={t('merchantStories.tabs.label')}
+            selected={tab}
+            tabs={STORY_TABS.map(id => ({ id, label: t(`merchantStories.tab.${id}`), count: isLoading ? null : counts[id] }))}
+            onSelect={setTab}
+          />
+        )}
       />
-      <SearchField aria-label={t('merchantStories.search')} className="w-full lg:w-80" isDisabled={isLoading} value={query} onChange={setQuery}>
-        <SearchField.Group>
-          <SearchField.SearchIcon />
-          <SearchField.Input placeholder={t('merchantStories.search')} />
-          <SearchField.ClearButton />
-        </SearchField.Group>
-      </SearchField>
       {failure ?? (
         <StoryRows
           empty={empty}

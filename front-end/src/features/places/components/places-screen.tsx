@@ -3,14 +3,15 @@ import type { ListFilters } from '../lib/list'
 import type { RowActionId } from './place-rows'
 import type { MessageKey } from '@/i18n/en'
 
-import { buttonVariants, SearchField } from '@heroui/react'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 import { ErrorNotice } from '@/components/error-notice'
 import { FilterButtons, FilterChips, filterGroup } from '@/components/filter-bar'
 import { ContentIcon, InfoIcon, PlusIcon } from '@/components/icons'
+import { ListAction, ListHeader, ListSearch, ListToolbar } from '@/components/layout/list-toolbar'
+import { Notice } from '@/components/notice'
 import { useLocale } from '@/contexts/locale-context'
 import { useCategories } from '@/features/categories/api/queries'
 import { ApiProblem } from '@/features/data-client/errors'
@@ -27,22 +28,16 @@ function Header({ disabled }: { disabled: boolean }) {
   const { t } = useLocale()
 
   return (
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-      <div className="flex min-w-0 flex-col gap-1">
-        <h1 className="text-title">{t('places.list.title')}</h1>
-        <p className="text-sm text-pretty text-muted">{t('places.list.intro')}</p>
-      </div>
-      <div className="flex shrink-0 flex-wrap gap-2">
-        <Link aria-disabled={disabled} className={buttonVariants({ className: 'min-h-11', variant: 'secondary' })} params={{ placeId: NEW_PLACE_ID }} search={{ start: 'dates' }} to="/store/content/places/$placeId">
-          <PlusIcon aria-hidden size={18} />
-          {t('places.list.addEvent')}
-        </Link>
-        <Link aria-disabled={disabled} className={buttonVariants({ className: 'min-h-11' })} params={{ placeId: NEW_PLACE_ID }} to="/store/content/places/$placeId">
-          <PlusIcon aria-hidden size={18} />
-          {t('places.list.addPlace')}
-        </Link>
-      </div>
-    </div>
+    <ListHeader
+      action={(
+        <div className="flex shrink-0 gap-2 max-lg:flex-col">
+          <ListAction icon={PlusIcon} isDisabled={disabled} link={{ params: { placeId: NEW_PLACE_ID }, search: { start: 'dates' }, to: '/store/content/places/$placeId' }} variant="secondary">{t('places.list.addEvent')}</ListAction>
+          <ListAction icon={PlusIcon} isDisabled={disabled} link={{ params: { placeId: NEW_PLACE_ID }, to: '/store/content/places/$placeId' }}>{t('places.list.addPlace')}</ListAction>
+        </div>
+      )}
+      description={t('places.list.intro')}
+      title={t('places.list.title')}
+    />
   )
 }
 
@@ -127,18 +122,12 @@ export function PlacesScreen() {
   return (
     <div className="flex flex-col gap-4" data-testid="places-screen">
       <Header disabled={!store} />
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-        <SearchField aria-label={t('places.list.search')} className="w-full lg:w-80" isDisabled={places.isPending} value={filters.query} onChange={query => change({ query })}>
-          <SearchField.Group>
-            <SearchField.SearchIcon />
-            <SearchField.Input placeholder={t('places.list.search')} />
-            <SearchField.ClearButton />
-          </SearchField.Group>
-        </SearchField>
-        <FilterButtons groups={groups} />
-      </div>
+      <ListToolbar
+        search={<ListSearch isDisabled={places.isPending} label={t('places.list.search')} value={filters.query} onChange={query => change({ query })} />}
+        filters={<FilterButtons groups={groups} />}
+      />
       <FilterChips groups={groups} />
-      {actions.notice && <p className="rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">{t(actions.notice)}</p>}
+      {actions.notice && <Notice status="danger">{t(actions.notice)}</Notice>}
       {places.isError
         ? (
             <ErrorNotice

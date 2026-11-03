@@ -1,14 +1,15 @@
 import type { FakeApi } from './places-support'
-
 import { toast } from '@heroui/react'
+
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SECTION_PAGES } from '@/components/layout/section-pages'
-
 import { PlacesScreen } from '@/features/places/components/places-screen'
+
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
+import { expectListChrome } from './list-screens-helper'
 import { installApi, listItem, pinInUse, problem, renderInRouter, storeId, uuid } from './places-support'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
@@ -602,5 +603,17 @@ describe('[E4.2][AC68] N16 the list', () => {
     expect(screen.getByRole('heading', { name: 'Orte' })).toBeInTheDocument()
     expect(within(rowOf('Kapellbrücke')).getByText('Vorbei · nicht auf der Karte')).toBeInTheDocument()
     expect(screen.getByRole('searchbox', { name: 'Nach Titel oder Kartenlink suchen' })).toBeInTheDocument()
+  })
+})
+
+describe('[S8-UI-01] the places list uses the shared list header and toolbar', () => {
+  it('[S8-UI-01] Add place and Add event have the Media button style and the filters sit before the search box', async () => {
+    api.items = [listItem()]
+    await open()
+
+    const [addPlace] = await screen.findAllByRole('link', { name: 'Add place' })
+
+    expectListChrome({ action: addPlace, start: screen.getByRole('button', { name: /^Status/ }), search: screen.getByRole('searchbox') })
+    expectListChrome({ action: screen.getByRole('link', { name: 'Add event' }) })
   })
 })

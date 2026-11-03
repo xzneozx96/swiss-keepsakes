@@ -65,7 +65,7 @@ export function MerchantOrders({
       <PageTabs
         label={tabsLabel}
         selected={selected}
-        tabs={tabs.map(tab => ({ id: tab.id, label: tab.label, badge: tab.count }))}
+        tabs={tabs.map(tab => ({ id: tab.id, label: tab.label, count: tab.count }))}
         onSelect={onSelect}
       >
         {tabs.map(tab => (

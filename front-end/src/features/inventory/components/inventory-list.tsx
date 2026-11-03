@@ -2,9 +2,9 @@ import type { StockList } from '@sk/api-contract'
 import type { StockTab } from '../lib/list'
 import type { MessageKey } from '@/i18n/en'
 
-import { SearchField } from '@heroui/react'
 import { useState } from 'react'
 
+import { ListSearch, ListToolbar } from '@/components/layout/list-toolbar'
 import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
 import { PageTabs } from '@/components/page-tabs'
 import { useLocale } from '@/contexts/locale-context'
@@ -17,7 +17,7 @@ import { StockRows } from './inventory-rows'
 const TAB_LABELS: Record<StockTab, MessageKey> = { all: 'inventory.tab.all', inStock: 'inventory.tab.inStock', soldOut: 'inventory.tab.soldOut' }
 const EMPTY_TEXTS: Record<StockTab, MessageKey> = { all: 'inventory.empty.all', inStock: 'inventory.empty.inStock', soldOut: 'inventory.empty.soldOut' }
 
-/** The tabs with the figures of the whole store (none while loading) and the search on the same row, then the table. */
+/** The tabs with the figures of the whole store (none while loading) and the search on the same row, then the table, as on the other list screens. */
 function InventoryCard({ storeId, stock, isLoading, failure }: { storeId: string, stock?: StockList, isLoading: boolean, failure?: React.ReactNode }) {
   const { t } = useLocale()
   const [tab, setTab] = useState<StockTab>('all')
@@ -25,23 +25,19 @@ function InventoryCard({ storeId, stock, isLoading, failure }: { storeId: string
   const rows = filterStock(stock?.items ?? [], tab, query)
 
   return (
-    <section aria-label={t('inventory.title')} className="flex min-w-0 flex-col gap-4 rounded-3xl bg-surface p-4 shadow-surface lg:p-5">
-      <PageTabs
-        split
-        label={t('inventory.tabsLabel')}
-        selected={tab}
-        sticky={false}
-        tabs={STOCK_TABS.map(id => ({ id, label: t(TAB_LABELS[id]), badge: stock?.counts[id] }))}
-        trailing={(
-          <SearchField aria-label={t('inventory.searchLabel')} className="w-full sm:w-64" isDisabled={isLoading} value={query} onChange={setQuery}>
-            <SearchField.Group>
-              <SearchField.SearchIcon />
-              <SearchField.Input className="w-full" placeholder={t('inventory.search')} />
-              <SearchField.ClearButton />
-            </SearchField.Group>
-          </SearchField>
+    <section aria-label={t('inventory.title')} className="flex min-w-0 flex-col gap-4">
+      <ListToolbar
+        search={<ListSearch isDisabled={isLoading} label={t('inventory.searchLabel')} placeholder={t('inventory.search')} value={query} onChange={setQuery} />}
+        tabs={(
+          <PageTabs
+            fill
+            label={t('inventory.tabsLabel')}
+            selected={tab}
+            sticky={false}
+            tabs={STOCK_TABS.map(id => ({ id, label: t(TAB_LABELS[id]), count: stock?.counts[id] ?? null }))}
+            onSelect={setTab}
+          />
         )}
-        onSelect={setTab}
       />
       {failure ?? <StockRows empty={query.trim() ? t('inventory.empty.search', { query: query.trim() }) : t(EMPTY_TEXTS[tab])} isLoading={isLoading} resetKey={`${tab}\n${query}`} rows={rows} storeId={storeId} />}
     </section>
@@ -61,7 +57,7 @@ function InventoryTable({ storeId }: { storeId: string }) {
   )
 }
 
-/** N13: the stock of every live variant of the store, edited in place. The page is a header and one card with the tabs, the search and the table. */
+/** N13: the stock of every live variant of the store, edited in place. The page is a header, the tabs with the search and the table, laid out as the other list screens. */
 export function InventoryList() {
   const { t } = useLocale()
 

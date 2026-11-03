@@ -1,16 +1,17 @@
 import type { MediaKind } from '@sk/domain/content'
 import type { FilterGroup } from '@/components/filter-bar'
 
-import { Button, SearchField } from '@heroui/react'
+import { Button } from '@heroui/react'
 
 import { FilterButtons } from '@/components/filter-bar'
+import { ListSearch, ListToolbar } from '@/components/layout/list-toolbar'
 import { PageTabs } from '@/components/page-tabs'
 import { useLocale } from '@/contexts/locale-context'
 import { MEDIA_KINDS } from '../lib/search-params'
 
 /**
- * Phones: the kind tabs share the full width, search and the buttons sit under them. From 1024 px one row: the tabs
- * share a 20rem bar on the left, search, filter and Select on the right. A tab label is the kind and its count.
+ * The shared list toolbar: the kind tabs alone on the first line (a 20rem bar from 1024 px), then the filters and Select at the left of the second
+ * line and the search at the right; on phones tabs, filters, search. A tab label is the kind and its count.
  */
 export function MediaToolbar({ kind, counts, text, groups, selecting, onKind, onText, onSelecting }: {
   kind: MediaKind
@@ -25,32 +26,30 @@ export function MediaToolbar({ kind, counts, text, groups, selecting, onKind, on
   const { t } = useLocale()
 
   return (
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
-      <div className="lg:w-80 lg:shrink-0">
-        <PageTabs
-          equal
-          label={t('media.filter.kind')}
-          selected={kind}
-          sticky={false}
-          tabs={MEDIA_KINDS.map(id => ({ id, label: `${t(`media.kind.${id}`)} · ${counts[id] ?? '–'}` }))}
-          onSelect={onKind}
-        />
-      </div>
-      <div className="flex min-w-0 flex-wrap items-center gap-2 lg:flex-1 lg:flex-nowrap lg:justify-end">
-        <SearchField aria-label={t('media.search')} className="w-full lg:max-w-xs" value={text} onChange={onText}>
-          <SearchField.Group>
-            <SearchField.SearchIcon />
-            <SearchField.Input className="w-full" placeholder={t('media.search')} />
-            <SearchField.ClearButton />
-          </SearchField.Group>
-        </SearchField>
-        <FilterButtons groups={groups} />
-        {kind === 'image' && (
-          <Button className="shrink-0 rounded-full max-lg:h-11" variant={selecting ? 'primary' : 'secondary'} onPress={onSelecting}>
-            {t(selecting ? 'media.select.stop' : 'media.select.start')}
-          </Button>
-        )}
-      </div>
-    </div>
+    <ListToolbar
+      search={<ListSearch label={t('media.search')} value={text} onChange={onText} />}
+      tabs={(
+        <div className="w-full lg:w-80">
+          <PageTabs
+            equal
+            label={t('media.filter.kind')}
+            selected={kind}
+            sticky={false}
+            tabs={MEDIA_KINDS.map(id => ({ id, label: t(`media.kind.${id}`), count: counts[id] ?? null }))}
+            onSelect={onKind}
+          />
+        </div>
+      )}
+      filters={(
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <FilterButtons groups={groups} />
+          {kind === 'image' && (
+            <Button className="shrink-0 rounded-full max-lg:h-11" variant={selecting ? 'primary' : 'secondary'} onPress={onSelecting}>
+              {t(selecting ? 'media.select.stop' : 'media.select.start')}
+            </Button>
+          )}
+        </div>
+      )}
+    />
   )
 }

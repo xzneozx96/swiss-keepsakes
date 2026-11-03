@@ -8,6 +8,7 @@ import { pickText } from '@sk/domain/shared'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
 
+import { Notice } from '@/components/notice'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { useDataClient } from '@/features/data-client'
@@ -152,12 +153,11 @@ export function PickupPointSheet({ storeId, place, onClose }: {
     >
       <div ref={bodyRef} className="flex flex-col gap-5">
         {stale && (
-          <div className="flex flex-col items-start gap-2 rounded-2xl bg-warning-soft p-4 text-sm text-warning-soft-foreground" role="alert">
-            <p>{t('pickup.problem.stale')}</p>
-            <Button className="min-h-11" isPending={reloading} variant="secondary" onPress={() => void reload()}>{t('pickup.reload')}</Button>
-          </div>
+          <Notice actions={<Button className="min-h-11" isPending={reloading} variant="secondary" onPress={() => void reload()}>{t('pickup.reload')}</Button>} status="warning">
+            {t('pickup.problem.stale')}
+          </Notice>
         )}
-        {failureKey && <p className="rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">{t(failureKey)}</p>}
+        {failureKey && <Notice status="danger">{t(failureKey)}</Notice>}
         <LanguageTabs missing={missing} selected={language} onChange={setLanguage}>
           {lang => (
             <>

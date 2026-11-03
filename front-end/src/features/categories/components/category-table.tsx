@@ -2,12 +2,12 @@ import type { CategoryKind, MerchantCategory } from '@sk/api-contract'
 import type { CategoryActions } from '../hooks/use-category-actions'
 import type { RowAction } from '@/components/row-actions'
 
-import { SearchField } from '@heroui/react'
 import { useRef, useState } from 'react'
 
 import { DataTable } from '@/components/data-table'
 import { EmptyState } from '@/components/empty-state'
 import { ChevronDownIcon, EditIcon, InfoIcon, PlusIcon, StatusWarningIcon, TrashIcon } from '@/components/icons'
+import { ListSearch } from '@/components/layout/list-toolbar'
 import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
@@ -22,13 +22,7 @@ export function CategorySearch({ value, onChange, disabled }: { value: string, o
   const { t } = useLocale()
 
   return (
-    <SearchField aria-label={t('categories.search.label')} className="w-72" isDisabled={disabled} value={value} onChange={onChange}>
-      <SearchField.Group>
-        <SearchField.SearchIcon />
-        <SearchField.Input placeholder={t('categories.search.placeholder')} />
-        <SearchField.ClearButton />
-      </SearchField.Group>
-    </SearchField>
+    <ListSearch isDisabled={disabled} label={t('categories.search.label')} placeholder={t('categories.search.placeholder')} value={value} onChange={onChange} />
   )
 }
 

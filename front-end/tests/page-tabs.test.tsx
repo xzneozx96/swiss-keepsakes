@@ -8,8 +8,9 @@ import { PageTabs, TabPanel } from '@/components/page-tabs'
 vi.mock('@tanstack/react-router', () => ({ useNavigate: () => vi.fn() }))
 
 const tabs = [
-  { id: 'a', label: 'Alpha', badge: 3 },
+  { id: 'a', label: 'Alpha', count: 3 },
   { id: 'b', label: 'Beta' },
+  { id: 'c', label: 'Gamma', count: null },
 ]
 
 function setup(props: Partial<Parameters<typeof PageTabs>[0]> = {}) {
@@ -26,11 +27,13 @@ function setup(props: Partial<Parameters<typeof PageTabs>[0]> = {}) {
 }
 
 describe('pageTabs', () => {
-  it('renders a labelled tablist with the tabs and a badge', () => {
+  it('renders a labelled tablist with the tabs and a count written as "Label · N"', () => {
     setup()
     expect(screen.getByRole('tablist', { name: 'Things' })).toBeInTheDocument()
-    expect(screen.getAllByRole('tab')).toHaveLength(2)
-    expect(screen.getByRole('tab', { name: /Alpha/ })).toHaveTextContent('3')
+    expect(screen.getAllByRole('tab')).toHaveLength(3)
+    expect(screen.getByRole('tab', { name: /Alpha/ })).toHaveTextContent('Alpha · 3')
+    expect(screen.getByRole('tab', { name: /Gamma/ })).toHaveTextContent('Gamma · –')
+    expect(screen.getByRole('tab', { name: 'Beta' })).toHaveTextContent(/^Beta$/)
     expect(screen.getByText('Panel A')).toBeInTheDocument()
   })
 

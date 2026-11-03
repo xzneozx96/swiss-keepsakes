@@ -7,8 +7,8 @@ import { STICKY_TABS, STICKY_TABS_BELOW_BAR } from '@/components/layout/sticky-t
 export interface TabItem<Id extends string = string> {
   id: Id
   label: ReactNode
-  /** The small pill after the label: a count, or "Soon". */
-  badge?: string | number
+  /** Written after the label as "Label · N", with "–" for `null` (not known yet); no count when left out. */
+  count?: number | null
   /** Anything else after the label, e.g. a warning dot. */
   marker?: ReactNode
 }
@@ -50,11 +50,7 @@ export function TabRow({
           <Tabs.Tab key={tab.id} className={`${tabWidth} whitespace-nowrap`.trim()} id={tab.id}>
             {index > 0 && <Tabs.Separator />}
             {tab.label}
-            {tab.badge !== undefined && (
-              <span className="ms-1.5 min-w-5 rounded-full bg-default px-1.5 text-xs leading-5 tabular-nums">
-                {tab.badge}
-              </span>
-            )}
+            {tab.count !== undefined && ` · ${tab.count ?? '–'}`}
             {tab.marker}
             <Tabs.Indicator />
           </Tabs.Tab>

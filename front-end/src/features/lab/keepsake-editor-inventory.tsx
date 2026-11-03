@@ -132,7 +132,7 @@ export function InventoryList({ catalog, go }: { catalog: Catalog, go: Go }) {
           label="Stock"
           selected={stock}
           sticky={false}
-          tabs={STOCK_FILTERS.map(f => ({ id: f.id, label: f.label, badge: all.filter(r => byStock(r, f.id)).length }))}
+          tabs={STOCK_FILTERS.map(f => ({ id: f.id, label: f.label, count: all.filter(r => byStock(r, f.id)).length }))}
           trailing={(
             <SearchField aria-label="Search by code or name" className="w-full sm:w-64" value={query} onChange={setQuery}>
               <SearchField.Group>

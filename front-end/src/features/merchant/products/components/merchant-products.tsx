@@ -70,13 +70,13 @@ export function MerchantProducts({ tab }: { tab: ProductsTab }) {
       id: 'gifts',
       to: '/store/products',
       label: t('products.tab.gifts'),
-      badge: all.gifts.filter(r => !r.archived).length,
+      count: all.gifts.filter(r => !r.archived).length,
     },
     {
       id: 'tours',
       to: '/store/products/tours',
       label: t('products.tab.tours'),
-      badge: all.tours.filter(r => !r.archived).length,
+      count: all.tours.filter(r => !r.archived).length,
     },
     {
       id: 'pickup',

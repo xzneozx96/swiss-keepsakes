@@ -3,12 +3,13 @@ import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-
 import { LocaleProvider } from '@/contexts/locale-context'
+
 import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { InventoryList } from '@/features/inventory/components/inventory-list'
 import { base, setUpHarness, skuOf, state, stockList, stockProblem, stockRow } from './inventory-harness'
+import { expectListChrome } from './list-screens-helper'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -62,9 +63,9 @@ describe('[E6.3][AC05][AC53] AC-1 the inventory list', () => {
     const tabs = within(screen.getByRole('tablist', { name: 'Stock' }))
 
     expect(screen.getByRole('heading', { level: 1, name: 'Inventory' })).toBeInTheDocument()
-    expect(tabs.getByRole('tab', { name: /^All\s*3$/ })).toBeInTheDocument()
-    expect(tabs.getByRole('tab', { name: /^In stock\s*2$/ })).toBeInTheDocument()
-    expect(tabs.getByRole('tab', { name: /^Sold out\s*1$/ })).toBeInTheDocument()
+    expect(tabs.getByRole('tab', { name: /^All · 3$/ })).toBeInTheDocument()
+    expect(tabs.getByRole('tab', { name: /^In stock · 2$/ })).toBeInTheDocument()
+    expect(tabs.getByRole('tab', { name: /^Sold out · 1$/ })).toBeInTheDocument()
     expect(within(grid).getAllByRole('columnheader').map(header => header.textContent)).toEqual(['Variant', 'SKU code', 'Reserved', 'In stock', 'Available'])
     expect(within(grid).getAllByRole('row')).toHaveLength(4)
     expect(within(grid).getByText('Sold out')).toHaveClass('text-danger')
@@ -320,5 +321,40 @@ describe('[E6.3][AC05][AC53] AC-2 editing a quantity in the list', () => {
     await user.click(box(grid))
     await user.tab()
     expect(puts()).toHaveLength(0)
+  })
+})
+
+describe('[S8-UI-01] the inventory list uses the shared toolbar', () => {
+  it('[S8-UI-01] the tabs sit before the search box', async () => {
+    answerWith(three)
+    renderInventory()
+
+    await loaded('VX-L-SWAN')
+    expectListChrome({ start: screen.getByRole('tablist'), search: screen.getByRole('searchbox') })
+  })
+
+  it('[S8-UI-01] the table is the page table of the other lists: no card around it, no fixed layout, ticket cards on phones', async () => {
+    answerWith(three)
+    renderInventory()
+
+    const { grid, cards } = await loaded('VX-L-SWAN')
+
+    expect(grid).not.toHaveClass('table-fixed')
+    expect(screen.getByRole('region', { name: 'Inventory' })).not.toHaveClass('bg-surface')
+    expect(within(cards).getAllByRole('listitem')[0]).toHaveClass('rounded-3xl', 'bg-surface', 'shadow-surface')
+  })
+
+  it('[S8-UI-01] a SKU code stays on one line: the code cell and its column carry no-wrap, the column sizes to its content', async () => {
+    answerWith(three)
+    renderInventory()
+
+    const { grid } = await loaded('VX-L-SWAN')
+    const code = within(grid).getAllByText('VX-L-SWAN').find(el => el.closest('td')?.classList.contains('xl:table-cell'))!
+    const cell = code.closest('td')!
+    const header = within(grid).getByRole('columnheader', { name: 'SKU code' })
+
+    expect(cell).toHaveClass('whitespace-nowrap')
+    expect(code).toHaveClass('whitespace-nowrap')
+    expect(header).toHaveClass('w-px', 'whitespace-nowrap')
   })
 })

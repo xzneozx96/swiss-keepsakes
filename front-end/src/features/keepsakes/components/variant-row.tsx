@@ -6,6 +6,7 @@ import { Button, Checkbox, Input } from '@heroui/react'
 import { useState } from 'react'
 
 import { ArchiveIcon, EditIcon, PhotoAddIcon, TrashIcon } from '@/components/icons'
+import { SKU_CODE_CLASS } from '@/components/sku-code'
 import { useLocale } from '@/contexts/locale-context'
 import { chf, toRappen } from '../lib/keepsake-rules'
 import { combinationName, shortLabel, variantTitle } from '../lib/option-rules'
@@ -121,7 +122,7 @@ export function VariantRow({ storeId, variant, options, held, skuOn, ownPhotos, 
         {/* The code comes first in the markup so that on lg it sits before the chips (photo, code, values); below lg `order-last` stacks it under them. */}
         {codeCell && !variant.skuCode && <span aria-hidden className="hidden lg:block" data-testid="sku-cell-empty" />}
         {codeCell && variant.skuCode && (
-          <button aria-label={t('keepsakes.variants.editSku', { name: title })} className="min-w-0 self-start rounded-md text-start font-mono text-xs break-words text-muted underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:focus-ring max-lg:order-last max-lg:min-h-11 lg:self-center" title={variant.skuCode} type="button" onClick={() => onEdit('sku')}>{variant.skuCode}</button>
+          <button aria-label={t('keepsakes.variants.editSku', { name: title })} className={`min-w-0 self-start rounded-md text-start text-xs text-muted ${SKU_CODE_CLASS} underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:focus-ring max-lg:order-last max-lg:min-h-11 lg:self-center`} title={variant.skuCode} type="button" onClick={() => onEdit('sku')}>{variant.skuCode}</button>
         )}
         {options.length > 0 ? <RowChips options={options} values={variant.values} /> : <span className="truncate font-medium">{variant.skuCode}</span>}
       </div>

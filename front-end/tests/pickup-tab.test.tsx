@@ -5,12 +5,13 @@ import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-
 import { LocaleProvider } from '@/contexts/locale-context'
+
 import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
 import { PickupPage } from '@/features/merchant/products/components/pickup-page'
+import { expectListChrome } from './list-screens-helper'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 vi.mock('@/hooks/use-is-wide', () => ({ useIsWide: () => true }))
@@ -236,7 +237,6 @@ describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000
 
     await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
     await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
-    await userEvent.click(await screen.findByRole('checkbox', { name: /Active/ }))
     await userEvent.keyboard('{Escape}')
     const card = await ticket('Point 1')
 
@@ -258,7 +258,6 @@ describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000
 
     await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
     await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
-    await userEvent.click(await screen.findByRole('checkbox', { name: /Active/ }))
     await userEvent.keyboard('{Escape}')
     await userEvent.click(within(await ticket('Point 1')).getByRole('button', { name: 'Restore Point 1' }))
 
@@ -273,7 +272,6 @@ describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000
 
     await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
     await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
-    await userEvent.click(await screen.findByRole('checkbox', { name: /Active/ }))
     await userEvent.keyboard('{Escape}')
     const card = await ticket('Point 1')
     let release: () => void = () => {}
@@ -299,7 +297,6 @@ describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000
 
     await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
     await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
-    await userEvent.click(await screen.findByRole('checkbox', { name: /Active/ }))
     await userEvent.keyboard('{Escape}')
     const restore = within(await ticket('Point 1')).getByRole('button', { name: 'Restore Point 1' })
 
@@ -310,5 +307,81 @@ describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000
 
     expect(writes()[0]!.key).toBeTruthy()
     expect(writes()[1]!.key).toBe(writes()[0]!.key)
+  })
+})
+
+describe('[S8-UI-01] the pickup points page uses the shared list header and starts with no status ticked', () => {
+  it('[S8-UI-01] Add pickup point has the Media button style and the Status filter sits in the toolbar', async () => {
+    active = [point(1)]
+    await renderTab()
+
+    await screen.findByText('Point 1')
+    expectListChrome({ action: screen.getByRole('button', { name: 'Add pickup point' }), start: screen.getByRole('button', { name: /^Status/ }) })
+  })
+
+  it('[S8-UI-01] shows no Status chip on load, lists the active points and hides the archived ones until Archived is ticked', async () => {
+    active = [point(1)]
+    archivedPoints = [point(2, { archived: true })]
+    await renderTab()
+
+    await screen.findByText('Point 1')
+    expect(screen.queryByRole('button', { name: /^Remove filter/ })).not.toBeInTheDocument()
+    expect(screen.queryByText('Point 2')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
+    await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
+    expect(await screen.findByText('Point 2')).toBeInTheDocument()
+    expect(screen.queryByText('Point 1')).not.toBeInTheDocument()
+    await userEvent.click(await screen.findByRole('checkbox', { name: /Active/ }))
+    expect(await screen.findByText('Point 1')).toBeInTheDocument()
+    expect(screen.getByText('Point 2')).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    await userEvent.click(await screen.findByRole('button', { name: 'Clear all' }))
+    await waitFor(() => expect(screen.queryByText('Point 2')).not.toBeInTheDocument())
+    expect(screen.getByText('Point 1')).toBeInTheDocument()
+  })
+})
+
+describe('[S8-UI-01] the pickup points search', () => {
+  it('[S8-UI-01] typing filters the tickets by name in either language and by address, with the Status filter', async () => {
+    active = [point(1, { name: { en: 'Station kiosk' }, address: { en: 'Bahnhofstrasse 1' } }), point(2, { name: { de: 'Hotel Alpina' }, address: { de: 'Seeweg 5' } })]
+    archivedPoints = [point(3, { archived: true, name: { en: 'Old kiosk' } })]
+    await renderTab()
+
+    const search = await screen.findByRole('searchbox', { name: 'Search by name or address' })
+
+    await screen.findByText('Station kiosk')
+    await userEvent.type(search, ' ALPINA ')
+    expect(screen.queryByText('Station kiosk')).not.toBeInTheDocument()
+    expect(screen.getByText('Hotel Alpina')).toBeInTheDocument()
+    await userEvent.clear(search)
+    await userEvent.type(search, 'bahnhof')
+    expect(screen.getByText('Station kiosk')).toBeInTheDocument()
+    expect(screen.queryByText('Hotel Alpina')).not.toBeInTheDocument()
+    await userEvent.clear(search)
+    await userEvent.type(search, 'kiosk')
+    expect(screen.queryByText('Old kiosk')).not.toBeInTheDocument()
+  })
+
+  it('[S8-UI-01] a query with no match shows the no-match state, and its button clears the search and the filters', async () => {
+    active = [point(1)]
+    await renderTab()
+
+    await screen.findByText('Point 1')
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search by name or address' }), 'zzz')
+    expect(await screen.findByText('No pickup point matches. Try another word or remove a filter.')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Clear search and filters' }))
+    expect(await screen.findByText('Point 1')).toBeInTheDocument()
+    expect(screen.getByRole('searchbox', { name: 'Search by name or address' })).toHaveValue('')
+  })
+})
+
+describe('[S8-UI-01] the pickup point sheet notices', () => {
+  it('[S8-UI-01] the "Complete the text" refusal is a soft danger Alert, not a plain box', async () => {
+    await renderTab()
+    await userEvent.click(await screen.findByRole('button', { name: 'Add pickup point' }))
+
+    const notice = (await screen.findByText(/Complete the text in English or German to save/)).closest('.alert')
+
+    expect(notice).toHaveClass('alert--soft', 'alert--danger')
   })
 })

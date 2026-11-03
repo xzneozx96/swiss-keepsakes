@@ -11,8 +11,8 @@ export interface RouteTab {
   id: string
   to: LinkProps['to']
   label: string
-  /** The small pill after the label: a count, or "Soon". */
-  badge?: string | number
+  /** Written after the label as "Label · N", "–" for `null`; none when left out. */
+  count?: number | null
 }
 
 /**

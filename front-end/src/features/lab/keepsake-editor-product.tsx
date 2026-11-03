@@ -244,7 +244,7 @@ function VariantsTable({ model, onOpen }: { model: ProductModel, onOpen: (sku: S
         label="Show"
         selected={filter}
         sticky={false}
-        tabs={FILTERS.map(f => ({ id: f.id, label: f.label, badge: skus.filter(f.test).length }))}
+        tabs={FILTERS.map(f => ({ id: f.id, label: f.label, count: skus.filter(f.test).length }))}
         onSelect={setFilter}
       />
       {refusal && <Refusal text={refusal} />}

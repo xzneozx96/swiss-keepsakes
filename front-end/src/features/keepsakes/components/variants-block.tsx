@@ -11,6 +11,7 @@ import { useConfirm } from '@/components/confirm-dialog'
 import { DataTable } from '@/components/data-table'
 import { Block } from '@/components/form-block'
 import { ArchiveIcon, ChevronDownIcon, ForSaleIcon, HiddenIcon, InfoIcon, PriceIcon, ProductsIcon, TrashIcon } from '@/components/icons'
+import { SKU_CODE_CLASS } from '@/components/sku-code'
 import { useLocale } from '@/contexts/locale-context'
 import { groupByFirstOption, priceRange } from '../lib/combinations'
 import { chf } from '../lib/keepsake-rules'
@@ -57,7 +58,7 @@ function ArchivedList({ variants, options, isBusy, selected, onSelect, onDelete 
         columns={[
           { id: 'variant', isRowHeader: true, header: t('keepsakes.variants.archivedColumn.variant'), render: variant => nameOf(variant) },
           ...(variants.some(variant => variant.skuCode)
-            ? [{ id: 'sku', header: t('keepsakes.variants.archivedColumn.sku'), cellClassName: 'font-mono text-xs text-muted', render: (variant: ProductVariant) => variant.skuCode ?? '' }]
+            ? [{ id: 'sku', header: t('keepsakes.variants.archivedColumn.sku'), cellClassName: `${SKU_CODE_CLASS} text-xs text-muted`, render: (variant: ProductVariant) => variant.skuCode ?? '' }]
             : []),
           { id: 'orders', header: t('keepsakes.variants.archivedColumn.orders'), cellClassName: 'text-muted', render: variant => t(variant.hasOrders ? 'keepsakes.variants.archivedSold' : 'keepsakes.variants.archivedNeverSold') },
         ]}

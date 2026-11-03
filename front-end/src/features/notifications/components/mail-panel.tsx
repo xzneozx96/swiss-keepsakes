@@ -57,9 +57,9 @@ export function MailPanel() {
                   label="Recipient"
                   selected={who}
                   tabs={[
-                    { id: 'guest', label: 'Guest', badge: guestMail.length },
-                    { id: 'staff', label: 'Staff', badge: staffMail.length },
-                    { id: 'partner', label: 'Partner', badge: partnerMail.length },
+                    { id: 'guest', label: 'Guest', count: guestMail.length },
+                    { id: 'staff', label: 'Staff', count: staffMail.length },
+                    { id: 'partner', label: 'Partner', count: partnerMail.length },
                   ]}
                   onSelect={setWho}
                 >

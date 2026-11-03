@@ -1,10 +1,11 @@
 import { toast } from '@heroui/react'
 import { configure, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Route as ContentRoute } from '@/routes/store/content/index'
+
+import { expectListChrome } from './list-screens-helper'
 import { answerStories, base, listItem, listVersion, media, problem, publishedVersion, renderStories, setUpHarness, state, storeId, storyList, uuid } from './stories-harness'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
@@ -17,8 +18,8 @@ vi.setConfig({ testTimeout: 30_000 })
 beforeEach(setUpHarness)
 afterEach(() => vi.restoreAllMocks())
 
-/** A status tab by its label and count; the count is a badge after the label. */
-const tab = (label: string, count: number) => screen.getByRole('tab', { name: new RegExp(`^${label}\\s*${count}$`) })
+/** A status tab by its label and count; the count reads "Label · N". */
+const tab = (label: string, count: number) => screen.getByRole('tab', { name: new RegExp(`^${label} · ${count}$`) })
 const cellTexts = (row: HTMLElement) => within(row).getAllByRole('gridcell').slice(0, 2).map(cell => cell.textContent.trim())
 
 /** The grid and the card list once `text` is on screen: the loading rows are another element, so wait for the text first. */
@@ -422,5 +423,15 @@ describe('[E4.3][AC30] the Content route', () => {
     expect(() => beforeLoad({ search: { tab: 'reviews' } })).toThrow(expect.objectContaining({ options: expect.objectContaining({ to: '/store/content/reviews' }) }))
     expect(() => beforeLoad({ search: {} })).not.toThrow()
     expect((ContentRoute.options.validateSearch as (search: Record<string, unknown>) => unknown)({ tab: 'reviews', lang: ['en'] })).toEqual({ tab: 'reviews' })
+  })
+})
+
+describe('[S8-UI-01] the stories list uses the shared list header and toolbar', () => {
+  it('[S8-UI-01] New story has the Media button style and the tabs sit before the search box', async () => {
+    answerStories([listItem(1, { title: { en: 'The lake' } })])
+    renderStories()
+
+    await loaded('The lake')
+    expectListChrome({ action: screen.getByRole('button', { name: 'New story' }), start: screen.getByRole('tablist'), search: screen.getByRole('searchbox') })
   })
 })

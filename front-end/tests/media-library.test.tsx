@@ -1,8 +1,9 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-
 import { writeStored } from '@/lib/storage'
+
+import { expectListChrome } from './list-screens-helper'
 import { item, other, page, photoId, problem, renderMedia, setUpHarness, state, storeId, third, uses, writes } from './media-harness'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
@@ -631,5 +632,22 @@ describe('[E4.11][AC51] the media library in German', () => {
     await userEvent.upload(screen.getByTestId('upload-input'), new File(['heic'], 'IMG_1.heic', { type: 'image/heic' }))
 
     await waitFor(() => expect(toasts.warning).toHaveBeenCalledWith('1 Datei abgelehnt: IMG_1.heic, Typ nicht akzeptiert (JPEG, PNG, WebP, MP3, M4A oder PDF).'))
+  })
+})
+
+describe('[S8-UI-01] the media library uses the shared list header and toolbar', () => {
+  it('[S8-UI-01] Upload has the shared button style, and the tabs and filters sit before the search box', async () => {
+    answerWith({ list: () => Response.json(page([item({ name: 'Sunrise.JPG' })])) })
+    renderMedia()
+
+    await screen.findByText('Sunrise.JPG')
+    expectListChrome({ action: screen.getByRole('button', { name: 'Upload' }), start: screen.getByRole('tablist'), search: screen.getByRole('searchbox') })
+    // Tabs and filters make two lines: the tabs alone, then the filters and Select at the left with the search at the right.
+    const tabs = screen.getByRole('tablist')
+    const line = screen.getByRole('button', { name: /^Use/ }).closest('[data-testid="list-toolbar-line"]')
+
+    expect(line).toContainElement(screen.getByRole('searchbox'))
+    expect(line).toContainElement(screen.getByRole('button', { name: 'Select' }))
+    expect(line).not.toContainElement(tabs)
   })
 })

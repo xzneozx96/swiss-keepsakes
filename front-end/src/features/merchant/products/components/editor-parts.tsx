@@ -9,7 +9,6 @@ import type { ProductTab } from '@/features/merchant/products/lib/search-params'
 import type { MessageKey } from '@/i18n/en'
 
 import {
-  Alert,
   Description,
   FieldError,
   Input,
@@ -26,6 +25,7 @@ import { AutoTextArea } from '@/components/auto-textarea'
 import { BackIcon } from '@/components/icons'
 import { EditorFormSkeleton } from '@/components/layout/detail-skeletons'
 import { MerchantBackBar } from '@/components/layout/merchant-back-bar'
+import { Notice } from '@/components/notice'
 import { PageTabs, TabPanel } from '@/components/page-tabs'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
@@ -213,49 +213,30 @@ export function LanguageTabs({
           {stepAlerts
             ? (
                 gaps(language).length > 0 && (
-                  <Alert status="warning">
-                    <Alert.Indicator />
-                    <Alert.Content>
-                      <Alert.Description>
-                        {t('products.text.incomplete', {
-                          language: t(`products.lang.${language}`),
-                          other: t(`products.lang.${otherLanguage(language)}`),
-                          fields: fieldList(gaps(language)),
-                        })}
-                      </Alert.Description>
-                    </Alert.Content>
-                  </Alert>
+                  <Notice status="warning">
+                    {t('products.text.incomplete', {
+                      language: t(`products.lang.${language}`),
+                      other: t(`products.lang.${otherLanguage(language)}`),
+                      fields: fieldList(gaps(language)),
+                    })}
+                  </Notice>
                 )
               )
             : status === 'incomplete'
               ? (
-                  <Alert status={requireComplete ? 'danger' : 'warning'}>
-                    <Alert.Indicator />
-                    <Alert.Content>
-                      <Alert.Description>
-                        {t(
-                          requireComplete
-                            ? 'products.text.noneComplete'
-                            : 'products.text.toPublish',
-                        )}
-                      </Alert.Description>
-                    </Alert.Content>
-                  </Alert>
+                  <Notice status={requireComplete ? 'danger' : 'warning'}>
+                    {t(requireComplete ? 'products.text.noneComplete' : 'products.text.toPublish')}
+                  </Notice>
                 )
               : (
                   missing[language].length > 0 && (
-                    <Alert status="warning">
-                      <Alert.Indicator />
-                      <Alert.Content>
-                        <Alert.Description>
-                          {t('products.text.incomplete', {
-                            language: t(`products.lang.${language}`),
-                            other: t(`products.lang.${otherLanguage(language)}`),
-                            fields: fieldList(missing[language]),
-                          })}
-                        </Alert.Description>
-                      </Alert.Content>
-                    </Alert>
+                    <Notice status="warning">
+                      {t('products.text.incomplete', {
+                        language: t(`products.lang.${language}`),
+                        other: t(`products.lang.${otherLanguage(language)}`),
+                        fields: fieldList(missing[language]),
+                      })}
+                    </Notice>
                   )
                 )}
           {children(language)}

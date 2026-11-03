@@ -6,6 +6,7 @@ import { Link } from '@tanstack/react-router'
 
 import { DataTable } from '@/components/data-table'
 import { OrdersIcon } from '@/components/icons'
+import { SKU_CODE_CLASS } from '@/components/sku-code'
 import { useLocale } from '@/contexts/locale-context'
 import { KeepsakePhoto } from '@/features/keepsakes/components/keepsake-photo'
 import { nameIn } from '@/features/keepsakes/lib/keepsake-rules'
@@ -27,10 +28,10 @@ function VariantCell({ row, codeClassName = '' }: { row: StockRow, codeClassName
 
   return (
     <Link className="flex min-w-0 items-center gap-3 rounded-xl outline-none focus-visible:focus-ring" params={{ skuId: row.skuId }} to="/store/products/inventory/$skuId">
-      <KeepsakePhoto className="size-11 shrink-0 rounded-xl" media={row.photo} width={160} />
+      <KeepsakePhoto className="size-11 shrink-0 rounded-lg" media={row.photo} width={160} />
       <span className="flex min-w-0 flex-col break-words">
-        <span className="text-sm font-medium">{title}</span>
-        {row.code && <span className={`font-mono text-xs text-muted ${codeClassName}`.trim()}>{row.code}</span>}
+        <span className="text-sm font-semibold">{title}</span>
+        {row.code && <span className={`${SKU_CODE_CLASS} text-xs text-muted ${codeClassName}`.trim()}>{row.code}</span>}
         {variant(row) && <span className="text-xs text-muted">{keepsake(row)}</span>}
       </span>
     </Link>
@@ -59,9 +60,9 @@ function StockLines({ row }: { row: StockRow }) {
 /** Phones: a row is the thumbnail, the title and the code, and under them the two stock lines on the left and the box on the right. */
 function StockCards({ rows, label, storeId }: { rows: StockRow[], label: string, storeId: string }) {
   return (
-    <ul aria-label={label} className="flex flex-col divide-y divide-separator lg:hidden">
+    <ul aria-label={label} className="flex flex-col gap-3 lg:hidden">
       {rows.map(row => (
-        <li key={row.skuId} className="flex min-w-0 flex-col gap-2 py-3" data-sku={row.skuId}>
+        <li key={row.skuId} className="flex min-w-0 flex-col gap-2 rounded-3xl bg-surface p-3 shadow-surface" data-sku={row.skuId}>
           <div className="min-w-0">
             <VariantCell row={row} />
           </div>
@@ -78,11 +79,11 @@ function StockCards({ rows, label, storeId }: { rows: StockRow[], label: string,
 /** The loading rows have the shape of the phone rows: a thumbnail with two lines, then the stock lines and the box. */
 function CardSkeletons() {
   return (
-    <ul aria-hidden className="flex flex-col divide-y divide-separator lg:hidden">
+    <ul aria-hidden className="flex flex-col gap-3 lg:hidden">
       {[0, 1, 2].map(i => (
-        <li key={i} className="flex flex-col gap-2 py-3">
+        <li key={i} className="flex flex-col gap-2 rounded-3xl bg-surface p-3 shadow-surface">
           <div className="flex items-center gap-3">
-            <Skeleton className="size-11 shrink-0 rounded-xl" />
+            <Skeleton className="size-11 shrink-0 rounded-lg" />
             <div className="flex flex-1 flex-col gap-2">
               <Skeleton className="h-4 w-3/5 rounded-lg" />
               <Skeleton className="h-3 w-1/3 rounded-lg" />
@@ -107,7 +108,7 @@ export function StockRows({ rows, isLoading, storeId, empty, resetKey }: { rows:
   const label = t('inventory.title')
   const columns: DataTableColumn<StockRow>[] = [
     { id: 'variant', header: t('inventory.column.variant'), isRowHeader: true, skeleton: 'lead', render: row => <VariantCell codeClassName="xl:hidden" row={row} /> },
-    { id: 'code', header: t('inventory.column.code'), headerClassName: 'hidden w-38 xl:table-cell', cellClassName: 'hidden xl:table-cell', render: row => <span className="font-mono text-sm">{row.code}</span> },
+    { id: 'code', header: t('inventory.column.code'), headerClassName: 'hidden w-px whitespace-nowrap xl:table-cell', cellClassName: 'hidden whitespace-nowrap xl:table-cell', render: row => <span className={`${SKU_CODE_CLASS} text-sm`}>{row.code}</span> },
     { id: 'reserved', header: t('inventory.column.reserved'), headerClassName: 'w-28 text-end', cellClassName: row => `text-end tabular-nums ${row.reserved === 0 ? 'text-muted' : ''}`, render: row => row.reserved },
     { id: 'inStock', header: t('inventory.column.inStock'), headerClassName: 'w-48', skeleton: 'field', render: row => <StockField key={row.skuId} row={row} storeId={storeId} /> },
     { id: 'available', header: t('inventory.column.available'), headerClassName: 'w-28 text-end', cellClassName: 'text-end tabular-nums', render: row => <Available row={row} /> },
@@ -118,14 +119,12 @@ export function StockRows({ rows, isLoading, storeId, empty, resetKey }: { rows:
       cardSkeleton={<CardSkeletons />}
       cards={pageRows => <StockCards label={label} rows={pageRows} storeId={storeId} />}
       columns={columns}
-      contentClassName="min-w-[40rem] table-fixed"
       empty={{ icon: OrdersIcon, message: empty }}
       getRowId={row => row.skuId}
       isLoading={isLoading}
       label={label}
       resetKey={resetKey}
       rows={rows}
-      variant="card"
     />
   )
 }
