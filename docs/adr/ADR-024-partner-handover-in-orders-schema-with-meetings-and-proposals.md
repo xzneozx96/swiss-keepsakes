@@ -21,6 +21,8 @@ We will keep five tables in the `orders` schema and the pickup list in `catalog`
 - A partner who moves a time later, and a merchant who moves a time, change the row directly and write `platform.audit_log`. Only the use case knows who is moving and whether a move is earlier.
 - Both tables carry `row_version` for `If-Match`.
 
+**Amended 2026-11-03 (Source: gate G-S8-D5).** A pickup span may cross midnight: a `closes` before `opens` closes the next morning, `24:00` closes at midnight, and `opens` equal to `closes` is refused. The orders module reads a wrapping span when it validates a pickup time (E6.9, E7.x). `catalog.pickup_places` also carries `row_version` for `If-Match`. Migration `0022_pickup_places` builds both pickup tables.
+
 ## Consequences
 - An order can carry a composite key to its meeting that includes the partner (ADR-025), which a separate module could not offer without a cross-module rule.
 - The orders module grows by five tables. A later split into a module is a schema move with no data change.
@@ -44,3 +46,4 @@ We will keep five tables in the `orders` schema and the pickup list in `catalog`
 ## History
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
+- 2026-11-03 amended (gate G-S8-D5): pickup spans may cross midnight
