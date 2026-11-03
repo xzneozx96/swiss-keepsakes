@@ -18,6 +18,7 @@ import { requestsEn } from '@/features/requests/messages'
 import { storesEn } from '@/features/stores/messages'
 import { storiesMerchantEn } from '@/features/stories/messages'
 import { storiesMediaEn } from '@/features/stories/messages-media'
+import { storiesPreviewEn } from '@/features/stories/messages-preview'
 import { storiesPublishEn } from '@/features/stories/messages-publish'
 import { tourBookingEn } from '@/features/tours/booking/messages'
 import { tourDetailEn } from '@/features/tours/detail/messages'
@@ -51,6 +52,7 @@ export const en = {
   ...placesEn,
   ...storiesMerchantEn,
   ...storiesPublishEn,
+  ...storiesPreviewEn,
   ...storiesMediaEn,
   ...actionBarEn,
   ...multiSelectEn,
