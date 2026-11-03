@@ -44,9 +44,9 @@ function TileChip({ children }: { children: string }) {
 
 /**
  * One photo as a labelled checkbox: the file name is its name for a screen reader; the tile shows the picture.
- * Choosable: an empty corner circle; chosen in this pick: the inside outline and the filled circle. A photo the page already has is disabled and faded, with no accent.
+ * Choosable: an empty corner circle; chosen in this pick: the inside outline and the filled circle. A photo the page already has is disabled and faded, with no accent; so is a photo that is still processing when `blocked`.
  */
-function Choice({ item, checked, disabled, used, onToggle }: { item: MediaItem, checked: boolean, disabled: boolean, used: boolean, onToggle: () => void }) {
+function Choice({ item, checked, disabled, used, blocked, onToggle }: { item: MediaItem, checked: boolean, disabled: boolean, used: boolean, blocked: boolean, onToggle: () => void }) {
   const { t } = useLocale()
   const processing = !used && item.status === 'processing'
   // The picture's spinner has a name of its own, so the checkbox says what it is.
@@ -54,12 +54,12 @@ function Choice({ item, checked, disabled, used, onToggle }: { item: MediaItem, 
 
   return (
     <li>
-      <label className={`group flex flex-col gap-1 ${disabled ? 'cursor-default opacity-60' : 'cursor-pointer'}`}>
+      <label className={`group flex flex-col gap-1 ${disabled || blocked ? 'cursor-default opacity-60' : 'cursor-pointer'}`}>
         <input
           aria-label={name}
           checked={checked}
           className="peer sr-only"
-          disabled={disabled}
+          disabled={disabled || blocked}
           type="checkbox"
           onChange={onToggle}
         />
@@ -67,7 +67,7 @@ function Choice({ item, checked, disabled, used, onToggle }: { item: MediaItem, 
           <span className="relative block w-full overflow-hidden rounded-xl">
             <FileThumb className="aspect-square w-full" item={item} />
             <TileOutline shown={checked} />
-            {!disabled && <TileMark selected={checked} />}
+            {!disabled && !blocked && <TileMark selected={checked} />}
             {used && <TileChip>{t('media.library.used')}</TileChip>}
             {processing && <TileChip>{t('media.status.processing')}</TileChip>}
           </span>
@@ -111,13 +111,15 @@ function PendingChoice({ item, onRetry, onRemove }: { item: PendingPhoto, onRetr
   )
 }
 
-function PickerBody({ storeId, used, selected, room, single, uploads, onToggle, onUpload }: {
+function PickerBody({ storeId, used, selected, room, single, readyOnly, uploads, onToggle, onUpload }: {
   storeId: string
   used: string[]
   selected: string[]
   room: number
   /** One photo is chosen: an upload or a pick replaces the choice, and there is always room for it. */
   single: boolean
+  /** A photo that is still processing cannot be chosen (a cover must be ready). */
+  readyOnly: boolean
   uploads: { pending: PendingPhoto[], retry: (key: string) => void, remove: (key: string) => void }
   onToggle: (id: string) => void
   onUpload: (files: File[]) => void
@@ -188,7 +190,7 @@ function PickerBody({ storeId, used, selected, room, single, uploads, onToggle, 
             const isUsed = used.includes(item.id)
             const checked = !isUsed && selected.includes(item.id)
 
-            return <Choice key={item.id} checked={checked} disabled={isUsed || (!checked && free <= 0)} item={item} used={isUsed} onToggle={() => onToggle(item.id)} />
+            return <Choice key={item.id} blocked={readyOnly && item.status === 'processing'} checked={checked} disabled={isUsed || (!checked && free <= 0)} item={item} used={isUsed} onToggle={() => onToggle(item.id)} />
           })}
         </ul>
       )}
@@ -204,9 +206,10 @@ function PickerBody({ storeId, used, selected, room, single, uploads, onToggle, 
  * PUT, confirm): the new photo joins the grid and is chosen at once, a library duplicate the merchant chose to reuse
  * is chosen too. Add selected hands the ids to `onAdd` in the order they were chosen.
  * With `single` one photo is chosen (a new pick replaces it, `room` is ignored) and the button reads "Use this photo": a
- * variant takes one photo of the library.
+ * variant takes one photo of the library. `title` and `chooseLabel` replace the sheet title and the button text (a story's cover
+ * says "Cover photo" and "Use as cover"); `readyOnly` disables a photo that is still processing.
  */
-export function LibraryPicker({ storeId, isOpen, used, room, single = false, onAdd, onClose }: {
+export function LibraryPicker({ storeId, isOpen, used, room, single = false, title, chooseLabel, readyOnly = false, onAdd, onClose }: {
   storeId: string
   isOpen: boolean
   /** The photos the page already has. */
@@ -215,6 +218,9 @@ export function LibraryPicker({ storeId, isOpen, used, room, single = false, onA
   room: number
   /** Choose one photo instead of several. */
   single?: boolean
+  title?: string
+  chooseLabel?: string
+  readyOnly?: boolean
   onAdd: (ids: string[]) => void
   onClose: () => void
 }) {
@@ -256,17 +262,17 @@ export function LibraryPicker({ storeId, isOpen, used, room, single = false, onA
               close()
             }}
           >
-            {t(single ? 'media.library.choose' : 'media.library.add')}
+            {chooseLabel ?? t(single ? 'media.library.choose' : 'media.library.add')}
           </Button>
           <Button variant="tertiary" onPress={close}>{t('media.library.cancel')}</Button>
         </>
       )}
       isOpen={isOpen}
-      title={t(single ? 'media.library.titleOne' : 'media.library.title')}
+      title={title ?? t(single ? 'media.library.titleOne' : 'media.library.title')}
       onClose={close}
     >
       {!single && <p aria-live="polite" className="text-sm text-muted" role="status">{t('media.library.selected', { count: selected.length, room })}</p>}
-      <PickerBody room={room} selected={selected} single={single} storeId={storeId} uploads={uploads} used={used} onToggle={toggle} onUpload={files => void upload(files)} />
+      <PickerBody readyOnly={readyOnly} room={room} selected={selected} single={single} storeId={storeId} uploads={uploads} used={used} onToggle={toggle} onUpload={files => void upload(files)} />
       {duplicates.dialog}
     </SheetFrame>
   )
