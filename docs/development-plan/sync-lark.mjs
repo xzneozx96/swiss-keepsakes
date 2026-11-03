@@ -14,6 +14,10 @@
 //   node docs/development-plan/sync-lark.mjs             create or update the task list
 //   node docs/development-plan/sync-lark.mjs --force-all patch every task, changed or not, to repair drift
 //
+// Moving tasks: after the sections exist, a task that sits in another section than its plan sprint's is moved with
+// POST /open-apis/task/v2/tasks/<guid>/add_tasklist. A dry run prints "E6.3: Sprint 7 to Sprint 8" per move and writes nothing.
+// A failed move is reported, the rest still run, and the script exits non-zero at the end.
+//
 // Retiring tasks: --delete-ids <file> deletes the tasks whose ids are listed (one per line, or a JSON
 // array) before the create and update pass, and --delete-only stops after the deletes. A task whose
 // Status is In progress, In review, Verified or Done is refused unless --force is given. A task that
@@ -120,6 +124,75 @@ export function classifyDeletes(candidates, force) {
   return result;
 }
 
+const NO_SECTION = "no sprint section";
+const isPlaceholder = (guid) => guid.startsWith("<");
+
+// tasks carry { id, guid }, current maps task guid to the guid of the section it sits in, sections maps sprint number to
+// section guid. Stops before any move when a plan sprint has no section guid.
+export function diffMoves(plan, tasks, current, sections) {
+  const missing = plan.sprints.find((sprint) => !sections[String(sprint.number)]);
+  if (missing) throw new Error(`sprint ${missing.number} has no section guid in lark.json, nothing was moved`);
+  const sprintOfGuid = new Map(Object.entries(sections).map(([number, guid]) => [guid, `Sprint ${number}`]));
+  const sprintOfStory = new Map(plan.stories.map((s) => [s.id, s.sprint]));
+  const moves = [];
+  const unplanned = [];
+  for (const { id, guid } of tasks) {
+    if (!id) continue;
+    if (!sprintOfStory.has(id)) {
+      unplanned.push(id);
+      continue;
+    }
+    const to = sections[String(sprintOfStory.get(id))];
+    const from = current.get(guid);
+    if (from === to) continue;
+    moves.push({ id, guid, from, to, fromLabel: from ? (sprintOfGuid.get(from) ?? from) : NO_SECTION, toLabel: sprintOfGuid.get(to) });
+  }
+  return { moves, unplanned };
+}
+
+export const moveArgs = (taskGuid, tasklist, sectionGuid) => [
+  "api", "POST", `/open-apis/task/v2/tasks/${taskGuid}/add_tasklist`,
+  "--data", JSON.stringify({ tasklist_guid: tasklist, section_guid: sectionGuid }), "--as", "user",
+];
+
+// read(args) runs one lark-cli task read and returns its data. Returns a map of task guid to the section guid it sits in.
+export function readCurrentSections(sections, read) {
+  const current = new Map();
+  for (const sectionGuid of Object.values(sections)) {
+    if (isPlaceholder(sectionGuid)) continue;
+    let pageToken;
+    do {
+      const params = { section_guid: sectionGuid, page_size: 100, ...(pageToken ? { page_token: pageToken } : {}) };
+      const res = read(["sections", "tasks", "--params", JSON.stringify(params)]);
+      for (const item of res.items ?? []) current.set(item.guid, sectionGuid);
+      pageToken = res.has_more ? res.page_token : undefined;
+    } while (pageToken);
+  }
+  return current;
+}
+
+// run(args) executes one lark-cli call. A failed call is recorded and the next move still runs.
+export function moveTasks(moves, state, { run, dry = false, log = console.log, error = console.error } = {}) {
+  let moved = 0;
+  const failed = [];
+  for (const move of moves) {
+    if (dry) {
+      log(`${move.id}: ${move.fromLabel} to ${move.toLabel}`);
+      continue;
+    }
+    try {
+      run(moveArgs(move.guid, state.tasklist, move.to));
+      moved++;
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      failed.push({ id: move.id, error: message });
+      error(`move failed for ${move.id}: ${message}`);
+    }
+  }
+  log(`moves: ${dry ? moves.length : moved}`);
+  return { moved, failed };
+}
+
 export function parsePlan(md) {
   const epics = [];
   const stories = [];
@@ -172,6 +245,19 @@ function task(args, { write = false } = {}) {
   }
   const out = execFileSync("lark-cli", [...full, "--format", "json"], { encoding: "utf8", maxBuffer: 64 << 20 });
   return JSON.parse(out).data;
+}
+
+function larkRaw(args) {
+  const out = execFileSync("lark-cli", args, { encoding: "utf8", maxBuffer: 64 << 20 });
+  return JSON.parse(out).data;
+}
+
+function syncMoves(plan, state, gone) {
+  const tasks = listTasks(state).filter((t) => !gone.has(t.guid));
+  const current = readCurrentSections(state.sections, (args) => task(args));
+  const { moves, unplanned } = diffMoves(plan, tasks, current, state.sections);
+  if (unplanned.length) console.warn(`in Lark but not in the plan, not moved: ${unplanned.join(", ")}`);
+  return moveTasks(moves, state, { run: larkRaw, dry: mode === "dry" });
 }
 
 function loadState() {
@@ -417,8 +503,13 @@ function main() {
   }
   ensureList(plan, state);
   syncTasks(plan, state, gone);
+  const { failed } = syncMoves(plan, state, gone);
   if (mode === "live") pullStatus(state);
   if (state.url) console.log(state.url);
+  if (failed.length) {
+    console.error(`${failed.length} moves failed: ${failed.map((f) => f.id).join(", ")}`);
+    process.exitCode = 1;
+  }
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) main();

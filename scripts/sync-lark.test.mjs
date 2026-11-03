@@ -5,8 +5,8 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
-  BLOCKED_PATTERN, classifyDeletes, diffEpicOptions, diffSections, fingerprint, initialStatus, needsPatch, parseArgs, parsePlan, readIds,
-  sectionName, select, syncTasks,
+  BLOCKED_PATTERN, classifyDeletes, diffEpicOptions, diffMoves, diffSections, fingerprint, initialStatus, moveArgs, moveTasks, needsPatch, parseArgs,
+  parsePlan, readCurrentSections, readIds, sectionName, select, syncTasks,
 } from "../docs/development-plan/sync-lark.mjs";
 
 const plans = join(dirname(fileURLToPath(import.meta.url)), "..", "docs", "development-plan");
@@ -243,4 +243,111 @@ test("parseArgs rejects a delete option without its file", () => {
   assert.throws(() => parseArgs(["--delete-ids"]), /needs a file/);
   assert.throws(() => parseArgs(["--delete-ids", "--dry-run"]), /needs a file/);
   assert.throws(() => parseArgs(["--delete-only"]), /needs --delete-ids/);
+});
+
+// Moves a task to its plan sprint's section (T-LARK).
+const driftPlan = { stories: [{ id: "E6.3", sprint: 8 }, { id: "E6.6", sprint: 8 }], sprints: [{ number: 7 }, { number: 8 }] };
+const moveSections = { 7: "sec-7", 8: "sec-8" };
+
+test("diffMoves returns only the drifted task, from its section to the plan's", () => {
+  const tasks = [{ id: "E6.3", guid: "g63" }, { id: "E6.6", guid: "g66" }];
+  const current = new Map([["g63", "sec-7"], ["g66", "sec-8"]]);
+
+  const { moves } = diffMoves(driftPlan, tasks, current, moveSections);
+
+  assert.deepEqual(moves, [{ id: "E6.3", guid: "g63", from: "sec-7", to: "sec-8", fromLabel: "Sprint 7", toLabel: "Sprint 8" }]);
+});
+
+test("diffMoves leaves a task that is not in the plan alone and names it", () => {
+  const tasks = [{ id: "E9.99", guid: "gx" }, { id: "E6.3", guid: "g63" }];
+  const current = new Map([["gx", "sec-7"], ["g63", "sec-8"]]);
+
+  const result = diffMoves(driftPlan, tasks, current, moveSections);
+
+  assert.deepEqual(result.moves, []);
+  assert.deepEqual(result.unplanned, ["E9.99"]);
+});
+
+test("diffMoves moves a task that sits in no sprint section, labelled as the default section", () => {
+  const { moves } = diffMoves(driftPlan, [{ id: "E6.3", guid: "g63" }], new Map(), moveSections);
+
+  assert.equal(moves.length, 1);
+  assert.equal(moves[0].fromLabel, "no sprint section");
+});
+
+test("diffMoves stops and names a sprint that has no section guid", () => {
+  assert.throws(() => diffMoves(driftPlan, [{ id: "E6.3", guid: "g63" }], new Map(), { 7: "sec-7" }), /sprint 8/);
+});
+
+test("moveArgs builds the add_tasklist call with the task list and section guids", () => {
+  assert.deepEqual(moveArgs("g63", "list-1", "sec-8"), [
+    "api", "POST", "/open-apis/task/v2/tasks/g63/add_tasklist", "--data", JSON.stringify({ tasklist_guid: "list-1", section_guid: "sec-8" }), "--as", "user",
+  ]);
+});
+
+const driftMoves = (n) => Array.from({ length: n }, (_, i) => ({ id: `E6.${i + 1}`, guid: `g${i}`, from: "sec-7", to: "sec-8", fromLabel: "Sprint 7", toLabel: "Sprint 8" }));
+
+test("moveTasks makes no call and prints moves: 0 when nothing drifted", () => {
+  const calls = [];
+  const lines = [];
+
+  const result = moveTasks([], { tasklist: "list-1" }, { run: (a) => calls.push(a), log: (l) => lines.push(l) });
+
+  assert.deepEqual(calls, []);
+  assert.deepEqual(lines, ["moves: 0"]);
+  assert.deepEqual(result, { moved: 0, failed: [] });
+});
+
+test("moveTasks in a dry run prints one line per move and runs no write", () => {
+  const calls = [];
+  const lines = [];
+
+  moveTasks(driftMoves(53), { tasklist: "list-1" }, { run: (a) => calls.push(a), log: (l) => lines.push(l), dry: true });
+
+  assert.deepEqual(calls, []);
+  assert.equal(lines.length, 54);
+  assert.equal(lines[0], "E6.1: Sprint 7 to Sprint 8");
+  assert.equal(lines[53], "moves: 53");
+});
+
+test("moveTasks live calls add_tasklist once per move", () => {
+  const calls = [];
+
+  const result = moveTasks(driftMoves(1), { tasklist: "list-1" }, { run: (a) => calls.push(a), log: () => {} });
+
+  assert.deepEqual(calls, [moveArgs("g0", "list-1", "sec-8")]);
+  assert.equal(result.moved, 1);
+});
+
+test("moveTasks reports a failed task, goes on with the others and returns the failure", () => {
+  const calls = [];
+  const lines = [];
+  const run = (a) => {
+    calls.push(a);
+    if (a[2].includes("/g1/")) throw new Error("boom");
+  };
+
+  const result = moveTasks(driftMoves(3), { tasklist: "list-1" }, { run, log: (l) => lines.push(l), error: (l) => lines.push(l) });
+
+  assert.equal(calls.length, 3);
+  assert.equal(result.moved, 2);
+  assert.deepEqual(result.failed, [{ id: "E6.2", error: "boom" }]);
+  assert.ok(lines.some((l) => l.includes("E6.2") && l.includes("boom")));
+});
+
+test("readCurrentSections pages through each section and maps task guid to section guid", () => {
+  const pages = {
+    "sec-7": [{ items: [{ guid: "a" }], has_more: true, page_token: "t1" }, { items: [{ guid: "b" }], has_more: false }],
+    "sec-8": [{ items: [{ guid: "c" }], has_more: false }],
+  };
+  const seen = {};
+  const read = (args) => {
+    const params = JSON.parse(args[args.indexOf("--params") + 1]);
+    const n = (seen[params.section_guid] = (seen[params.section_guid] ?? -1) + 1);
+    return pages[params.section_guid][n];
+  };
+
+  const current = readCurrentSections({ 7: "sec-7", 8: "sec-8", 9: "<section 9>" }, read);
+
+  assert.deepEqual([...current], [["a", "sec-7"], ["b", "sec-7"], ["c", "sec-8"]]);
 });
