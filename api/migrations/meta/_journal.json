@@ -176,6 +176,13 @@
       "when": 1794287353729,
       "tag": "0024_story_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794373753729,
+      "tag": "0025_pickup_maps",
+      "breakpoints": true
     }
   ]
 }
