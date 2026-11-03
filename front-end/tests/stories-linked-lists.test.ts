@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
+import { keepsakesSummary, placesSummary, relatedSummary } from '@/features/stories/lib/details-summary'
 import { hiddenFor, keepsakeOptionOf, MAX_KEEPSAKES, MAX_PLACES, MAX_RELATED, offeredKeepsakes, offeredStories, storyOptionOf, toggleLinked } from '@/features/stories/lib/linked-lists'
+import { en } from '@/i18n/en'
 import { listItem as keepsakeItem } from './keepsakes-harness'
 import { listVersion, publishedVersion, listItem as storyItem, uuid } from './stories-harness'
 
@@ -70,5 +72,18 @@ describe('[E4.3][AC33][AC54] the caps and the offered lists of the linked cards'
     expect(storyOptionOf(storyItem(1, { title: { de: 'Titel' } }) as never, 'en', 'Untitled').title).toBe('Titel')
     expect(storyOptionOf(storyItem(1, { title: {} }) as never, 'en', 'Untitled').title).toBe('Untitled')
     expect(storyOptionOf(storyItem(1, { languages: { en: publishedVersion(), de: null } }) as never, 'en', 'U').states).toEqual({ en: 'published', de: 'none' })
+  })
+})
+
+describe('[E4.3][AC30] the closed summaries of the linked cards', () => {
+  // The real English dictionary, with the {name} placeholders filled as the app's translator does.
+  const t = (key: keyof typeof en, values: Record<string, string | number> = {}) => en[key].replace(/\{(\w+)\}/g, (_, name: string) => String(values[name]))
+
+  it('[E4.3][AC30] summaries', () => {
+    expect(placesSummary(t, ['A', 'B'])).toBe('A, B')
+    expect(placesSummary(t, [])).toBe('None')
+    expect(keepsakesSummary(t, 2)).toBe('2 of 6')
+    expect(relatedSummary(t, 0)).toBe('0 of 3 · the newest stories')
+    expect(relatedSummary(t, 2)).toBe('2 of 3')
   })
 })
