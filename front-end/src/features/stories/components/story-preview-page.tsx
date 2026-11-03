@@ -64,7 +64,7 @@ export function StoryPreviewPage({ language, title, excerpt, cover, author, publ
         )}
         <p className="mt-3 text-sm text-muted tabular-nums">
           {t('article.meta', { date: formatShortDate(publishedOn, today, intlLocale), minutes })}
-          {review && ` · ${t('storyPreview.checked', { date: formatShortDate(review.checkedOn, today, intlLocale), name: author })}`}
+          {review && ` · ${t('storyPreview.checked', { date: formatShortDate(review.checkedOn, today, intlLocale) })}`}
         </p>
 
         <div className="mt-6 flex flex-col">

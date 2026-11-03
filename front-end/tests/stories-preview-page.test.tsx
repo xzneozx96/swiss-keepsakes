@@ -165,10 +165,11 @@ describe('[E4.3][AC30][AC33][AC45][AC54] the guest story page drawn from a draft
     expect(screen.getByRole('heading', { name: 'Mehr entdecken' })).toBeTruthy()
   })
 
-  it('names who checked the facts for an editorial review, and shows no such line otherwise (AC-7)', async () => {
+  it('shows the check date of an editorial review and never a checker, and no such line otherwise (AC-7)', async () => {
     const view = renderPage({ review: { checkedOn: '2026-10-12' } })
 
-    expect(await screen.findByText(/Facts checked .*12 Oct by Anna Keller/)).toBeTruthy()
+    expect(await screen.findByText(/Facts checked .*12 Oct$/)).toBeTruthy()
+    expect(screen.queryByText(/ by Anna Keller/)).toBeNull()
     view.unmount()
 
     renderPage({ review: null })
