@@ -7,6 +7,7 @@ import { installFakeAnalytics } from './support/fake-analytics'
 
 const state = vi.hoisted(() => ({
   api: false,
+  on: true,
   path: '/en',
   sessionUser: (): Promise<unknown> => Promise.resolve(null),
   me: { isPending: false, isError: false, data: { stores: [] as unknown[] } },
@@ -17,6 +18,11 @@ vi.mock('@/lib/api-mode', () => ({
     return state.api
   },
 }))
+vi.mock('@/lib/analytics/config', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/analytics/config')>()
+
+  return { ...actual, analyticsEnabled: () => state.on }
+})
 vi.mock('@/features/stores/api/queries', () => ({
   sessionUserQuery: { queryKey: ['test', 'session-user'], queryFn: () => state.sessionUser() },
   useMe: () => state.me,
@@ -57,6 +63,7 @@ beforeEach(() => {
   fake.reset()
   window.localStorage.clear()
   state.api = false
+  state.on = true
   state.path = '/en'
   state.sessionUser = () => Promise.resolve(null)
   state.me = { isPending: false, isError: false, data: { stores: [] } }
@@ -199,6 +206,17 @@ describe('[E8.7][AC37][AC60][AC-5] private areas and merchants send nothing', ()
     await settle()
 
     expect(fake.events).toEqual([])
+  })
+
+  it('with the API on and the sender off, makes no session or stores lookup', async () => {
+    state.api = true
+    state.on = false
+    const lookup = vi.fn(() => Promise.resolve(null))
+
+    state.sessionUser = lookup
+    mount()
+    await settle()
+    expect(lookup).not.toHaveBeenCalled()
   })
 
   it('with the API off, reads no session at all', async () => {

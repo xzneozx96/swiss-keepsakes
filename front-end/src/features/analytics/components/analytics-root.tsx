@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 
 import { storedLanguage } from '@/contexts/locale-context'
 import { sessionUserQuery, useMe } from '@/features/stores/api/queries'
+import { analyticsEnabled } from '@/lib/analytics/config'
 import { languageOf, pageTypeOf } from '@/lib/analytics/page-type'
 import { track } from '@/lib/analytics/track'
 import { apiEnabled } from '@/lib/api-mode'
@@ -15,15 +16,17 @@ type Gate = 'allow' | 'hold' | 'skip'
 
 /**
  * Whether the guest site may report for this browser (R5, ADR-032). With the API off there is no session, so yes. With it on, a
- * signed-out visitor or a signed-in guest may be reportedRef; a signed-in merchant (one or more stores) is not; while the session or the stores
- * are unresolved or failed the answer is `hold`, and nothing is reportedRef.
+ * signed-out visitor or a signed-in guest may be reported; a signed-in merchant (one or more stores) is not; while the session or the stores
+ * are unresolved or failed the answer is `hold`, and nothing is reported.
  */
 function useGate(): Gate {
-  const session = useQuery({ ...sessionUserQuery, enabled: apiEnabled, staleTime: FIVE_MINUTES, refetchOnWindowFocus: false })
+  // With the sender off the lookups are never made: no request for a guest while production is switched off.
+  const lookup = apiEnabled && analyticsEnabled()
+  const session = useQuery({ ...sessionUserQuery, enabled: lookup, staleTime: FIVE_MINUTES, refetchOnWindowFocus: false })
   const signedIn = session.data != null
-  const me = useMe(apiEnabled && signedIn)
+  const me = useMe(lookup && signedIn)
 
-  if (!apiEnabled)
+  if (!lookup)
     return 'allow'
   if (session.isPending || session.isError)
     return 'hold'
