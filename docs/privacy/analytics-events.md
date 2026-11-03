@@ -4,13 +4,13 @@ This note lists what the guest site sends to PostHog, what it never sends, and w
 
 ## When events are sent
 
-The sender is on in development and staging. In production it is off until O32 is answered. Off means the browser never loads PostHog and sends no request.
+The sender is on in development and staging only. In production it is off until O32 is answered. Off means the browser never loads PostHog and sends no request.
 
 A key and a switch control this:
 
 - `VITE_POSTHOG_KEY` is the PostHog EU project key. Without it, nothing is sent.
-- `VITE_POSTHOG_ENABLED` is `true` or `false`. It overrides the default.
-- Without an override, the sender is on unless `VITE_SITE_ENV` is `production`. Production hosting must set `VITE_SITE_ENV=production`.
+- `VITE_POSTHOG_ENABLED` must be exactly `true`.
+- `VITE_SITE_ENV` must be `development` or `staging`. A missing, `production` or unknown value counts as production, so a host that forgets to set it sends nothing.
 
 Pages under `/store`, `/partner`, `/admin` and the other private paths send nothing. A signed-in merchant browsing the guest site sends nothing either. While the browser does not yet know whether the visitor is a merchant, it sends nothing.
 

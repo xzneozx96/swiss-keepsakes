@@ -3,6 +3,7 @@ import { render, waitFor } from '@testing-library/react'
 import { renderToString } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AnalyticsRoot } from '@/features/analytics/components/analytics-root'
+import { setTrackAllowed, track } from '@/lib/analytics/track'
 import { installFakeAnalytics } from './support/fake-analytics'
 
 const state = vi.hoisted(() => ({
@@ -61,6 +62,7 @@ const pageViews = () => fake.events.filter(event => event.name === 'page_view').
 
 beforeEach(() => {
   fake.reset()
+  setTrackAllowed(true)
   window.localStorage.clear()
   state.api = false
   state.on = true
@@ -153,6 +155,27 @@ describe('[E8.7][AC37][AC60][AC-5] private areas and merchants send nothing', ()
     await settle()
 
     expect(fake.events).toEqual([])
+  })
+
+  it('a signed-in merchant who opens a pin, follows its story or its website sends nothing; a guest does', async () => {
+    state.api = true
+    state.sessionUser = () => Promise.resolve(MERCHANT)
+    state.me = { isPending: false, isError: false, data: { stores: [{ id: 's1' }] } }
+    mount()
+    await settle()
+    const pin = { pageType: 'place', contentId: '00000000-0000-4000-8000-000000000101', language: 'en' } as const
+
+    track('pin_open', pin)
+    track('pin_to_story_click', pin)
+    track('outbound_click', pin)
+    expect(fake.events).toEqual([])
+
+    fake.reset()
+    state.me = { isPending: false, isError: false, data: { stores: [] } }
+    mount()
+    await waitFor(() => expect(pageViews()).toHaveLength(1))
+    track('pin_open', pin)
+    expect(fake.events.map(event => event.name)).toEqual(['page_view', 'pin_open'])
   })
 
   it('holds while the session is unresolved, and tracks the held page once it resolves to a guest', async () => {

@@ -1,5 +1,6 @@
 import type { Language } from '@sk/domain/shared'
 import type { EventName, PageType, ReferrerClass } from './closed-values'
+import { isPrivatePath } from '@/lib/private-routes'
 import { readAudience } from './audience'
 import { startAnalytics } from './client'
 import { analyticsEnabled } from './config'
@@ -14,11 +15,20 @@ export interface TrackProps {
 type Sink = (name: EventName, props: Record<string, unknown>) => void
 
 let sink: Sink | undefined
+let allowed = true
 let referrerClass: ReferrerClass | undefined
 
 /** Tests install a sink: it receives every event and nothing is loaded or sent. Pass undefined to remove it. */
 export function setTrackSink(next: Sink | undefined): void {
   sink = next
+}
+
+/**
+ * The guest-site gate (private path, merchant browser, answer not known yet). AnalyticsRoot sets it, and every event goes through it,
+ * not only page views. Open until the root says otherwise.
+ */
+export function setTrackAllowed(next: boolean): void {
+  allowed = next
 }
 
 function visitReferrerClass(): ReferrerClass {
@@ -55,7 +65,7 @@ function closedProps({ pageType, contentId, language }: TrackProps): Record<stri
  */
 export function track(name: EventName, props: TrackProps): void {
   try {
-    if (typeof window === 'undefined')
+    if (typeof window === 'undefined' || !allowed || isPrivatePath(window.location.pathname))
       return
 
     const closed = closedProps(props)

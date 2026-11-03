@@ -38,7 +38,7 @@ function setReferrer(value: string) {
 beforeEach(() => {
   vi.stubEnv('VITE_POSTHOG_KEY', KEY)
   vi.stubEnv('VITE_SITE_ENV', 'staging')
-  vi.stubEnv('VITE_POSTHOG_ENABLED', '')
+  vi.stubEnv('VITE_POSTHOG_ENABLED', 'true')
   window.localStorage.clear()
   setReferrer('')
   window.innerWidth = 1280
@@ -194,7 +194,7 @@ describe('[E8.7][AC37][AC60][AC-4][AC-6] the closed properties that track builds
 })
 
 describe('[E8.7][AC37][AC60][AC-7] the switch', () => {
-  it('off in production by default: nothing is imported, inited or sent, and track runs without error', async () => {
+  it('off in production: nothing is imported, inited or sent, and track runs without error', async () => {
     vi.stubEnv('VITE_SITE_ENV', 'production')
     const { track, factory, fake } = await load()
     const posthog = fake as ReturnType<typeof fakePosthog>
@@ -207,6 +207,18 @@ describe('[E8.7][AC37][AC60][AC-7] the switch', () => {
     expect(posthog.capture).not.toHaveBeenCalled()
   })
 
+  it('off when VITE_SITE_ENV is missing (counts as production), even with the key and the switch on', async () => {
+    vi.stubEnv('VITE_SITE_ENV', '')
+    const { track, factory, fake } = await load()
+    const posthog = fake as ReturnType<typeof fakePosthog>
+
+    track('page_view', { pageType: 'home', language: 'en' })
+    await settle()
+
+    expect(factory).not.toHaveBeenCalled()
+    expect(posthog.init).not.toHaveBeenCalled()
+  })
+
   it('off by VITE_POSTHOG_ENABLED=false in staging, and off without a key', async () => {
     vi.stubEnv('VITE_POSTHOG_ENABLED', 'false')
     const first = await load()
@@ -215,7 +227,7 @@ describe('[E8.7][AC37][AC60][AC-7] the switch', () => {
     await settle()
     expect(first.factory).not.toHaveBeenCalled()
 
-    vi.stubEnv('VITE_POSTHOG_ENABLED', '')
+    vi.stubEnv('VITE_POSTHOG_ENABLED', 'true')
     vi.stubEnv('VITE_POSTHOG_KEY', '')
     const second = await load()
 

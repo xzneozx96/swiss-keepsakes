@@ -6,7 +6,7 @@ import { storedLanguage } from '@/contexts/locale-context'
 import { sessionUserQuery, useMe } from '@/features/stores/api/queries'
 import { analyticsEnabled } from '@/lib/analytics/config'
 import { languageOf, pageTypeOf } from '@/lib/analytics/page-type'
-import { track } from '@/lib/analytics/track'
+import { setTrackAllowed, track } from '@/lib/analytics/track'
 import { apiEnabled } from '@/lib/api-mode'
 import { isPrivatePath } from '@/lib/private-routes'
 
@@ -43,6 +43,11 @@ export function AnalyticsRoot(): null {
   const pathname = useRouterState({ select: state => state.location.pathname })
   const gate = useGate()
   const reportedRef = useRef<string | undefined>(undefined)
+
+  // The gate covers every event, not only page views: pin and content events check it in `track`.
+  useEffect(() => {
+    setTrackAllowed(gate === 'allow')
+  }, [gate])
 
   useEffect(() => {
     if (gate !== 'allow' || isPrivatePath(pathname) || reportedRef.current === pathname)
