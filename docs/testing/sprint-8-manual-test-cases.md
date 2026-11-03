@@ -15,7 +15,7 @@ The cases are grouped by PR, in this merge order. Test and merge in this order. 
 | 2 | E6.3 stock: inventory page, stock in the keepsake editor (migration 0021) | S8-INV-01 to 09 |
 | 3 | E6.5 opening stock for the five Victorinox knives | S8-STOCK-SEED-01 to 04 |
 | 4 | E6.6 pickup points (migration 0022) | S8-PICKUP-01 to 08 |
-| 5 | E8.7 analytics events and the map card tip fix (migration 0023) | S8-EVENTS-01 to 06, S8-MAP-01 |
+| 5 | E8.7 analytics events and the map card tip fix (migration 0023) | S8-EVENTS-01 to 07, S8-MAP-01 |
 
 S8-FIX (the one-variant fix) is already on main (PR #95, commit 8b936dbc). The E6.3 stock cases in PR 2 depend on it, so run S8-FIX first on any build.
 
@@ -85,9 +85,10 @@ Events go to PostHog EU. Nothing is sent unless you switch it on.
 | S8-EVENTS-04 | A signed-in merchant's deep-linked pin records nothing | E8.7 / AC37 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-EVENTS-05 | Signing in after the page loaded stops the tab reporting | E8.7 / AC37 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-EVENTS-06 | A production or unset site environment sends nothing | E8.7 / AC37 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-EVENTS-07 | A signed-in Super Admin on the guest site sends nothing | E8.7 / AC37 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-MAP-01 | The map place card shows no tip | E8.7 / owner decision 2026-11-03 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 
-Counts: 36 cases. P1: 7, P2: 20, P3: 9.
+Counts: 37 cases. P1: 7, P2: 21, P3: 9.
 
 ## PR 1: Lark and plan docs
 
@@ -635,6 +636,22 @@ Do the PostHog setup in "Before you start" first. A sender that is off sends not
 | 3 | Set `VITE_SITE_ENV=development` again, restart, browse the same pages. | New page_view and pin_open events appear. |
 
 - **Postconditions:** the setup is back to the one in "Before you start".
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-EVENTS-07 A signed-in Super Admin on the guest site sends nothing
+- **Story / AC:** E8.7 / AC37 (fix: a Super Admin has no store, and still counts as signed in)
+- **Priority:** P2
+- **Role and device:** Super Admin, then Guest (signed out), desktop 1280 px, and the browser Network tab
+- **Preconditions:** the PostHog setup is done; the Super Admin account exists; the profile is signed out.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Sign in as the Super Admin. | The platform area opens. |
+| 2 | Open the guest site: the home page, a story and the map. Open a pin and follow its story link. | The pages work normally. |
+| 3 | In the Network tab filter for the PostHog host. | No request to that host is sent on any of these pages. |
+| 4 | Sign out and repeat steps 2 and 3 as a signed-out visitor. | page_view and pin_open requests are sent. |
+
+- **Postconditions:** signed out.
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
 
 ### S8-MAP-01 The map place card shows no tip
