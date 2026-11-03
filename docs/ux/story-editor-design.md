@@ -181,7 +181,10 @@ All cards are shared by both languages.
 **Editorial review.** A switch "This is an editorial review" with the help "Your review of one place. It names who checked the facts and when, and the place’s card on the map links to it." When on, a tinted block shows:
 - **Place reviewed** (required). A 44 px photo, the pin name and "Change", or the button "Choose the place". It opens the pin picker "Place reviewed" (one pin). Choosing it also adds the pin to the story's places when it is missing.
 - **Checked by.** Optional text. The placeholder is the account name. The preview shows the account name when it is empty.
+  - **Decided 2026-11-03 (gate G-S8-E43-CHECKEDBY): "Checked by" is dropped.** The card has the switch, Place reviewed and Facts checked on; the closed summary and the preview never mention a checker, and nothing stores one. The line above is superseded.
 - **Facts checked on** (required). A date field, not later than today.
+  - **Decided 2026-11-03 (gate G-S8-E43-CHECKEDON): Facts checked on stays per language version**, not shared. A new language version copies the other version's date when it starts, and each version can then change it.
+  - **Decided 2026-11-03 (gate G-S8-E43-KIND): the switch works at any time**, on a new or an old story. The group save takes `kind` and `subjectPlaceId` together (database check `story_groups_subject_check`). A switch turned on before a place is chosen is held in the editor and not saved.
 - There is **no partner label** on hotel reviews (owner, 2026-10-29).
 
 **Places.** Text: "The pins this story is about. Their cards on the map list it." A plain list, no order: a 44 px photo, the pin name, "Not published" when it is, and a remove button. The button "Choose places" or "Change places" opens the pin picker "Places in this story" (several pins, any pin of the store, done button "Save {n} place(s)"). When the text links to a pin that is not tagged, a note says "Linked in the text but not tagged: {names}. A pin link does not tag the place."
