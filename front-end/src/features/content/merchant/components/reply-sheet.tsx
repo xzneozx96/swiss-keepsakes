@@ -1,5 +1,4 @@
 import type { Language } from '@/contexts/locale-context'
-
 import {
   Button,
   Description,
@@ -8,10 +7,11 @@ import {
   Label,
   Radio,
   RadioGroup,
-  TextArea,
   TextField,
 } from '@heroui/react'
+
 import { useState } from 'react'
+import { AutoTextArea } from '@/components/auto-textarea'
 
 import { choiceCard } from '@/components/choice-card'
 import { SheetFrame } from '@/components/sheet-frame'
@@ -122,7 +122,7 @@ export function ReplySheet({
           <Label className="text-heading">
             {t('merchantComments.sheet.label')}
           </Label>
-          <TextArea lang={replyLanguage ?? quoteLanguage} rows={5} />
+          <AutoTextArea lang={replyLanguage ?? quoteLanguage} rows={5} />
           <Description>{help}</Description>
           <FieldError>{t('merchantComments.sheet.error')}</FieldError>
         </TextField>

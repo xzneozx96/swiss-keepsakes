@@ -30,7 +30,7 @@ describe('[E4.3][AC30] publish checks', () => {
     const result = checks({ slug: null, fields: { title: '', excerpt: '', coverMediaId: null, body: emptyBody } })
 
     expect(codes(result.blocking)).toEqual(['cover', 'title', 'excerpt', 'link'])
-    expect(result.blocking.map(check => checkText(t, check))).toEqual(['Add a cover photo.', 'Add a title.', 'Add an excerpt.', 'Set the story’s link.'])
+    expect(result.blocking.map(check => checkText(t, check))).toEqual(['Add a cover photo.', 'Add a title.', 'Add a short summary.', 'Set the story’s link.'])
     expect(result.blocking.map(check => `${check.step}:${check.target}`)).toEqual(['write:cover', 'write:title', 'write:excerpt', 'details:link'])
   })
 

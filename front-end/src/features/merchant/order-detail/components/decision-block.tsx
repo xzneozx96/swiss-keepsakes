@@ -6,7 +6,6 @@ import type {
   MerchantOrderView,
 } from '../hooks/use-merchant-order-detail'
 import type { ShownLabel } from '@/features/orders/hooks/use-orders'
-
 import {
   Alert,
   Button,
@@ -16,15 +15,16 @@ import {
   Label,
   Radio,
   RadioGroup,
-  TextArea,
   TextField,
 } from '@heroui/react'
+
 import { parseDate } from '@internationalized/date'
 import { isPickupClosed, zurichDate } from '@sk/domain/catalog'
-
 import { pickText } from '@sk/domain/shared'
 
 import { useState } from 'react'
+
+import { AutoTextArea } from '@/components/auto-textarea'
 
 import { choiceCard } from '@/components/choice-card'
 import { useConfirm } from '@/components/confirm-dialog'
@@ -448,7 +448,7 @@ function ChangeSheet({
         }}
       >
         <Label className="text-heading">{t('merchantOrder.change.note')}</Label>
-        <TextArea rows={3} />
+        <AutoTextArea rows={3} />
         <Description>{t('merchantOrder.change.noteHelp')}</Description>
         <FieldError>{error}</FieldError>
       </TextField>
@@ -555,7 +555,7 @@ function DeclineSheet({
               : 'merchantOrder.decline.noteOptional',
           )}
         </Label>
-        <TextArea rows={3} />
+        <AutoTextArea rows={3} />
         <Description>{t('merchantOrder.decline.noteHelp')}</Description>
         <FieldError>{error}</FieldError>
       </TextField>

@@ -1,6 +1,5 @@
 import type { Order } from '@sk/domain/orders'
 import type { OfflineMethod } from '@/features/orders/lib/transitions'
-
 import {
   Alert,
   Button,
@@ -10,11 +9,12 @@ import {
   NumberField,
   Radio,
   RadioGroup,
-  TextArea,
   TextField,
   TimeField,
   toast,
 } from '@heroui/react'
+
+import { AutoTextArea } from '@/components/auto-textarea'
 
 import { choiceCard } from '@/components/choice-card'
 
@@ -166,7 +166,7 @@ export function RecordPaymentSheet({
 
       <TextField fullWidth value={form.note} onChange={form.setNote}>
         <Label className="text-heading">{t('recordPayment.note')}</Label>
-        <TextArea rows={2} />
+        <AutoTextArea rows={2} />
         <Description>{t('recordPayment.noteHelp')}</Description>
       </TextField>
     </SheetFrame>

@@ -166,11 +166,17 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
             </>
           )
         : (
-            <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4 py-4 max-lg:-mx-4 max-lg:w-auto lg:py-8">
+            <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4 py-4 max-lg:-mx-4 max-lg:w-auto lg:max-w-[1200px] lg:py-8">
               {notices}
               {!isWide && <div className="max-lg:px-4">{switcher(false)}</div>}
-              <CoverTitleCard accountName={accountName} fields={editor.fields} language={language} showErrors={showErrors} storeId={storeId} onChange={editor.change} />
-              <StoryBodyCard body={editor.fields.body} language={language} storeId={storeId} registerHandover={editor.registerHandover} onChange={editor.change} onDirty={editor.markDirty} />
+              <div className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6" data-testid="write-columns">
+                <div className="lg:col-span-5">
+                  <CoverTitleCard fields={editor.fields} language={language} showErrors={showErrors} storeId={storeId} onChange={editor.change} />
+                </div>
+                <div className="lg:col-span-7">
+                  <StoryBodyCard body={editor.fields.body} language={language} storeId={storeId} registerHandover={editor.registerHandover} onChange={editor.change} onDirty={editor.markDirty} />
+                </div>
+              </div>
             </div>
           )}
       {guard.dialog}

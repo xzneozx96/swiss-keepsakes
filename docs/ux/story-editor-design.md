@@ -88,6 +88,8 @@ One column with 16 px gutters. Top to bottom:
 - **Excerpt** (required). A text area of two rows, at most 300 characters. Help: "Under the title, on story cards and in search results." and the count "{n} / 300". The error is "Add an excerpt to publish."
 - **Byline note:** "Written by {account name}, the name of the account you are signed in with."
 
+> **Update 2026-11-03 (owner feedback, S8-UI-02).** The field is now labelled "Short summary" (German "Kurze Zusammenfassung"), and its messages say so: the error "Add a short summary to publish.", the check "Add a short summary." and the all-set line "Cover, title, short summary and link are all set." The help line under it and the byline note are no longer shown on this card; the counter stays. The text area grows with its content (no inner scrollbar). On screens from 1024 px the Cover and title card sits on the left (5 of 12 columns) and the story card on the right (7 of 12), both scrolling with the page; below that they stack, cover first. The text below keeps the original wording.
+
 Errors show only after the merchant pressed Review with a blocking check, or used an Edit jump. Fields carry `lang` of the open language.
 
 ## 4. The Story card

@@ -1,8 +1,9 @@
 import type { StoryFields } from '../lib/draft'
 import type { StoryLanguage } from '../lib/search-params'
 
-import { Description, FieldError, Input, Label, TextArea, TextField } from '@heroui/react'
+import { FieldError, Input, Label, TextField } from '@heroui/react'
 
+import { AutoTextArea } from '@/components/auto-textarea'
 import { StoryIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { EXCERPT_MAX, TITLE_MAX } from '../lib/draft'
@@ -12,16 +13,15 @@ import { WriteCard } from './story-write-card'
 type CoverFields = Pick<StoryFields, 'title' | 'excerpt' | 'coverMediaId'>
 
 /**
- * Card one of Write: the cover, the title and the excerpt, all three needed to publish, and the byline. The card is
+ * Card one of Write: the cover, the title and the short summary, all three needed to publish. The card is
  * controlled and holds no draft. A field's error shows only with `showErrors` (Review was pressed with a blocking check).
  */
-export function CoverTitleCard({ storeId, language, fields, onChange, showErrors, accountName }: {
+export function CoverTitleCard({ storeId, language, fields, onChange, showErrors }: {
   storeId: string
   language: StoryLanguage
   fields: CoverFields
   onChange: (patch: Partial<CoverFields>) => void
   showErrors: boolean
-  accountName: string
 }) {
   const { t } = useLocale()
   const noTitle = showErrors && fields.title.trim() === ''
@@ -38,14 +38,10 @@ export function CoverTitleCard({ storeId, language, fields, onChange, showErrors
       </TextField>
       <TextField fullWidth isRequired id="write-excerpt" isInvalid={noExcerpt} value={fields.excerpt} onChange={excerpt => onChange({ excerpt })}>
         <Label>{t('storyEditor.excerpt.label')}</Label>
-        <TextArea lang={language} maxLength={EXCERPT_MAX} rows={2} />
-        <div className="flex items-start justify-between gap-3">
-          <Description>{t('storyEditor.excerpt.help')}</Description>
-          <span className="shrink-0 text-xs text-muted tabular-nums">{t('storyEditor.count', { count: fields.excerpt.length, max: EXCERPT_MAX })}</span>
-        </div>
+        <AutoTextArea lang={language} maxLength={EXCERPT_MAX} rows={2} />
+        <span className="text-xs text-muted tabular-nums">{t('storyEditor.count', { count: fields.excerpt.length, max: EXCERPT_MAX })}</span>
         <FieldError>{t('storyEditor.excerpt.error')}</FieldError>
       </TextField>
-      {accountName !== '' && <p className="text-xs text-muted">{t('storyEditor.byline', { name: accountName })}</p>}
     </WriteCard>
   )
 }

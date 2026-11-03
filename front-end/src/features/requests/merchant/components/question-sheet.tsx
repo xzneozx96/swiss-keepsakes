@@ -10,11 +10,11 @@ import {
   ListBox,
   Select,
   Switch,
-  TextArea,
   TextField,
 } from '@heroui/react'
 import { useState } from 'react'
 
+import { AutoTextArea } from '@/components/auto-textarea'
 import { useConfirm } from '@/components/confirm-dialog'
 
 import { PlusIcon, TrashIcon } from '@/components/icons'
@@ -185,7 +185,7 @@ export function QuestionSheet({
           <Label className="text-heading">
             {t('adviceQuestions.sheet.textEn')}
           </Label>
-          <TextArea lang="en" rows={2} />
+          <AutoTextArea lang="en" rows={2} />
           {missingNote(en, de, 'missingEn')}
           <FieldError>{textError}</FieldError>
         </TextField>
@@ -198,7 +198,7 @@ export function QuestionSheet({
           <Label className="text-heading">
             {t('adviceQuestions.sheet.textDe')}
           </Label>
-          <TextArea lang="de" rows={2} />
+          <AutoTextArea lang="de" rows={2} />
           {missingNote(de, en, 'missingDe')}
           <FieldError>{textError}</FieldError>
         </TextField>

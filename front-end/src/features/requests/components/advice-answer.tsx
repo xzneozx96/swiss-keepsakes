@@ -8,7 +8,6 @@ import {
   Label,
   Tag,
   TagGroup,
-  TextArea,
   TextField,
 } from '@heroui/react'
 import { parseDate } from '@internationalized/date'
@@ -18,6 +17,7 @@ import { NUMBER_MAX, numberStart } from '@sk/domain/requests'
 
 import { calendarDay, formatDate, pickText } from '@sk/domain/shared'
 import { useState } from 'react'
+import { AutoTextArea } from '@/components/auto-textarea'
 import { PickupDateIcon, SelectedIcon } from '@/components/icons'
 import { QuantityLarge } from '@/components/quantity-stepper'
 import { useLocale } from '@/contexts/locale-context'
@@ -129,7 +129,7 @@ export function AdviceAnswer({
           onChange={v => onChange(v.trim() ? v : undefined)}
         >
           <Label className="sr-only">{label}</Label>
-          <TextArea placeholder={t('advice.textPlaceholder')} rows={3} />
+          <AutoTextArea placeholder={t('advice.textPlaceholder')} rows={3} />
         </TextField>
       )
   }

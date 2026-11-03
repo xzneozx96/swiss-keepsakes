@@ -242,7 +242,7 @@ describe('[E4.3][AC30][AC45] the story editor', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Back to writing' }))
 
     expect(await screen.findByText('Add a title to publish.')).toBeInTheDocument()
-    expect(screen.getByText('Add an excerpt to publish.')).toBeInTheDocument()
+    expect(screen.getByText('Add a short summary to publish.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Add a cover photo/ })).toHaveClass('border-danger')
   })
 
@@ -272,7 +272,7 @@ describe('[E4.3][AC30][AC45] the story editor', () => {
 
     serveStory(group)
     await openEditor('?lang=de')
-    const field = await screen.findByRole('textbox', { name: /^Excerpt/ })
+    const field = await screen.findByRole('textbox', { name: /^Short summary/ })
 
     await userEvent.click(field)
     await userEvent.keyboard('{End}!')

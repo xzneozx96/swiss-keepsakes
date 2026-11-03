@@ -1,6 +1,5 @@
 import type { CalendarDate } from '@internationalized/date'
 import type { OfflineMethod } from '@/features/orders/lib/transitions'
-
 import {
   Alert,
   Button,
@@ -13,14 +12,15 @@ import {
   NumberField,
   Radio,
   RadioGroup,
-  TextArea,
   TextField,
 } from '@heroui/react'
+
 import { parseDate } from '@internationalized/date'
 import { zurichDate } from '@sk/domain/catalog'
-
 import { formatMoney } from '@sk/domain/shared'
+
 import { useState } from 'react'
+import { AutoTextArea } from '@/components/auto-textarea'
 import { choiceCard } from '@/components/choice-card'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
@@ -206,7 +206,7 @@ export function PayoutSheet({
         onChange={setReference}
       >
         <Label className="text-heading">{t('payout.reference')}</Label>
-        <TextArea rows={2} />
+        <AutoTextArea rows={2} />
         <Description>{t('payout.referenceHelp')}</Description>
         <FieldError>{errors.reference}</FieldError>
       </TextField>

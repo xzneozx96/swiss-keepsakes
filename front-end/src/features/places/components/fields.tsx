@@ -1,6 +1,7 @@
 import type { MessageKey } from '@/i18n/en'
+import { Description, FieldError, Input, Label, TextField, TimeField } from '@heroui/react'
 
-import { Description, FieldError, Input, Label, TextArea, TextField, TimeField } from '@heroui/react'
+import { AutoTextArea } from '@/components/auto-textarea'
 
 import { useLocale } from '@/contexts/locale-context'
 import { textOf, timeOf } from '../lib/time-text'
@@ -33,7 +34,7 @@ export function Field({ label, hiddenPrefix, value, onChange, lang, description,
         {label}
       </Label>
       {rows
-        ? <TextArea lang={lang} placeholder={placeholder} rows={rows} />
+        ? <AutoTextArea lang={lang} placeholder={placeholder} rows={rows} />
         : <Input inputMode={inputMode} lang={lang} placeholder={placeholder} />}
       {description && !error && <Description>{description}</Description>}
       {error && <FieldError>{t(error)}</FieldError>}

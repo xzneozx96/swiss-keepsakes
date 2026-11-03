@@ -1,17 +1,17 @@
 import type { IconComponent } from '@/components/icons'
 import type { Language } from '@/contexts/locale-context'
 import type { MessageKey } from '@/i18n/en'
-
 import {
   Button,
   Description,
   FieldError,
   Input,
   Label,
-  TextArea,
   TextField,
 } from '@heroui/react'
+
 import { useId } from 'react'
+import { AutoTextArea } from '@/components/auto-textarea'
 
 import {
   ChevronDownIcon,
@@ -49,7 +49,7 @@ export function Field({
   return (
     <TextField fullWidth isInvalid={!!error} value={value} onChange={onChange}>
       <Label>{label}</Label>
-      {rows ? <TextArea lang={lang} rows={rows} /> : <Input lang={lang} />}
+      {rows ? <AutoTextArea lang={lang} rows={rows} /> : <Input lang={lang} />}
       {description && <Description>{description}</Description>}
       <FieldError>{error ? t(error) : ''}</FieldError>
     </TextField>

@@ -29,7 +29,6 @@ function Host({ initial = empty, showErrors = false }: { initial?: Cover, showEr
 
   return (
     <CoverTitleCard
-      accountName="Anna Keller"
       fields={fields}
       language="de"
       showErrors={showErrors}
@@ -108,7 +107,7 @@ describe('[E4.3][AC30] cover and title card', () => {
   it('[E4.3][AC30] AC-6 the title stops at 140 characters and the excerpt at 300, and the counters show it', async () => {
     renderCard()
     const title = screen.getByRole('textbox', { name: /^Title/ })
-    const excerpt = screen.getByRole('textbox', { name: /^Excerpt/ })
+    const excerpt = screen.getByRole('textbox', { name: /^Short summary/ })
 
     expect(screen.getByText('0 / 140')).toBeInTheDocument()
     expect(screen.getByText('0 / 300')).toBeInTheDocument()
@@ -127,15 +126,15 @@ describe('[E4.3][AC30] cover and title card', () => {
     renderCard()
 
     expect(screen.queryByText('Add a title to publish.')).not.toBeInTheDocument()
-    expect(screen.queryByText('Add an excerpt to publish.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Add a short summary to publish.')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Add a cover photo/ })).not.toHaveClass('border-danger')
   })
 
-  it('[E4.3][AC30] AC-7 with showErrors the title says Add a title to publish., the excerpt says Add an excerpt to publish. and the empty cover has the red dashed border', () => {
+  it('[E4.3][AC30] AC-7 with showErrors the title says Add a title to publish., the excerpt says Add a short summary to publish. and the empty cover has the red dashed border', () => {
     renderCard({ showErrors: true })
 
     expect(screen.getByText('Add a title to publish.')).toBeInTheDocument()
-    expect(screen.getByText('Add an excerpt to publish.')).toBeInTheDocument()
+    expect(screen.getByText('Add a short summary to publish.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Add a cover photo/ })).toHaveClass('border-danger', 'border-dashed')
   })
 
@@ -143,7 +142,7 @@ describe('[E4.3][AC30] cover and title card', () => {
     renderCard({ showErrors: true, initial: { title: 'A title', excerpt: 'An excerpt', coverMediaId: null } })
 
     expect(screen.queryByText('Add a title to publish.')).not.toBeInTheDocument()
-    expect(screen.queryByText('Add an excerpt to publish.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Add a short summary to publish.')).not.toBeInTheDocument()
   })
 
   it('[E4.3][AC30] a retired cover file shows the unavailable state with Change cover', async () => {
@@ -161,11 +160,20 @@ describe('[E4.3][AC30] cover and title card', () => {
     expect(await screen.findByText(/no longer available/)).toBeInTheDocument()
   })
 
-  it('[E4.3][AC30] the byline names the account, and the fields carry lang', () => {
+  it('[E4.3][AC30] the fields carry lang', () => {
     renderCard()
 
-    expect(screen.getByText(/Written by Anna Keller, the name of the account you are signed in with\./)).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: /^Title/ })).toHaveAttribute('lang', 'de')
-    expect(within(screen.getByRole('region', { name: 'Cover and title' })).getByRole('textbox', { name: /^Excerpt/ })).toHaveAttribute('lang', 'de')
+    expect(within(screen.getByRole('region', { name: 'Cover and title' })).getByRole('textbox', { name: /^Short summary/ })).toHaveAttribute('lang', 'de')
+  })
+
+  it('[S8-UI-02] the summary field is labelled Short summary, has no helper line and no author line, and keeps its counter', () => {
+    renderCard()
+
+    expect(screen.queryByText('Excerpt')).not.toBeInTheDocument()
+    expect(screen.getByText('0 / 300')).toBeInTheDocument()
+    expect(screen.queryByText(/Under the title, on story cards/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Written by/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Anna Keller/)).not.toBeInTheDocument()
   })
 })

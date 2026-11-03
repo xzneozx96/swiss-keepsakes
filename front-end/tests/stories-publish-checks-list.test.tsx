@@ -45,7 +45,7 @@ describe('[E4.3][AC30][AC45] the publish checks on Review', () => {
     await openReview()
 
     expect(await screen.findByText('4 things stop publishing', undefined, SLOW)).toBeInTheDocument()
-    for (const text of ['Add a cover photo.', 'Add a title.', 'Add an excerpt.', 'Set the story’s link.'])
+    for (const text of ['Add a cover photo.', 'Add a title.', 'Add a short summary.', 'Set the story’s link.'])
       expect(screen.getByText(text)).toBeInTheDocument()
     expect(await publishButton()).toBeDisabled()
     expect(screen.getByText('Fix what stops publishing first.')).toBeInTheDocument()
@@ -54,7 +54,7 @@ describe('[E4.3][AC30][AC45] the publish checks on Review', () => {
   it.each([
     ['cover', 'Add a cover photo.', ready({ draft: storyDoc({ coverMediaId: null }) })],
     ['title', 'Add a title.', ready({ draft: storyDoc({ title: '', coverMediaId: coverId }) })],
-    ['excerpt', 'Add an excerpt.', ready({ draft: storyDoc({ excerpt: '', coverMediaId: coverId }) })],
+    ['excerpt', 'Add a short summary.', ready({ draft: storyDoc({ excerpt: '', coverMediaId: coverId }) })],
     ['link', 'Set the story’s link.', ready({ slug: null })],
   ])('[E4.3][AC30] AC-2 a draft that lacks only the %s lists only that sentence under "1 thing stops publishing"', async (code, text, version) => {
     servePublish(storyGroupDetail({ en: version }, category))
@@ -84,7 +84,7 @@ describe('[E4.3][AC30][AC45] the publish checks on Review', () => {
     expect(await screen.findByText('Ready to publish', undefined, SLOW)).toBeInTheDocument()
     expect(screen.getByText('3 to look at (publishing still works)')).toBeInTheDocument()
     expect(rows()).toEqual(['no-alt', 'no-caption', 'no-category'])
-    expect(screen.getByText('Cover, title, excerpt and link are all set. The other language is never required.')).toBeInTheDocument()
+    expect(screen.getByText('Cover, title, short summary and link are all set. The other language is never required.')).toBeInTheDocument()
     expect(await publishButton()).toBeEnabled()
   }, 20000)
 
