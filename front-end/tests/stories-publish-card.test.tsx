@@ -139,7 +139,8 @@ describe('[E4.3][AC30][AC45] the publish card', () => {
     await openReview()
     await userEvent.click(await button('Publish English'))
 
-    expect(await screen.findByRole('alert', undefined, SLOW)).toHaveTextContent(/saved after you opened|Someone/i)
+    // This server does not answer the category list, so the Blog categories card also shows its own alert: the notice is found by its text.
+    expect(await screen.findByText(/saved after you opened/i, undefined, SLOW)).toBeInTheDocument()
     expect(posts('/publish')).toHaveLength(1)
     await userEvent.click(screen.getByRole('button', { name: 'Publish English' }))
     expect(posts('/publish')).toHaveLength(1)
