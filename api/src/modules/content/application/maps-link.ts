@@ -31,6 +31,20 @@ export function parseMapsShortLink(text: string): URL | undefined {
   return undefined
 }
 
+/**
+ * A link a merchant may store and the server may read: a short link, or a full Google Maps address (https, no credentials or
+ * port, a Google Maps host, a path that starts /maps). Anything else is undefined.
+ */
+export function parseMapsLink(text: string): URL | undefined {
+  const short = parseMapsShortLink(text)
+  if (short)
+    return short
+  const url = URL.parse(text.trim())
+  if (!url || url.protocol !== 'https:' || url.username !== '' || url.password !== '' || url.port !== '')
+    return undefined
+  return googleHost.test(url.hostname) && goPath.test(url.pathname) ? url : undefined
+}
+
 function position(latitude: string | undefined, longitude: string | undefined): MapsPosition | undefined {
   if (latitude === undefined || longitude === undefined)
     return undefined
