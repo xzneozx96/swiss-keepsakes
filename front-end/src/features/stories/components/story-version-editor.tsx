@@ -18,6 +18,7 @@ import { saveStatusOf } from '../lib/save-status'
 import { STORIES_PATH } from '../lib/search-params'
 import { versionStateOf } from '../lib/version-state'
 import { CoverTitleCard } from './cover-title-card'
+import { StoryBodyCard } from './story-body-card'
 import { StoryHeader } from './story-header'
 import { StoryLanguageSwitch } from './story-language-switch'
 import { StoryReviewScreen } from './story-review-screen'
@@ -147,6 +148,7 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
               {notices}
               {!isWide && <div className="max-lg:px-4">{switcher(false)}</div>}
               <CoverTitleCard accountName={accountName} fields={editor.fields} language={language} showErrors={showErrors} storeId={storeId} onChange={editor.change} />
+              <StoryBodyCard body={editor.fields.body} language={language} registerHandover={editor.registerHandover} onChange={editor.change} onDirty={editor.markDirty} />
             </div>
           )}
       {guard.dialog}
