@@ -100,6 +100,28 @@ describe('[E4.3][AC30] deleting a story from the editor', () => {
     expect(state.calls.filter(call => call.method === 'GET' && call.path === base)).toHaveLength(1)
   })
 
+  it('[E4.3][AC30] CORRECTNESS-E43-2 a successful delete drops the cached groups of other stories and refreshes the pins that named the story', async () => {
+    const cache = () => state.demo.queryClient
+    const otherGroup = ['stories', 'group', storeId, '0198a000-0000-7000-8000-0000000000ee']
+    const pinKeys = [['places', 'list', storeId], ['places', 'pin', storeId, 'p1'], ['places', 'storyOptions', storeId]]
+
+    serveStory(draftOnly(), call => (call.method === 'DELETE' ? Response.json({ pinsUnlinked: 1, storiesUnlinked: 1 }) : noLinks(call)))
+    renderStoryEditor(`/store/content/articles/${groupId}`)
+    await screen.findByRole('textbox', { name: /^Title/ }, SLOW)
+    // A story that listed the deleted one as related, and the pins that named it, were read before.
+    cache().setQueryData(otherGroup, { id: 'other', rowVersion: 7 })
+    for (const key of pinKeys)
+      cache().setQueryData(key, { items: [] })
+    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Delete story' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete story' }))
+
+    expect(await screen.findByText('Stories list', undefined, SLOW)).toBeInTheDocument()
+    await waitFor(() => expect(cache().getQueryData(otherGroup)).toBeUndefined(), SLOW)
+    for (const key of pinKeys)
+      expect(cache().getQueryState(key)?.isInvalidated).toBe(true)
+  })
+
   it('[E4.3][AC30] AC-7 a refused delete keeps the editor and the dialog open with the error, and both buttons work again', async () => {
     const success = vi.spyOn(toast, 'success')
 

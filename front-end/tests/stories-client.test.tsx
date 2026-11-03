@@ -113,8 +113,9 @@ describe('[E4.3][AC30] the stories queries and commands', () => {
   it('[E4.3][AC30] commandAffects lists the stories list for every command', () => {
     for (const command of ['createStory', 'createVersion'] as const)
       expect(commandAffects.stories[command]).toEqual([['stories', 'list'], ['stories', 'group']])
-    // The group of a deleted story is not read again (it would answer 404 while the editor is still on screen); the screen drops it.
-    expect(commandAffects.stories.removeStory).toEqual([['stories', 'list']])
+    // The groups are not read again (a deleted one would answer 404 while the editor is still on screen); the screen drops them.
+    // The pins that named the story moved their row version, so the pin reads are refreshed.
+    expect(commandAffects.stories.removeStory).toEqual([['stories', 'list'], ['places', 'list'], ['places', 'pin'], ['places', 'storyOptions']])
   })
 
   it('[E4.3][AC45] reads the group with both versions from GET story-groups/{groupId}', async () => {

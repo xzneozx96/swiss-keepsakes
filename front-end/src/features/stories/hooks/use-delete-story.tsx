@@ -21,7 +21,7 @@ export interface DeletableStory {
  * The dialog first reads how many pins and stories link to it (a failed read does not stop the delete: the dialog says the
  * links could not be checked), then runs the write inside itself: spinner, a refusal shown in the dialog, and on success the
  * row leaves the cached list at once (`commandChanges`) and a toast says so. `onDeleted` runs before the dialog closes (the editor
- * opens the list there). The cached group of the deleted story is dropped afterwards. `dialog` must be rendered by the caller.
+ * opens the list there). The cached groups of the store are dropped afterwards, and the pins it was the main story of are refreshed. `dialog` must be rendered by the caller.
  */
 export function useDeleteStory(storeId: string, onDeleted?: () => void | Promise<unknown>) {
   const { t } = useLocale()
@@ -47,7 +47,8 @@ export function useDeleteStory(storeId: string, onDeleted?: () => void | Promise
         run: async () => {
           await remove.submitAsync({ storeId, groupId: story.groupId, idempotencyKey: crypto.randomUUID() })
           await onDeleted?.()
-          queryClient.removeQueries({ queryKey: [...queryKeys.stories.group, storeId, story.groupId] })
+          // Every group of the store, not only this one: the stories that listed it as related moved their row version, so a cached copy would answer 412.
+          queryClient.removeQueries({ queryKey: [...queryKeys.stories.group, storeId] })
         },
       })
     },
