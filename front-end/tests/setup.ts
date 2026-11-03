@@ -52,3 +52,24 @@ Range.prototype.getClientRects ??= noRects
 Range.prototype.getBoundingClientRect ??= () => new DOMRect()
 Element.prototype.getClientRects ??= noRects
 document.elementFromPoint ??= () => null
+
+// No test may reach PostHog by accident: the library is a fake with every method spied. The one test of the real library
+// (analytics-posthog-real.test.ts) takes it with `vi.importActual` and replaces the network first.
+vi.mock('posthog-js', () => {
+  const noop = () => vi.fn()
+
+  return {
+    default: {
+      init: noop(),
+      capture: noop(),
+      identify: noop(),
+      register: noop(),
+      register_once: noop(),
+      setPersonProperties: noop(),
+      opt_in_capturing: noop(),
+      opt_out_capturing: noop(),
+      reset: noop(),
+      set_config: noop(),
+    },
+  }
+})

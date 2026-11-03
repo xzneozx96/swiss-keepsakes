@@ -162,6 +162,13 @@
       "when": 1794114553729,
       "tag": "0022_pickup_places",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794200953729,
+      "tag": "0023_analytics",
+      "breakpoints": true
     }
   ]
 }

@@ -57,7 +57,7 @@ function Hours({ detail }: { detail: PlaceDetail }) {
   )
 }
 
-function StoryRow({ story, main, onReadStory }: { story: PlaceStory, main: boolean, onReadStory?: () => void }) {
+function StoryRow({ story, main, onReadStory, onStoryClick }: { story: PlaceStory, main: boolean, onReadStory?: () => void, onStoryClick?: () => void }) {
   const { t, language } = useLocale()
   const className = 'flex min-h-14 w-full items-center gap-3 rounded-2xl py-1.5 text-start outline-none focus-visible:focus-ring active:bg-default'
   const body = (
@@ -76,14 +76,25 @@ function StoryRow({ story, main, onReadStory }: { story: PlaceStory, main: boole
   return (
     <li>
       {main && onReadStory
-        ? <button className={className} type="button" onClick={onReadStory}>{body}</button>
-        : <Link className={className} params={{ lang: language, slug: story.slug }} to="/$lang/stories/$slug">{body}</Link>}
+        ? (
+            <button
+              className={className}
+              type="button"
+              onClick={() => {
+                onStoryClick?.()
+                onReadStory()
+              }}
+            >
+              {body}
+            </button>
+          )
+        : <Link className={className} params={{ lang: language, slug: story.slug }} to="/$lang/stories/$slug" onClick={onStoryClick}>{body}</Link>}
     </li>
   )
 }
 
 /** The facts of a place, each only when present: next date, hours, address with the map button, website, then the stories. */
-function Facts({ detail, directions, onReadStory }: { detail: PlaceDetail, directions: boolean, onReadStory?: () => void }) {
+function Facts({ detail, directions, onReadStory, onStoryClick, onOutboundClick }: { detail: PlaceDetail, directions: boolean, onReadStory?: () => void, onStoryClick?: () => void, onOutboundClick?: () => void }) {
   const { t, intlLocale } = useLocale()
   const [today] = useState(() => zurichToday(new Date()))
   const date = detail.nextDate
@@ -114,7 +125,7 @@ function Facts({ detail, directions, onReadStory }: { detail: PlaceDetail, direc
           {directions && <DirectionsLink icon="quiet" place={detail} />}
         </div>
         {detail.link && host && (
-          <a className={`${row} py-1 outline-none focus-visible:focus-ring`} href={detail.link} rel="noopener" target="_blank">
+          <a className={`${row} py-1 outline-none focus-visible:focus-ring`} href={detail.link} rel="noopener" target="_blank" onClick={onOutboundClick}>
             <LinkIcon className="shrink-0 text-muted" size={20} />
             <span className="flex flex-1 flex-col">
               <span className="text-xs text-muted">{t('map.sheet.website')}</span>
@@ -128,7 +139,7 @@ function Facts({ detail, directions, onReadStory }: { detail: PlaceDetail, direc
         <section className="flex flex-col gap-1">
           <h3 className="text-label text-muted">{t('map.sheet.stories')}</h3>
           <ul className="flex flex-col">
-            {stories.map(({ story, main }) => <StoryRow key={story.slug} main={main} story={story} onReadStory={onReadStory} />)}
+            {stories.map(({ story, main }) => <StoryRow key={story.slug} main={main} story={story} onReadStory={onReadStory} onStoryClick={onStoryClick} />)}
           </ul>
         </section>
       )}
@@ -166,7 +177,7 @@ function SheetSkeleton() {
  * title and the directions come from the map list, so the sheet is useful at once. A story link goes to the story page,
  * or to `onReadStory` where the page stays (the place editor's preview).
  */
-export function PlaceSheet({ item, detail, failed = false, directions = true, onRetry, position, onStep, isOpen, onClose, container, onReadStory }: {
+export function PlaceSheet({ item, detail, failed = false, directions = true, onRetry, position, onStep, isOpen, onClose, container, onReadStory, onStoryClick, onOutboundClick }: {
   item: PublicMapItem
   detail?: PlaceDetail
   failed?: boolean
@@ -179,6 +190,10 @@ export function PlaceSheet({ item, detail, failed = false, directions = true, on
   onClose: () => void
   container?: Element
   onReadStory?: () => void
+  /** A story row was followed (analytics, ADR-032). The place editor's preview passes none. */
+  onStoryClick?: () => void
+  /** The website link was followed (analytics, ADR-032). */
+  onOutboundClick?: () => void
 }) {
   const { t, language } = useLocale()
   const title = detail?.title ?? item.title
@@ -222,7 +237,7 @@ export function PlaceSheet({ item, detail, failed = false, directions = true, on
         <>
           {detail.photos.length > 0 && <PlacePhotos key={detail.id} photos={detail.photos} title={title} />}
           {detail.tip && <p className="text-body" lang={detail.language}>{detail.tip}</p>}
-          <Facts detail={detail} directions={directions} onReadStory={onReadStory} />
+          <Facts detail={detail} directions={directions} onOutboundClick={onOutboundClick} onReadStory={onReadStory} onStoryClick={onStoryClick} />
         </>
       )}
     </SheetFrame>

@@ -1,5 +1,6 @@
 # Map and pins design: N02, N03, N16 and N17
 
+- **Amended 2026-11-03 (owner).** The guest place card shows no tip: photo, title, eyebrow, Show more and the map button only, so it never changes size when the pin's detail arrives. The details sheet shows the tip in full. The editor's preview card follows (`docs/decisions/2026-10-28-pins-and-map-design.md`, 2026-11-03 amendment, item 1).
 - **Amended 2026-11-02 (owner).**
   - The guest pin card has no `‹ n of m ›` steps. They are commented out in `features/map/components/place-card.tsx`, and **Show more** takes the row beside the map button. The cards still swipe.
   - The details sheet has no note under Open in Google Maps.

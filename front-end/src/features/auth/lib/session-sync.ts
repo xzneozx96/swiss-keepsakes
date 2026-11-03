@@ -3,7 +3,7 @@ import type { DemoStore } from '@/features/demo/store'
 
 import { clearGuestData } from '@/features/demo/store'
 import { demoGuest } from '@/features/orders/seed'
-import { forgetStoresSession } from '@/features/stores/lib/forget-session'
+import { forgetStoresSession, refreshStoresSession } from '@/features/stores/lib/forget-session'
 import { loadAuthClient } from './auth-api'
 
 /**
@@ -17,6 +17,8 @@ import { loadAuthClient } from './auth-api'
  */
 export function followSession(store: DemoStore, queryClient: QueryClient) {
   let userId: string | undefined
+  // The first answer is the page load's own; a sign-in after it is news to the reads the analytics gate made.
+  let answered = false
 
   loadAuthClient()
     .then((client) => {
@@ -24,12 +26,17 @@ export function followSession(store: DemoStore, queryClient: QueryClient) {
         if (isPending)
           return
         const wasSignedIn = store.getState().data.signedInGuestId !== null
+        const loaded = answered
+
+        answered = true
 
         if (data) {
           const next = data.user.id
 
           if (userId !== undefined && userId !== next)
             forgetStoresSession(queryClient)
+          else if (userId === undefined && loaded)
+            refreshStoresSession(queryClient)
           userId = next
           if (store.getState().data.signedInGuestId !== demoGuest.id) {
             store.update(s => ({

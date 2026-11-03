@@ -46,6 +46,10 @@ The design did things the PRD, ADRs or data model did not say. The requester dec
 - The inventory rows N02, N03, N16 and N17 and the stories E4.2, E4.6 and E4.7 point to it.
 - Differences 1 to 4 and 6 are now written into the PRD, the plan and the ADR notes (see the table). The data model still needs the extra-photo table (E4.2).
 
+## Amended 2026-11-03 (owner)
+
+1. **No tip on the guest place card.** The card shows the photo, the title, the eyebrow (category, date or language notice), Show more and the directions button, and never the tip. This replaces the 2026-11-02 rule that the opened card shows the tip (two lines) once its detail arrives; the card grew when the tip came in, and the owner saw it jump. The detail is still read, for the map link behind the directions button and so that Show more opens at once. The tip stays in full in the details sheet. The place editor's preview follows the guest card. Owner answer in chat on 2026-11-03 ("No tip on the card").
+
 ## Not verified
 
 - I read the lab code and the page's own notes and opened the page on desktop. I did not click through every state, and I did not test the page on a phone, with a screen reader or with reduced motion.

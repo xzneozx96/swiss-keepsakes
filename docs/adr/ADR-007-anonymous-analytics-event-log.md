@@ -1,6 +1,6 @@
 # ADR-007: Collect SM-1 to SM-3 events in a first-party anonymous event log
 
-Status: accepted
+Status: superseded by ADR-032
 Date: 2026-10-26
 Source: AD-8
 Applies to: `api/src/modules/analytics/`, `api/src/modules/reporting/`, `api/src/platform/http/`, `front-end/src/lib/analytics/`, `packages/api-contract/`
@@ -45,3 +45,4 @@ We will record events in our own database through one endpoint, with no persiste
 ## History
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
+- 2026-11-03 superseded by ADR-032 (accepted by the owner, gate G-S8-ADR032)

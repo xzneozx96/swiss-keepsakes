@@ -517,7 +517,7 @@ async function openSheetOf(title: string) {
 }
 
 describe('[E4.7][AC42] a pin with stories', () => {
-  it('shows the tip on the open card, and in the sheet links the main story first and lists the other stories, with no price', async () => {
+  it('in the sheet links the main story first and lists the other stories, with no price', async () => {
     const sheet = await openSheetOf('Chapel Bridge')
     const stories = (await sheet.findAllByRole('link')).filter(link => link.getAttribute('href')?.includes('/stories/'))
 
@@ -526,10 +526,14 @@ describe('[E4.7][AC42] a pin with stories', () => {
     expect(fetchMapPin).toHaveBeenCalledWith(pinA.id, 'en')
   })
 
-  it('reads the pin once its card opens, and shows the tip on that card', async () => {
+  it('reads the pin once its card opens, and the card shows no tip: it keeps its Show more and map button and does not grow', async () => {
     await openCardOf('Chapel Bridge')
+    await waitFor(() => expect(fetchMapPin).toHaveBeenCalledWith(pinA.id, 'en'))
+    const card = cardOfTitle('Chapel Bridge')
 
-    expect(await within(cardOfTitle('Chapel Bridge')).findByText('Tip for Chapel Bridge')).toBeInTheDocument()
+    await waitFor(() => expect(within(card).getByRole('button', { name: en['map.card.more'] })).toBeInTheDocument())
+    await waitFor(() => expect(within(card).getAllByRole('link').map(link => link.getAttribute('aria-label'))).toEqual([en['map.directions']]))
+    expect(within(card).queryByText('Tip for Chapel Bridge')).toBeNull()
   })
 })
 

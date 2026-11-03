@@ -4861,6 +4861,10 @@
             "format": "uuid",
             "type": "string"
           },
+          "platformAdmin": {
+            "description": "Whether the caller is the Super Admin. The caller learns only their own flag; the guest site uses it to send no analytics",
+            "type": "boolean"
+          },
           "stores": {
             "description": "The stores the user belongs to, oldest membership first. Empty for a guest and for a Super Admin, who hold no store role",
             "items": {
@@ -4871,7 +4875,8 @@
         },
         "required": [
           "guestId",
-          "stores"
+          "stores",
+          "platformAdmin"
         ],
         "type": "object"
       },

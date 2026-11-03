@@ -641,7 +641,7 @@ describe('[E2.4][AC02] M22, the members tab', () => {
 })
 
 describe('[E2.4][AC02] the members tab sits in Settings and is hidden from a Manager', () => {
-  const meOf = (role: 'owner' | 'manager') => Response.json(meSchema.parse({ guestId: '0198a000-0000-7000-8000-0000000000f1', stores: [{ storeId, role, status: 'live' }] }))
+  const meOf = (role: 'owner' | 'manager') => Response.json(meSchema.parse({ guestId: '0198a000-0000-7000-8000-0000000000f1', platformAdmin: false, stores: [{ storeId, role, status: 'live' }] }))
 
   it('opens on Members for the Owner of the current store, with General beside it, and no tab before /api/me answers', async () => {
     answer = call => call.path === '/api/me' ? meOf('owner') : Response.json(members)

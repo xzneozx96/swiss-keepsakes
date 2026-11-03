@@ -143,8 +143,9 @@ export function createApp(logger: Logger, checkHealth: HealthCheck, identity: Id
     const { guestId, userId } = c.get('guest')
     // Only staff hold store roles. A guest holds none, and the guards give a Super Admin none even when a stray
     // membership row exists, so listing that store would send a screen to a store the guards refuse.
-    const stores = c.get('actor').kind === 'staff' ? await identity.listMyStores(userId) : []
-    return c.json({ guestId, stores }, 200)
+    const actor = c.get('actor')
+    const stores = actor.kind === 'staff' ? await identity.listMyStores(userId) : []
+    return c.json({ guestId, stores, platformAdmin: actor.kind === 'super_admin' }, 200)
   })
 
   for (const register of commands.routes)

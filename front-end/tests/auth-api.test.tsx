@@ -324,6 +324,38 @@ describe('[E2.1][AC01] sign-in through the real Better Auth client', () => {
     expect(favouriteProductIds).toEqual([])
   })
 
+  it('[E8.7] a sign-in after the page loaded signed out makes the session and stores reads stale, and the first read at load does not', async () => {
+    let user: string | null = null
+    const message = () => window.dispatchEvent(new StorageEvent('storage', {
+      key: 'better-auth.message',
+      newValue: JSON.stringify({ event: 'session', data: { trigger: 'signout' } }),
+    }))
+    const stale = (key: string[]) => demo.queryClient.getQueryState(key)?.isInvalidated
+
+    answer = path => path === '/api/auth/get-session' && user
+      ? Response.json({ session: { id: 's-u7', userId: user, expiresAt: new Date(Date.now() + 1e7).toISOString() }, user: { id: user, email: `${user}@example.ch` } })
+      : Response.json(null)
+    demo.queryClient.setQueryData(['stores', 'sessionUser'], null)
+    demo.queryClient.setQueryData(['stores', 'me'], { stores: [] })
+    followSession(demo.store, demo.queryClient)
+    const reads = () => calls.filter(call => call.path === '/api/auth/get-session').length
+
+    message()
+    await waitFor(() => expect(reads()).toBeGreaterThan(0))
+    expect(stale(['stores', 'sessionUser'])).toBe(false)
+    expect(stale(['stores', 'me'])).toBe(false)
+
+    user = 'u7'
+    message()
+    await waitFor(() => expect(stale(['stores', 'sessionUser'])).toBe(true))
+    expect(stale(['stores', 'me'])).toBe(true)
+
+    // The client is shared with the next test, which expects it to hold no session.
+    user = null
+    message()
+    await waitFor(() => expect(demo.store.getState().data.signedInGuestId).toBeNull())
+  })
+
   it('[E2.3] forgets the stores feature when the session ends or another user takes it over, and only then', async () => {
     let user: string | null = 'u1'
     const sessionOf = (id: string) => Response.json({

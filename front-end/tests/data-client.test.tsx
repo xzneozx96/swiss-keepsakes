@@ -14,6 +14,7 @@ import {
   StorageFullError,
   useCommand,
 } from '@/features/data-client'
+import { commandAffects } from '@/features/data-client/commands'
 import { DemoProvider } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import {
@@ -262,6 +263,10 @@ function renderWithoutBridge<T>(hook: () => T, store: DemoStore) {
 }
 
 describe('mutation then invalidate', () => {
+  it('[E8.7] accepting an invitation refreshes the stores read, which the analytics gate trusts', () => {
+    expect(commandAffects.stores.acceptInvitation).toContain(queryKeys.stores.me)
+  })
+
   it('[E1.11] hiding a comment on M18 invalidates the comments query, so the row shows it hidden', async () => {
     const store = createDemoStore({ ...createSeedState(), role: 'owner' })
     const { result } = renderWithoutBridge(() => useMerchantComments([]), store)

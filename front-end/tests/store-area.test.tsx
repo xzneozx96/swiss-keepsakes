@@ -18,7 +18,7 @@ vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 const storeId = '0198a000-0000-7000-8000-000000000001'
 type Status = 'invited' | 'onboarding' | 'live' | 'suspended'
 const entry = (role: 'owner' | 'manager', status: Status) => ({ storeId, role, status })
-const meBody = (stores: ReturnType<typeof entry>[]) => Response.json(meSchema.parse({ guestId: '0198a000-0000-7000-8000-0000000000f1', stores }))
+const meBody = (stores: ReturnType<typeof entry>[]) => Response.json(meSchema.parse({ guestId: '0198a000-0000-7000-8000-0000000000f1', platformAdmin: false, stores }))
 const problem = (status: number) => Response.json(problemSchema.parse({ type: 'x', status, title: 'x', instance: '/x', requestId: 'req-1' }), { status })
 
 let demo: ReturnType<typeof startDemo>
