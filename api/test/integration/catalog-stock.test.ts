@@ -63,6 +63,20 @@ describe('[E6.3][AC05][AC53][AC-10] a new SKU has its stock row', () => {
     expect(first).toMatchObject({ onHand: 12, available: 12 })
   })
 
+  it('[E6.3][AC05][AC53][E6.3c-AC-5] a SKU code already in use refuses the whole create and writes no stock row for any variant', async () => {
+    const s = await setup()
+    const taken = code()
+    await s.create([{ skuCode: taken, priceRappen: 3900, values: { size: 's' } }])
+    const before = Number((await pool.query('select count(*) from inventory.stock_items where store_id = $1', [s.storeId])).rows[0].count)
+    const response = await s.create([{ skuCode: code(), priceRappen: 3900, values: { size: 's' }, quantity: 4 }, { skuCode: taken, priceRappen: 3900, values: { size: 'l' }, quantity: 5 }])
+    const after = Number((await pool.query('select count(*) from inventory.stock_items where store_id = $1', [s.storeId])).rows[0].count)
+    const history = Number((await pool.query('select count(*) from inventory.stock_adjustments where store_id = $1', [s.storeId])).rows[0].count)
+
+    expect(response.status).toBe(409)
+    expect(after).toBe(before)
+    expect(history).toBe(0)
+  })
+
   it('[E6.3][AC05][AC53][AC-10] a new variant on an existing keepsake has a row of 0, or its quantity', async () => {
     const s = await setup()
     const product = await (await s.create([{ skuCode: code(), priceRappen: 3900, values: { size: 's' } }])).json() as Product
