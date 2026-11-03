@@ -47,3 +47,7 @@ We will keep five tables in the `orders` schema and the pickup list in `catalog`
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
 - 2026-11-03 amended (gate G-S8-D5): pickup spans may cross midnight
+- 2026-11-03 amended (gate G-S8-PICKUP-MAPS): a pickup point stores a Google Maps link and a pin
+
+## Amendments
+- 2026-11-03 (gate G-S8-PICKUP-MAPS, owner): every pickup point stores a required Google Maps link and a pin (`latitude`, `longitude`) read from it, in `catalog.pickup_places` (migration `0025_pickup_maps`). Guests open the link for directions in the checkout review and order tracking (E7.x); the merchant list shows nothing new. The API takes the link on create and save and reads the pin on the server, following a short link through Google hosts only, as the place lookup does; a link with no position is refused with `maps-link-unreadable`. The catalog reads the pin through its own port `MapsPositions`, which `main.ts` fills with the content module's `makeReadMapsPosition` (exported from the content `index.ts`), so no module imports another's internals (ADR-013). Source: owner 2026-11-03.

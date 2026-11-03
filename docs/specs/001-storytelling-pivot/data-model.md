@@ -251,7 +251,7 @@ Why. The PRD sells knives only, from one stock place. The later limited-edition 
 
 ### DM-16 The handover is modelled in the orders schema: handover, meeting, proposal
 
-Decision. Four tables carry the agreement. `orders.handovers` is the record: partner, pickup point, kind (`one_off` or `repeating`), state, a share code for the group-chat link, the daily rule of a repeating handover, who created it, and when it was agreed. `orders.handover_occurrences` is one dated meeting: the time, the order cut-off `closes_orders_at`, optional group arrival and leaving times, and a state of `scheduled`, `done` or `cancelled`. A one-off handover has exactly one meeting, and a repeating one has at most one a day, by the generated Zurich date. `orders.handover_proposals` is the agree step and the later time changes that need the other side. It has one open proposal per handover and one per meeting, and an answered proposal is never edited. `catalog.pickup_places` and `pickup_place_hours` hold the merchant's list that self-collect orders and handovers share. Handover state moves only along the allowed paths, and the partner and kind of a handover never change. `row_version` on the handover and the meeting lets two editors use `If-Match`. Serves AP-26, AP-27, AP-30 to AP-33. ADR: ADR-024.
+Decision. Four tables carry the agreement. `orders.handovers` is the record: partner, pickup point, kind (`one_off` or `repeating`), state, a share code for the group-chat link, the daily rule of a repeating handover, who created it, and when it was agreed. `orders.handover_occurrences` is one dated meeting: the time, the order cut-off `closes_orders_at`, optional group arrival and leaving times, and a state of `scheduled`, `done` or `cancelled`. A one-off handover has exactly one meeting, and a repeating one has at most one a day, by the generated Zurich date. `orders.handover_proposals` is the agree step and the later time changes that need the other side. It has one open proposal per handover and one per meeting, and an answered proposal is never edited. `catalog.pickup_places` and `pickup_place_hours` hold the merchant's list that self-collect orders and handovers share. Handover state moves only along the allowed paths, and the partner and kind of a handover never change. `row_version` on the handover and the meeting lets two editors use `If-Match`. Amended 2026-11-03, gate G-S8-PICKUP-MAPS: `catalog.pickup_places` also holds a required `maps_link` and a pin (`latitude`, `longitude`) read from it, with the CHECKs of `content.places` (migration `0025_pickup_maps`), so guests can open the link for directions (E7.x). The columns have no default: a database that already holds a pickup point makes the migration fail and change nothing. Serves AP-26, AP-27, AP-30 to AP-33. ADR: ADR-024.
 
 Why. The record keeps one partner, one pickup point and one time per meeting, and it says each order points to one meeting. With the tables in the `orders` schema, a composite key can force an order's partner to equal its meeting's partner, and the binding check can lock the meeting row in the order's own transaction. The record leaves the module choice to the builder, so section 8 returns it as a decision. The database cannot tell an earlier move from a later one by actor, so the use case decides which change needs a proposal. A change of place is a new handover. Alternatives rejected. A separate `handovers` module or a `partners` home, which turn the partner key and the binding lock into cross-module rules that depend on the open M3 answer. A `visit` entity of the earlier design, which a hotel desk does not fit.
 
@@ -1025,6 +1025,11 @@ CREATE TABLE catalog.pickup_places (
   store_id     uuid NOT NULL,
   name         jsonb NOT NULL,
   address      jsonb NOT NULL,
+  -- Amended 2026-11-03 (gate G-S8-PICKUP-MAPS, migration 0025_pickup_maps): the Google Maps link the merchant pasted, and the
+  -- pin the API read from it. Required. Guests open the link for directions (E7.x). The same checks as `content.places`.
+  maps_link    text NOT NULL,
+  latitude     double precision NOT NULL,
+  longitude    double precision NOT NULL,
   instructions jsonb,
   position     integer NOT NULL DEFAULT 1,
   archived_at  timestamptz,
@@ -1033,7 +1038,10 @@ CREATE TABLE catalog.pickup_places (
   updated_at   timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT pickup_places_store_id_id_key UNIQUE (store_id, id),
   CONSTRAINT pickup_places_name_check CHECK (jsonb_typeof(name) = 'object' AND name ?| ARRAY['en', 'de']),
-  CONSTRAINT pickup_places_address_check CHECK (jsonb_typeof(address) = 'object' AND address ?| ARRAY['en', 'de'])
+  CONSTRAINT pickup_places_address_check CHECK (jsonb_typeof(address) = 'object' AND address ?| ARRAY['en', 'de']),
+  CONSTRAINT pickup_places_maps_link_check CHECK (maps_link ~ '^https://[^\s]+$' AND length(maps_link) <= 2000),
+  CONSTRAINT pickup_places_latitude_check CHECK (latitude BETWEEN -90 AND 90),
+  CONSTRAINT pickup_places_longitude_check CHECK (longitude BETWEEN -180 AND 180)
 );
 CREATE TABLE catalog.pickup_place_hours (
   place_id uuid NOT NULL,
