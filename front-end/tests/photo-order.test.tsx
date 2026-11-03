@@ -22,6 +22,16 @@ function Harness({ start = ['a', 'b', 'c'] }: { start?: string[] }) {
 const names = () => screen.getAllByRole('listitem').map(item => item.querySelector('[title]')!.textContent)
 
 describe('shared PhotoOrder', () => {
+  it('[E4.3][AC33] a list without a cover label says no Cover under any row', () => {
+    const { cover: _cover, ...withoutCover } = labels
+
+    render(<PhotoOrder items={['a', 'b'].map(id => ({ id, name: `Photo ${id}`, thumbnail: <span /> }))} labels={withoutCover} onChange={() => {}} />)
+
+    expect(screen.queryByText('Cover')).not.toBeInTheDocument()
+    // Only the name line: no empty line is left where "Cover" would be.
+    expect(screen.getAllByRole('listitem')[0]!.querySelectorAll('span.truncate')).toHaveLength(1)
+  })
+
   it('lists the photos in order and says Cover under the first only', () => {
     render(<Harness />)
 

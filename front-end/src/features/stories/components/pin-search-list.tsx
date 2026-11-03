@@ -17,7 +17,7 @@ import { ChosenMark } from './chosen-mark'
 const SKELETON_ROWS = 5
 
 /** Rows shaped like the real ones: the photo, the name and the line under it. */
-function RowsSkeleton() {
+export function RowsSkeleton() {
   return (
     <ul aria-hidden className="flex flex-col gap-2 p-1">
       {Array.from({ length: SKELETON_ROWS }, (_, i) => (
