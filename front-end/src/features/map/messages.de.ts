@@ -39,6 +39,7 @@ export const mapDe: Record<keyof typeof mapEn, string> = {
   'map.sheet.photoNext': 'Nächstes Foto',
   'map.gone': 'Dieser Ort ist nicht mehr auf der Karte',
   'map.gone.close': 'Hinweis schliessen',
+  'map.category.unknown': 'Diese Kategorie gibt es auf der Karte nicht, darum sind alle Orte zu sehen',
   'map.date.until': 'Bis {day}',
   'map.date.from': 'ab {time}',
   'map.filter.title': 'Kategorien',
@@ -51,4 +52,5 @@ export const mapDe: Record<keyof typeof mapEn, string> = {
   'map.announce.all.one': 'Der 1 Ort auf der Karte',
   'map.announce.all.other': 'Alle {count} Orte',
   'map.announce.some': '{categories}: {count} von {total} Orten hervorgehoben',
+  'map.announce.dated': 'Orte mit Datum: {count} von {total} hervorgehoben',
 }

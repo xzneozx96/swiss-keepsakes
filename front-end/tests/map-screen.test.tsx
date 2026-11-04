@@ -1,15 +1,18 @@
 import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
 import type { PlaceDetail } from '@/features/map/lib/place-detail'
 
+import type { MapSearch } from '@/features/map/lib/search-params'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider, useSearch } from '@tanstack/react-router'
+import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider, useNavigate, useSearch } from '@tanstack/react-router'
 import { act, configure, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
 import { fetchMapCategories, fetchMapPin, fetchMapPins } from '@/features/map/api/map-client'
+
 import { MapScreen } from '@/features/map/components/map-screen'
+import { validateMapSearch } from '@/features/map/lib/search-params'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
 import { FakeMap, resetFakeMaps } from './support/fake-maplibre'
@@ -98,9 +101,10 @@ function detailOf(item: PublicMapItem): PlaceDetail {
 }
 
 function MapAtRoute() {
-  const { place } = useSearch({ strict: false }) as { place?: string }
+  const { place, category, dated } = useSearch({ strict: false }) as MapSearch
+  const navigate = useNavigate()
 
-  return <MapScreen place={place} />
+  return <MapScreen category={category} dated={dated} place={place} onSearchChange={search => void navigate({ to: '.', search, replace: true })} />
 }
 
 function renderMap(url = '/en/map') {
@@ -116,7 +120,7 @@ function renderMap(url = '/en/map') {
   const map = createRoute({
     getParentRoute: () => root,
     path: '/$lang/map',
-    validateSearch: (search: Record<string, unknown>): { place?: string } => (typeof search.place === 'string' && search.place !== '' ? { place: search.place } : {}),
+    validateSearch: validateMapSearch,
     loader: ({ params }) => params.lang === 'de' ? loadDictionary('de') : undefined,
     component: MapAtRoute,
   })
@@ -129,9 +133,11 @@ function renderMap(url = '/en/map') {
   return router
 }
 
+let currentRouter: ReturnType<typeof renderMap>
+
 /** The map draws its style and its first view (the map's `idle`): the pins and the controls appear. */
 async function loaded(url?: string) {
-  renderMap(url)
+  currentRouter = renderMap(url)
   await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
   act(() => FakeMap.instances[0]!.emit('load'))
   act(() => FakeMap.instances[0]!.emit('idle'))
@@ -659,5 +665,145 @@ describe('[E4.7][AC90] the deep link /map?place=<slug>', () => {
 
     expect(screen.queryByText(en['map.gone'])).toBeNull()
     expect(await screen.findAllByRole('article')).not.toHaveLength(0)
+  })
+})
+
+describe('[E4.13][AC42][AC90] the map opens filtered through ?category and ?dated', () => {
+  const inList = async (label = en['map.view.list']) => {
+    await userEvent.click(await screen.findByRole('button', { name: label }))
+
+    return within(screen.getByRole('list')).getAllByRole('listitem').map(item => item.textContent ?? '')
+  }
+  const showSheet = async () => {
+    await userEvent.click(screen.getByRole('button', { name: /^Categories/ }))
+
+    return screen.findByRole('dialog')
+  }
+  const search = () => currentRouter.state.location.search as Record<string, unknown>
+
+  it('aC-1 a parent slug lists the pins of the parent and its sub-category, and dims the others', async () => {
+    await loaded('/en/map?category=c3')
+    await screen.findByRole('button', { name: en['map.categoriesCount'].replace('{count}', '1') })
+
+    expect(pinButton('Chapel Bridge')).toHaveAccessibleName(/dimmed/)
+    expect(pinButton('Hotel am See')).toHaveAccessibleName(/dimmed/)
+    expect(pinButton('Wine Market')).not.toHaveAccessibleName(/dimmed/)
+    expect(pinButton('Baeckerei Weinmarkt')).not.toHaveAccessibleName(/dimmed/)
+    const rows = await inList()
+
+    expect(rows).toHaveLength(2)
+    expect(rows.join(' ')).toContain('Wine Market')
+    expect(rows.join(' ')).toContain('Baeckerei Weinmarkt')
+  })
+
+  it('aC-2 a sub-category slug lists only the pins of that sub-category', async () => {
+    await loaded('/en/map?category=c4')
+    const rows = await inList()
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toContain('Baeckerei Weinmarkt')
+  })
+
+  it('aC-2 the sheet opened on a sub-category counts its places and does not tick a top-level row', async () => {
+    await loaded('/en/map?category=c4')
+    await screen.findByRole('button', { name: en['map.categoriesCount'].replace('{count}', '1') })
+    const dialog = await showSheet()
+
+    expect(within(dialog).getByRole('button', { name: /^Show 1 place/ })).toBeInTheDocument()
+    expect(within(dialog).getByRole<HTMLInputElement>('checkbox', { name: /Food and drink/ }).checked).toBe(false)
+  })
+
+  it('aC-3 dated lists only the pins with a next date and dims the rest', async () => {
+    await loaded('/en/map?dated=1')
+    const rows = await inList()
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toContain('Organ Concert')
+    await userEvent.click(screen.getByRole('button', { name: en['map.view.map'] }))
+    expect(pinButton('Chapel Bridge')).toHaveAccessibleName(/dimmed/)
+  })
+
+  it('aC-3 category and dated together list the pins that are in both', async () => {
+    vi.mocked(fetchMapPins).mockResolvedValue([pinA, pinB, pinC, { ...pinD, nextDate: pinE.nextDate }, pinE])
+    await loaded('/en/map?category=c3&dated=1')
+    const rows = await inList()
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toContain('Wine Market')
+  })
+
+  it('aC-4 an unknown slug opens an unfiltered map with a notice that closes, and the address loses it', async () => {
+    await loaded('/en/map?category=nope')
+
+    expect(await screen.findByText(en['map.category.unknown'])).toBeInTheDocument()
+    expect(allPinButtons().length + screen.queryAllByRole('button', { pressed: true }).length).toBe(5)
+    expect(screen.queryAllByRole('button', { name: /dimmed/ })).toHaveLength(0)
+    await waitFor(() => expect(search()).toEqual({}))
+    await userEvent.click(screen.getByRole('button', { name: en['map.gone.close'] }))
+
+    expect(screen.queryByText(en['map.category.unknown'])).toBeNull()
+  })
+
+  it('aC-4 an empty slug opens an unfiltered map with the same notice, in German too', async () => {
+    await loaded('/de/map?category=')
+
+    expect(await screen.findByText(de['map.category.unknown'])).toBeInTheDocument()
+    expect(await inList(de['map.view.list'])).toHaveLength(5)
+  })
+
+  it('aC-5 clearing the filter in the sheet removes the parameter and adds no history entry', async () => {
+    await loaded('/en/map?category=c3')
+    await screen.findByRole('button', { name: en['map.categoriesCount'].replace('{count}', '1') })
+    const before = currentRouter.history.length
+    const dialog = await showSheet()
+
+    await userEvent.click(within(dialog).getByRole('button', { name: en['map.filter.clear'] }))
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Show \d+ place/ }))
+
+    await waitFor(() => expect(search()).toEqual({}))
+    expect(currentRouter.history.length).toBe(before)
+  })
+
+  it('aC-5 choosing in the sheet writes the slug to the address, replacing the entry', async () => {
+    await loaded('/en/map')
+    await screen.findByRole('button', { name: en['map.categories'] })
+    const before = currentRouter.history.length
+
+    await choose('Photo spots')
+
+    await waitFor(() => expect(search()).toEqual({ category: 'c2' }))
+    expect(currentRouter.history.length).toBe(before)
+  })
+
+  it('aC-6 a place link opens that card, clears category and dated, lists every pin and cleans the address', async () => {
+    await loaded('/en/map?place=pin-1&category=c3&dated=1')
+
+    const title = await screen.findByRole('heading', { level: 2, name: 'Chapel Bridge' })
+
+    expect(title).toBeInTheDocument()
+    expect(screen.queryAllByRole('button', { name: /dimmed/ })).toHaveLength(0)
+    await waitFor(() => expect(search()).toEqual({ place: 'pin-1' }))
+    expect(await inList()).toHaveLength(5)
+  })
+
+  it('aC-6 a category picked in the sheet after a place link applies, and the address then describes the view', async () => {
+    await loaded('/en/map?place=pin-1&dated=1')
+    await screen.findByRole('heading', { level: 2, name: 'Chapel Bridge' })
+
+    await choose('Food and drink')
+
+    expect(pinButton('Chapel Bridge')).toHaveAccessibleName(/dimmed/)
+    expect(pinButton('Wine Market')).not.toHaveAccessibleName(/dimmed/)
+    await waitFor(() => expect(search()).toEqual({ category: 'c3' }))
+    expect(screen.queryByText(en['map.gone'])).toBeNull()
+  })
+
+  it('aC-6 a place that is gone with a category shows the notice and opens with the filters cleared', async () => {
+    await loaded('/en/map?place=gone&category=c3')
+
+    expect(await screen.findByText(en['map.gone'])).toBeInTheDocument()
+    expect(screen.queryByText(en['map.category.unknown'])).toBeNull()
+    expect(screen.queryAllByRole('button', { name: /dimmed/ })).toHaveLength(0)
+    await waitFor(() => expect(search()).toEqual({ place: 'gone' }))
   })
 })

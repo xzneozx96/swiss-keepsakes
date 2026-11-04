@@ -38,6 +38,7 @@ export const mapEn = {
   'map.sheet.photoNext': 'Next photo',
   'map.gone': 'This place is no longer on the map',
   'map.gone.close': 'Close the notice',
+  'map.category.unknown': 'That category is not on the map, so every place is shown',
   'map.date.until': 'Until {day}',
   'map.date.from': 'from {time}',
   'map.filter.title': 'Categories',
@@ -50,4 +51,5 @@ export const mapEn = {
   'map.announce.all.one': 'The 1 place on the map',
   'map.announce.all.other': 'All {count} places',
   'map.announce.some': '{categories}: {count} of {total} places highlighted',
+  'map.announce.dated': 'Places with a date: {count} of {total} highlighted',
 }

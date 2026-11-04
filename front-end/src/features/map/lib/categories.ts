@@ -65,3 +65,17 @@ export function pinCategoryNames(
 
   return own.filter(category => !parents.has(category.id)).map(category => categoryName(category, language))
 }
+
+/** What the map holds the guest to: the chosen categories (none means All) and, when set, only the pins with a next date. Both must hold. */
+export interface MapPinFilter {
+  chosen: readonly string[]
+  datedOnly: boolean
+}
+
+export function isLit(pin: PublicMapItem, filter: MapPinFilter, categories: readonly PublicCategory[]) {
+  return (!filter.datedOnly || pin.nextDate !== null) && isHighlighted(pin, filter.chosen, categories)
+}
+
+export function keepFiltered(pins: readonly PublicMapItem[], filter: MapPinFilter, categories: readonly PublicCategory[]) {
+  return pins.filter(pin => isLit(pin, filter, categories))
+}
