@@ -333,6 +333,7 @@ function pinRow(n: number, over: Partial<PublicPinRow> = {}): PublicPinRow {
     categories: [],
     parentCategories: [],
     mainStorySlugs: {},
+    mustVisit: false,
     ...over,
   }
 }
