@@ -34,20 +34,19 @@ const noLinks = (call: (typeof state.calls)[number]) => (call.method === 'GET' &
 async function openDelete() {
   renderStoryEditor(`/store/content/articles/${groupId}`)
   await screen.findByRole('textbox', { name: /^Title/ }, SLOW)
-  await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
-  await userEvent.click(await screen.findByRole('menuitem', { name: 'Delete story' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Delete story' }))
 
   return screen.findByRole('alertdialog')
 }
 
 describe('[E4.3][AC30] deleting a story from the editor', () => {
-  it('[E4.3][AC30] AC-7 the editor has a more menu with Delete story', async () => {
+  it('[E4.3][AC30] AC-7 Delete story is the header\'s one icon button (one secondary action, owner 04.11.2026), not a menu', async () => {
     serveStory(draftOnly(), noLinks)
     renderStoryEditor(`/store/content/articles/${groupId}`)
     await screen.findByRole('textbox', { name: /^Title/ }, SLOW)
 
-    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
-    expect(await screen.findByRole('menuitem', { name: 'Delete story' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Delete story' }).className).toContain('button--danger-soft')
+    expect(screen.queryByRole('button', { name: /more actions/i })).toBeNull()
   })
 
   it('[E4.3][AC30] AC-6 a story with a live version asks in the danger dialog, names the links, and Cancel changes nothing', async () => {
@@ -86,8 +85,7 @@ describe('[E4.3][AC30] deleting a story from the editor', () => {
 
     await userEvent.click(field)
     await userEvent.keyboard('{End} typed')
-    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Delete story' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Delete story' }))
     await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete story' }))
 
     expect(await screen.findByText('Stories list', undefined, SLOW)).toBeInTheDocument()
@@ -112,8 +110,7 @@ describe('[E4.3][AC30] deleting a story from the editor', () => {
     cache().setQueryData(otherGroup, { id: 'other', rowVersion: 7 })
     for (const key of pinKeys)
       cache().setQueryData(key, { items: [] })
-    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Delete story' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Delete story' }))
     await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete story' }))
 
     expect(await screen.findByText('Stories list', undefined, SLOW)).toBeInTheDocument()
@@ -136,15 +133,14 @@ describe('[E4.3][AC30] deleting a story from the editor', () => {
     expect(success).not.toHaveBeenCalled()
   })
 
-  it('[E4.3][AC30] AC-8 in German the menu item, the dialog and the toast are German', async () => {
+  it('[E4.3][AC30] AC-8 in German the Delete button, the dialog and the toast are German', async () => {
     const success = vi.spyOn(toast, 'success')
 
     localStorage.setItem('sk.language', JSON.stringify('de'))
     serveStory(draftOnly(), call => (call.method === 'DELETE' ? Response.json({ pinsUnlinked: 0, storiesUnlinked: 0 }) : noLinks(call)))
     renderStoryEditor(`/store/content/articles/${groupId}`)
     await screen.findByRole('textbox', { name: /Titel/ }, SLOW)
-    await userEvent.click(screen.getByRole('button', { name: 'Weitere Aktionen' }))
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Geschichte löschen' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Geschichte löschen' }))
     const dialog = await screen.findByRole('alertdialog')
 
     expect(dialog).toHaveTextContent('Der Entwurf wird gelöscht.')

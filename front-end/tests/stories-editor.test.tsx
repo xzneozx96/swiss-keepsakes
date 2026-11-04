@@ -237,7 +237,7 @@ describe('[E4.3][AC30][AC45] the story editor', () => {
     await openEditor()
 
     expect(screen.queryByText('Add a title to publish.')).not.toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Review' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Review and publish' }))
     expect(await screen.findByText('Review and publish')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Back to writing' }))
 

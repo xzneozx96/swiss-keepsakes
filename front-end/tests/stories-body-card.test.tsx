@@ -136,7 +136,7 @@ describe('[E4.3][AC30][AC45] the Story card on Write', () => {
     serve()
     renderStoryEditor(path)
     await type('!')
-    await userEvent.click(screen.getByRole('button', { name: 'Review' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Review and publish' }))
     expect(await screen.findByText('Review and publish', undefined, SLOW)).toBeInTheDocument()
     expect(patches()).toHaveLength(1)
     expect(JSON.stringify(sentBody())).toContain('two!')

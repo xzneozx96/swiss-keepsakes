@@ -138,7 +138,7 @@ describe('[E4.3][AC30] the Review layout', () => {
 
     await userEvent.click(title)
     await userEvent.keyboard('{End}!')
-    await userEvent.click(screen.getByRole('button', { name: 'Review' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Review and publish' }))
     await userEvent.click(await screen.findByRole('button', { name: 'Back to writing' }, SLOW))
 
     expect(await screen.findByRole('textbox', { name: /^Title/ }, SLOW)).toHaveValue('A morning on the Musegg wall!')

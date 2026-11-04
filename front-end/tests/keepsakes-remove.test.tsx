@@ -116,7 +116,7 @@ describe('[E6.1][remove] the editor', () => {
     }
     const router = renderKeepsakes(`/store/products/${productId}`)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Delete' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Delete keepsake' }))
     const dialog = await screen.findByRole('alertdialog')
 
     expect(within(dialog).getByText('Delete Victorinox Classic?')).toBeInTheDocument()
