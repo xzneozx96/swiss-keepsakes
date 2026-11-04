@@ -2,7 +2,7 @@ import type { NextDate } from '@sk/api-contract'
 
 import { describe, expect, it } from 'vitest'
 
-import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
+import { nextDateLine } from '@/features/map/lib/next-date'
 
 const copy = {
   until: (day: string) => `Until ${day}`,
@@ -14,11 +14,6 @@ function next(overrides: Partial<NextDate>): NextDate {
 }
 
 describe('[E4.6][AC42] next date line', () => {
-  it('reads the Zurich calendar day, not the UTC day', () => {
-    expect(zurichToday(new Date('2026-10-30T23:30:00Z'))).toBe('2026-10-31')
-    expect(zurichToday(new Date('2026-10-30T10:00:00Z'))).toBe('2026-10-30')
-  })
-
   it('shows one day with its time span', () => {
     expect(nextDateLine(next({ startTime: '18:00:00', endTime: '20:30:00' }), '2026-10-30', 'en-CH', copy)).toBe('Sat 7 Nov, 18:00–20:30')
   })

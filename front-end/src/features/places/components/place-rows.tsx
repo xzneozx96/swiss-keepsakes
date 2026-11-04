@@ -4,8 +4,9 @@ import type { DataTableColumn } from '@/components/data-table'
 import type { EmptyStateProps } from '@/components/empty-state'
 import type { RowAction } from '@/components/row-actions'
 import type { MessageKey } from '@/i18n/en'
-
 import { Skeleton } from '@heroui/react'
+
+import { zurichDate } from '@sk/domain/dates'
 import { Link } from '@tanstack/react-router'
 
 import { DataTable } from '@/components/data-table'
@@ -15,7 +16,7 @@ import { RowActions } from '@/components/row-actions'
 import { StatusChip, TagChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { photoSrc } from '@/features/keepsakes/lib/keepsake-rules'
-import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
+import { nextDateLine } from '@/features/map/lib/next-date'
 import { kindOf, languagesOf, STATUS_TONE, titleOf } from '../lib/list'
 import { PLACES_PATH } from '../lib/search-params'
 
@@ -85,7 +86,7 @@ function Kind({ item }: { item: PinListItem }) {
     label = t('places.type.eventEnded')
   }
   else if (kind === 'event' && item.nextDate) {
-    const date = nextDateLine(item.nextDate, zurichToday(new Date()), intlLocale, {
+    const date = nextDateLine(item.nextDate, zurichDate(new Date()), intlLocale, {
       until: day => t('map.date.until', { day }),
       from: time => t('map.date.from', { time }),
     })
