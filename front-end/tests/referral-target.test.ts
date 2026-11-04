@@ -10,6 +10,11 @@ function withTo(to: string, headers: Record<string, string> = {}) {
   return request(`?to=${encodeURIComponent(to)}`, headers)
 }
 
+// The redirect adds one fixed marker, whatever the code, so the guest shell knows the visit came from a partner link.
+function withMarker(to: string) {
+  return to.includes('?') ? `${to}&via=partner` : `${to}?via=partner`
+}
+
 describe('referralTarget and referralLocation', () => {
   it.each([
     '/en/stories/zytturm',
@@ -18,7 +23,7 @@ describe('referralTarget and referralLocation', () => {
     '/de',
   ])('[E3.7][AC24] accepts %s unchanged', (to) => {
     expect(referralTarget(to)).toBe(to)
-    expect(referralLocation(withTo(to))).toBe(to)
+    expect(referralLocation(withTo(to))).toBe(withMarker(to))
   })
 
   it.each([
@@ -44,7 +49,7 @@ describe('referralTarget and referralLocation', () => {
     `/en/${'a'.repeat(200)}`,
   ])('[E3.7][AC24] rejects %s and falls back to /en', (to) => {
     expect(referralTarget(to)).toBeNull()
-    expect(referralLocation(withTo(to))).toBe('/en')
+    expect(referralLocation(withTo(to))).toBe('/en?via=partner')
   })
 
   it.each([
@@ -57,7 +62,7 @@ describe('referralTarget and referralLocation', () => {
     ['empty to', '?to='],
     ['no to', ''],
   ])('[E3.7][AC24] raw query %s falls back to /en', (_name, query) => {
-    expect(referralLocation(request(query))).toBe('/en')
+    expect(referralLocation(request(query))).toBe('/en?via=partner')
   })
 
   it('[E3.7][AC24] accepts a target of exactly 200 characters', () => {
@@ -70,28 +75,34 @@ describe('referralTarget and referralLocation', () => {
   })
 
   it('[E3.7][AC24] falls back to the browser language when there is no target', () => {
-    expect(referralLocation(request('', { 'accept-language': 'de-CH' }))).toBe('/de')
+    expect(referralLocation(request('', { 'accept-language': 'de-CH' }))).toBe('/de?via=partner')
   })
 
   it('[E3.7][AC24] prefers the language cookie over Accept-Language', () => {
-    expect(referralLocation(request('', { 'cookie': 'sk_lang=de', 'accept-language': 'en' }))).toBe('/de')
+    expect(referralLocation(request('', { 'cookie': 'sk_lang=de', 'accept-language': 'en' }))).toBe('/de?via=partner')
   })
 
   it('[E3.7][AC24] uses the cookie language when the target is hostile', () => {
-    expect(referralLocation(withTo('//evil.example', { cookie: 'sk_lang=de' }))).toBe('/de')
+    expect(referralLocation(withTo('//evil.example', { cookie: 'sk_lang=de' }))).toBe('/de?via=partner')
   })
 
   it('[E3.7][AC24] uses the first to parameter when it is valid', () => {
-    expect(referralLocation(request('?to=%2Fen%2Fa&to=%2Fde%2Fb'))).toBe('/en/a')
+    expect(referralLocation(request('?to=%2Fen%2Fa&to=%2Fde%2Fb'))).toBe('/en/a?via=partner')
   })
 
   it('[E3.7][AC24] falls back when the first to parameter is invalid even if the second is valid', () => {
-    expect(referralLocation(request('?to=%2Fstore&to=%2Fen%2Fa'))).toBe('/en')
+    expect(referralLocation(request('?to=%2Fstore&to=%2Fen%2Fa'))).toBe('/en?via=partner')
   })
 
   it('[E3.7][AC24] gives the same location for a known and an unknown code', () => {
     const to = encodeURIComponent('/de/stories/x')
     expect(referralLocation(request(`?to=${to}`, {}, 'known'))).toBe(referralLocation(request(`?to=${to}`, {}, 'zzz-unknown')))
     expect(referralLocation(request('', {}, 'known'))).toBe(referralLocation(request('', {}, 'zzz-unknown')))
+  })
+})
+
+describe('[E4.5][AC91] the partner marker', () => {
+  it('goes before a fragment and joins an existing query', () => {
+    expect(referralLocation(withTo('/en/stories/x?y=1#top'))).toBe('/en/stories/x?y=1&via=partner#top')
   })
 })

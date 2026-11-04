@@ -5,11 +5,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider, useSearch } from '@tanstack/react-router'
 import { act, configure, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
 import { fetchMapCategories, fetchMapPin, fetchMapPins } from '@/features/map/api/map-client'
 import { MapScreen } from '@/features/map/components/map-screen'
+import { resetAnswersStoreForTests, saveAnswers } from '@/features/onboarding/lib/answers-store'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
 import { FakeMap, resetFakeMaps } from './support/fake-maplibre'
@@ -322,6 +323,26 @@ describe('[E4.6][AC88] a filter that matches nothing', () => {
     expect(screen.queryByText(en['map.none.title'])).toBeNull()
     expect(screen.queryByRole('heading', { level: 2, name: 'Hotel am See' })).toBeNull()
     expect(screen.getByRole('button', { name: en['map.categories'] })).toBeInTheDocument()
+  })
+})
+
+describe('[E4.5][AC93][AC44] the answers order the card row and the list alike', () => {
+  afterEach(() => resetAnswersStoreForTests())
+
+  it('sinks a multi-day pin in both views for a short stay and hides none', async () => {
+    vi.mocked(fetchMapPins).mockResolvedValue([pin(1, 'Mountain hike', [], { stayTag: 'multi_day' }), pin(2, 'Old town walk', [], { stayTag: 'short_stay' }), pin(3, 'Wine bar', [], { stayTag: 'both' })])
+    saveAnswers({ stay: 'short_stay', interests: [] })
+    await loaded()
+    await screen.findByRole('button', { name: en['map.categories'] })
+
+    const row = await screen.findByRole('region', { name: '3 places' })
+    const cardTitles = within(row).getAllByRole('heading', { level: 2 }).map(heading => heading.textContent)
+
+    await userEvent.click(screen.getByRole('button', { name: en['map.view.list'] }))
+    const listTitles = within(screen.getByRole('list')).getAllByRole('listitem').map(item => item.querySelector('[lang]')!.textContent)
+
+    expect(cardTitles).toEqual(['Old town walk', 'Wine bar', 'Mountain hike'])
+    expect(listTitles).toEqual(cardTitles)
   })
 })
 

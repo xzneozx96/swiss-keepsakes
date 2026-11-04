@@ -1,4 +1,4 @@
-import type { PublicKeepsake, PublicKeepsakeAvailability, PublicLanguage } from '@sk/api-contract'
+import type { PublicKeepsake, PublicKeepsakeAvailability, PublicLanguage, PublicPickupPoints } from '@sk/api-contract'
 import { answer, timeout } from '@/features/data-client/api-transport'
 import { ApiProblem } from '@/features/data-client/errors'
 import { apiOrigin } from './api-origin'
@@ -27,4 +27,23 @@ export async function fetchAvailability(slug: string, lang: PublicLanguage): Pro
   const availability = await answer(client.GET('/api/public/keepsakes/{slug}/availability', { ...timeout(), params: { path: { slug }, query: { lang } } }))
 
   return publicKeepsakeAvailabilitySchema.parse(availability)
+}
+
+/** The active pickup points of the store that owns the keepsake, with their weekly hours. Any failure, a 404 too, throws: the sheet then shows an error with a retry. */
+export async function fetchPickupPoints(slug: string, lang: PublicLanguage): Promise<PublicPickupPoints> {
+  const { createApiClient } = await import('@sk/api-contract')
+  const client = createApiClient(apiOrigin())
+  const points = await answer(client.GET('/api/public/keepsakes/{slug}/pickup-points', { ...timeout(), params: { path: { slug }, query: { lang } } }))
+
+  // Not parsed with the contract's strict schema: the page keeps only the fields it reads, so a field the API adds later cannot fail the whole pickup area. The contract test stays strict.
+  return {
+    items: points.items.map(({ id, name, address, instructions, mapsUrl, hours }) => ({
+      id,
+      name,
+      address,
+      instructions,
+      mapsUrl,
+      hours: hours.map(({ weekday, opens, closes }) => ({ weekday, opens, closes })),
+    })),
+  }
 }

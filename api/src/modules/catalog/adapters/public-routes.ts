@@ -1,11 +1,11 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
-import type { PublicKeepsakeAvailability as ContractAvailability, PublicKeepsake as ContractKeepsake, PublicKeepsakeList as ContractList } from '@sk/api-contract'
+import type { PublicKeepsakeAvailability as ContractAvailability, PublicKeepsake as ContractKeepsake, PublicKeepsakeList as ContractList, PublicPickupPoints as ContractPickupPoints } from '@sk/api-contract'
 import type { ContentLanguage } from '@sk/domain/content'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
-import type { PublicKeepsake, PublicKeepsakeAvailability, PublicKeepsakeList } from '../application/public-keepsakes.ts'
+import type { PublicKeepsake, PublicKeepsakeAvailability, PublicKeepsakeList, PublicPickupPoints } from '../application/public-keepsakes.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { publicKeepsakeAvailabilitySchema, publicKeepsakeListSchema, publicKeepsakeSchema, publicLanguageSchema } from '@sk/api-contract'
+import { publicKeepsakeAvailabilitySchema, publicKeepsakeListSchema, publicKeepsakeSchema, publicLanguageSchema, publicPickupPointsSchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { failureProblem } from './problems.ts'
@@ -18,6 +18,7 @@ export interface PublicKeepsakeUseCases {
   listKeepsakes: (language: ContentLanguage) => Promise<PublicKeepsakeList>
   getKeepsake: (slug: string, language: ContentLanguage) => Promise<Result<PublicKeepsake>>
   getAvailability: (slug: string, language: ContentLanguage) => Promise<Result<PublicKeepsakeAvailability>>
+  getPickupPoints: (slug: string, language: ContentLanguage) => Promise<Result<PublicPickupPoints>>
 }
 
 // The application types and the contract types must stay the same shape: a price added to the list or the detail on one
@@ -28,6 +29,7 @@ export type PublicKeepsakeTypesMatchContract = [
   Assert<Same<PublicKeepsakeList, ContractList>>,
   Assert<Same<PublicKeepsake, ContractKeepsake>>,
   Assert<Same<PublicKeepsakeAvailability, ContractAvailability>>,
+  Assert<Same<PublicPickupPoints, ContractPickupPoints>>,
 ]
 
 const query = z.object({ lang: publicLanguageSchema.meta({ description: 'The language asked for. A keepsake that has no version in it comes back in the other language, marked `fallback`' }) })
@@ -58,6 +60,7 @@ function publicGet<S extends z.ZodType, P extends z.ZodObject | undefined = unde
 const listRoute = publicGet('/api/public/keepsakes', 'The published keepsakes, newest first. No price and no stock figure', publicKeepsakeListSchema, textCacheControl)
 const detailRoute = publicGet('/api/public/keepsakes/{slug}', 'One published keepsake: text, photos, options and the combinations for sale. No price and no stock figure', publicKeepsakeSchema, textCacheControl, slugParams)
 const availabilityRoute = publicGet('/api/public/keepsakes/{slug}/availability', 'The price and the units of each combination for sale. The only public keepsake read with a price', publicKeepsakeAvailabilitySchema, availabilityCacheControl, slugParams)
+const pickupPointsRoute = publicGet('/api/public/keepsakes/{slug}/pickup-points', 'The active pickup points of the store that owns the keepsake, by the merchant\'s order. No store id, pin, position, archived flag or row version', publicPickupPointsSchema, textCacheControl, slugParams)
 
 // Anonymous: no guard sits on /api/public. An unpublished or archived keepsake is a 404.
 export function registerPublicKeepsakeRoutes(app: OpenAPIHono<AppEnv>, useCases: PublicKeepsakeUseCases): void {
@@ -71,5 +74,10 @@ export function registerPublicKeepsakeRoutes(app: OpenAPIHono<AppEnv>, useCases:
   app.openapi(availabilityRoute, async (c) => {
     const result = await useCases.getAvailability(c.req.valid('param').slug, c.req.valid('query').lang)
     return result.ok ? conditionalJson(c, result.value, availabilityCacheControl) : problem(c, failureProblem(result))
+  })
+
+  app.openapi(pickupPointsRoute, async (c) => {
+    const result = await useCases.getPickupPoints(c.req.valid('param').slug, c.req.valid('query').lang)
+    return result.ok ? conditionalJson(c, result.value, textCacheControl) : problem(c, failureProblem(result))
   })
 }

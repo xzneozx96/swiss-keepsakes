@@ -15,7 +15,7 @@ test('[E3.7][AC24] a referral link with a target answers 302 to it, with nothing
   const response = await request.get('/r/abc?to=%2Fen%2Fstories%2Fzytturm', { maxRedirects: 0 })
 
   expect(response.status()).toBe(302)
-  expect(response.headers().location).toBe('/en/stories/zytturm')
+  expect(response.headers().location).toBe('/en/stories/zytturm?via=partner')
   expect(response.headers()['x-robots-tag']).toBe('noindex')
   expect(response.headers()['cache-control']).toBe('private, no-store')
   expect(response.headers().vary).toBe('Cookie, Accept-Language')
@@ -42,7 +42,7 @@ for (const query of HOSTILE) {
     const response = await request.get(`/r/abc${query ? `?${query}` : ''}`, { maxRedirects: 0 })
 
     expect(response.status()).toBe(302)
-    expect(response.headers().location).toBe('/en')
+    expect(response.headers().location).toBe('/en?via=partner')
     expect(response.headers()['x-robots-tag']).toBe('noindex')
     expect(response.headers()['set-cookie']).toBeUndefined()
   })
@@ -65,8 +65,8 @@ test('[E3.7][AC24] a known code and an unknown code get the same answer', async 
 
   expect(known.status()).toBe(302)
   expect(unknown.status()).toBe(302)
-  expect(known.headers().location).toBe('/en/stories/zytturm')
-  expect(unknown.headers().location).toBe('/en/stories/zytturm')
+  expect(known.headers().location).toBe('/en/stories/zytturm?via=partner')
+  expect(unknown.headers().location).toBe('/en/stories/zytturm?via=partner')
   expect(known.headers()['x-robots-tag']).toBe('noindex')
   expect(unknown.headers()['x-robots-tag']).toBe('noindex')
 })

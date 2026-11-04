@@ -12,6 +12,7 @@ import { PhotoCluster, PhotoPin } from '@/components/map/pin-faces'
 import { PinLayer } from '@/components/map/pin-layer'
 import { useLocale } from '@/contexts/locale-context'
 import { mapQueries, useMapData } from '@/features/map/api/queries'
+import { useRankedPins } from '@/features/map/hooks/use-ranked-pins'
 import { categoryName, isHighlighted, keepHighlighted, pinCategoryNames, topLevelCategories } from '@/features/map/lib/categories'
 import { CARD_ROW_BOTTOM, CARD_ROW_HEIGHT, CONTROLS, MAP_BOTTOM_CLEAR } from '@/features/map/lib/layout'
 import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
@@ -65,7 +66,7 @@ function MapPills({ chosenCount, dataPending, hasPins, view, onFilter, onView }:
  * N02, option B "Cards" (docs/ux/pins-design.md): a flat aerial map between the top edge and the
  * guest tab bar, with a Categories button and a Map or List switch over it. A pin opens its card
  * in a row above the tab bar. Map, card row and list all come from one ranked list of pins (the
- * server's order until onboarding adds the visitor's answers, E4.5); the filter dims pins on the
+ * server's order, or the visitor's answers when onboarding has them, E4.5); the filter dims pins on the
  * map and never removes one, while the card row and the list hold only the chosen places. `place` is the slug of
  * `?place=<slug>`: its card opens once the places have loaded, and a slug the map does not hold shows a notice (AC90).
  * Show more on a card opens the details sheet of the open pin (N03, E4.7).
@@ -91,7 +92,8 @@ export function MapScreen({ place }: { place?: string }) {
   const status = data.isFailed
     ? 'failed' as const
     : data.isPending ? 'pins-loading' as const : data.pins.length === 0 ? 'empty' as const : undefined
-  const ranked = dataReady ? data.pins : NO_PINS
+  const rankedPins = useRankedPins(data.pins)
+  const ranked = dataReady ? rankedPins : NO_PINS
   const located = useMemo(() => ranked.map(pin => ({ ...pin, coordinates: [pin.longitude, pin.latitude] as [number, number] })), [ranked])
   const kept = keepHighlighted(ranked, chosen, data.categories)
   const litIds = new Set(kept.map(pin => pin.id))

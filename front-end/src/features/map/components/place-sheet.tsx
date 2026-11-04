@@ -9,8 +9,8 @@ import { ArrowUpRightIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, LinkIco
 import { InfoNote } from '@/components/info-note'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
-import { hoursOfWeek, zurichWeekday } from '@/features/map/lib/hours'
 import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
+import { hoursOfWeek, zurichWeekday } from '@/lib/hours'
 import { DirectionsLink } from './directions-link'
 import { PlacePhotos } from './place-photos'
 

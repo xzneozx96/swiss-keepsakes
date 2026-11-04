@@ -71,6 +71,8 @@ export interface GiftPageProps {
     icon: 'pickup' | 'pay'
     title: string
     body: string
+    /** The text is still being read: a skeleton line shows in its place. */
+    loading?: boolean
   }[]
   sheet: { title: string, closeLabel: string }
   variant: {
@@ -87,15 +89,26 @@ export interface GiftPageProps {
   /** "This is the date you request. The seller confirms before you pay." */
   note: string
   place: {
-    /** An empty address or hours line is not shown. */
-    options: { id: string, name: string, address: string, hours: string }[]
+    /** An empty address or hours line is not shown. `schedule` is the week in lines, `directions` the link to the map. */
+    options: {
+      id: string
+      name: string
+      address: string
+      hours: string
+      instructions?: string
+      schedule?: { days: string, value: string }[]
+      directions?: { href: string, label: string }
+    }[]
+    /** Said in the "Pickup places" fold-out when there are no options. */
+    emptyText?: string
+    /** The points are being read, or the read failed: the fold-out shows a skeleton or the error with a retry. */
+    state?: PickupReadState
   }
   sections: {
     aboutTitle: string
     placesTitle: string
-    /** "Pickup date" row: earliest date, or the chosen date and place. */
-    /** The "Pickup date" fold-out: its title and the button in it (owner 2026-11-02: no date line under the title). */
-    dateRow: { title: string, action: string }
+    /** The "Pickup date" fold-out: its title, the chosen date and place when there are some, and the button in it. */
+    dateRow: { title: string, value?: string, action: string }
     paymentTitle: string
     payment: string
     cancellationTitle: string
@@ -136,15 +149,20 @@ export interface GiftShopperProps {
     hint?: string
     onChange: (value: number) => void
   }
-  /** The guest's own pickup date and place, chosen in the sheet. Absent while pickup is chosen at checkout (E6.6). */
+  /**
+   * The guest's own pickup place and date, chosen in the sheet: the place first, the date once a place is chosen. The
+   * places come from `place.options`; while they are read, or when the read failed, `place.state` says so. Absent when
+   * the shop has no pickup points.
+   */
   pickup?: {
-    date: PickupDateFieldProps
     place: {
       label: string
       value: string | null
       onChange: (id: string) => void
       error?: string
+      state?: PickupReadState
     }
+    date?: PickupDateFieldProps
   }
   bar: {
     /** Set right after adding; the bar then also offers "View cart". */
@@ -158,6 +176,9 @@ export interface GiftShopperProps {
   backLabel: string
   onBack: () => void
 }
+
+/** The read of the pickup points that has not answered: loading, or failed with a retry. */
+type PickupReadState = 'loading' | { error: string, retryLabel: string, onRetry: () => void }
 
 export type GiftDetailProps = GiftPageProps & GiftShopperProps
 
@@ -274,7 +295,9 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
                 <Icon aria-hidden className="mt-0.5 shrink-0" size={26} />
                 <div className="flex flex-col gap-0.5">
                   <span className="font-semibold">{h.title}</span>
-                  <span className="text-sm text-muted">{h.body}</span>
+                  {h.loading
+                    ? <Skeleton aria-hidden className="h-4 w-48 rounded-lg" data-skeleton="pickup-line" />
+                    : <span className="text-sm text-muted">{h.body}</span>}
                 </div>
               </li>
             )
@@ -314,17 +337,38 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
             </Accordion.Heading>
             <Accordion.Panel>
               <Accordion.Body>
-                <ul className="flex flex-col gap-4">
-                  {place.options.map(p => (
-                    <li key={p.id} className="flex flex-col">
-                      <span className="font-semibold text-foreground">
-                        {p.name}
-                      </span>
-                      {p.address && <span className="text-sm">{p.address}</span>}
-                      {p.hours && <span className="text-sm">{p.hours}</span>}
-                    </li>
-                  ))}
-                </ul>
+                {place.state
+                  ? <PickupReadStatus state={place.state} />
+                  : place.options.length === 0 && place.emptyText
+                    ? <p className="text-sm">{place.emptyText}</p>
+                    : (
+                        <ul className="flex flex-col gap-4">
+                          {place.options.map(p => (
+                            <li key={p.id} className="flex flex-col">
+                              <span className="font-semibold text-foreground">
+                                {p.name}
+                              </span>
+                              {p.address && <span className="text-sm">{p.address}</span>}
+                              {p.schedule
+                                ? p.schedule.map(line => (
+                                    <span key={line.days} className="text-sm">{line.days} {line.value}</span>
+                                  ))
+                                : p.hours && <span className="text-sm">{p.hours}</span>}
+                              {p.instructions && <span className="text-sm text-muted">{p.instructions}</span>}
+                              {p.directions && (
+                                <a
+                                  className="mt-1 self-start rounded text-sm font-semibold underline underline-offset-4 outline-none focus-visible:focus-ring"
+                                  href={p.directions.href}
+                                  rel="noopener noreferrer"
+                                  target="_blank"
+                                >
+                                  {p.directions.label}
+                                </a>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
               </Accordion.Body>
             </Accordion.Panel>
           </Accordion.Item>
@@ -341,6 +385,7 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
               </Accordion.Heading>
               <Accordion.Panel>
                 <Accordion.Body className="flex flex-col items-start gap-3">
+                  {sections.dateRow.value && <p className="text-sm font-semibold">{sections.dateRow.value}</p>}
                   <p className="text-sm">{props.note}</p>
                   {shopper && sections.dateRow.action && (
                     <Button size="sm" variant="secondary" onPress={openSheet}>
@@ -530,31 +575,8 @@ function GiftSheet({
 
       {pickup && (
         <>
-          <PickupDateField {...pickup.date} />
-
-          {/* No "*": every sheet field is needed. Missing choices show an error on add. */}
-          <RadioGroup
-            id="gift-place"
-            isInvalid={pickup.place.error !== undefined}
-            value={pickup.place.value}
-            onChange={pickup.place.onChange}
-          >
-            <Label className="text-heading">{pickup.place.label}</Label>
-            {pickupPlaces.options.map(p => (
-              <Radio key={p.id} value={p.id}>
-                <Radio.Content>
-                  <Radio.Control>
-                    <Radio.Indicator />
-                  </Radio.Control>
-                  {p.name}
-                </Radio.Content>
-                <Description>
-                  {p.address} · {p.hours}
-                </Description>
-              </Radio>
-            ))}
-            <FieldError>{pickup.place.error}</FieldError>
-          </RadioGroup>
+          <PickupPlaces options={pickupPlaces.options} place={pickup.place} />
+          {pickup.date && <PickupDateField key={pickup.place.value} {...pickup.date} />}
         </>
       )}
 
@@ -567,6 +589,65 @@ function GiftSheet({
         {note}
       </p>
     </ChoiceSheet>
+  )
+}
+
+/** The pickup read that has not answered: a skeleton shaped like the place rows, or the error with a retry. */
+function PickupReadStatus({ state, id }: { state: PickupReadState, id?: string }) {
+  if (state === 'loading') {
+    return (
+      <div aria-hidden className="flex flex-col gap-3" data-skeleton="pickup">
+        <Skeleton className="h-5 w-28 rounded-lg" />
+        {[0, 1].map(i => (
+          <div key={i} className="flex items-center gap-3">
+            <Skeleton className="size-5 shrink-0 rounded-full" />
+            <div className="flex flex-col gap-1.5">
+              <Skeleton className="h-4 w-40 rounded-lg" />
+              <Skeleton className="h-3 w-56 rounded-lg" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col items-start gap-2" id={id} role="alert">
+      <span className="text-sm text-danger">{state.error}</span>
+      <Button size="sm" variant="secondary" onPress={state.onRetry}>{state.retryLabel}</Button>
+    </div>
+  )
+}
+
+/** The pickup place choice: the points of the store, a skeleton of them while they are read, or an error with a retry. */
+function PickupPlaces({ options, place }: { options: GiftPageProps['place']['options'], place: NonNullable<GiftShopperProps['pickup']>['place'] }) {
+  if (place.state)
+    return <PickupReadStatus id="gift-place" state={place.state} />
+
+  // No "*": every sheet field is needed. Missing choices show an error on add.
+  return (
+    <RadioGroup
+      id="gift-place"
+      isInvalid={place.error !== undefined}
+      value={place.value}
+      onChange={place.onChange}
+    >
+      <Label className="text-heading">{place.label}</Label>
+      {options.map(p => (
+        <Radio key={p.id} value={p.id}>
+          <Radio.Content>
+            <Radio.Control>
+              <Radio.Indicator />
+            </Radio.Control>
+            {p.name}
+          </Radio.Content>
+          <Description>
+            {[p.address, p.hours].filter(Boolean).join(' · ')}
+          </Description>
+        </Radio>
+      ))}
+      <FieldError>{place.error}</FieldError>
+    </RadioGroup>
   )
 }
 

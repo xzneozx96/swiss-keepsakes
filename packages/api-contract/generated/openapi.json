@@ -8632,6 +8632,88 @@
         ],
         "type": "object"
       },
+      "PublicPickupPoint": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "hours": {
+            "description": "The weekly spans, by weekday then opening time. Empty when the merchant gave none",
+            "items": {
+              "$ref": "#/components/schemas/PublicPickupSpan"
+            },
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "instructions": {
+            "description": "Hand-over instructions, null for none",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mapsUrl": {
+            "description": "The Google Maps link of the point, for directions",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "address",
+          "instructions",
+          "mapsUrl",
+          "hours"
+        ],
+        "type": "object"
+      },
+      "PublicPickupPoints": {
+        "additionalProperties": false,
+        "description": "The active pickup points of the store that owns a published keepsake",
+        "properties": {
+          "items": {
+            "description": "The active pickup points by the merchant's order. No store id, pin, position, archived flag or row version",
+            "items": {
+              "$ref": "#/components/schemas/PublicPickupPoint"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "PublicPickupSpan": {
+        "additionalProperties": false,
+        "properties": {
+          "closes": {
+            "description": "HH:MM, or 24:00. Before opens means the next morning: the span belongs to the day it starts",
+            "type": "string"
+          },
+          "opens": {
+            "description": "HH:MM",
+            "type": "string"
+          },
+          "weekday": {
+            "description": "1 (Monday) to 7 (Sunday)",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weekday",
+          "opens",
+          "closes"
+        ],
+        "type": "object"
+      },
       "PublicPin": {
         "description": "The pin card",
         "properties": {
@@ -18607,6 +18689,116 @@
             "headers": {
               "Cache-Control": {
                 "description": "`max-age=5`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "No such published keepsake",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/keepsakes/{slug}/pickup-points": {
+      "get": {
+        "parameters": [
+          {
+            "description": "The slug of either language",
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "description": "The slug of either language",
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The language asked for. A keepsake that has no version in it comes back in the other language, marked `fallback`",
+            "in": "query",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "The language asked for. A keepsake that has no version in it comes back in the other language, marked `fallback`",
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicPickupPoints"
+                }
+              }
+            },
+            "description": "The active pickup points of the store that owns the keepsake, by the merchant's order. No store id, pin, position, archived flag or row version",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "304": {
+            "description": "The If-None-Match tag still matches. No body",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
                 "schema": {
                   "type": "string"
                 }

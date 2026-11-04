@@ -52,6 +52,13 @@ beforeEach(() => {
 })
 
 describe('[E4.4][AC61] story page in the server HTML', () => {
+  it('[E4.5][AC91] has no deep-link card: it is client only', async () => {
+    const html = await serverHtml('/en/stories/lake-day', publicStory())
+
+    expect(html).not.toContain('Personalize my visit')
+    expect(html).not.toContain('<aside')
+  })
+
   it('[AC-1] has the whole text and markup, the cover, the title, the author and no price', async () => {
     const html = await serverHtml('/en/stories/lake-day', publicStory())
 

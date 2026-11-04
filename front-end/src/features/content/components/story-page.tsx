@@ -6,6 +6,7 @@ import { useRef } from 'react'
 
 import { BackButton, CartButton, CompactBar } from '@/components/layout/cart-button'
 import { useLocale } from '@/contexts/locale-context'
+import { OnboardingCard } from '@/features/onboarding/components/onboarding-card'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
 import { contentsOf } from '../lib/story-body'
 import { ArticleContents } from './article-contents'
@@ -47,6 +48,7 @@ export function StoryPage({ story, onBack }: { story: Story, onBack: () => void 
 
   return (
     <div className="flex flex-1 flex-col">
+      <OnboardingCard />
       <CompactBar
         leading={<BackButton label={t('detail.back')} onPress={onBack} />}
         title={story.title}

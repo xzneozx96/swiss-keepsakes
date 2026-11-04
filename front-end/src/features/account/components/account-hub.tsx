@@ -23,6 +23,7 @@ import {
   SectionRow,
   SettingsGroup,
 } from './settings-list'
+import { YourTripRow } from './your-trip-row'
 
 /**
  * Account hub (1.12s, after Instagram "Settings and activity" and Meta Accounts Center): who
@@ -102,6 +103,7 @@ export function AccountHub({
           section="notifications"
           title={t('account.section.notifications')}
         />
+        <YourTripRow />
       </SettingsGroup>
 
       <SettingsGroup id="hub-session">
