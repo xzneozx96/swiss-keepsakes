@@ -1,13 +1,7 @@
 import type { PublicCategory, PublicLanguage, PublicStoryCard } from '@sk/api-contract'
-import { createIsomorphicFn } from '@tanstack/react-start'
-import { serverApiOrigin } from '@/features/seo/api/api-origin'
+import { apiOrigin } from '@/features/catalog/api/api-origin'
 
 const TIMEOUT_MS = 5000
-
-// The server reads the API at its internal address; the browser reads it at the page's own origin (tanstack-start.md, rule 4).
-const apiOrigin = createIsomorphicFn()
-  .server(serverApiOrigin)
-  .client(() => window.location.origin)
 
 /**
  * The published stories in one language, newest first, as `GET /api/public/stories` sends them. Throws when the read
