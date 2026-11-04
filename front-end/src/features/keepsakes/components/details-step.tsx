@@ -5,7 +5,7 @@ import { Block } from '@/components/form-block'
 import { GiftIcon, PartnersIcon, PhotoAddIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { PhotosField } from '@/features/media/components/photos-field'
-import { CommissionField } from '@/features/merchant/products/components/gift-editor'
+import { CommissionField } from '@/features/merchant/products/components/commission-field'
 import { MAX_PHOTOS } from '../lib/keepsake-rules'
 import { BasicsFields } from './basics-fields'
 

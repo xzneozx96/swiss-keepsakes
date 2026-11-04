@@ -51,6 +51,7 @@ import {
   useTourFormatting,
 } from '@/features/tours/merchant/shared'
 import { useTourEditor } from '../hooks/use-tour-editor'
+import { CommissionCard } from './commission-field'
 import { NewDepartureSheet, SeatsSheet } from './departure-sheets'
 import { DetailsStep } from './details-step'
 import {
@@ -58,7 +59,6 @@ import {
   LocalizedField,
   useFocusFirstInvalid,
 } from './editor-parts'
-import { CommissionCard } from './gift-editor'
 import { PhotoField } from './photo-field'
 import { PracticalInfoStep } from './sections-editor'
 import { Group, NavRow, rowHairline } from './settings-rows'

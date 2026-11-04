@@ -1,16 +1,5 @@
 /** The values the product pages accept in their URLs, kept apart from the editor hooks so a route can validate them without loading the editors. */
 
-/** M12's steps (owner, revision 2), in order; the ids are the `step` search param. */
-export const GIFT_STEPS = [
-  'basics',
-  'options',
-  'pickup',
-  'payment',
-  'story',
-  'review',
-] as const
-export type GiftStep = (typeof GIFT_STEPS)[number]
-
 /** M13's steps (owner, revision 2), in order; the ids are the `step` search param. */
 export const TOUR_STEPS = [
   'basics',

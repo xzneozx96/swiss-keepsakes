@@ -55,7 +55,6 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'products.lang.incomplete': 'Text fehlt',
 
   'products.back': 'Produkte',
-  'products.kind.gift': 'Andenken',
   'products.kind.tour': 'Tour',
   'products.notFound.gift': 'Dieses Andenken gibt es im Shop nicht.',
   'products.notFound.tour': 'Diese Tour gibt es im Shop nicht.',
@@ -69,8 +68,6 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
 
   'products.visibility.title': 'Sichtbarkeit',
   'products.visibility.switch': 'Im Shop zeigen',
-  'products.visibility.on.gift':
-    'Gäste finden dieses Andenken in der Andenken-Liste, auf der Startseite und in Geschichten.',
   'products.visibility.off.gift':
     'Entwurf: nicht in der Andenken-Liste, auf der Startseite und in Geschichten.',
   'products.visibility.on.tour':
@@ -95,10 +92,8 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'products.text.other.en': 'Auf Englisch: {text}',
   'products.text.other.de': 'Auf Deutsch: {text}',
   'products.field.name': 'Name',
-  'products.field.story': 'Kurze Geschichte',
   'products.field.cancellation': 'Stornierungsbedingungen',
   'products.field.options': 'Namen der Varianten',
-  'products.field.option': 'Variante {n}',
   'products.field.summary': 'Kurzbeschreibung',
   'products.field.description': 'Beschreibung',
   'products.field.meetingPoint': 'Treffpunkt',
@@ -129,48 +124,11 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'products.missing.openingHours': 'Öffnungszeiten',
   'products.missing.instructions': 'Hinweise',
 
-  'products.stock.title': 'Varianten und Bestand',
-  'products.stock.intro':
-    'Am Lager ist, was Sie vorrätig haben. Angenommene Bestellungen reservieren ihre Stücke bis zur Abholung.',
   'products.stock.price': 'Preis',
-  'products.stock.onHand': 'Am Lager',
-  'products.stock.forSale': 'Im Verkauf',
-  'products.stock.held':
-    '{held} reserviert für angenommene Bestellungen · {available} verfügbar',
-  'products.stock.notForSale':
-    'Nicht im Verkauf: Gäste sehen diese Variante als nicht verfügbar.',
-  'products.stock.belowHeld':
-    'Angenommene Bestellungen reservieren {held}, weniger geht nicht.',
   'products.stock.priceError': 'Geben Sie einen Preis über CHF 0 ein.',
-  'products.engraving.title': 'Gravur',
-  'products.engraving.switch': 'Gravur anbieten',
-  'products.engraving.max': 'Maximale Zeichenzahl',
-  'products.engraving.help': 'Gäste sehen einen Zähler bis zu dieser Länge.',
-  'products.engraving.off':
-    'Gäste können dieses Andenken nicht gravieren lassen.',
-  'products.prep.title': 'Vorbereitung',
-  'products.prep.days': 'Vorbereitungstage',
-  'products.prep.mode': 'Tage zählen als',
-  'products.prep.working': 'Arbeitstage (Mo–Fr)',
-  'products.prep.workingHelp': 'Wochenenden zählen nicht, Feiertage schon.',
-  'products.prep.calendar': 'Kalendertage',
-  'products.prep.preview':
-    'Eine Anfrage von heute kann ab {date} abgeholt werden.',
-  'products.places.title': 'Abholorte',
-  'products.places.label': 'Gäste können dieses Andenken abholen bei',
-  'products.places.error': 'Wählen Sie mindestens eine Abholstelle.',
-  'products.places.edit': 'Abholstellen bearbeiten',
-  'products.payment.title': 'Zahlung',
-  'products.payment.kind': 'Zahlungsregel',
   'products.payment.full': 'Ganz bezahlen',
   'products.payment.deposit': 'Anzahlung, dann der Rest',
   'products.payment.later': 'Nach der Abholung bezahlen',
-  'products.payment.firstDue': 'Frist für die erste Zahlung (Stunden)',
-  'products.payment.firstDueHelp':
-    'Ab Ihrer Annahme gezählt. Hat der Gast bis dann nicht bezahlt, wird die Bestellung automatisch storniert.',
-  'products.payment.depositPercent': 'Anzahlung (%)',
-  'products.payment.balanceDays': 'Rest fällig (Tage nach Abholung)',
-  'products.payment.laterDays': 'Fällig (Tage nach Abholung)',
   'products.commission.title': 'Provisionssatz für Partner (%)',
   'products.commission.rate': 'Provisionssatz',
   'products.commission.help':
@@ -281,11 +239,9 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
     'Ein Entwurf lässt sich so speichern. Zum Veröffentlichen vervollständigen Sie den Text auf Englisch oder Deutsch.',
   'products.addGift': 'Andenken hinzufügen',
   'products.addTour': 'Tour hinzufügen',
-  'products.new.gift': 'Neues Andenken',
   'products.new.tour': 'Neue Tour',
   'products.visibility.off.tourNew':
     'Entwurf: Gäste sehen diese Tour erst, wenn Sie sie veröffentlichen.',
-  'products.category.label': 'Kategorie',
   'products.category.placeholder': 'Kategorie wählen',
   'products.category.error': 'Wählen Sie eine Kategorie.',
   'categories.title': 'Kategorien',
@@ -328,14 +284,8 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'categories.sheet.taken':
     'Eine Unterkategorie mit diesem Namen gibt es bereits.',
   'products.subcategory.label': 'Unterkategorie',
-  'products.subcategory.placeholder': 'Unterkategorie wählen',
-  'products.subcategory.error': 'Wählen Sie eine Unterkategorie.',
-  'products.subcategory.none': 'Dieser Shop hat noch keine Unterkategorien.',
-  'products.photo.titleGift': 'Foto und Kategorie',
   'products.photo.titleTour': 'Foto und Dauer',
   'products.photo.label': 'Hauptfoto',
-  'products.photo.help.gift':
-    'Erscheint in der Andenken-Liste, auf der Startseite und zuerst auf der Andenken-Seite.',
   'products.photo.help.tour':
     'Erscheint in der Tourliste und oben auf der Tourseite.',
   'products.photo.upload': 'Foto hochladen',
@@ -348,11 +298,8 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'products.photo.error.size':
     'Dieses Foto ist auch verkleinert zu gross. Wählen Sie ein kleineres.',
   'products.photo.error.read': 'Diese Datei liess sich nicht als Foto lesen.',
-  'products.stock.add': 'Variante hinzufügen',
   'products.stock.name.en': 'Name auf Englisch',
   'products.stock.name.de': 'Name auf Deutsch',
-  'products.stock.publishError':
-    'Zum Veröffentlichen muss mindestens eine Variante mit Preis im Verkauf sein.',
   'products.story.title': 'Die Geschichte dahinter',
   'products.story.help.gift':
     'Zum Veröffentlichen nötig, auf Englisch oder Deutsch. Gäste öffnen sie auf der Andenken-Seite über «Die Geschichte dahinter».',
@@ -393,8 +340,6 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'products.unpublish': 'Zurückziehen',
   'products.saveDraft': 'Entwurf speichern',
   'products.savedDraft': 'Entwurf gespeichert. Gäste sehen ihn noch nicht.',
-  'products.archivedNotice.gift':
-    'Dieses Andenken ist archiviert: Gäste sehen es nicht, und es lässt sich nicht veröffentlichen. Stellen Sie es als Entwurf wieder her, um es erneut zu veröffentlichen.',
   'products.archivedNotice.tour':
     'Diese Tour ist archiviert: Gäste sehen sie nicht, und sie lässt sich nicht veröffentlichen. Stellen Sie sie als Entwurf wieder her, um sie erneut zu veröffentlichen.',
   'products.step.basics': 'Grunddaten',
@@ -409,23 +354,14 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'products.step.policies': 'Bedingungen & Provision',
   'products.review.edit': '{step} bearbeiten',
   'products.review.none': 'Nicht festgelegt',
-  'products.review.option': '{price} · {stock} am Lager',
-  'products.review.notForSale': 'Nicht im Verkauf',
-  'products.review.engraving': 'Höchstzahl Zeichen: {max}',
-  'products.review.noEngraving': 'Keine Gravur',
   'products.review.storyIn': 'Geschrieben auf',
-  'products.review.storyPhoto': 'Erstes Foto',
   'products.review.emptyAny': 'In beiden Sprachen noch leer: {fields}.',
   'products.review.emptyIn':
     'Zum Veröffentlichen auf {language} ausfüllen: {fields}.',
   'products.review.refused':
     'Noch nicht veröffentlicht: Beheben Sie die rot markierten Schritte.',
-  'products.review.draft.gift':
-    'Entwurf: Gäste sehen dieses Andenken nicht. Veröffentlicht erscheint es in der Andenken-Liste, auf der Startseite und in Geschichten.',
   'products.review.draft.tour':
     'Entwurf: Gäste können diese Tour nicht buchen. Veröffentlicht erscheint sie in der Tourliste mit ihren Terminen.',
-  'products.review.archived.gift':
-    'Archiviert: Gäste sehen dieses Andenken nicht. Stellen Sie es als Entwurf wieder her, um es erneut zu veröffentlichen.',
   'products.review.archived.tour':
     'Archiviert: Gäste sehen diese Tour nicht. Stellen Sie sie als Entwurf wieder her, um sie erneut zu veröffentlichen.',
   ...itineraryDe,

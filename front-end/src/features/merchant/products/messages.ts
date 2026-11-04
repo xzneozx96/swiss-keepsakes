@@ -54,7 +54,6 @@ export const productsEn = {
   'products.lang.incomplete': 'Text missing',
 
   'products.back': 'Products',
-  'products.kind.gift': 'Keepsake',
   'products.kind.tour': 'Tour',
   'products.notFound.gift': 'This keepsake is not in the shop.',
   'products.notFound.tour': 'This tour is not in the shop.',
@@ -68,8 +67,6 @@ export const productsEn = {
 
   'products.visibility.title': 'Visibility',
   'products.visibility.switch': 'Show in the shop',
-  'products.visibility.on.gift':
-    'Guests find this keepsake in the keepsake list, on the home page and in stories.',
   'products.visibility.off.gift':
     'Draft: hidden from the keepsake list, the home page and stories.',
   'products.visibility.on.tour':
@@ -94,10 +91,8 @@ export const productsEn = {
   'products.text.other.en': 'In English: {text}',
   'products.text.other.de': 'In German: {text}',
   'products.field.name': 'Name',
-  'products.field.story': 'Short story',
   'products.field.cancellation': 'Cancellation policy',
   'products.field.options': 'Option names',
-  'products.field.option': 'Option {n}',
   'products.field.summary': 'Summary',
   'products.field.description': 'Description',
   'products.field.meetingPoint': 'Meeting point',
@@ -128,46 +123,11 @@ export const productsEn = {
   'products.missing.openingHours': 'opening hours',
   'products.missing.instructions': 'instructions',
 
-  'products.stock.title': 'Options and stock',
-  'products.stock.intro':
-    'In stock is what you have on hand. Accepted orders hold their units until pickup.',
   'products.stock.price': 'Price',
-  'products.stock.onHand': 'In stock',
-  'products.stock.forSale': 'For sale',
-  'products.stock.held':
-    '{held} held by accepted orders · {available} available',
-  'products.stock.notForSale':
-    'Not for sale: guests see this option as unavailable.',
-  'products.stock.belowHeld':
-    'Accepted orders hold {held}, so stock can’t be lower.',
   'products.stock.priceError': 'Enter a price above CHF 0.',
-  'products.engraving.title': 'Engraving',
-  'products.engraving.switch': 'Offer engraving',
-  'products.engraving.max': 'Maximum characters',
-  'products.engraving.help': 'Guests see a counter up to this length.',
-  'products.engraving.off': 'Guests can’t add engraving to this keepsake.',
-  'products.prep.title': 'Preparation',
-  'products.prep.days': 'Preparation days',
-  'products.prep.mode': 'Count days as',
-  'products.prep.working': 'Working days (Mon–Fri)',
-  'products.prep.workingHelp': 'Weekends are skipped, public holidays are not.',
-  'products.prep.calendar': 'Calendar days',
-  'products.prep.preview': 'A request made today can be picked up from {date}.',
-  'products.places.title': 'Pickup places',
-  'products.places.label': 'Guests can pick this keepsake up at',
-  'products.places.error': 'Choose at least one pickup point.',
-  'products.places.edit': 'Edit pickup points',
-  'products.payment.title': 'Payment',
-  'products.payment.kind': 'Payment policy',
   'products.payment.full': 'Pay in full',
   'products.payment.deposit': 'Deposit, then the rest',
   'products.payment.later': 'Pay after pickup',
-  'products.payment.firstDue': 'First payment deadline (hours)',
-  'products.payment.firstDueHelp':
-    'Counted from your acceptance. If the guest has not paid by then, the order is cancelled automatically.',
-  'products.payment.depositPercent': 'Deposit (%)',
-  'products.payment.balanceDays': 'Rest due (days after pickup)',
-  'products.payment.laterDays': 'Due (days after pickup)',
   'products.commission.title': 'Partner\'s commission rate (%)',
   'products.commission.rate': 'Commission rate',
   'products.commission.help':
@@ -279,11 +239,9 @@ export const productsEn = {
     'A draft can be saved as it is. To publish, complete the text in English or German.',
   'products.addGift': 'Add keepsake',
   'products.addTour': 'Add tour',
-  'products.new.gift': 'New keepsake',
   'products.new.tour': 'New tour',
   'products.visibility.off.tourNew':
     'Draft: guests don\'t see this tour until you publish it.',
-  'products.category.label': 'Category',
   'products.category.placeholder': 'Choose a category',
   'products.category.error': 'Choose a category.',
   'categories.title': 'Categories',
@@ -323,14 +281,8 @@ export const productsEn = {
   'categories.sheet.nameError': 'Enter a name in at least one language.',
   'categories.sheet.taken': 'A sub-category with this name already exists.',
   'products.subcategory.label': 'Sub-category',
-  'products.subcategory.placeholder': 'Choose a sub-category',
-  'products.subcategory.error': 'Choose a sub-category.',
-  'products.subcategory.none': 'This store has no sub-categories yet.',
-  'products.photo.titleGift': 'Photo and category',
   'products.photo.titleTour': 'Photo and duration',
   'products.photo.label': 'Main photo',
-  'products.photo.help.gift':
-    'Shown in the keepsake list, on the home page and first on the keepsake page.',
   'products.photo.help.tour':
     'Shown in the tour list and at the top of the tour page.',
   'products.photo.upload': 'Upload photo',
@@ -343,11 +295,8 @@ export const productsEn = {
   'products.photo.error.size':
     'This photo is too large even after resizing. Choose a smaller one.',
   'products.photo.error.read': 'This file could not be read as a photo.',
-  'products.stock.add': 'Add option',
   'products.stock.name.en': 'Name in English',
   'products.stock.name.de': 'Name in German',
-  'products.stock.publishError':
-    'To publish, at least one option must be for sale with a price.',
   'products.story.title': 'The story behind it',
   'products.story.help.gift':
     'Needed to publish, in English or German. Guests open it from \u201CThe story behind it\u201D on the keepsake page.',
@@ -388,8 +337,6 @@ export const productsEn = {
   'products.unpublish': 'Unpublish',
   'products.saveDraft': 'Save draft',
   'products.savedDraft': 'Draft saved. Guests don\'t see it yet.',
-  'products.archivedNotice.gift':
-    'This keepsake is archived: guests don\'t see it, and it can\'t be published. Restore it as a draft to publish it again.',
   'products.archivedNotice.tour':
     'This tour is archived: guests don\'t see it, and it can\'t be published. Restore it as a draft to publish it again.',
   'products.step.basics': 'Basics',
@@ -404,21 +351,12 @@ export const productsEn = {
   'products.step.policies': 'Policies & commission',
   'products.review.edit': 'Edit {step}',
   'products.review.none': 'Not set',
-  'products.review.option': '{price} · {stock} in stock',
-  'products.review.notForSale': 'Not for sale',
-  'products.review.engraving': 'Maximum characters: {max}',
-  'products.review.noEngraving': 'No engraving',
   'products.review.storyIn': 'Written in',
-  'products.review.storyPhoto': 'First photo',
   'products.review.emptyAny': 'Still empty in both languages: {fields}.',
   'products.review.emptyIn': 'To publish in {language}, fill in: {fields}.',
   'products.review.refused': 'Not published yet: fix the steps marked in red.',
-  'products.review.draft.gift':
-    'Draft: guests don\'t see this keepsake. Publishing shows it in the keepsake list, on the home page and in stories.',
   'products.review.draft.tour':
     'Draft: guests can\'t book this tour. Publishing shows it in the tour list with its departures.',
-  'products.review.archived.gift':
-    'Archived: guests don\'t see this keepsake. Restore it as a draft to publish it again.',
   'products.review.archived.tour':
     'Archived: guests don\'t see this tour. Restore it as a draft to publish it again.',
   ...itineraryEn,
