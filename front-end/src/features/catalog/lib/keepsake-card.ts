@@ -1,14 +1,14 @@
 import type { PublicKeepsakeCard, PublicKeepsakePhoto } from '@sk/api-contract'
 import type { ProductCardProps } from '../components/product-card'
 import type { MessageKey } from '@/i18n/en'
-import { photoCopy } from './photo-copy'
+import { pickVariant, widestVariant } from '@/lib/pick-variant'
 
 type Translate = (key: MessageKey) => string
 
 const CARD_PHOTO_WIDTH = 800
 
 /** A card shows the widest copy when none is as wide as it; the original only when there are no copies. */
-export const coverUrl = (cover: Pick<PublicKeepsakePhoto, 'url' | 'variants'>) => photoCopy(cover.variants, CARD_PHOTO_WIDTH) ?? cover.variants.reduce<{ width: number, url: string } | undefined>((widest, v) => !widest || v.width > widest.width ? v : widest, undefined)?.url ?? cover.url
+export const coverUrl = (cover: Pick<PublicKeepsakePhoto, 'url' | 'variants'>) => (pickVariant(cover.variants, CARD_PHOTO_WIDTH) ?? widestVariant(cover.variants))?.url ?? cover.url
 
 /** A card of the public list: photo, name, sold-out state and language note. No price and no pickup line (AC54). */
 export function toKeepsakeCard(item: PublicKeepsakeCard, t: Translate): ProductCardProps {

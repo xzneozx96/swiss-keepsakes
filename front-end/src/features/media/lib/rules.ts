@@ -3,6 +3,7 @@ import type { MediaKind } from '@sk/domain/content'
 import type { MessageKey } from '@/i18n/en'
 
 import { checkUploadRequest, MEDIA_RULES, mediaRuleFor } from '@sk/domain/content'
+import { pickVariant, widestVariant } from '@/lib/pick-variant'
 
 type Translate = (key: MessageKey, vars?: Record<string, string | number>) => string
 
@@ -92,7 +93,5 @@ export const EDITOR_PATH: Record<MediaUse['pageKind'], (id: string) => string> =
 
 /** The smallest picture the file has, for a thumbnail; the original when it has no variants. */
 export function thumbOf(item: Pick<MediaItem, 'variants' | 'publicUrl'>, width = 320): string | null {
-  const fit = item.variants.find(variant => variant.width >= width) ?? item.variants.at(-1)
-
-  return fit?.url ?? item.publicUrl
+  return (pickVariant(item.variants, width) ?? widestVariant(item.variants))?.url ?? item.publicUrl
 }

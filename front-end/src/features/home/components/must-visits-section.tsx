@@ -8,10 +8,10 @@ import { ErrorNotice } from '@/components/error-notice'
 import { ChevronRightIcon, FilterIcon, StoryIcon } from '@/components/icons'
 import { MapThumb } from '@/components/map/map-thumb'
 import { useLocale } from '@/contexts/locale-context'
-import { photoCopy } from '@/features/catalog/lib/photo-copy'
 import { useOnboardingAnswers } from '@/features/content/hooks/use-onboarding-answers'
 import { Rail } from '@/features/discovery/components/section'
 import { openOnboarding } from '@/features/onboarding/lib/opener'
+import { pickVariant, widestVariant } from '@/lib/pick-variant'
 import { mustVisitOrder, mustVisitsOf } from '../lib/must-visits'
 import { SectionHeading } from './section-heading'
 
@@ -45,7 +45,7 @@ function SortPill({ stay, interests }: { stay: string | null | undefined, intere
 /** A postcard: the photo fills the 300 px card at 4:5, the name and the tip sit on a soft dark gradient, the story is a pill on the photo. */
 function Postcard({ pin }: { pin: PublicMapItem }) {
   const { t, language } = useLocale()
-  const photo = photoCopy(pin.photoVariants, POSTCARD_PHOTO_WIDTH) ?? pin.photoVariants.at(-1)?.url ?? pin.photoUrl ?? undefined
+  const photo = (pickVariant(pin.photoVariants, POSTCARD_PHOTO_WIDTH) ?? widestVariant(pin.photoVariants))?.url ?? pin.photoUrl ?? undefined
   const other = pin.language === language ? undefined : pin.language
 
   return (
