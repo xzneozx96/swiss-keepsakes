@@ -182,9 +182,6 @@ export function PickupPoints({ places, label, resetKey, isLoading, ...handlers }
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-pretty text-muted">
-        {t('products.place.intro')}
-      </p>
       <DataTable
         cardSkeleton={<CardSkeletons />}
         cards={pageRows => <PickupCards label={label} places={pageRows} {...handlers} />}

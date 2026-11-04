@@ -268,8 +268,6 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'pickup.reload': 'Neu laden',
   'products.place.noHours': 'Keine Öffnungszeiten angegeben',
 
-  'products.place.intro':
-    'Gäste sehen diese Angaben auf der Andenken-Seite, beim Bestellen, in ihren Bestellungen und in E-Mails.',
   'products.place.edit': 'Abholstelle bearbeiten',
   'products.place.open': '{name} bearbeiten',
   'products.place.save': 'Abholstelle speichern',

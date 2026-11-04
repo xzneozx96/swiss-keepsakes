@@ -265,8 +265,6 @@ export const productsEn = {
   'pickup.reload': 'Reload',
   'products.place.noHours': 'No opening hours set',
 
-  'products.place.intro':
-    'Guests see these on the keepsake page, at checkout, in their orders and in emails.',
   'products.place.edit': 'Edit pickup point',
   'products.place.open': 'Edit {name}',
   'products.place.save': 'Save pickup point',
