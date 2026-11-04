@@ -1,69 +1,27 @@
-import {
-  createFileRoute,
-  notFound,
-  redirect,
-  useCanGoBack,
-  useNavigate,
-  useRouter,
-} from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
-import { ArticleSkeleton } from '@/components/layout/guest-skeletons'
-import { ArticlePage } from '@/features/content/components/article-page'
-import { storyLanguages } from '@/features/content/lib/story-versions'
-import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
-import { isLanguage, pageVersionRule } from '@/lib/language-routing'
+import { StoryPage } from '@/features/content/components/story-page'
+import { StorySkeleton } from '@/features/content/components/story-skeleton'
+import { readStoryPage } from '@/features/content/lib/read-story'
+import { storyHead } from '@/features/content/lib/story-head'
+import { useBack } from '@/hooks/use-back'
 
-// C20 Article.
+// C20 Story. The server reads the published story from the API and renders the whole text; a slug with no published version is a 404.
 export const Route = createFileRoute('/_guest/$lang/stories/$slug')({
   ssr: true,
-  // The comment bar is sticky in the screen's own flow, so the shell reserves no tab-bar space.
   staticData: { hideTabBar: true, ownsBottomSpace: true },
-  // A story may exist in one language only. The address in the other language goes to the one that exists. The server reads the seed, the browser reads the saved demo store. A slug with no published version is a 404 on the server only: in the browser it shows the page's own not-found state.
-  loader: ({ params, location }) => {
-    const { lang, slug } = params
-    if (!isLanguage(lang))
-      throw notFound()
-
-    const availableLanguages = storyLanguages(slug)
-    const rule = pageVersionRule(availableLanguages, lang)
-
-    if (rule.kind === 'redirect')
-      throw redirect({ to: '/$lang/stories/$slug', params: { lang: rule.language, slug }, search: location.search, hash: location.hash, statusCode: 302 })
-    if (rule.kind === 'missing' && typeof window === 'undefined')
-      throw notFound()
-
-    return { availableLanguages }
-  },
-  component: ArticleRoute,
+  loader: ({ params }) => readStoryPage(params.lang, params.slug),
+  head: ({ loaderData }) => (loaderData ? storyHead(loaderData.story) : {}),
+  pendingComponent: StorySkeleton,
+  component: StoryRoute,
 })
 
-function ArticleRoute() {
-  const { lang: language, slug } = Route.useParams()
-  const { availableLanguages } = Route.useLoaderData()
-  const isLoading = useSimulatedLoading()
-  const router = useRouter()
+function StoryRoute() {
+  const { story } = Route.useLoaderData()
+  const { lang } = Route.useParams()
   const navigate = useNavigate()
-  const canGoBack = useCanGoBack()
+  const back = useBack(() => void navigate({ to: '/$lang/stories', params: { lang }, replace: true }))
 
-  // A hard load is server-rendered from the seed, and the browser copies the server's loader data without running the loader. If the saved store knows other languages for this story, run the loader again here: its redirect (ADR-002 step 6) and the notice's data then follow the store. Once the data matches the store this does nothing, so it cannot loop.
-  useEffect(() => {
-    const known = storyLanguages(slug)
-
-    if (known.length !== availableLanguages.length || known.some(l => !availableLanguages.includes(l)))
-      void router.invalidate()
-  }, [slug, availableLanguages, router])
-
-  if (isLoading)
-    return <ArticleSkeleton />
-
-  // Keyed by slug so moving between stories starts at the top with a closed sheet.
-  return (
-    <ArticlePage
-      key={slug}
-      slug={slug}
-      onBack={() =>
-        canGoBack ? router.history.back() : void navigate({ to: '/$lang/stories', params: { lang: language } })}
-    />
-  )
+  // Keyed by id so moving between stories starts at the top.
+  return <StoryPage key={story.id} story={story} onBack={back} />
 }

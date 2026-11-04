@@ -34,6 +34,10 @@ if (!window.matchMedia) {
   })) as unknown as typeof window.matchMedia
 }
 
+// jsdom implements neither HTMLMediaElement.play nor pause (play returns undefined). The background music timer calls play().then.
+window.HTMLMediaElement.prototype.play = () => Promise.resolve()
+window.HTMLMediaElement.prototype.pause = () => {}
+
 // jsdom does not implement the Web Animations API (Element.getAnimations).
 if (!Element.prototype.getAnimations) {
   Element.prototype.getAnimations = () => []

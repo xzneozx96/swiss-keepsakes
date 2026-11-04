@@ -8021,6 +8021,42 @@
         ],
         "type": "object"
       },
+      "PublicCover": {
+        "description": "The cover of a story, with its public addresses",
+        "properties": {
+          "url": {
+            "description": "The original file",
+            "type": "string"
+          },
+          "variants": {
+            "description": "The webp copies, smallest first; empty when the width is not known",
+            "items": {
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "width": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "width",
+                "url"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "url",
+          "variants"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
+      },
       "PublicKeepsake": {
         "properties": {
           "availableLanguages": {
@@ -8941,6 +8977,42 @@
             },
             "type": "array"
           },
+          "cover": {
+            "description": "The cover as addresses; null when the story has no ready cover",
+            "properties": {
+              "url": {
+                "description": "The original file",
+                "type": "string"
+              },
+              "variants": {
+                "description": "The webp copies, smallest first; empty when the width is not known",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "url",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
           "coverKey": {
             "type": [
               "string",
@@ -8964,8 +9036,42 @@
             },
             "type": "array"
           },
+          "keepsakes": {
+            "description": "The keepsakes the story links, in the editor order",
+            "items": {
+              "$ref": "#/components/schemas/PublicStoryKeepsake"
+            },
+            "type": "array"
+          },
           "language": {
             "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "places": {
+            "description": "The visible pins the story tags, in the editor order; a hidden, expired or unpublished pin is left out",
+            "items": {
+              "properties": {
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "slug": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "slug",
+                "name"
+              ],
+              "type": "object"
+            },
+            "type": "array"
           },
           "publishedAt": {
             "format": "date-time",
@@ -8974,6 +9080,14 @@
           "readMinutes": {
             "minimum": 1,
             "type": "integer"
+          },
+          "related": {
+            "description": "Up to three published related stories, in the editor order",
+            "items": {
+              "$ref": "#/components/schemas/PublicStoryCard"
+            },
+            "maxItems": 3,
+            "type": "array"
           },
           "requestedLanguage": {
             "$ref": "#/components/schemas/PublicLanguage"
@@ -8991,6 +9105,25 @@
           },
           "title": {
             "type": "string"
+          },
+          "versions": {
+            "description": "Every published version of the story, the one carried included, for the language switcher and hreflang",
+            "items": {
+              "properties": {
+                "language": {
+                  "$ref": "#/components/schemas/PublicLanguage"
+                },
+                "slug": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "language",
+                "slug"
+              ],
+              "type": "object"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -9000,6 +9133,7 @@
           "excerpt",
           "readMinutes",
           "coverKey",
+          "cover",
           "stayTag",
           "interests",
           "categories",
@@ -9009,7 +9143,11 @@
           "fallback",
           "availableLanguages",
           "authorName",
-          "body"
+          "body",
+          "versions",
+          "places",
+          "related",
+          "keepsakes"
         ],
         "type": "object"
       },
@@ -11828,10 +11966,36 @@
                             "string",
                             "null"
                           ]
+                        },
+                        "url": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "variants": {
+                          "items": {
+                            "properties": {
+                              "url": {
+                                "type": "string"
+                              },
+                              "width": {
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "width",
+                              "url"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
                         }
                       },
                       "required": [
                         "key",
+                        "url",
+                        "variants",
                         "alt",
                         "caption"
                       ],
@@ -11903,10 +12067,17 @@
                         },
                         "title": {
                           "type": "string"
+                        },
+                        "url": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
                         }
                       },
                       "required": [
                         "key",
+                        "url",
                         "title",
                         "caption"
                       ],
@@ -11976,6 +12147,42 @@
             },
             "type": "array"
           },
+          "cover": {
+            "description": "The cover as addresses; null when the story has no ready cover",
+            "properties": {
+              "url": {
+                "description": "The original file",
+                "type": "string"
+              },
+              "variants": {
+                "description": "The webp copies, smallest first; empty when the width is not known",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "url",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
           "coverKey": {
             "type": [
               "string",
@@ -12035,6 +12242,7 @@
           "excerpt",
           "readMinutes",
           "coverKey",
+          "cover",
           "stayTag",
           "interests",
           "categories",
@@ -12043,6 +12251,35 @@
           "requestedLanguage",
           "fallback",
           "availableLanguages"
+        ],
+        "type": "object"
+      },
+      "PublicStoryKeepsake": {
+        "description": "A keepsake card on a story: no price. A sold-out keepsake stays in the list; an unpublished or archived one is absent",
+        "properties": {
+          "cover": {
+            "$ref": "#/components/schemas/PublicCover"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "soldOut": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "cover",
+          "soldOut"
         ],
         "type": "object"
       },

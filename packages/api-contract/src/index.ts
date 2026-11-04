@@ -221,6 +221,7 @@ export {
   publicStoryBodySchema,
   publicStoryCardSchema,
   type PublicStoryList,
+  publicStoryKeepsakeSchema,
   publicStoryListSchema,
   publicStorySchema,
   type PublicTour,

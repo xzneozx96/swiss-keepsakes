@@ -29,7 +29,7 @@ import { registerContentRoutes } from './modules/content/adapters/routes.ts'
 import { createS3Storage, createUnconfiguredStorage } from './modules/content/adapters/s3-storage.ts'
 import { createStoryRepository } from './modules/content/adapters/story-repository.ts'
 import { createTourRepository } from './modules/content/adapters/tour-repository.ts'
-import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryGroup, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeFailMedia, makeFindAddressAt, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetStoryGroup, makeGetStoryLinks, makeGetStoryVersionText, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListStoryGroups, makeListTours, makeLookupMediaByHash, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makePurgeOldVersions, makeReadMapsPosition, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeResolveMapsLink, makeRetireLibraryMedia, makeRetireMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
+import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryGroup, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeFailMedia, makeFindAddressAt, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetStoryGroup, makeGetStoryLinks, makeGetStoryVersionText, makeGetTour, makeHidePin, makeKeepsakeCards, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListStoryGroups, makeListTours, makeLookupMediaByHash, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makePurgeOldVersions, makeReadMapsPosition, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeResolveMapsLink, makeRetireLibraryMedia, makeRetireMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
 import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
@@ -242,24 +242,6 @@ async function main() {
       findAddressAt: makeFindAddressAt({ register: createAddressRegister() }),
       retireLibraryMedia: makeRetireLibraryMedia({ ...libraryDeps, media: createMediaRepository(), jobs: createJobQueue(jobs.boss), audit, clock: systemClock, graceHours: config.MEDIA_GRACE_HOURS }),
     })
-    // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
-    const contentUseCases = {
-      ...writeUseCases,
-      requestUpload: makeRequestUpload({ storage, clock: systemClock, newId: () => crypto.randomUUID() }),
-      // They touch storage, so guardUseCases does not wrap them: the media routes map a StorageUnavailableError.
-      confirmUpload: makeConfirmUpload({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, newId: () => crypto.randomUUID() }),
-      getMedia: makeGetMedia({ uow, media: createMediaRepository() }),
-      lookupMediaByHash: makeLookupMediaByHash({ uow, media: createMediaRepository() }),
-      replaceMedia: makeReplaceMedia({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, graceHours: config.MEDIA_GRACE_HOURS }),
-      publicUrl: storage.publicUrl,
-      listStories: makeListStories(readDeps),
-      getStory: makeGetStory(readDeps),
-      getPin: makeGetPin(readDeps),
-      listTours: makeListTours(readDeps),
-      getTour: makeGetTour(readDeps),
-      listCategories: makeListCategories(readDeps),
-      getMap: makeGetMap(readDeps),
-    }
     const contentMedia = createMediaRepository()
     // The catalog gets its stock through three functions of the inventory module (ADR-013): a new SKU's row in the write's
     // transaction, the units open orders hold, and the on hand and reserved figures.
@@ -324,6 +306,28 @@ async function main() {
       getKeepsake: makeGetKeepsake(publicKeepsakeDeps),
       getAvailability: makeGetAvailability(publicKeepsakeDeps),
       getPickupPoints: makeGetPickupPoints(publicKeepsakeDeps),
+    }
+    // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
+    const contentUseCases = {
+      ...writeUseCases,
+      requestUpload: makeRequestUpload({ storage, clock: systemClock, newId: () => crypto.randomUUID() }),
+      // They touch storage, so guardUseCases does not wrap them: the media routes map a StorageUnavailableError.
+      confirmUpload: makeConfirmUpload({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, newId: () => crypto.randomUUID() }),
+      getMedia: makeGetMedia({ uow, media: createMediaRepository() }),
+      lookupMediaByHash: makeLookupMediaByHash({ uow, media: createMediaRepository() }),
+      replaceMedia: makeReplaceMedia({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, graceHours: config.MEDIA_GRACE_HOURS }),
+      publicUrl: storage.publicUrl,
+      listStories: makeListStories(readDeps),
+      // The keepsake cards come from the catalog's public list, by id.
+      getStory: makeGetStory({
+        ...readDeps,
+        keepsakeCards: makeKeepsakeCards(language => publicKeepsakeUseCases.listKeepsakes(language)),
+      }),
+      getPin: makeGetPin(readDeps),
+      listTours: makeListTours(readDeps),
+      getTour: makeGetTour(readDeps),
+      listCategories: makeListCategories(readDeps),
+      getMap: makeGetMap(readDeps),
     }
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),
