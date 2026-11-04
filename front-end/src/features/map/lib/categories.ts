@@ -1,4 +1,6 @@
-import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
+import type { CategoryIcon, PublicCategory, PublicMapItem } from '@sk/api-contract'
+
+import { placeIcon } from '@sk/domain/content'
 
 type Language = 'en' | 'de'
 
@@ -78,4 +80,9 @@ export function isLit(pin: PublicMapItem, filter: MapPinFilter, categories: read
 
 export function keepFiltered(pins: readonly PublicMapItem[], filter: MapPinFilter, categories: readonly PublicCategory[]) {
   return pins.filter(pin => isLit(pin, filter, categories))
+}
+
+/** The icon a pin draws where it has no photo: its first category with an icon (a sub-category takes its parent's), or null for the plain pin. */
+export function pinIcon(pin: PublicMapItem, categories: readonly PublicCategory[]): CategoryIcon | null {
+  return placeIcon(pin.categoryIds, categories)
 }

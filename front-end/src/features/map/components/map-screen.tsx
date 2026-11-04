@@ -14,7 +14,7 @@ import { PhotoCluster, PhotoPin } from '@/components/map/pin-faces'
 import { PinLayer } from '@/components/map/pin-layer'
 import { useLocale } from '@/contexts/locale-context'
 import { mapQueries, useMapData } from '@/features/map/api/queries'
-import { categoryName, isLit, keepFiltered, pinCategoryNames } from '@/features/map/lib/categories'
+import { categoryName, isLit, keepFiltered, pinCategoryNames, pinIcon } from '@/features/map/lib/categories'
 import { CARD_ROW_BOTTOM, CARD_ROW_HEIGHT, CONTROLS, MAP_BOTTOM_CLEAR } from '@/features/map/lib/layout'
 import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
 import { filterAddress, resolveMapFilter } from '@/features/map/lib/search-params'
@@ -258,12 +258,12 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
           followSelected
           dimmedIds={dimmedIds}
           pins={located}
-          renderCluster={(members, zoomIn) => <PhotoCluster count={members.length} dimmed={members.every(member => dimmedIds.has(member.id))} onPress={zoomIn} />}
+          renderCluster={(members, zoomIn) => <PhotoCluster count={members.length} icons={members.slice(0, 2).map(member => pinIcon(member, data.categories))} dimmed={members.every(member => dimmedIds.has(member.id))} onPress={zoomIn} />}
           renderPin={(pin, state) => {
             const date = pin.nextDate ? nextDateLine(pin.nextDate, today, intlLocale, dateCopy) : undefined
             const label = [pin.title, date && `${t('map.pin.event')}, ${date}`, state.dimmed && t('map.pin.dimmed')].filter(Boolean).join(', ')
 
-            return <PhotoPin dimmed={state.dimmed} emphasized={isFiltered && !state.dimmed} id={pin.id} label={label} photoSrc={pin.photoUrl ?? undefined} title={pin.title} selected={state.selected} onPress={state.select} />
+            return <PhotoPin dimmed={state.dimmed} emphasized={isFiltered && !state.dimmed} id={pin.id} label={label} icon={pinIcon(pin, data.categories)} photoSrc={pin.photoUrl ?? undefined} title={pin.title} selected={state.selected} onPress={state.select} />
           }}
           selectedId={openId}
           onSelect={openFromPin}
@@ -275,6 +275,7 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
               // Only the open card has read its pin: the others open the position. The card shows no tip (owner 2026-11-03), so it never changes size when the read arrives.
               ...(pin.id === openId && detail.data ? { mapsLink: detail.data.mapsLink } : {}),
             })}
+            iconOf={pin => pinIcon(pin, data.categories)}
             photoOf={pin => pin.photoUrl ?? undefined}
             pins={kept}
             selectedId={openId}
