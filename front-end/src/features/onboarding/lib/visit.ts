@@ -73,8 +73,9 @@ export function captureEntry({ pathname, search, referrer, siteHost }: { pathnam
 
   const onHome = isHomePath(pathname)
   const source = referrerClassOf({ referrer, search, siteHost })
+  const viaPartnerLink = new URLSearchParams(search).get('via') === 'partner'
 
-  save({ entry: onHome && source !== 'search' && source !== 'partner' ? 'home' : 'other', cardHidden: false })
+  save({ entry: onHome && !viaPartnerLink && source !== 'search' && source !== 'partner' ? 'home' : 'other', cardHidden: false })
 }
 
 /** The deep-link card was closed: it stays hidden for this visit. This is not a skip. */

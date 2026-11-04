@@ -1,4 +1,4 @@
-import { useLocation } from '@tanstack/react-router'
+import { useLocation, useRouter } from '@tanstack/react-router'
 import { lazy, Suspense, useEffect, useEffectEvent, useState, useSyncExternalStore } from 'react'
 
 import { useOnboardingAudience } from '../hooks/use-onboarding-audience'
@@ -23,6 +23,8 @@ const RETURN_SELECTOR = '[data-onboarding-return]'
 export function OnboardingHost() {
   const pathname = useLocation({ select: l => l.pathname })
   const searchStr = useLocation({ select: l => l.searchStr })
+  const hash = useLocation({ select: l => l.hash })
+  const router = useRouter()
   const audience = useOnboardingAudience()
   const record = useSyncExternalStore(subscribe, getRecord, getServerRecord)
   const request = useOnboardingRequest()
@@ -40,6 +42,15 @@ export function OnboardingHost() {
   const capture = useEffectEvent(() => {
     captureEntry({ pathname, search: searchStr, referrer: document.referrer, siteHost: window.location.host })
     markVisitCaptured()
+    // The partner redirect marker has been read into the visit; the address goes back to the clean one (replace, no new history entry).
+    const params = new URLSearchParams(searchStr)
+
+    if (params.get('via') === 'partner') {
+      params.delete('via')
+      const rest = params.toString()
+
+      router.history.replace(`${pathname}${rest ? `?${rest}` : ''}${hash ? '#'.concat(hash) : ''}`)
+    }
   })
 
   useEffect(() => {

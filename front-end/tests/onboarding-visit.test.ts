@@ -23,6 +23,7 @@ describe('[E4.5][AC91] the entry of a visit', () => {
     ['the home from a social link', '/en', '', 'https://instagram.com/x', 'home'],
     ['the home from a search result', '/en', '', 'https://www.google.com/', 'other'],
     ['the home with a partner tag', '/en', '?utm_medium=partner', '', 'other'],
+    ['the home with the partner redirect marker', '/en', '?via=partner', '', 'other'],
     ['the home with a partner source tag', '/de', '?utm_source=partner', '', 'other'],
     ['a story', '/en/stories/lucerne', '', '', 'other'],
     ['a keepsake', '/en/gifts/mug', '', '', 'other'],

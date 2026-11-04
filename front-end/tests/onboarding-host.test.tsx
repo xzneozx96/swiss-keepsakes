@@ -82,6 +82,28 @@ describe('[E4.5][AC24][AC91] entry matrix', () => {
     expect(await screen.findByRole('dialog')).toBeInTheDocument()
   })
 
+  it('[E4.5][AC24][AC91] a partner redirect to the home shows no flow, the marker leaves the address, and Explore opens it later', async () => {
+    freshBrowser()
+    const { router } = await renderApp('/en?via=partner')
+
+    await settle()
+    expect(flow()).toBeNull()
+    expect(router.state.location.href).toBe('/en')
+    expect(JSON.parse(sessionStorage.getItem('sk.visit') ?? '{}').entry).toBe('other')
+    await act(() => router.navigate({ to: '/$lang/stories', params: { lang: 'en' } }))
+    await act(() => router.navigate({ to: '/$lang', params: { lang: 'en' } }))
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('[E4.5][AC24] the marker is dropped from a story address and keeps other query parts', async () => {
+    freshBrowser()
+    const { router } = await renderApp('/en/stories/chapel-bridge?a=1&via=partner#top')
+
+    await settle()
+    expect(router.state.location.href).toBe('/en/stories/chapel-bridge?a=1#top')
+  })
+
   it('[E4.5][AC24] a partner landing on the home waits for an in-app navigation, then opens at the next Explore opening', async () => {
     const { router } = await renderApp('/en?utm_medium=partner')
 
