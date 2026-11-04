@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { captureEntry, getVisit, hideCard, resetVisitForTests } from '@/features/onboarding/lib/visit'
+import { captureEntry, getVisit, hideCard, resetVisitForTests, subscribeVisit } from '@/features/onboarding/lib/visit'
 
 const SITE = 'swisskeepsakes.ch'
 function capture(over: Partial<Parameters<typeof captureEntry>[0]> = {}) {
@@ -92,5 +92,21 @@ describe('[E4.5][AC37] blocked sessionStorage', () => {
     capture({ pathname: '/en' })
 
     expect(getVisit()).toEqual({ entry: 'home', cardHidden: false })
+  })
+})
+
+describe('[E4.5][AC91] the visit store notifies', () => {
+  it('tells a listener when the visit is captured and when the card is hidden, and stops after unsubscribe', () => {
+    const listener = vi.fn()
+    const unsubscribe = subscribeVisit(listener)
+
+    capture({ pathname: '/en/stories/lucerne' })
+    expect(listener).toHaveBeenCalledTimes(1)
+    hideCard()
+    expect(listener).toHaveBeenCalledTimes(2)
+    unsubscribe()
+    resetVisitForTests()
+    capture()
+    expect(listener).toHaveBeenCalledTimes(2)
   })
 })

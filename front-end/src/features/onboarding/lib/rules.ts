@@ -1,6 +1,7 @@
 import type { OnboardingRecord } from './record'
 import type { Visit } from './visit'
 
+import { isLanguage } from '@/lib/language-routing'
 import { isPrivatePath } from '@/lib/private-routes'
 import { isUnanswered } from './answers-store'
 import { isHomePath } from './visit'
@@ -43,4 +44,26 @@ export function flowTrigger({ record, visit, audience, pathname, isExplore }: {
     return 'wait'
 
   return visit.entry === 'home' || isExplore ? 'open' : 'wait'
+}
+
+/** A story page: `/{lang}/stories/{slug}`, with or without a trailing slash. Not the list, not a tour, not a keepsake. */
+function isStoryPath(pathname: string): boolean {
+  const segments = pathname.split('/').filter(Boolean)
+
+  return segments.length === 3 && isLanguage(segments[0]) && segments[1] === 'stories'
+}
+
+/**
+ * Whether the deep-link card (N24) may show (AC91, AC92, design 3). Only a known guest with no answers who has not skipped,
+ * whose visit began on a deep link, a partner link or a search result (`entry` is `other`), who has not hidden it in this
+ * visit, on a story page. The 10 seconds are the card's own timer.
+ */
+export function showsCard({ record, visit, audience, pathname }: {
+  record: OnboardingRecord
+  visit: Visit | null
+  audience: OnboardingAudience
+  pathname: string
+}): boolean {
+  return visit !== null && visit.entry === 'other' && !visit.cardHidden
+    && isUnanswered(record) && canShowOnboarding({ pathname, audience }) && isStoryPath(pathname)
 }

@@ -2,7 +2,7 @@ import type { OnboardingRecord } from '@/features/onboarding/lib/record'
 import type { Visit } from '@/features/onboarding/lib/visit'
 import { describe, expect, it } from 'vitest'
 import { EMPTY_RECORD } from '@/features/onboarding/lib/record'
-import { canShowOnboarding, flowTrigger } from '@/features/onboarding/lib/rules'
+import { canShowOnboarding, flowTrigger, showsCard } from '@/features/onboarding/lib/rules'
 
 type Audience = 'guest' | 'staff' | 'unknown'
 
@@ -73,5 +73,50 @@ describe('[E4.5][AC91] flowTrigger: when the flow opens by itself', () => {
 
   it('hiding the card does not stop the flow at the next Explore opening', () => {
     expect(trigger({ visit: { entry: 'other', cardHidden: true }, isExplore: true })).toBe('open')
+  })
+})
+
+function card(over: Partial<{ record: OnboardingRecord, visit: Visit | null, audience: Audience, pathname: string }> = {}) {
+  return showsCard({ record: EMPTY_RECORD, visit: other, audience: 'guest', pathname: '/en/stories/lucerne', ...over })
+}
+
+describe('[E4.5][AC91][AC92] showsCard: the deep-link card', () => {
+  it('shows for an unanswered guest whose visit began elsewhere, on a story', () => {
+    expect(card()).toBe(true)
+  })
+
+  it.each([
+    ['a story in German', '/de/stories/luzern', true],
+    ['a story with a trailing slash', '/en/stories/lucerne/', true],
+    ['the stories list', '/en/stories', false],
+    ['the home', '/en', false],
+    ['the map', '/en/map', false],
+    ['a keepsake page', '/en/gifts/mug', false],
+    ['a tour', '/en/tours/rigi', false],
+    ['a path under a story', '/en/stories/lucerne/extra', false],
+    ['a story with no language', '/stories/lucerne', false],
+    ['the Account tab', '/account', false],
+    ['a store screen', '/store/stories/x', false],
+  ])('on %s (%s) gives %s', (_name, pathname, expected) => {
+    expect(card({ pathname })).toBe(expected)
+  })
+
+  it('does not show before the visit is captured, or for a visit that began at the home', () => {
+    expect(card({ visit: null })).toBe(false)
+    expect(card({ visit: home })).toBe(false)
+  })
+
+  it('does not show after the guest hid it in this visit', () => {
+    expect(card({ visit: { entry: 'other', cardHidden: true } })).toBe(false)
+  })
+
+  it('does not show for an answered guest or one who skipped', () => {
+    expect(card({ record: answered })).toBe(false)
+    expect(card({ record: skipped })).toBe(false)
+  })
+
+  it('does not show for staff or an unknown audience', () => {
+    expect(card({ audience: 'staff' })).toBe(false)
+    expect(card({ audience: 'unknown' })).toBe(false)
   })
 })

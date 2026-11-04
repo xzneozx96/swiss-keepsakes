@@ -38,9 +38,21 @@ export function isHomePath(pathname: string): boolean {
   return segments.length === 1 && isLanguage(segments[0])
 }
 
+const listeners = new Set<() => void>()
+
+/** For `useSyncExternalStore`: the card re-renders when the visit is captured or the card is hidden. */
+export function subscribeVisit(listener: () => void): () => void {
+  listeners.add(listener)
+
+  return () => {
+    listeners.delete(listener)
+  }
+}
+
 function save(visit: Visit) {
   memory = visit
   writeSessionStored(VISIT_KEY, JSON.stringify(visit))
+  listeners.forEach(listener => listener())
 }
 
 /** The visit of this tab, or null before the first capture. The object stays the same until `hideCard`. */
