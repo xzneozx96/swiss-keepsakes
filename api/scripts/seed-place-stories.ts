@@ -1,5 +1,6 @@
 import type { ContentLanguage, Localized, StoryBody, StoryBodyNode, StoryDraft } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
+import type { Buffer } from 'node:buffer'
 import type { Pool } from 'pg'
 import type { PlaceStory, PlaceStoryBlock } from './seed-data/place-stories.ts'
 import type { StoryPhoto } from './seed-data/story-photos.ts'
@@ -178,8 +179,9 @@ export function planPlaceStories(stories: readonly PlaceStory[], snapshot: Story
   for (const entry of covers) {
     const place = snapshot.places.get(entry.place)
     const ref = refs.get(entry.photo)
-    if (!place)
+    if (!place) {
       plan.faults.push(`The cover of the place ${entry.place} names a place the store does not have.`)
+    }
     else if (ref && place.coverMediaId === null && place.status !== 'draft') {
       if (place.hasDraft)
         plan.coversSkipped.push(entry.place)

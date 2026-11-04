@@ -1,7 +1,7 @@
 import type { StoryBody, StoryBodyNode } from '@sk/domain/content'
-import type { PlaceFacts, StorySnapshot } from '../scripts/seed-place-stories.ts'
 import type { PlaceStory } from '../scripts/seed-data/place-stories.ts'
 import type { StoryPhoto } from '../scripts/seed-data/story-photos.ts'
+import type { PlaceFacts, StorySnapshot } from '../scripts/seed-place-stories.ts'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { storyDraftSchema } from '@sk/api-contract'
@@ -24,7 +24,7 @@ const ids = new Map(storyPhotos.map((photo, index) => [photo.key, `00000000-0000
 const refs = photoRefs(ids)
 
 // Phrases the owner does not want (an AI tell, or a platitude) and the dash characters.
-const banned = [/—/, /–/, /\bnestled\b/i, /\biconic\b/i, /testament to/i, /rich tapestry/i, /whether you(?:'|’)re/i, /hidden gem/i, /\bdelve\b/i, /\bvibrant\b/i, /\bbustling\b/i, /\bnicht nur\b.*\bsondern auch\b/i, /\bunvergesslich/i, /\bwahres Juwel/i, /Eintauchen in/i]
+const banned = [/—/, /–/, /\bnestled\b/i, /\biconic\b/i, /testament to/i, /rich tapestry/i, /whether you(?:'|’)re/i, /hidden gem/i, /\bdelve\b/i, /\bvibrant\b/i, /\bbustling\b/i, /\bnicht nur\b.+\bsondern auch\b/i, /\bunvergesslich/i, /\bwahres Juwel/i, /Eintauchen in/i]
 
 function everyText(story: PlaceStory): string[] {
   const own = languages.flatMap(language => [story.versions[language].title, story.versions[language].excerpt, ...textsOf(placeStoryBody(story, language, refs).content)])
@@ -182,7 +182,7 @@ function snapshotOf(overrides: Partial<StorySnapshot> = {}, place: Partial<Place
   }
 }
 const plan = (snapshot: StorySnapshot, covers: typeof placeCovers = []) => planPlaceStories([fixture], snapshot, photos, covers)
-const storedFor = (language: 'en' | 'de', changes: Record<string, unknown> = {}, status: 'draft' | 'published' = 'published') => {
+function storedFor(language: 'en' | 'de', changes: Record<string, unknown> = {}, status: 'draft' | 'published' = 'published') {
   const draft = placeStoryDraft(fixture, language, 'media-cover', photoRefs(ready, photos))
   return { groupId: 'g1', language, slug: fixture.slug[language], status, rowVersion: 4, doc: { ...draft, ...changes } as never, pendingDraft: false }
 }
