@@ -15,6 +15,7 @@ import {
   Label,
   Radio,
   RadioGroup,
+  Skeleton,
   Tag,
   TagGroup,
 } from '@heroui/react'
@@ -70,6 +71,8 @@ export interface GiftPageProps {
     icon: 'pickup' | 'pay'
     title: string
     body: string
+    /** The text is still being read: a skeleton line shows in its place. */
+    loading?: boolean
   }[]
   sheet: { title: string, closeLabel: string }
   variant: {
@@ -86,15 +89,26 @@ export interface GiftPageProps {
   /** "This is the date you request. The seller confirms before you pay." */
   note: string
   place: {
-    /** An empty address or hours line is not shown. */
-    options: { id: string, name: string, address: string, hours: string }[]
+    /** An empty address or hours line is not shown. `schedule` is the week in lines, `directions` the link to the map. */
+    options: {
+      id: string
+      name: string
+      address: string
+      hours: string
+      instructions?: string
+      schedule?: { days: string, value: string }[]
+      directions?: { href: string, label: string }
+    }[]
+    /** Said in the "Pickup places" fold-out when there are no options. */
+    emptyText?: string
+    /** The points are being read, or the read failed: the fold-out shows a skeleton or the error with a retry. */
+    state?: PickupReadState
   }
   sections: {
     aboutTitle: string
     placesTitle: string
-    /** "Pickup date" row: earliest date, or the chosen date and place. */
-    /** The "Pickup date" fold-out: its title and the button in it (owner 2026-11-02: no date line under the title). */
-    dateRow: { title: string, action: string }
+    /** The "Pickup date" fold-out: its title, the chosen date and place when there are some, and the button in it. */
+    dateRow: { title: string, value?: string, action: string }
     paymentTitle: string
     payment: string
     cancellationTitle: string
@@ -108,6 +122,13 @@ export interface GiftPageProps {
     summary: string
     chip: string
     addLabel: string
+    /**
+     * The price comes from a read the browser makes after the page has loaded (AC54): `loading` shows a skeleton in its
+     * place, an error shows its message with a retry. Absent = the price is known and `price` shows.
+     */
+    priceState?: 'loading' | { error: string, retryLabel: string, onRetry: () => void }
+    /** The button that opens the sheet cannot be pressed (nothing can be chosen yet). */
+    addDisabled?: boolean
   }
 }
 
@@ -118,9 +139,8 @@ export interface GiftShopperProps {
     label: string
     message: string
     actionLabel: string
-    subcategory?: string
   }
-  sheet: { addLabel: string }
+  sheet: { addLabel: string, /** The sheet's add button cannot be pressed: the choice is not one that can be bought. */ addDisabled?: boolean }
   quantity: {
     label: string
     value: number
@@ -129,12 +149,20 @@ export interface GiftShopperProps {
     hint?: string
     onChange: (value: number) => void
   }
-  date: PickupDateFieldProps
-  place: {
-    label: string
-    value: string | null
-    onChange: (id: string) => void
-    error?: string
+  /**
+   * The guest's own pickup place and date, chosen in the sheet: the place first, the date once a place is chosen. The
+   * places come from `place.options`; while they are read, or when the read failed, `place.state` says so. Absent when
+   * the shop has no pickup points.
+   */
+  pickup?: {
+    place: {
+      label: string
+      value: string | null
+      onChange: (id: string) => void
+      error?: string
+      state?: PickupReadState
+    }
+    date?: PickupDateFieldProps
   }
   bar: {
     /** Set right after adding; the bar then also offers "View cart". */
@@ -148,6 +176,9 @@ export interface GiftShopperProps {
   backLabel: string
   onBack: () => void
 }
+
+/** The read of the pickup points that has not answered: loading, or failed with a retry. */
+type PickupReadState = 'loading' | { error: string, retryLabel: string, onRetry: () => void }
 
 export type GiftDetailProps = GiftPageProps & GiftShopperProps
 
@@ -167,8 +198,8 @@ const highlightIcon: Record<
 
 /**
  * C03 Gift detail in the order of the Airbnb listing page (owner references, Airbnb iOS
- * Jun 2025, screens 36, 38, 42, 45): photos; title; stats row with the laurel badge;
- * seller; highlights; translation notice; About; reviews (laurel rating, swipeable
+ * Jun 2025, screens 36, 38, 42, 45): photos; title and one rating line;
+ * highlights; translation notice; About; reviews (laurel rating, swipeable
  * cards, "Show all" opens the reviews sheet); where to pick it up; then the things to know
  * (pickup date row, cancellation policy, payment). Every choice is made in a bottom
  * sheet opened from the sticky price bar or the pickup date row.
@@ -264,7 +295,9 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
                 <Icon aria-hidden className="mt-0.5 shrink-0" size={26} />
                 <div className="flex flex-col gap-0.5">
                   <span className="font-semibold">{h.title}</span>
-                  <span className="text-sm text-muted">{h.body}</span>
+                  {h.loading
+                    ? <Skeleton aria-hidden className="h-4 w-48 rounded-lg" data-skeleton="pickup-line" />
+                    : <span className="text-sm text-muted">{h.body}</span>}
                 </div>
               </li>
             )
@@ -304,17 +337,38 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
             </Accordion.Heading>
             <Accordion.Panel>
               <Accordion.Body>
-                <ul className="flex flex-col gap-4">
-                  {place.options.map(p => (
-                    <li key={p.id} className="flex flex-col">
-                      <span className="font-semibold text-foreground">
-                        {p.name}
-                      </span>
-                      {p.address && <span className="text-sm">{p.address}</span>}
-                      {p.hours && <span className="text-sm">{p.hours}</span>}
-                    </li>
-                  ))}
-                </ul>
+                {place.state
+                  ? <PickupReadStatus state={place.state} />
+                  : place.options.length === 0 && place.emptyText
+                    ? <p className="text-sm">{place.emptyText}</p>
+                    : (
+                        <ul className="flex flex-col gap-4">
+                          {place.options.map(p => (
+                            <li key={p.id} className="flex flex-col">
+                              <span className="font-semibold text-foreground">
+                                {p.name}
+                              </span>
+                              {p.address && <span className="text-sm">{p.address}</span>}
+                              {p.schedule
+                                ? p.schedule.map(line => (
+                                    <span key={line.days} className="text-sm">{line.days} {line.value}</span>
+                                  ))
+                                : p.hours && <span className="text-sm">{p.hours}</span>}
+                              {p.instructions && <span className="text-sm text-muted">{p.instructions}</span>}
+                              {p.directions && (
+                                <a
+                                  className="mt-1 self-start rounded text-sm font-semibold underline underline-offset-4 outline-none focus-visible:focus-ring"
+                                  href={p.directions.href}
+                                  rel="noopener noreferrer"
+                                  target="_blank"
+                                >
+                                  {p.directions.label}
+                                </a>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
               </Accordion.Body>
             </Accordion.Panel>
           </Accordion.Item>
@@ -331,8 +385,9 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
               </Accordion.Heading>
               <Accordion.Panel>
                 <Accordion.Body className="flex flex-col items-start gap-3">
+                  {sections.dateRow.value && <p className="text-sm font-semibold">{sections.dateRow.value}</p>}
                   <p className="text-sm">{props.note}</p>
-                  {shopper && (
+                  {shopper && sections.dateRow.action && (
                     <Button size="sm" variant="secondary" onPress={openSheet}>
                       {sections.dateRow.action}
                     </Button>
@@ -389,9 +444,6 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
                 </div>
                 <Link
                   className={buttonVariants({ size: 'lg', variant: 'secondary' })}
-                  search={
-                    soldOut.subcategory ? { subcategory: soldOut.subcategory } : {}
-                  }
                   to="/$lang/gifts"
                   params={{ lang: language }}
                 >
@@ -422,9 +474,7 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
                       )
                     : (
                         <>
-                          <span className="text-lg font-semibold underline underline-offset-4 tabular-nums">
-                            {bar.price}
-                          </span>
+                          <BarPrice bar={bar} />
                           <span className="truncate text-xs text-muted">
                             {bar.summary}
                           </span>
@@ -436,7 +486,7 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
                       )}
                 </div>
                 {/* Stays available after adding, for another option, date or quantity. */}
-                <Button size="lg" onPress={openSheet}>
+                <Button isDisabled={bar.addDisabled} size="lg" onPress={openSheet}>
                   {bar.addLabel}
                 </Button>
               </>
@@ -457,15 +507,37 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
   )
 }
 
-/** Add-to-cart sheet: one choice per option, quantity, pickup date and place. */
+/** The price in the bar: the amount, a skeleton while the browser reads it, or the error with a retry. */
+function BarPrice({ bar }: { bar: GiftPageProps['bar'] }) {
+  const state = bar.priceState
+
+  if (state === 'loading')
+    return <Skeleton aria-hidden className="h-7 w-24 rounded-lg" data-skeleton="price" />
+  if (state) {
+    return (
+      <span className="flex items-center gap-2" role="alert">
+        <span className="text-sm text-danger">{state.error}</span>
+        <Button size="sm" variant="secondary" onPress={state.onRetry}>{state.retryLabel}</Button>
+      </span>
+    )
+  }
+
+  return (
+    <span className="text-lg font-semibold underline underline-offset-4 tabular-nums">
+      {bar.price}
+    </span>
+  )
+}
+
+/** Add-to-cart sheet: one choice per option, quantity, and the pickup date and place when the guest chooses them here. */
 function GiftSheet({
   sheet,
   photos,
   variant,
   quantity,
-  date,
+  pickup,
   note,
-  place,
+  place: pickupPlaces,
   onAdd,
   isOpen,
   onOpenChange,
@@ -477,6 +549,7 @@ function GiftSheet({
     <ChoiceSheet
       action={{
         label: sheet.addLabel,
+        isDisabled: sheet.addDisabled,
         onPress: (e) => {
           if (!onAdd())
             return
@@ -500,31 +573,12 @@ function GiftSheet({
         onChange={quantity.onChange}
       />
 
-      <PickupDateField {...date} />
-
-      {/* No "*": every sheet field is needed. Missing choices show an error on add. */}
-      <RadioGroup
-        id="gift-place"
-        isInvalid={place.error !== undefined}
-        value={place.value}
-        onChange={place.onChange}
-      >
-        <Label className="text-heading">{place.label}</Label>
-        {place.options.map(p => (
-          <Radio key={p.id} value={p.id}>
-            <Radio.Content>
-              <Radio.Control>
-                <Radio.Indicator />
-              </Radio.Control>
-              {p.name}
-            </Radio.Content>
-            <Description>
-              {p.address} · {p.hours}
-            </Description>
-          </Radio>
-        ))}
-        <FieldError>{place.error}</FieldError>
-      </RadioGroup>
+      {pickup && (
+        <>
+          <PickupPlaces options={pickupPlaces.options} place={pickup.place} />
+          {pickup.date && <PickupDateField key={pickup.place.value} {...pickup.date} />}
+        </>
+      )}
 
       <p className="flex items-start gap-2 text-sm">
         <InfoIcon
@@ -535,6 +589,65 @@ function GiftSheet({
         {note}
       </p>
     </ChoiceSheet>
+  )
+}
+
+/** The pickup read that has not answered: a skeleton shaped like the place rows, or the error with a retry. */
+function PickupReadStatus({ state, id }: { state: PickupReadState, id?: string }) {
+  if (state === 'loading') {
+    return (
+      <div aria-hidden className="flex flex-col gap-3" data-skeleton="pickup">
+        <Skeleton className="h-5 w-28 rounded-lg" />
+        {[0, 1].map(i => (
+          <div key={i} className="flex items-center gap-3">
+            <Skeleton className="size-5 shrink-0 rounded-full" />
+            <div className="flex flex-col gap-1.5">
+              <Skeleton className="h-4 w-40 rounded-lg" />
+              <Skeleton className="h-3 w-56 rounded-lg" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col items-start gap-2" id={id} role="alert">
+      <span className="text-sm text-danger">{state.error}</span>
+      <Button size="sm" variant="secondary" onPress={state.onRetry}>{state.retryLabel}</Button>
+    </div>
+  )
+}
+
+/** The pickup place choice: the points of the store, a skeleton of them while they are read, or an error with a retry. */
+function PickupPlaces({ options, place }: { options: GiftPageProps['place']['options'], place: NonNullable<GiftShopperProps['pickup']>['place'] }) {
+  if (place.state)
+    return <PickupReadStatus id="gift-place" state={place.state} />
+
+  // No "*": every sheet field is needed. Missing choices show an error on add.
+  return (
+    <RadioGroup
+      id="gift-place"
+      isInvalid={place.error !== undefined}
+      value={place.value}
+      onChange={place.onChange}
+    >
+      <Label className="text-heading">{place.label}</Label>
+      {options.map(p => (
+        <Radio key={p.id} value={p.id}>
+          <Radio.Content>
+            <Radio.Control>
+              <Radio.Indicator />
+            </Radio.Control>
+            {p.name}
+          </Radio.Content>
+          <Description>
+            {[p.address, p.hours].filter(Boolean).join(' · ')}
+          </Description>
+        </Radio>
+      ))}
+      <FieldError>{place.error}</FieldError>
+    </RadioGroup>
   )
 }
 

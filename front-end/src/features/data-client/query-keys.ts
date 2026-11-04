@@ -7,6 +7,8 @@ export const queryKeys = {
     products: ['catalog', 'products'],
     subcategories: ['catalog', 'subcategories'],
     pickupPlaces: ['catalog', 'pickupPlaces'],
+    keepsakeAvailability: ['catalog', 'keepsakeAvailability'],
+    keepsakePickupPoints: ['catalog', 'keepsakePickupPoints'],
   },
   categories: {
     list: ['categories', 'list'],
@@ -22,6 +24,7 @@ export const queryKeys = {
   keepsakes: {
     list: ['keepsakes', 'list'],
     detail: ['keepsakes', 'detail'],
+    tourBlock: ['keepsakes', 'list', 'tour-block'],
   },
   media: {
     list: ['media', 'list'],

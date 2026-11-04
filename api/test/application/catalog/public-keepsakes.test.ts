@@ -101,6 +101,24 @@ describe('[E6.4][AC53] the public list: sold out is a flag, never a figure', () 
     expect(items.map(i => i.soldOut)).toEqual([true, false, true])
   })
 
+  it('[E6.4][AC53] looks the covers up once per store for the whole list, never one query per keepsake', async () => {
+    const second = '0190f0c2-0000-7000-8000-0000000000d2'
+    const third = '0190f0c2-0000-7000-8000-0000000000d3'
+    const rows = [
+      row({ id: 'k1', slug: { en: 'one' }, name: { en: 'One' }, mediaIds: [photoId] }),
+      row({ id: 'k2', slug: { en: 'two' }, name: { en: 'Two' }, mediaIds: [second] }),
+      row({ id: 'k3', slug: { en: 'three' }, name: { en: 'Three' }, storeId: otherStore, mediaIds: [third] }),
+    ]
+    const { deps } = setup(rows, {}, [photo(photoId), photo(second), photo(third)])
+    const find = vi.fn(deps.media.find)
+
+    const { items } = await makeListKeepsakes({ ...deps, media: { find } })('en')
+
+    expect(find).toHaveBeenCalledTimes(2)
+    expect(find).toHaveBeenCalledWith(null, store, [photoId, second])
+    expect(items.map(i => i.cover?.url)).toEqual([`https://cdn.test/${photoId}.jpg`, `https://cdn.test/${second}.jpg`, `https://cdn.test/${third}.jpg`])
+  })
+
   it('[E6.4][AC53] without a stock port every keepsake reads sold out, as the merchant list reads 0', async () => {
     const { deps } = setup([row()], { [skuA]: [9, 0] })
     delete deps.stockLevels

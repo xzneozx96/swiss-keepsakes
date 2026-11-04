@@ -1,16 +1,19 @@
+import type { Language } from '@sk/domain/shared'
 import { memo } from 'react'
 
 import { ListingCard, sameListing } from '@/components/listing-card'
 
 export interface ProductCardProps {
   slug: string
+  /** The language of the address, when it is not the guest's (a keepsake that has no version in the guest's language). */
+  lang?: Language
   name: string
   photo?: string
-  /** "from" label, e.g. "from" / "ab". */
-  fromLabel: string
-  price: string
-  /** e.g. "Earliest pickup Fri 16.10." */
-  pickupLine: string
+  /** "from" label, e.g. "from" / "ab". Left out with `price` on the public list, which shows no price. */
+  fromLabel?: string
+  price?: string
+  /** e.g. "Earliest pickup Fri 16.10." Left out when the card has no such line. */
+  pickupLine?: string
   /** Optional non-status label on the photo, e.g. "Engraving" (secondary Chip md, Card card). */
   badge?: string
   /** When set, the card shows this status label instead of the pickup line (spec C02). */

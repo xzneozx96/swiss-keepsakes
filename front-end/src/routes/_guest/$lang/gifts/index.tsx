@@ -1,154 +1,69 @@
-import { isPublished } from '@sk/domain/catalog'
-
-import { pickText } from '@sk/domain/shared'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useLocale } from '@/contexts/locale-context'
-import { useProducts, useStoreSubcategories } from '@/features/catalog/api/queries'
-import {
-  ALL_CATEGORIES,
-  GiftList,
-} from '@/features/catalog/components/gift-list'
-import { useProductCard } from '@/features/catalog/hooks/use-product-card'
-import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
-import { useUrlInput } from '@/hooks/use-url-input'
+import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { loadDictionary, useLocale } from '@/contexts/locale-context'
+import { fetchKeepsakeList } from '@/features/catalog/api/keepsakes'
+import { GiftList } from '@/features/catalog/components/gift-list'
+import { toKeepsakeCard } from '@/features/catalog/lib/keepsake-card'
+import { alternateHead } from '@/features/seo/lib/page-head'
+import { isLanguage } from '@/lib/language-routing'
 
 interface GiftsSearch {
-  /** Sub-category from the discovery home or the filter rail; absent = all keepsakes. */
   subcategory?: string
-  /** Free-text search from the home search pill or the search field. */
   q?: string
 }
 
-// C02 Gifts: list, category filter and search.
+const BANNER_PHOTO = 'lucerne-kapellbruecke-1200'
+
+// C02 Keepsakes: the published list, server-rendered, no price (AC54). The sub-category and search params of the
+// demo list are still accepted so that an old link opens the list; the list ignores them (search is T-E4.14b).
 export const Route = createFileRoute('/_guest/$lang/gifts/')({
   ssr: true,
-  validateSearch: (search: Record<string, unknown>): GiftsSearch => {
-    // The store's own sub-categories are in demo state, so the page checks the id.
-    const subcategory
-      = typeof search.subcategory === 'string' && search.subcategory
-        ? search.subcategory
-        : undefined
-    const q
-      = typeof search.q === 'string' && search.q.trim() ? search.q : undefined
+  validateSearch: (search: Record<string, unknown>): GiftsSearch => ({
+    ...(typeof search.subcategory === 'string' && search.subcategory && { subcategory: search.subcategory }),
+    ...(typeof search.q === 'string' && search.q.trim() && { q: search.q }),
+  }),
+  loader: async ({ params }) => {
+    const lang = isLanguage(params.lang) ? params.lang : 'en'
+    const dictionary = await loadDictionary(lang)
+    const text = { title: dictionary['gifts.title'], description: dictionary['gifts.tagline'] }
 
-    return { ...(subcategory && { subcategory }), ...(q && { q }) }
+    try {
+      return { ...text, lang, state: 'ready' as const, items: (await fetchKeepsakeList(lang)).items }
+    }
+    // The page renders its own error state with a retry; the read is not repeated here.
+    catch {
+      return { ...text, lang, state: 'failed' as const, items: [] }
+    }
   },
+  head: ({ loaderData }) => loaderData
+    ? alternateHead({ lang: loaderData.lang, path: l => `/${l}/gifts`, title: `${loaderData.title} | Swiss Keepsakes`, description: loaderData.description })
+    : {},
+  pendingComponent: GiftsPending,
   component: GiftsPage,
 })
 
+function GiftsPending() {
+  const { t } = useLocale()
+
+  return <GiftList banner={{ title: t('gifts.title'), tagline: t('gifts.tagline'), photo: BANNER_PHOTO }} cards={[]} state="loading" onRetry={() => {}} />
+}
+
 function GiftsPage() {
-  const { t, language, intlLocale } = useLocale()
-  const products = useProducts()
-  const subcategories = useStoreSubcategories()
-  const { subcategory, q = '' } = Route.useSearch()
-  const navigate = useNavigate({ from: '/$lang/gifts/' })
-  const toCard = useProductCard()
-  const isLoading = useSimulatedLoading()
-  const { value, setValue, deferred } = useUrlInput(
-    q,
-    next =>
-      void navigate({
-        search: prev => ({ ...prev, q: next || undefined }),
-        replace: true,
-      }),
-  )
-
-  // Only sub-categories a guest can buy from: at least one published keepsake in them.
-  const giftCategories = subcategories.filter(
-    c =>
-      c.categoryId === 'keepsakes'
-      && products.some(
-        p => p.subcategoryId === c.id && isPublished(p),
-      ),
-  )
-  const selected = giftCategories.find(c => c.id === subcategory)
-  const query = deferred.trim().toLocaleLowerCase(intlLocale)
-  const cards = products
-    // A draft from M12 is hidden from guests (4.9).
-    .filter(
-      p => isPublished(p) && (!selected || p.subcategoryId === selected.id),
-    )
-    .map(toCard)
-    .filter(
-      c => !query || c.name.toLocaleLowerCase(intlLocale).includes(query),
-    )
-    // Available gifts first, soonest pickup first; sold-out gifts last (still shown, spec C02).
-    .sort(
-      (a, b) =>
-        Number(a.soldOut) - Number(b.soldOut)
-        || a.pickup.localeCompare(b.pickup),
-    )
-
-  const plural = new Intl.PluralRules(intlLocale)
-  const countLabel = t(
-    plural.select(cards.length) === 'one'
-      ? 'gifts.count.one'
-      : 'gifts.count.other',
-    {
-      count: cards.length,
-    },
-  )
-
-  const empty
-    = cards.length > 0
-      ? null
-      : {
-          message: query
-            ? t('gifts.noResults', { query: deferred.trim() })
-            : t('gifts.emptyCategory'),
-          actionLabel: t('gifts.showAll'),
-        }
+  const { t, intlLocale } = useLocale()
+  const { state, items } = Route.useLoaderData()
+  const router = useRouter()
+  const one = new Intl.PluralRules(intlLocale).select(items.length) === 'one'
 
   return (
     <GiftList
       banner={{
-        title: selected
-          ? pickText(selected.name, language).text
-          : t('gifts.title'),
-        tagline: selected?.tagline
-          ? pickText(selected.tagline, language).text
-          : t('gifts.tagline'),
-        countLabel,
-        photo: selected?.photo ?? 'lucerne-kapellbruecke-1200',
+        title: t('gifts.title'),
+        tagline: t('gifts.tagline'),
+        countLabel: state === 'ready' && items.length > 0 ? t(one ? 'gifts.count.one' : 'gifts.count.other', { count: items.length }) : undefined,
+        photo: BANNER_PHOTO,
       }}
-      cards={cards}
-      empty={empty}
-      filter={{
-        label: t('gifts.filterLabel'),
-        items: [
-          {
-            id: ALL_CATEGORIES,
-            name: t('gifts.all'),
-            photo: 'lucerne-kapellbruecke-1200',
-          },
-          ...giftCategories.map(c => ({
-            id: c.id,
-            name: pickText(c.name, language).text,
-            photo: c.photo,
-          })),
-        ],
-        selected: selected?.id ?? ALL_CATEGORIES,
-        onChange: id =>
-          void navigate({
-            search: prev => ({
-              ...prev,
-              subcategory: id === ALL_CATEGORIES ? undefined : id,
-            }),
-            replace: true,
-          }),
-      }}
-      isLoading={isLoading}
-      search={{
-        label: selected
-          ? t('search.inCategory', {
-              category: pickText(selected.name, language).text,
-            })
-          : t('search.inGifts'),
-        openLabel: t('search.open'),
-        backLabel: t('search.back'),
-        value,
-        onChange: setValue,
-      }}
+      cards={items.map(item => toKeepsakeCard(item, t))}
+      state={state}
+      onRetry={() => void router.invalidate()}
     />
   )
 }

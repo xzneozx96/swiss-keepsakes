@@ -11,7 +11,7 @@ import { createPublicKeepsakeReads } from './modules/catalog/adapters/public-rep
 import { registerPublicKeepsakeRoutes } from './modules/catalog/adapters/public-routes.ts'
 import { registerCatalogRoutes } from './modules/catalog/adapters/routes.ts'
 import { createSkuDirectory } from './modules/catalog/adapters/sku-directory.ts'
-import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeletePickupPlace, makeDeleteProduct, makeGetAvailability, makeGetKeepsake, makeGetPickupPlace, makeGetProduct, makeListKeepsakes, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from './modules/catalog/index.ts'
+import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeletePickupPlace, makeDeleteProduct, makeGetAvailability, makeGetKeepsake, makeGetPickupPlace, makeGetPickupPoints, makeGetProduct, makeListKeepsakes, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from './modules/catalog/index.ts'
 import { createAddressRegister } from './modules/content/adapters/address-register-fetch.ts'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
@@ -323,11 +323,12 @@ async function main() {
       deletePickupPlace: makeDeletePickupPlace(pickupDeps),
     })
     // The public keepsake reads fail with an exception, not a Result, like the content reads: a database error is a 500.
-    const publicKeepsakeDeps = { uow, reads: createPublicKeepsakeReads(), media: catalogDeps.media, stockLevels: catalogDeps.stockLevels }
+    const publicKeepsakeDeps = { uow, reads: createPublicKeepsakeReads(), media: catalogDeps.media, stockLevels: catalogDeps.stockLevels, pickups: pickupDeps.pickups }
     const publicKeepsakeUseCases = {
       listKeepsakes: makeListKeepsakes(publicKeepsakeDeps),
       getKeepsake: makeGetKeepsake(publicKeepsakeDeps),
       getAvailability: makeGetAvailability(publicKeepsakeDeps),
+      getPickupPoints: makeGetPickupPoints(publicKeepsakeDeps),
     }
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),

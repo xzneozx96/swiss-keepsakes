@@ -1,5 +1,3 @@
-import type { LocalizedText, Product, Variant } from '@sk/domain/catalog'
-
 /** The shape the guest keepsake page reads: options with values, and one variant per sold combination. */
 export interface ChoiceOption {
   id: string
@@ -82,39 +80,46 @@ export function galleryOrder<T>(photos: T[], index: number | undefined): T[] {
   return [photos[index], ...photos.slice(0, index), ...photos.slice(index + 1)]
 }
 
-const SINGLE_OPTION = 'option'
-
 /**
- * The demo product as options: its own `options`, or, with several variants and none declared, one
- * option with a value per variant (its price as the hint); a single variant has no choice.
+ * Why a value cannot be picked at all: no combination with it can be picked (sold out or not sold). Unlike
+ * `valueReasons`, other chosen values do not block it, so a guest can switch from Red/S to Blue/L; `settleChoice`
+ * then moves the other options to a combination that exists.
  */
-export function demoOptions(
-  product: Pick<Product, 'options' | 'variants'>,
-  text: (value: LocalizedText) => string,
-  defaultLabel: string,
-  price: (variant: Variant) => string,
-): ChoiceOption[] {
-  if (product.options) {
-    return product.options.map(o => ({
-      id: o.id,
-      label: text(o.label),
-      values: o.values.map(v => ({ id: v.id, label: text(v.label) })),
-    }))
-  }
-  if (product.variants.length < 2)
-    return []
+export function blockedValues(
+  options: ChoiceOption[],
+  variants: ChoiceVariant[],
+  missing: string,
+): Record<string, Record<string, string>> {
+  return Object.fromEntries(
+    options.map(option => [
+      option.id,
+      Object.fromEntries(
+        option.values.flatMap((value) => {
+          const candidates = variants.filter(v => v.values[option.id] === value.id)
 
-  return [{
-    id: SINGLE_OPTION,
-    label: defaultLabel,
-    values: product.variants.map(v => ({ id: v.id, label: text(v.label), hint: price(v) })),
-  }]
+          return candidates.some(v => !v.reason) ? [] : [[value.id, candidates[0]?.reason ?? missing]]
+        }),
+      ),
+    ]),
+  )
 }
 
-/** The variant's value per option id, matching `demoOptions`. */
-export function demoValues(product: Pick<Product, 'options' | 'variants'>, variant: Variant): Chosen {
-  if (product.options)
-    return variant.values ?? {}
+/**
+ * The choice after picking a value: the pickable combination with that value that keeps most of the other choices
+ * (the exact combination when it can be picked, as it keeps all of them; the first one listed on a tie). Picking a
+ * value no pickable combination has leaves the choice as picked: the page shows that value as blocked.
+ */
+export function settleChoice(
+  options: ChoiceOption[],
+  variants: ChoiceVariant[],
+  chosen: Chosen,
+  optionId: string,
+  valueId: string,
+): Chosen {
+  const kept = (v: ChoiceVariant) => options.filter(o => o.id !== optionId && v.values[o.id] === chosen[o.id]).length
+  const best = variants
+    .filter(v => !v.reason && v.values[optionId] === valueId)
+    .sort((a, b) => kept(b) - kept(a))[0]
 
-  return product.variants.length < 2 ? {} : { [SINGLE_OPTION]: variant.id }
+  return best ? { ...best.values } : pickValue(chosen, optionId, valueId)
 }

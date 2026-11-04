@@ -86,10 +86,10 @@ describe('guest screens loading', () => {
 
     expect(container.querySelector('.aspect-\\[4\\/3\\.4\\]')).not.toBeNull()
     expect(container.querySelector('.-mt-6.rounded-t-3xl')).not.toBeNull()
-    expect(count(container, 'ul li')).toBe(3)
+    expect(count(container, 'ul li')).toBe(2)
     expect(container.querySelector('.items-center.pb-6')).not.toBeNull()
-    expect(container.querySelector('[data-skeleton="stats"].py-4.border-y [data-skeleton="rating"].h-10')).not.toBeNull()
-    expect(container.querySelector('[data-skeleton="seller"].py-5 .size-12.rounded-full')).not.toBeNull()
+    // The page has no stats row and no seller row (owner, 2026-11-02): one quiet rating line under the name.
+    expect(container.querySelector('[data-skeleton="stats"], [data-skeleton="seller"]')).toBeNull()
     const bar = container.querySelector('[data-skeleton="bar"]')!
 
     expect(bar.className).toContain('sticky')

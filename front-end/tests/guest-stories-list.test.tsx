@@ -1,9 +1,9 @@
 import { QueryClientProvider } from '@tanstack/react-query'
-import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider, useNavigate, useSearch } from '@tanstack/react-router'
-import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderToString } from 'react-dom/server'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
 import { StoriesPage } from '@/features/content/components/stories-page'
@@ -20,7 +20,7 @@ vi.mock('@/features/content/hooks/use-onboarding-answers', () => ({ useOnboardin
 
 type Props = Parameters<typeof StoriesPage>[0]
 
-async function buildRouter(url: string, props: Props, Component?: () => React.JSX.Element) {
+async function buildRouter(url: string, props: Props) {
   // The cart button in the page bar reads the demo cart; the stories themselves come in through props.
   const demo = startSeedDemo()
   const root = createRootRoute({
@@ -36,7 +36,7 @@ async function buildRouter(url: string, props: Props, Component?: () => React.JS
       </QueryClientProvider>
     ),
   })
-  const page = createRoute({ getParentRoute: () => root, path: '/$lang/stories', component: Component ?? (() => <StoriesPage {...props} />) })
+  const page = createRoute({ getParentRoute: () => root, path: '/$lang/stories', component: () => <StoriesPage {...props} /> })
   // The German dictionary is a lazy chunk; the route waits for it as the real guest layout does.
   const withDictionary = url.startsWith('/de') ? loadDictionary('de') : Promise.resolve()
   await withDictionary
@@ -61,6 +61,8 @@ beforeEach(() => {
   localStorage.clear()
   answers.value = { stay: null, interests: [] }
 })
+
+afterEach(() => vi.unstubAllGlobals())
 
 describe('[E4.4] guest stories list', () => {
   it('[E4.4][AC61] the server HTML lists every story newest first, whatever the answers are', async () => {
@@ -162,7 +164,15 @@ describe('[E4.4] guest stories list', () => {
   })
 })
 
-describe('[E4.4][AC30] blog category filter', () => {
+// The full route tree loads on the first test; guest-routes.test.tsx gives it the same time.
+describe('[E4.4][AC30] blog category filter', { timeout: 60_000 }, () => {
+  // Load the full route tree once, before any test's own clock starts.
+  beforeAll(async () => {
+    if (typeof CSS.supports !== 'function')
+      CSS.supports = () => false
+    await import('@/router')
+  }, 120_000)
+
   const legends = blogCategory({ slug: 'legends', name: { en: 'Legends', de: 'Sagen' }, position: 2 })
   const tips = blogCategory({ slug: 'practical-tips', name: { en: 'Practical tips', de: null }, position: 3 })
   const history = blogCategory({ slug: 'swiss-history', name: { en: 'Swiss history', de: 'Schweizer Geschichte' }, position: 1 })
@@ -179,23 +189,27 @@ describe('[E4.4][AC30] blog category filter', () => {
   const chips = () => screen.getByRole('grid', { name: /Story categories|Kategorien der Geschichten/ })
   const chipNames = () => within(chips()).getAllByRole('row').map(r => r.textContent)
 
-  /** The page as the route wires it: the address holds the choice and a choice navigates. */
-  async function renderFiltered(url: string, over: Partial<Props> = {}) {
-    function Wired() {
-      const { category } = useSearch({ strict: false }) as { category?: string }
-      const navigate = useNavigate()
-      return (
-        <StoriesPage
-          categories={categories}
-          category={category}
-          stories={stories}
-          onCategoryChange={slug => void navigate({ to: '/$lang/stories', params: { lang: url.slice(1, 3) }, search: slug ? { category: slug } : {} })}
-          onRetry={() => {}}
-          {...over}
-        />
-      )
-    }
-    const router = await buildRouter(url, { stories, onRetry: () => {} }, Wired)
+  /** The real route: its loader reads the stubbed API, its component reads the address and navigates. */
+  async function realRouter(url: string, over: { stories?: typeof stories, categories?: typeof categories | null } = {}) {
+    vi.stubGlobal('fetch', async (input: Request | string) => {
+      const { pathname } = new URL(typeof input === 'string' ? input : input.url)
+      if (pathname === '/api/public/blog-categories')
+        return over.categories === null ? new Response('{}', { status: 500 }) : Response.json({ items: over.categories ?? categories })
+      return Response.json({ items: over.stories ?? stories })
+    })
+    if (typeof CSS.supports !== 'function')
+      CSS.supports = () => false
+    if (url.startsWith('/de'))
+      await loadDictionary('de')
+    const { getRouter } = await import('@/router')
+    const router = getRouter()
+    router.update({ history: createMemoryHistory({ initialEntries: [url] }) })
+    await router.load()
+    return router
+  }
+
+  async function renderFiltered(url: string, over: Parameters<typeof realRouter>[1] = {}) {
+    const router = await realRouter(url, over)
     render(<RouterProvider router={router} />)
     return router
   }
@@ -249,24 +263,30 @@ describe('[E4.4][AC30] blog category filter', () => {
   })
 
   it('[E4.4][AC61] AC-3 the server HTML of a shared link lists only that category', async () => {
-    const router = await buildRouter('/en/stories?category=legends', { stories, categories, category: 'legends', onRetry: () => {} })
-
-    const html = renderToString(<RouterProvider router={router} />)
+    const html = renderToString(<RouterProvider router={await realRouter('/en/stories?category=legends')} />)
 
     expect(html).toContain('Legend one')
     expect(html).not.toContain('Castle story')
     expect(html).not.toContain('Tip story')
   })
 
-  it('[E4.4][AC30] AC-4 an unknown or unused slug shows every story with All selected and the address unchanged', async () => {
-    for (const slug of ['no-such-topic', 'swiss-history-unused']) {
-      const router = await renderFiltered(`/en/stories?category=${slug}`, { stories: [legend1, tip] })
+  it('[E4.4][AC30] AC-4 an unknown slug shows every story with All selected and the address unchanged', async () => {
+    const router = await renderFiltered('/en/stories?category=no-such-topic', { stories: [legend1, tip] })
 
-      expect(titles()).toHaveLength(2)
-      expect(within(chips()).getByRole('row', { name: 'All' })).toHaveAttribute('aria-selected', 'true')
-      expect(router.state.location.search).toEqual({ category: slug })
-      cleanup()
-    }
+    expect(titles()).toHaveLength(2)
+    expect(within(chips()).getByRole('row', { name: 'All' })).toHaveAttribute('aria-selected', 'true')
+    expect(router.state.location.search).toEqual({ category: 'no-such-topic' })
+  })
+
+  it('[E4.4][AC30] AC-4 a real category no story here uses shows every story with All selected (server HTML)', async () => {
+    const router = await realRouter('/en/stories?category=swiss-history', { stories: [legend1, tip] })
+
+    const html = renderToString(<RouterProvider router={router} />)
+
+    expect(html).toContain('Legend one')
+    expect(html).toContain('Tip story')
+    expect(html).toMatch(/aria-selected="true"[^>]*>(?:(?!<\/div>).)*All/s)
+    expect(router.state.location.search).toEqual({ category: 'swiss-history' })
   })
 
   it('[E4.4][AC38] AC-5 the filter comes first, then the answers rank inside it', async () => {
@@ -286,9 +306,8 @@ describe('[E4.4][AC30] blog category filter', () => {
   })
 
   it('[E4.4][AC54] AC-6 no CHF on the page, filtered or not', async () => {
-    const router = await buildRouter('/en/stories?category=legends', { stories, categories, category: 'legends', onRetry: () => {} })
-
-    expect(renderToString(<RouterProvider router={router} />)).not.toContain('CHF')
+    expect(renderToString(<RouterProvider router={await realRouter('/en/stories?category=legends')} />)).not.toContain('CHF')
+    expect(renderToString(<RouterProvider router={await realRouter('/en/stories')} />)).not.toContain('CHF')
   })
 
   it('[E4.4][AC30] AC-7 a failed category read shows the stories with no filter row and no alert', async () => {

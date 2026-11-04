@@ -1,4 +1,4 @@
-import type { Media, Product } from '@sk/api-contract'
+import type { Media, Product, PublicKeepsake, PublicKeepsakePhoto } from '@sk/api-contract'
 import type { IntlLocale, Language, RichNode } from '@sk/domain/shared'
 import type { GiftPageProps } from '../components/gift-detail'
 import type { ChoiceVariant, Chosen } from './variant-choice'
@@ -7,7 +7,8 @@ import type { MessageKey } from '@/i18n/en'
 
 import { isEmptyDescription } from '@sk/domain/content'
 import { formatMoney, pickText } from '@sk/domain/shared'
-import { chosenVariant, galleryOrder, valueReasons } from './variant-choice'
+import { photoCopy } from './photo-copy'
+import { blockedValues, chosenVariant, galleryOrder, valueReasons } from './variant-choice'
 
 type Translate = (key: MessageKey, vars?: Record<string, string | number>) => string
 
@@ -45,13 +46,12 @@ export function galleryLabelsOf(t: Translate, name: string): GiftPageProps['gall
   }
 }
 
-/** The smallest resized copy at least `width` wide, else the original; undefined until the file is ready. */
-function mediaSrc(media: Pick<Media, 'publicUrl' | 'variants'> | null | undefined, width: number): string | undefined {
+/** The copy a gallery shows, else the original; undefined until the file is ready. */
+function mediaSrc(media: Pick<Media, 'publicUrl' | 'variants'> | null | undefined): string | undefined {
   if (!media)
     return undefined
-  const copy = [...media.variants].sort((a, b) => a.width - b.width).find(v => v.width >= width)
 
-  return copy?.url ?? media.publicUrl ?? undefined
+  return photoCopy(media.variants, GALLERY_WIDTH) ?? media.publicUrl ?? undefined
 }
 
 const forSale = (variant: Product['variants'][number]) => variant.status === 'published'
@@ -93,7 +93,7 @@ export function keepsakePage(
     return src
   }
 
-  keepsake.photos.forEach(media => addPhoto(mediaSrc(media, GALLERY_WIDTH)))
+  keepsake.photos.forEach(media => addPhoto(mediaSrc(media)))
 
   const options = keepsake.options.map(option => ({
     id: option.id,
@@ -101,7 +101,7 @@ export function keepsakePage(
     values: option.values.map(value => ({ id: value.id, label: pickText(value.label, language).text })),
   }))
   const variants = keepsake.variants.map((variant): ChoiceVariant => {
-    const photo = addPhoto(mediaSrc(variant.photo, GALLERY_WIDTH))
+    const photo = addPhoto(mediaSrc(variant.photo))
 
     return {
       id: variant.id,
@@ -155,5 +155,122 @@ export function keepsakePage(
       chip: t('detail.bar.nothingNow'),
       addLabel: t('detail.bar.add'),
     },
+  }
+}
+
+/** What the browser has read of the price and the units: the page shows no price until it is `ready`. */
+export type AvailabilityView
+  = | { state: 'loading' | 'failed' }
+    | { state: 'ready', byVariant: ReadonlyMap<string, { priceRappen: number, available: number }> }
+
+const photoSrc = (photo: PublicKeepsakePhoto) => photoCopy(photo.variants, GALLERY_WIDTH) ?? photo.url
+
+/** The description as the renderer's rich-text node. The contract types a node's children as unknown, so the shape is read here. */
+export function richNodeOf(value: unknown): RichNode {
+  if (typeof value !== 'object' || value === null)
+    return {}
+  const node: RichNode = {}
+
+  if ('type' in value && typeof value.type === 'string')
+    node.type = value.type
+  if ('text' in value && typeof value.text === 'string')
+    node.text = value.text
+  if ('content' in value && Array.isArray(value.content))
+    node.content = value.content.map(richNodeOf)
+  if ('marks' in value && Array.isArray(value.marks))
+    node.marks = value.marks.flatMap(mark => typeof mark === 'object' && mark !== null && 'type' in mark && typeof mark.type === 'string' ? [{ type: mark.type, ...('attrs' in mark && typeof mark.attrs === 'object' && mark.attrs !== null && { attrs: { ...mark.attrs } }) }] : [])
+  if ('attrs' in value && typeof value.attrs === 'object' && value.attrs !== null)
+    node.attrs = { ...value.attrs }
+
+  return node
+}
+
+/**
+ * The guest keepsake page's parts from the public detail (server-rendered, so no price in it) and what the browser has
+ * read of the availability. Until it is `ready`, every combination can be looked at and none can be added. Ready: a
+ * combination the read does not list is not sold, one with no unit left is sold out, and neither can be picked
+ * (AC52, AC53). `chosen` is what the guest picked; it falls back to the first combination that can be picked.
+ * Pickup place and date are chosen at checkout (E6.6), and ratings do not exist yet (E5.5).
+ */
+export function publicKeepsakePage(
+  detail: PublicKeepsake,
+  input: { t: Translate, intlLocale: IntlLocale, availability: AvailabilityView, chosen?: Chosen },
+) {
+  const { t, intlLocale, availability } = input
+  const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
+  const doc = richNodeOf(detail.description)
+  const description = isEmptyDescription(doc) ? undefined : doc
+
+  const photos = detail.photos.map(photoSrc)
+  const options = detail.options.map(option => ({
+    id: option.id,
+    label: option.name,
+    values: option.values.map(value => ({ id: value.id, label: value.label })),
+  }))
+  const variants = detail.variants.map((variant): ChoiceVariant => {
+    const row = availability.state === 'ready' ? availability.byVariant.get(variant.id) : undefined
+    const src = variant.photo ? photoSrc(variant.photo) : undefined
+    if (src && !photos.includes(src))
+      photos.push(src)
+
+    return {
+      id: variant.id,
+      values: variant.values,
+      price: row ? money(row.priceRappen) : '',
+      reason: availability.state !== 'ready'
+        ? undefined
+        : !row
+            ? t('detail.variant.notSold')
+            : row.available <= 0
+              ? t('detail.variant.soldOut')
+              : undefined,
+      photoIndex: src === undefined ? undefined : photos.indexOf(src),
+    }
+  })
+  const pickable = (variant: ChoiceVariant | undefined) => variant !== undefined && !variant.reason
+  const picked = chosenVariant(options, variants, input.chosen ?? {})
+  const first = variants.find(pickable) ?? variants[0]
+  const chosen = pickable(picked) && input.chosen ? input.chosen : { ...first?.values }
+  const current = chosenVariant(options, variants, chosen)
+  const live = pickable(current) ? current : undefined
+  const row = live && availability.state === 'ready' ? availability.byVariant.get(live.id) : undefined
+  const atCheckout = t('detail.preview.atCheckout')
+
+  return {
+    page: {
+      name: detail.name,
+      photos: galleryOrder(photos, current?.photoIndex),
+      galleryLabels: galleryLabelsOf(t, detail.name),
+      description,
+      languageNotice: detail.fallback ? t(detail.language === 'en' ? 'detail.onlyInEnglish' : 'detail.onlyInGerman') : undefined,
+      rating: { summary: t('detail.rating.new'), label: t('detail.reviews.none') },
+      highlights: [
+        { icon: 'pickup' as const, title: t('detail.highlight.pickup.title'), body: t('detail.preview.pickupBody') },
+        { icon: 'pay' as const, title: t('detail.highlight.delivery.title'), body: t('detail.highlight.delivery.body') },
+      ],
+      sheet: { title: t('detail.sheet.title'), closeLabel: t('detail.sheet.close') },
+      note: t('detail.preview.pickupBody'),
+      place: { options: [{ id: 'checkout', name: atCheckout, address: '', hours: '' }] },
+      sections: {
+        aboutTitle: t('detail.about.title'),
+        placesTitle: t('detail.places.title'),
+        dateRow: { title: t('detail.date.label'), action: '' },
+        paymentTitle: t('detail.payment.title'),
+        payment: t('detail.highlight.delivery.body'),
+        cancellationTitle: t('detail.cancellation.title'),
+        cancellation: t('detail.preview.cancellation'),
+      },
+      reviews: noReviews(t, detail.name),
+    },
+    variant: {
+      options,
+      variants,
+      chosen,
+      reasons: blockedValues(options, variants, t('detail.variant.notSold')),
+    },
+    /** The combination that can be bought now, with its price and units; undefined until the availability is ready. */
+    choice: live && row ? { id: live.id, price: money(row.priceRappen), priceRappen: row.priceRappen, available: row.available } : undefined,
+    /** Nothing can be bought: the keepsake says so, or the read shows no combination with a unit. */
+    soldOut: availability.state === 'ready' ? !variants.some(pickable) : detail.soldOut,
   }
 }
