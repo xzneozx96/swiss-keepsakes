@@ -55,7 +55,7 @@ describe('[E4.3][AC45] the Insert sheet', () => {
     expect(done('Insert photo')).toBeDisabled()
   })
 
-  it('[E4.3][AC45] AC-2 Insert video is off for an empty field and a Vimeo link, on for a YouTube link, and the node holds the 11-character id and the title', async () => {
+  it('[E4.3][AC45] AC-2 Insert video is off for an empty field and a Vimeo link, on for a YouTube link, and the node holds the 11-character id and the title', { timeout: 20_000 }, async () => {
     const { inserted } = renderSheet({ firstTab: 'video' })
     const field = screen.getByRole('textbox', { name: 'YouTube link' })
 

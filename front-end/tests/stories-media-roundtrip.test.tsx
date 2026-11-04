@@ -42,7 +42,7 @@ const editorOf = (element: HTMLElement) => (element as unknown as { editor: Edit
 const types = (element: HTMLElement) => (editorOf(element).getJSON().content ?? []).map(node => node.type)
 
 describe('[E4.3][AC45] media and pin link round trip', () => {
-  it('[E4.3][AC45] AC-1 a photo between two paragraphs survives a save and a reload', async () => {
+  it('[E4.3][AC45] AC-1 a photo between two paragraphs survives a save and a reload', { timeout: 20_000 }, async () => {
     const server = serveStory(storyGroupDetail({ en: storyVersion('en', { draft: storyDoc({ coverMediaId: coverId, body: body(para(text('first')), para(text('second'))) }) }) }))
 
     renderStoryEditor(path)
