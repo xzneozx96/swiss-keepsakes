@@ -3,7 +3,7 @@ id: swiss-keepsakes-prd
 status: approved
 owner: Chủ sản phẩm (Chị Ngọc là merchant)
 created: 2026-10-12
-updated: 2026-10-27
+updated: 2026-11-04
 ---
 # Swiss Stories & Gifts / Lucerne Keepsake
 
@@ -229,40 +229,103 @@ Các ví dụ dùng chung một nhóm nhân vật, cùng một ngày thứ Ba:
 | Chị Ngọc | Owner của cửa hàng |
 | Luca | Nhân sự cửa hàng, kiêm người giao |
 
+**Cập nhật 04/11/2026 (cổng G-J-WHERE).** Mục này được viết lại theo các quyết định đến ngày 04/11/2026 (`docs/decisions/2026-11-04-roadmap-reorder.md`, `docs/development-plan/delivery-plan.md` §5.1). Mỗi hành trình có một sơ đồ ngay dưới tiêu đề. Các hành trình 6.7 đến 6.23 được thêm vào; số mục 6.1 đến 6.6 giữ nguyên. Bước nào đổi có ghi chú ngắn kèm ngày và nguồn. "Bản" là bản phát hành theo thứ tự ở delivery-plan §5.1: Nền tảng, 1, 3, 2a, 4, 5, 2b, 6 đến 8.
+
+| Mã | Hành trình | Ai | Bản | Đã xây |
+| --- | --- | --- | --- | --- |
+| 6.1 | Từ nguồn giới thiệu và tìm kiếm đến câu chuyện và cửa hàng | Khách | 2a | Một phần |
+| 6.2 | Khách mua dao Victorinox (bước chung) | Khách | 4 | Chưa |
+| 6.2a | Khách tự nhận | Khách, merchant | 4 | Chưa |
+| 6.2b | Khách nhận qua đối tác | Khách, đối tác, merchant | 5 | Chưa |
+| 6.3 | Khách xem thông tin tour | Khách | 2b (trang mẫu dùng đến lúc đó) | Trang mẫu |
+| 6.4a | Merchant chuẩn bị nội dung và danh mục | Owner, Manager | 1 và 3 | Có |
+| 6.4b | Merchant vận hành ngày có đơn | Owner, Manager, Luca | 4 và 5 | Chưa |
+| 6.5 | Đối tác giới thiệu và bàn giao | Đối tác | 5 | Một phần |
+| 6.6 | Khách gửi yêu cầu tư vấn | Khách, merchant | 2b (biểu mẫu mẫu dùng đến lúc đó) | Biểu mẫu mẫu |
+| 6.7 | Đăng nhập và tài khoản | Khách | Nền tảng; trang Tài khoản ở 4 | Một phần |
+| 6.8 | Onboarding: mở lại và đổi câu trả lời | Khách | 2a | Chưa |
+| 6.9 | Trang chủ và tìm kiếm | Khách | 2a | Chưa |
+| 6.10 | Bản đồ, danh mục và điểm | Khách | 1 | Có |
+| 6.11 | Sự kiện trên bản đồ | Khách | 2a (phần trang chủ) | Một phần |
+| 6.12 | Đơn trong tài khoản: trả tiền và theo dõi | Khách | 4 | Chưa |
+| 6.13 | Viết và xuất bản câu chuyện | Merchant | Đã xây | Có |
+| 6.14 | Thêm và xuất bản điểm hoặc sự kiện | Merchant | 1 | Có |
+| 6.15 | Quản lý danh mục và thư viện ảnh | Merchant | 1 | Có |
+| 6.16 | Tạo keepsake | Merchant | 3 | Có |
+| 6.17 | Thiết lập điểm nhận | Merchant | 3 | Có |
+| 6.18 | Mời và quản lý thành viên | Owner | Đã xây | Có |
+| 6.19 | Mở cửa hàng | Super Admin, Owner | Nền tảng và 3 | Có |
+| 6.20 | Thiết lập tài khoản đối tác | Merchant, đối tác | 5 | Chưa |
+| 6.21 | Hủy và hoàn tiền | Khách, Owner, Manager | 4; khách tự hủy ở 5 | Chưa |
+| 6.22 | Bình luận và đánh giá | Khách, merchant | 2b | Chưa |
+| 6.23 | Thông báo | Mọi vai trò | Nhiều bản | Một phần |
+
 ### 6.1 Từ nguồn giới thiệu và tìm kiếm đến câu chuyện và cửa hàng
+
+```mermaid
+flowchart LR
+  A["Quét QR, mở link, tìm kiếm hoặc vào thẳng"] --> B{"Trang đầu tiên"}
+  B -->|"Trang chủ, không QR hay tìm kiếm"| C["N01 toàn màn hình"]
+  B -->|"Trang chủ từ QR hoặc link"| D["Trang chủ, không lời nhắc"]
+  B -->|"Câu chuyện"| E["Câu chuyện hiện ngay"]
+  D --> F["Bản đồ, thẻ điểm"]
+  F --> E
+  E --> G["N24 sau 10 giây"]
+  C --> H["Khám phá đã xếp theo câu trả lời"]
+  G --> H
+  E --> I["Thẻ dao, không giá"]
+  I --> J["Trang sản phẩm, giá hiện lần đầu"]
+```
 
 Khách vào trang từ ba hướng: tìm kiếm, QR hoặc link của guide hoặc khách sạn, hoặc vào thẳng. Trong cả ba, khách đọc được nội dung ngay, không đăng nhập. Hành trình điển hình:
 
-1. Khách mở trang qua QR, link hoặc tìm kiếm: nội dung hiện ngay, khách trả lời lời nhắc nhỏ hoặc đóng nó. Khách mở thẳng màn hình Khám phá lần đầu thấy onboarding toàn màn hình (§3.1).
-2. Khách mở bản đồ hoặc màn hình Khám phá, nhấn một điểm, đọc câu chuyện của điểm đó (§11.1, §11.2).
-3. Trong hoặc sau câu chuyện, khách thấy dao Victorinox liên quan, không kèm giá. Khách mở trang sản phẩm, nơi giá hiện lần đầu (Q24).
+1. Khách mở trang qua QR, link hoặc tìm kiếm: nội dung hiện ngay. Nếu trang là một câu chuyện, lời nhắc nhỏ N24 nổi lên sau 10 giây, khách trả lời hoặc đóng nó. Trang khác (trang chủ, điểm bản đồ, sản phẩm) không hiện lời nhắc. Khách mở thẳng màn hình Khám phá lần đầu thấy onboarding toàn màn hình N01. Khách vào qua QR hoặc link ở trang chủ thì thấy N01 lần đầu mở Khám phá từ trong ứng dụng (§3.1; cập nhật 04/11/2026, `docs/ux/onboarding-design.md` §1; E4.5).
+2. Khách mở bản đồ hoặc màn hình Khám phá, nhấn một điểm, đọc thẻ điểm rồi mở câu chuyện của điểm đó (§11.1, §11.2; E4.7). Khám phá là bản tin có thứ tự mục cố định; câu trả lời onboarding chỉ xếp thẻ trong từng mục (cập nhật 04/11/2026, `docs/decisions/2026-10-28-home-local-briefing.md` quyết định 10; E4.13).
+3. Trong hoặc sau câu chuyện, khách thấy dao Victorinox liên quan, không kèm giá. Khách mở trang sản phẩm, nơi giá hiện lần đầu (Q24; cập nhật 04/11/2026: thẻ keepsake sau câu chuyện thuộc E4.4 trong Sprint 9, không còn là E6.9, `docs/decisions/2026-11-04-roadmap-reorder.md` quyết định 13).
 4. Khách đặt dao (§6.2).
 
-Mỗi đối tác có QR hoặc link riêng. QR hoặc link bài viết dẫn đúng nội dung được chia sẻ, và nguồn giới thiệu vẫn ghi nhận (§10.1). Không bắt buộc có guide. Sau chuyến đi, merchant có thể gửi nội dung liên quan theo quy tắc liên hệ được duyệt; marketing cần sự đồng ý của khách.
+Mỗi đối tác có QR hoặc link riêng. QR hoặc link bài viết dẫn đúng nội dung được chia sẻ (E3.7 đã có việc chuyển hướng). Việc ghi lượt mở link và nhớ 30 ngày chờ O32 (E8.3; §10.1; cập nhật 04/11/2026, cổng G-J-LINKMEM). Không bắt buộc có guide. Sau chuyến đi, merchant có thể gửi nội dung liên quan theo quy tắc liên hệ được duyệt; marketing cần sự đồng ý của khách.
 
 **Ví dụ 1: Mai vào qua QR của Anna.**
 
 1. **10:05**, trên xe buýt, Anna phát tờ rơi "Lucerne miễn phí: chỗ ăn, nhà vệ sinh, điểm tham quan". Mai quét QR trên tờ rơi.
-2. Trang chủ mở ngay, không cần đăng nhập. Hệ thống ghi một lượt mở link của Anna (§10.1).
-3. Lời nhắc onboarding nhỏ nổi trên màn hình, không che nội dung. Mai mở lời nhắc, chọn short-stay và "Mua sắm và đồ lưu niệm". Màn hình Khám phá xếp các mục short-stay lên trước (§3.2).
-4. Mai mở bản đồ, nhấn điểm Kapellbrücke và đọc câu chuyện về cây cầu.
-5. Cuối câu chuyện có thẻ dao Victorinox chủ đề Kapellbrücke, không có giá. Mai nhấn thẻ và sang trang sản phẩm (tiếp ở §6.2b).
+2. Trang chủ mở ngay, không cần đăng nhập. Link chuyển Mai tới trang đích (E3.7). Việc ghi một lượt mở link của Anna chờ O32 (cổng G-J-LINKMEM, 04/11/2026; §10.1).
+3. Trang chủ không hiện lời nhắc onboarding nào (cập nhật 04/11/2026, `docs/ux/onboarding-design.md` §1).
+4. Mai mở bản đồ, nhấn điểm Kapellbrücke, đọc thẻ điểm rồi mở câu chuyện về cây cầu.
+5. Mười giây sau, lời nhắc N24 nổi trên trang câu chuyện, không che nội dung. Mai mở lời nhắc, chọn short-stay và "Mua sắm và đồ lưu niệm". Khi Mai quay về Khám phá, các thẻ short-stay trong từng mục xếp lên trước (§3.2). N01 không hiện nữa vì Mai đã trả lời.
+6. Cuối câu chuyện có thẻ dao Victorinox chủ đề Kapellbrücke, không có giá. Mai nhấn thẻ và sang trang sản phẩm (tiếp ở §6.2b).
 
 **Ví dụ 2: Tom vào qua tìm kiếm.**
 
 1. **Chủ nhật**, Tom nhận phòng ở khách sạn Seeblick. Lena đưa Tom tờ thông tin có QR của khách sạn. Tom quét thử rồi đóng trang.
 2. **Thứ Hai 21:00**, Tom tìm "Lucerne old town stories" trên Google và mở thẳng một câu chuyện về phố cổ.
 3. Câu chuyện hiện ngay. Lời nhắc onboarding nhỏ nổi trên màn hình sau 10 giây, không chèn vào nội dung. Tom mở lời nhắc, chọn multi-day, "Lịch sử và văn hóa" và "Cảnh quan thiên nhiên".
-4. Tom quay lại màn hình Khám phá. Tour và nhà hàng có thẻ multi-day xếp trước.
-5. Lần này Tom vào thẳng, nhưng lượt mở link của khách sạn Seeblick hôm Chủ nhật vẫn còn trong 30 ngày. Nếu Tom mua, đơn ghi nguồn là khách sạn Seeblick (§10.1).
+4. Tom quay lại màn hình Khám phá. Thứ tự các mục không đổi. Trong mục tuyến, chuyến đi trong ngày xếp trước vì Tom chọn multi-day, và điểm phải xem, quán ăn hợp sở thích của Tom xếp trước (cập nhật 04/11/2026, `docs/ux/home-design.md` §2).
+5. Lần này Tom vào thẳng, nhưng lượt mở link của khách sạn Seeblick hôm Chủ nhật vẫn còn trong 30 ngày. Nếu Tom mua, đơn ghi nguồn là khách sạn Seeblick (§10.1). Chờ O32: việc ghi và nhớ lượt mở link chưa xây (cổng G-J-LINKMEM, 04/11/2026).
 
 ### 6.2 Khách mua dao Victorinox
 
-Khách nhận dao theo một trong hai cách: **tự nhận** (§6.2a) hoặc **nhận qua đối tác** (§6.2b, chi tiết ở §10.4). Ba bước đầu giống nhau:
+```mermaid
+flowchart LR
+  A["Trang sản phẩm C03"] --> B["Bảng thêm vào giỏ: chọn tùy chọn, số lượng"]
+  B --> C["Chọn cách nhận và giờ"]
+  C --> D{"Đã đăng nhập?"}
+  D -->|"Chưa"| E["Đăng nhập C05"]
+  D -->|"Rồi"| F["Giỏ C04"]
+  E --> F
+  F --> G["Xem lại C06: các đơn sẽ tạo, tiền, Chỉ đường"]
+  G --> H["Gửi đơn"]
+  H --> I["Một giỏ thành một hoặc nhiều đơn"]
+  I --> J["6.2a tự nhận hoặc 6.2b qua đối tác"]
+```
 
-1. Khách mở trang sản phẩm, chọn kích cỡ, chủ đề, màu, số lượng. Giá hiện lần đầu ở trang này.
-2. Khách chọn cách nhận. Với cách tự nhận, khách chọn một điểm nhận trong danh sách merchant cấu hình và giờ nhận trong giờ mở cửa của điểm đó. Với cách nhận qua đối tác, lượt bàn giao được điền sẵn từ QR hoặc link của đối tác, và khách xác nhận hoặc chuyển sang tự nhận. Hệ thống đối chiếu tồn của SKU đã chọn và thời gian chuẩn bị (vài giờ, §7.2).
-3. Khách đăng nhập, xem lại lựa chọn và tổng tiền, rồi gửi đơn.
+Khách nhận dao theo một trong hai cách: **tự nhận** (§6.2a) hoặc **nhận qua đối tác** (§6.2b, chi tiết ở §10.4). Các bước đầu giống nhau:
+
+1. Khách mở trang sản phẩm. Các tùy chọn (ví dụ kích cỡ, chủ đề, màu) do merchant định nghĩa cho từng keepsake và khách chọn trong bảng thêm vào giỏ, cùng số lượng. Tổ hợp chưa bán hoặc hết hàng không chọn được. Không có khắc chữ. Giá hiện lần đầu ở trang này (cập nhật 04/11/2026, `docs/decisions/2026-11-02-keepsake-guest-page.md` quyết định 2 và 3; ADR-027; E6.4).
+2. Khách chọn cách nhận. Với cách tự nhận, khách chọn một điểm nhận trong danh sách merchant cấu hình và giờ nhận trong giờ mở cửa của điểm đó. Điểm nhận có liên kết Google Maps và nút "Chỉ đường" (cập nhật 04/11/2026, cổng G-S8-PICKUP-MAPS; ADR-024; E7.2, E7.7). Với cách nhận qua đối tác, lượt bàn giao được điền sẵn từ QR hoặc link của đối tác, và khách xác nhận hoặc chuyển sang tự nhận. Hệ thống đối chiếu tồn của SKU đã chọn và thời gian chuẩn bị (vài giờ, §7.2).
+3. Khách thêm dao vào giỏ. Giỏ lưu trên máy chủ nên khách đăng nhập ngay ở bước này, bằng Google hoặc mã email (cập nhật 04/11/2026, cổng G-J-SIGNIN; E6.7, E2.1). Nếu O41 cho phép giỏ khi chưa đăng nhập (E6.8), bước đăng nhập có thể lùi về lúc gửi đơn.
+4. Khách mở giỏ (C04) và màn hình xem lại (C06). Giỏ nhóm món theo điểm nhận hoặc lượt bàn giao. Màn hình xem lại cho thấy các đơn sẽ được tạo, số tiền từng đơn, điểm nhận và "Chỉ đường", và hệ thống kiểm tra lại tồn và giá trước khi gửi (cập nhật 04/11/2026; E7.2, E6.7; ADR-026).
+5. Khách gửi đơn. Một giỏ thành một hoặc nhiều đơn, tách theo điểm nhận hoặc lượt bàn giao (AC04, AC82; §8.1).
 
 **Chấp nhận.** Khi SKU còn đủ tồn và thời gian chuẩn bị kịp giờ nhận, hệ thống tự chấp nhận đơn và giữ tồn (cổng G2, 26/10/2026). Merchant vẫn từ chối được đơn trước khi bắt đầu chuẩn bị. Khi điều kiện tự chấp nhận không đạt, đơn ở trạng thái **Chờ người bán xác nhận**. Merchant kiểm tra khả năng đáp ứng, giờ nhận và phương án nhận, và nếu không đáp ứng được thì trao đổi với khách qua email để thống nhất phương án khác; kết quả cập nhật trên đơn (Q27).
 
@@ -272,9 +335,20 @@ Khách nhận dao theo một trong hai cách: **tự nhận** (§6.2a) hoặc **
 
 #### 6.2a Khách tự nhận
 
+```mermaid
+flowchart LR
+  A["Đơn tự chấp nhận hoặc merchant chấp nhận"] --> B["Khách trả đủ trực tuyến"]
+  B --> C["Đang chuẩn bị"]
+  C --> D["Sẵn sàng bàn giao"]
+  D --> E["Khách tới điểm nhận, đưa mã đơn, Chỉ đường"]
+  E --> F["Giao hàng và thu đủ tiền"]
+  F --> G["Hoàn tất, ghi hoa hồng, mời đánh giá"]
+  B -.->|"Quá hạn thanh toán"| H["Tự hủy, giải phóng tồn"]
+```
+
 1. Sau khi đơn được chấp nhận, hệ thống yêu cầu khách thanh toán toàn bộ trực tuyến. **Đang chuẩn bị** bắt đầu khi khoản thanh toán thành công. Hạn thanh toán và tự hủy khi quá hạn áp dụng (§9.1).
 2. Merchant chuẩn bị và cập nhật tiến độ.
-3. Nhân sự merchant gặp khách tại điểm nhận vào giờ đã chọn và giao hàng. Merchant chỉ hoàn tất khi đã giao hàng và thu đủ tiền.
+3. Nhân sự merchant gặp khách tại điểm nhận vào giờ đã chọn và giao hàng. Khách mở "Chỉ đường" tới điểm nhận từ theo dõi đơn (E7.7). Merchant chỉ hoàn tất khi đã giao hàng và thu đủ tiền.
 4. Hệ thống ghi hoa hồng cho đối tác theo last-click 30 ngày (§10.1, §10.2) và mời khách đánh giá sản phẩm.
 
 Vòng đời giữ nguyên v2 (Q27), điều chỉnh bởi cổng G1 và G2. Giờ nhận do khách nhập là yêu cầu, chỉ được xác nhận khi đơn được chấp nhận, tự động hoặc thủ công. Khi chờ merchant, khách thấy "Đang chờ người bán xác nhận", không có thời gian phản hồi dự kiến (R03). Trạng thái cần phân biệt: **Chờ người bán xác nhận**, **Người bán đã chấp nhận, chờ thanh toán**, **Đơn đã xác nhận, đang chuẩn bị**, **Sẵn sàng bàn giao**, **Hoàn tất**.
@@ -283,12 +357,12 @@ Vòng đời giữ nguyên v2 (Q27), điều chỉnh bởi cổng G1 và G2. Gi�
 
 1. **Thứ Ba 09:00**, Tom mở dao Spartan 91 mm, chủ đề Kapellbrücke, màu đỏ. Giá hiện lần đầu: CHF 45.
 2. Tom chọn tự nhận tại cửa hàng, hôm nay lúc 17:00. Giờ này nằm trong giờ mở cửa và còn đủ thời gian chuẩn bị.
-3. Tom đăng nhập bằng Google, xem lại đơn và gửi.
+3. Tom nhấn thêm vào giỏ và đăng nhập bằng Google (cập nhật 04/11/2026, cổng G-J-SIGNIN). Tom mở giỏ, xem lại đơn và gửi.
 4. SKU còn tồn và kịp giờ, nên hệ thống tự chấp nhận đơn và giữ 1 chiếc. Tom thấy "Người bán đã chấp nhận, chờ thanh toán" cùng hạn thanh toán.
 5. **09:05**, Tom trả trực tuyến. Đơn sang "Đơn đã xác nhận, đang chuẩn bị".
 6. **15:30**, Luca đóng gói xong và đánh dấu "Sẵn sàng bàn giao".
 7. **17:00**, Tom tới cửa hàng và đưa mã đơn. Luca giao dao, và đơn hoàn tất vì đã giao và đã thu đủ.
-8. Hoa hồng ghi cho khách sạn Seeblick, vì lượt mở link hôm Chủ nhật còn trong 30 ngày. Tom nhận lời mời đánh giá sản phẩm.
+8. Hoa hồng ghi cho khách sạn Seeblick, vì lượt mở link hôm Chủ nhật còn trong 30 ngày (chờ O32, cổng G-J-LINKMEM, 04/11/2026). Tom nhận lời mời đánh giá sản phẩm.
 
 Các biến thể:
 
@@ -297,6 +371,19 @@ Các biến thể:
 - Nếu Tom chọn một điểm nhận ngoài cửa hàng, Luca mang dao tới điểm đó vào giờ Tom chọn và gặp Tom tại đó.
 
 #### 6.2b Khách nhận qua đối tác
+
+```mermaid
+flowchart LR
+  A["QR hoặc link của đối tác"] --> B["Checkout điền sẵn lượt bàn giao"]
+  B --> C{"Cách trả"}
+  C -->|"Trực tuyến"| D["Chuẩn bị khi thanh toán xong"]
+  C -->|"Tiền mặt"| E["Chuẩn bị ngay khi được chấp nhận"]
+  D --> F["Merchant mang đơn tới đối tác"]
+  E --> F
+  F --> G["Đối tác xác nhận đã nhận"]
+  G --> H["Đối tác giao, khách đưa mã đơn"]
+  H --> I["Hoàn tất, hoa hồng ghi nhận"]
+```
 
 Luồng đầy đủ ở §10.4. Tóm tắt:
 
@@ -309,11 +396,13 @@ Luồng đầy đủ ở §10.4. Tóm tắt:
 
 Trạng thái khách thấy: **Đã đặt**, **Đang chuẩn bị**, **Đang tới đối tác**, **Đối tác đang giữ**, **Đã giao** (§10.4).
 
+Khi cả nhóm đặt nhiều ngày, đối tác chia sẻ **link bàn giao** trong nhóm chat. Link điền sẵn đúng lượt bàn giao đó vào bất kỳ ngày nào, ví dụ nhóm đặt ngày 1 để nhận tại khách sạn ngày 3. QR in sẵn chỉ điền lượt gần nhất hôm nay còn nhận đơn được (cập nhật 04/11/2026, `docs/decisions/2026-10-26-partner-handover.md`; bản 5).
+
 **Ví dụ: Mai nhận qua Anna.** Anna và chị Ngọc đã thống nhất lượt bàn giao tại Schwanenplatz lúc 13:00 thứ Ba (§6.5). Với 2 giờ chuẩn bị, lượt này nhận đơn tới 11:00.
 
 1. **10:20**, Mai mở dao Classic SD 58 mm, chủ đề Kapellbrücke. Giá hiện lần đầu: CHF 25. Mai nhấn **Mua**.
 2. Checkout đã điền sẵn "Anna giao tại Schwanenplatz, hôm nay 13:00". Mai xác nhận dòng này và chọn **Trả tiền mặt cho Anna**.
-3. Mai đăng nhập bằng mã email và gửi đơn. Hệ thống tự chấp nhận đơn và giữ tồn. Vì là đơn tiền mặt, đơn vào "Đang chuẩn bị" ngay. Mai nhận mã đơn **K7-42**.
+3. Mai thêm dao vào giỏ và đăng nhập bằng mã email (cập nhật 04/11/2026, cổng G-J-SIGNIN), xem lại rồi gửi đơn. Hệ thống tự chấp nhận đơn và giữ tồn. Vì là đơn tiền mặt, đơn vào "Đang chuẩn bị" ngay. Mai nhận mã đơn **K7-42**.
 4. **11:00**, lượt của Anna ngừng nhận đơn, với 6 đơn. Khách của Anna quét QR sau giờ này chỉ chọn được tự nhận.
 5. **12:30**, Luca rời cửa hàng với 6 túi. Màn hình của Mai hiện "Đang trên đường tới Anna".
 6. **12:50**, Luca giao 6 túi cho Anna ở Schwanenplatz. Anna bấm "Đã nhận 6/6". Màn hình của Mai hiện "Anna đang giữ, giao lúc 13:00".
@@ -327,19 +416,63 @@ Các biến thể:
 
 ### 6.3 Khách xem thông tin tour
 
+```mermaid
+flowchart LR
+  A["Dải tuyến trên trang chủ, tìm kiếm hoặc trang tour"] --> B["Trang tour"]
+  B --> C["Lộ trình, điểm dừng, điểm gặp"]
+  C --> D["Bản đồ lộ trình"]
+  D --> E["Tải PDF của tour"]
+  B --> F["Thẻ dao liên quan, không giá"]
+  F --> G["Trang sản phẩm"]
+```
+
+**Cập nhật 04/11/2026 (cổng G-J-TOURS, G-S9-DEFER, G-S9-TOURS-DEMO):** mục này giữ nguyên chỗ. Trang tour mẫu có sẵn phục vụ đến bản 2b; trình soạn tour, trang tour thật, PDF và thẻ keepsake trên trang tour (bước 3 và 4 bên dưới) thuộc bản 2b (E4.9, E4.10, E4.12, E6.9).
+
 Khách mở một tour, đọc lộ trình, các điểm dừng, thời lượng và điểm gặp, xem lộ trình trên bản đồ, và tải file PDF hướng dẫn của tour. Mọi thứ miễn phí, không cần tài khoản. Không có lịch khởi hành, chỗ trống, giữ chỗ, thanh toán hay nút đặt (Q4). Lộ trình do merchant định nghĩa chỉ là lời khuyên; khách không lập lộ trình riêng và sản phẩm không dùng vị trí của khách (cổng G9, 26/10/2026). Chi tiết ở §7.3. Các quy tắc giữ chỗ 15 phút, tour trả sau và hoàn tất booking của v2 đã gỡ (§18.2).
 
 **Ví dụ: Tom chuẩn bị cho ngày thứ Tư.**
 
-1. **Thứ Ba 20:00**, Tom mở màn hình Khám phá. Vì Tom chọn multi-day và "Lịch sử và văn hóa", một tour đi bộ phố cổ xếp gần đầu.
+1. **Thứ Ba 20:00**, Tom mở màn hình Khám phá. Mục tuyến nằm trên trang chủ; Tom cũng có thể tìm tour trong tìm kiếm. Tab Bản đồ đã thay chỗ của tab Tour (cập nhật 04/11/2026; E3.11, E4.6, E4.14). Vì Tom chọn multi-day, chuyến đi trong ngày xếp trước trong mục tuyến, và tuyến đi bộ phố cổ nằm trong dải đó (cổng G-S9-ROUTE-LINK: thẻ tuyến mở trang tour hiện có).
 2. Tom mở tour và đọc thời lượng, điểm gặp và các điểm dừng. Bản đồ hiện lộ trình do chị Ngọc định nghĩa.
-3. Trang không có giá, lịch khởi hành hay nút đặt. Tom tải file PDF hướng dẫn của tour, không cần đăng nhập.
-4. Gần cuối trang có hai thẻ dao Victorinox liên quan, không kèm giá.
+3. Trang không có giá, lịch khởi hành hay nút đặt. Tom tải file PDF hướng dẫn của tour, một file cho mỗi tour, không cần đăng nhập (bản 2b; E4.10, AC51).
+4. Gần cuối trang có hai thẻ dao Victorinox liên quan, không kèm giá (bản 2b; E6.9).
 5. **Thứ Tư**, Tom tự đi theo lộ trình, dùng file PDF. Ứng dụng không dẫn đường từ vị trí của Tom.
 
 ### 6.4 Merchant vận hành cửa hàng
 
-Merchant chuẩn bị nội dung (câu chuyện, điểm, thẻ nhóm khách và sở thích, tour, PDF), sản phẩm và tồn theo SKU, điểm nhận, tài khoản nhận tiền và đối tác giới thiệu. Khi có đơn, Owner hoặc Manager theo dõi việc sắp đến giờ, cập nhật thực hiện, ghi khoản thu hoặc xử lý hủy và hoàn tiền theo quyền. Với đơn qua đối tác, merchant chấp nhận hoặc đề xuất lại giờ bàn giao, mang đơn tới điểm nhận và xử lý cảnh báo thiếu túi hoặc túi khách không nhận (§10.4). Merchant cũng ẩn bình luận của khách khi cần (§11.6). Dashboard phân biệt việc còn phải làm, tiền còn phải thu và hoa hồng còn phải trả. Lịch hiện các lượt bàn giao và giờ nhận của đơn (§13.1a).
+Hành trình này tách thành hai phần (cập nhật 04/11/2026, cổng G-J-WHERE): chuẩn bị nội dung và danh mục (6.4a, đã xây) và ngày có đơn (6.4b, bản 4 và 5).
+
+#### 6.4a Merchant chuẩn bị nội dung và danh mục
+
+```mermaid
+flowchart LR
+  A["Đăng nhập, mở /store"] --> B["Keepsake là trang đầu; Hôm nay ẩn đến khi cửa hàng sẵn sàng"]
+  B --> C["Câu chuyện 6.13"]
+  B --> D["Địa điểm và sự kiện 6.14"]
+  B --> E["Danh mục và thư viện ảnh 6.15"]
+  B --> F["Keepsake 6.16"]
+  B --> G["Điểm nhận 6.17"]
+  B --> H["Thành viên 6.18"]
+```
+
+Owner hoặc Manager chuẩn bị nội dung và danh mục trước khi có đơn. `/store` mở thẳng vào Keepsake, và mục Hôm nay ẩn đến khi cửa hàng sẵn sàng (cập nhật 04/11/2026; commit e1280b18, 2b3e8596). Mục "Điểm" của menu cửa hàng nay là "Địa điểm và sự kiện" (cổng G-S9-LABEL). Ẩn bình luận của khách thuộc bản 2b (E5.4, §11.6). Từng việc có hành trình riêng: câu chuyện (6.13), địa điểm và sự kiện (6.14), danh mục và thư viện ảnh (6.15), keepsake (6.16), điểm nhận (6.17), thành viên (6.18).
+
+#### 6.4b Merchant vận hành ngày có đơn
+
+```mermaid
+flowchart LR
+  A["Nhận đề xuất của đối tác (bản 5)"] --> B["Chấp nhận hoặc đề xuất giờ khác"]
+  B --> C["Lịch hiện lượt bàn giao và đơn tự nhận"]
+  C --> D["Lượt ngừng nhận đơn, đóng gói, ghi mã đơn"]
+  D --> E["Mang túi tới đối tác, đánh dấu Đang tới đối tác"]
+  E --> F["Đối tác xác nhận đã nhận"]
+  F --> G["Giao và hoàn tất"]
+  G --> H["Dashboard: tiền, hoa hồng còn phải trả"]
+```
+
+Phần này thuộc bản 4 (đơn, thanh toán, theo dõi) và bản 5 (đề xuất bàn giao E7.14, E7.16, tiền mặt, hoa hồng). Chưa có mô-đun đơn hoặc bàn giao nào được xây.
+
+Với nội dung (câu chuyện, điểm, thẻ nhóm khách và sở thích, tour, PDF), sản phẩm và tồn theo SKU, điểm nhận, tài khoản nhận tiền và đối tác giới thiệu đã sẵn sàng (6.4a), khi có đơn, Owner hoặc Manager theo dõi việc sắp đến giờ, cập nhật thực hiện, ghi khoản thu hoặc xử lý hủy và hoàn tiền theo quyền. Với đơn qua đối tác, merchant chấp nhận hoặc đề xuất lại giờ bàn giao, mang đơn tới điểm nhận và xử lý cảnh báo thiếu túi hoặc túi khách không nhận (§10.4). Merchant cũng ẩn bình luận của khách khi cần (§11.6). Dashboard phân biệt việc còn phải làm, tiền còn phải thu và hoa hồng còn phải trả. Lịch hiện các lượt bàn giao và giờ nhận của đơn (§13.1a).
 
 **Ví dụ: ngày thứ Ba của chị Ngọc.**
 
@@ -354,13 +487,24 @@ Merchant chuẩn bị nội dung (câu chuyện, điểm, thẻ nhóm khách và
 
 ### 6.5 Đối tác giới thiệu và bàn giao
 
+```mermaid
+flowchart LR
+  A["Merchant tạo đối tác, mã và QR"] --> B["Merchant mời tài khoản đối tác 6.20"]
+  B --> C["Đối tác đăng nhập"]
+  C --> D["Màn hình bàn giao /handover: đề xuất lượt"]
+  D --> E["Merchant chấp nhận"]
+  E --> F["Đối tác nhận túi, giao khách, ghi tiền mặt"]
+  A --> G["Link báo cáo chỉ đọc cộng mã gửi email"]
+  G --> H["Báo cáo giao dịch và hoa hồng"]
+```
+
 Đối tác chia sẻ QR hoặc link công khai. Họ mở link báo cáo riêng và xác nhận mã gửi tới email đã đăng ký khi bắt đầu phiên mới, không cần mật khẩu, để xem giao dịch được ghi nguồn, giá trị và hoa hồng theo ngày, tuần hoặc tháng. Báo cáo cập nhật phần đã ghi nhận, đã trả và còn phải trả, chỉ hiện tên khách.
 
-Đối tác nhận bàn giao còn có màn hình bàn giao: đề xuất lượt bàn giao, đổi giờ, xác nhận đã nhận túi, giao cho khách và ghi tiền mặt (§10.4). Cách đối tác đăng nhập để ghi cập nhật còn mở (O24).
+Đối tác nhận bàn giao còn có màn hình bàn giao, nằm dưới `/handover`: đề xuất lượt bàn giao, đổi giờ, xác nhận đã nhận túi, giao cho khách và ghi tiền mặt (§10.4; E7.16). Màn hình này cần tài khoản đối tác, có được qua lời mời của merchant (§6.20; E8.1, ADR-019). Link báo cáo chỉ đọc và mã gửi email vẫn dùng như trên (E8.2, E8.5, AC12). Hiện mới có `/partner` và `/partner/$token`; màn hình bàn giao thuộc bản 5 (cập nhật 04/11/2026).
 
 **Ví dụ 1: Anna và đoàn ngày thứ Ba.**
 
-1. **Chủ nhật 18:00**, Anna mở màn hình bàn giao và tạo đề xuất: thứ Ba, đoàn đến 10:00 và rời đi 14:00, điểm nhận Schwanenplatz, bàn giao 13:00. **19:00**, chị Ngọc chấp nhận và Anna được báo.
+1. Trước đó chị Ngọc đã mời Anna tạo tài khoản đối tác, và Anna đã chấp nhận lời mời (§6.20; cập nhật 04/11/2026, E8.1). **Chủ nhật 18:00**, Anna mở màn hình bàn giao và tạo đề xuất: thứ Ba, đoàn đến 10:00 và rời đi 14:00, điểm nhận Schwanenplatz, bàn giao 13:00. **19:00**, chị Ngọc chấp nhận và Anna được báo.
 2. **Thứ Ba 10:05**, Anna phát tờ rơi có QR in sẵn của mình. Anna không cần QR mới cho đoàn này.
 3. **11:00**, màn hình bàn giao hiện 6 đơn, gồm tên khách, mã đơn, sản phẩm, và đơn đã trả hay còn tiền mặt cần thu.
 4. **12:50**, Luca giao túi. Anna kiểm danh sách, thấy đủ và bấm "Đã nhận 6/6".
@@ -379,14 +523,395 @@ Biến thể: nếu đoàn trễ 30 phút vì kẹt xe, Anna dời giờ bàn gi
 
 ### 6.6 Khách gửi yêu cầu tư vấn
 
+```mermaid
+flowchart LR
+  A["Biểu ngữ tư vấn trên trang chủ"] --> B["Biểu mẫu tư vấn C21"]
+  B --> C["Trả lời bộ câu hỏi cố định"]
+  C --> D["Nhập email, bắt buộc"]
+  D --> E["Gửi, không cần đăng nhập"]
+  E --> F["Email tới merchant, hộp thư tư vấn"]
+  F --> G["Merchant trả lời bằng email, ngoài hệ thống"]
+```
+
+**Cập nhật 04/11/2026 (cổng G-J-TOURS, G-S9-TOURS-DEMO):** mục này giữ nguyên chỗ. Biểu ngữ tư vấn mở biểu mẫu mẫu đến bản 2b; biểu mẫu thật (E4.15) và hộp thư tư vấn của merchant (E4.16) thuộc bản 2b.
+
 Khách gửi yêu cầu tư vấn qua một biểu mẫu đơn giản, giữ nguyên ý định của v2 (cổng G10, 26/10/2026). Mô tả ở §12.
 
 **Ví dụ: Tom hỏi về một ngày trên núi.**
 
 1. **Thứ Hai 21:30**, Tom muốn dành một ngày lên núi nhưng chưa biết chọn tuyến nào. Tom mở biểu mẫu tư vấn.
 2. Tom trả lời lần lượt bộ câu hỏi cố định của cửa hàng, nhập email, rồi gửi. Tom không cần đăng nhập.
-3. Chị Ngọc nhận email có yêu cầu của Tom và trả lời Tom bằng email, ngoài hệ thống.
+3. Chị Ngọc nhận email có yêu cầu của Tom, thấy yêu cầu trong hộp thư tư vấn (E4.16), và trả lời Tom bằng email, ngoài hệ thống.
 4. Yêu cầu không tạo đơn hay giao dịch nào.
+
+### 6.7 Đăng nhập và tài khoản
+
+```mermaid
+flowchart LR
+  A["Khách bấm hành động cần tài khoản"] --> B["Bảng đăng nhập C05"]
+  B --> C{"Cách đăng nhập"}
+  C -->|"Google"| D["Phiên đăng nhập"]
+  C -->|"Mã email"| E["Nhập mã, hiệu lực 5 phút"]
+  E --> D
+  D --> F["Giữ đăng nhập khi tải lại trang"]
+  F --> G["Tab Tài khoản: hồ sơ, đơn hàng"]
+```
+
+**Ai:** khách. Đọc nội dung không cần tài khoản; đăng nhập để mua và để bình luận (§5).
+
+1. Khách bấm một hành động cần tài khoản, ví dụ thêm vào giỏ (§6.2). Bảng đăng nhập mở ra (E2.1).
+2. Khách chọn Google hoặc mã gửi qua email. Mã có hiệu lực 5 phút và gửi bằng ngôn ngữ của trang, EN hoặc DE (E2.1, E2.2, E2.8).
+3. Khách vẫn đăng nhập khi tải lại trang (E2.1).
+4. Tab Tài khoản hiện hồ sơ và danh sách đơn (E7.26; §6.12).
+
+Bản: nền tảng; trang Tài khoản trên đơn thật ở bản 4. Story: E2.1, E2.2, E2.8, E7.26.
+
+### 6.8 Onboarding: mở lại và đổi câu trả lời
+
+```mermaid
+flowchart LR
+  A["N01 hoặc N24"] --> B{"Khách chọn"}
+  B -->|"Bỏ qua hoặc đóng"| C["Không tự hiện lại"]
+  B -->|"Trả lời hai bước"| D["Khám phá xếp lại ngay"]
+  C --> E["Dòng Sắp xếp cho chuyến của tôi"]
+  D --> F["Dòng Sắp xếp theo ... Đổi"]
+  F --> G["Mở lại hai bước, đổi câu trả lời"]
+  E --> G
+  H["Tab Tài khoản, dòng Chuyến của bạn"] --> G
+  G --> D
+```
+
+**Ai:** khách. Merchant, đối tác và Super Admin không bao giờ thấy onboarding (§3.1, AC92).
+
+1. Khách gặp N01 hoặc N24 theo quy tắc ở §6.1 và §3.1.
+2. Khách trả lời hai bước (loại khách, sở thích), hoặc bỏ qua, hoặc đóng. Bỏ qua hoặc đóng là cuối cùng, onboarding không tự hiện lại.
+3. Khám phá xếp lại các thẻ ngay, có chuyển động chỉ ở những dòng đổi chỗ (AC36).
+4. Khách mở lại hai bước ở chế độ đổi từ hai nơi: dòng "Sắp xếp theo ... Đổi" trên trang chủ (sau khi bỏ qua, dòng đọc "Mới nhất trước, Sắp xếp cho chuyến của tôi"), hoặc dòng "Chuyến của bạn" ở tab Tài khoản (AC91).
+5. Câu trả lời chỉ lưu trên trình duyệt (§3.1, Q12).
+
+Bản: 2a. Story: E4.5. Nguồn: `docs/ux/onboarding-design.md`, `docs/decisions/2026-10-28-onboarding-full-screen.md`, AC36, AC91, AC92.
+
+### 6.9 Trang chủ và tìm kiếm
+
+```mermaid
+flowchart LR
+  A["Trang chủ C01"] --> B["Ô tìm kiếm"]
+  A --> C["Ô dịch vụ, ví dụ nước uống, WC"]
+  A --> D["Điểm phải xem, tuyến, bản đồ đồ ăn"]
+  A --> E["Trong thời gian bạn ở đây: sự kiện"]
+  B --> F["Tìm kiếm C24: một danh sách"]
+  C --> G["Bản đồ lọc theo danh mục"]
+  D --> H["Thẻ điểm hoặc trang tour hiện có"]
+  F --> I["Câu chuyện, điểm, tour, keepsake"]
+```
+
+**Ai:** khách, không cần tài khoản.
+
+1. Trang chủ là bản tin có thứ tự mục cố định: ảnh đầu trang với ô tìm kiếm, lời mời mở bản đồ, các ô dịch vụ, điểm phải xem, tuyến, đồ ăn và uống, sự kiện, rồi mục dao Victorinox không giá và biểu ngữ tư vấn. Câu trả lời onboarding chỉ xếp thẻ trong mục (`docs/ux/home-design.md` §1, §2).
+2. Một ô dịch vụ là danh mục bản đồ có bật "Hiện trên trang chủ"; ô chỉ hiện khi danh mục có ít nhất một điểm đã xuất bản. Ô mở bản đồ lọc theo danh mục (`/$lang/map?category=<slug>`; cổng G-S9-TILES, G-S9-EMPTY-TILE).
+3. Thẻ tuyến mở trang tour hiện có (cổng G-S9-ROUTE-LINK).
+4. Ô tìm kiếm mở một danh sách chung cho câu chuyện, điểm, tour và keepsake, mỗi dòng ghi loại, có bộ lọc loại, không giá. Kết quả tour lấy từ các tour mẫu đến bản 2b (E4.14; cổng G-S9-SEARCH).
+5. Dữ liệu trang chủ lấy từ API thật; chỗ nào thiếu thì để thiếu (cổng G-S9-REALDATA).
+
+Bản: 2a. Story: E4.13, E4.14. Nguồn: `docs/decisions/2026-11-04-roadmap-reorder.md` quyết định 7, 8, 11, 12.
+
+### 6.10 Bản đồ, danh mục và điểm
+
+```mermaid
+flowchart LR
+  A["Tab Bản đồ N02"] --> B["Bảng Danh mục"]
+  B --> C["Các điểm khác mờ đi"]
+  A --> D["Chuyển Bản đồ và Danh sách"]
+  C --> E["Nhấn điểm: thẻ điểm N03"]
+  D --> E
+  E --> F["Mở trong Google Maps, chỉ đường"]
+  E --> G["Link câu chuyện chính nếu có"]
+  H["Link ?place=slug"] --> E
+  H -.->|"Điểm đã gỡ"| I["Thông báo không còn trên bản đồ"]
+```
+
+**Ai:** khách, không cần tài khoản.
+
+1. Khách mở tab Bản đồ. Bảng Danh mục có ô chọn; chọn danh mục làm mờ điểm khác trên bản đồ, còn danh sách và hàng thẻ chỉ giữ danh mục đã chọn (E4.6, AC88 đến AC90).
+2. Khách chuyển giữa Bản đồ và Danh sách (AC93).
+3. Khách nhấn một điểm. Thẻ điểm hiện ảnh, mẹo, giờ, địa chỉ, ngày kế tiếp nếu có, link câu chuyện chính nếu có và nút mở Google Maps để chỉ đường (E4.7, AC42).
+4. Link `?place=<slug>` mở thẳng thẻ điểm. Nếu điểm đã gỡ, khách thấy thông báo điểm không còn trên bản đồ (E4.7).
+
+Bản: 1, đã xây. Story: E4.6, E4.7. Nguồn: `docs/ux/pins-design.md`, AC42, AC88 đến AC90, AC93.
+
+### 6.11 Sự kiện trên bản đồ
+
+```mermaid
+flowchart LR
+  A["Merchant xuất bản điểm có ngày"] --> B["Trang chủ: Trong thời gian bạn ở đây"]
+  B --> C["Tuần này: ngày kế tiếp trong 7 ngày"]
+  B --> D["Sắp tới: tối đa 3 sự kiện"]
+  D --> E{"Hơn 3 sự kiện phía trước?"}
+  E -->|"Có"| F["Xem tất cả trên bản đồ"]
+  F --> G["Bản đồ lọc các điểm có ngày"]
+  A --> H["Sau ngày cuối, điểm tự biến mất"]
+```
+
+**Ai:** khách.
+
+1. Một sự kiện là điểm có ngày (ADR-029). Merchant xuất bản là hiện, hết ngày cuối thì tự biến mất mà merchant không làm gì (`docs/decisions/2026-10-27-map-pins-and-events.md`).
+2. Mục "Trong thời gian bạn ở đây" trên trang chủ chia "Tuần này" (ngày kế tiếp trong 7 ngày) và "Sắp tới" (các ngày sau, tối đa 3). Không có điểm nào có ngày thì mục không hiện (cổng G-S9-EVENTS).
+3. "Xem tất cả trên bản đồ" chỉ hiện khi còn hơn 3 sự kiện phía trước, và mở bản đồ lọc các điểm có ngày.
+
+Bản: 2a, phần trang chủ; bản đồ ở bản 1. Story: E4.13, E4.6. Nguồn: ADR-029, `docs/decisions/2026-11-04-roadmap-reorder.md` quyết định 10.
+
+### 6.12 Đơn trong tài khoản: trả tiền và theo dõi
+
+```mermaid
+flowchart LR
+  A["Tab Tài khoản C14"] --> B["Danh sách đơn, mới nhất trước"]
+  B --> C["Theo dõi đơn C15"]
+  C --> D{"Đơn đã được chấp nhận, trả trực tuyến?"}
+  D -->|"Có"| E["Trả tiền C12"]
+  E --> C
+  D -->|"Tiền mặt"| F["Không có trang trả tiền"]
+  C --> G["Trạng thái, mã đơn, Chỉ đường"]
+```
+
+**Ai:** khách đã đăng nhập.
+
+1. Tài khoản hiện danh sách đơn, mới nhất trước, mỗi đơn có trạng thái và link tới theo dõi đơn. Một giỏ thành hai đơn hiện hai dòng (E7.26, AC82).
+2. Với đơn trực tuyến đã được chấp nhận, khách trả đủ ở trang trả tiền C12. Thanh toán chỉ được yêu cầu sau khi chấp nhận (E7.9, AC25). Đơn tiền mặt không có trang này (AC65).
+3. Theo dõi đơn C15 hiện trạng thái tự nhận hoặc qua đối tác, mã đơn, trạng thái tiền mặt và nhãn thanh toán; đơn tự nhận có "Chỉ đường" (E7.7).
+
+**Ví dụ: Tom sau khi gửi đơn (§6.2a).** Tom mở Tài khoản và thấy một đơn "Người bán đã chấp nhận, chờ thanh toán". Tom bấm vào, trả CHF 45 trực tuyến, rồi quay lại trang theo dõi thấy "Đang chuẩn bị" và mã đơn.
+
+Bản: 4. Story: E7.7, E7.9, E7.26. Chưa xây.
+
+### 6.13 Viết và xuất bản câu chuyện
+
+```mermaid
+flowchart LR
+  A["Danh sách câu chuyện theo ngôn ngữ"] --> B["Bước 1 Viết: ảnh bìa, tiêu đề, nội dung"]
+  B --> C["Bước 2 Chi tiết: danh mục, điểm, keepsake, bài liên quan"]
+  C --> D["Bước 3 Xem lại và xuất bản"]
+  D --> E["Xuất bản"]
+  A --> F["Xóa câu chuyện"]
+```
+
+**Ai:** Owner hoặc Manager. Super Admin không biên tập (§5, AC16).
+
+1. Merchant mở danh sách theo phiên bản ngôn ngữ và trạng thái (E4.3).
+2. Bước Viết: một tài liệu rich text cho mỗi ngôn ngữ, gồm ảnh bìa, tiêu đề, nội dung, và ảnh chèn giữa các đoạn.
+3. Bước Chi tiết: phiên bản ngôn ngữ, danh mục blog, các điểm, loại khách, sở thích, keepsake (tối đa 6) và bài liên quan.
+4. Bước Xem lại và xuất bản: xem trước, các kiểm tra trước khi xuất bản, rồi xuất bản.
+5. Merchant xóa được câu chuyện.
+
+Bản: đã xây. Story: E4.3. Nguồn: `docs/decisions/2026-10-28-story-editor.md`.
+
+### 6.14 Thêm và xuất bản điểm hoặc sự kiện
+
+```mermaid
+flowchart LR
+  A["Danh sách Địa điểm và sự kiện"] --> B["Thêm điểm"]
+  B --> C["Danh mục, ảnh, link Google Maps"]
+  C --> D["Giờ mở cửa, ngày nếu là sự kiện"]
+  D --> E{"Trạng thái"}
+  E -->|"Xuất bản"| F["Hiện trên bản đồ"]
+  E -->|"Ẩn"| G["Không hiện với khách"]
+  A --> H["Xóa nếu chưa dùng"]
+```
+
+**Ai:** Owner hoặc Manager.
+
+1. Merchant thêm một điểm hoặc sự kiện: danh mục, ảnh, link Google Maps, giờ mở cửa, và ngày nếu là sự kiện (E4.2; ADR-029).
+2. Merchant xuất bản hoặc ẩn. Điểm đứng một mình, không cần câu chuyện.
+3. Merchant xóa điểm chưa được dùng (ADR-030).
+
+Bản: 1, đã xây. Story: E4.2. Nguồn: ADR-029, ADR-030, `docs/decisions/2026-10-27-map-pins-and-events.md`.
+
+### 6.15 Quản lý danh mục và thư viện ảnh
+
+```mermaid
+flowchart LR
+  A["Nội dung"] --> B["Danh mục N23"]
+  A --> C["Thư viện ảnh N18"]
+  B --> D["Danh mục bản đồ và blog, tên EN và DE, một cấp con"]
+  D --> E["Xóa khi không còn điểm hay bài dùng"]
+  C --> F["Tải lên, tìm, thay file"]
+  F --> G["Xem file đang dùng ở đâu"]
+```
+
+**Ai:** Owner hoặc Manager.
+
+1. Danh mục bản đồ và danh mục blog, mỗi loại có tên EN và DE, thứ tự và một cấp danh mục con. Xóa được khi không còn danh mục con, điểm hoặc bài dùng (E4.18; ADR-030).
+2. Thư viện ảnh: tải lên, tìm theo tên, thay file, xem file đang dùng ở đâu (E4.11).
+
+Bản: 1, đã xây. Story: E4.18, E4.11.
+
+### 6.16 Tạo keepsake
+
+```mermaid
+flowchart LR
+  A["Danh sách Keepsake"] --> B["Bước 1 Chi tiết"]
+  B --> C["Bước 2 Tùy chọn và biến thể"]
+  C --> D["Bước 3 Xem lại và xuất bản"]
+  D --> E["Xuất bản hoặc lưu nháp: keepsake được tạo"]
+  C --> F["Tồn kho theo SKU"]
+  A --> G["Xóa hoặc lưu trữ"]
+```
+
+**Ai:** Owner hoặc Manager.
+
+1. Bước Chi tiết, với mô tả rich text cho mỗi ngôn ngữ.
+2. Bước Tùy chọn và biến thể: tùy chọn tự gõ tại chỗ, các tổ hợp xuất hiện khi thêm giá trị, bỏ tổ hợp không bán, giá và trạng thái ngay trên dòng. Keepsake không có tùy chọn thì sửa giá tại chỗ.
+3. Bước Xem lại và xuất bản. Keepsake mới chỉ được tạo ở bước này, bằng Xuất bản hoặc Lưu nháp. Keepsake đã có thì tự lưu.
+4. Tồn kho theo SKU: đang có, đang giữ, còn bán được.
+5. Xóa một keepsake chưa bán; keepsake đã bán thì được lưu trữ (ADR-017).
+
+Bản: 3, đã xây. Story: E6.1, E6.2, E6.3. Nguồn: `docs/decisions/2026-11-02-keepsake-editor-steps.md`.
+
+### 6.17 Thiết lập điểm nhận
+
+```mermaid
+flowchart LR
+  A["Điểm nhận M14"] --> B["Tên, địa chỉ, hướng dẫn"]
+  B --> C["Giờ mở cửa theo tuần"]
+  C --> D["Link Google Maps, bắt buộc"]
+  D --> E["Dùng cho tự nhận và bàn giao"]
+  A --> F["Xóa nếu chưa dùng"]
+```
+
+**Ai:** Owner hoặc Manager.
+
+1. Merchant thêm điểm nhận với tên, địa chỉ, hướng dẫn và giờ mở cửa theo tuần; giờ được qua nửa đêm (E6.6).
+2. Link Google Maps là bắt buộc. Khách dùng link này cho "Chỉ đường" (cổng G-S8-PICKUP-MAPS; ADR-024).
+3. Điểm nhận dùng chung cho tự nhận và bàn giao. Xóa chỉ khi chưa được dùng.
+
+Bản: 3, đã xây. Story: E6.6.
+
+### 6.18 Mời và quản lý thành viên
+
+```mermaid
+flowchart LR
+  A["Owner: Cài đặt, Thành viên"] --> B["Mời Store Manager qua email"]
+  B --> C["Người nhận đăng nhập hoặc tạo tài khoản"]
+  C --> D["Chấp nhận lời mời, email khớp"]
+  D --> E["Thành viên trong bảng Thành viên"]
+```
+
+**Ai:** Owner.
+
+1. Owner mở Cài đặt, Thành viên, và mời Store Manager bằng email (§5; ADR-010).
+2. Người nhận đăng nhập hoặc tạo tài khoản rồi chấp nhận lời mời. Email đăng nhập phải khớp email được mời (E2.3).
+3. Bảng Thành viên hiện các thành viên của cửa hàng.
+
+Bản: đã xây (commit 5b74823b). Story: E2.3. Còn mở: lời mời hết hạn hoặc thu hồi (§5).
+
+### 6.19 Mở cửa hàng
+
+```mermaid
+flowchart LR
+  A["Super Admin tạo cửa hàng, mời Owner A01"] --> B["Email mời N20"]
+  B --> C["Owner chấp nhận"]
+  C --> D["Các bước mở cửa hàng"]
+  D --> E{"Đủ điều kiện mở?"}
+  E -->|"Chưa"| F["Liệt kê điều kiện còn thiếu"]
+  E -->|"Rồi"| G["Mở bán"]
+  G --> H["Vào dashboard, Hôm nay"]
+```
+
+**Ai:** Super Admin, rồi Owner.
+
+1. Super Admin tạo cửa hàng và mời Owner (A01, N20). Super Admin không giữ vai trò nào trong cửa hàng (E2.3).
+2. Owner chấp nhận lời mời và làm các bước mở cửa hàng ở một trang riêng ngoài khung merchant. Thông tin cửa hàng có sẵn; các bước tài khoản nhận tiền, danh mục và chính sách ghi "Chưa có" cho đến khi được xây (E2.16).
+3. Nút "Mở bán" chỉ bật khi API báo đủ điều kiện. Quy tắc mở bán nằm ở máy chủ (E2.16).
+4. Sau đó "Đến dashboard" mở Hôm nay (`/store`) và menu merchant mới hiện.
+
+Bản: nền tảng và 3, đã xây. Story: E2.3, E2.15, E2.16.
+
+### 6.20 Thiết lập tài khoản đối tác
+
+```mermaid
+flowchart LR
+  A["Merchant tạo đối tác với mã và QR M15"] --> B["Mời tài khoản đối tác M01"]
+  B --> C["Người được mời đăng nhập bằng email được mời"]
+  C --> D["Chấp nhận lời mời"]
+  D --> E["Vai trò đối tác"]
+  E --> F["Chỉ thấy dữ liệu của chính mình"]
+  G["Tự đăng ký"] --> H["Chỉ vai trò khách"]
+```
+
+**Ai:** merchant và đối tác (Anna, Lena).
+
+1. Merchant tạo đối tác với mã và QR, rồi gửi lời mời tài khoản từ trang chi tiết đối tác (E8.2, M15, M16).
+2. Người được mời đăng nhập bằng email được mời và chấp nhận (M01; E8.1; ADR-019).
+3. Vai trò đối tác chỉ có qua lời mời được chấp nhận. Tự đăng ký chỉ ra vai trò khách (cổng D1, ADR-010).
+4. Đối tác chỉ thấy dữ liệu của mình và không thấy `/handover` của người khác (AC02).
+
+Bản: 5. Story: E8.1, E8.2. Chưa xây.
+
+### 6.21 Hủy và hoàn tiền
+
+```mermaid
+flowchart LR
+  A["Owner hoặc Manager mở chi tiết đơn"] --> B["Hủy từng dòng, một phần"]
+  B --> C["Giải phóng tồn chưa bàn giao"]
+  B --> D["Hoàn tiền: không vượt số đã trả"]
+  D --> E{"Đã trả bằng"}
+  E -->|"Ngoài ứng dụng"| F["Ghi hoàn tiền"]
+  E -->|"Stripe"| G["Đang xử lý, thành công hoặc thất bại"]
+  H["Khách tự hủy, chờ O36"] -.-> B
+```
+
+**Ai:** Owner hoặc Manager; khách tự hủy chờ O36.
+
+1. Owner hoặc Manager hủy từng dòng của đơn đã trả ngoài ứng dụng, từ chi tiết đơn. Hủy giải phóng tồn chưa bàn giao và không tự hoàn tiền (E7.12; AC05, AC14).
+2. Hoàn tiền không vượt số đã trả của dòng (AC14; §9.3).
+3. Với đơn trả qua Stripe, hoàn tiền hiện đang xử lý, thành công hoặc thất bại; đang xử lý không được báo là đã hoàn (E7.13).
+4. Khách tự hủy đơn còn ở "Đã đặt" hoặc "Đang chuẩn bị", kể cả đơn qua bàn giao, chờ O36 (E7.24).
+
+Bản: 4; khách tự hủy ở bản 5. Story: E7.12, E7.13, E7.24. Chưa xây.
+
+### 6.22 Bình luận và đánh giá
+
+```mermaid
+flowchart LR
+  A["Khách đọc câu chuyện"] --> B["Hộp bình luận"]
+  B --> C{"Đã đăng nhập?"}
+  C -->|"Chưa"| D["Đăng nhập C05"]
+  C -->|"Rồi"| E["Bình luận hiện ngay"]
+  D --> E
+  E --> F["Merchant ẩn hoặc bỏ ẩn M18"]
+  G["Đơn hoàn tất"] --> H["Khách đánh giá keepsake đã mua"]
+```
+
+**Ai:** khách và merchant.
+
+1. Khách phải đăng nhập mới bình luận; không cần mua hàng. Bình luận hiện ngay, giữ ngôn ngữ khách viết và hiện tên riêng cộng chữ cái đầu (E5.3; §11.6; AC46).
+2. Merchant ẩn hoặc bỏ ẩn bình luận; lịch sử giữ người, lúc và lý do. Không có xóa (E5.4; AC47).
+3. Khách đánh giá keepsake sau khi đơn hoàn tất, một lần cho mỗi keepsake (E5.5). Đến lúc đó trang keepsake ghi "Mới, chưa có đánh giá".
+
+Bản: 2b. Story: E5.3, E5.4, E5.5. Chưa xây.
+
+### 6.23 Thông báo
+
+```mermaid
+flowchart LR
+  A["Sự kiện trong hệ thống"] --> B["Việc gửi mail, thử lại khi lỗi"]
+  B --> C["Mã đăng nhập N01"]
+  B --> D["Lời mời N20"]
+  B --> E["Đơn quá hạn thanh toán, tự hủy"]
+  B --> F["Bàn giao đổi hoặc hủy"]
+  C --> G["EN hoặc DE theo ngôn ngữ trang"]
+  D --> G
+  E --> G
+  F --> G
+```
+
+**Ai:** mọi vai trò.
+
+1. Email đi qua một việc gửi mail có thử lại, với mẫu EN và DE (E2.8). Gửi lỗi thì thử lại rồi cảnh báo.
+2. Mã đăng nhập (N01) và lời mời (N20) đã xây (E2.8).
+3. Đơn trực tuyến quá hạn thanh toán tự hủy và khách được báo bằng mail (E7.11, bản 4).
+4. Khi merchant hủy một ngày bàn giao hoặc đổi giờ, đối tác và mọi khách có đơn được báo (E7.15, bản 5).
+
+Bản: nhiều bản. Story: E2.8, E7.11, E7.15.
 
 ## 7. Cửa hàng và sản phẩm
 
@@ -907,7 +1432,7 @@ Bảng này tập hợp lựa chọn ảnh hưởng phạm vi, hành vi hoặc l
 | O21 | **Rà soát công nghệ (giai đoạn 2).** Bốn mục thuộc rà soát công nghệ và kiến trúc, PRD chỉ nêu yêu cầu: (a) địa chỉ cho công cụ tìm kiếm (Q5); (b) công cụ soạn câu chuyện, điểm, lộ trình (Q7); (c) mô hình liên kết sẵn sàng cho affiliate (Q30); (d) nơi lưu PDF tour (Q19) | Trước khi xây           | Kiến trúc sư, chủ sản phẩm       |
 | O22 | Giá trị thời gian chuẩn bị (số giờ) và cách tính điều kiện tự chấp nhận. Mốc hủy N giờ và phí hủy đã gỡ khỏi Phase 1, xem O36 | Trước nhận đơn thật | Chủ sản phẩm, merchant |
 | O23 | Thiết kế hình ảnh bản đồ. **Phần nền đã chốt (cổng G11, 27/10/2026):** ảnh swisstopo SWISSIMAGE phẳng 2D kèm tên địa danh OpenFreeMap, không 3D, dùng cho cả bản đồ và bản đồ lộ trình tour; ghi nguồn © swisstopo và OpenFreeMap, OpenMapTiles, OpenStreetMap. **Đã đóng (27/10/2026):** chủ sản phẩm không có ảnh tham chiếu; kiểu điểm và màu dùng kiểu mặc định của bộ bản đồ | Đã đóng | Chủ sản phẩm |
-| O24 | Cách đối tác xác thực để ghi cập nhật bàn giao. Đã chốt (cổng D1, 26/10/2026; ADR-010 và ADR-019, đang ở trạng thái đề xuất): tài khoản đăng nhập theo luồng hiện có, vai trò đối tác chỉ qua lời mời của merchant, tự đăng ký chỉ ra vai trò khách, link báo cáo chỉ đọc. Các phần khác của O24 cũ đã chốt ở cổng G1 và G6 (§10.4) | Đã chốt | Chủ sản phẩm, kỹ thuật |
+| O24 | Cách đối tác xác thực để ghi cập nhật bàn giao. Đã chốt (cổng D1, 26/10/2026; ADR-010 và ADR-019, đã chấp nhận trong `docs/adr/INDEX.md`; cập nhật 04/11/2026): tài khoản đăng nhập theo luồng hiện có, vai trò đối tác chỉ qua lời mời của merchant, tự đăng ký chỉ ra vai trò khách, link báo cáo chỉ đọc. Các phần khác của O24 cũ đã chốt ở cổng G1 và G6 (§10.4) | Đã chốt | Chủ sản phẩm, kỹ thuật |
 | O25 | Quy tắc review mặc định của cổng R1 (một review mỗi khách và địa điểm, 1 đến 5 sao) **đã gỡ cùng review địa điểm (cổng G11, 27/10/2026)**. Phần tên hiển thị (tên riêng và chữ cái đầu, ví dụ "Anna K.") vẫn áp dụng cho bình luận bài (R1). Còn mở: nội dung chưa gắn thẻ nhóm khách (đề xuất: coi là cả hai) và feed khi khách bỏ qua onboarding (đề xuất: chỉ xếp theo ngày) | Trước đặc tả cá nhân hóa | Chủ sản phẩm, merchant |
 | O26 | Victorinox: danh sách màu, danh sách chủ đề, quyền sử dụng thiết kế, giá. Nếu quyền thiết kế chưa xác nhận, pilot chạy không có cửa hàng hay chỉ bán hàng Victorinox tiêu chuẩn. Tài nguyên cho Swiss limited edition giai đoạn sau | Trước nhập tồn | Merchant, nhà cung cấp |
 | O27 | Widget tư vấn: đã chốt giữ như biểu mẫu yêu cầu đơn giản (cổng G10, 26/10/2026) | Đã chốt | Chủ sản phẩm |
