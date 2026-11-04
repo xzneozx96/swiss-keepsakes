@@ -1,11 +1,12 @@
 import type { PublicLanguage } from '@sk/api-contract'
 import type { PublicCard, PublishedPages } from '../lib/sitemap'
 import { createApiClient, publicStoryCardSchema, publicTourCardSchema } from '@sk/api-contract'
-import { apiOrigin } from '@/features/catalog/api/api-origin'
+import { answer, PAGE_READ_TIMEOUT_MS, timeout } from '@/features/data-client/api-transport'
+import { ApiProblem } from '@/features/data-client/errors'
+import { apiOrigin } from '@/lib/api-origin'
 
 const LANGUAGES: readonly PublicLanguage[] = ['en', 'de']
 const CACHE_MS = 60_000
-const TIMEOUT_MS = 5000
 
 const CARD_FIELDS = { id: true, slug: true, language: true, fallback: true } as const
 const storyCards = publicStoryCardSchema.pick(CARD_FIELDS).array()
@@ -32,19 +33,16 @@ async function readCards(
   lang: PublicLanguage,
 ): Promise<PublicCard[]> {
   try {
-    const options = { params: { query: { lang } }, signal: AbortSignal.timeout(TIMEOUT_MS) }
-    const { data, response } = kind === 'stories'
-      ? await client.GET('/api/public/stories', options)
-      : await client.GET('/api/public/tours', options)
-    if (!response.ok)
-      throw new Error(`${kind} ${lang} answered ${response.status}`)
-
-    const items = (data as { items?: unknown } | undefined)?.items
+    const options = { params: { query: { lang } }, ...timeout(PAGE_READ_TIMEOUT_MS) }
+    const list = kind === 'stories'
+      ? await answer(client.GET('/api/public/stories', options))
+      : await answer(client.GET('/api/public/tours', options))
+    const items: unknown = list.items
     const parsed = (kind === 'stories' ? storyCards : tourCards).parse(items)
     return parsed.filter(card => !card.fallback && card.language === lang)
   }
   catch (error) {
-    throw new PublicPagesUnavailable(`Cannot read published ${kind} in ${lang}: ${error instanceof Error ? error.message : String(error)}`)
+    throw new PublicPagesUnavailable(`Cannot read published ${kind} in ${lang}: ${error instanceof ApiProblem ? `answered ${error.status}` : error instanceof Error ? error.message : String(error)}`)
   }
 }
 

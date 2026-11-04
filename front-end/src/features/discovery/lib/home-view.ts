@@ -1,35 +1,7 @@
 import type { Tour } from '@sk/domain/bookings'
-import type { StoryCategory } from '@sk/domain/content'
 import type { ProductCardProps } from '@/features/catalog/components/product-card'
 
 // The view the lab pages (/lab/victorinox, /lab/blog-home) still read through `useDiscoveryView`. The guest home no longer uses it (E4.13).
-
-export interface JourneyStep {
-  id: string
-  photo: string
-  color: string
-  eyebrow: string
-  title: string
-  line: string
-}
-
-export interface MovingStory {
-  slug: string
-  photo: string
-  title: string
-  category: string
-  place: string
-  author: string
-  /** e.g. "4 min read". */
-  meta: string
-}
-
-export interface StoryCategoryLink {
-  /** Absent = all stories. */
-  id?: StoryCategory
-  name: string
-  photo: string
-}
 
 export interface StoryView {
   slug: string
@@ -52,13 +24,6 @@ export interface DiscoveryHomeView {
     photoAlt: string
     searchLabel: string
     searchPrompt: string
-  }
-  journey: { title: string, subtitle: string, steps: JourneyStep[] }
-  stories: PartView & {
-    categoriesLabel: string
-    categories: StoryCategoryLink[]
-    items: MovingStory[]
-    showAll: string
   }
   tours: PartView & {
     seeAll: string

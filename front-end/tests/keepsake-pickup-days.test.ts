@@ -37,6 +37,8 @@ describe('[E6.4][AC26] the days a pickup point can be picked', () => {
 
   it('[AC26] AC-5 today is off when every span that starts today has ended, on when one is still ahead', () => {
     expect(isPickupDay(everyDay, '2026-11-03', tuesday('18:30'))).toBe(false)
+    // A point closing at 17:00 offers no pickup at 17:00 itself.
+    expect(isPickupDay(everyDay, '2026-11-03', tuesday('17:00'))).toBe(false)
     expect(isPickupDay(everyDay, '2026-11-03', tuesday('10:00'))).toBe(true)
     expect(isPickupDay([span(2, '09:00', '12:00'), span(2, '14:00', '17:00')], '2026-11-03', tuesday('13:00'))).toBe(true)
     expect(isPickupDay([span(2, '09:00', '24:00')], '2026-11-03', tuesday('23:59'))).toBe(true)

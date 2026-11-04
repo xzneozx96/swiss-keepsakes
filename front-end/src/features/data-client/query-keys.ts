@@ -28,6 +28,10 @@ export const queryKeys = {
     publicList: ['keepsakes', 'public'],
     tourBlock: ['keepsakes', 'list', 'tour-block'],
   },
+  search: {
+    stories: ['search', 'stories'],
+    tours: ['search', 'tours'],
+  },
   media: {
     list: ['media', 'list'],
     uses: ['media', 'uses'],

@@ -1,6 +1,7 @@
 import type { PublicStory } from '@sk/api-contract'
 
 import { readSiteConfig } from '@/features/seo/lib/site-config'
+import { widestVariant } from '@/lib/pick-variant'
 
 type StoryHeadInput = Pick<PublicStory, 'title' | 'excerpt' | 'cover' | 'language' | 'versions'>
 
@@ -14,7 +15,7 @@ export function storyHead(story: StoryHeadInput) {
   const url = (version: { language: string, slug: string }) => `${siteUrl}/${version.language}/stories/${encodeURIComponent(version.slug)}`
   const own = story.versions.find(version => version.language === story.language)
   const english = story.versions.find(version => version.language === 'en')
-  const image = story.cover ? (story.cover.variants.at(-1)?.url ?? story.cover.url) : undefined
+  const image = story.cover ? (widestVariant(story.cover.variants)?.url ?? story.cover.url) : undefined
 
   return {
     meta: [

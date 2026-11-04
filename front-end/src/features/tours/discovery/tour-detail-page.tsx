@@ -17,11 +17,11 @@ import {
   ListingDetailHeader,
   ListingFavouriteButton,
 } from '@/components/listings/listing-detail-header'
-import { ListingReviews } from '@/components/listings/listing-reviews'
 import { Media } from '@/components/media'
 import { PhotoGallery } from '@/components/photo-gallery'
 import { useLocale } from '@/contexts/locale-context'
 import { usePickupPlaces } from '@/features/catalog/api/queries'
+import { ListingReviews } from '@/features/catalog/components/listing-reviews'
 import { SellerRow } from '@/features/catalog/components/seller-row'
 import { StorySheet } from '@/features/catalog/components/story-sheet'
 import { useFavourite } from '@/features/catalog/hooks/use-favourites'

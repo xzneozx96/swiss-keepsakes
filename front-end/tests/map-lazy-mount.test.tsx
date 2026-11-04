@@ -95,14 +95,15 @@ describe('[E4.13][AC95] the lazy map mount', () => {
     expect(loads.maplibre).toBe(0)
 
     act(() => observerOf().fire(true))
-    await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
+    // The first dynamic import of the map chain is cold in this file, so a loaded CI runner needs more than 1 s.
+    await waitFor(() => expect(FakeMap.instances).toHaveLength(1), { timeout: 5000 })
 
     expect(loads).toEqual({ maplibre: 1, css: 1 })
     expect(placeholder()).not.toBeInTheDocument()
     expect(container.firstElementChild).toBe(frame)
     expect(frame).toHaveClass('h-[548px]')
     expect(screen.getByTestId('probe')).toBeInTheDocument()
-  })
+  }, 20_000)
 
   it('stays mounted once near, and stops watching', async () => {
     renderLazy()

@@ -1,7 +1,7 @@
 import type { PublicLanguage, PublicStory } from '@sk/api-contract'
-import { apiOrigin } from '@/features/catalog/api/api-origin'
-
-const TIMEOUT_MS = 5000
+import { answer, PAGE_READ_TIMEOUT_MS, timeout } from '@/features/data-client/api-transport'
+import { ApiProblem } from '@/features/data-client/errors'
+import { apiOrigin } from '@/lib/api-origin'
 
 /**
  * One published story, as `GET /api/public/stories/{slug}` sends it, in `lang` or in the language that has it. Null when no
@@ -10,14 +10,15 @@ const TIMEOUT_MS = 5000
 export async function loadPublicStory(slug: string, lang: PublicLanguage): Promise<PublicStory | null> {
   // The contract package carries Zod, so it loads with the first read and not with the first paint.
   const { createApiClient, publicStorySchema } = await import('@sk/api-contract')
-  const { data, response } = await createApiClient(apiOrigin()).GET('/api/public/stories/{slug}', {
-    params: { path: { slug }, query: { lang } },
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-  })
-  if (response.status === 404)
-    return null
-  if (!response.ok)
-    throw new Error(`Story answered ${response.status}`)
 
-  return publicStorySchema.parse(data)
+  try {
+    const story = await answer(createApiClient(apiOrigin()).GET('/api/public/stories/{slug}', { ...timeout(PAGE_READ_TIMEOUT_MS), params: { path: { slug }, query: { lang } } }))
+
+    return publicStorySchema.parse(story)
+  }
+  catch (error) {
+    if (error instanceof ApiProblem && error.status === 404)
+      return null
+    throw error
+  }
 }

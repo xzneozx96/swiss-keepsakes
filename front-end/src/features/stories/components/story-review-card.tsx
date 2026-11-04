@@ -4,12 +4,12 @@ import type { GroupFields } from '../lib/group-fields'
 import type { StoryLanguage } from '../lib/search-params'
 
 import { Button, Label, Switch } from '@heroui/react'
+import { zurichDate } from '@sk/domain/dates'
 import { formatShortDate } from '@sk/domain/shared'
-import { useState } from 'react'
 
+import { useState } from 'react'
 import { CheckIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { zurichToday } from '@/features/map/lib/next-date'
 import { Field } from '@/features/places/components/fields'
 import { usePinOptions } from '../hooks/use-pin-options'
 import { reviewSummary } from '../lib/details-summary'
@@ -35,7 +35,7 @@ export function ReviewCard({ storeId, group, language, fields, onGroupChange, on
   const isReview = group.kind === 'editorial_review'
   const placeId = group.subjectPlaceId
   const { pins, isLoading } = usePinOptions(storeId, language, placeId !== null)
-  const [today] = useState(() => zurichToday(new Date()))
+  const [today] = useState(() => zurichDate(new Date()))
   // A day after today is shown with its error and never reaches the draft.
   const [refused, setRefused] = useState<string>()
   const [sheetOpen, setSheetOpen] = useState(false)

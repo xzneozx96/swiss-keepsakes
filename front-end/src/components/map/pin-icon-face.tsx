@@ -1,7 +1,7 @@
 import type { CategoryIcon } from '@sk/api-contract'
 
+import { categoryIconComponents } from '@/components/category-icons'
 import { PickupIcon } from '@/components/icons'
-import { categoryIconComponents } from '@/features/categories/lib/category-icons'
 
 /**
  * What a pin, a cluster and a card thumbnail show where there is no ready cover: the place's category icon, white on the

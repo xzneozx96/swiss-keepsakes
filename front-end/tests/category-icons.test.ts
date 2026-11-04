@@ -2,8 +2,8 @@ import { categoryIconGroups, categoryIcons } from '@sk/domain/content'
 
 import { describe, expect, it } from 'vitest'
 
+import { categoryIconComponents } from '@/components/category-icons'
 import {
-  categoryIconComponents,
   categoryIconGroupKeys,
   categoryIconGroupLabelKey,
   categoryIconKeys,

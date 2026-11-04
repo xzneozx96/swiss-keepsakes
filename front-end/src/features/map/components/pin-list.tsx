@@ -1,9 +1,10 @@
 import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
 
+import { zurichDate } from '@sk/domain/dates'
 import { MapThumb } from '@/components/map/map-thumb'
 import { useLocale } from '@/contexts/locale-context'
 import { pinCategoryNames, pinIcon } from '@/features/map/lib/categories'
-import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
+import { nextDateLine } from '@/features/map/lib/next-date'
 
 /**
  * The places the filter keeps as a ranked list: the alternative for screen readers and keyboards
@@ -19,7 +20,7 @@ export function PinList({
   onOpen: (id: string) => void
 }) {
   const { t, language, intlLocale } = useLocale()
-  const today = zurichToday(new Date())
+  const today = zurichDate(new Date())
 
   return (
     <ul className="flex flex-col">

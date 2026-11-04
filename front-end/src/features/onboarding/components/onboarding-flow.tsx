@@ -4,12 +4,13 @@ import type { Stay } from '../lib/record'
 
 import { Button, Modal, Tag, TagGroup } from '@heroui/react'
 import { interestCodes } from '@sk/domain/content'
-import { useState, useSyncExternalStore } from 'react'
+import { useState } from 'react'
 
 import { ChevronLeftIcon, CloseIcon, PlusIcon, SelectedIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { photoUrl } from '@/lib/photos'
-import { forgetAnswers, getRecord, getServerRecord, markDismissed, saveInterests, saveStay, subscribe } from '../lib/answers-store'
+import { useOnboardingRecord } from '../hooks/use-onboarding-record'
+import { forgetAnswers, getRecord, markDismissed, saveInterests, saveStay } from '../lib/answers-store'
 
 type Step = 1 | 2
 
@@ -26,7 +27,7 @@ const STAYS: readonly { stay: Stay, photo: string }[] = [
  */
 export default function OnboardingFlow({ mode, onClose }: { mode: 'first' | 'change', onClose: () => void }) {
   const { t } = useLocale()
-  const record = useSyncExternalStore(subscribe, getRecord, getServerRecord)
+  const record = useOnboardingRecord()
   const changing = mode === 'change'
   const [step, setStep] = useState<Step>(1)
   // First run only: a tapped stay waits for Continue. In change mode the store holds it.

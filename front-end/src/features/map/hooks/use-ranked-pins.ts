@@ -1,9 +1,9 @@
 import type { PublicMapItem } from '@sk/api-contract'
 import type { RankPrefs } from '@sk/domain/content'
 
+import { rankByTags } from '@sk/domain/content'
 import { useMemo } from 'react'
-import { useOnboardingAnswers } from '@/features/content/hooks/use-onboarding-answers'
-import { rankPins } from '@/features/map/lib/rank-pins'
+import { useOnboardingAnswers } from '@/features/onboarding/hooks/use-onboarding-answers'
 
 const changesOrder = ({ stay, interests }: RankPrefs) => Boolean(stay) || (interests?.length ?? 0) > 0
 
@@ -15,5 +15,5 @@ const changesOrder = ({ stay, interests }: RankPrefs) => Boolean(stay) || (inter
 export function useRankedPins(pins: PublicMapItem[]): PublicMapItem[] {
   const answers = useOnboardingAnswers()
 
-  return useMemo(() => (changesOrder(answers) ? rankPins(pins, answers) : pins), [pins, answers])
+  return useMemo(() => (changesOrder(answers) ? rankByTags(pins, answers) : pins), [pins, answers])
 }

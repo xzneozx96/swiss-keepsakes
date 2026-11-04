@@ -1,9 +1,9 @@
 import type { PublicCategory, PublicLanguage, PublicMapItem, PublicTourCard } from '@sk/api-contract'
 import type { ServiceTile } from '../lib/service-tiles'
 
-import { apiOrigin } from '@/features/catalog/api/api-origin'
-import { timeout } from '@/features/data-client/api-transport'
+import { answer, timeout } from '@/features/data-client/api-transport'
 import { apiEnabled } from '@/lib/api-mode'
+import { apiOrigin } from '@/lib/api-origin'
 import { serviceTiles } from '../lib/service-tiles'
 
 /** What the home's loader read. A read that failed is `null`, so its block shows its own error and the rest of the page stays. */
@@ -17,15 +17,9 @@ export interface HomeRead {
   tours: PublicTourCard[] | null
 }
 
-async function read<T>(call: Promise<{ data?: T, response: Response }>): Promise<T | null> {
-  try {
-    const { data, response } = await call
-
-    return response.ok && data !== undefined ? data : null
-  }
-  catch {
-    return null
-  }
+/** A failed read is null, so its block shows its own error. */
+function read<T>(call: Promise<{ data?: T, error?: unknown, response: Response }>): Promise<T | null> {
+  return answer(call).catch(() => null)
 }
 
 /**

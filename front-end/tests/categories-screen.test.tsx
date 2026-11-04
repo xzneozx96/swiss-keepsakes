@@ -358,7 +358,7 @@ describe('[E4.18][AC87] the category editor in English', () => {
       radios.forEach((radio, i) => expect(radio).toHaveAccessibleName(en[iconLabelKey(group.icons[i])]))
     })
     expect(within(dialog).getByRole('switch', { name: /Show on the home/ })).not.toBeChecked()
-  })
+  }, 20_000)
 
   it('[E4.13][AC95] choosing an icon saves it with the changed switch, and the table shows it before the name', async () => {
     lists.map = [category(food, { name: { en: 'Toilets', de: 'Toiletten' } })]

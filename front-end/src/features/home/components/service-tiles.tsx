@@ -4,10 +4,10 @@ import { Skeleton } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 import { useId } from 'react'
 
+import { categoryIconComponents } from '@/components/category-icons'
 import { ErrorNotice } from '@/components/error-notice'
 import { PickupIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { categoryIconComponents } from '@/features/categories/lib/category-icons'
 import { SectionHeading } from './section-heading'
 
 const TILE = 'flex min-h-[78px] w-full flex-col items-start justify-between gap-2 rounded-2xl bg-surface p-3 text-start shadow-surface'

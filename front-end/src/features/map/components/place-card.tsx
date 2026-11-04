@@ -2,11 +2,12 @@ import type { CategoryIcon, PublicMapItem } from '@sk/api-contract'
 
 import { Button } from '@heroui/react'
 
+import { zurichDate } from '@sk/domain/dates'
 import { MapCard, MapCardRow } from '@/components/map/map-card'
 import { MapThumb } from '@/components/map/map-thumb'
 import { useLocale } from '@/contexts/locale-context'
 import { CARD_ROW_BOTTOM } from '@/features/map/lib/layout'
-import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
+import { nextDateLine } from '@/features/map/lib/next-date'
 import { DirectionsLink } from './directions-link'
 
 /** The words a card shows besides the pin's own fields, when the caller has them (the category names and the map link). The card shows no tip (owner 2026-11-03): the details sheet has it. */
@@ -36,7 +37,7 @@ function PlaceCard({ pin, active, photoSrc, icon, extras, /* nav, */ directions,
 }) {
   const { t, language, intlLocale } = useLocale()
   const date = pin.nextDate
-    ? nextDateLine(pin.nextDate, zurichToday(new Date()), intlLocale, {
+    ? nextDateLine(pin.nextDate, zurichDate(new Date()), intlLocale, {
         until: day => t('map.date.until', { day }),
         from: time => t('map.date.from', { time }),
       })

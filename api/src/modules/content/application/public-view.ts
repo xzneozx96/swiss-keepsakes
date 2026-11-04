@@ -1,7 +1,6 @@
-import type { CategoryIcon, ContentLanguage, Localized, PinDate, StayTag } from '@sk/domain/content'
+import type { CategoryIcon, ContentLanguage, LanguageNotice, Localized, PinDate, StayTag } from '@sk/domain/content'
 import type { PublicCategoryListRow, PublicPinDetailRow, PublicPinRow, PublicStoryDetailRow, PublicStoryKeepsakeCard, PublicStoryRow, PublicStoryVersionRow, PublicTourRow } from '../read-ports.ts'
-import { isSafeLinkHref, languagesOf, STORY_BODY_LIMITS, storyBodyReadMinutes, variantKey, variantWidthsFor } from '@sk/domain/content'
-import { pickLanguage } from './language.ts'
+import { isSafeLinkHref, languageNotice, languagesOf, pickLanguage, STORY_BODY_LIMITS, storyBodyReadMinutes, variantKey, variantWidthsFor } from '@sk/domain/content'
 import { nextDate, withParents } from './pin-dates.ts'
 
 // Rows to the public response shapes. Nothing here reads a store or a price. The application layer may not import
@@ -9,8 +8,6 @@ import { nextDate, withParents } from './pin-dates.ts'
 
 export interface PublicCategory { id: string, slug: string, name: { en: string | null, de: string | null }, parentId: string | null, icon: CategoryIcon | null, showOnHome: boolean, position: number }
 export interface PublicCategoryList { items: PublicCategory[] }
-
-interface LanguageNotice { language: ContentLanguage, requestedLanguage: ContentLanguage, fallback: boolean, availableLanguages: ContentLanguage[] }
 
 // A cover as the public sees it: the address of the original and of each webp copy.
 export interface PublicCover { url: string, variants: { width: number, url: string }[] }
@@ -334,11 +331,6 @@ const text = (value: Localized | null | undefined, language: ContentLanguage) =>
 
 const pinNext = (date: PinDate): PublicNextDate => ({ firstDay: date.firstDay, lastDay: date.lastDay, startTime: date.startTime, endTime: date.endTime })
 
-function notice(available: ContentLanguage[], requested: ContentLanguage): LanguageNotice | null {
-  const choice = pickLanguage(available, requested)
-  return choice && { language: choice.language, requestedLanguage: requested, fallback: choice.fallback, availableLanguages: available }
-}
-
 // Pins whose dates have all ended have no next date; the caller leaves them out.
 function pinNextDate(row: PublicPinRow, now: Date): PublicNextDate | null | 'ended' {
   const next = nextDate(row.dates, now)
@@ -346,7 +338,7 @@ function pinNextDate(row: PublicPinRow, now: Date): PublicNextDate | null | 'end
 }
 
 function toPinCore(row: PublicPinRow, requested: ContentLanguage, now: Date): PinCore | null {
-  const info = notice(languagesOf(row.name), requested)
+  const info = languageNotice(languagesOf(row.name), requested)
   const next = pinNextDate(row, now)
   if (!info || next === 'ended')
     return null
@@ -440,12 +432,12 @@ function toTourCard(row: PublicTourRow, info: LanguageNotice): PublicTourCard {
 }
 
 export function toTourCardFor(row: PublicTourRow, requested: ContentLanguage): PublicTourCard | null {
-  const info = notice(languagesOf(row.title), requested)
+  const info = languageNotice(languagesOf(row.title), requested)
   return info && toTourCard(row, info)
 }
 
 export function toPublicTour(row: PublicTourRow, requested: ContentLanguage): PublicTour | null {
-  const info = notice(languagesOf(row.title), requested)
+  const info = languageNotice(languagesOf(row.title), requested)
   if (!info)
     return null
   const { language } = info

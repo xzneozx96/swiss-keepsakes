@@ -1,7 +1,7 @@
 import type { PublicKeepsake, PublicKeepsakeAvailability, PublicLanguage, PublicPickupPoints } from '@sk/api-contract'
 import { answer, timeout } from '@/features/data-client/api-transport'
 import { ApiProblem } from '@/features/data-client/errors'
-import { apiOrigin } from './api-origin'
+import { apiOrigin } from '@/lib/api-origin'
 
 /** One published keepsake (text, photos, options, combinations; never a price). Null when there is none; any other failure throws. */
 export async function fetchKeepsake(slug: string, lang: PublicLanguage): Promise<PublicKeepsake | null> {

@@ -11,7 +11,7 @@ import { createPublicKeepsakeReads } from './modules/catalog/adapters/public-rep
 import { registerPublicKeepsakeRoutes } from './modules/catalog/adapters/public-routes.ts'
 import { registerCatalogRoutes } from './modules/catalog/adapters/routes.ts'
 import { createSkuDirectory } from './modules/catalog/adapters/sku-directory.ts'
-import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeletePickupPlace, makeDeleteProduct, makeGetAvailability, makeGetKeepsake, makeGetPickupPlace, makeGetPickupPoints, makeGetProduct, makeListKeepsakes, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from './modules/catalog/index.ts'
+import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeletePickupPlace, makeDeleteProduct, makeGetAvailability, makeGetKeepsake, makeGetPickupPlace, makeGetPickupPoints, makeGetProduct, makeListKeepsakes, makeListKeepsakesByIds, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from './modules/catalog/index.ts'
 import { createAddressRegister } from './modules/content/adapters/address-register-fetch.ts'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
@@ -303,6 +303,7 @@ async function main() {
     const publicKeepsakeDeps = { uow, reads: createPublicKeepsakeReads(), media: catalogDeps.media, stockLevels: catalogDeps.stockLevels, pickups: pickupDeps.pickups }
     const publicKeepsakeUseCases = {
       listKeepsakes: makeListKeepsakes(publicKeepsakeDeps),
+      listKeepsakesByIds: makeListKeepsakesByIds(publicKeepsakeDeps),
       getKeepsake: makeGetKeepsake(publicKeepsakeDeps),
       getAvailability: makeGetAvailability(publicKeepsakeDeps),
       getPickupPoints: makeGetPickupPoints(publicKeepsakeDeps),
@@ -318,10 +319,10 @@ async function main() {
       replaceMedia: makeReplaceMedia({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, graceHours: config.MEDIA_GRACE_HOURS }),
       publicUrl: storage.publicUrl,
       listStories: makeListStories(readDeps),
-      // The keepsake cards come from the catalog's public list, by id.
+      // The keepsake cards come from the catalog's public read by id; a failing read leaves the story without cards.
       getStory: makeGetStory({
         ...readDeps,
-        keepsakeCards: makeKeepsakeCards(language => publicKeepsakeUseCases.listKeepsakes(language)),
+        keepsakeCards: makeKeepsakeCards(publicKeepsakeUseCases.listKeepsakesByIds, error => logger.warn({ err: error }, 'story keepsake cards unavailable')),
       }),
       getPin: makeGetPin(readDeps),
       listTours: makeListTours(readDeps),

@@ -43,6 +43,13 @@ export function zurichDate(at: Date): string {
   return dayClock.format(at)
 }
 
+/** The wall-clock time in Europe/Zurich as HH:mm. */
+export function zurichTime(at: Date): string {
+  const p = wallParts(at)
+
+  return `${p.hour}:${p.minute}`
+}
+
 /** Moves a YYYY-MM-DD date by whole calendar days. */
 export function addCalendarDays(isoDate: string, days: number): string {
   return new Date(Date.parse(`${isoDate}T00:00:00Z`) + days * DAY_MS)

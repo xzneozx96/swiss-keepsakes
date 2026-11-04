@@ -149,29 +149,39 @@ describe('[E4.4][AC61] head', () => {
   })
 })
 
+const here = { search: {}, hash: '' }
+
 describe('[E4.4][AC61] loader', () => {
   it('[AC-5] an unknown slug is a not-found, which the server answers with 404', async () => {
     const { readStoryPage } = await import('@/features/content/lib/read-story')
     api.loadPublicStory.mockResolvedValue(null)
 
-    await expect(readStoryPage('en', 'nope')).rejects.toSatisfy(isNotFound)
-    await expect(readStoryPage('fr', 'lake-day')).rejects.toSatisfy(isNotFound)
+    await expect(readStoryPage('en', 'nope', here)).rejects.toSatisfy(isNotFound)
+    await expect(readStoryPage('fr', 'lake-day', here)).rejects.toSatisfy(isNotFound)
   })
 
   it('[AC-4] an address in a language with no version redirects (302, ADR-002 step 6) to the version that exists, never showing its text', async () => {
     const { readStoryPage } = await import('@/features/content/lib/read-story')
     api.loadPublicStory.mockResolvedValue(publicStory({ language: 'en', requestedLanguage: 'de', fallback: true, versions: [{ language: 'en', slug: 'lake-day' }], availableLanguages: ['en'] }))
 
-    const thrown = await readStoryPage('de', 'lake-day').catch((e: unknown) => e)
+    const thrown = await readStoryPage('de', 'lake-day', here).catch((e: unknown) => e)
     expect(isRedirect(thrown)).toBe(true)
     expect(thrown).toMatchObject({ options: { statusCode: 302, to: '/$lang/stories/$slug', params: { lang: 'en', slug: 'lake-day' } } })
+  })
+
+  it('[AC-4] a redirect keeps the query and the hash, as the keepsake redirect does', async () => {
+    const { readStoryPage } = await import('@/features/content/lib/read-story')
+    api.loadPublicStory.mockResolvedValue(publicStory({ language: 'de', requestedLanguage: 'de', title: 'Seetag' }))
+
+    const thrown = await readStoryPage('de', 'lake-day', { search: { utm_source: 'partner' }, hash: 'section' }).catch((e: unknown) => e)
+    expect(thrown).toMatchObject({ options: { statusCode: 302, search: { utm_source: 'partner' }, hash: 'section' } })
   })
 
   it('[AC-4] another language\'s slug redirects to the guest language\'s own slug', async () => {
     const { readStoryPage } = await import('@/features/content/lib/read-story')
     api.loadPublicStory.mockResolvedValue(publicStory({ language: 'de', requestedLanguage: 'de', title: 'Seetag' }))
 
-    const thrown = await readStoryPage('de', 'lake-day').catch((e: unknown) => e)
+    const thrown = await readStoryPage('de', 'lake-day', here).catch((e: unknown) => e)
     expect(thrown).toMatchObject({ options: { statusCode: 302, params: { lang: 'de', slug: 'seetag' } } })
   })
 
@@ -179,13 +189,13 @@ describe('[E4.4][AC61] loader', () => {
     const { readStoryPage } = await import('@/features/content/lib/read-story')
     api.loadPublicStory.mockResolvedValue(publicStory({ language: 'en', availableLanguages: ['en'], versions: [{ language: 'en', slug: 'lake-day' }] }))
 
-    expect((await readStoryPage('en', 'lake-day')).availableLanguages).toEqual(['en'])
+    expect((await readStoryPage('en', 'lake-day', here)).availableLanguages).toEqual(['en'])
   })
 
   it('[AC-5] the loader data carries the related stories and keepsake cards the page draws', async () => {
     const { readStoryPage } = await import('@/features/content/lib/read-story')
     api.loadPublicStory.mockResolvedValueOnce(publicStory())
-    const data = await readStoryPage('en', 'lake-day')
+    const data = await readStoryPage('en', 'lake-day', here)
 
     expect(Object.keys(data.story)).toEqual(expect.arrayContaining(['related', 'keepsakes', 'places']))
   })
@@ -195,7 +205,7 @@ type RouteModule = typeof import('@/routes/_guest/$lang/stories/$slug')
 
 // The route's own loader, as the router calls it.
 function runLoader(route: RouteModule['Route'], params: { lang: string, slug: string }) {
-  return Promise.resolve().then(() => (route.options.loader as unknown as (ctx: unknown) => Promise<{ story: ReturnType<typeof publicStory> }>)({ params }))
+  return Promise.resolve().then(() => (route.options.loader as unknown as (ctx: unknown) => Promise<{ story: ReturnType<typeof publicStory> }>)({ params, location: { search: { utm_source: 'partner' }, hash: 'section' } }))
 }
 
 describe('[E4.4][AC61] route wiring', () => {
@@ -228,7 +238,7 @@ describe('[E4.4][AC61] route wiring', () => {
 
     const thrown = await runLoader(Route, { lang: 'de', slug: 'lake-day' }).catch((e: unknown) => e)
     expect(isRedirect(thrown)).toBe(true)
-    expect(thrown).toMatchObject({ options: { statusCode: 302 } })
+    expect(thrown).toMatchObject({ options: { statusCode: 302, search: { utm_source: 'partner' }, hash: 'section' } })
   })
 })
 

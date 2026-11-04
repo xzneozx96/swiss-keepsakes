@@ -38,6 +38,9 @@ export async function answer<T>(call: Promise<{ data?: T, error?: unknown, respo
   return data
 }
 
+/** A server-rendered page waits no longer than this for a public read, so a slow API shows the error state soon. */
+export const PAGE_READ_TIMEOUT_MS = 5_000
+
 export function timeout(ms = TIMEOUT_MS) {
   return { signal: AbortSignal.timeout(ms) }
 }

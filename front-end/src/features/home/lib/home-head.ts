@@ -1,6 +1,6 @@
 import type { PublicLanguage } from '@sk/api-contract'
 
-import { readSiteConfig } from '@/features/seo/lib/site-config'
+import { alternateHead } from '@/features/seo/lib/page-head'
 
 // The words of `home.title` and `homePage.meta.description`. The head cannot call `t`, and the German dictionary stays a lazy chunk,
 // so the two lines are here; tests/home-page.test.tsx keeps them equal to the dictionaries.
@@ -17,21 +17,11 @@ const WORDS: Record<PublicLanguage, { title: string, description: string }> = {
 
 /** The document head of the home (ADR-002): title, description, its own canonical and the alternate of each language. */
 export function homeHead(lang: PublicLanguage) {
-  const { siteUrl } = readSiteConfig()
   const { title, description } = WORDS[lang]
+  const head = alternateHead({ lang, path: l => `/${l}`, title, description })
 
   return {
-    meta: [
-      { title },
-      { name: 'description', content: description },
-      { property: 'og:title', content: title },
-      { property: 'og:description', content: description },
-    ],
-    links: [
-      { rel: 'canonical', href: `${siteUrl}/${lang}` },
-      { rel: 'alternate', hrefLang: 'en', href: `${siteUrl}/en` },
-      { rel: 'alternate', hrefLang: 'de', href: `${siteUrl}/de` },
-      { rel: 'alternate', hrefLang: 'x-default', href: `${siteUrl}/en` },
-    ] as { rel: string, href: string, hrefLang?: string }[],
+    meta: [...head.meta, { property: 'og:title', content: title }, { property: 'og:description', content: description }],
+    links: head.links as { rel: string, href: string, hrefLang?: string }[],
   }
 }

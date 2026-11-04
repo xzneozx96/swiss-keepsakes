@@ -114,6 +114,6 @@ describe('[E6.4] the tour keepsake block', () => {
 
     for (const demo of ['useProducts', 'useOrders', 'useProductCard', 'isPublished', 'isSoldOut'])
       expect(source).not.toContain(demo)
-    expect(source).toContain('fetchKeepsakeList')
+    expect(source).toContain('guestKeepsakeList')
   })
 })

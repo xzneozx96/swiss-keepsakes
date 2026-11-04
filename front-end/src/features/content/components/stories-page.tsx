@@ -3,6 +3,7 @@ import type { PublicCategory, PublicStoryCard } from '@sk/api-contract'
 import type { InterestCode, RankPrefs } from '@sk/domain/content'
 
 import { Button, ScrollShadow, Tag, TagGroup } from '@heroui/react'
+import { rankByTags } from '@sk/domain/content'
 import { useHydrated, useNavigate } from '@tanstack/react-router'
 import { EmptyState } from '@/components/empty-state'
 import { ContentIcon } from '@/components/icons'
@@ -16,13 +17,12 @@ import { LanguageButton } from '@/components/layout/language-button'
 
 import { Media } from '@/components/media'
 import { useLocale } from '@/contexts/locale-context'
+import { useOnboardingAnswers } from '@/features/onboarding/hooks/use-onboarding-answers'
 import { useBack } from '@/hooks/use-back'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
-import { useOnboardingAnswers } from '../hooks/use-onboarding-answers'
 import { useRowSlide } from '../hooks/use-row-slide'
 import { filterStories, offeredCategories, resolveCategory } from '../lib/category-filter'
 import { coverSrc } from '../lib/cover-src'
-import { rankStories } from '../lib/rank-stories'
 import { StoryCard } from './story-card'
 
 const ALL = 'all'
@@ -138,7 +138,7 @@ export function StoriesPage({
   const options = stories && categories ? offeredCategories(categories, stories, language) : []
   const chosen = resolveCategory(options, category)
   const filtered = stories && categories ? filterStories(stories, categories, chosen) : stories
-  const ordered = filtered && hydrated ? rankStories(filtered, answers) : filtered
+  const ordered = filtered && hydrated ? rankByTags(filtered, answers) : filtered
   const slide = useRowSlide(ordered?.map(story => story.id) ?? [])
 
   const count = ordered?.length ?? 0

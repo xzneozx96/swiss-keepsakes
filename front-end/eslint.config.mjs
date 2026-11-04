@@ -81,7 +81,9 @@ export default antfu(
       'import/resolver': { typescript: { project: './tsconfig.eslint.json' } },
       'boundaries/elements': [
         { type: 'shared', pattern: 'src/{lib,hooks,contexts}/**' },
-        { type: 'shared-ui', pattern: 'src/components/*.{ts,tsx}', mode: 'file' },
+        // Four app-level pieces that read a feature hook or the demo seed; moving them is a redesign of the shells (U1 report). The rule skips them until then.
+        { type: 'shell-debt', pattern: ['src/components/layout/cart-button.tsx', 'src/components/layout/guest-shell.tsx', 'src/components/layout/merchant-shell.tsx', 'src/components/layout/partner-shell.tsx'], mode: 'file' },
+        { type: 'shared-ui', pattern: 'src/components/**' },
         { type: 'feature', pattern: 'src/features/**' },
         { type: 'route', pattern: 'src/routes/**' },
       ],

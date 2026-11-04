@@ -6,11 +6,14 @@ import type { Result } from '../application/failure.ts'
 import type { PublicCategoryList, PublicMap, PublicPin, PublicStory, PublicStoryList, PublicTour, PublicTourList } from '../application/public-view.ts'
 import { createRoute, z } from '@hono/zod-openapi'
 import { publicCategoryListSchema, publicLanguageSchema, publicMapSchema, publicPinSchema, publicStoryListSchema, publicStorySchema, publicTourListSchema, publicTourSchema } from '@sk/api-contract'
+import { conditionalJson } from '../../../platform/http/conditional-json.ts'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { failureProblem } from './problems.ts'
-import { conditionalJson } from './public-cache.ts'
 import { json } from './route-parts.ts'
+
+// Cached by the browser for 30 s, then revalidated with the ETag (ADR-006).
+const publicCacheControl = 'max-age=30'
 
 // What the public routes call. They take no actor and no store: the content is public and one list covers all stores.
 export interface PublicUseCases {
@@ -74,26 +77,26 @@ const mapRoute = publicGet('/api/public/map', 'The visible pins of all stores, n
 
 // Anonymous: no guard sits on /api/public, and a stranger sees only published content. The handlers read no store.
 export function registerPublicRoutes(app: OpenAPIHono<AppEnv>, useCases: PublicUseCases): void {
-  app.openapi(storiesRoute, async c => conditionalJson(c, await useCases.listStories(c.req.valid('query').lang)))
+  app.openapi(storiesRoute, async c => conditionalJson(c, await useCases.listStories(c.req.valid('query').lang), publicCacheControl))
 
   app.openapi(storyRoute, async (c) => {
     const result = await useCases.getStory(c.req.valid('param').slug, c.req.valid('query').lang)
-    return result.ok ? conditionalJson(c, result.value) : problem(c, failureProblem(result))
+    return result.ok ? conditionalJson(c, result.value, publicCacheControl) : problem(c, failureProblem(result))
   })
 
   app.openapi(pinRoute, async (c) => {
     const result = await useCases.getPin(c.req.valid('param').id, c.req.valid('query').lang)
-    return result.ok ? conditionalJson(c, result.value) : problem(c, failureProblem(result))
+    return result.ok ? conditionalJson(c, result.value, publicCacheControl) : problem(c, failureProblem(result))
   })
 
-  app.openapi(toursRoute, async c => conditionalJson(c, await useCases.listTours(c.req.valid('query').lang)))
+  app.openapi(toursRoute, async c => conditionalJson(c, await useCases.listTours(c.req.valid('query').lang), publicCacheControl))
 
   app.openapi(tourRoute, async (c) => {
     const result = await useCases.getTour(c.req.valid('param').slug, c.req.valid('query').lang)
-    return result.ok ? conditionalJson(c, result.value) : problem(c, failureProblem(result))
+    return result.ok ? conditionalJson(c, result.value, publicCacheControl) : problem(c, failureProblem(result))
   })
 
-  app.openapi(mapCategoriesRoute, async c => conditionalJson(c, await useCases.listCategories('map')))
-  app.openapi(blogCategoriesRoute, async c => conditionalJson(c, await useCases.listCategories('blog')))
-  app.openapi(mapRoute, async c => conditionalJson(c, await useCases.getMap(c.req.valid('query').lang)))
+  app.openapi(mapCategoriesRoute, async c => conditionalJson(c, await useCases.listCategories('map'), publicCacheControl))
+  app.openapi(blogCategoriesRoute, async c => conditionalJson(c, await useCases.listCategories('blog'), publicCacheControl))
+  app.openapi(mapRoute, async c => conditionalJson(c, await useCases.getMap(c.req.valid('query').lang), publicCacheControl))
 }

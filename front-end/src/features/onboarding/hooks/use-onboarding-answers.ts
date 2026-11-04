@@ -1,8 +1,8 @@
 import type { RankPrefs } from '@sk/domain/content'
-import type { OnboardingRecord } from '@/features/onboarding/lib/record'
+import type { OnboardingRecord } from '../lib/record'
 
-import { useSyncExternalStore } from 'react'
-import { getRecord, getServerRecord, hasAnswers, subscribe } from '@/features/onboarding/lib/answers-store'
+import { hasAnswers } from '../lib/answers-store'
+import { useOnboardingRecord } from './use-onboarding-record'
 
 const NO_ANSWERS: RankPrefs = { stay: null, interests: [] }
 
@@ -24,5 +24,5 @@ function prefsOf(record: OnboardingRecord): RankPrefs {
  * client render have no answers, so the HTML matches; the lists apply the answers after hydration.
  */
 export function useOnboardingAnswers(): RankPrefs {
-  return useSyncExternalStore(subscribe, () => prefsOf(getRecord()), () => prefsOf(getServerRecord()))
+  return prefsOf(useOnboardingRecord())
 }
