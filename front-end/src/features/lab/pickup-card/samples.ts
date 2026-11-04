@@ -11,7 +11,7 @@ const base = {
 
 const weekdays = [1, 2, 3, 4, 5, 6].map(weekday => ({ weekday, opens: '10:00', closes: '18:00' }))
 
-/** The three sample points of the lab: complete, German missing, archived. */
+/** The sample points of the lab: complete ones, one with no German, one archived. */
 export const samples: PickupPlace[] = [
   {
     ...base,
@@ -41,5 +41,28 @@ export const samples: PickupPlace[] = [
     archived: true,
     hours: [],
     position: 2,
+  },
+  {
+    ...base,
+    id: '00000000-0000-4000-8000-0000000000a4',
+    name: { en: 'Lucerne station, Travel Centre', de: 'Bahnhof Luzern, Reisezentrum' },
+    address: { en: 'Zentralstrasse 1, 6003 Lucerne', de: 'Zentralstrasse 1, 6003 Luzern' },
+    instructions: { en: 'Counter 4, ask for the Swiss Keepsakes shelf.', de: 'Schalter 4, fragen Sie nach dem Swiss-Keepsakes-Regal.' },
+    archived: false,
+    hours: [
+      ...[1, 2, 3, 4, 5].map(weekday => ({ weekday, opens: '09:00', closes: '18:30' })),
+      { weekday: 6, opens: '09:00', closes: '16:00' },
+    ],
+    position: 3,
+  },
+  {
+    ...base,
+    id: '00000000-0000-4000-8000-0000000000a5',
+    name: { en: 'Hotel des Balances front desk', de: 'Hotel des Balances, Rezeption' },
+    address: { en: 'Weinmarkt, 6004 Lucerne', de: 'Weinmarkt, 6004 Luzern' },
+    instructions: null,
+    archived: false,
+    hours: [1, 2, 3, 4, 5, 6, 7].map(weekday => ({ weekday, opens: '07:00', closes: '22:00' })),
+    position: 4,
   },
 ]
