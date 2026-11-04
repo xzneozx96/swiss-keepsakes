@@ -55,4 +55,5 @@ export const contentDe: Record<keyof typeof contentEn, string> = {
   'article.video.source': 'Wird von YouTube abgespielt',
   'article.audio.play': 'Abspielen: {title}',
   'article.audio.pause': 'Pausieren: {title}',
+  'article.otherLanguage': 'Auch auf',
 }

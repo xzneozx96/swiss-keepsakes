@@ -51,4 +51,5 @@ export const contentEn = {
   'article.video.source': 'Plays from YouTube',
   'article.audio.play': 'Play: {title}',
   'article.audio.pause': 'Pause: {title}',
+  'article.otherLanguage': 'Also in',
 }
