@@ -17,10 +17,10 @@ vi.mock('@/lib/api-mode', () => ({ get apiEnabled() { return m.api.on } }))
 vi.mock('@/features/content/api/public-stories', () => ({ loadPublicStories: m.stories }))
 vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: m.pins, fetchMapPin: vi.fn(), fetchMapCategories: vi.fn() }))
 vi.mock('@/features/catalog/api/keepsakes', () => ({ fetchKeepsakeList: m.keepsakes }))
-vi.mock('@/features/data-client/api-transport', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/features/data-client/api-transport')>()
+vi.mock('@sk/api-contract', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@sk/api-contract')>()
 
-  return { ...actual, loadClient: async () => ({ GET: m.tours }), answer: async (call: Promise<unknown>) => call }
+  return { ...actual, createApiClient: () => ({ GET: m.tours }) }
 })
 
 function wrapper({ children }: { children: React.ReactNode }) {
@@ -34,7 +34,7 @@ beforeEach(() => {
   m.api.on = true
   m.stories.mockResolvedValue([])
   m.pins.mockResolvedValue([])
-  m.tours.mockResolvedValue({ items: [] })
+  m.tours.mockResolvedValue({ data: { items: [] }, response: new Response() })
   m.keepsakes.mockResolvedValue({ items: [] })
 })
 

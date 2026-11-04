@@ -4,14 +4,16 @@ import type { SearchKind, SearchSources } from '@/features/search/lib/search'
 import { queryOptions, useQuery } from '@tanstack/react-query'
 import { guestKeepsakeList } from '@/features/catalog/api/keepsake-list-query'
 import { loadPublicStories } from '@/features/content/api/public-stories'
-import { answer, fromApi, loadClient, timeout } from '@/features/data-client/api-transport'
+import { answer, fromApi, timeout } from '@/features/data-client/api-transport'
 import { queryKeys } from '@/features/data-client/query-keys'
 import { mapQueries } from '@/features/map/api/queries'
 import { apiEnabled } from '@/lib/api-mode'
+import { apiOrigin } from '@/lib/api-origin'
 
 /** The published tours in one language, as `GET /api/public/tours` sends them. A failed read throws. */
-export async function fetchTourCards(lang: PublicLanguage): Promise<PublicTourCard[]> {
-  const client = await loadClient()
+async function fetchTourCards(lang: PublicLanguage): Promise<PublicTourCard[]> {
+  const { createApiClient } = await import('@sk/api-contract')
+  const client = createApiClient(apiOrigin())
   const { items } = await answer(client.GET('/api/public/tours', { ...timeout(), params: { query: { lang } } }))
 
   return items

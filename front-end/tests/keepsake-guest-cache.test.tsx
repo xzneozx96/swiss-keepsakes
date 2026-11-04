@@ -14,10 +14,10 @@ vi.mock('@/lib/api-mode', () => ({ apiEnabled: true }))
 vi.mock('@/features/catalog/api/keepsakes', () => ({ fetchKeepsakeList: m.keepsakes }))
 vi.mock('@/features/content/api/public-stories', () => ({ loadPublicStories: vi.fn().mockResolvedValue([]) }))
 vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: vi.fn().mockResolvedValue([]), fetchMapPin: vi.fn(), fetchMapCategories: vi.fn() }))
-vi.mock('@/features/data-client/api-transport', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/features/data-client/api-transport')>()
+vi.mock('@sk/api-contract', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@sk/api-contract')>()
 
-  return { ...actual, loadClient: async () => ({ GET: async () => ({ items: [] }) }), answer: async (call: Promise<unknown>) => call }
+  return { ...actual, createApiClient: () => ({ GET: async () => ({ data: { items: [] }, response: new Response() }) }) }
 })
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
