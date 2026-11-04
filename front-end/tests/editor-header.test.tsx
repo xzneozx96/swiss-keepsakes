@@ -1,4 +1,5 @@
 import type { EditorHeaderProps } from '@/components/layout/editor-header'
+import { QueryClientProvider } from '@tanstack/react-query'
 
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
 import { render, screen, within } from '@testing-library/react'
@@ -162,13 +163,15 @@ describe('the shell measures the store notice for the bars under it', () => {
     const router = createRouter({ routeTree: root.addChildren([page]), history: createMemoryHistory({ initialEntries: ['/store'] }), disableGlobalCatchBoundary: true })
 
     render(
-      <DataClientProvider client={demo.dataClient}>
-        <LocaleProvider>
-          <DemoProvider store={demo.store}>
-            <RouterProvider router={router} />
-          </DemoProvider>
-        </LocaleProvider>
-      </DataClientProvider>,
+      <QueryClientProvider client={demo.queryClient}>
+        <DataClientProvider client={demo.dataClient}>
+          <LocaleProvider>
+            <DemoProvider store={demo.store}>
+              <RouterProvider router={router} />
+            </DemoProvider>
+          </LocaleProvider>
+        </DataClientProvider>
+      </QueryClientProvider>,
     )
     await screen.findByText('page')
   }

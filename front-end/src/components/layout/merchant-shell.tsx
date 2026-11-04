@@ -2,7 +2,7 @@ import type { LinkProps } from '@tanstack/react-router'
 import type { IconComponent } from '@/components/icons'
 import type { MessageKey } from '@/i18n/en'
 
-import { Button, Drawer } from '@heroui/react'
+import { Button, Drawer, Skeleton } from '@heroui/react'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
@@ -25,8 +25,9 @@ import { MerchantBarSlotContext } from '@/components/layout/merchant-back-bar'
 import { isReady } from '@/components/layout/nav-ready'
 import { SECTION_PAGES } from '@/components/layout/section-pages'
 import { useLocale } from '@/contexts/locale-context'
+import { useSignOut } from '@/features/auth/hooks/use-sign-out'
 import { shop } from '@/features/catalog/seed'
-import { useDemoActions, useDemoSelector } from '@/features/demo'
+import { useStaffAccount } from '@/features/stores/hooks/use-staff-account'
 import { avatarUrl } from '@/lib/avatars'
 
 export type MerchantSection
@@ -326,12 +327,11 @@ export function MerchantShell({ children, notice }: {
   /** A notice for every page of the area (the store-setup warning): the very top of the content column, above the phone bar. */
   notice?: React.ReactNode
 }) {
-  const { language, t } = useLocale()
-  const { setRole } = useDemoActions()
-  const demoRole = useDemoSelector(s => s.role)
-  const staffName = demoRole === 'manager' ? 'Lukas' : shop.ownerName
-  const staffRole
-    = demoRole === 'manager' ? t('staff.manager') : t('staff.owner')
+  const { t } = useLocale()
+  const account = useStaffAccount()
+  const { signOutThen, pending: signingOut } = useSignOut()
+  const staffName = account.name
+  const staffRole = account.role ? t(`stores.members.role.${account.role}`) : ''
   const [moreOpen, setMoreOpen] = useState(false)
   // Groups start unfolded; the set holds the ones the user folded.
   const [folded, setFolded] = useState<Set<string>>(() => new Set())
@@ -445,30 +445,39 @@ export function MerchantShell({ children, notice }: {
           </nav>
         </div>
         <div className="sticky bottom-0 mt-auto flex items-center justify-between gap-3 border-t border-separator bg-surface py-4 ps-6 pe-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <img
-              alt=""
-              className="size-9 shrink-0 rounded-full bg-default object-cover"
-              decoding="async"
-              src={avatarUrl(staffName)}
-            />
-            <span className="flex min-w-0 flex-col">
-              <span className="truncate text-sm font-medium">{staffName}</span>
-              <span className="truncate text-xs text-muted">{staffRole}</span>
-            </span>
-          </div>
-          {/* The prototype has no merchant login: signing out leaves the shop for the guest
-              side, as the prototype bar's guest role does. */}
+          {account.loading
+            ? (
+                <div className="flex min-w-0 items-center gap-3">
+                  <Skeleton className="size-9 shrink-0 rounded-full" />
+                  <span className="flex flex-col gap-1.5">
+                    <Skeleton className="h-3.5 w-24 rounded" />
+                    <Skeleton className="h-3 w-16 rounded" />
+                  </span>
+                </div>
+              )
+            : (
+                <div className="flex min-w-0 items-center gap-3">
+                  <img
+                    alt=""
+                    className="size-9 shrink-0 rounded-full bg-default object-cover"
+                    decoding="async"
+                    src={avatarUrl(staffName)}
+                  />
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate text-sm font-medium">{staffName}</span>
+                    <span className="truncate text-xs text-muted">{staffRole}</span>
+                  </span>
+                </div>
+              )}
+          {/* Ends the real session (a failed one keeps the user signed in and toasts, see useSignOut). */}
           <Button
             isIconOnly
             aria-label={t('account.signOut')}
             className="text-danger"
+            isDisabled={signingOut}
             size="sm"
             variant="ghost"
-            onPress={() => {
-              setRole('guest')
-              void navigate({ to: '/$lang', params: { lang: language } })
-            }}
+            onPress={() => signOutThen(() => void navigate({ to: '/sign-in', replace: true }))}
           >
             <LogoutIcon aria-hidden size={18} />
           </Button>
@@ -548,7 +557,7 @@ export function MerchantShell({ children, notice }: {
                         <Drawer.Header>
                           <Drawer.Heading>{t('nav.moreTitle')}</Drawer.Heading>
                           <p className="text-label text-muted">
-                            {shop.name} · {staffName} · {staffRole}
+                            {account.loading ? shop.name : `${shop.name} · ${staffName} · ${staffRole}`}
                           </p>
                         </Drawer.Header>
                         <Drawer.Body>
