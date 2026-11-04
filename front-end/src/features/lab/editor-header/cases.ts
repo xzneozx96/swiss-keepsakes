@@ -32,7 +32,8 @@ export interface EditorCase {
   languages: Record<Lang, LanguageStatus>
   /** The one red action; `short` is its phone label. */
   primary: { label: string, short: string, isDisabled?: boolean }
-  menu: { id: string, label: string, icon: IconComponent, isDanger?: boolean }[]
+  /** Secondary actions: one shows as its own icon button, two or more sit in ⋯. `confirm` is the body of the ask-first dialog. */
+  menu: { id: string, label: string, icon: IconComponent, isDanger?: boolean, confirm?: string }[]
   /** The editor's steps (keepsake, place) or screens (story: Write, Review and publish). */
   steps: EditorStep[]
   current: string
@@ -54,7 +55,7 @@ export const CASES: EditorCase[] = [
     save: { text: 'No changes', tone: 'muted' },
     languages: { en: { text: 'Complete', tone: 'success' }, de: { text: 'Complete', tone: 'success' } },
     primary: { label: 'Save changes', short: 'Save', isDisabled: true },
-    menu: [{ id: 'delete', label: 'Delete keepsake', icon: TrashIcon, isDanger: true }],
+    menu: [{ id: 'delete', label: 'Delete keepsake', icon: TrashIcon, isDanger: true, confirm: 'It can’t be undone. Its photos stay in your library.' }],
     steps: [
       { id: 'details', label: 'Details', status: 'done' },
       { id: 'options', label: 'Options and variants', status: 'done' },
@@ -75,7 +76,7 @@ export const CASES: EditorCase[] = [
     save: { text: 'Saved 10:07', tone: 'success' },
     languages: { en: { text: 'Complete', tone: 'success' }, de: { text: 'Summary missing', tone: 'warning' } },
     primary: { label: 'Review and publish', short: 'Review' },
-    menu: [{ id: 'delete', label: 'Delete story', icon: TrashIcon, isDanger: true }],
+    menu: [{ id: 'delete', label: 'Delete story', icon: TrashIcon, isDanger: true, confirm: 'The draft will be deleted.' }],
     steps: [
       { id: 'write', label: 'Write', status: 'todo' },
       { id: 'review', label: 'Review', status: 'todo' },
@@ -97,7 +98,7 @@ export const CASES: EditorCase[] = [
     primary: { label: 'Save changes', short: 'Save' },
     menu: [
       { id: 'hide', label: 'Hide from the map', icon: HiddenIcon },
-      { id: 'delete', label: 'Delete pin', icon: TrashIcon, isDanger: true },
+      { id: 'delete', label: 'Delete pin', icon: TrashIcon, isDanger: true, confirm: 'Guests no longer see it on the map. This can’t be undone.' },
     ],
     steps: [
       { id: 'place', label: 'Place', status: 'done' },

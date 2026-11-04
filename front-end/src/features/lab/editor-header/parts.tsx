@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react'
 import type { EditorCase, Lang, SaveState } from './cases'
 
-import { Button, Input, Label, TextField } from '@heroui/react'
+import { Button, Input, Label, TextField, Tooltip } from '@heroui/react'
 
+import { useConfirm } from '@/components/confirm-dialog'
 import { ArrowRightIcon, BackIcon, StatusSuccessIcon } from '@/components/icons'
 import { LanguageVersionSwitch } from '@/components/language-version-switch'
 import { RowActions } from '@/components/row-actions'
@@ -88,8 +89,37 @@ export function Primary({ c, kind }: { c: EditorCase, kind: Kind }) {
   )
 }
 
+/**
+ * The secondary actions. Exactly one (Delete keepsake, Delete story) shows as its own icon button with a tooltip,
+ * in the danger tone when it destroys; two or more sit in the ⋯ menu. Delete asks first, as in the product.
+ */
 export function More({ c }: { c: EditorCase }) {
-  return <RowActions actions={c.menu} label={`More actions for ${c.title}`} />
+  const { confirm, dialog } = useConfirm()
+  const run = (id: string) => {
+    const action = c.menu.find(a => a.id === id)
+
+    if (action?.confirm)
+      void confirm({ title: `${action.label.split(' ')[0]} ${c.title}?`, body: action.confirm, confirmLabel: action.label })
+  }
+  const [only] = c.menu
+
+  return (
+    <>
+      {c.menu.length === 1 && only
+        ? (
+            <Tooltip delay={300}>
+              <Button isIconOnly aria-label={only.label} size="sm" variant={only.isDanger ? 'danger-soft' : 'tertiary'} onPress={() => run(only.id)}>
+                <only.icon aria-hidden size={18} />
+              </Button>
+              <Tooltip.Content placement="bottom">
+                <p>{only.label}</p>
+              </Tooltip.Content>
+            </Tooltip>
+          )
+        : <RowActions actions={c.menu} label={`More actions for ${c.title}`} onAction={run} />}
+      {dialog}
+    </>
+  )
 }
 
 /** A thin vertical rule between groups of a bar. */

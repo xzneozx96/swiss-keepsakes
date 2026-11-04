@@ -22,14 +22,14 @@ const OPTIONS: {
     idea: 'The story editor’s bar becomes every editor’s bar: name over “status · save state”, and every control in one row on the right.',
     sticky: 'Pinned at the top of the page, flush under the store notice (the shell’s BAR_PULL_UP: no pull-up while the notice shows). Phones: it docks in the shell’s bar slot; the full switch and the step line open the page.',
     gains: 'Shortest change: the story editor already has it, the floating save bar and the second header go. Nothing at the bottom, so it never meets the bulk ActionBar or the tab bar.',
-    costs: 'The big keepsake name becomes a 16 px line. A desktop row with switch, arrows, red action and ⋯ is busy on an editor with steps.',
+    costs: 'The big keepsake name becomes a 16 px line. A desktop row with switch, arrows, red action and Delete (or ⋯) is busy on an editor with steps.',
     Header: OptionOneLine,
   },
   {
     id: 'b',
     name: 'B · Name, then the bar',
     idea: 'The big name and its status stay as the page’s heading and scroll away; the white save bar moves to the top and pins, holding the switch, the save state, the arrows and the red action.',
-    sticky: 'The name row scrolls; the white bar pins under the store notice (the same BAR_PULL_UP rule for its top edge). Phones: the ← bar with the name and ⋯ docks in the bar slot, the white bar pins right under it.',
+    sticky: 'The name row scrolls; the white bar pins under the store notice (the same BAR_PULL_UP rule for its top edge). Phones: the ← bar with the name and Delete (or ⋯) docks in the bar slot, the white bar pins right under it.',
     gains: 'Keeps the white bar the owner knows and the keepsake editor’s big title. Save state sits next to the action it belongs to.',
     costs: 'Two layers to pin on phones (about 112 px of the 812 px screen). Once the name scrolls away, the bar does not say which item is open.',
     Header: OptionNameThenBar,
@@ -37,7 +37,7 @@ const OPTIONS: {
   {
     id: 'c',
     name: 'C · Steps in the header',
-    idea: 'One pinned header in two rows: name over “status · save state” with switch, red action and ⋯; under it the steps (or Write | Review) as the app’s thin tabs.',
+    idea: 'One pinned header in two rows: name over “status · save state” with switch, red action and Delete (or ⋯); under it the steps (or Write | Review) as the app’s thin tabs.',
     sticky: 'Both rows pin under the store notice (BAR_PULL_UP). Phones: both rows dock in the bar slot; the tabs scroll sideways; the full switch opens the page.',
     gains: 'Step navigation is always in reach, so the left step list and the step arrows go, and the content gets the full width. The story editor’s two screens read the same way.',
     costs: 'Drops the approved left step list (and its status words) for a row of tabs. Six place steps need a sideways scroll on phones. The biggest change of the three.',
@@ -64,10 +64,10 @@ export function EditorHeaderLab() {
           Today the keepsake editor has a big title with a chip and a wide switch, the story editor a slim pinned bar,
           and the keepsake, place, gift and tour editors a floating white save bar. Each option below folds all three
           into one header with the same slots: Back, the name, one line “status · save state”, the EN | DE switch with
-          each language’s state, back and next arrows where the editor has steps, one red action and ⋯ for delete or hide. Autosave
+          each language’s state, back and next arrows where the editor has steps, one red action, and the secondary actions: a single one (Delete keepsake, Delete story) as its own trash button with a tooltip, two or more (Hide from the map, Delete pin) in ⋯. Autosave
           and explicit save use the same line: “Saved 10:07”, “No changes” or “Unsaved changes”; the red action is
           Review and publish (autosave) or Save changes (explicit, off while nothing changed). Each frame scrolls
-          inside, so the pinning shows. Buttons do nothing here except the switch, the arrows and the steps.
+          inside, so the pinning shows. Buttons do nothing here except the switch, the arrows, the steps and Delete, which opens the confirm.
         </p>
       </div>
       {OPTIONS.map(option => (
