@@ -12,6 +12,12 @@ import { startDemo } from '@/features/demo/data-client'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
 
+// These tests check the menu's structure with every page listed; store-nav-ready.test.tsx covers the real hidden list.
+vi.mock('@/components/layout/nav-ready', () => ({
+  HIDDEN_UNTIL_READY: new Set<string>(),
+  isReady: () => true,
+}))
+
 let demo: ReturnType<typeof startDemo>
 
 beforeEach(async () => {

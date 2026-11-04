@@ -17,6 +17,12 @@ import { REQUEST_TABS } from '@/features/requests/merchant/lib/search-params'
 import { en } from '@/i18n/en'
 import { Route as accountRoute } from '@/routes/_guest/account'
 
+// These tests check the menu's structure with every page listed; store-nav-ready.test.tsx covers the real hidden list.
+vi.mock('@/components/layout/nav-ready', () => ({
+  HIDDEN_UNTIL_READY: new Set<string>(),
+  isReady: () => true,
+}))
+
 let demo: ReturnType<typeof startDemo>
 
 beforeEach(async () => {

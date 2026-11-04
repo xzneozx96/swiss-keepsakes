@@ -22,6 +22,7 @@ import {
 } from '@/components/icons'
 import { BrandMark } from '@/components/layout/brand-mark'
 import { MerchantBarSlotContext } from '@/components/layout/merchant-back-bar'
+import { isReady } from '@/components/layout/nav-ready'
 import { SECTION_PAGES } from '@/components/layout/section-pages'
 import { useLocale } from '@/contexts/locale-context'
 import { shop } from '@/features/catalog/seed'
@@ -184,8 +185,29 @@ const phoneItems: NavItem[] = [
   },
 ]
 
-const phonePrimary = phoneItems.slice(0, 3)
-const phoneMore = phoneItems.slice(3)
+/**
+ * What the menus show: items and pages that are not in HIDDEN_UNTIL_READY (nav-ready.ts). A group
+ * with no page left goes; a hidden page still opens by URL. Read on every render so the list is
+ * the only place to change.
+ */
+function readySidebar() {
+  return sidebarItems.flatMap((item) => {
+    if (!item.pages)
+      return [item]
+    const pages = item.pages.filter(page => isReady(page.to))
+
+    return pages.length ? [{ ...item, pages }] : []
+  })
+}
+
+function readyPhone() {
+  const items = phoneItems.filter(item => item.settings || isReady(item.to))
+
+  // Up to four items fit in the bar itself; More appears only when there are more.
+  return items.length <= 4
+    ? { primary: items, more: [] }
+    : { primary: items.slice(0, 3), more: items.slice(3) }
+}
 
 function isUnder(pathname: string, base: string) {
   return base === '/store'
@@ -297,6 +319,10 @@ export function MerchantShell({ children, notice }: {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const labelOf = (item: NavItem) => t(item.label)
+  const sidebar = readySidebar()
+  const { primary: phonePrimary, more: phoneMore } = readyPhone()
+  // The shop mark opens the first ready page (Today is a prototype for now).
+  const landing = sidebar[0]?.pages?.[0]?.to ?? sidebar[0]?.to ?? '/store'
 
   return (
     <div className="flex flex-1">
@@ -310,7 +336,7 @@ export function MerchantShell({ children, notice }: {
         <div className="sticky top-0 flex max-h-[calc(100dvh-4.5rem)] flex-col gap-6 overflow-y-auto p-4 pb-14">
           <Link
             className="flex items-center gap-3 rounded-xl px-2 pt-2 outline-none focus-visible:focus-ring"
-            to="/store"
+            to={landing}
           >
             <BrandMark />
             <span className="min-w-0 text-sm leading-snug font-semibold">
@@ -319,7 +345,7 @@ export function MerchantShell({ children, notice }: {
           </Link>
           <nav aria-label={t('nav.merchant.label')}>
             <ul className="flex flex-col gap-1">
-              {sidebarItems.map((item) => {
+              {sidebar.map((item) => {
                 const pages = item.pages ?? []
                 const id = `nav-pages-${item.label.replace('.', '-')}`
                 const inside = isInside(pathname, item)
@@ -459,7 +485,7 @@ export function MerchantShell({ children, notice }: {
           aria-label={t('nav.merchant.label')}
           className="fixed inset-x-0 bottom-0 z-20 border-t border-separator bg-surface pb-[env(safe-area-inset-bottom,0px)] lg:hidden"
         >
-          <ul className="grid grid-cols-4">
+          <ul className={phonePrimary.length === 3 && !phoneMore.length ? 'grid grid-cols-3' : 'grid grid-cols-4'}>
             {phonePrimary.map(item => (
               <li key={item.label}>
                 <NavLink className={tabLink} item={item}>
@@ -477,58 +503,60 @@ export function MerchantShell({ children, notice }: {
                 </NavLink>
               </li>
             ))}
-            <li>
-              <Drawer isOpen={moreOpen} onOpenChange={setMoreOpen}>
-                <Drawer.Trigger
-                  className="flex h-16 w-full flex-col items-center justify-center gap-1 text-xs text-muted outline-none focus-visible:focus-ring data-[status=active]:font-semibold data-[status=active]:text-accent"
-                  data-status={
-                    phoneMore.some(item => isInside(pathname, item))
-                      ? 'active'
-                      : undefined
-                  }
-                >
-                  <MoreIcon size={24} />
-                  {t('nav.more')}
-                </Drawer.Trigger>
-                <Drawer.Backdrop>
-                  <Drawer.Content placement="bottom">
-                    <Drawer.Dialog>
-                      <Drawer.Handle />
-                      <Drawer.Header>
-                        <Drawer.Heading>{t('nav.moreTitle')}</Drawer.Heading>
-                        <p className="text-label text-muted">
-                          {shop.name} · {staffName} · {staffRole}
-                        </p>
-                      </Drawer.Header>
-                      <Drawer.Body>
-                        <ul className="flex flex-col gap-1 pb-4">
-                          {phoneMore.map(item => (
-                            <li key={item.label}>
-                              <NavLink
-                                className="group flex h-12 items-center gap-3 rounded-2xl px-3 text-base outline-none hover:bg-default focus-visible:focus-ring data-[status=active]:bg-default data-[status=active]:font-semibold data-[status=active]:text-accent"
-                                item={item}
-                                onClick={() => setMoreOpen(false)}
-                              >
-                                <item.icon
-                                  className="group-data-[status=active]:hidden"
-                                  size={20}
-                                />
-                                <item.icon
-                                  className="hidden group-data-[status=active]:block"
-                                  size={20}
-                                  weight="Filled"
-                                />
-                                {labelOf(item)}
-                              </NavLink>
-                            </li>
-                          ))}
-                        </ul>
-                      </Drawer.Body>
-                    </Drawer.Dialog>
-                  </Drawer.Content>
-                </Drawer.Backdrop>
-              </Drawer>
-            </li>
+            {phoneMore.length > 0 && (
+              <li>
+                <Drawer isOpen={moreOpen} onOpenChange={setMoreOpen}>
+                  <Drawer.Trigger
+                    className="flex h-16 w-full flex-col items-center justify-center gap-1 text-xs text-muted outline-none focus-visible:focus-ring data-[status=active]:font-semibold data-[status=active]:text-accent"
+                    data-status={
+                      phoneMore.some(item => isInside(pathname, item))
+                        ? 'active'
+                        : undefined
+                    }
+                  >
+                    <MoreIcon size={24} />
+                    {t('nav.more')}
+                  </Drawer.Trigger>
+                  <Drawer.Backdrop>
+                    <Drawer.Content placement="bottom">
+                      <Drawer.Dialog>
+                        <Drawer.Handle />
+                        <Drawer.Header>
+                          <Drawer.Heading>{t('nav.moreTitle')}</Drawer.Heading>
+                          <p className="text-label text-muted">
+                            {shop.name} · {staffName} · {staffRole}
+                          </p>
+                        </Drawer.Header>
+                        <Drawer.Body>
+                          <ul className="flex flex-col gap-1 pb-4">
+                            {phoneMore.map(item => (
+                              <li key={item.label}>
+                                <NavLink
+                                  className="group flex h-12 items-center gap-3 rounded-2xl px-3 text-base outline-none hover:bg-default focus-visible:focus-ring data-[status=active]:bg-default data-[status=active]:font-semibold data-[status=active]:text-accent"
+                                  item={item}
+                                  onClick={() => setMoreOpen(false)}
+                                >
+                                  <item.icon
+                                    className="group-data-[status=active]:hidden"
+                                    size={20}
+                                  />
+                                  <item.icon
+                                    className="hidden group-data-[status=active]:block"
+                                    size={20}
+                                    weight="Filled"
+                                  />
+                                  {labelOf(item)}
+                                </NavLink>
+                              </li>
+                            ))}
+                          </ul>
+                        </Drawer.Body>
+                      </Drawer.Dialog>
+                    </Drawer.Content>
+                  </Drawer.Backdrop>
+                </Drawer>
+              </li>
+            )}
           </ul>
         </nav>
       </div>
