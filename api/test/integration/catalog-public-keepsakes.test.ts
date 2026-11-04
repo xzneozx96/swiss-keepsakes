@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { createMediaDirectory } from '../../src/modules/catalog/adapters/media-directory.ts'
+import { createPickupRepository } from '../../src/modules/catalog/adapters/pickup-repository.ts'
 import { createPublicKeepsakeReads } from '../../src/modules/catalog/adapters/public-repository.ts'
 import { registerPublicKeepsakeRoutes } from '../../src/modules/catalog/adapters/public-routes.ts'
-import { makeGetAvailability, makeGetKeepsake, makeListKeepsakes } from '../../src/modules/catalog/index.ts'
+import { makeGetAvailability, makeGetKeepsake, makeGetPickupPoints, makeListKeepsakes } from '../../src/modules/catalog/index.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
 import { mediaView } from '../../src/modules/content/adapters/media-view.ts'
 import { createStockRepository } from '../../src/modules/inventory/adapters/stock-repository.ts'
@@ -36,7 +37,7 @@ const publicDeps = {
   media: createMediaDirectory({ findById: (tx: Parameters<typeof contentMedia.findById>[0], storeId: string, id: string) => contentMedia.findById(tx, storeId, id), view: row => mediaView(row, storage.publicUrl) }),
   stockLevels: { levels: makeStockLevels({ stock: stockRepository }) },
 }
-const publicUseCases = { listKeepsakes: makeListKeepsakes(publicDeps), getKeepsake: makeGetKeepsake(publicDeps), getAvailability: makeGetAvailability(publicDeps) }
+const publicUseCases = { listKeepsakes: makeListKeepsakes(publicDeps), getKeepsake: makeGetKeepsake(publicDeps), getAvailability: makeGetAvailability(publicDeps), getPickupPoints: makeGetPickupPoints({ ...publicDeps, pickups: createPickupRepository() }) }
 const env = createCatalogHttp(testDatabase, { extraRoutes: [app => registerPublicKeepsakeRoutes(app, publicUseCases)] })
 
 const rich = (text: string) => ({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] })

@@ -242,6 +242,8 @@ export {
   type PublicKeepsakePhoto,
   publicKeepsakePhotoSchema,
   publicKeepsakeSchema,
+  type PublicPickupPoints,
+  publicPickupPointsSchema,
 } from './public-keepsakes.ts'
 export {
   type AcceptedInvitation,

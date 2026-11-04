@@ -11,11 +11,13 @@ export interface PickupDateFieldProps {
   today: CalendarDate
   /** First valid pickup day; the calendar opens on its month. */
   earliest: CalendarDate
+  /** Last day the calendar offers; later days are disabled. */
+  max?: CalendarDate
   /** Days still being prepared or closed: pale (unavailable), not disabled. */
   isUnavailable: (date: DateValue) => boolean
   /** Why a pale day cannot be picked (YYYY-MM-DD), shown when the guest taps it. */
   reasonFor: (isoDate: string) => string | undefined
-  legend: { title: string, prep: string, closed: string }
+  legend: { title: string, /** Left out when no day is held back for preparation. */ prep?: string, closed: string }
   value: CalendarDate | null
   onChange: (value: CalendarDate) => void
   error?: string
@@ -37,6 +39,7 @@ export function PickupDateField({
   description,
   today,
   earliest,
+  max,
   isUnavailable,
   reasonFor,
   legend,
@@ -90,6 +93,7 @@ export function PickupDateField({
         defaultFocusedValue={earliest}
         isDateUnavailable={isUnavailable}
         isInvalid={error !== undefined}
+        maxValue={max}
         minValue={today}
         value={value}
         onChange={(v) => {
@@ -122,10 +126,12 @@ export function PickupDateField({
       </Calendar>
       <div className="flex flex-col gap-1 text-xs text-muted">
         <p className="font-medium text-foreground">{legend.title}</p>
-        <p className="flex gap-2">
-          {paleDot}
-          {legend.prep}
-        </p>
+        {legend.prep && (
+          <p className="flex gap-2">
+            {paleDot}
+            {legend.prep}
+          </p>
+        )}
         <p className="flex gap-2">
           {paleDot}
           {legend.closed}

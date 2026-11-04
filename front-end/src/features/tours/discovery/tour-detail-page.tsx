@@ -381,7 +381,7 @@ export function TourDetail({
             </Accordion.Item>
           ))}
         </Accordion>
-        <TourKeepsakes ids={tour.keepsakeIds} />
+        <TourKeepsakes />
       </div>
     </div>
   )

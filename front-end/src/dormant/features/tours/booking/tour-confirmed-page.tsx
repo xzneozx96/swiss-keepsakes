@@ -94,7 +94,7 @@ export function TourConfirmedPage({ bookingId }: { bookingId: string }) {
           {t('tourBooking.view')}
         </Button>
       </section>
-      <TourKeepsakes ids={tour?.keepsakeIds} variant="confirmation" />
+      <TourKeepsakes variant="confirmation" />
       <TripProfile
         answers={trip.answers}
         kind="tour"
