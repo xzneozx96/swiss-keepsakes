@@ -238,6 +238,8 @@ export const productsEn = {
   'pickup.toast.deleted': '{name} deleted',
   'pickup.problem.inUse': 'An order or a handover names this pickup point, so it can’t be deleted. Archive it instead.',
   'pickup.problem.gone': 'This pickup point no longer exists. Reload the list.',
+  'pickup.column.point': 'Pickup point',
+  'pickup.column.languages': 'Languages',
   'pickup.search': 'Search by name or address',
   'pickup.empty.filtered': 'No pickup point matches. Try another word or remove a filter.',
   'pickup.clear': 'Clear search and filters',

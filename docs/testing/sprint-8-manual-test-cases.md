@@ -14,7 +14,7 @@ The cases are grouped by PR, in this merge order. Test and merge in this order. 
 | 1 | Lark sync and plan docs (T-LARK, T-DOCS) | S8-LARK-01 to 03 |
 | 2 | E6.3 stock: inventory page, stock in the keepsake editor (migration 0021) | S8-INV-01 to 09 |
 | 3 | E6.5 opening stock for the five Victorinox knives | S8-STOCK-SEED-01 to 04 |
-| 4 | E6.6 pickup points (migrations 0022 and 0025) | S8-PICKUP-01 to 17 |
+| 4 | E6.6 pickup points (migrations 0022 and 0025) | S8-PICKUP-01 to 18 |
 | 5 | E8.7 analytics events and the map card tip fix (migration 0023) | S8-EVENTS-01 to 07, S8-MAP-01 |
 | 6 | E4.3 story editor | S8-STORY-01 to 28 |
 | 7 | UI consistency and story fixes (list headers, story Write layout, story header notice) | S8-UI-01, S8-UI-02, S8-STORY-FIX-01 |
@@ -74,7 +74,7 @@ Events go to PostHog EU. Nothing is sent unless you switch it on.
 | S8-STOCK-SEED-03 | A second seed run changes nothing | E6.5 / AC53 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-STOCK-SEED-04 | A stock figure set by a person is not overwritten | E6.5 / AC53 (gate G-S8-D2) | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-PICKUP-01 | Save two pickup points and keep them after reload | E6.6 / AC26 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
-| S8-PICKUP-02 | Two spans on one day show in the ticket | E6.6 / AC26 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-PICKUP-02 | Two spans on one day show in the row | E6.6 / AC26 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-PICKUP-03 | A span past midnight is kept, and opens equal to closes is refused | E6.6 / AC26 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-PICKUP-04 | One language is enough for a pickup point | E6.6 / AC26 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-PICKUP-05 | Archive and restore a pickup point | E6.6 / AC26 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
@@ -90,6 +90,7 @@ Events go to PostHog EU. Nothing is sent unless you switch it on.
 | S8-PICKUP-15 | Delete an active pickup point | E6.6 / AC26 (gate G-S8-PICKUP-DELETE) | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-PICKUP-16 | Delete an archived pickup point | E6.6 / AC26 (gate G-S8-PICKUP-DELETE) | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-PICKUP-17 | Cancel the delete, and the dialog in German | E6.6 / AC26 (gate G-S8-PICKUP-DELETE) | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-PICKUP-18 | The pickup points table and the phone cards | Owner design 2026-11-04 (S8-PICKUP-TABLE) | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-EVENTS-01 | Events arrive in PostHog with closed values only | E8.7 / AC37, AC60 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-EVENTS-02 | A merchant page and a switched-off build send nothing | E8.7 / AC37 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-EVENTS-03 | A guest's deep-linked pin is recorded once | E8.7 / AC60 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
@@ -478,14 +479,14 @@ Terminal cases except S8-STOCK-SEED-02 and 04, which use the browser. The seed m
 
 | # | Step | Expected result |
 |---|---|---|
-| 1 | Open Products, Pickup points, and add "Shop Hertensteinstrasse" with a Google Maps link, an address and Monday to Saturday 10:00 to 18:00. | The point shows as a ticket with the line "Mon to Sat 10:00 to 18:00". |
-| 2 | Add a second point with its own link and different hours. | Both tickets show in order. |
+| 1 | Open Products, Pickup points, and add "Shop Hertensteinstrasse" with a Google Maps link, an address and Monday to Saturday 10:00 to 18:00. | The point shows as a table row with the hours "Mon to Sat · 10:00 – 18:00". |
+| 2 | Add a second point with its own link and different hours. | Both rows show in order. |
 | 3 | Reload. | Both are still there with their hours. |
 
 - **Postconditions:** two active pickup points.
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
 
-### S8-PICKUP-02 Two spans on one day show in the ticket
+### S8-PICKUP-02 Two spans on one day show in the row
 - **Story / AC:** E6.6 / AC26
 - **Priority:** P2
 - **Role and device:** Owner, desktop 1280 px
@@ -494,7 +495,7 @@ Terminal cases except S8-STOCK-SEED-02 and 04, which use the browser. The seed m
 | # | Step | Expected result |
 |---|---|---|
 | 1 | Edit the point and add 14:00 to 18:00 on Monday after 09:00 to 12:00. | Both spans show in the editor. |
-| 2 | Save. | The ticket line reads "Mon 09:00 to 12:00, 14:00 to 18:00". |
+| 2 | Save. | The hours cell reads "Mon · 09:00 – 12:00, 14:00 – 18:00" on one line, and the other days on their own lines. |
 
 - **Postconditions:** the point has two spans on Monday.
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
@@ -507,7 +508,7 @@ Terminal cases except S8-STOCK-SEED-02 and 04, which use the browser. The seed m
 
 | # | Step | Expected result |
 |---|---|---|
-| 1 | Set a span that opens 22:00 and closes 02:00, then press Save. | The sheet saves. The ticket line shows the span the way the place hours editor shows one. |
+| 1 | Set a span that opens 22:00 and closes 02:00, then press Save. | The sheet saves. The hours cell shows the span the way the place hours editor shows one. |
 | 2 | Reload. | The span is still there. |
 | 3 | Set a span that opens 10:00 and closes 10:00, then press Save. | The field shows the refusal and the sheet stays open. |
 
@@ -523,7 +524,7 @@ Terminal cases except S8-STOCK-SEED-02 and 04, which use the browser. The seed m
 | # | Step | Expected result |
 |---|---|---|
 | 1 | Add a point with a Google Maps link and a German name and address only, and press Save. | It saves. |
-| 2 | Read the ticket. | It shows the missing-English notice. |
+| 2 | Read its row. | The Languages column shows the warning chip "EN missing". |
 
 - **Postconditions:** one point without English text.
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
@@ -697,8 +698,8 @@ Terminal cases except S8-STOCK-SEED-02 and 04, which use the browser. The seed m
 
 | # | Step | Expected result |
 |---|---|---|
-| 1 | On the ticket of Point A, look at the buttons at the bottom. | "Archive" and "Delete" sit side by side, both in the soft red style. |
-| 2 | Press "Delete". | A dialog asks "Delete Point A?" and says it can't be undone and that a point an order or a handover names should be archived instead. Nothing is deleted yet. |
+| 1 | Open the ⋯ menu at the end of Point A's row. | It lists "Edit", "Archive" and "Delete"; only "Delete" is red. |
+| 2 | Press "Delete" in the menu. | A dialog asks "Delete Point A?" and says it can't be undone and that a point an order or a handover names should be archived instead. Nothing is deleted yet. |
 | 3 | Press "Delete" in the dialog. | The button shows a spinner, then the dialog closes. The toast says "Point A deleted". Point A has left the list and Point B is still there. |
 | 4 | Reload the page, then tick "Archived" in the Status filter. | Point A is in neither list. |
 | 5 | Open Point B and check its hours. | They are unchanged. |
@@ -714,8 +715,8 @@ Terminal cases except S8-STOCK-SEED-02 and 04, which use the browser. The seed m
 
 | # | Step | Expected result |
 |---|---|---|
-| 1 | Tick "Archived" in the Status filter. | Point C shows with "Restore" and "Delete". |
-| 2 | Press "Delete" on Point C and confirm. | The dialog asks "Delete Point C?". After you confirm, the toast says "Point C deleted" and the ticket leaves the list. |
+| 1 | Tick "Archived" in the Status filter, then open Point C's ⋯ menu. | Point C's status reads "Archived"; the menu lists "Restore" and "Delete", no "Edit". |
+| 2 | Press "Delete" in Point C's menu and confirm. | The dialog asks "Delete Point C?". After you confirm, the toast says "Point C deleted" and the row leaves the list. |
 | 3 | Reload and tick "Archived". | Point C is gone. |
 | 4 | Add a new pickup point. | It saves. Deleting left no gap that blocks a new point. |
 
@@ -730,11 +731,31 @@ Terminal cases except S8-STOCK-SEED-02 and 04, which use the browser. The seed m
 
 | # | Step | Expected result |
 |---|---|---|
-| 1 | Press "Löschen" on the ticket. | A dialog asks "<Name> löschen?" in German. |
+| 1 | Open the ⋯ menu of the row and press "Löschen". | A dialog asks "<Name> löschen?" in German. |
 | 2 | Press "Abbrechen". | The dialog closes. The point is still in the list. |
-| 3 | Press "Löschen" again and confirm. | The toast says "<Name> gelöscht" and the point leaves the list. |
+| 3 | Press "Löschen" in the menu again and confirm. | The toast says "<Name> gelöscht" and the point leaves the list. |
 
 - **Postconditions:** the point no longer exists.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-PICKUP-18 The pickup points table and the phone cards
+- **Story / AC:** owner design 2026-11-04 (S8-PICKUP-TABLE)
+- **Priority:** P1
+- **Role and device:** Owner, desktop 1440 px, then phone 375 px
+- **Preconditions:** three active pickup points: "Point A" in EN and DE with Monday to Saturday 10:00 to 18:00; "Point B" in English only with Monday to Friday 09:00 to 18:30 and Saturday 09:00 to 16:00; "Point C" in EN and DE with Monday to Friday 08:00 to 12:00 and 13:30 to 18:00. One archived point, "Point D", with no hours.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open Products, Pickup points at 1440 px. | A table with the columns Pickup point, Opening hours, Languages, Status and Actions, like the Keepsakes and Places tables. Each name is bold with its address under it in grey. No instructions show in a row. |
+| 2 | Read the Opening hours cells. | Point A: "Mon to Sat · 10:00 – 18:00". Point B: two lines, "Mon to Fri · 09:00 – 18:30" and "Sat · 09:00 – 16:00". Point C: one line, "Mon to Fri · 08:00 – 12:00, 13:30 – 18:00". |
+| 3 | Read the Languages and Status columns. | Only Point B has a chip, the yellow "DE missing". Points A and C have none. Every status reads "● Active" in green dot text. |
+| 4 | Press the name "Point A". | The edit sheet opens filled with Point A. Close it. |
+| 5 | Tick "Archived" in the Status filter. | Point D shows "No opening hours set" and "○ Archived". Its name is plain text, not a button. |
+| 6 | Switch to German. | The headers read Abholstelle, Öffnungszeiten, Sprachen, Status, Aktionen. Point B's chip reads "DE fehlt"; the hours read "Mo bis Fr · 09:00 – 18:30"; the status reads "Aktiv" or "Archiviert". |
+| 7 | Narrow the window to 375 px (or open it on a phone). | The table becomes one card per point, as the Keepsakes list does: name, address, the hours lines, then the status and the chip, and the ⋯ menu at the end. Tapping a card opens the edit sheet. Nothing scrolls sideways. |
+| 8 | Reload with a slow network (DevTools, Slow 4G). | While loading, the table shows its real headers with grey bars in each cell; at 375 px, grey cards in the card shape. |
+
+- **Postconditions:** none.
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
 
 Not testable in the browser yet: a point that an order or a handover names is refused with "An order or a handover names this pickup point, so it can’t be deleted. Archive it instead." That needs E7.1, which wires `SalesDirectory.usedPickupPlaceIds`. Until then an integration test stands in for the order (`api/test/integration/catalog-pickup.test.ts`).

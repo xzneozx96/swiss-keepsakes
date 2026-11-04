@@ -1,10 +1,10 @@
 import type { ProductVariant } from '@sk/api-contract'
 import type { SetStock } from '../lib/variant-actions'
 
+import { StatusText } from '@/components/status-text'
 import { useLocale } from '@/contexts/locale-context'
 import { StockInput } from '@/features/inventory/components/stock-field'
 import { useStockDraft } from '@/features/inventory/hooks/use-stock-save'
-import { StatusText } from './status-text'
 
 /**
  * The In stock box of one variant row (decision record 2026-11-02, item 25): the shared quantity box, bound to this

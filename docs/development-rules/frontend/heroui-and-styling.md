@@ -52,6 +52,7 @@ Before you build a control, search `front-end/src/components` for an existing on
 | Sheet or drawer body | `front-end/src/components/sheet-frame.tsx` (`SheetFrame`) |
 | Confirm before a change | `front-end/src/components/confirm-dialog.tsx` (`ConfirmDialog`, `useConfirm`) |
 | Status label | `front-end/src/components/status-chip.tsx` (`StatusChip`) |
+| Status as coloured text with a dot ("● Active"), in a table cell or under a title | `front-end/src/components/status-text.tsx` (`StatusText`) |
 | Nothing to show | `front-end/src/components/empty-state.tsx` (`EmptyState`, `TableEmptyState`) |
 | Row menu | `front-end/src/components/row-actions.tsx` (`RowActions`) |
 | Steps of an editor (step list, phone title and sheet, bottom bar) | `front-end/src/components/step-layout.tsx` (`StepLayout`), `step-bar.tsx` (`StepBar`), `step-marks.tsx`; texts in `step-messages.ts` |

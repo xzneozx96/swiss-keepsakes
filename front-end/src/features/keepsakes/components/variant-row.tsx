@@ -7,10 +7,10 @@ import { useState } from 'react'
 
 import { ArchiveIcon, EditIcon, PhotoAddIcon, TrashIcon } from '@/components/icons'
 import { SKU_CODE_CLASS } from '@/components/sku-code'
+import { StatusText } from '@/components/status-text'
 import { useLocale } from '@/contexts/locale-context'
 import { chf, toRappen } from '../lib/keepsake-rules'
 import { combinationName, shortLabel, variantTitle } from '../lib/option-rules'
-import { StatusText } from './status-text'
 import { VariantPhotoPicker, VariantThumb } from './variant-photo'
 import { VariantStock } from './variant-stock'
 

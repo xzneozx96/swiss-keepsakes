@@ -152,7 +152,22 @@ async function renderTab() {
   )
 }
 
-const ticket = async (name: string) => (await screen.findByText(name)).closest('article')!
+// The table and the phone cards are both in the DOM (CSS picks one), so a row query looks in the table; `hidden`
+// because an open filter popover or dialog hides the page from the accessibility tree.
+const table = () => within(screen.getByRole('grid', { hidden: true }))
+const row = async (name: string) => (await within(await screen.findByRole('grid', { hidden: true })).findByText(name)).closest('tr')!
+
+/** Opens the row's ⋯ menu (the table's, the last of the two) and presses an item. */
+async function menu(name: string, item: string) {
+  await userEvent.click((await screen.findAllByRole('button', { name: `Actions for ${name}` })).at(-1)!)
+  await userEvent.click(await screen.findByRole('menuitem', { name: item }))
+}
+
+async function showArchived() {
+  await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
+  await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
+  await userEvent.keyboard('{Escape}')
+}
 
 describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000 }, () => {
   it('shows the empty state when the store has no points', async () => {
@@ -173,7 +188,7 @@ describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000
     expect(screen.getByRole('button', { name: /^Status/ })).toBeInTheDocument()
   })
 
-  it('shows a skeleton that mirrors the tickets while the list loads', async () => {
+  it('[S8-PICKUP-TABLE] shows the table skeleton (real headers, a bar per cell) while the list loads', async () => {
     let release: () => void = () => {}
 
     hold = new Promise((resolve) => {
@@ -183,58 +198,94 @@ describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000
     const { container } = await renderTab()
 
     await waitFor(() => expect(container.querySelectorAll('[data-slot="skeleton"], .skeleton').length).toBeGreaterThan(0))
+    expect(table().getAllByRole('columnheader', { hidden: true }).map(h => h.textContent)).toEqual(['Pickup point', 'Opening hours', 'Languages', 'Status', 'Actions'])
     release()
-    expect(await screen.findByText('Point 1')).toBeInTheDocument()
+    expect(await row('Point 1')).toBeInTheDocument()
   })
 
-  it('lists the points in order with name, address, hours line and instructions', async () => {
+  it('[S8-PICKUP-TABLE] lists the points as table rows: name over address, one hours line per day group, status, no instructions', async () => {
     active = [
       point(1, { instructions: { en: 'Ring the bell' } }),
       point(2, { hours: [{ weekday: 1, opens: '09:00', closes: '12:00' }, { weekday: 1, opens: '14:00', closes: '18:00' }] }),
-      point(3, { hours: [] }),
+      point(3, { hours: [...[1, 2, 3, 4, 5].map(weekday => ({ weekday, opens: '09:00', closes: '18:30' })), { weekday: 6, opens: '09:00', closes: '16:00' }] }),
+      point(4, { hours: [] }),
     ]
     await renderTab()
 
-    const first = await ticket('Point 1')
+    const first = within(await row('Point 1'))
 
-    expect(within(first).getByText('Street 1')).toBeInTheDocument()
-    expect(within(first).getByText('Mon to Sat 10:00 to 18:00')).toBeInTheDocument()
-    expect(within(first).getByText('Ring the bell')).toBeInTheDocument()
-    expect(within(await ticket('Point 2')).getByText('Mon 09:00 to 12:00, 14:00 to 18:00')).toBeInTheDocument()
-    expect(within(await ticket('Point 3')).getByText('No opening hours set')).toBeInTheDocument()
-    expect(screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Point 1', 'Point 2', 'Point 3'])
+    expect(table().getAllByRole('columnheader').map(h => h.textContent)).toEqual(['Pickup point', 'Opening hours', 'Languages', 'Status', 'Actions'])
+    expect(first.getByText('Street 1')).toBeInTheDocument()
+    expect(first.getByText('Mon to Sat · 10:00 – 18:00')).toBeInTheDocument()
+    expect(first.getByText('Active')).toBeInTheDocument()
+    expect(first.queryByText('Ring the bell')).not.toBeInTheDocument()
+    expect(within(await row('Point 2')).getByText('Mon · 09:00 – 12:00, 14:00 – 18:00')).toBeInTheDocument()
+    const third = within(await row('Point 3'))
+
+    expect(third.getByText('Mon to Fri · 09:00 – 18:30')).toBeInTheDocument()
+    expect(third.getByText('Sat · 09:00 – 16:00')).toBeInTheDocument()
+    expect(within(await row('Point 4')).getByText('No opening hours set')).toBeInTheDocument()
+    expect(table().getAllByRole('rowheader').map(cell => within(cell).getByRole('button').textContent)).toEqual(['Point 1', 'Point 2', 'Point 3', 'Point 4'])
+  })
+
+  it('[S8-PICKUP-TABLE] a point with both languages has no language chip; a missing language gets the warning chip', async () => {
+    active = [point(1), point(2, { name: { en: 'Kiosk' }, address: { en: 'Quai 1' } })]
+    await renderTab()
+
+    const complete = within(await row('Point 1'))
+
+    expect(complete.queryByText(/missing|EN and DE/)).not.toBeInTheDocument()
+    expect(within(await row('Kiosk')).getByText('DE missing').closest('[data-slot="chip"]')).not.toBeNull()
+  })
+
+  it('[S8-PICKUP-TABLE] the phone cards show the same facts: name, address, hours lines, status and the menu', async () => {
+    active = [point(3, { hours: [...[1, 2, 3, 4, 5].map(weekday => ({ weekday, opens: '09:00', closes: '18:30' })), { weekday: 6, opens: '09:00', closes: '16:00' }] })]
+    await renderTab()
+    await row('Point 3')
+
+    const card = within(screen.getByRole('list', { name: 'Pickup points' }))
+
+    expect(card.getByText('Point 3')).toBeInTheDocument()
+    expect(card.getByText('Street 3')).toBeInTheDocument()
+    expect(card.getByText('Mon to Fri · 09:00 – 18:30')).toBeInTheDocument()
+    expect(card.getByText('Sat · 09:00 – 16:00')).toBeInTheDocument()
+    expect(card.getByText('Active')).toBeInTheDocument()
+    expect(card.getByRole('button', { name: 'Actions for Point 3' })).toBeInTheDocument()
   })
 
   it('a german-only point shows the missing-English chip, not an error', async () => {
     active = [point(1, { name: { de: 'Laden' }, address: { de: 'Luzern' } })]
     await renderTab()
 
-    const card = await ticket('Laden')
-
-    expect(within(card).getByText('EN missing')).toBeInTheDocument()
+    expect(within(await row('Laden')).getByText('EN missing')).toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
-  it('add pickup point opens an empty sheet; a ticket opens the sheet filled', async () => {
+  it('[S8-PICKUP-TABLE] add pickup point opens an empty sheet; the name and the menu\'s Edit open the sheet filled', async () => {
     active = [point(1)]
     await renderTab()
-    await screen.findByText('Point 1')
+    await row('Point 1')
 
     await userEvent.click(screen.getByRole('button', { name: 'Add pickup point' }))
     expect(await screen.findByLabelText('Name')).toHaveValue('')
     await userEvent.click(screen.getByRole('button', { name: 'Go back' }))
     await waitFor(() => expect(screen.queryByLabelText('Name')).not.toBeInTheDocument())
 
-    await userEvent.click(screen.getByRole('button', { name: 'Edit Point 1' }))
+    await userEvent.click(table().getByRole('button', { name: 'Edit Point 1' }))
+    expect(await screen.findByLabelText('Name')).toHaveValue('Point 1')
+    await userEvent.click(screen.getByRole('button', { name: 'Go back' }))
+    await waitFor(() => expect(screen.queryByLabelText('Name')).not.toBeInTheDocument())
+
+    await menu('Point 1', 'Edit')
     expect(await screen.findByLabelText('Name')).toHaveValue('Point 1')
   })
 
-  it('archive asks first, sends the row version, and the ticket leaves; the last one shows the empty state', async () => {
+  it('archive (in the ⋯ menu) asks first, sends the row version, and the row leaves; the last one shows the empty state', async () => {
     active = [point(1)]
     await renderTab()
-    await screen.findByText('Point 1')
+    await row('Point 1')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Archive Point 1' }))
+    await menu('Point 1', 'Archive')
     expect(writes()).toHaveLength(0)
     const dialog = await screen.findByRole('alertdialog')
 
@@ -242,7 +293,7 @@ describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `${base}/0198a000-0000-7000-8000-0000000000d1/archive`, ifMatch: '3' })
-    expect(await screen.findByText('No pickup points yet.')).toBeInTheDocument()
+    expect((await screen.findAllByText('No pickup points yet.')).length).toBeGreaterThan(0)
   })
 
   it('[S8-PICKUP-DELETE] delete asks first with the point named, sends DELETE with the row version, and the ticket leaves', async () => {
@@ -250,9 +301,9 @@ describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000
 
     active = [point(1), point(2)]
     await renderTab()
-    await screen.findByText('Point 1')
+    await row('Point 1')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Delete Point 1' }))
+    await menu('Point 1', 'Delete')
     expect(writes()).toHaveLength(0)
     const dialog = await screen.findByRole('alertdialog')
 
@@ -262,47 +313,45 @@ describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'DELETE', path: `${base}/0198a000-0000-7000-8000-0000000000d1`, ifMatch: '3' })
     await waitFor(() => expect(screen.queryByText('Point 1')).not.toBeInTheDocument())
-    expect(screen.getByText('Point 2')).toBeInTheDocument()
+    expect(table().getByText('Point 2')).toBeInTheDocument()
     expect(toasted).toHaveBeenCalledWith('Point 1 deleted')
   })
 
   it('[S8-PICKUP-DELETE] cancelling the delete dialog sends nothing', async () => {
     active = [point(1)]
     await renderTab()
-    await screen.findByText('Point 1')
+    await row('Point 1')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Delete Point 1' }))
+    await menu('Point 1', 'Delete')
     await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Cancel' }))
 
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
     expect(writes()).toHaveLength(0)
-    expect(screen.getByText('Point 1')).toBeInTheDocument()
+    expect(table().getByText('Point 1')).toBeInTheDocument()
   })
 
   it('[S8-PICKUP-DELETE] a point an order names (409 pickup-in-use) stays and the dialog says to archive it instead', async () => {
     active = [point(1)]
     refuseDelete = 'in-use'
     await renderTab()
-    await screen.findByText('Point 1')
+    await row('Point 1')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Delete Point 1' }))
+    await menu('Point 1', 'Delete')
     const dialog = await screen.findByRole('alertdialog')
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
     expect(await within(dialog).findByText('An order or a handover names this pickup point, so it can’t be deleted. Archive it instead.')).toBeInTheDocument()
-    expect(screen.getByText('Point 1')).toBeInTheDocument()
+    expect(table().getByText('Point 1')).toBeInTheDocument()
   })
 
   it('[S8-PICKUP-DELETE] an archived point can be deleted too', async () => {
     archivedPoints = [point(1, { archived: true })]
     await renderTab()
-    await screen.findByText('No pickup points yet.')
-
-    await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
-    await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
-    await userEvent.keyboard('{Escape}')
-    await userEvent.click(within(await ticket('Point 1')).getByRole('button', { name: 'Delete Point 1' }))
+    await screen.findAllByText('No pickup points yet.')
+    await showArchived()
+    await row('Point 1')
+    await menu('Point 1', 'Delete')
     await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete' }))
 
     await waitFor(() => expect(writes()).toHaveLength(1))
@@ -310,18 +359,16 @@ describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000
     await waitFor(() => expect(screen.queryByText('Point 1')).not.toBeInTheDocument())
   })
 
-  it('the archived list shows Restore, not an edit button, and Restore sends the row version', async () => {
+  it('[S8-PICKUP-TABLE] an archived row reads Archived, has Restore and Delete but no Edit, and Restore sends the row version', async () => {
     archivedPoints = [point(1, { archived: true })]
     await renderTab()
-    await screen.findByText('No pickup points yet.')
-
-    await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
-    await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
-    await userEvent.keyboard('{Escape}')
-    const card = await ticket('Point 1')
-
+    await screen.findAllByText('No pickup points yet.')
+    await showArchived()
+    expect(within(await row('Point 1')).getByText('Archived')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Edit Point 1' })).not.toBeInTheDocument()
-    await userEvent.click(within(card).getByRole('button', { name: 'Restore Point 1' }))
+    await userEvent.click((await screen.findAllByRole('button', { name: 'Actions for Point 1' })).at(-1)!)
+    expect((await screen.findAllByRole('menuitem')).map(item => item.textContent)).toEqual(['Restore', 'Delete'])
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Restore' }))
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `${base}/0198a000-0000-7000-8000-0000000000d1/restore`, ifMatch: '3' })
@@ -334,35 +381,28 @@ describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000
     archivedPoints = [point(1, { archived: true })]
     refuseRestoreAtLimit = true
     await renderTab()
-    await screen.findByText('No pickup points yet.')
-
-    await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
-    await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
-    await userEvent.keyboard('{Escape}')
-    await userEvent.click(within(await ticket('Point 1')).getByRole('button', { name: 'Restore Point 1' }))
+    await screen.findAllByText('No pickup points yet.')
+    await showArchived()
+    await row('Point 1')
+    await menu('Point 1', 'Restore')
 
     await waitFor(() => expect(danger).toHaveBeenCalledWith('100 active pickup points. Archive one first.'))
     expect(danger).toHaveBeenCalledTimes(1)
   })
 
-  it('two quick presses on Restore send one request', async () => {
+  it('a second Restore while the first is under way sends no second request', async () => {
     archivedPoints = [point(1, { archived: true })]
     await renderTab()
-    await screen.findByText('No pickup points yet.')
-
-    await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
-    await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
-    await userEvent.keyboard('{Escape}')
-    const card = await ticket('Point 1')
+    await screen.findAllByText('No pickup points yet.')
+    await showArchived()
+    await row('Point 1')
     let release: () => void = () => {}
 
     hold = new Promise((resolve) => {
       release = resolve
     })
-    const restore = within(card).getByRole('button', { name: 'Restore Point 1' })
-
-    await userEvent.click(restore)
-    await userEvent.click(restore)
+    await menu('Point 1', 'Restore')
+    await menu('Point 1', 'Restore')
     release()
 
     await waitFor(() => expect(screen.queryByText('Point 1')).not.toBeInTheDocument())
@@ -373,16 +413,12 @@ describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000
     archivedPoints = [point(1, { archived: true })]
     failNext = true
     await renderTab()
-    await screen.findByText('No pickup points yet.')
-
-    await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
-    await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
-    await userEvent.keyboard('{Escape}')
-    const restore = within(await ticket('Point 1')).getByRole('button', { name: 'Restore Point 1' })
-
-    await userEvent.click(restore)
+    await screen.findAllByText('No pickup points yet.')
+    await showArchived()
+    await row('Point 1')
+    await menu('Point 1', 'Restore')
     await waitFor(() => expect(writes()).toHaveLength(1))
-    await userEvent.click(restore)
+    await menu('Point 1', 'Restore')
     await waitFor(() => expect(writes()).toHaveLength(2))
 
     expect(writes()[0]!.key).toBeTruthy()
@@ -395,7 +431,7 @@ describe('[S8-UI-01] the pickup points page uses the shared list header and star
     active = [point(1)]
     await renderTab()
 
-    await screen.findByText('Point 1')
+    await row('Point 1')
     expectListChrome({ action: screen.getByRole('button', { name: 'Add pickup point' }), start: screen.getByRole('button', { name: /^Status/ }) })
   })
 
@@ -404,20 +440,20 @@ describe('[S8-UI-01] the pickup points page uses the shared list header and star
     archivedPoints = [point(2, { archived: true })]
     await renderTab()
 
-    await screen.findByText('Point 1')
+    await row('Point 1')
     expect(screen.queryByRole('button', { name: /^Remove filter/ })).not.toBeInTheDocument()
     expect(screen.queryByText('Point 2')).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
     await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
-    expect(await screen.findByText('Point 2')).toBeInTheDocument()
+    expect(await row('Point 2')).toBeInTheDocument()
     expect(screen.queryByText('Point 1')).not.toBeInTheDocument()
     await userEvent.click(await screen.findByRole('checkbox', { name: /Active/ }))
-    expect(await screen.findByText('Point 1')).toBeInTheDocument()
-    expect(screen.getByText('Point 2')).toBeInTheDocument()
+    expect(await row('Point 1')).toBeInTheDocument()
+    expect(table().getByText('Point 2')).toBeInTheDocument()
     await userEvent.keyboard('{Escape}')
     await userEvent.click(await screen.findByRole('button', { name: 'Clear all' }))
     await waitFor(() => expect(screen.queryByText('Point 2')).not.toBeInTheDocument())
-    expect(screen.getByText('Point 1')).toBeInTheDocument()
+    expect(table().getByText('Point 1')).toBeInTheDocument()
   })
 })
 
@@ -429,13 +465,13 @@ describe('[S8-UI-01] the pickup points search', () => {
 
     const search = await screen.findByRole('searchbox', { name: 'Search by name or address' })
 
-    await screen.findByText('Station kiosk')
+    await row('Station kiosk')
     await userEvent.type(search, ' ALPINA ')
     expect(screen.queryByText('Station kiosk')).not.toBeInTheDocument()
-    expect(screen.getByText('Hotel Alpina')).toBeInTheDocument()
+    expect(table().getByText('Hotel Alpina')).toBeInTheDocument()
     await userEvent.clear(search)
     await userEvent.type(search, 'bahnhof')
-    expect(screen.getByText('Station kiosk')).toBeInTheDocument()
+    expect(table().getByText('Station kiosk')).toBeInTheDocument()
     expect(screen.queryByText('Hotel Alpina')).not.toBeInTheDocument()
     await userEvent.clear(search)
     await userEvent.type(search, 'kiosk')
@@ -446,11 +482,11 @@ describe('[S8-UI-01] the pickup points search', () => {
     active = [point(1)]
     await renderTab()
 
-    await screen.findByText('Point 1')
+    await row('Point 1')
     await userEvent.type(screen.getByRole('searchbox', { name: 'Search by name or address' }), 'zzz')
     expect(await screen.findByText('No pickup point matches. Try another word or remove a filter.')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Clear search and filters' }))
-    expect(await screen.findByText('Point 1')).toBeInTheDocument()
+    expect(await row('Point 1')).toBeInTheDocument()
     expect(screen.getByRole('searchbox', { name: 'Search by name or address' })).toHaveValue('')
   })
 })

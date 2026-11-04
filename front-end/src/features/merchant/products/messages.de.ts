@@ -241,6 +241,8 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'pickup.toast.deleted': '{name} gelöscht',
   'pickup.problem.inUse': 'Eine Bestellung oder Übergabe nennt diese Abholstelle, daher lässt sie sich nicht löschen. Archivieren Sie sie stattdessen.',
   'pickup.problem.gone': 'Diese Abholstelle gibt es nicht mehr. Laden Sie die Liste neu.',
+  'pickup.column.point': 'Abholstelle',
+  'pickup.column.languages': 'Sprachen',
   'pickup.search': 'Nach Name oder Adresse suchen',
   'pickup.empty.filtered': 'Keine Abholstelle passt. Versuchen Sie ein anderes Wort oder entfernen Sie einen Filter.',
   'pickup.clear': 'Suche und Filter zurücksetzen',

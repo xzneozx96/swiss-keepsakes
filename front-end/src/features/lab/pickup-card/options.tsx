@@ -1,6 +1,5 @@
 import type { PickupPlace } from '@sk/api-contract'
 import type { DataTableColumn } from '@/components/data-table'
-import type { MessageKey } from '@/i18n/en'
 
 import { pickText } from '@sk/domain/shared'
 
@@ -8,49 +7,12 @@ import { DataTable } from '@/components/data-table'
 import { ArchiveIcon, EditIcon, PickupIcon, RestoreIcon, TrashIcon } from '@/components/icons'
 import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
+import { StatusText } from '@/components/status-text'
 import { useLocale } from '@/contexts/locale-context'
-import { StatusText } from '@/features/keepsakes/components/status-text'
 import { languagesOf } from '@/features/pickup/lib/form'
-import { DAYS } from '@/features/places/lib/hours'
+import { hoursGroups } from '@/features/pickup/lib/hours-line'
 
 function noop() {}
-
-type Translate = ReturnType<typeof useLocale>['t']
-
-/**
- * The weekly hours as one line per day group: "Mon to Sat · 10:00 – 18:00". The same grouping as `hoursLine`
- * (pickup lib): days with the same spans share a group, three or more days in a row read "Mon to Wed", one or two
- * read by name. A day with two spans keeps them on its line: "Mon · 08:00 – 12:00, 13:30 – 18:00".
- * Lab copy; the real build moves it into the pickup lib with tests.
- */
-function hoursGroups(spans: PickupPlace['hours'], t: Translate): string[] {
-  const day = (n: number) => t(`places.day.${n}` as MessageKey)
-  const textOf = (n: number) => spans.filter(s => s.weekday === n).map(s => `${s.opens} – ${s.closes}`).join(', ')
-  const groups = new Map<string, number[][]>()
-
-  for (const n of DAYS) {
-    const text = textOf(n)
-
-    if (text === '')
-      continue
-    const runs = groups.get(text) ?? []
-    const last = runs.at(-1)
-
-    if (last && last.at(-1) === n - 1 && textOf(n - 1) === text)
-      last.push(n)
-    else
-      runs.push([n])
-    groups.set(text, runs)
-  }
-
-  return [...groups]
-    .sort(([, a], [, b]) => (a[0]?.[0] ?? 0) - (b[0]?.[0] ?? 0))
-    .map(([text, runs]) => {
-      const days = runs.map(run => run.length >= 3 ? t('pickup.hours.range', { from: day(run[0] as number), to: day(run.at(-1) as number) }) : run.map(day).join(', '))
-
-      return `${days.join(', ')} · ${text}`
-    })
-}
 
 /** One line per day group; "No opening hours" as one muted line. */
 function Hours({ lines, className = '' }: { lines: string[], className?: string }) {
