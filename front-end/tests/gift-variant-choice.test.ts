@@ -2,8 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import {
   chosenVariant,
-  demoOptions,
-  demoValues,
   galleryOrder,
   pickValue,
   valueReasons,
@@ -62,43 +60,5 @@ describe('variant choice by option values', () => {
     expect(galleryOrder(['a', 'b', 'c'], undefined)).toEqual(['a', 'b', 'c'])
     expect(galleryOrder(['a', 'b'], 7)).toEqual(['a', 'b'])
     expect(galleryOrder(['a', 'b'], 0)).toEqual(['a', 'b'])
-  })
-
-  it('turns a demo product with several variants into one option with a value per variant', () => {
-    const product = {
-      variants: [
-        { id: 's', label: { en: 'Small' }, price: 4900, stock: 1 },
-        { id: 'm', label: { en: 'Medium' }, price: 5400, stock: 1 },
-      ],
-    }
-    const text = (l: { en?: string }) => l.en ?? ''
-    const [option, ...rest] = demoOptions(product, text, 'Option', v => `CHF ${v.price / 100}`)
-
-    expect(rest).toEqual([])
-    expect(option.label).toBe('Option')
-    expect(option.values).toEqual([
-      { id: 's', label: 'Small', hint: 'CHF 49' },
-      { id: 'm', label: 'Medium', hint: 'CHF 54' },
-    ])
-    expect(demoValues(product, product.variants[1])).toEqual({ [option.id]: 'm' })
-  })
-
-  it('shows no choice for a single demo variant', () => {
-    const product = { variants: [{ id: 'std', label: { en: 'Standard' }, price: 8900, stock: 5 }] }
-
-    expect(demoOptions(product, l => l.en ?? '', 'Option', () => '')).toEqual([])
-    expect(demoValues(product, product.variants[0])).toEqual({})
-  })
-
-  it('reads the declared options and the variants values of a multi-option demo product', () => {
-    const product = {
-      options: [{ id: 'size', label: { en: 'Size' }, values: [{ id: 'a', label: { en: 'A' } }] }],
-      variants: [{ id: 'v', label: { en: 'A' }, price: 100, stock: 1, values: { size: 'a' } }],
-    }
-
-    expect(demoOptions(product, l => l.en ?? '', 'Option', () => '')).toEqual([
-      { id: 'size', label: 'Size', values: [{ id: 'a', label: 'A' }] },
-    ])
-    expect(demoValues(product, product.variants[0])).toEqual({ size: 'a' })
   })
 })

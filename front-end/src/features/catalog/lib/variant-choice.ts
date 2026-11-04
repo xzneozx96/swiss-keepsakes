@@ -1,5 +1,3 @@
-import type { LocalizedText, Product, Variant } from '@sk/domain/catalog'
-
 /** The shape the guest keepsake page reads: options with values, and one variant per sold combination. */
 export interface ChoiceOption {
   id: string
@@ -80,41 +78,4 @@ export function galleryOrder<T>(photos: T[], index: number | undefined): T[] {
     return photos
 
   return [photos[index], ...photos.slice(0, index), ...photos.slice(index + 1)]
-}
-
-const SINGLE_OPTION = 'option'
-
-/**
- * The demo product as options: its own `options`, or, with several variants and none declared, one
- * option with a value per variant (its price as the hint); a single variant has no choice.
- */
-export function demoOptions(
-  product: Pick<Product, 'options' | 'variants'>,
-  text: (value: LocalizedText) => string,
-  defaultLabel: string,
-  price: (variant: Variant) => string,
-): ChoiceOption[] {
-  if (product.options) {
-    return product.options.map(o => ({
-      id: o.id,
-      label: text(o.label),
-      values: o.values.map(v => ({ id: v.id, label: text(v.label) })),
-    }))
-  }
-  if (product.variants.length < 2)
-    return []
-
-  return [{
-    id: SINGLE_OPTION,
-    label: defaultLabel,
-    values: product.variants.map(v => ({ id: v.id, label: text(v.label), hint: price(v) })),
-  }]
-}
-
-/** The variant's value per option id, matching `demoOptions`. */
-export function demoValues(product: Pick<Product, 'options' | 'variants'>, variant: Variant): Chosen {
-  if (product.options)
-    return variant.values ?? {}
-
-  return product.variants.length < 2 ? {} : { [SINGLE_OPTION]: variant.id }
 }
