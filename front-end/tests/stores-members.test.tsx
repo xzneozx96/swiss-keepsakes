@@ -345,6 +345,36 @@ describe('[E2.4][AC02] M01, the Store Manager accepts an invitation', () => {
   })
 })
 
+// The table and the phone cards are both in the DOM (CSS picks one), so a row query looks in the table; `hidden`
+// because an open dialog hides the page from the accessibility tree.
+const table = () => within(screen.getByRole('grid', { hidden: true }))
+// The loading table is replaced by the loaded one, so the grid is looked up again on every try.
+async function rowOf(email: string) {
+  let row: HTMLElement | null = null
+
+  await waitFor(() => {
+    row = table().getByText(email).closest('tr')
+    expect(row).not.toBeNull()
+  })
+
+  return row!
+}
+const actionsFor = async (email: string) => (await screen.findAllByRole('button', { name: `Actions for ${email}`, hidden: true })).at(-1)!
+
+/** Opens a row's ⋯ menu (the table's, the last of the two) and presses an item. */
+async function menu(email: string, item: string) {
+  await userEvent.click(await actionsFor(email))
+  await userEvent.click(await screen.findByRole('menuitem', { name: item }))
+}
+
+async function openInvite() {
+  // The button waits for the list: it is disabled while the table loads.
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Invite a Store Manager' })).toBeEnabled())
+  await userEvent.click(screen.getByRole('button', { name: 'Invite a Store Manager' }))
+
+  return within(await screen.findByRole('dialog'))
+}
+
 describe('[E2.4][AC02] M22, the members tab', () => {
   function membersAnswers(overrides: Partial<Record<string, () => Response>> = {}) {
     return (call: Call): Response => {
@@ -359,31 +389,70 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     }
   }
 
-  it('lists members with email, role and date, and open and expired invitations, and an Owner row has no Remove', async () => {
+  it('[S8-UI-MEMBERS] lists members and invitations as rows of one table: email, role, status, member since', async () => {
     answer = membersAnswers()
     renderAt('/members', () => <MembersTab storeId={storeId} />)
 
-    expect(await screen.findByText('owner@example.ch')).toBeInTheDocument()
-    const rows = screen.getAllByRole('listitem')
-    const owner = rows.find(row => row.getAttribute('data-member') === 'owner')!
-    const manager = rows.find(row => row.getAttribute('data-member') === 'manager')!
+    const owner = within(await rowOf('owner@example.ch'))
 
-    expect(within(owner).getByText('Owner')).toBeInTheDocument()
-    expect(within(owner).getByText('Member since 01.10.2026')).toBeInTheDocument()
-    expect(within(owner).queryByRole('button')).not.toBeInTheDocument()
-    expect(within(manager).getByRole('button', { name: /Remove a-very-long/ })).toBeInTheDocument()
-    expect(screen.getByText('Invited. The link works until 29.10.2026.')).toBeInTheDocument()
-    expect(screen.getByText('Expired on 01.10.2026. Send it again to renew the link.')).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: /^Send the invitation to .* again$/ })).toHaveLength(2)
+    expect(table().getAllByRole('columnheader').map(h => h.textContent)).toEqual(['Member', 'Role', 'Status', 'Member since', 'Actions'])
+    expect(owner.getByText('Owner')).toBeInTheDocument()
+    expect(owner.getByText('Active')).toBeInTheDocument()
+    expect(owner.getByText('01.10.2026')).toBeInTheDocument()
+    const manager = within(await rowOf('a-very-long-manager-address-for-wrapping@subdomain.example.ch'))
+
+    expect(manager.getByText('Store Manager')).toBeInTheDocument()
+    expect(manager.getByText('Active')).toBeInTheDocument()
+    expect(manager.getByText('05.10.2026')).toBeInTheDocument()
+    const open = within(await rowOf('open@example.ch'))
+
+    expect(open.getByText('Store Manager')).toBeInTheDocument()
+    expect(open.getByText('Invited')).toBeInTheDocument()
+    expect(open.getByText('Link works until 29.10.2026')).toBeInTheDocument()
+    const late = within(await rowOf('late@example.ch'))
+
+    expect(late.getByText('Expired')).toBeInTheDocument()
+    expect(late.getByText('Expired on 01.10.2026')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Invitations' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Who belongs to the store' })).not.toBeInTheDocument()
   })
 
-  it('shows the empty invitations state and the loading state', async () => {
+  it('[S8-UI-MEMBERS] offers only what the API does: no menu for the Owner, Remove for a Manager, Send again and Revoke for an invitation', async () => {
+    answer = membersAnswers()
+    renderAt('/members', () => <MembersTab storeId={storeId} />)
+
+    await rowOf('owner@example.ch')
+    expect(screen.queryAllByRole('button', { name: 'Actions for owner@example.ch' })).toHaveLength(0)
+    await userEvent.click(await actionsFor('a-very-long-manager-address-for-wrapping@subdomain.example.ch'))
+    expect((await screen.findAllByRole('menuitem')).map(item => item.textContent)).toEqual(['Remove'])
+    await userEvent.keyboard('{Escape}')
+    await userEvent.click(await actionsFor('open@example.ch'))
+    expect((await screen.findAllByRole('menuitem')).map(item => item.textContent)).toEqual(['Send again', 'Revoke'])
+  })
+
+  it('[S8-UI-MEMBERS] the phone cards show the same facts and the same menu', async () => {
+    answer = membersAnswers()
+    renderAt('/members', () => <MembersTab storeId={storeId} />)
+    await rowOf('open@example.ch')
+
+    const cards = within(screen.getByRole('list', { name: 'Members' }))
+
+    expect(cards.getByText('open@example.ch')).toBeInTheDocument()
+    expect(cards.getByText('Invited')).toBeInTheDocument()
+    expect(cards.getByText('Link works until 29.10.2026')).toBeInTheDocument()
+    expect(cards.getByText('Member since 01.10.2026')).toBeInTheDocument()
+    expect(cards.getByRole('button', { name: 'Actions for open@example.ch' })).toBeInTheDocument()
+  })
+
+  it('shows the loading state, and no invitation rows when there are none', async () => {
     members = membersSchema.parse({ members: members.members, invitations: [] })
     answer = membersAnswers()
     renderAt('/members', () => <MembersTab storeId={storeId} />)
 
     expect(await screen.findByRole('status')).toBeInTheDocument()
-    expect(await screen.findByText('No open invitations.')).toBeInTheDocument()
+    await rowOf('owner@example.ch')
+    expect(table().getAllByRole('row')).toHaveLength(3)
+    expect(screen.queryByText('No open invitations.')).not.toBeInTheDocument()
   })
 
   it('shows the guard message, with no retry, when the API answers 403 to the list', async () => {
@@ -394,7 +463,7 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument()
   })
 
-  it('invites a Manager by email in the chosen language, with one key, and reads the list again', async () => {
+  it('[S8-UI-MEMBERS] Invite a Store Manager opens a sheet; it invites by email in the chosen language, with one key, closes and reads the list again', async () => {
     let invited = false
 
     answer = membersAnswers({
@@ -407,11 +476,16 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     })
     renderAt('/members', () => <MembersTab storeId={storeId} />)
 
-    await userEvent.type(await screen.findByRole('textbox', { name: 'Email address' }), ' new@example.ch ')
-    await userEvent.click(screen.getByRole('radio', { name: 'Deutsch' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Send invitation' }))
+    await rowOf('owner@example.ch')
+    expect(screen.queryByRole('textbox', { name: 'Email address' })).not.toBeInTheDocument()
+    const sheet = await openInvite()
 
-    expect(await screen.findByText('new@example.ch')).toBeInTheDocument()
+    await userEvent.type(sheet.getByRole('textbox', { name: 'Email address' }), ' new@example.ch ')
+    await userEvent.click(sheet.getByRole('radio', { name: 'Deutsch' }))
+    await userEvent.click(sheet.getByRole('button', { name: 'Send invitation' }))
+
+    expect(within(await rowOf('new@example.ch')).getByText('Invited')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(invited).toBe(true)
     const post = calls.find(call => call.method === 'POST')
 
@@ -423,10 +497,12 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     answer = membersAnswers()
     renderAt('/members', () => <MembersTab storeId={storeId} />)
 
-    await userEvent.type(await screen.findByRole('textbox', { name: 'Email address' }), 'nobody')
-    await userEvent.click(screen.getByRole('button', { name: 'Send invitation' }))
+    const sheet = await openInvite()
 
-    expect(await screen.findByText('Enter a valid email address.')).toBeInTheDocument()
+    await userEvent.type(sheet.getByRole('textbox', { name: 'Email address' }), 'nobody')
+    await userEvent.click(sheet.getByRole('button', { name: 'Send invitation' }))
+
+    expect(await sheet.findByText('Enter a valid email address.')).toBeInTheDocument()
     expect(calls.some(call => call.method === 'POST')).toBe(false)
   })
 
@@ -434,25 +510,30 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     ['already-a-member', 'This person already belongs to the store.'],
     ['invitation-already-open', 'This email already has an open invitation. Send that one again instead.'],
     ['manager-is-super-admin', 'This email belongs to a Super Admin, who cannot take a store role. Use another email address.'],
-  ])('shows %s next to the email field', async (type, message) => {
+  ])('shows %s next to the email field, and the sheet stays open', async (type, message) => {
     answer = membersAnswers({ [`POST /api/store/${storeId}/member-invitations`]: () => problem(409, type) })
     renderAt('/members', () => <MembersTab storeId={storeId} />)
 
-    await userEvent.type(await screen.findByRole('textbox', { name: 'Email address' }), 'new@example.ch')
-    await userEvent.click(screen.getByRole('button', { name: 'Send invitation' }))
+    const sheet = await openInvite()
 
-    expect(await screen.findByText(message)).toBeInTheDocument()
+    await userEvent.type(sheet.getByRole('textbox', { name: 'Email address' }), 'new@example.ch')
+    await userEvent.click(sheet.getByRole('button', { name: 'Send invitation' }))
+
+    expect(await sheet.findByText(message)).toBeInTheDocument()
+    expect(sheet.getByRole('textbox', { name: 'Email address' })).toHaveValue('new@example.ch')
   })
 
   it('sends one invite for a double tap', async () => {
     answer = membersAnswers({ [`POST /api/store/${storeId}/member-invitations`]: () => Response.json(invitationOf(openInvitation, 'new@example.ch'), { status: 201 }) })
     renderAt('/members', () => <MembersTab storeId={storeId} />)
 
-    await userEvent.type(await screen.findByRole('textbox', { name: 'Email address' }), 'new@example.ch')
+    const sheet = await openInvite()
+
+    await userEvent.type(sheet.getByRole('textbox', { name: 'Email address' }), 'new@example.ch')
     let release = () => {}
 
     hold = new Promise<void>((resolve) => { release = resolve })
-    const button = screen.getByRole('button', { name: 'Send invitation' })
+    const button = sheet.getByRole('button', { name: 'Send invitation' })
 
     act(() => {
       fireEvent.click(button)
@@ -472,9 +553,9 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     })
     renderAt('/members', () => <MembersTab storeId={storeId} />)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Send the invitation to late@example.ch again' }))
+    await menu('late@example.ch', 'Send again')
     await waitFor(() => expect(calls.some(call => call.path.endsWith('/resend'))).toBe(true))
-    await userEvent.click(screen.getByRole('button', { name: 'Revoke the invitation to open@example.ch' }))
+    await menu('open@example.ch', 'Revoke')
     expect(calls.some(call => call.path.endsWith('/revoke'))).toBe(false)
     await userEvent.click(await screen.findByRole('button', { name: 'Withdraw invitation' }))
     await waitFor(() => expect(calls.some(call => call.path.endsWith('/revoke'))).toBe(true))
@@ -488,7 +569,7 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     answer = membersAnswers()
     renderAt('/members', () => <MembersTab storeId={storeId} />)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Revoke the invitation to open@example.ch' }))
+    await menu('open@example.ch', 'Revoke')
     await userEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
 
     expect(calls.some(call => call.path.endsWith('/revoke'))).toBe(false)
@@ -506,17 +587,21 @@ describe('[E2.4][AC02] M22, the members tab', () => {
       [`POST /api/store/${storeId}/member-invitations/${expiredInvitation}/revoke`]: () => Response.json(invitationOf(expiredInvitation, 'late@example.ch', 'revoked')),
     })
     renderAt('/members', () => <MembersTab storeId={storeId} />)
-    const resendButton = await screen.findByRole('button', { name: 'Send the invitation to late@example.ch again' })
     const resends = () => calls.filter(call => call.path.endsWith('/resend'))
+    // The next press waits until the last command settled: a pending one disables the row's items.
+    const pressWhenFree = async (item: string) => {
+      await userEvent.click(await actionsFor('late@example.ch'))
+      await waitFor(() => expect(screen.getByRole('menuitem', { name: item })).not.toHaveAttribute('aria-disabled', 'true'))
+      await userEvent.click(screen.getByRole('menuitem', { name: item }))
+    }
 
-    await userEvent.click(resendButton)
+    await pressWhenFree('Send again')
     await waitFor(() => expect(resends()).toHaveLength(1))
-    await userEvent.click(screen.getByRole('button', { name: 'Send the invitation to late@example.ch again' }))
+    await pressWhenFree('Send again')
     await waitFor(() => expect(resends()).toHaveLength(2))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Send the invitation to late@example.ch again' })).toBeEnabled())
-    await userEvent.click(screen.getByRole('button', { name: 'Send the invitation to late@example.ch again' }))
+    await pressWhenFree('Send again')
     await waitFor(() => expect(resends()).toHaveLength(3))
-    await userEvent.click(screen.getByRole('button', { name: 'Revoke the invitation to late@example.ch' }))
+    await pressWhenFree('Revoke')
     await userEvent.click(await screen.findByRole('button', { name: 'Withdraw invitation' }))
     await waitFor(() => expect(calls.some(call => call.path.endsWith('/revoke'))).toBe(true))
 
@@ -529,27 +614,20 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     expect(revoke?.key).not.toBe(next.key)
   })
 
-  it('disables Send again while the revoke is pending, and Revoke while the resend is pending', async () => {
+  it('disables Revoke while the resend is pending, and enables it again after', async () => {
     answer = membersAnswers({
       [`POST /api/store/${storeId}/member-invitations/${expiredInvitation}/resend`]: () => Response.json(invitationOf(expiredInvitation, 'late@example.ch')),
-      [`POST /api/store/${storeId}/member-invitations/${expiredInvitation}/revoke`]: () => Response.json(invitationOf(expiredInvitation, 'late@example.ch', 'revoked')),
     })
     let release = () => {}
 
     hold = new Promise<void>((resolve) => { release = resolve })
     renderAt('/members', () => <MembersTab storeId={storeId} />)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Send the invitation to late@example.ch again' }))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Revoke the invitation to late@example.ch' })).toBeDisabled())
+    await menu('late@example.ch', 'Send again')
+    await userEvent.click(await actionsFor('late@example.ch'))
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: 'Revoke' })).toHaveAttribute('aria-disabled', 'true'))
     release()
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Revoke the invitation to late@example.ch' })).toBeEnabled())
-
-    hold = new Promise<void>((resolve) => { release = resolve })
-    await userEvent.click(screen.getByRole('button', { name: 'Revoke the invitation to late@example.ch' }))
-    await userEvent.click(await screen.findByRole('button', { name: 'Withdraw invitation' }))
-    // The dialog stays open over the list while the revoke runs, so the row's buttons are behind it.
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Send the invitation to late@example.ch again', hidden: true })).toBeDisabled())
-    release()
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: 'Revoke' })).not.toHaveAttribute('aria-disabled', 'true'))
   })
 
   it.each([
@@ -559,7 +637,7 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     answer = membersAnswers({ [`POST /api/store/${storeId}/member-invitations/${openInvitation}/revoke`]: () => problem(status, type) })
     renderAt('/members', () => <MembersTab storeId={storeId} />)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Revoke the invitation to open@example.ch' }))
+    await menu('open@example.ch', 'Revoke')
     await userEvent.click(await screen.findByRole('button', { name: 'Withdraw invitation' }))
 
     await waitFor(() => expect(calls.filter(call => call.path === `/api/store/${storeId}/members`)).toHaveLength(2))
@@ -570,7 +648,7 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     const danger = vi.spyOn(toast, 'danger').mockClear()
     const router = renderAt('/members', () => <MembersTab storeId={storeId} />)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Revoke the invitation to open@example.ch' }))
+    await menu('open@example.ch', 'Revoke')
     await userEvent.click(await screen.findByRole('button', { name: 'Withdraw invitation' }))
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
@@ -591,7 +669,7 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     answer = membersAnswers({ [`DELETE /api/store/${storeId}/members/${managerMember}`]: () => new Response(null, { status: 204 }) })
     renderAt('/members', () => <MembersTab storeId={storeId} />)
 
-    await userEvent.click(await screen.findByRole('button', { name: /Remove a-very-long/ }))
+    await menu('a-very-long-manager-address-for-wrapping@subdomain.example.ch', 'Remove')
     expect(calls.some(call => call.method === 'DELETE')).toBe(false)
     await userEvent.click(await screen.findByRole('button', { name: 'Remove from the store' }))
 
@@ -607,7 +685,7 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     answer = membersAnswers({ [`DELETE /api/store/${storeId}/members/${managerMember}`]: () => problem(404, 'member-not-found') })
     renderAt('/members', () => <MembersTab storeId={storeId} />)
 
-    await userEvent.click(await screen.findByRole('button', { name: /Remove a-very-long/ }))
+    await menu('a-very-long-manager-address-for-wrapping@subdomain.example.ch', 'Remove')
     await userEvent.click(await screen.findByRole('button', { name: 'Remove from the store' }))
 
     // The refusal shows in the dialog that asked, which stays open; the cache does not toast it too.
@@ -623,7 +701,7 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     answer = membersAnswers({ [`DELETE /api/store/${storeId}/members/${managerMember}`]: () => new Response(null, { status: 204 }) })
     renderAt('/members', () => <MembersTab storeId={storeId} />)
 
-    await userEvent.click(await screen.findByRole('button', { name: /Remove a-very-long/ }))
+    await menu('a-very-long-manager-address-for-wrapping@subdomain.example.ch', 'Remove')
     await userEvent.click(await screen.findByRole('button', { name: 'Remove from the store' }))
 
     await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('a-very-long-manager-address-for-wrapping@subdomain.example.ch was removed from the store.'))
@@ -633,7 +711,7 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     answer = membersAnswers()
     renderAt('/members', () => <MembersTab storeId={storeId} />)
 
-    await userEvent.click(await screen.findByRole('button', { name: /Remove a-very-long/ }))
+    await menu('a-very-long-manager-address-for-wrapping@subdomain.example.ch', 'Remove')
     await userEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
 
     expect(calls.some(call => call.method === 'DELETE')).toBe(false)
@@ -650,7 +728,7 @@ describe('[E2.4][AC02] the members tab sits in Settings and is hidden from a Man
     expect(screen.queryByRole('tab')).not.toBeInTheDocument()
     expect(await screen.findByRole('tab', { name: 'Members', selected: true })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'General' })).toBeInTheDocument()
-    expect(await screen.findByText('owner@example.ch')).toBeInTheDocument()
+    expect(await rowOf('owner@example.ch')).toBeInTheDocument()
   })
 
   it('goes to sign-in and back to Settings when /api/me answers 401', async () => {

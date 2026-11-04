@@ -1,5 +1,5 @@
 import { createMemoryHistory, createRootRoute, createRouter, RouterProvider } from '@tanstack/react-router'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LocaleProvider } from '@/contexts/locale-context'
@@ -33,13 +33,13 @@ beforeEach(() => {
 })
 
 describe('store screens loading', () => {
-  it('members tab: two list sections and an invitations heading, with real-shaped rows', () => {
+  it('[S8-UI-MEMBERS] members tab: the table skeleton, with the real headers and a bar per cell', () => {
     const { container } = wrap(<MembersTab storeId="s1" />)
 
     expect(screen.getByRole('status')).toHaveTextContent('Members')
     expect(genericBox(container)).toBeNull()
-    expect(container.querySelectorAll('li.rounded-3xl.bg-surface.shadow-surface')).toHaveLength(3)
-    expect(container.querySelectorAll('section')).toHaveLength(2)
+    expect(within(screen.getByRole('grid')).getAllByRole('columnheader').map(h => h.textContent)).toEqual(['Member', 'Role', 'Status', 'Member since', 'Actions'])
+    expect(container.querySelectorAll('td .skeleton, td [data-slot="skeleton"]').length).toBeGreaterThan(0)
   })
 
   it('invitation preview: the invitation frame with a title, an intro and the first button', async () => {

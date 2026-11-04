@@ -42,10 +42,17 @@ async function storeWithOwner(browser: Browser, language: Language) {
 async function openMembers(owner: Page, language: Language) {
   await owner.goto('/store/settings')
   await owner.getByRole('tab', { name: say(language, 'stores.members.title') }).click()
-  await expect(owner.getByRole('textbox', { name: say(language, 'stores.members.invite.email') })).toBeVisible()
+  await expect(owner.getByRole('button', { name: say(language, 'stores.members.invite.title') })).toBeVisible()
+}
+
+/** Opens a row's ⋯ menu (the phone card's, at 375 px) and presses an item. */
+async function rowAction(owner: Page, language: Language, email: string, item: Parameters<typeof say>[1]) {
+  await owner.getByRole('button', { name: say(language, 'stores.members.actions', { email }) }).click()
+  await owner.getByRole('menuitem', { name: say(language, item) }).click()
 }
 
 async function invite(owner: Page, language: Language, email: string) {
+  await owner.getByRole('button', { name: say(language, 'stores.members.invite.title') }).click()
   await owner.getByRole('textbox', { name: say(language, 'stores.members.invite.email') }).fill(email)
   await owner.getByRole('button', { name: say(language, 'stores.members.invite.submit') }).click()
   await expect(owner.locator('[data-invitation="open"]').filter({ hasText: email })).toBeVisible()
@@ -125,7 +132,7 @@ test('[E2.4][AC02][E3.4][AC02] the Owner invites a Manager, another email is ref
   const row = owner.locator('[data-member="manager"]').filter({ hasText: managerEmail })
 
   await expect(row).toBeVisible()
-  await row.getByRole('button', { name: say(language, 'stores.members.removeLabel', { email: managerEmail }) }).click()
+  await rowAction(owner, language, managerEmail, 'stores.members.remove')
   await owner.getByRole('button', { name: say(language, 'stores.members.removeConfirm') }).click()
   await expect(owner.locator('[data-member="manager"]')).toHaveCount(0)
 
@@ -147,7 +154,7 @@ test('[E2.4][AC02] revoke kills the link and a new invitation of the same addres
   await invite(owner, language, revoked)
   const revokedMail = await managerInvitationMail(revoked)
 
-  await owner.getByRole('button', { name: say(language, 'stores.members.revokeLabel', { email: revoked }) }).click()
+  await rowAction(owner, language, revoked, 'stores.members.revoke')
   await owner.getByRole('button', { name: say(language, 'stores.members.revokeConfirm') }).click()
   // The confirm button sits where the toast shows, and a toast under the pointer stays open and covers the form below.
   await owner.mouse.move(0, 0)
@@ -163,7 +170,7 @@ test('[E2.4][AC02] revoke kills the link and a new invitation of the same addres
   await invite(owner, language, resent)
   const first = await managerInvitationMail(resent)
 
-  await owner.getByRole('button', { name: say(language, 'stores.members.resendLabel', { email: resent }) }).click()
+  await rowAction(owner, language, resent, 'stores.members.resend')
   await expect(owner.getByText(say(language, 'stores.members.resent', { email: resent }))).toBeVisible()
   const second = await managerInvitationMail(resent)
 
