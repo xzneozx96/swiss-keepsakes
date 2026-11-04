@@ -6,11 +6,11 @@ export interface ProductCardProps {
   slug: string
   name: string
   photo?: string
-  /** "from" label, e.g. "from" / "ab". */
-  fromLabel: string
-  price: string
-  /** e.g. "Earliest pickup Fri 16.10." */
-  pickupLine: string
+  /** "from" label, e.g. "from" / "ab". Left out with `price` on the public list, which shows no price. */
+  fromLabel?: string
+  price?: string
+  /** e.g. "Earliest pickup Fri 16.10." Left out when the card has no such line. */
+  pickupLine?: string
   /** Optional non-status label on the photo, e.g. "Engraving" (secondary Chip md, Card card). */
   badge?: string
   /** When set, the card shows this status label instead of the pickup line (spec C02). */

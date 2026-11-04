@@ -14,9 +14,11 @@ export interface ListingCardProps {
   slug: string
   name: string
   photo?: string
-  fromLabel: string
-  price: string
-  metadata: string
+  /** A card without a price (the public keepsake list, AC54) leaves `fromLabel` and `price` out. */
+  fromLabel?: string
+  price?: string
+  /** The line under the name; left out when the card has nothing to say there. */
+  metadata?: string
   supplementaryMetadata?: ReactNode
   badge?: string
   statusLabel?: string
@@ -104,13 +106,15 @@ export const ListingCard = memo(function ListingCard({
             <Chip.Label>{badge}</Chip.Label>
           </Chip>
         )}
-        <span className="pill absolute start-2.5 bottom-2.5 rounded-full px-3 py-1 text-sm">
-          <span className="text-muted">
-            {fromLabel}
-            {' '}
+        {price !== undefined && (
+          <span className="pill absolute start-2.5 bottom-2.5 rounded-full px-3 py-1 text-sm">
+            <span className="text-muted">
+              {fromLabel}
+              {' '}
+            </span>
+            <span className="font-semibold tabular-nums">{price}</span>
           </span>
-          <span className="font-semibold tabular-nums">{price}</span>
-        </span>
+        )}
       </Media>
       <div className="flex flex-col gap-0.5 px-0.5">
         <h3 className="font-serif text-card-title text-balance">{name}</h3>
@@ -137,12 +141,12 @@ export const ListingCard = memo(function ListingCard({
                 <StatusChip tone="neutral">{statusLabel}</StatusChip>
               </div>
             )
-          : (
-              <p className="flex items-start gap-1.5 text-label text-muted">
-                <ClockIcon className="mt-0.5 shrink-0" size={14} />
-                {metadata}
-              </p>
-            )}
+          : metadata !== undefined && (
+            <p className="flex items-start gap-1.5 text-label text-muted">
+              <ClockIcon className="mt-0.5 shrink-0" size={14} />
+              {metadata}
+            </p>
+          )}
         {supplementaryMetadata}
       </div>
     </>
