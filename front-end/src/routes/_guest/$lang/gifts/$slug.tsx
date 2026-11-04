@@ -1,55 +1,75 @@
+import type { PublicKeepsake, PublicLanguage } from '@sk/api-contract'
+import { descriptionText } from '@sk/domain/content'
 import {
   createFileRoute,
+  notFound,
   useCanGoBack,
   useNavigate,
   useRouter,
 } from '@tanstack/react-router'
 
-import { EmptyState } from '@/components/empty-state'
-import { GiftIcon } from '@/components/icons'
 import { GiftDetailSkeleton } from '@/components/layout/guest-skeletons'
 import { useLocale } from '@/contexts/locale-context'
+import { fetchKeepsake } from '@/features/catalog/api/keepsake'
 import { GiftDetail } from '@/features/catalog/components/gift-detail'
-import { useGiftDetail } from '@/features/catalog/hooks/use-gift-detail'
-import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
+import { useKeepsakeDetail } from '@/features/catalog/hooks/use-keepsake-detail'
+import { alternateHead } from '@/features/seo/lib/page-head'
+import { isLanguage } from '@/lib/language-routing'
 
-// C03 Gift detail.
+const BLANKS = /\s+/g
+
+// C03 Keepsake: the text, photos and options are read from the public API on the server; the price and the units are
+// read in the browser (AC54). An unknown or unpublished slug is a 404 (AC61).
 export const Route = createFileRoute('/_guest/$lang/gifts/$slug')({
   ssr: true,
   // The bottom bar is sticky in the screen's own flow, so the shell reserves no tab-bar space.
   staticData: { hideTabBar: true, ownsBottomSpace: true },
+  loader: async ({ params }) => {
+    if (!isLanguage(params.lang))
+      throw notFound()
+    const keepsake = await fetchKeepsake(params.slug, params.lang)
+
+    if (!keepsake)
+      throw notFound()
+
+    return { keepsake, lang: params.lang }
+  },
+  head: ({ loaderData }) => {
+    if (!loaderData)
+      return {}
+    const { keepsake } = loaderData
+    const other = keepsake.language === 'en' ? 'de' : 'en'
+    const slugs = { [keepsake.language]: keepsake.slug, ...(keepsake.otherSlug && { [other]: keepsake.otherSlug }) }
+    const text = descriptionText(keepsake.description as never).replace(BLANKS, ' ').trim()
+    const image = keepsake.cover?.url
+
+    return alternateHead({
+      lang: keepsake.language,
+      languages: Object.keys(slugs) as PublicLanguage[],
+      path: l => `/${l}/gifts/${slugs[l]}`,
+      title: `${keepsake.name} | Swiss Keepsakes`,
+      description: text,
+      // The snippet names the product and never an offer: a price is read in the browser only (AC54).
+      jsonLd: { '@context': 'https://schema.org', '@type': 'Product', 'name': keepsake.name, 'description': text, ...(image && { image }) },
+    })
+  },
+  pendingComponent: GiftDetailSkeleton,
   component: GiftDetailPage,
 })
 
 function GiftDetailPage() {
-  const { slug } = Route.useParams()
-  const isLoading = useSimulatedLoading()
+  const { keepsake, lang } = Route.useLoaderData()
 
-  if (isLoading)
-    return <GiftDetailSkeleton />
-
-  // Keyed by slug so moving between gifts starts with an empty form.
-  return <GiftDetailScreen key={slug} slug={slug} />
+  // Keyed by id so moving between keepsakes starts with an empty form.
+  return <GiftDetailScreen key={keepsake.id} keepsake={keepsake} lang={lang} />
 }
 
-function GiftDetailScreen({ slug }: { slug: string }) {
-  const { language, t } = useLocale()
+function GiftDetailScreen({ keepsake, lang }: { keepsake: PublicKeepsake, lang: PublicLanguage }) {
+  const { language } = useLocale()
   const router = useRouter()
   const navigate = useNavigate()
   const canGoBack = useCanGoBack()
-  const view = useGiftDetail(slug)
-
-  if (!view) {
-    return (
-      <div className="pt-16">
-        <EmptyState
-          action={{ label: t('gifts.showAll'), to: '/$lang/gifts' }}
-          icon={GiftIcon}
-          message={t('detail.notFound')}
-        />
-      </div>
-    )
-  }
+  const view = useKeepsakeDetail(keepsake, lang)
 
   return (
     <GiftDetail

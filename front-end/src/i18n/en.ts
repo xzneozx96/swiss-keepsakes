@@ -293,6 +293,7 @@ export const en = {
   'detail.preview.pickupBody': 'Guests choose the pickup place and date at checkout.',
   'detail.preview.cancellation': 'The cancellation policy is shown at checkout.',
   'detail.preview.noVariant': 'No variant is for sale yet.',
+  'detail.price.failed': 'The price could not be loaded.',
   'gallery.label': 'Photos of {name}',
   'gallery.photo': 'Photo {n} of {count}',
   'gallery.reviewLabel': 'Photos from {name}’s review',

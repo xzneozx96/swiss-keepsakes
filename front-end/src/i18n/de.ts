@@ -302,6 +302,7 @@ export const de: Record<MessageKey, string> = {
   'detail.preview.pickupBody': 'Abholort und Datum wählen Gäste an der Kasse.',
   'detail.preview.cancellation': 'Die Stornobedingungen werden an der Kasse angezeigt.',
   'detail.preview.noVariant': 'Noch keine Variante im Verkauf.',
+  'detail.price.failed': 'Der Preis konnte nicht geladen werden.',
   'gallery.label': 'Fotos von {name}',
   'gallery.photo': 'Foto {n} von {count}',
   'gallery.reviewLabel': 'Fotos aus der Bewertung von {name}',

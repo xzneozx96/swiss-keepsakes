@@ -369,29 +369,8 @@ export function GiftDetailSkeleton() {
           <Skeleton className="h-8 w-4/5 rounded-lg" />
           <Skeleton className="h-4 w-1/2 rounded-lg" />
         </div>
-        <div className="grid grid-cols-[1fr_1.5fr_1fr] items-center border-y border-separator py-4" data-skeleton="stats">
-          <div className="flex flex-col items-center gap-1 px-1">
-            <Skeleton className="h-5 w-16 rounded-lg" />
-            <Skeleton className="h-3 w-12 rounded-lg" />
-          </div>
-          <div className="flex flex-col items-center gap-1 border-x border-separator px-1">
-            <Skeleton className="h-10 w-14 rounded-lg" data-skeleton="rating" />
-            <Skeleton className="h-3.5 w-20 rounded-lg" />
-          </div>
-          <div className="flex flex-col items-center gap-1 px-1">
-            <Skeleton className="h-6 w-8 rounded-lg" />
-            <Skeleton className="h-3 w-12 rounded-lg" />
-          </div>
-        </div>
-        <section className="flex items-center gap-3 py-5" data-skeleton="seller">
-          <Skeleton className="size-12 shrink-0 rounded-full" />
-          <div className="flex flex-1 flex-col gap-2">
-            <Skeleton className="h-5 w-1/2 rounded-lg" />
-            <Skeleton className="h-4 w-2/3 rounded-lg" />
-          </div>
-        </section>
         <ul className="flex flex-col gap-5 border-t border-separator py-7">
-          {[0, 1, 2].map(i => (
+          {[0, 1].map(i => (
             <li key={i} className="flex gap-4">
               <Skeleton className="size-[26px] shrink-0 rounded-full" />
               <div className="flex flex-1 flex-col gap-1">

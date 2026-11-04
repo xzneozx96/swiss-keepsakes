@@ -1,4 +1,4 @@
-import type { Media, Product } from '@sk/api-contract'
+import type { Media, Product, PublicKeepsake, PublicKeepsakePhoto } from '@sk/api-contract'
 import type { IntlLocale, Language, RichNode } from '@sk/domain/shared'
 import type { GiftPageProps } from '../components/gift-detail'
 import type { ChoiceVariant, Chosen } from './variant-choice'
@@ -155,5 +155,104 @@ export function keepsakePage(
       chip: t('detail.bar.nothingNow'),
       addLabel: t('detail.bar.add'),
     },
+  }
+}
+
+/** What the browser has read of the price and the units: the page shows no price until it is `ready`. */
+export type AvailabilityView
+  = | { state: 'loading' | 'failed' }
+    | { state: 'ready', byVariant: ReadonlyMap<string, { priceRappen: number, available: number }> }
+
+/** The smallest resized copy at least `width` wide, else the original. */
+function photoSrc(photo: PublicKeepsakePhoto): string {
+  return [...photo.variants].sort((a, b) => a.width - b.width).find(v => v.width >= GALLERY_WIDTH)?.url ?? photo.url
+}
+
+/**
+ * The guest keepsake page's parts from the public detail (server-rendered, so no price in it) and what the browser has
+ * read of the availability. Until it is `ready`, every combination can be looked at and none can be added. Ready: a
+ * combination the read does not list is not sold, one with no unit left is sold out, and neither can be picked
+ * (AC52, AC53). `chosen` is what the guest picked; it falls back to the first combination that can be picked.
+ * Pickup place and date are chosen at checkout (E6.6), and ratings do not exist yet (E5.5).
+ */
+export function publicKeepsakePage(
+  detail: PublicKeepsake,
+  input: { t: Translate, intlLocale: IntlLocale, availability: AvailabilityView, chosen?: Chosen },
+) {
+  const { t, intlLocale, availability } = input
+  const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
+  const description = isEmptyDescription(detail.description as RichNode) ? undefined : detail.description as RichNode
+
+  const photos = detail.photos.map(photoSrc)
+  const options = detail.options.map(option => ({
+    id: option.id,
+    label: option.name,
+    values: option.values.map(value => ({ id: value.id, label: value.label })),
+  }))
+  const variants = detail.variants.map((variant): ChoiceVariant => {
+    const row = availability.state === 'ready' ? availability.byVariant.get(variant.id) : undefined
+    const src = variant.photo ? photoSrc(variant.photo) : undefined
+    if (src && !photos.includes(src))
+      photos.push(src)
+
+    return {
+      id: variant.id,
+      values: variant.values,
+      price: row ? money(row.priceRappen) : '',
+      reason: availability.state !== 'ready'
+        ? undefined
+        : !row
+            ? t('detail.variant.notSold')
+            : row.available <= 0
+              ? t('detail.variant.soldOut')
+              : undefined,
+      photoIndex: src === undefined ? undefined : photos.indexOf(src),
+    }
+  })
+  const pickable = (variant: ChoiceVariant | undefined) => variant !== undefined && !variant.reason
+  const picked = chosenVariant(options, variants, input.chosen ?? {})
+  const first = variants.find(pickable) ?? variants[0]
+  const chosen = pickable(picked) && input.chosen ? input.chosen : { ...first?.values }
+  const current = chosenVariant(options, variants, chosen)
+  const live = pickable(current) ? current : undefined
+  const row = live && availability.state === 'ready' ? availability.byVariant.get(live.id) : undefined
+  const atCheckout = t('detail.preview.atCheckout')
+
+  return {
+    page: {
+      name: detail.name,
+      photos: galleryOrder(photos, current?.photoIndex),
+      galleryLabels: galleryLabelsOf(t, detail.name),
+      description,
+      languageNotice: detail.fallback ? t(detail.language === 'en' ? 'detail.onlyInEnglish' : 'detail.onlyInGerman') : undefined,
+      rating: { summary: t('detail.rating.new'), label: t('detail.reviews.none') },
+      highlights: [
+        { icon: 'pickup' as const, title: t('detail.highlight.pickup.title'), body: t('detail.preview.pickupBody') },
+        { icon: 'pay' as const, title: t('detail.highlight.delivery.title'), body: t('detail.highlight.delivery.body') },
+      ],
+      sheet: { title: t('detail.sheet.title'), closeLabel: t('detail.sheet.close') },
+      note: t('detail.preview.pickupBody'),
+      place: { options: [{ id: 'checkout', name: atCheckout, address: '', hours: '' }] },
+      sections: {
+        aboutTitle: t('detail.about.title'),
+        placesTitle: t('detail.places.title'),
+        dateRow: { title: t('detail.date.label'), action: '' },
+        paymentTitle: t('detail.payment.title'),
+        payment: t('detail.highlight.delivery.body'),
+        cancellationTitle: t('detail.cancellation.title'),
+        cancellation: t('detail.preview.cancellation'),
+      },
+      reviews: noReviews(t, detail.name),
+    },
+    variant: {
+      options,
+      variants,
+      chosen,
+      reasons: valueReasons(options, variants, chosen, t('detail.variant.notSold')),
+    },
+    /** The combination that can be bought now, with its price and units; undefined until the availability is ready. */
+    choice: live && row ? { id: live.id, price: money(row.priceRappen), priceRappen: row.priceRappen, available: row.available } : undefined,
+    /** Nothing can be bought: the keepsake says so, or the read shows no combination with a unit. */
+    soldOut: availability.state === 'ready' ? !variants.some(pickable) : detail.soldOut,
   }
 }

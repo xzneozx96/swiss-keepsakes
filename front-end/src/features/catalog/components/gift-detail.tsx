@@ -15,6 +15,7 @@ import {
   Label,
   Radio,
   RadioGroup,
+  Skeleton,
   Tag,
   TagGroup,
 } from '@heroui/react'
@@ -108,6 +109,13 @@ export interface GiftPageProps {
     summary: string
     chip: string
     addLabel: string
+    /**
+     * The price comes from a read the browser makes after the page has loaded (AC54): `loading` shows a skeleton in its
+     * place, an error shows its message with a retry. Absent = the price is known and `price` shows.
+     */
+    priceState?: 'loading' | { error: string, retryLabel: string, onRetry: () => void }
+    /** The button that opens the sheet cannot be pressed (nothing can be chosen yet). */
+    addDisabled?: boolean
   }
 }
 
@@ -120,7 +128,7 @@ export interface GiftShopperProps {
     actionLabel: string
     subcategory?: string
   }
-  sheet: { addLabel: string }
+  sheet: { addLabel: string, /** The sheet's add button cannot be pressed: the choice is not one that can be bought. */ addDisabled?: boolean }
   quantity: {
     label: string
     value: number
@@ -129,12 +137,15 @@ export interface GiftShopperProps {
     hint?: string
     onChange: (value: number) => void
   }
-  date: PickupDateFieldProps
-  place: {
-    label: string
-    value: string | null
-    onChange: (id: string) => void
-    error?: string
+  /** The guest's own pickup date and place, chosen in the sheet. Absent while pickup is chosen at checkout (E6.6). */
+  pickup?: {
+    date: PickupDateFieldProps
+    place: {
+      label: string
+      value: string | null
+      onChange: (id: string) => void
+      error?: string
+    }
   }
   bar: {
     /** Set right after adding; the bar then also offers "View cart". */
@@ -332,7 +343,7 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
               <Accordion.Panel>
                 <Accordion.Body className="flex flex-col items-start gap-3">
                   <p className="text-sm">{props.note}</p>
-                  {shopper && (
+                  {shopper && sections.dateRow.action && (
                     <Button size="sm" variant="secondary" onPress={openSheet}>
                       {sections.dateRow.action}
                     </Button>
@@ -422,9 +433,7 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
                       )
                     : (
                         <>
-                          <span className="text-lg font-semibold underline underline-offset-4 tabular-nums">
-                            {bar.price}
-                          </span>
+                          <BarPrice bar={bar} />
                           <span className="truncate text-xs text-muted">
                             {bar.summary}
                           </span>
@@ -436,7 +445,7 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
                       )}
                 </div>
                 {/* Stays available after adding, for another option, date or quantity. */}
-                <Button size="lg" onPress={openSheet}>
+                <Button isDisabled={bar.addDisabled} size="lg" onPress={openSheet}>
                   {bar.addLabel}
                 </Button>
               </>
@@ -457,15 +466,37 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
   )
 }
 
-/** Add-to-cart sheet: one choice per option, quantity, pickup date and place. */
+/** The price in the bar: the amount, a skeleton while the browser reads it, or the error with a retry. */
+function BarPrice({ bar }: { bar: GiftPageProps['bar'] }) {
+  const state = bar.priceState
+
+  if (state === 'loading')
+    return <Skeleton aria-hidden className="h-7 w-24 rounded-lg" data-skeleton="price" />
+  if (state) {
+    return (
+      <span className="flex items-center gap-2" role="alert">
+        <span className="text-sm text-danger">{state.error}</span>
+        <Button size="sm" variant="secondary" onPress={state.onRetry}>{state.retryLabel}</Button>
+      </span>
+    )
+  }
+
+  return (
+    <span className="text-lg font-semibold underline underline-offset-4 tabular-nums">
+      {bar.price}
+    </span>
+  )
+}
+
+/** Add-to-cart sheet: one choice per option, quantity, and the pickup date and place when the guest chooses them here. */
 function GiftSheet({
   sheet,
   photos,
   variant,
   quantity,
-  date,
+  pickup,
   note,
-  place,
+  place: pickupPlaces,
   onAdd,
   isOpen,
   onOpenChange,
@@ -477,6 +508,7 @@ function GiftSheet({
     <ChoiceSheet
       action={{
         label: sheet.addLabel,
+        isDisabled: sheet.addDisabled,
         onPress: (e) => {
           if (!onAdd())
             return
@@ -500,31 +532,35 @@ function GiftSheet({
         onChange={quantity.onChange}
       />
 
-      <PickupDateField {...date} />
+      {pickup && (
+        <>
+          <PickupDateField {...pickup.date} />
 
-      {/* No "*": every sheet field is needed. Missing choices show an error on add. */}
-      <RadioGroup
-        id="gift-place"
-        isInvalid={place.error !== undefined}
-        value={place.value}
-        onChange={place.onChange}
-      >
-        <Label className="text-heading">{place.label}</Label>
-        {place.options.map(p => (
-          <Radio key={p.id} value={p.id}>
-            <Radio.Content>
-              <Radio.Control>
-                <Radio.Indicator />
-              </Radio.Control>
-              {p.name}
-            </Radio.Content>
-            <Description>
-              {p.address} · {p.hours}
-            </Description>
-          </Radio>
-        ))}
-        <FieldError>{place.error}</FieldError>
-      </RadioGroup>
+          {/* No "*": every sheet field is needed. Missing choices show an error on add. */}
+          <RadioGroup
+            id="gift-place"
+            isInvalid={pickup.place.error !== undefined}
+            value={pickup.place.value}
+            onChange={pickup.place.onChange}
+          >
+            <Label className="text-heading">{pickup.place.label}</Label>
+            {pickupPlaces.options.map(p => (
+              <Radio key={p.id} value={p.id}>
+                <Radio.Content>
+                  <Radio.Control>
+                    <Radio.Indicator />
+                  </Radio.Control>
+                  {p.name}
+                </Radio.Content>
+                <Description>
+                  {p.address} · {p.hours}
+                </Description>
+              </Radio>
+            ))}
+            <FieldError>{pickup.place.error}</FieldError>
+          </RadioGroup>
+        </>
+      )}
 
       <p className="flex items-start gap-2 text-sm">
         <InfoIcon
