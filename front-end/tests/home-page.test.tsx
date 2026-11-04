@@ -181,9 +181,10 @@ describe('[E4.13][AC95] a failed read takes down its own block only', () => {
     vi.mocked(fetchMapCategories).mockRejectedValueOnce(new Error('down'))
     render(<RouterProvider router={await buildRouter('/en')} />)
 
-    const alert = await screen.findByRole('alert')
+    // The food map reads the same list, so it shows its own notice beside the tiles'.
+    const alert = (await screen.findByText(en['homePage.services.failed'])).closest('[role="alert"]') as HTMLElement
 
-    expect(within(alert).getByText(en['homePage.services.failed'])).toBeInTheDocument()
+    expect(screen.getByText(en['homePage.food.failed'])).toBeInTheDocument()
     expect(screen.getByText(en['home.heroTitle'])).toBeInTheDocument()
     expect(screen.getByRole('link', { name: en['homePage.map.action'] })).toBeInTheDocument()
     expect(screen.getByText(en['home.victorinox.title'])).toBeInTheDocument()

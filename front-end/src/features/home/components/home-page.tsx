@@ -6,6 +6,7 @@ import { LanguageButton } from '@/components/layout/language-button'
 import { useLocale } from '@/contexts/locale-context'
 import { TripAdviceButton } from '@/features/discovery/components/trip-advice-button'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
+import { FoodMapSection } from './food-map-section'
 import { HomeEndingBlock } from './home-ending-block'
 import { HomeHero } from './home-hero'
 import { MapInvitation } from './map-invitation'
@@ -43,6 +44,7 @@ export function HomePage() {
         </div>
         <MapInvitation />
         <ServiceTiles />
+        <FoodMapSection />
         <HomeEndingBlock />
       </div>
       <TripAdviceButton above="tabBar" />
