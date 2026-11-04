@@ -6,14 +6,14 @@ import { Button } from '@heroui/react'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 
-import { BulletListIcon, CloseIcon, FilterIcon, PickupIcon } from '@/components/icons'
-import { useMap } from '@/components/map/map-context'
+import { CloseIcon } from '@/components/icons'
 import { MapControls } from '@/components/map/map-controls'
 import { MapView } from '@/components/map/map-view'
 import { PhotoCluster, PhotoPin } from '@/components/map/pin-faces'
 import { PinLayer } from '@/components/map/pin-layer'
 import { useLocale } from '@/contexts/locale-context'
 import { mapQueries, useMapData } from '@/features/map/api/queries'
+import { useRankedPins } from '@/features/map/hooks/use-ranked-pins'
 import { categoryName, isLit, keepFiltered, pinCategoryNames, pinIcon } from '@/features/map/lib/categories'
 import { CARD_ROW_BOTTOM, CARD_ROW_HEIGHT, CONTROLS, MAP_BOTTOM_CLEAR } from '@/features/map/lib/layout'
 import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
@@ -21,7 +21,7 @@ import { filterAddress, resolveMapFilter } from '@/features/map/lib/search-param
 import { track, useTrackAllowed } from '@/lib/analytics/track'
 import { apiEnabled } from '@/lib/api-mode'
 import { CategoriesSheet } from './categories-sheet'
-import { MapControlsSkeleton } from './map-skeleton'
+import { MapPills } from './map-pills'
 import { PinList } from './pin-list'
 import { PlaceCardRow } from './place-card'
 import { PlaceSheet } from './place-sheet'
@@ -32,43 +32,11 @@ const NO_PINS: PublicMapItem[] = []
 const LUCERNE: [number, number] = [8.3068, 47.0535]
 const MAP_VIEW = { center: LUCERNE, zoom: 15.2, minZoom: 12, maxZoom: 18.5 }
 
-/** The Categories and Map or List buttons over the map: skeletons while the map draws or the places are on the way, nothing when there are none. */
-function MapPills({ chosenCount, dataPending, hasPins, view, onFilter, onView }: {
-  chosenCount: number
-  dataPending: boolean
-  hasPins: boolean
-  view: View
-  onFilter: () => void
-  onView: () => void
-}) {
-  const { t } = useLocale()
-  const { state, drawn } = useMap()
-
-  if (state === 'loading' || !drawn || dataPending)
-    return <MapControlsSkeleton />
-  if (!hasPins)
-    return null
-
-  return (
-    <div className="absolute inset-x-0 top-0 z-10 flex items-start gap-2 px-3 pt-3">
-      <Button aria-haspopup="dialog" className="pill min-h-11 shadow-sm" size="sm" variant="secondary" onPress={onFilter}>
-        <FilterIcon size={16} />
-        {chosenCount > 0 ? t('map.categoriesCount', { count: chosenCount }) : t('map.categories')}
-      </Button>
-      <span className="flex-1" />
-      <Button className="pill min-h-11 shadow-sm" size="sm" variant="secondary" onPress={onView}>
-        {view === 'map' ? <BulletListIcon size={16} /> : <PickupIcon size={16} />}
-        {t(view === 'map' ? 'map.view.list' : 'map.view.map')}
-      </Button>
-    </div>
-  )
-}
-
 /**
  * N02, option B "Cards" (docs/ux/pins-design.md): a flat aerial map between the top edge and the
  * guest tab bar, with a Categories button and a Map or List switch over it. A pin opens its card
  * in a row above the tab bar. Map, card row and list all come from one ranked list of pins (the
- * server's order until onboarding adds the visitor's answers, E4.5); the filter dims pins on the
+ * server's order, or the visitor's answers when onboarding has them, E4.5); the filter dims pins on the
  * map and never removes one, while the card row and the list hold only the chosen places. `place` is the slug of
  * `?place=<slug>`: its card opens once the places have loaded, and a slug the map does not hold shows a notice (AC90).
  * Show more on a card opens the details sheet of the open pin (N03, E4.7).
@@ -100,7 +68,8 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
   const status = data.isFailed
     ? 'failed' as const
     : data.isPending ? 'pins-loading' as const : data.pins.length === 0 ? 'empty' as const : undefined
-  const ranked = dataReady ? data.pins : NO_PINS
+  const rankedPins = useRankedPins(data.pins)
+  const ranked = dataReady ? rankedPins : NO_PINS
   const located = useMemo(() => ranked.map(pin => ({ ...pin, coordinates: [pin.longitude, pin.latitude] as [number, number] })), [ranked])
   const filter = { chosen, datedOnly }
   const kept = keepFiltered(ranked, filter, data.categories)

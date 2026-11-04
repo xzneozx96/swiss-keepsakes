@@ -9,6 +9,7 @@ export function blogCategory(over: Partial<PublicCategory> & { slug: string }): 
     id: `0190b000-0000-7000-8000-${String(n).padStart(12, '0')}`,
     name: { en: over.slug, de: null },
     parentId: null,
+    icon: null,
     showOnHome: false,
     position: n,
     ...over,

@@ -17,6 +17,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { useGuests } from '@/features/account/api/queries'
 import { GuestAvatar } from '@/features/account/components/guest-avatar'
 import { useDemoSelector } from '@/features/demo'
+import { OnboardingHost } from '@/features/onboarding/components/onboarding-host'
 import { isLanguage } from '@/lib/language-routing'
 
 type GuestNavTarget = '/$lang' | '/$lang/gifts' | '/$lang/map' | '/account'
@@ -72,6 +73,7 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
     <div className="flex flex-1 justify-center bg-default/60">
       <div className="relative flex w-full max-w-[430px] flex-1 flex-col bg-background sm:shadow-overlay">
         <LanguageNotice />
+        <OnboardingHost />
         <main
           className={
             ownsBottomSpace
