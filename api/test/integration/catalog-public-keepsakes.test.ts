@@ -4,7 +4,7 @@ import { createMediaDirectory } from '../../src/modules/catalog/adapters/media-d
 import { createPickupRepository } from '../../src/modules/catalog/adapters/pickup-repository.ts'
 import { createPublicKeepsakeReads } from '../../src/modules/catalog/adapters/public-repository.ts'
 import { registerPublicKeepsakeRoutes } from '../../src/modules/catalog/adapters/public-routes.ts'
-import { makeGetAvailability, makeGetKeepsake, makeGetPickupPoints, makeListKeepsakes } from '../../src/modules/catalog/index.ts'
+import { makeGetAvailability, makeGetKeepsake, makeGetPickupPoints, makeListKeepsakes, makeListKeepsakesByIds } from '../../src/modules/catalog/index.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
 import { mediaView } from '../../src/modules/content/adapters/media-view.ts'
 import { createStockRepository } from '../../src/modules/inventory/adapters/stock-repository.ts'
@@ -225,6 +225,28 @@ describe('[E6.4][AC31] unpublished and archived keepsakes are invisible', () => 
     await s.send(`${s.products}/${made.id}/publish`, 'POST', 3)
 
     expect((await env.call(`/api/public/keepsakes/${made.slug.en}?lang=en`)).status).toBe(200)
+  })
+})
+
+describe('[E4.4][AC31] the cards of a story by id', () => {
+  it('[E4.4][AC31] returns the published keepsakes among the ids in the order asked, with the sold-out flag and cover, and never a draft, an unpublished or an archived one', async () => {
+    const s = await setup()
+    const first = await s.keepsake([{ value: 's', price: 3900, quantity: 2 }])
+    const soldOut = await s.keepsake([{ value: 's', price: 3900, quantity: 0 }])
+    const unpublished = await s.keepsake([{ value: 's', price: 3900, quantity: 1 }])
+    const archived = await s.keepsake([{ value: 's', price: 3900, quantity: 1 }])
+    const draft = await s.keepsake([{ value: 's', price: 3900, quantity: 1 }], { publish: false })
+    const notRequested = await s.keepsake([{ value: 's', price: 3900, quantity: 1 }])
+    expect((await s.send(`${s.products}/${unpublished.id}/unpublish`, 'POST', 2)).status).toBe(200)
+    await pool.query(`update catalog.products set status = 'archived' where id = $1`, [archived.id])
+
+    const { items } = await makeListKeepsakesByIds(publicDeps)([soldOut.id, draft.id, unpublished.id, archived.id, first.id, randomUUID()], 'en')
+
+    expect(items.map(item => item.id)).toEqual([soldOut.id, first.id])
+    expect(items.map(item => item.soldOut)).toEqual([true, false])
+    expect(items[1]).toMatchObject({ slug: first.slug.en, cover: { url: expect.any(String) }, language: 'en' })
+    expect(items.map(item => item.id)).not.toContain(notRequested.id)
+    expect((await makeListKeepsakesByIds(publicDeps)([], 'en')).items).toEqual([])
   })
 })
 

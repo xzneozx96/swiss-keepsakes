@@ -60,4 +60,19 @@ describe('[E4.4][AC31] planning the links', () => {
       { story: 'lake-day-2', code: 'Z', reason: 'no published keepsake with this SKU code in the store' },
     ])
   })
+
+  it('[E4.4][AC31] AC-5: the cap counts the links, so a story with links at 1 and 6 gets the new ones at the free positions 2 and 3', () => {
+    const plan = planStoryKeepsakeLinks(specs, { stories: new Map([['lake-day', { groupId: 'g1', links: [{ position: 1, productId: 'x' }, { position: 6, productId: 'y' }] }]]), products })
+
+    expect(plan.adds.map(add => [add.code, add.position])).toEqual([['A', 2], ['B', 3]])
+    expect(plan.skipped).toEqual([])
+  })
+
+  it('[E4.4][AC31] AC-5: six links at any positions leave no room, and the rest is skipped', () => {
+    const gaps = [1, 2, 3, 4, 5, 6].map(position => ({ position, productId: `other-${position}` }))
+    const plan = planStoryKeepsakeLinks(specs, { stories: new Map([['lake-day', { groupId: 'g1', links: gaps }]]), products })
+
+    expect(plan.adds).toEqual([])
+    expect(plan.skipped.map(skip => skip.reason)).toEqual(['the story has 6 links already', 'the story has 6 links already'])
+  })
 })

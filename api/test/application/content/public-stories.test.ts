@@ -382,6 +382,7 @@ describe('public story detail extras', () => {
       story(relId(2), []),
       story(relId(1), [version('en', 'first', 'First')]),
       story(relId(4), [version('en', 'fourth', 'Fourth')]),
+      story(relId(5), [version('en', 'fifth', 'Fifth')]),
     ]
     const s = setup([{ ...story(id1, [version('en', 'lake-day', 'A day'), version('de', 'seetag', 'Ein Tag')]), related }])
 

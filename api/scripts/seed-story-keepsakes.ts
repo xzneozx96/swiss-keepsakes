@@ -4,7 +4,7 @@ import process from 'node:process'
 import { pathToFileURL } from 'node:url'
 import { Pool as PgPool } from 'pg'
 import { storyKeepsakeLinks } from './seed-data/story-keepsake-links.ts'
-import { isLocalDatabaseUrl } from './seed-guard.ts'
+import { pickStore, printSeedFailure, seedDatabaseUrl } from './seed-guard.ts'
 
 // `pnpm --filter @sk/api db:seed:story-keepsakes [--dry-run]` adds the keepsake links of `seed-data/story-keepsake-links.ts` to
 // the seeded stories of one store (T-E4.4a). It only adds: a link that exists is left alone, a story gets each missing keepsake at
@@ -33,7 +33,7 @@ export function planStoryKeepsakeLinks(specs: readonly StoryKeepsakeLinkSpec[], 
       continue
     }
     const linked = new Set(found.links.map(link => link.productId))
-    let next = Math.max(0, ...found.links.map(link => link.position)) + 1
+    const taken = new Set(found.links.map(link => link.position))
     for (const code of spec.keepsakes) {
       const productId = snapshot.products.get(code)
       if (!productId) {
@@ -42,13 +42,16 @@ export function planStoryKeepsakeLinks(specs: readonly StoryKeepsakeLinkSpec[], 
       }
       if (linked.has(productId))
         continue
-      if (next > maxLinks) {
+      // The cap counts the links; the position is the one after the last, or the lowest free one when the last is the 6th.
+      if (taken.size >= maxLinks) {
         skipped.push({ story: spec.story, code, reason: `the story has ${maxLinks} links already` })
         continue
       }
-      adds.push({ story: spec.story, code, groupId: found.groupId, productId, position: next })
+      const after = Math.max(0, ...taken) + 1
+      const position = after <= maxLinks ? after : Array.from({ length: maxLinks }, (_, i) => i + 1).find(free => !taken.has(free))!
+      adds.push({ story: spec.story, code, groupId: found.groupId, productId, position })
       linked.add(productId)
-      next += 1
+      taken.add(position)
     }
   }
   return { adds, skipped }
@@ -96,20 +99,6 @@ export async function storyKeepsakeLinksStep(pool: Pool, storeId: string, option
   return 0
 }
 
-async function pickStore(pool: Pool): Promise<string | undefined> {
-  const wanted = process.env.SEED_STORE_ID
-  if (wanted) {
-    const { rows } = await pool.query<{ id: string }>('select id from identity.stores where id::text = $1', [wanted])
-    if (!rows[0])
-      process.stderr.write('SEED_STORE_ID names no store. Nothing was written.\n')
-    return rows[0]?.id
-  }
-  const { rows } = await pool.query<{ id: string }>('select id from identity.stores limit 2')
-  if (rows.length !== 1)
-    process.stderr.write(`${rows.length === 0 ? 'There is no store' : 'There is more than one store'}. Set SEED_STORE_ID to the store to seed. Nothing was written.\n`)
-  return rows.length === 1 ? rows[0]!.id : undefined
-}
-
 async function main(): Promise<number> {
   const flags = process.argv.slice(2)
   const unknown = flags.filter(flag => flag !== '--dry-run')
@@ -117,15 +106,9 @@ async function main(): Promise<number> {
     process.stderr.write(`Unknown flag: ${unknown.join(' ')}. Known: --dry-run. Nothing was written.\n`)
     return 2
   }
-  const url = process.env.DATABASE_URL
-  if (!url) {
-    process.stderr.write('DATABASE_URL is not set.\n')
+  const url = seedDatabaseUrl()
+  if (!url)
     return 2
-  }
-  if (!isLocalDatabaseUrl(url) && process.env.SEED_ALLOW_REMOTE_DATABASE !== '1') {
-    process.stderr.write('Refused: host is not local. Set SEED_ALLOW_REMOTE_DATABASE=1 to seed a remote database. Nothing was written.\n')
-    return 2
-  }
   const pool = new PgPool({ connectionString: url, connectionTimeoutMillis: 5_000 })
   try {
     const storeId = await pickStore(pool)
@@ -142,11 +125,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     (code) => {
       process.exitCode = code
     },
-    (error) => {
-      // The error's message can quote the connection string, so only its type and code are printed.
-      const { name, code } = error as { name?: string, code?: string }
-      process.stderr.write(`The seed failed: ${name ?? 'Error'}${code ? ` ${code}` : ''}\n`)
-      process.exitCode = 1
-    },
+    printSeedFailure,
   )
 }
