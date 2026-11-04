@@ -1,6 +1,6 @@
 import type { PublicKeepsakeCard, PublicLanguage, PublicMapItem, PublicStoryCard, PublicTourCard } from '@sk/api-contract'
 
-import { fold } from './fold'
+import { fold, foldDigraphs } from './fold'
 
 // Search runs in the browser over the lists the app already has (no server search). The lists omit what a guest must
 // not see (hidden, draft and expired pins, unpublished and archived keepsakes), and no price is read here (AC54).
@@ -38,8 +38,13 @@ const isLetter = /[\p{L}\p{N}]/u
  * inside a word; -1 = no match.
  */
 export function scoreTitle(title: string, query: string): number {
-  const t = fold(title)
   const q = fold(query).trim()
+
+  // A title is read both ways (ö as o, and as oe), so "lowen" and "loewen" both find Löwendenkmal.
+  return Math.max(scoreFolded(fold(title), q), scoreFolded(foldDigraphs(title), q))
+}
+
+function scoreFolded(t: string, q: string): number {
   const at = t.indexOf(q)
 
   if (!q || at < 0) {

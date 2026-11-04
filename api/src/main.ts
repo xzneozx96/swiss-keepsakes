@@ -242,29 +242,6 @@ async function main() {
       findAddressAt: makeFindAddressAt({ register: createAddressRegister() }),
       retireLibraryMedia: makeRetireLibraryMedia({ ...libraryDeps, media: createMediaRepository(), jobs: createJobQueue(jobs.boss), audit, clock: systemClock, graceHours: config.MEDIA_GRACE_HOURS }),
     })
-    // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
-    const contentUseCases = {
-      ...writeUseCases,
-      requestUpload: makeRequestUpload({ storage, clock: systemClock, newId: () => crypto.randomUUID() }),
-      // They touch storage, so guardUseCases does not wrap them: the media routes map a StorageUnavailableError.
-      confirmUpload: makeConfirmUpload({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, newId: () => crypto.randomUUID() }),
-      getMedia: makeGetMedia({ uow, media: createMediaRepository() }),
-      lookupMediaByHash: makeLookupMediaByHash({ uow, media: createMediaRepository() }),
-      replaceMedia: makeReplaceMedia({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, graceHours: config.MEDIA_GRACE_HOURS }),
-      publicUrl: storage.publicUrl,
-      listStories: makeListStories(readDeps),
-      // The keepsake cards come from the catalog's public list, by id. publicKeepsakeUseCases is built further down; this runs only when a story is read.
-      getStory: makeGetStory({
-        ...readDeps,
-        // eslint-disable-next-line ts/no-use-before-define -- called per request, after startup has built it
-        keepsakeCards: makeKeepsakeCards(language => publicKeepsakeUseCases.listKeepsakes(language)),
-      }),
-      getPin: makeGetPin(readDeps),
-      listTours: makeListTours(readDeps),
-      getTour: makeGetTour(readDeps),
-      listCategories: makeListCategories(readDeps),
-      getMap: makeGetMap(readDeps),
-    }
     const contentMedia = createMediaRepository()
     // The catalog gets its stock through three functions of the inventory module (ADR-013): a new SKU's row in the write's
     // transaction, the units open orders hold, and the on hand and reserved figures.
@@ -329,6 +306,28 @@ async function main() {
       getKeepsake: makeGetKeepsake(publicKeepsakeDeps),
       getAvailability: makeGetAvailability(publicKeepsakeDeps),
       getPickupPoints: makeGetPickupPoints(publicKeepsakeDeps),
+    }
+    // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
+    const contentUseCases = {
+      ...writeUseCases,
+      requestUpload: makeRequestUpload({ storage, clock: systemClock, newId: () => crypto.randomUUID() }),
+      // They touch storage, so guardUseCases does not wrap them: the media routes map a StorageUnavailableError.
+      confirmUpload: makeConfirmUpload({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, newId: () => crypto.randomUUID() }),
+      getMedia: makeGetMedia({ uow, media: createMediaRepository() }),
+      lookupMediaByHash: makeLookupMediaByHash({ uow, media: createMediaRepository() }),
+      replaceMedia: makeReplaceMedia({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, graceHours: config.MEDIA_GRACE_HOURS }),
+      publicUrl: storage.publicUrl,
+      listStories: makeListStories(readDeps),
+      // The keepsake cards come from the catalog's public list, by id.
+      getStory: makeGetStory({
+        ...readDeps,
+        keepsakeCards: makeKeepsakeCards(language => publicKeepsakeUseCases.listKeepsakes(language)),
+      }),
+      getPin: makeGetPin(readDeps),
+      listTours: makeListTours(readDeps),
+      getTour: makeGetTour(readDeps),
+      listCategories: makeListCategories(readDeps),
+      getMap: makeGetMap(readDeps),
     }
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),
