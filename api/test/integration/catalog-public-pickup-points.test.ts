@@ -118,14 +118,18 @@ describe('[E6.4][AC26][AC64] the public pickup points read', () => {
     expect((JSON.parse(text) as { items: Point[] }).items.map(item => item.name)).toEqual(['English only shop'])
   })
 
-  it('[E6.4][AC64] AC-2: a draft keepsake, an unpublished one and an unknown slug are a 404 problem', async () => {
+  it('[E6.4][AC64] AC-2: an unpublished keepsake, an archived one and an unknown slug are a 404 problem', async () => {
     const s = await setup()
-    const draft = await s.keepsake(false)
+    await s.keepsake(false)
     await s.place({ name: { en: 'Some shop' } })
     const published = await s.keepsake()
     expect((await s.send(`${s.products}/${published.id}/unpublish`, 'POST', 2)).status).toBe(200)
+    // Archived, as the public keepsake test does it: the status is set directly, the merchant API has no archive for a keepsake here.
+    const archived = await s.keepsake()
+    await pool.query(`update catalog.products set status = 'archived' where id = $1`, [archived.id])
 
-    for (const slug of [published.slug.en, draft.id, `nothing-${unique()}`]) {
+    // A draft has no slug to ask for, so the cases are an unpublished keepsake, an archived one and an unknown slug.
+    for (const slug of [published.slug.en, archived.slug.en, `nothing-${unique()}`]) {
       const response = await get(`/api/public/keepsakes/${slug}/pickup-points?lang=en`)
       expect(response.status, String(slug)).toBe(404)
       expect(response.headers.get('Content-Type')).toBe('application/problem+json')
