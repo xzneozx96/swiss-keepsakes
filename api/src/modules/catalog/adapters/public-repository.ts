@@ -34,6 +34,13 @@ export function createPublicKeepsakeReads(): PublicKeepsakeReads<Tx> {
       return result.rows.map(asSummary)
     },
 
+    async listPublishedByIds(tx, ids) {
+      if (ids.length === 0)
+        return []
+      const result = await tx.execute<SummaryRow & Record<string, unknown>>(sql`${summary} where ${published} and p.id = any(${sql.param(ids)}::uuid[])`)
+      return result.rows.map(asSummary)
+    },
+
     async findPublishedBySlug(tx, slug, language) {
       // The slug of the language asked for wins when both languages of different keepsakes hold the same text.
       const found = await tx.execute<SummaryRow & Record<string, unknown>>(sql`

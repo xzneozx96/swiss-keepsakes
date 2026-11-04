@@ -1,7 +1,7 @@
 import type { PublicKeepsakeDeps, PublicKeepsakeReads, PublicKeepsakeRow } from '../../../src/modules/catalog/application/public-keepsakes.ts'
 import type { MediaInfo, StockLevel } from '../../../src/modules/catalog/ports.ts'
 import { describe, expect, it, vi } from 'vitest'
-import { makeGetAvailability, makeGetKeepsake, makeListKeepsakes } from '../../../src/modules/catalog/application/public-keepsakes.ts'
+import { makeGetAvailability, makeGetKeepsake, makeListKeepsakes, makeListKeepsakesByIds } from '../../../src/modules/catalog/application/public-keepsakes.ts'
 
 const store = '0190f0c2-0000-7000-8000-00000000000a'
 const otherStore = '0190f0c2-0000-7000-8000-00000000000b'
@@ -41,6 +41,7 @@ function row(over: Partial<PublicKeepsakeRow> = {}): PublicKeepsakeRow {
 function setup(rows: PublicKeepsakeRow[], levels: Record<string, [number, number]> = {}, files: MediaInfo[] = [photo(photoId)]) {
   const reads: PublicKeepsakeReads<null> = {
     listPublished: async () => rows,
+    listPublishedByIds: async (_tx, ids) => rows.filter(r => ids.includes(r.id)),
     findPublishedBySlug: async (_tx, slug, language) => {
       const found = rows.filter(r => r.slug.en === slug || r.slug.de === slug)
       return found.find(r => r.slug[language] === slug) ?? found[0]
@@ -55,6 +56,30 @@ function setup(rows: PublicKeepsakeRow[], levels: Record<string, [number, number
   }
   return { deps, stockLevels }
 }
+
+describe('[E4.4][AC31] the cards of a story by id', () => {
+  const second = row({ id: '0190f0c2-0000-7000-8000-0000000000e2', storeId: otherStore, slug: { en: 'bag' }, name: { en: 'Bag' }, skuIds: [skuC], variants: [] })
+  const third = row({ id: '0190f0c2-0000-7000-8000-0000000000e3', slug: { en: 'cap' }, name: { en: 'Cap' }, skuIds: [] })
+
+  it('[E4.4][AC31] returns only the asked published keepsakes, in the order of the ids, and skips an id with no row', async () => {
+    const { deps } = setup([row(), second, third], { [skuC]: [2, 0] })
+
+    const { items } = await makeListKeepsakesByIds(deps)([third.id, 'not-published', second.id], 'en')
+
+    expect(items.map(i => i.id)).toEqual([third.id, second.id])
+    expect(items.map(i => i.soldOut)).toEqual([true, false])
+  })
+
+  it('[E4.4][AC31] reads the stock only for the asked keepsakes, once per store, and no query at all for no ids', async () => {
+    const { deps, stockLevels } = setup([row(), second, third], { [skuC]: [2, 0] })
+
+    await makeListKeepsakesByIds(deps)([second.id, third.id], 'en')
+    expect(stockLevels).toHaveBeenCalledTimes(1)
+    expect(stockLevels).toHaveBeenCalledWith(null, otherStore, [skuC])
+
+    expect(await makeListKeepsakesByIds(deps)([], 'en')).toEqual({ items: [] })
+  })
+})
 
 describe('[E6.4][AC53] the public list: sold out is a flag, never a figure', () => {
   it('[E6.4][AC53] AC-3: variant A at 0 and variant B at 4 is not sold out', async () => {

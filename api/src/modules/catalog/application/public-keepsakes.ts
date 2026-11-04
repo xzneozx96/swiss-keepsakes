@@ -30,6 +30,8 @@ export interface PublicKeepsakeRow extends PublicKeepsakeSummary {
 export interface PublicKeepsakeReads<T> {
   // Published keepsakes of every store, newest first.
   listPublished: (tx: T) => Promise<PublicKeepsakeSummary[]>
+  // The published ones among these ids, in no set order; an id that is no published keepsake has no row.
+  listPublishedByIds: (tx: T, ids: string[]) => Promise<PublicKeepsakeSummary[]>
   // The published keepsake that holds this slug in either language, the one that holds it in `language` first. A draft
   // and an archived keepsake have no row.
   findPublishedBySlug: (tx: T, slug: string, language: ContentLanguage) => Promise<PublicKeepsakeRow | undefined>
@@ -147,29 +149,45 @@ function card(row: PublicKeepsakeSummary, language: LanguageNotice, cover: Publi
   }
 }
 
+// The cards of these rows in the language asked for, or the other one with the fallback notice; a row with no readable
+// language is left out. Stock is read once per store and covers once per store.
+async function cardsOf<T>(deps: PublicKeepsakeDeps<T>, tx: T, rows: PublicKeepsakeSummary[], requested: ContentLanguage): Promise<PublicKeepsakeCard[]> {
+  const shown = rows.flatMap((row) => {
+    const language = notice(row, requested)
+    return language ? [{ row, language }] : []
+  })
+  const stock = await stockOf(deps, tx, shown.map(item => item.row))
+  const coversByStore = new Map<string, string[]>()
+  for (const { row } of shown) {
+    const first = row.mediaIds[0]
+    if (first)
+      coversByStore.set(row.storeId, [...(coversByStore.get(row.storeId) ?? []), first])
+  }
+  const covers = new Map<string, PublicKeepsakePhoto>()
+  for (const [storeId, ids] of coversByStore) {
+    for (const [id, photo] of await photosOf(deps.media, tx, storeId, ids))
+      covers.set(id, photo)
+  }
+  return shown.map(({ row, language }) => card(row, language, covers.get(row.mediaIds[0]?.toLowerCase() ?? '') ?? null, stock))
+}
+
 // Every published keepsake in the language asked for, or the other one with the fallback notice. Each carries a cover and
 // a sold-out flag and nothing about price or units.
 export function makeListKeepsakes<T>(deps: PublicKeepsakeDeps<T>) {
-  return async (requested: ContentLanguage): Promise<PublicKeepsakeList> => deps.uow.run(async (tx) => {
-    const rows = await deps.reads.listPublished(tx)
-    const shown = rows.flatMap((row) => {
-      const language = notice(row, requested)
-      return language ? [{ row, language }] : []
+  return async (requested: ContentLanguage): Promise<PublicKeepsakeList> => deps.uow.run(async tx => ({ items: await cardsOf(deps, tx, await deps.reads.listPublished(tx), requested) }))
+}
+
+// The same cards for the published keepsakes among `ids`, in the order of `ids` (the story's order). An id that is no
+// published keepsake is skipped. A story reads at most a few, so this is not the whole list.
+export function makeListKeepsakesByIds<T>(deps: PublicKeepsakeDeps<T>) {
+  return async (ids: string[], requested: ContentLanguage): Promise<PublicKeepsakeList> => {
+    if (ids.length === 0)
+      return { items: [] }
+    return deps.uow.run(async (tx) => {
+      const byId = new Map((await deps.reads.listPublishedByIds(tx, ids)).map(row => [row.id, row]))
+      return { items: await cardsOf(deps, tx, ids.flatMap(id => byId.get(id) ?? []), requested) }
     })
-    const stock = await stockOf(deps, tx, shown.map(item => item.row))
-    const coversByStore = new Map<string, string[]>()
-    for (const { row } of shown) {
-      const first = row.mediaIds[0]
-      if (first)
-        coversByStore.set(row.storeId, [...(coversByStore.get(row.storeId) ?? []), first])
-    }
-    const covers = new Map<string, PublicKeepsakePhoto>()
-    for (const [storeId, ids] of coversByStore) {
-      for (const [id, photo] of await photosOf(deps.media, tx, storeId, ids))
-        covers.set(id, photo)
-    }
-    return { items: shown.map(({ row, language }) => card(row, language, covers.get(row.mediaIds[0]?.toLowerCase() ?? '') ?? null, stock)) }
-  })
+  }
 }
 
 const label = (text: Localized, language: ContentLanguage) => text[language] ?? text[other(language)] ?? ''
