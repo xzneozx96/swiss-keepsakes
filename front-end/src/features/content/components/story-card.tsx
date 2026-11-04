@@ -1,3 +1,4 @@
+import { Chip } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 
 import { Media } from '@/components/media'
@@ -6,11 +7,13 @@ import { useLocale } from '@/contexts/locale-context'
 interface StoryCardProps {
   /** Opens C20; both language versions share the slug. */
   slug: string
-  photo: string
+  photo?: string
   title: string
   meta: string
   /** Shown on the C19 list only; the C01 rail keeps cards short. */
   excerpt?: string
+  /** The story is in the other language than the page (ADR-002): its short code, and the language's name for screen readers. */
+  tag?: { code: string, label: string }
   layout?: 'rail' | 'list'
 }
 
@@ -24,6 +27,7 @@ export function StoryCard({
   title,
   meta,
   excerpt,
+  tag,
   layout = 'list',
 }: StoryCardProps) {
   const { language } = useLocale()
@@ -45,7 +49,14 @@ export function StoryCard({
         {excerpt && (
           <p className="line-clamp-2 text-sm text-foreground/75">{excerpt}</p>
         )}
-        <p className="text-label text-muted">{meta}</p>
+        <p className="flex items-center gap-2 text-label text-muted">
+          {tag && (
+            <Chip aria-label={tag.label} size="sm" variant="secondary">
+              <Chip.Label>{tag.code}</Chip.Label>
+            </Chip>
+          )}
+          {meta}
+        </p>
       </div>
     </Link>
   )

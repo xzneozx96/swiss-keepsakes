@@ -13,6 +13,7 @@
     "db:migrate": "tsx --env-file-if-exists=.env.local src/platform/db/migrate.ts",
     "db:seed": "tsx --env-file-if-exists=.env.local scripts/seed.ts",
     "db:seed:curated": "tsx --env-file-if-exists=.env.local scripts/seed-curated.ts",
+    "db:seed:story-keepsakes": "tsx --env-file-if-exists=.env.local scripts/seed-story-keepsakes.ts",
     "admin:grant": "tsx scripts/admin-grant.ts",
     "db:check-branch": "tsx scripts/check-branch-migrations.ts",
     "build": "pnpm --filter @sk/api^... --if-present build && tsc -p tsconfig.build.json",

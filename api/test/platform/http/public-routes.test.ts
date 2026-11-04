@@ -53,13 +53,14 @@ describe('[E2.12] the public routes: input checks and the ETag', () => {
   })
 
   it('[E2.12] a detail 200 is conditional too, and an unknown item is a 404 problem', async () => {
-    const app = setup({ getStory: async () => ({ ok: true, value: { id: pinId, slug: 'old-town', title: 'Old town', excerpt: '', readMinutes: 1, coverKey: null, stayTag: 'both', interests: [], categories: [], publishedAt: '2090-01-01T00:00:00.000Z', language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'], authorName: '', body: { type: 'doc', content: [] } } }) })
+    const app = setup({ getStory: async () => ({ ok: true, value: { id: pinId, slug: 'old-town', title: 'Old town', excerpt: '', readMinutes: 1, coverKey: null, cover: null, stayTag: 'both', interests: [], categories: [], publishedAt: '2090-01-01T00:00:00.000Z', language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'], authorName: '', body: { type: 'doc', content: [] }, versions: [{ language: 'en', slug: 'old-town' }], places: [], related: [], keepsakes: [{ id: pinId, slug: 'mug', name: 'Mug', cover: null, soldOut: true }] } }) })
 
     const found = await app.request('/api/public/stories/old-town?lang=en')
     const again = await app.request('/api/public/stories/old-town?lang=en', { headers: { 'If-None-Match': found.headers.get('ETag')! } })
     const missing = await setup().request(`/api/public/places/${pinId}?lang=en`)
 
     expect(found.status).toBe(200)
+    expect(await found.json()).toMatchObject({ versions: [{ language: 'en', slug: 'old-town' }], keepsakes: [{ slug: 'mug', soldOut: true }] })
     expect(again.status).toBe(304)
     expect(missing.status).toBe(404)
     expect(missing.headers.get('Content-Type')).toBe('application/problem+json')
@@ -101,14 +102,16 @@ function schemaKeys(node: unknown, components: Record<string, unknown>, seen = n
 
 describe('[E2.12] the generated document for the public routes', () => {
   const document = openApiDocument(contractApp())
-  const paths = ['/api/public/stories', '/api/public/stories/{slug}', '/api/public/places/{id}', '/api/public/tours', '/api/public/tours/{slug}', '/api/public/map-categories', '/api/public/blog-categories', '/api/public/map']
+  // The keepsake availability read is the one public read with a price (E6.4, AC52), so it is checked apart.
+  const priced = '/api/public/keepsakes/{slug}/availability'
+  const paths = ['/api/public/stories', '/api/public/stories/{slug}', '/api/public/places/{id}', '/api/public/tours', '/api/public/tours/{slug}', '/api/public/map-categories', '/api/public/blog-categories', '/api/public/map', '/api/public/keepsakes', '/api/public/keepsakes/{slug}']
 
-  it('[E2.12] all 8 public paths are present, hold no store, and declare 200, 304 and a problem default', () => {
+  it('[E2.12][E6.4] all 11 public paths are present, hold no store, and declare 200, 304 and a problem default', () => {
     // /api/public/invitations/preview is an identity POST, not one of these reads.
     const present = Object.entries(document.paths ?? {}).filter(([path, item]) => path.startsWith('/api/public/') && 'get' in item).map(([path]) => path)
 
-    expect(present.sort()).toEqual([...paths].sort())
-    for (const path of paths) {
+    expect(present.sort()).toEqual([...paths, priced].sort())
+    for (const path of [...paths, priced]) {
       const operation = (document.paths as Record<string, { get: { responses: Record<string, unknown> } }>)[path]!.get
       expect(path).not.toContain('store')
       expect(Object.keys(operation.responses), path).toEqual(expect.arrayContaining(['200', '304', 'default']))

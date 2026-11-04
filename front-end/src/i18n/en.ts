@@ -200,9 +200,7 @@ export const en = {
   'gifts.soldOut': 'Sold out',
   'gifts.textInEnglish': 'Text in English',
   'gifts.textInGerman': 'Text in German',
-  'gifts.emptyCategory': 'No keepsakes in this category at the moment.',
-  'gifts.noResults': 'No keepsakes match “{query}”.',
-  'gifts.showAll': 'Show all keepsakes',
+  'gifts.empty': 'No keepsakes for sale yet.',
   'detail.back': 'Back',
   'detail.notFound':
     'We couldn’t find this keepsake. It may no longer be sold.',
@@ -294,6 +292,7 @@ export const en = {
   'detail.preview.pickupBody': 'Guests choose the pickup place and date at checkout.',
   'detail.preview.cancellation': 'The cancellation policy is shown at checkout.',
   'detail.preview.noVariant': 'No variant is for sale yet.',
+  'detail.price.failed': 'The price could not be loaded.',
   'gallery.label': 'Photos of {name}',
   'gallery.photo': 'Photo {n} of {count}',
   'gallery.reviewLabel': 'Photos from {name}’s review',

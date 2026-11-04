@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  blockedValues,
   chosenVariant,
-  demoOptions,
-  demoValues,
   galleryOrder,
   pickValue,
+  settleChoice,
   valueReasons,
 } from '@/features/catalog/lib/variant-choice'
 
@@ -64,41 +64,62 @@ describe('variant choice by option values', () => {
     expect(galleryOrder(['a', 'b'], 0)).toEqual(['a', 'b'])
   })
 
-  it('turns a demo product with several variants into one option with a value per variant', () => {
-    const product = {
-      variants: [
-        { id: 's', label: { en: 'Small' }, price: 4900, stock: 1 },
-        { id: 'm', label: { en: 'Medium' }, price: 5400, stock: 1 },
-      ],
-    }
-    const text = (l: { en?: string }) => l.en ?? ''
-    const [option, ...rest] = demoOptions(product, text, 'Option', v => `CHF ${v.price / 100}`)
+  it('blocks a value only when no combination with it can be picked', () => {
+    expect(blockedValues(options, variants, 'not sold')).toEqual({ size: {}, colour: {} })
+    const soldOut = variants.map(v => v.values.size === 'l' ? { ...v, reason: 'Sold out' } : v)
 
-    expect(rest).toEqual([])
-    expect(option.label).toBe('Option')
-    expect(option.values).toEqual([
-      { id: 's', label: 'Small', hint: 'CHF 49' },
-      { id: 'm', label: 'Medium', hint: 'CHF 54' },
-    ])
-    expect(demoValues(product, product.variants[1])).toEqual({ [option.id]: 'm' })
+    expect(blockedValues(options, soldOut, 'not sold')).toEqual({ size: { l: 'Sold out' }, colour: { red: 'Sold out' } })
   })
 
-  it('shows no choice for a single demo variant', () => {
-    const product = { variants: [{ id: 'std', label: { en: 'Standard' }, price: 8900, stock: 5 }] }
-
-    expect(demoOptions(product, l => l.en ?? '', 'Option', () => '')).toEqual([])
-    expect(demoValues(product, product.variants[0])).toEqual({})
+  it('moves the other options to a combination that exists, keeping as many choices as it can', () => {
+    expect(settleChoice(options, variants, { size: 's', colour: 'nat' }, 'colour', 'red')).toEqual({ size: 'l', colour: 'red' })
+    expect(settleChoice(options, variants, { size: 'l', colour: 'red' }, 'size', 's')).toEqual({ size: 's', colour: 'nat' })
+    expect(settleChoice(options, variants, { size: 's', colour: 'nat' }, 'size', 'l')).toEqual({ size: 'l', colour: 'red' })
   })
 
-  it('reads the declared options and the variants values of a multi-option demo product', () => {
-    const product = {
-      options: [{ id: 'size', label: { en: 'Size' }, values: [{ id: 'a', label: { en: 'A' } }] }],
-      variants: [{ id: 'v', label: { en: 'A' }, price: 100, stock: 1, values: { size: 'a' } }],
-    }
+  it('settles on the combination that keeps most of the other choices, not the first one listed', () => {
+    const three = [...options, { id: 'finish', label: 'Finish', values: [{ id: 'matte', label: 'Matte' }, { id: 'gloss', label: 'Gloss' }] }]
+    const list = [
+      { id: 'x', values: { size: 'l', colour: 'red', finish: 'gloss' }, price: '' },
+      { id: 'y', values: { size: 's', colour: 'red', finish: 'gloss' }, price: '' },
+      { id: 'z', values: { size: 's', colour: 'nat', finish: 'matte' }, price: '' },
+    ]
 
-    expect(demoOptions(product, l => l.en ?? '', 'Option', () => '')).toEqual([
-      { id: 'size', label: 'Size', values: [{ id: 'a', label: 'A' }] },
-    ])
-    expect(demoValues(product, product.variants[0])).toEqual({ size: 'a' })
+    // Red with small and matte chosen: s/red/matte is not sold; s/red/gloss keeps the size, l/red/gloss (listed first) keeps nothing.
+    expect(settleChoice(three, list, { size: 's', colour: 'nat', finish: 'matte' }, 'colour', 'red')).toEqual({ size: 's', colour: 'red', finish: 'gloss' })
+  })
+
+  it('takes the exact combination when it can be picked', () => {
+    const list = [
+      { id: 'a', values: { size: 's', colour: 'red' }, price: '' },
+      { id: 'b', values: { size: 'l', colour: 'red' }, price: '' },
+      { id: 'c', values: { size: 'l', colour: 'nat' }, price: '' },
+    ]
+
+    expect(settleChoice(options, list, { size: 'l', colour: 'nat' }, 'colour', 'red')).toEqual({ size: 'l', colour: 'red' })
+  })
+
+  it('takes the first combination listed on a tie', () => {
+    const list = [
+      { id: 'a', values: { size: 'l', colour: 'red' }, price: '' },
+      { id: 'b', values: { size: 'l', colour: 'nat' }, price: '' },
+    ]
+
+    expect(settleChoice(options, list, {}, 'size', 'l')).toEqual({ size: 'l', colour: 'red' })
+  })
+
+  it('keeps the picked value as it is when no combination with it can be picked', () => {
+    const list = [
+      { id: 'a', values: { size: 's', colour: 'nat' }, price: '' },
+      { id: 'b', values: { size: 'l', colour: 'nat' }, price: '', reason: 'Sold out' },
+    ]
+
+    expect(settleChoice(options, list, { size: 's', colour: 'nat' }, 'size', 'l')).toEqual({ size: 'l', colour: 'nat' })
+  })
+
+  it('gives the `missing` reason to a value no combination has', () => {
+    const list = [{ id: 'a', values: { size: 's', colour: 'nat' }, price: '' }]
+
+    expect(blockedValues(options, list, 'not sold')).toEqual({ size: { l: 'not sold' }, colour: { red: 'not sold' } })
   })
 })

@@ -223,6 +223,7 @@ export {
   publicStoryBodySchema,
   publicStoryCardSchema,
   type PublicStoryList,
+  publicStoryKeepsakeSchema,
   publicStoryListSchema,
   publicStorySchema,
   type PublicTour,
@@ -232,6 +233,18 @@ export {
   publicTourListSchema,
   publicTourSchema,
 } from './public.ts'
+export {
+  type PublicKeepsake,
+  type PublicKeepsakeAvailability,
+  publicKeepsakeAvailabilitySchema,
+  type PublicKeepsakeCard,
+  publicKeepsakeCardSchema,
+  type PublicKeepsakeList,
+  publicKeepsakeListSchema,
+  type PublicKeepsakePhoto,
+  publicKeepsakePhotoSchema,
+  publicKeepsakeSchema,
+} from './public-keepsakes.ts'
 export {
   type AcceptedInvitation,
   acceptedInvitationSchema,

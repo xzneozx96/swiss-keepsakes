@@ -1,7 +1,7 @@
 import type { PublicLanguage } from '@sk/api-contract'
 import type { PublicCard, PublishedPages } from '../lib/sitemap'
-import process from 'node:process'
 import { createApiClient, publicStoryCardSchema, publicTourCardSchema } from '@sk/api-contract'
+import { apiOrigin } from '@/features/catalog/api/api-origin'
 
 const LANGUAGES: readonly PublicLanguage[] = ['en', 'de']
 const CACHE_MS = 60_000
@@ -24,10 +24,6 @@ let inFlight: Promise<PublishedPages> | null = null
 export function resetPublishedPagesCache(): void {
   cached = null
   inFlight = null
-}
-
-function apiOrigin(): string {
-  return process.env.API_ORIGIN || process.env.API_PROXY_TARGET || 'http://127.0.0.1:5002'
 }
 
 async function readCards(

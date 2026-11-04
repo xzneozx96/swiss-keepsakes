@@ -8375,6 +8375,473 @@
         ],
         "type": "object"
       },
+      "PublicCover": {
+        "description": "The cover of a story, with its public addresses",
+        "properties": {
+          "url": {
+            "description": "The original file",
+            "type": "string"
+          },
+          "variants": {
+            "description": "The webp copies, smallest first; empty when the width is not known",
+            "items": {
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "width": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "width",
+                "url"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "url",
+          "variants"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "PublicKeepsake": {
+        "properties": {
+          "availableLanguages": {
+            "items": {
+              "$ref": "#/components/schemas/PublicLanguage"
+            },
+            "type": "array"
+          },
+          "cover": {
+            "description": "The first photo, null when it is not ready",
+            "properties": {
+              "url": {
+                "description": "The original file",
+                "type": "string"
+              },
+              "variants": {
+                "description": "The webp copies, smallest first",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "url",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "description": {
+            "$ref": "#/components/schemas/PublicKeepsakeDescription"
+          },
+          "fallback": {
+            "description": "True when the item is in another language than the one asked for",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "language": {
+            "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "name": {
+            "type": "string"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/PublicKeepsakeOption"
+            },
+            "type": "array"
+          },
+          "otherSlug": {
+            "description": "The slug of the other language, for the language switcher. Null when that language has no version",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "photos": {
+            "description": "The ready photos in the merchant's order",
+            "items": {
+              "$ref": "#/components/schemas/PublicKeepsakePhoto"
+            },
+            "type": "array"
+          },
+          "requestedLanguage": {
+            "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "slug": {
+            "description": "The slug of the language carried",
+            "type": "string"
+          },
+          "soldOut": {
+            "description": "True when every combination for sale has no unit available",
+            "type": "boolean"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/PublicKeepsakeCombination"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "cover",
+          "soldOut",
+          "language",
+          "requestedLanguage",
+          "fallback",
+          "availableLanguages",
+          "description",
+          "photos",
+          "options",
+          "variants",
+          "otherSlug"
+        ],
+        "type": "object"
+      },
+      "PublicKeepsakeAvailability": {
+        "description": "The price and the units of each combination for sale. The only public keepsake read with a price. Cached for 5 seconds",
+        "properties": {
+          "items": {
+            "items": {
+              "properties": {
+                "available": {
+                  "description": "Units on hand minus units reserved, never below 0",
+                  "type": "integer"
+                },
+                "currency": {
+                  "enum": [
+                    "CHF"
+                  ],
+                  "type": "string"
+                },
+                "priceRappen": {
+                  "description": "The price in rappen (CHF 0.01)",
+                  "type": "integer"
+                },
+                "variantId": {
+                  "format": "uuid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "variantId",
+                "priceRappen",
+                "currency",
+                "available"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "PublicKeepsakeCard": {
+        "properties": {
+          "availableLanguages": {
+            "items": {
+              "$ref": "#/components/schemas/PublicLanguage"
+            },
+            "type": "array"
+          },
+          "cover": {
+            "description": "The first photo, null when it is not ready",
+            "properties": {
+              "url": {
+                "description": "The original file",
+                "type": "string"
+              },
+              "variants": {
+                "description": "The webp copies, smallest first",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "url",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "fallback": {
+            "description": "True when the item is in another language than the one asked for",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "language": {
+            "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "name": {
+            "type": "string"
+          },
+          "requestedLanguage": {
+            "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "slug": {
+            "description": "The slug of the language carried",
+            "type": "string"
+          },
+          "soldOut": {
+            "description": "True when every combination for sale has no unit available",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "cover",
+          "soldOut",
+          "language",
+          "requestedLanguage",
+          "fallback",
+          "availableLanguages"
+        ],
+        "type": "object"
+      },
+      "PublicKeepsakeCombination": {
+        "description": "A combination that is for sale. A combination that is not listed is not sold (ADR-017)",
+        "properties": {
+          "id": {
+            "description": "The variant id, the key of the availability read",
+            "format": "uuid",
+            "type": "string"
+          },
+          "photo": {
+            "description": "The photo of the combination, null for none",
+            "properties": {
+              "url": {
+                "description": "The original file",
+                "type": "string"
+              },
+              "variants": {
+                "description": "The webp copies, smallest first",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "url",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "values": {
+            "additionalProperties": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "description": "The value id of each option id. Empty for a keepsake with no option",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "values",
+          "photo"
+        ],
+        "type": "object"
+      },
+      "PublicKeepsakeDescription": {
+        "description": "The description as one Tiptap document: paragraphs, hard breaks, lists, bold, italic and links",
+        "properties": {
+          "content": {
+            "items": {
+              "properties": {
+                "attrs": {
+                  "additionalProperties": {},
+                  "type": "object"
+                },
+                "content": {
+                  "items": {},
+                  "type": "array"
+                },
+                "marks": {
+                  "items": {},
+                  "type": "array"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "type": {
+            "enum": [
+              "doc"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "content"
+        ],
+        "type": "object"
+      },
+      "PublicKeepsakeList": {
+        "description": "The published keepsakes of all stores, newest first",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PublicKeepsakeCard"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "PublicKeepsakeOption": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "values": {
+            "description": "In the order guests see them",
+            "items": {
+              "properties": {
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "label"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "values"
+        ],
+        "type": "object"
+      },
+      "PublicKeepsakePhoto": {
+        "description": "A photo of a keepsake, with its public addresses",
+        "properties": {
+          "url": {
+            "description": "The original file",
+            "type": "string"
+          },
+          "variants": {
+            "description": "The webp copies, smallest first",
+            "items": {
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "width": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "width",
+                "url"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "url",
+          "variants"
+        ],
+        "type": "object"
+      },
       "PublicLanguage": {
         "enum": [
           "en",
@@ -8812,6 +9279,42 @@
             },
             "type": "array"
           },
+          "cover": {
+            "description": "The cover as addresses; null when the story has no ready cover",
+            "properties": {
+              "url": {
+                "description": "The original file",
+                "type": "string"
+              },
+              "variants": {
+                "description": "The webp copies, smallest first; empty when the width is not known",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "url",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
           "coverKey": {
             "type": [
               "string",
@@ -8835,8 +9338,42 @@
             },
             "type": "array"
           },
+          "keepsakes": {
+            "description": "The keepsakes the story links, in the editor order",
+            "items": {
+              "$ref": "#/components/schemas/PublicStoryKeepsake"
+            },
+            "type": "array"
+          },
           "language": {
             "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "places": {
+            "description": "The visible pins the story tags, in the editor order; a hidden, expired or unpublished pin is left out",
+            "items": {
+              "properties": {
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "slug": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "slug",
+                "name"
+              ],
+              "type": "object"
+            },
+            "type": "array"
           },
           "publishedAt": {
             "format": "date-time",
@@ -8845,6 +9382,14 @@
           "readMinutes": {
             "minimum": 1,
             "type": "integer"
+          },
+          "related": {
+            "description": "Up to three published related stories, in the editor order",
+            "items": {
+              "$ref": "#/components/schemas/PublicStoryCard"
+            },
+            "maxItems": 3,
+            "type": "array"
           },
           "requestedLanguage": {
             "$ref": "#/components/schemas/PublicLanguage"
@@ -8862,6 +9407,25 @@
           },
           "title": {
             "type": "string"
+          },
+          "versions": {
+            "description": "Every published version of the story, the one carried included, for the language switcher and hreflang",
+            "items": {
+              "properties": {
+                "language": {
+                  "$ref": "#/components/schemas/PublicLanguage"
+                },
+                "slug": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "language",
+                "slug"
+              ],
+              "type": "object"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -8871,6 +9435,7 @@
           "excerpt",
           "readMinutes",
           "coverKey",
+          "cover",
           "stayTag",
           "interests",
           "categories",
@@ -8880,7 +9445,11 @@
           "fallback",
           "availableLanguages",
           "authorName",
-          "body"
+          "body",
+          "versions",
+          "places",
+          "related",
+          "keepsakes"
         ],
         "type": "object"
       },
@@ -11699,10 +12268,36 @@
                             "string",
                             "null"
                           ]
+                        },
+                        "url": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "variants": {
+                          "items": {
+                            "properties": {
+                              "url": {
+                                "type": "string"
+                              },
+                              "width": {
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "width",
+                              "url"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
                         }
                       },
                       "required": [
                         "key",
+                        "url",
+                        "variants",
                         "alt",
                         "caption"
                       ],
@@ -11774,10 +12369,17 @@
                         },
                         "title": {
                           "type": "string"
+                        },
+                        "url": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
                         }
                       },
                       "required": [
                         "key",
+                        "url",
                         "title",
                         "caption"
                       ],
@@ -11847,6 +12449,42 @@
             },
             "type": "array"
           },
+          "cover": {
+            "description": "The cover as addresses; null when the story has no ready cover",
+            "properties": {
+              "url": {
+                "description": "The original file",
+                "type": "string"
+              },
+              "variants": {
+                "description": "The webp copies, smallest first; empty when the width is not known",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "url",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
           "coverKey": {
             "type": [
               "string",
@@ -11906,6 +12544,7 @@
           "excerpt",
           "readMinutes",
           "coverKey",
+          "cover",
           "stayTag",
           "interests",
           "categories",
@@ -11914,6 +12553,35 @@
           "requestedLanguage",
           "fallback",
           "availableLanguages"
+        ],
+        "type": "object"
+      },
+      "PublicStoryKeepsake": {
+        "description": "A keepsake card on a story: no price. A sold-out keepsake stays in the list; an unpublished or archived one is absent",
+        "properties": {
+          "cover": {
+            "$ref": "#/components/schemas/PublicCover"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "soldOut": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "cover",
+          "soldOut"
         ],
         "type": "object"
       },
@@ -18043,6 +18711,310 @@
               }
             },
             "description": "The store, the role, the inviter's name and the state of the invitation. Never the invited address",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/keepsakes": {
+      "get": {
+        "parameters": [
+          {
+            "description": "The language asked for. A keepsake that has no version in it comes back in the other language, marked `fallback`",
+            "in": "query",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "The language asked for. A keepsake that has no version in it comes back in the other language, marked `fallback`",
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicKeepsakeList"
+                }
+              }
+            },
+            "description": "The published keepsakes, newest first. No price and no stock figure",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "304": {
+            "description": "The If-None-Match tag still matches. No body",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/keepsakes/{slug}": {
+      "get": {
+        "parameters": [
+          {
+            "description": "The slug of either language",
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "description": "The slug of either language",
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The language asked for. A keepsake that has no version in it comes back in the other language, marked `fallback`",
+            "in": "query",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "The language asked for. A keepsake that has no version in it comes back in the other language, marked `fallback`",
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicKeepsake"
+                }
+              }
+            },
+            "description": "One published keepsake: text, photos, options and the combinations for sale. No price and no stock figure",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "304": {
+            "description": "The If-None-Match tag still matches. No body",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "No such published keepsake",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/keepsakes/{slug}/availability": {
+      "get": {
+        "parameters": [
+          {
+            "description": "The slug of either language",
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "description": "The slug of either language",
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The language asked for. A keepsake that has no version in it comes back in the other language, marked `fallback`",
+            "in": "query",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "The language asked for. A keepsake that has no version in it comes back in the other language, marked `fallback`",
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicKeepsakeAvailability"
+                }
+              }
+            },
+            "description": "The price and the units of each combination for sale. The only public keepsake read with a price",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=5`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "304": {
+            "description": "The If-None-Match tag still matches. No body",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=5`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "No such published keepsake",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
