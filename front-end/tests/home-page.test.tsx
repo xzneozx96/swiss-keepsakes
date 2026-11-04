@@ -17,6 +17,7 @@ import { startSeedDemo } from '@/features/demo/data-client'
 import { HomePage } from '@/features/home/components/home-page'
 import { homeHead } from '@/features/home/lib/home-head'
 import { fetchMapCategories, fetchMapPins } from '@/features/map/api/map-client'
+import { resetAnswersStoreForTests } from '@/features/onboarding/lib/answers-store'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
 import { Route as HomeRoute } from '@/routes/_guest/$lang/index'
@@ -84,6 +85,7 @@ function textOf(html: string) {
 
 beforeEach(() => {
   localStorage.clear()
+  resetAnswersStoreForTests()
   vi.mocked(fetchMapPins).mockReset().mockResolvedValue([pin])
   vi.mocked(fetchMapCategories).mockReset().mockResolvedValue([water])
 })
@@ -148,23 +150,27 @@ describe('[E4.13][AC24][AC54] the server HTML of the home', () => {
 })
 
 describe('[E4.13][AC95] the order is the same for every visitor', () => {
-  it('draws the same headings in the same order with onboarding answers saved and without (AC-4)', async () => {
+  it('draws the same headings in the same order, and the same links above the rails, with answers saved and without (AC-3)', async () => {
     const headings = async () => {
       const { unmount } = render(<RouterProvider router={await buildRouter('/en')} />)
       await screen.findByRole('link', { name: 'Drinking water' })
       const names = screen.getAllByRole('heading', { level: 2 }).map(heading => heading.textContent)
-      const hrefs = screen.getAllByRole('link').map(link => link.getAttribute('href'))
+      // The hero, the invitation and the tiles come before the first rail; the answers reorder only the rails.
+      const links = screen.getAllByRole('link').map(link => link.getAttribute('href'))
+      const aboveRails = links.slice(0, links.indexOf('/en/map?category=drinking-water') + 1)
       unmount()
 
-      return { names, hrefs }
+      return { names, aboveRails }
     }
     const without = await headings()
-    localStorage.setItem('onboarding-answers', JSON.stringify({ stay: 'multi_day', interests: ['food-drink'] }))
+    resetAnswersStoreForTests()
+    localStorage.setItem('sk.onboarding', JSON.stringify({ v: 1, segment: 'multi_day', interests: ['food-drink'], answeredAt: '2026-11-04T10:00:00.000Z', dismissedAt: null }))
     const withAnswers = await headings()
 
     expect(without.names.slice(0, 2)).toEqual([en['homePage.map.title'], en['homePage.services.title']])
     expect(withAnswers.names).toEqual(without.names)
-    expect(withAnswers.hrefs).toEqual(without.hrefs)
+    expect(withAnswers.aboveRails).toEqual(without.aboveRails)
+    expect(without.aboveRails.length).toBeGreaterThan(3)
   })
 
   it('opens the map from the invitation and a tile, and search from the pill, without a question first', async () => {
@@ -230,9 +236,10 @@ describe('[E4.13][AC95] the demo layer is gone from the home', () => {
       expect({ file, hit: readFileSync(file, 'utf8').match(DEMO)?.[0] }).toEqual({ file, hit: undefined })
   })
 
-  it('the home reads no onboarding answer', () => {
-    for (const file of homeFiles(join(SRC, 'features/home')))
-      expect(readFileSync(file, 'utf8')).not.toMatch(/onboarding/i)
+  it('only the postcards and the routes read the onboarding answers; the hero, the invitation and the tiles do not (AC-3)', () => {
+    const readers = homeFiles(join(SRC, 'features/home/components')).filter(file => /onboarding/i.test(readFileSync(file, 'utf8'))).map(file => file.split('/').pop())
+
+    expect(readers.sort()).toEqual(['must-visits-section.tsx', 'routes-section.tsx'])
     expect(read('routes/_guest/$lang/index.tsx')).not.toMatch(/onboarding/i)
   })
 
