@@ -2,8 +2,8 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-/** Vitest runs from `front-end/`. */
-const FRONT_END = process.cwd()
+/** The front-end package root, whatever directory Vitest runs from. */
+const FRONT_END = join(import.meta.dirname, '..')
 
 interface Schema {
   $ref?: string
