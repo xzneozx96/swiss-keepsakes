@@ -29,7 +29,7 @@ export const samples: PickupPlace[] = [
     address: { en: 'Schweizerhofquai 3, 6002 Lucerne' },
     instructions: null,
     archived: false,
-    hours: [0, 1, 2, 3, 4, 5, 6].map(weekday => ({ weekday, opens: '08:00', closes: '20:00' })),
+    hours: [1, 2, 3, 4, 5, 6, 7].map(weekday => ({ weekday, opens: '08:00', closes: '20:00' })),
     position: 1,
   },
   {
