@@ -37,10 +37,11 @@ describe('[E4.4][AC31] the story-keepsake link seed over the database', () => {
     const codeA = (await pool.query<{ sku_code: string }>('select sku_code from catalog.skus where product_id = $1', [a])).rows[0]!.sku_code
     const codeB = `SEEDB-${randomUUID().slice(0, 6)}`
     const b = await product(store, codeB)
-    const draft = await product(store, `SEEDD-${randomUUID().slice(0, 6)}`, 'draft')
+    const draftCode = `SEEDD-${randomUUID().slice(0, 6)}`
+    const draft = await product(store, draftCode, 'draft')
     const person = await product(store, `SEEDP-${randomUUID().slice(0, 6)}`)
     await pool.query('insert into content.story_keepsake_links (group_id, store_id, position, product_id) values ($1, $2, 1, $3)', [g, store, person])
-    const specs = [{ story: slug, keepsakes: [codeA, codeB, 'NO-SUCH-CODE'] }]
+    const specs = [{ story: slug, keepsakes: [codeA, draftCode, codeB, 'NO-SUCH-CODE'] }]
     const rows = async () => (await pool.query<{ position: number, product_id: string }>('select position, product_id from content.story_keepsake_links where group_id = $1 order by position', [g])).rows
 
     expect(await storyKeepsakeLinksStep(pool, store, { dry: false, specs })).toBe(0)
