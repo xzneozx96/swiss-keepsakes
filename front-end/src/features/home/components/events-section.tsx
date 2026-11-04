@@ -1,4 +1,4 @@
-import type { PublicCategory } from '@sk/api-contract'
+import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
 import type { EventPin } from '../lib/events'
 import { Skeleton } from '@heroui/react'
 
@@ -8,7 +8,6 @@ import { ErrorNotice } from '@/components/error-notice'
 import { MapThumb } from '@/components/map/map-thumb'
 import { useLocale } from '@/contexts/locale-context'
 import { Rail } from '@/features/discovery/components/section'
-import { useMapData } from '@/features/map/api/queries'
 import { pinIcon } from '@/features/map/lib/categories'
 import { zurichToday } from '@/features/map/lib/next-date'
 
@@ -164,15 +163,16 @@ function EventsSkeleton() {
 /**
  * "While you're in town": the pins with a next date of the guest map's own list, split into "This week" and "Coming up"
  * (docs/ux/home-design.md row 7, G-S9-EVENTS). The split drops an event that has ended, also from a cached list. With no
- * event the section is not drawn. A card opens the map with that place; no price anywhere.
+ * event the section is not drawn. The pins and categories are the home loader's read of the map list (undefined while it loads, null when it failed), so the browser reads nothing for it. A card opens the map with that place; no price anywhere.
  */
-export function EventsSection() {
-  const { t, language } = useLocale()
+export function EventsSection({ pins, categories, onRetry }: { pins: readonly PublicMapItem[] | null | undefined, categories: readonly PublicCategory[] | null | undefined, onRetry: () => void }) {
+  const { t } = useLocale()
   const headingId = useId()
-  const { pins, categories, isPending, isFailed, retry } = useMapData(language)
+  const isFailed = pins === null || categories === null
+  const isPending = pins === undefined || categories === undefined
   const [now] = useState(() => new Date())
   const today = zurichToday(now)
-  const split = useMemo(() => eventsSplit(pins, now), [pins, now])
+  const split = useMemo(() => eventsSplit(pins ?? [], now), [pins, now])
   const empty = split.thisWeek.length === 0 && split.comingUp.length === 0
 
   if (!isPending && !isFailed && empty)
@@ -182,12 +182,12 @@ export function EventsSection() {
     <section aria-labelledby={headingId} className="flex flex-col gap-3">
       <SectionHeading body={t('homePage.events.body')} id={headingId} title={t('homePage.events.title')} />
       {isFailed
-        ? <ErrorNotice compact message={t('homePage.events.failed')} onRetry={retry} />
+        ? <ErrorNotice compact message={t('homePage.events.failed')} onRetry={onRetry} />
         : isPending
           ? <EventsSkeleton />
           : (
               <>
-                {split.thisWeek.length > 0 && <ThisWeek categories={categories} events={split.thisWeek} today={today} />}
+                {split.thisWeek.length > 0 && <ThisWeek categories={categories ?? []} events={split.thisWeek} today={today} />}
                 {split.comingUp.length > 0 && <ComingUp events={split.comingUp} seeAll={split.seeAll} today={today} />}
               </>
             )}

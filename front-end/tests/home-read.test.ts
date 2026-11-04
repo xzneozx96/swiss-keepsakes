@@ -3,12 +3,20 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { loadHomeRead } from '@/features/home/api/home-reads'
 import { Route as HomeRoute } from '@/routes/_guest/$lang/index'
 
+const mode = vi.hoisted(() => ({ on: true }))
+
+vi.mock('@/lib/api-mode', () => ({ get apiEnabled() { return mode.on } }))
+
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 const mapItem = { id: id(1), slug: 'bridge', latitude: 47.05, longitude: 8.3, title: 'Chapel Bridge', language: 'en', categoryIds: [id(3)], stayTag: 'both', interests: [], nextDate: null, hasMainStory: false, mainStorySlug: null, photoUrl: null, photoVariants: [], mustVisit: true, tip: 'Go at dawn.' }
 const water = { id: id(3), slug: 'drinking-water', name: { en: 'Drinking water', de: 'Trinkwasser' }, parentId: null, icon: 'water', showOnHome: true, position: 1 }
 const tourCard = { id: id(2), slug: 'pilatus-above-the-city', title: 'Pilatus: Above the City', stayTag: 'multi_day', interests: [], durationMinutes: 390, coverKey: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  mode.on = true
+  vi.restoreAllMocks()
+  vi.unstubAllGlobals()
+})
 
 function answerWith(routes: Record<string, () => Response>) {
   const calls: string[] = []
@@ -32,8 +40,27 @@ describe('[E4.13][AC95] the home read', () => {
 
     expect(read.pins?.[0]?.title).toBe('Chapel Bridge')
     expect(read.tours?.[0]?.slug).toBe('pilatus-above-the-city')
+    expect(read.categories).toEqual([water])
     expect(read.tiles?.map(tile => tile.name)).toEqual(['Trinkwasser'])
     expect(calls.sort()).toEqual(['/api/public/map-categories?lang=de', '/api/public/map?lang=de', '/api/public/tours?lang=de'])
+  })
+
+  it('gives each read the standard 15 s of the data client', async () => {
+    const timeoutSpy = vi.spyOn(AbortSignal, 'timeout')
+    answerWith({ '/api/public/map': json({ items: [] }), '/api/public/map-categories': json({ items: [] }), '/api/public/tours': json({ items: [] }) })
+    await loadHomeRead('en')
+
+    expect(timeoutSpy).toHaveBeenCalledTimes(3)
+    expect(timeoutSpy.mock.calls.every(([ms]) => ms === 15_000)).toBe(true)
+  })
+
+  it('sends no request in the demo build and leaves every block empty, so none shows an error', async () => {
+    mode.on = false
+    const calls = answerWith({})
+    const read = await loadHomeRead('en')
+
+    expect(calls).toEqual([])
+    expect(read).toEqual({ pins: [], categories: [], tiles: [], tours: [] })
   })
 
   it('turns a failed read into null for that block only (AC-6)', async () => {
@@ -43,6 +70,7 @@ describe('[E4.13][AC95] the home read', () => {
     expect(read.pins).toHaveLength(1)
     expect(read.tours).toBeNull()
     expect(read.tiles).toBeNull()
+    expect(read.categories).toBeNull()
   })
 
   it('turns an answer that does not match the contract into null', async () => {

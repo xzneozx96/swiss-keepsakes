@@ -1,4 +1,4 @@
-import type { PublicCategory, PublicKeepsakeCard, PublicMapItem } from '@sk/api-contract'
+import type { PublicCategory, PublicKeepsakeCard, PublicMapItem, PublicTourCard } from '@sk/api-contract'
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -51,9 +51,14 @@ const pin: PublicMapItem = {
   tip: '',
 }
 
+const mustVisit: PublicMapItem = { ...pin, id: id(101), slug: 'chapel-bridge', title: 'Chapel Bridge', mustVisit: true, tip: 'Go at dawn.' }
+const tour = (n: number, title: string, stayTag: PublicTourCard['stayTag']): PublicTourCard => ({ id: id(300 + n), slug: `tour-${n}`, title, stayTag, interests: [], durationMinutes: 390, coverKey: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] })
+const tours = [tour(1, 'Pilatus above the city', 'multi_day'), tour(2, 'Old town in an hour', 'short_stay')]
+
 const photo = { url: 'https://cdn.test/swan.jpg', variants: [{ width: 320, url: 'https://cdn.test/swan-320.webp' }, { width: 800, url: 'https://cdn.test/swan-800.webp' }] }
 const swan: PublicKeepsakeCard = { id: id(200), slug: 'victorinox-swan', name: 'Victorinox Swan', cover: photo, soldOut: false, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en', 'de'] }
 const bridge: PublicKeepsakeCard = { id: id(201), slug: 'victorinox-kapellbruecke', name: 'Victorinox Kapellbrücke', cover: null, soldOut: true, language: 'de', requestedLanguage: 'en', fallback: true, availableLanguages: ['de'] }
+const lion: PublicKeepsakeCard = { id: id(202), slug: 'victorinox-lion', name: 'Victorinox Löwe', cover: null, soldOut: false, language: 'de', requestedLanguage: 'en', fallback: true, availableLanguages: ['de'] }
 
 type DataClient = ReturnType<typeof startSeedDemo>['dataClient']
 
@@ -89,7 +94,7 @@ async function buildRouter(url: string, dataClient?: DataClient) {
   function Page() {
     return <HomePage read={home.useLoaderData()} />
   }
-  const others = ['map', 'search', 'plan', 'gifts', 'stories'].map(path => createRoute({ getParentRoute: () => root, path: `/$lang/${path}`, component: () => null }))
+  const others = ['map', 'search', 'plan', 'gifts', 'stories', 'stories/$slug', 'tours/$slug'].map(path => createRoute({ getParentRoute: () => root, path: `/$lang/${path}`, component: () => null }))
   const router = createRouter({ routeTree: root.addChildren([home, ...others]), history: createMemoryHistory({ initialEntries: [url] }) })
   await router.load()
 
@@ -104,8 +109,8 @@ function textOf(html: string) {
 beforeEach(() => {
   localStorage.clear()
   resetAnswersStoreForTests()
-  vi.mocked(fetchKeepsakeList).mockReset().mockResolvedValue({ items: [swan, bridge] })
-  vi.mocked(loadHomeRead).mockReset().mockImplementation(async lang => ({ pins: [pin], tiles: serviceTiles([water], [pin], lang), tours: [] }))
+  vi.mocked(fetchKeepsakeList).mockReset().mockResolvedValue({ items: [swan, bridge, lion] })
+  vi.mocked(loadHomeRead).mockReset().mockImplementation(async lang => ({ pins: [pin, mustVisit], categories: [water], tiles: serviceTiles([water], [pin, mustVisit], lang), tours }))
   vi.mocked(fetchMapPins).mockReset().mockResolvedValue([pin])
   vi.mocked(fetchMapCategories).mockReset().mockResolvedValue([water])
 })
@@ -144,7 +149,7 @@ describe('[E4.13][AC24][AC54] the server HTML of the home', () => {
   it('has the blocks in the fixed order, with no CHF, no count under five and no guest review text (AC-4)', async () => {
     const html = renderToString(<RouterProvider router={await buildRouter('/en')} />)
     const text = textOf(html)
-    const order = [en['home.heroTitle'], en['homePage.map.title'], en['homePage.services.title'], en['home.victorinox.title'], en['homePage.ending.line'], en['home.advice.title']]
+    const order = [en['home.heroTitle'], en['homePage.map.title'], en['homePage.services.title'], en['homePage.must.title'], en['homePage.routes.title'], en['home.victorinox.title'], en['homePage.ending.line'], en['home.advice.title']]
     const at = order.map(words => text.indexOf(words))
 
     expect(at.every(index => index >= 0)).toBe(true)
@@ -164,7 +169,7 @@ describe('[E4.13][AC24][AC54] the server HTML of the home', () => {
   })
 
   it('is whole when the loader read nothing: each block holds its error, never a blank page', async () => {
-    vi.mocked(loadHomeRead).mockResolvedValue({ pins: null, tiles: null, tours: null })
+    vi.mocked(loadHomeRead).mockResolvedValue({ pins: null, categories: null, tiles: null, tours: null })
     const html = renderToString(<RouterProvider router={await buildRouter('/en')} />)
 
     expect(textOf(html)).toContain(en['homePage.services.failed'])
@@ -197,7 +202,7 @@ describe('[E4.13][AC95] the order is the same for every visitor', () => {
     localStorage.setItem('sk.onboarding', JSON.stringify({ v: 1, segment: 'multi_day', interests: ['food-drink'], answeredAt: '2026-11-04T10:00:00.000Z', dismissedAt: null }))
     const withAnswers = await headings()
 
-    expect(without.names.slice(0, 2)).toEqual([en['homePage.map.title'], en['homePage.services.title']])
+    expect(without.names.slice(0, 4)).toEqual([en['homePage.map.title'], en['homePage.services.title'], en['homePage.must.title'], en['homePage.routes.title']])
     expect(withAnswers.names).toEqual(without.names)
     expect(withAnswers.aboveRails).toEqual(without.aboveRails)
     expect(without.aboveRails.length).toBeGreaterThan(3)
@@ -212,9 +217,20 @@ describe('[E4.13][AC95] the order is the same for every visitor', () => {
   })
 })
 
+describe('[E4.13][AC95] one read of the map list', () => {
+  it('draws the map blocks from the loader read and does not fetch the map list again in the browser', async () => {
+    render(<RouterProvider router={await buildRouter('/en')} />)
+    await screen.findByRole('link', { name: 'Drinking water' })
+    await screen.findByText(en['home.victorinox.title'])
+
+    expect(fetchMapPins).not.toHaveBeenCalled()
+    expect(fetchMapCategories).not.toHaveBeenCalled()
+  })
+})
+
 describe('[E4.13][AC95] a failed read takes down its own block only', () => {
   it('shows an error with retry in the tiles block while the hero, the invitation and the ending render, and retry runs the loader again (AC-6)', async () => {
-    vi.mocked(loadHomeRead).mockResolvedValueOnce({ pins: [pin], tiles: null, tours: [] })
+    vi.mocked(loadHomeRead).mockResolvedValueOnce({ pins: [pin], categories: [water], tiles: null, tours: [] })
     render(<RouterProvider router={await buildRouter('/en')} />)
 
     const alert = (await screen.findByText(en['homePage.services.failed'])).closest('[role="alert"]') as HTMLElement
@@ -248,18 +264,20 @@ describe('[E4.13][AC95] a failed read takes down its own block only', () => {
 })
 
 describe('[E4.13][AC54] the Victorinox showcase reads the public keepsake list', () => {
-  it('shows the real keepsakes, each opening its own page, sold out marked, a photo where there is one and no price (follow-up A)', async () => {
+  it('shows the real keepsakes on the shipped tiles, each opening its own page by its own language, with no price and no sold-out keepsake (follow-up A)', async () => {
     render(<RouterProvider router={await buildRouter('/en')} />)
 
     const swanLink = await screen.findByRole('link', { name: /Swan/ })
 
     expect(fetchKeepsakeList).toHaveBeenCalledWith('en')
     expect(swanLink).toHaveAttribute('href', '/en/gifts/victorinox-swan')
-    expect(swanLink.querySelector('img')).toHaveAttribute('src', 'https://cdn.test/swan-800.webp')
-    // A keepsake only in German links to its own German address and says so.
-    expect(screen.getByRole('link', { name: /Kapellbrücke/ })).toHaveAttribute('href', '/de/gifts/victorinox-kapellbruecke')
-    expect(within(screen.getByRole('link', { name: /Kapellbrücke/ })).getByText(en['gifts.soldOut'])).toBeInTheDocument()
-    expect(within(swanLink).queryByText(en['gifts.soldOut'])).toBeNull()
+    // The tile draws the shipped cut-out art, not the cover photo.
+    expect(swanLink.querySelector('img')?.getAttribute('src')).not.toContain('cdn.test')
+    // A keepsake only in German links to its own German address (ADR-002).
+    expect(screen.getByRole('link', { name: /Löwe/ })).toHaveAttribute('href', '/de/gifts/victorinox-lion')
+    // The shipped showcase has no sold-out state, so a sold-out keepsake is left out.
+    expect(screen.queryByRole('link', { name: /Kapellbr/ })).toBeNull()
+    expect(screen.queryByText(en['gifts.soldOut'])).toBeNull()
     expect(document.body.textContent).not.toContain('CHF')
   })
 })
@@ -289,6 +307,11 @@ describe('[E4.13][AC95] the demo layer is gone from the home', () => {
   it('the home reads no demo catalogue: the showcase takes the public keepsake list', () => {
     for (const file of homeFiles(join(SRC, 'features/home')))
       expect({ file, hit: readFileSync(file, 'utf8').match(/catalogQueries|useDataClient|useProducts|@sk\/domain\/catalog/)?.[0] }).toEqual({ file, hit: undefined })
+  })
+
+  it('the home hooks take their query keys from the shared key file, never inline', () => {
+    expect(read('features/home/hooks/use-victorinox-items.ts')).not.toMatch(/queryKey: \[\s*'/)
+    expect(read('features/home/hooks/use-victorinox-items.ts')).toContain('queryKeys.keepsakes.publicList')
   })
 
   it('the components that only the old home drew are deleted', () => {

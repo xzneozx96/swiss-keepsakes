@@ -22,7 +22,8 @@ function RouteCard({ tour }: { tour: PublicTourCard }) {
     <li className="flex shrink-0 snap-start">
       <Link
         className="flex w-60 flex-col gap-2.5 rounded-3xl text-start outline-none focus-visible:focus-ring motion-safe:transition-transform motion-safe:active:scale-[0.98]"
-        params={{ lang: language, slug: tour.slug }}
+        // A route in the other language than the guest's links to its own address (ADR-002).
+        params={{ lang: tour.language, slug: tour.slug }}
         to="/$lang/tours/$slug"
       >
         <Media alt="" className="aspect-[4/3] w-full rounded-3xl" />

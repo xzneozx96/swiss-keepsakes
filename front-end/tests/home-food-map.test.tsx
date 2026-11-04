@@ -74,7 +74,9 @@ const cafe = pin(2, 'Cafe Heini', [food.id])
 const bakery = pin(3, 'Baeckerei Weinmarkt', [bakeries.id, food.id], { interests: ['food-drink'], photoUrl: 'https://img.example/bakery.webp' })
 const pins = [bridge, cafe, bakery]
 
-function renderSection(prefs?: RankPrefs) {
+interface Read { pins?: PublicMapItem[] | null, categories?: PublicCategory[] | null }
+
+function renderSection(prefs?: RankPrefs, read: Read = { pins, categories }, onRetry = () => {}) {
   const root = createRootRoute({
     component: () => (
       <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
@@ -86,7 +88,7 @@ function renderSection(prefs?: RankPrefs) {
   })
   const home = createRoute({ getParentRoute: () => root, path: '/$lang', component: () => (
     <div data-testid="page">
-      <FoodMapSection prefs={prefs} />
+      <FoodMapSection categories={read.categories} pins={read.pins} prefs={prefs} onRetry={onRetry} />
     </div>
   ) })
   const others = ['map', 'stories/$slug'].map(path => createRoute({ getParentRoute: () => root, path: `/$lang/${path}`, component: () => null }))
@@ -96,8 +98,8 @@ function renderSection(prefs?: RankPrefs) {
 }
 
 /** The map draws its style and first view: the Categories and List buttons appear. */
-async function drawn(prefs?: RankPrefs) {
-  renderSection(prefs)
+async function drawn(prefs?: RankPrefs, read?: Read) {
+  renderSection(prefs, read)
   await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
   act(() => FakeMap.instances[0]!.emit('load'))
   act(() => FakeMap.instances[0]!.emit('idle'))
@@ -171,18 +173,33 @@ describe('[E4.13][AC54][AC95] the food map section', () => {
   })
 
   it('aC-5a is not drawn when the category is gone', async () => {
-    vi.mocked(fetchMapCategories).mockResolvedValue([walks])
-    renderSection()
-    await waitFor(() => expect(fetchMapCategories).toHaveBeenCalled())
-    await waitFor(() => expect(screen.queryByRole('heading', { name: en['homePage.food.title'] })).toBeNull())
+    renderSection(undefined, { pins, categories: [walks] })
     await waitFor(() => expect(screen.getByTestId('page')).toBeEmptyDOMElement())
 
     expect(FakeMap.instances).toHaveLength(0)
   })
 
+  it('reads nothing itself: it draws from the pins and categories it is given, and shows a skeleton while there are none yet', async () => {
+    renderSection(undefined, {})
+
+    expect(await screen.findByRole('heading', { name: en['homePage.food.title'] })).toBeInTheDocument()
+    expect(document.querySelector('[data-skeleton="food-map"]')).not.toBeNull()
+    expect(fetchMapPins).not.toHaveBeenCalled()
+    expect(fetchMapCategories).not.toHaveBeenCalled()
+  })
+
+  it('shows its own error with Try again when the read failed, and Try again asks the page to read again', async () => {
+    const onRetry = vi.fn()
+
+    renderSection(undefined, { pins: null, categories }, onRetry)
+    await screen.findByText(en['homePage.food.failed'])
+    await userEvent.click(screen.getByRole('button', { name: en['errorNotice.retry'] }))
+
+    expect(onRetry).toHaveBeenCalledTimes(1)
+  })
+
   it('aC-5b is drawn as before when a merchant renamed the category', async () => {
-    vi.mocked(fetchMapCategories).mockResolvedValue([walks, { ...food, name: { en: 'Restaurants', de: 'Restaurants' } }, bakeries])
-    await drawn()
+    await drawn(undefined, { pins, categories: [walks, { ...food, name: { en: 'Restaurants', de: 'Restaurants' } }, bakeries] })
 
     expect(screen.getByRole('heading', { level: 2, name: en['homePage.food.title'] })).toBeInTheDocument()
     expect(FakeMap.instances).toHaveLength(1)

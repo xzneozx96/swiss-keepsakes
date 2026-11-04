@@ -53,8 +53,8 @@ export function HomePage({ read }: { read?: HomeRead }) {
         <ServiceTiles tiles={read?.tiles} onRetry={retry} />
         <MustVisitsSection pins={read?.pins} onRetry={retry} />
         <RoutesSection tours={read?.tours} onRetry={retry} />
-        <FoodMapSection />
-        <EventsSection />
+        <FoodMapSection categories={read?.categories} pins={read?.pins} onRetry={retry} />
+        <EventsSection categories={read?.categories} pins={read?.pins} onRetry={retry} />
         <HomeEndingBlock />
       </div>
       <TripAdviceButton above="tabBar" />

@@ -101,6 +101,13 @@ describe('[E4.13][AC24][AC54][AC95] the server HTML of the rails', () => {
     expect(html).not.toContain('CHF')
   })
 
+  it('links a route to the address of its own language (ADR-002)', async () => {
+    const html = renderToString(<RouterProvider router={await routerOf(<RoutesSection tours={[tour(7, 'both', { language: 'de', fallback: true })]} onRetry={() => {}} />)} />)
+
+    expect(html).toContain('href="/de/tours/tour-7"')
+    expect(html).not.toContain('href="/en/tours/tour-7"')
+  })
+
   it('draws a skeleton while the reads are out, for both rails', async () => {
     const html = renderToString(
       <RouterProvider router={await routerOf(

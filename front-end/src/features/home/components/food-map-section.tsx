@@ -11,7 +11,7 @@ import { MapControls } from '@/components/map/map-controls'
 import { PhotoCluster, PhotoPin } from '@/components/map/pin-faces'
 import { PinLayer } from '@/components/map/pin-layer'
 import { useLocale } from '@/contexts/locale-context'
-import { mapQueries, useMapData } from '@/features/map/api/queries'
+import { mapQueries } from '@/features/map/api/queries'
 import { CategoriesSheet } from '@/features/map/components/categories-sheet'
 import { MapPills } from '@/features/map/components/map-pills'
 import { PinList } from '@/features/map/components/pin-list'
@@ -41,24 +41,26 @@ const CARD_ROW_BOTTOM = 8
  * The map draws only near the viewport (`LazyMapView`) and with cooperative gestures, so one finger scrolls the page.
  * `prefs` are the guest's answers: they order the pins and the cards with the map list's ranking and hide none. Until the
  * guest's answers have a store in the browser (E4.5) the home passes none. Not drawn when the category is not there. No price anywhere.
+ * The pins and categories are the home loader's read of the map list (undefined while it loads, null when it failed).
  */
-export function FoodMapSection({ prefs = NO_PREFS }: { prefs?: RankPrefs }) {
-  const { t, language } = useLocale()
-  const data = useMapData(language)
+export function FoodMapSection({ pins, categories, onRetry, prefs = NO_PREFS }: { pins: readonly PublicMapItem[] | null | undefined, categories: PublicCategory[] | null | undefined, onRetry: () => void, prefs?: RankPrefs }) {
+  const { t } = useLocale()
   const headingId = useId()
-  const selection = useMemo(() => foodMapSelection(data.pins, data.categories, prefs), [data.pins, data.categories, prefs])
+  const isFailed = pins === null || categories === null
+  const isPending = pins === undefined || categories === undefined
+  const selection = useMemo(() => pins && categories ? foodMapSelection(pins, categories, prefs) : undefined, [pins, categories, prefs])
 
-  if (!data.isPending && !data.isFailed && !selection)
+  if (!isPending && !isFailed && !selection)
     return null
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3 pt-4">
       <SectionHeading body={t('homePage.food.body')} id={headingId} title={t('homePage.food.title')} />
-      {data.isFailed
-        ? <ErrorNotice compact message={t('homePage.food.failed')} onRetry={data.retry} />
-        : !selection
+      {isFailed
+        ? <ErrorNotice compact message={t('homePage.food.failed')} onRetry={onRetry} />
+        : !selection || !categories
             ? <Skeleton className={`${FRAME} w-full rounded-2xl`} data-skeleton="food-map" />
-            : <FoodMap categories={data.categories} defaultChosen={selection.category.id} ranked={selection.ranked} />}
+            : <FoodMap categories={categories} defaultChosen={selection.category.id} ranked={selection.ranked} />}
     </section>
   )
 }

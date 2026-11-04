@@ -144,23 +144,18 @@ export function VictorinoxShowcase({
                     to="/$lang/gifts/$slug"
                   >
                     <span className="flex h-44 items-center justify-center rounded-xl bg-hero-cream">
-                      {item.photo
-                        ? <img alt="" className="size-full rounded-xl object-contain" decoding="async" loading="lazy" src={item.photo} />
-                        : (
-                            <img
-                              alt=""
-                              className="h-40 -rotate-6 drop-shadow-[0_8px_10px_rgba(0,0,0,0.25)]"
-                              decoding="async"
-                              loading="lazy"
-                              src={knifeArt[artKey(item.slug)]}
-                            />
-                          )}
+                      <img
+                        alt=""
+                        className="h-40 -rotate-6 drop-shadow-[0_8px_10px_rgba(0,0,0,0.25)]"
+                        decoding="async"
+                        loading="lazy"
+                        src={knifeArt[artKey(item.slug)]}
+                      />
                     </span>
                     <span className="flex flex-1 flex-col gap-0.5 px-1">
                       <span className="line-clamp-2 min-h-[2.5em] text-sm leading-tight font-semibold">
                         {item.name.replace(VICTORINOX_NAME_PREFIX, '')}
                       </span>
-                      {item.soldOutLabel && <span className="text-label text-muted">{item.soldOutLabel}</span>}
                       {!hidePrice && (
                         <span className="mt-auto pt-0.5 text-label text-muted">
                           {item.fromLabel}

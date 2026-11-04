@@ -1,4 +1,4 @@
-import type { NextDate, PublicMapItem } from '@sk/api-contract'
+import type { NextDate, PublicCategory, PublicMapItem } from '@sk/api-contract'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
@@ -16,6 +16,8 @@ vi.mock('@/lib/api-mode', () => ({ apiEnabled: true }))
 vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: vi.fn(), fetchMapCategories: vi.fn(), fetchMapPin: vi.fn() }))
 
 let n = 0
+let read: { pins?: PublicMapItem[] | null, categories?: PublicCategory[] | null } = {}
+const onRetry = vi.fn()
 
 function event(title: string, next: Partial<NextDate> & { firstDay: string }, extra: Partial<PublicMapItem> = {}): PublicMapItem {
   n += 1
@@ -53,7 +55,7 @@ function renderAt(url: string) {
   })
   const home = createRoute({ getParentRoute: () => root, path: '/$lang', component: () => (
     <>
-      <EventsSection />
+      <EventsSection categories={read.categories} pins={read.pins} onRetry={onRetry} />
       <p>after</p>
     </>
   ) })
@@ -69,6 +71,8 @@ const title = en['homePage.events.title']
 
 beforeEach(() => {
   n = 0
+  read = {}
+  onRetry.mockReset()
   vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-11-04T09:00:00Z') })
   vi.mocked(fetchMapPins).mockReset()
   vi.mocked(fetchMapCategories).mockReset().mockResolvedValue([])
@@ -80,11 +84,14 @@ afterEach(() => {
 
 describe('[E4.13][AC54][AC95] the events section', () => {
   it('splits This week and Coming up by the 7 days (AC-1)', async () => {
-    vi.mocked(fetchMapPins).mockResolvedValue([
-      event('Soon', { firstDay: '2026-11-08' }),
-      event('Running', { firstDay: '2026-11-01', lastDay: '2026-11-06' }),
-      event('Later', { firstDay: '2026-11-20' }),
-    ])
+    read = {
+      pins: [
+        event('Soon', { firstDay: '2026-11-08' }),
+        event('Running', { firstDay: '2026-11-01', lastDay: '2026-11-06' }),
+        event('Later', { firstDay: '2026-11-20' }),
+      ],
+      categories: [],
+    }
     renderAt('/en')
 
     const week = await screen.findByRole('region', { name: en['homePage.events.thisWeek'] })
@@ -96,7 +103,7 @@ describe('[E4.13][AC54][AC95] the events section', () => {
   })
 
   it('shows three later events with no See all link (AC-2)', async () => {
-    vi.mocked(fetchMapPins).mockResolvedValue(['A', 'B', 'C'].map((name, i) => event(name, { firstDay: `2026-12-0${i + 1}` })))
+    read = { pins: ['A', 'B', 'C'].map((name, i) => event(name, { firstDay: `2026-12-0${i + 1}` })), categories: [] }
     renderAt('/en')
 
     const coming = await screen.findByRole('region', { name: en['homePage.events.comingUp'] })
@@ -106,7 +113,7 @@ describe('[E4.13][AC54][AC95] the events section', () => {
   })
 
   it('links See all on the map to ?dated=1 only when more than three are later (AC-2, AC-6)', async () => {
-    vi.mocked(fetchMapPins).mockResolvedValue(['A', 'B', 'C', 'D'].map((name, i) => event(name, { firstDay: `2026-12-0${i + 1}` })))
+    read = { pins: ['A', 'B', 'C', 'D'].map((name, i) => event(name, { firstDay: `2026-12-0${i + 1}` })), categories: [] }
     renderAt('/en')
 
     const coming = await screen.findByRole('region', { name: en['homePage.events.comingUp'] })
@@ -117,7 +124,7 @@ describe('[E4.13][AC54][AC95] the events section', () => {
   })
 
   it('draws neither the heading nor a box with no dated pin (AC-3)', async () => {
-    vi.mocked(fetchMapPins).mockResolvedValue([{ ...event('x', { firstDay: '2026-11-05' }), nextDate: null }])
+    read = { pins: [{ ...event('x', { firstDay: '2026-11-05' }), nextDate: null }], categories: [] }
     renderAt('/en')
 
     await screen.findByText('after')
@@ -126,7 +133,7 @@ describe('[E4.13][AC54][AC95] the events section', () => {
   })
 
   it('never shows an event whose last day was yesterday (AC-4)', async () => {
-    vi.mocked(fetchMapPins).mockResolvedValue([event('Gone', { firstDay: '2026-11-02', lastDay: '2026-11-03' }), event('Here', { firstDay: '2026-11-05' })])
+    read = { pins: [event('Gone', { firstDay: '2026-11-02', lastDay: '2026-11-03' }), event('Here', { firstDay: '2026-11-05' })], categories: [] }
     renderAt('/en')
 
     await screen.findByRole('link', { name: /Here/ })
@@ -134,7 +141,7 @@ describe('[E4.13][AC54][AC95] the events section', () => {
   })
 
   it('gives one event this week the full width, and several a carousel (AC-5)', async () => {
-    vi.mocked(fetchMapPins).mockResolvedValue([event('Solo', { firstDay: '2026-11-05' })])
+    read = { pins: [event('Solo', { firstDay: '2026-11-05' })], categories: [] }
     renderAt('/en')
     const solo = await screen.findByRole('link', { name: /Solo/ })
 
@@ -143,7 +150,7 @@ describe('[E4.13][AC54][AC95] the events section', () => {
   })
 
   it('makes a carousel of snap cards for three events this week (AC-5)', async () => {
-    vi.mocked(fetchMapPins).mockResolvedValue(['A', 'B', 'C'].map((name, i) => event(name, { firstDay: `2026-11-0${5 + i}` })))
+    read = { pins: ['A', 'B', 'C'].map((name, i) => event(name, { firstDay: `2026-11-0${5 + i}` })), categories: [] }
     renderAt('/en')
 
     const week = await screen.findByRole('region', { name: en['homePage.events.thisWeek'] })
@@ -159,7 +166,7 @@ describe('[E4.13][AC54][AC95] the events section', () => {
     const withPhoto = event('Photo', { firstDay: '2026-11-05' }, { photoUrl: 'https://img.test/p.jpg' })
     const noPhoto = event('Plain', { firstDay: '2026-11-06' })
 
-    vi.mocked(fetchMapPins).mockResolvedValue([withPhoto, noPhoto])
+    read = { pins: [withPhoto, noPhoto], categories: [] }
     const router = renderAt('/en')
     const card = await screen.findByRole('link', { name: /Plain/ })
 
@@ -172,8 +179,17 @@ describe('[E4.13][AC54][AC95] the events section', () => {
     expect(router.state.location.search).toEqual({ place: noPhoto.slug })
   })
 
+  it('reads nothing itself: the map list comes from the page', async () => {
+    read = { pins: [event('Soon', { firstDay: '2026-11-05' })], categories: [] }
+    renderAt('/en')
+    await screen.findByRole('link', { name: /Soon/ })
+
+    expect(fetchMapPins).not.toHaveBeenCalled()
+    expect(fetchMapCategories).not.toHaveBeenCalled()
+  })
+
   it('shows a skeleton that mirrors the section while the read loads', async () => {
-    vi.mocked(fetchMapPins).mockReturnValue(new Promise(() => {}))
+    read = {}
     renderAt('/en')
 
     await screen.findByRole('heading', { name: title })
@@ -183,27 +199,28 @@ describe('[E4.13][AC54][AC95] the events section', () => {
     expect(skeleton?.querySelectorAll('.skeleton').length).toBeGreaterThan(5)
   })
 
-  it('shows an error with Try again when the read fails, then the events', async () => {
-    vi.mocked(fetchMapPins).mockRejectedValueOnce(new Error('down')).mockResolvedValue([event('Back', { firstDay: '2026-11-05' })])
+  it('shows an error with Try again when the read failed, and Try again asks the page to read again', async () => {
+    read = { pins: null, categories: null }
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
     renderAt('/en')
     await screen.findByText(en['homePage.events.failed'])
     await user.click(screen.getByRole('button', { name: en['errorNotice.retry'] }))
-    await screen.findByRole('link', { name: /Back/ })
+    expect(onRetry).toHaveBeenCalledTimes(1)
   })
 
   it('prints no CHF in the server HTML of the loading state or of the events', async () => {
-    vi.mocked(fetchMapPins).mockResolvedValue([event('Soon', { firstDay: '2026-11-05' }), event('Later', { firstDay: '2026-12-01' })])
+    // The server HTML of the loading state (no router here, so no links yet).
     const server = renderToString(
       <QueryClientProvider client={new QueryClient()}>
         <LocaleProvider>
-          <EventsSection />
+          <EventsSection categories={read.categories} pins={read.pins} onRetry={onRetry} />
         </LocaleProvider>
       </QueryClientProvider>,
     )
 
     expect(server).not.toContain('CHF')
+    read = { pins: [event('Soon', { firstDay: '2026-11-05' }), event('Later', { firstDay: '2026-12-01' })], categories: [] }
     renderAt('/en')
     await screen.findByRole('link', { name: /Soon/ })
     expect(document.body.innerHTML).not.toContain('CHF')
