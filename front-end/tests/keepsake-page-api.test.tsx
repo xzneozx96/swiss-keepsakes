@@ -61,7 +61,7 @@ const sizeAvailability = [
   { variantId: ids.v2, priceRappen: 2490, currency: 'CHF', available: 0 },
 ]
 
-let detail: () => Response
+let detail: (lang: string | null) => Response
 let availability: () => Response
 let availabilityCalls: number
 
@@ -87,7 +87,7 @@ beforeEach(() => {
       availabilityCalls += 1
       return availability()
     }
-    return detail()
+    return detail(url.searchParams.get('lang'))
   })
 })
 
@@ -212,23 +212,56 @@ describe('[E6.4] the keepsake page', { timeout: 180_000 }, () => {
     expect(router.state.location.pathname).toBe('/de/gifts/kapellbruecke-tasse')
   })
 
-  it('[AC64] AC-5 English text only, asked in German: the address goes to the English version, which shows its text with the language notice and no German alternate', async () => {
-    detail = () => Response.json(keepsake({
-      language: 'en',
-      requestedLanguage: 'de',
-      fallback: true,
-      availableLanguages: ['en'],
-      otherSlug: null,
-    }))
+  // The API answers an English-only keepsake in German with the English version marked `fallback`, and in English without a mark.
+  const englishOnly = (lang: string | null) => Response.json(keepsake({
+    language: 'en',
+    requestedLanguage: lang,
+    fallback: lang === 'de',
+    availableLanguages: ['en'],
+    otherSlug: null,
+  }))
+
+  it('[AC64] AC-5 English text only, asked in German: the address goes to the English version, which shows its text, no German alternate and, rendered on the server, no notice', async () => {
+    detail = englishOnly
     const router = await routerAt('/de/gifts/kapellbruecke-mug')
 
     expect(router.state.location.pathname).toBe('/en/gifts/kapellbruecke-mug')
     const html = renderToString(<RouterProvider router={router} />)
 
     expect(html).toContain('A mug with the old bridge.')
-    expect(html).toContain('only available in English')
+    expect(html).not.toContain('only available in English')
     expect(html).toMatch(/rel="canonical"[^>]*href="[^"]*\/en\/gifts\/kapellbruecke-mug"/)
     expect(html).not.toMatch(/hrefLang="de"/i)
+  })
+
+  it('[AC64] AC-5 English text only, with German saved: the notice shows once the saved language is known', async () => {
+    localStorage.setItem('sk.language', JSON.stringify('de'))
+    try {
+      detail = englishOnly
+      const router = await routerAt('/en/gifts/kapellbruecke-mug')
+      render(<RouterProvider router={router} />)
+
+      expect(await screen.findByText('This keepsake’s description is only available in English.')).toBeInTheDocument()
+    }
+    finally {
+      localStorage.removeItem('sk.language')
+    }
+  })
+
+  it('[AC64] a keepsake that has a German version shows no notice when German is saved and the address is English', async () => {
+    localStorage.setItem('sk.language', JSON.stringify('de'))
+    try {
+      detail = () => Response.json(keepsake())
+      const router = await routerAt('/en/gifts/kapellbruecke-mug')
+      render(<RouterProvider router={router} />)
+
+      expect(await screen.findByText('A mug with the old bridge.')).toBeInTheDocument()
+      await new Promise(resolve => setTimeout(resolve, 300))
+      expect(document.body.textContent).not.toContain('only available in')
+    }
+    finally {
+      localStorage.removeItem('sk.language')
+    }
   })
 
   it('[AC53] AC-6 a failed availability read keeps the text, shows an error with retry and disables adding; retry reads again', async () => {

@@ -36,7 +36,7 @@ export function useKeepsakeDetail(detail: PublicKeepsake, lang: PublicLanguage):
     ? { state: 'ready', byVariant: new Map(read.data.items.map(item => [item.variantId, item])) }
     : { state: read.isError && !read.isFetching ? 'failed' : 'loading' }
 
-  const { page, variant, choice, soldOut } = publicKeepsakePage({ ...detail, fallback: detail.fallback || (preferredLanguage !== undefined && preferredLanguage !== detail.language) }, { t, intlLocale, availability, chosen: picked })
+  const { page, variant, choice, soldOut } = publicKeepsakePage({ ...detail, fallback: preferredLanguage !== undefined && !detail.availableLanguages.includes(preferredLanguage) }, { t, intlLocale, availability, chosen: picked })
   const max = Math.max(1, choice?.available ?? 1)
   const count = Math.min(quantity, max)
   const total = choice ? formatMoney((choice.priceRappen * count) / 100, intlLocale) : undefined

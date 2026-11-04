@@ -104,7 +104,11 @@ export function blockedValues(
   )
 }
 
-/** The choice after picking a value: the combination it makes when that can be picked, else the pickable combination with it that keeps most of the other choices. */
+/**
+ * The choice after picking a value: the pickable combination with that value that keeps most of the other choices
+ * (the exact combination when it can be picked, as it keeps all of them; the first one listed on a tie). Picking a
+ * value no pickable combination has leaves the choice as picked: the page shows that value as blocked.
+ */
 export function settleChoice(
   options: ChoiceOption[],
   variants: ChoiceVariant[],
@@ -112,15 +116,10 @@ export function settleChoice(
   optionId: string,
   valueId: string,
 ): Chosen {
-  const next = pickValue(chosen, optionId, valueId)
-  const exact = chosenVariant(options, variants, next)
-
-  if (exact && !exact.reason)
-    return next
-  const kept = (v: ChoiceVariant) => options.filter(o => v.values[o.id] === chosen[o.id]).length
+  const kept = (v: ChoiceVariant) => options.filter(o => o.id !== optionId && v.values[o.id] === chosen[o.id]).length
   const best = variants
     .filter(v => !v.reason && v.values[optionId] === valueId)
     .sort((a, b) => kept(b) - kept(a))[0]
 
-  return best ? { ...best.values } : next
+  return best ? { ...best.values } : pickValue(chosen, optionId, valueId)
 }
