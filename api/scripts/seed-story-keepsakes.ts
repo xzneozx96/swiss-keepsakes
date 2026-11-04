@@ -33,7 +33,7 @@ export function planStoryKeepsakeLinks(specs: readonly StoryKeepsakeLinkSpec[], 
       continue
     }
     const linked = new Set(found.links.map(link => link.productId))
-    let next = Math.max(0, ...found.links.map(link => link.position)) + 1
+    const taken = new Set(found.links.map(link => link.position))
     for (const code of spec.keepsakes) {
       const productId = snapshot.products.get(code)
       if (!productId) {
@@ -42,13 +42,16 @@ export function planStoryKeepsakeLinks(specs: readonly StoryKeepsakeLinkSpec[], 
       }
       if (linked.has(productId))
         continue
-      if (next > maxLinks) {
+      // The cap counts the links; the position is the one after the last, or the lowest free one when the last is the 6th.
+      if (taken.size >= maxLinks) {
         skipped.push({ story: spec.story, code, reason: `the story has ${maxLinks} links already` })
         continue
       }
-      adds.push({ story: spec.story, code, groupId: found.groupId, productId, position: next })
+      const after = Math.max(0, ...taken) + 1
+      const position = after <= maxLinks ? after : Array.from({ length: maxLinks }, (_, i) => i + 1).find(free => !taken.has(free))!
+      adds.push({ story: spec.story, code, groupId: found.groupId, productId, position })
       linked.add(productId)
-      next += 1
+      taken.add(position)
     }
   }
   return { adds, skipped }
