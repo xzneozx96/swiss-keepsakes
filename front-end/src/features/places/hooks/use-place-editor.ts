@@ -270,7 +270,7 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
         // Next is the red action here, so only the arrow back shows.
         steps: { onPrevious: back },
         secondary: { label: t('places.action.saveDraft'), onPress: saveDraft, isDisabled: busy },
-        primary: isReview ? { label: t('places.action.publish'), onPress: doPublish, isDisabled: busy } : { label: t('places.action.next'), onPress: next },
+        primary: isReview ? { label: t('places.action.publish'), onPress: doPublish, isDisabled: busy } : { label: t('places.action.next'), onPress: next, isDisabled: busy },
       }
     : {
         save: { text: status.status, tone: status.tone },

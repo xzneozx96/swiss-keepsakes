@@ -17,7 +17,7 @@ The cases are grouped by PR, in this merge order. Test and merge in this order. 
 | 4 | E6.6 pickup points (migrations 0022 and 0025) | S8-PICKUP-01 to 18 |
 | 5 | E8.7 analytics events and the map card tip fix (migration 0023) | S8-EVENTS-01 to 07, S8-MAP-01 |
 | 6 | E4.3 story editor | S8-STORY-01 to 28 |
-| 7 | UI consistency and story fixes (list headers, story Write layout, story header notice, members table) | S8-UI-01, S8-UI-02, S8-UI-03, S8-STORY-FIX-01 |
+| 7 | UI consistency and story fixes (list headers, story Write layout, story header notice) | S8-UI-01, S8-UI-02, S8-STORY-FIX-01 |
 
 S8-FIX (the one-variant fix) is already on main (PR #95, commit 8b936dbc). The E6.3 stock cases in PR 2 depend on it, so run S8-FIX first on any build.
 
@@ -129,7 +129,6 @@ Events go to PostHog EU. Nothing is sent unless you switch it on.
 | S8-STORY-28 | The cover picker waits for a new photo to finish processing | E4.3 / AC30 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-UI-01 | Merchant list screens share one header and toolbar | UI consistency, owner feedback 2026-11-03 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-UI-02 | Story Write screen: two columns, Short summary field, growing text boxes | E4.3 / AC30 (owner feedback 2026-11-03) | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
-| S8-UI-03 | Settings, Members is one table with an Invite sheet | E2.4 / AC02 (owner feedback 2026-11-04) | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-UI-04 | Every merchant editor has the same header, and no floating save bar | UI consistency, owner 04.11.2026 option A | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-UI-05 | The editor header stays under the store notice while the page scrolls | Owner 04.11.2026 option A (replaces the note under S8-STORY-FIX-01) | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-UI-06 | On a phone the editor header's buttons are the laptop size, and a single Delete is an icon | Owner 04.11.2026 option A | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
@@ -1375,30 +1374,6 @@ Merchant UI changes made after the first draft of this file. They are on main, n
 - **Postconditions:** the summary text typed in step 4 is saved (clear it if not wanted).
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
 
-### S8-UI-03 Settings, Members is one table with an Invite sheet
-- **Story / AC:** E2.4 / AC02 (owner feedback 2026-11-04)
-- **Priority:** P1
-- **Role and device:** Owner, desktop 1440 px, then phone 375 px
-- **Preconditions:** a store with its Owner, one Store Manager who accepted, one open invitation and one expired invitation (invite an address and wait until its link expires, or use seeded data). Use test addresses only: an invitation sends a real mail.
-
-| # | Step | Expected result |
-|---|---|---|
-| 1 | Open Settings, Members at 1440 px. | Under the Settings tabs: the line "Store Managers see orders and the catalogue, not the members or the payment account." and the red button "Invite a Store Manager" at the end. Below it, one table with the columns Member, Role, Status, Member since and Actions, like the Pickup points table. No "Who belongs to the store" or "Invitations" headings. |
-| 2 | Read the rows. | The Owner: "Owner", "● Active" in green, the date joined, and no ⋯ menu. The Manager: "Store Manager", "● Active", the date joined. The open invitation: "Store Manager", "○ Invited" with "Link works until <date>" under it, and "–" as the member-since. The expired one: "● Expired" in amber with "Expired on <date>". |
-| 3 | Open the Manager's ⋯ menu, then an invitation's menu. | The Manager's menu has only "Remove", in red. An invitation's menu has "Send again" and "Revoke", Revoke in red. |
-| 4 | Press "Send again" on the expired invitation. | The toast says the invitation was sent again; the row turns to "Invited" with a new date. |
-| 5 | Press "Revoke" on the open invitation, then "Cancel"; press it again and confirm with "Withdraw invitation". | Cancel changes nothing. After confirming, the toast says it was revoked and the row leaves the table. |
-| 6 | Press "Invite a Store Manager". | A dialog "Invite a Store Manager" opens with the Email address field, the mail language (English, Deutsch) and the buttons "Cancel" and "Send invitation" at their normal width. |
-| 7 | Enter "nobody" and press "Send invitation". | "Enter a valid email address." under the field; nothing is sent. |
-| 8 | Enter the Manager's own email and send. | "This person already belongs to the store." under the field; the dialog stays open with the address. |
-| 9 | Enter a new test address, choose Deutsch and send. | The dialog closes, the toast says the invitation was sent, and the address shows as a new "Invited" row. The mail arrives in German. |
-| 10 | Switch to German. | Headers Mitglied, Rolle, Status, Mitglied seit, Aktionen; statuses Aktiv, Eingeladen, Abgelaufen; the button "Shop-Manager einladen". |
-| 11 | Narrow to 375 px. | The table becomes one card per row: the email, the role, the status with its line, "Member since <date>" for members, and the ⋯ menu (none on the Owner). The button is full width under the line. Nothing scrolls sideways. |
-| 12 | Sign in as the Store Manager and open Settings. | No Members tab, so no table and no invite button. |
-
-- **Postconditions:** one revoked invitation, one new open invitation.
-- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
-
 ### S8-STORY-FIX-01 Story editor header does not cover the store notice
 - **Story / AC:** E4.3 / owner fix 2026-11-03
 - **Priority:** P1
@@ -1416,7 +1391,7 @@ Merchant UI changes made after the first draft of this file. They are on main, n
 - **Postconditions:** none.
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
 
-- **Note:** scrolling the page down with the notice shown is a known separate item (the header pins over the sticky notice).
+- **Note:** scrolling the page down with the notice shown is checked by S8-UI-05 (fixed 04.11.2026: the header pins under the notice).
 
 ## Seeded stories and reviews (S8-SEED-STORY)
 
@@ -1451,14 +1426,16 @@ Run these after `pnpm exec tsx --env-file-if-exists=.env.local scripts/seed-cura
 
 | # | Step | Expected result |
 |---|---|---|
-| 1 | Products > Keepsakes, open the published keepsake. | One bar at the top: a back arrow, the name, under it "● Published · Saved hh:mm", then EN / DE with a tick each, the arrows, a red "Review and publish" button and a red-tinted bin button. No white bar floats at the bottom. |
+| 1 | Products > Keepsakes, open the published keepsake. | One bar at the top: a back arrow, the name, under it "● Published · Saved hh:mm", then EN / DE with a tick each, a → arrow (step 1 has no ← arrow), a red "Review and publish" button and a red-tinted bin button. No white bar floats at the bottom. |
 | 2 | Point at the bin button. | A tooltip says "Delete keepsake". |
 | 3 | Press the bin button, then Cancel. | The delete (or archive) question opens; Cancel closes it and nothing changes. |
 | 4 | Press "Review and publish". | The Review and publish step opens; the red button leaves the header, and the line says what the checks say (for example "Ready to publish"). |
 | 5 | Content > Stories, open the draft story. | The same bar: the story's name, "● English · Draft · Saved hh:mm", EN / DE, "Review and publish" and the bin button ("Delete story"). |
-| 6 | Content > Places, open the published place. | The same bar: the name, "● Published · No changes", the arrows, a red "Save changes" that is greyed out, and the bin button ("Delete place"). |
-| 7 | Type one letter in the place's title. | The line says "Unsaved changes" and "Save changes" can be pressed. Undo the letter (leave without saving). |
-| 8 | Products > Keepsakes > Create. | The bar says "Not saved yet" with the red "Next"; no bin button. |
+| 6 | Content > Places, open the published place. | The same bar: the name, "● Published · No changes", a → arrow, a red "Save changes" that is greyed out, and the bin button ("Delete place"). |
+| 7 | Press the → arrow. | Step 2 "Text and photo" opens; the bar now has ← and → arrows. |
+| 8 | Type one letter at the end of "Title in English". | The line says "Unsaved changes" and "Save changes" can be pressed. |
+| 9 | Delete the letter again, then press the back arrow at the far left of the bar. | The Places list opens; nothing was saved. |
+| 10 | Products > Keepsakes > Create. | The bar says "Not saved yet" with the red "Next"; no bin button. |
 
 - **Postconditions:** none (nothing was saved).
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
@@ -1490,7 +1467,7 @@ Run these after `pnpm exec tsx --env-file-if-exists=.env.local scripts/seed-cura
 |---|---|---|
 | 1 | Open the keepsake at 375 px. | The bar shows the back arrow, the name with its line, a red "Review" button and the bin button. The EN / DE switch sits under the bar with "English · Complete". |
 | 2 | Compare the red button's height with the laptop's at 1280 px. | Both are the same height (36 px); the bin button is the same size at both widths. |
-| 3 | At 375 px, use the arrows next to "Step 1 of 3 · Details". | The next step opens. |
+| 3 | At 375 px, press the → arrow next to "Step 1 of 3 · Details". | Step 2 "Options and variants" opens. |
 
 - **Postconditions:** none.
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
