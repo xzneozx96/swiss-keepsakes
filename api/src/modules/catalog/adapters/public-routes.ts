@@ -6,11 +6,15 @@ import type { Result } from '../application/failure.ts'
 import type { PublicKeepsake, PublicKeepsakeAvailability, PublicKeepsakeList, PublicPickupPoints } from '../application/public-keepsakes.ts'
 import { createRoute, z } from '@hono/zod-openapi'
 import { publicKeepsakeAvailabilitySchema, publicKeepsakeListSchema, publicKeepsakeSchema, publicLanguageSchema, publicPickupPointsSchema } from '@sk/api-contract'
+import { conditionalJson } from '../../../platform/http/conditional-json.ts'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { failureProblem } from './problems.ts'
-import { availabilityCacheControl, conditionalJson, textCacheControl } from './public-cache.ts'
 import { json } from './route-parts.ts'
+
+// The text reads are cached for 30 s; the availability read for 5 s only, so a sell-out shows soon (ADR-006).
+const textCacheControl = 'max-age=30'
+const availabilityCacheControl = 'max-age=5'
 
 // What the public keepsake routes call. They take no actor and no store: published keepsakes are public and one list
 // covers all stores.

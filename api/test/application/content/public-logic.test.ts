@@ -1,6 +1,5 @@
 import type { PinDate } from '@sk/domain/content'
 import { describe, expect, it, vi } from 'vitest'
-import { pickLanguage } from '../../../src/modules/content/application/language.ts'
 import { hasEnded, nextDate, withParents } from '../../../src/modules/content/application/pin-dates.ts'
 import { createTtlCache } from '../../../src/modules/content/application/ttl-cache.ts'
 import { createManualClock } from '../../support/manual-clock.ts'
@@ -8,14 +7,6 @@ import { createManualClock } from '../../support/manual-clock.ts'
 function date(over: Partial<PinDate>): PinDate {
   return { id: 'd', firstDay: '2090-11-14', lastDay: '2090-11-14', startTime: null, endTime: null, ...over }
 }
-
-describe('[E2.12][AC64] pickLanguage', () => {
-  it('falls back to the other language, prefers the requested one, and returns null when none', () => {
-    expect(pickLanguage(['en'], 'de')).toEqual({ language: 'en', fallback: true })
-    expect(pickLanguage(['en', 'de'], 'de')).toEqual({ language: 'de', fallback: false })
-    expect(pickLanguage([], 'de')).toBeNull()
-  })
-})
 
 describe('[E2.12][AC86] hasEnded and nextDate in Europe/Zurich', () => {
   const evening = date({ id: 'e', startTime: '19:30', endTime: '21:00' })

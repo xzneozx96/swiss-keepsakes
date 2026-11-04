@@ -1,7 +1,7 @@
-import type { ContentLanguage } from '@sk/domain/content'
+import type { ContentLanguage, LanguageNotice } from '@sk/domain/content'
 import type { Localized, LocalizedDoc, MediaDirectory, MediaInfo, PickupPlaceRepository, ProductOption, StockLevel, StockLevels, UnitOfWork } from '../ports.ts'
 import type { Result } from './failure.ts'
-import { descriptionLanguages, languagesOf } from '@sk/domain/content'
+import { descriptionLanguages, languageNotice, languagesOf } from '@sk/domain/content'
 import { fail, ok } from './failure.ts'
 
 // The public reads of keepsakes (E6.4). They take no actor and no store: a published keepsake is public and one list
@@ -50,13 +50,6 @@ export interface PublicPickupDeps<T> extends PublicKeepsakeDeps<T> {
   pickups: Pick<PickupPlaceRepository<T>, 'list'>
 }
 
-interface LanguageNotice {
-  language: ContentLanguage
-  requestedLanguage: ContentLanguage
-  fallback: boolean
-  availableLanguages: ContentLanguage[]
-}
-
 export interface PublicKeepsakePhoto { url: string, variants: { width: number, url: string }[] }
 
 export interface PublicKeepsakeCard extends LanguageNotice {
@@ -102,13 +95,8 @@ function languagesOfRow(row: PublicKeepsakeSummary): ContentLanguage[] {
   return (['en', 'de'] as const).filter(language => named.includes(language) && written.includes(language) && !!row.slug[language])
 }
 
-// Copied from the content module (ADR-013, modules do not import each other): the requested language when the keepsake
-// has it, else the other one, else nothing to show.
-function notice(row: PublicKeepsakeSummary, requested: ContentLanguage): LanguageNotice | null {
-  const available = languagesOfRow(row)
-  const language = available.includes(requested) ? requested : available.find(l => l !== requested)
-  return language ? { language, requestedLanguage: requested, fallback: language !== requested, availableLanguages: available } : null
-}
+// The requested language when the keepsake has it, else the other one, else nothing to show.
+const notice = (row: PublicKeepsakeSummary, requested: ContentLanguage): LanguageNotice | null => languageNotice(languagesOfRow(row), requested)
 
 const unitsOf = (level: StockLevel | undefined) => Math.max(0, level ? level.onHand - level.reserved : 0)
 
