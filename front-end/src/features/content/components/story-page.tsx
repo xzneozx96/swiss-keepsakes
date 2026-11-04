@@ -10,11 +10,14 @@ import { useScrolledPast } from '@/hooks/use-scrolled-past'
 import { contentsOf } from '../lib/story-body'
 import { ArticleContents } from './article-contents'
 import { StoryBody } from './story-body'
+import { StoryKeepsakes } from './story-keepsakes'
+import { StoryPlaces } from './story-places'
+import { StoryRelated } from './story-related'
 
 // Language names stay in their own language, so they are not dictionary keys (as in the language sheet).
 const NAMES = { en: 'English', de: 'Deutsch' } as const
 
-type Story = Omit<PublicStory, 'related' | 'keepsakes'>
+type Story = PublicStory
 
 /** The cover as the page's banner: every copy offered, the largest as the fallback address. */
 function coverImage(cover: Story['cover']) {
@@ -30,7 +33,7 @@ function coverImage(cover: Story['cover']) {
 /**
  * C20 Story (spec §4.11, ADR-001): the cover with the title, the author, the date and reading time, a contents bar from the H2
  * headings, the body drawn from the story document, and a link to the other language's version. The server renders all of
- * it. Places, related stories and keepsake cards come with T-E4.4d; comments with E5.3.
+ * it. Under the body: the places it tags, its keepsake cards and related stories (each block is left out when empty); comments come with E5.3.
  */
 export function StoryPage({ story, onBack }: { story: Story, onBack: () => void }) {
   const { t, intlLocale } = useLocale()
@@ -107,6 +110,10 @@ export function StoryPage({ story, onBack }: { story: Story, onBack: () => void 
             <StoryBody body={story.body} language={story.language} places={story.places} />
           </div>
         </div>
+
+        <StoryPlaces language={story.language} places={story.places} />
+        <StoryKeepsakes keepsakes={story.keepsakes} language={story.language} />
+        <StoryRelated stories={story.related} />
       </div>
     </div>
   )
