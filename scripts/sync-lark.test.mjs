@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   BLOCKED_PATTERN, classifyDeletes, diffEpicOptions, diffMoves, diffSections, fingerprint, initialStatus, moveArgs, moveTasks, needsPatch, parseArgs,
-  parsePlan, readCurrentSections, readIds, sectionName, select, syncMoves, syncTasks,
+  parsePlan, readCurrentSections, readIds, sectionName, select, syncMoves, syncTasks, title, describe,
 } from "../docs/development-plan/sync-lark.mjs";
 
 const plans = join(dirname(fileURLToPath(import.meta.url)), "..", "docs", "development-plan");
@@ -404,4 +404,10 @@ test("syncMoves prints moves: 0 and writes nothing when every task is in its spr
   assert.deepEqual(calls, []);
   assert.deepEqual(lines, ["moves: 0"]);
   assert.deepEqual(result, { moved: 0, failed: [] });
+});
+
+test("title and describe send no angle brackets, which blank the task in the Lark app (E4.7)", () => {
+  const story = { id: "E4.7", story: "Pin card with the deep link `/$lang/map?place=<slug>`.", side: "FE", depends: "", acceptance: "A <b> tag", adrs: "" };
+  for (const text of [title(story), describe(story)]) assert.doesNotMatch(text, /[<>]/);
+  assert.match(title(story), /place=\{slug\}/);
 });

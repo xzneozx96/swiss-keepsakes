@@ -405,8 +405,12 @@ function deleteRetired(plan, state, ids, force) {
   return new Set(remove.map((t) => t.guid));
 }
 
+// The Lark app shows a task with a "<...>" in its title or description as blank, so placeholders such as
+// <slug> go out as {slug} and any other angle bracket as a guillemet. The plan keeps its own text.
+export const larkSafe = (text) => text.replace(/<([^<>\n]*)>/g, "{$1}").replace(/</g, "‹").replace(/>/g, "›");
+
 export function describe(story) {
-  return [
+  return larkSafe([
     story.story,
     "",
     `Side: ${story.side}`,
@@ -416,12 +420,12 @@ export function describe(story) {
     story.acceptance,
     "",
     "Source: docs/development-plan/delivery-plan.md",
-  ].join("\n");
+  ].join("\n"));
 }
 
 export function title(story) {
   const short = story.story.length > 120 ? `${story.story.slice(0, 117)}...` : story.story;
-  return `${story.id} ${short}`;
+  return larkSafe(`${story.id} ${short}`);
 }
 
 export const select = (state, field, option) => {
