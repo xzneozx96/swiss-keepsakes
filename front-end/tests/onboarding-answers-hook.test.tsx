@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { renderToString } from 'react-dom/server'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { useOnboardingAnswers } from '@/features/content/hooks/use-onboarding-answers'
+import { useOnboardingAnswers } from '@/features/onboarding/hooks/use-onboarding-answers'
 import { forgetAnswers, resetAnswersStoreForTests, saveAnswers } from '@/features/onboarding/lib/answers-store'
 
 beforeEach(() => {

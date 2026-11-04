@@ -16,7 +16,7 @@ import { storyCard } from './support/story-cards'
 
 const answers = vi.hoisted(() => ({ value: { stay: null, interests: [] } as { stay: 'short_stay' | 'multi_day' | null, interests: string[] } }))
 
-vi.mock('@/features/content/hooks/use-onboarding-answers', () => ({ useOnboardingAnswers: () => answers.value }))
+vi.mock('@/features/onboarding/hooks/use-onboarding-answers', () => ({ useOnboardingAnswers: () => answers.value }))
 
 type Props = Parameters<typeof StoriesPage>[0]
 

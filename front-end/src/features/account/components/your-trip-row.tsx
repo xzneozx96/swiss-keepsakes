@@ -2,7 +2,7 @@ import type { InterestCode } from '@sk/domain/content'
 
 import { ExploreIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { useOnboardingAnswers } from '@/features/content/hooks/use-onboarding-answers'
+import { useOnboardingAnswers } from '@/features/onboarding/hooks/use-onboarding-answers'
 import { useOnboardingAudience } from '@/features/onboarding/hooks/use-onboarding-audience'
 import { openOnboarding } from '@/features/onboarding/lib/opener'
 import { itemClass, rowClass, RowIcon } from './settings-list'

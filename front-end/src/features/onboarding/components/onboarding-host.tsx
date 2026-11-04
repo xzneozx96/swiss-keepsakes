@@ -1,8 +1,8 @@
 import { useLocation, useRouter } from '@tanstack/react-router'
-import { lazy, Suspense, useEffect, useEffectEvent, useState, useSyncExternalStore } from 'react'
+import { lazy, Suspense, useEffect, useEffectEvent, useState } from 'react'
 
 import { useOnboardingAudience } from '../hooks/use-onboarding-audience'
-import { getRecord, getServerRecord, subscribe } from '../lib/answers-store'
+import { useOnboardingRecord } from '../hooks/use-onboarding-record'
 import { closeOnboarding, markVisitCaptured, openOnboarding, takeReturnFocus, useOnboardingAutoState, useOnboardingRequest } from '../lib/opener'
 import { canOpenOnboarding, flowTrigger } from '../lib/rules'
 import { captureEntry, getVisit } from '../lib/visit'
@@ -26,7 +26,7 @@ export function OnboardingHost() {
   const hash = useLocation({ select: l => l.hash })
   const router = useRouter()
   const audience = useOnboardingAudience()
-  const record = useSyncExternalStore(subscribe, getRecord, getServerRecord)
+  const record = useOnboardingRecord()
   const request = useOnboardingRequest()
   const { autoDone, captured } = useOnboardingAutoState()
 

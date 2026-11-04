@@ -3,7 +3,7 @@ import type { RankPrefs } from '@sk/domain/content'
 
 import { rankByTags } from '@sk/domain/content'
 import { useMemo } from 'react'
-import { useOnboardingAnswers } from '@/features/content/hooks/use-onboarding-answers'
+import { useOnboardingAnswers } from '@/features/onboarding/hooks/use-onboarding-answers'
 
 const changesOrder = ({ stay, interests }: RankPrefs) => Boolean(stay) || (interests?.length ?? 0) > 0
 
