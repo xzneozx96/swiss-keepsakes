@@ -108,8 +108,6 @@ import { Route as GuestAccountOrdersOrderIdRouteImport } from './routes/_guest/a
 import { Route as StoreContentArticlesArticleIdRouteImport } from './routes/store/content/articles/$articleId'
 import { Route as StoreContentPlacesIndexRouteImport } from './routes/store/content/places/index'
 import { Route as StoreContentPlacesPlaceIdRouteImport } from './routes/store/content/places/$placeId'
-import { Route as StoreProductsGiftsProductIdRouteImport } from './routes/store/products/gifts/$productId'
-import { Route as StoreProductsGiftsNewRouteImport } from './routes/store/products/gifts/new'
 import { Route as StoreProductsInventoryIndexRouteImport } from './routes/store/products/inventory/index'
 import { Route as StoreProductsInventorySkuIdRouteImport } from './routes/store/products/inventory/$skuId'
 import { Route as StoreProductsToursIndexRouteImport } from './routes/store/products/tours/index'
@@ -616,17 +614,6 @@ const StoreContentPlacesPlaceIdRoute =
     path: '/content/places/$placeId',
     getParentRoute: () => StoreRoute,
   } as any)
-const StoreProductsGiftsProductIdRoute =
-  StoreProductsGiftsProductIdRouteImport.update({
-    id: '/products/gifts/$productId',
-    path: '/products/gifts/$productId',
-    getParentRoute: () => StoreRoute,
-  } as any)
-const StoreProductsGiftsNewRoute = StoreProductsGiftsNewRouteImport.update({
-  id: '/products/gifts/new',
-  path: '/products/gifts/new',
-  getParentRoute: () => StoreRoute,
-} as any)
 const StoreProductsInventoryIndexRoute =
   StoreProductsInventoryIndexRouteImport.update({
     id: '/products/inventory/',
@@ -763,8 +750,6 @@ export interface FileRoutesByFullPath {
   '/account/orders/$orderId': typeof GuestAccountOrdersOrderIdRoute
   '/store/content/articles/$articleId': typeof StoreContentArticlesArticleIdRoute
   '/store/content/places/$placeId': typeof StoreContentPlacesPlaceIdRoute
-  '/store/products/gifts/$productId': typeof StoreProductsGiftsProductIdRoute
-  '/store/products/gifts/new': typeof StoreProductsGiftsNewRoute
   '/store/products/inventory/$skuId': typeof StoreProductsInventorySkuIdRoute
   '/store/products/tours/$tourId': typeof StoreProductsToursTourIdRoute
   '/store/products/tours/new': typeof StoreProductsToursNewRoute
@@ -868,8 +853,6 @@ export interface FileRoutesByTo {
   '/account/orders/$orderId': typeof GuestAccountOrdersOrderIdRoute
   '/store/content/articles/$articleId': typeof StoreContentArticlesArticleIdRoute
   '/store/content/places/$placeId': typeof StoreContentPlacesPlaceIdRoute
-  '/store/products/gifts/$productId': typeof StoreProductsGiftsProductIdRoute
-  '/store/products/gifts/new': typeof StoreProductsGiftsNewRoute
   '/store/products/inventory/$skuId': typeof StoreProductsInventorySkuIdRoute
   '/store/products/tours/$tourId': typeof StoreProductsToursTourIdRoute
   '/store/products/tours/new': typeof StoreProductsToursNewRoute
@@ -979,8 +962,6 @@ export interface FileRoutesById {
   '/_guest/account_/orders/$orderId': typeof GuestAccountOrdersOrderIdRoute
   '/store/content/articles/$articleId': typeof StoreContentArticlesArticleIdRoute
   '/store/content/places/$placeId': typeof StoreContentPlacesPlaceIdRoute
-  '/store/products/gifts/$productId': typeof StoreProductsGiftsProductIdRoute
-  '/store/products/gifts/new': typeof StoreProductsGiftsNewRoute
   '/store/products/inventory/$skuId': typeof StoreProductsInventorySkuIdRoute
   '/store/products/tours/$tourId': typeof StoreProductsToursTourIdRoute
   '/store/products/tours/new': typeof StoreProductsToursNewRoute
@@ -1090,8 +1071,6 @@ export interface FileRouteTypes {
     | '/account/orders/$orderId'
     | '/store/content/articles/$articleId'
     | '/store/content/places/$placeId'
-    | '/store/products/gifts/$productId'
-    | '/store/products/gifts/new'
     | '/store/products/inventory/$skuId'
     | '/store/products/tours/$tourId'
     | '/store/products/tours/new'
@@ -1195,8 +1174,6 @@ export interface FileRouteTypes {
     | '/account/orders/$orderId'
     | '/store/content/articles/$articleId'
     | '/store/content/places/$placeId'
-    | '/store/products/gifts/$productId'
-    | '/store/products/gifts/new'
     | '/store/products/inventory/$skuId'
     | '/store/products/tours/$tourId'
     | '/store/products/tours/new'
@@ -1305,8 +1282,6 @@ export interface FileRouteTypes {
     | '/_guest/account_/orders/$orderId'
     | '/store/content/articles/$articleId'
     | '/store/content/places/$placeId'
-    | '/store/products/gifts/$productId'
-    | '/store/products/gifts/new'
     | '/store/products/inventory/$skuId'
     | '/store/products/tours/$tourId'
     | '/store/products/tours/new'
@@ -2067,20 +2042,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreContentPlacesPlaceIdRouteImport
       parentRoute: typeof StoreRoute
     }
-    '/store/products/gifts/$productId': {
-      id: '/store/products/gifts/$productId'
-      path: '/products/gifts/$productId'
-      fullPath: '/store/products/gifts/$productId'
-      preLoaderRoute: typeof StoreProductsGiftsProductIdRouteImport
-      parentRoute: typeof StoreRoute
-    }
-    '/store/products/gifts/new': {
-      id: '/store/products/gifts/new'
-      path: '/products/gifts/new'
-      fullPath: '/store/products/gifts/new'
-      preLoaderRoute: typeof StoreProductsGiftsNewRouteImport
-      parentRoute: typeof StoreRoute
-    }
     '/store/products/inventory/': {
       id: '/store/products/inventory/'
       path: '/products/inventory'
@@ -2246,8 +2207,6 @@ interface StoreRouteChildren {
   StoreRequestsIndexRoute: typeof StoreRequestsIndexRoute
   StoreContentArticlesArticleIdRoute: typeof StoreContentArticlesArticleIdRoute
   StoreContentPlacesPlaceIdRoute: typeof StoreContentPlacesPlaceIdRoute
-  StoreProductsGiftsProductIdRoute: typeof StoreProductsGiftsProductIdRoute
-  StoreProductsGiftsNewRoute: typeof StoreProductsGiftsNewRoute
   StoreProductsInventorySkuIdRoute: typeof StoreProductsInventorySkuIdRoute
   StoreProductsToursTourIdRoute: typeof StoreProductsToursTourIdRoute
   StoreProductsToursNewRoute: typeof StoreProductsToursNewRoute
@@ -2283,8 +2242,6 @@ const StoreRouteChildren: StoreRouteChildren = {
   StoreRequestsIndexRoute: StoreRequestsIndexRoute,
   StoreContentArticlesArticleIdRoute: StoreContentArticlesArticleIdRoute,
   StoreContentPlacesPlaceIdRoute: StoreContentPlacesPlaceIdRoute,
-  StoreProductsGiftsProductIdRoute: StoreProductsGiftsProductIdRoute,
-  StoreProductsGiftsNewRoute: StoreProductsGiftsNewRoute,
   StoreProductsInventorySkuIdRoute: StoreProductsInventorySkuIdRoute,
   StoreProductsToursTourIdRoute: StoreProductsToursTourIdRoute,
   StoreProductsToursNewRoute: StoreProductsToursNewRoute,

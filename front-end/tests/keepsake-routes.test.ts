@@ -30,18 +30,11 @@ describe('keepsake editor addresses have no /gifts segment', () => {
     expect((await open(url)).id).toBe(id)
   })
 
-  it('the old /store/products/gifts/<id> address redirects, keeping the search', async () => {
-    const { id, location } = await open('/store/products/gifts/p1?step=review')
+  it('the old /store/products/gifts/... addresses are gone and open neither the editor of that keepsake nor the create flow (owner, 04.11.2026)', async () => {
+    const router = createRouter({ routeTree, history: createMemoryHistory({ initialEntries: ['/store/products/gifts/p1'] }) })
 
-    expect(location.pathname).toBe('/store/products/p1')
-    expect(location.search).toEqual({ step: 'review' })
-    expect(id).toBe('/store/products/$productId')
-  })
-
-  it('the old /store/products/gifts/new address redirects to /store/products/new', async () => {
-    const { id, location } = await open('/store/products/gifts/new')
-
-    expect(location.pathname).toBe('/store/products/new')
-    expect(id).toBe('/store/products/new')
+    await router.load()
+    expect(router.state.matches.some(m => (m.params as { productId?: string }).productId === 'p1')).toBe(false)
+    expect((await open('/store/products/gifts/new')).id).not.toBe('/store/products/new')
   })
 })
