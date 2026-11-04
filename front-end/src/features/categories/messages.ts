@@ -93,6 +93,9 @@ export const categoriesEn = {
   'categories.home.off': 'Not on the home',
   'categories.col.home': 'Home',
   // Map category icons (T-E4.13a): group names, then one screen-reader name per key
+  'categories.icon.label': 'Icon',
+  'categories.icon.none': 'None',
+  'categories.icon.hint': 'A place with no photo shows the icon of its first category that has one. A sub-category with no icon takes its category’s icon.',
   'categories.iconGroup.essentials': 'Essentials',
   'categories.iconGroup.transport': 'Transport',
   'categories.iconGroup.food-and-drink': 'Food and drink',

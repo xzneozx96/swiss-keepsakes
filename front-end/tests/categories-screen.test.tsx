@@ -1,4 +1,5 @@
 import { merchantCategoryListSchema, merchantCategorySchema, problemSchema } from '@sk/api-contract'
+import { categoryIconGroups } from '@sk/domain/content'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -6,8 +7,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
 
 import { CategoriesScreen } from '@/features/categories/components/categories-screen'
+import { categoryIconGroupLabelKey, categoryIconKeys, iconLabelKey } from '@/features/categories/lib/category-icons'
 import { DataClientProvider } from '@/features/data-client'
 import { startDemo } from '@/features/demo/data-client'
+import { de } from '@/i18n/de'
+import { en } from '@/i18n/en'
 import { expectListChrome } from './list-screens-helper'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
@@ -181,6 +185,21 @@ describe('[E4.18][AC87] the category editor in German', () => {
     expect(await screen.findByText('Diese Kategorie wird noch von Pins oder Geschichten verwendet. Entfernen Sie dort zuerst die Zuordnung.')).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/\bcategories\.[a-z]/i)
   })
+
+  it('[E4.13][AC95] the German picker names every icon and group in German', async () => {
+    renderScreen()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Hinzufügen' }))
+    const dialog = await screen.findByRole('dialog')
+    const groups = within(dialog).getAllByRole('radiogroup')
+
+    expect(within(dialog).getByRole('radio', { name: 'Keines' })).toBeChecked()
+    categoryIconGroups.forEach((group, index) => {
+      expect(groups[index + 1]).toHaveAccessibleName(de[categoryIconGroupLabelKey(group.key)])
+      within(groups[index + 1]).getAllByRole('radio').forEach((radio, i) => expect(radio).toHaveAccessibleName(de[iconLabelKey(group.icons[i])]))
+    })
+    expect(within(dialog).getByRole('radio', { name: 'Trinkwasser' })).toBeInTheDocument()
+  })
 })
 
 describe('[E4.18][AC87] the category editor in English', () => {
@@ -296,10 +315,10 @@ describe('[E4.18][AC87] the category editor in English', () => {
     expect(writes('PATCH')[0].body).toEqual({ name: { en: 'Dining', de: 'Essen' } })
   })
 
-  it('[T-011] shows "On the home" as quiet text on a map category and no icon before the name; the blog tab shows neither', async () => {
+  it('[E4.13][AC95] shows the icon before the name and "On the home" as quiet text on a map category; a category without an icon shows none; the blog tab shows neither', async () => {
     lists.map = [
       category(walks, { name: { en: 'Free essentials', de: null } }),
-      category(hill, { name: { en: 'Toilets', de: 'Toiletten' }, showOnHome: true }),
+      category(hill, { name: { en: 'Toilets', de: 'Toiletten' }, icon: 'toilet', showOnHome: true }),
       category(food, { name: { en: 'Food', de: 'Essen' }, position: 2 }),
     ]
     renderScreen()
@@ -308,57 +327,130 @@ describe('[E4.18][AC87] the category editor in English', () => {
     const toilets = rowOf('Toilets')
 
     expect(within(toilets).getByText('On the home')).toHaveClass('text-muted')
-    expect(toilets.querySelector('svg.text-muted')).toBeNull()
+    expect(toilets.querySelector('svg.text-muted')).not.toBeNull()
     expect(within(rowOf('Food')).queryByText('On the home')).toBeNull()
     expect(rowOf('Food').querySelector('svg.text-muted')).toBeNull()
-    expect(within(rowOf('Free essentials')).queryByText('On the home')).toBeNull()
+    expect(rowOf('Free essentials').querySelector('svg.text-muted')).toBeNull()
     expect(screen.queryByRole('columnheader', { name: 'Home' })).toBeNull()
   })
 
-  it('[T-011] the sheet has a Show on the home switch and no icon picker, and saves only what changed', async () => {
+  it('[E4.13][AC95] the sheet shows None first, then every icon of the shared list once in its labelled group', async () => {
+    lists.map = [category(food, { name: { en: 'Toilets', de: 'Toiletten' } })]
+    renderScreen()
+
+    await openMenu('Toilets', 'Edit')
+    const dialog = await screen.findByRole('dialog')
+    const none = within(dialog).getByRole('radio', { name: 'None' })
+
+    expect(none).toBeChecked()
+    const groups = within(dialog).getAllByRole('radiogroup')
+    const all = within(dialog).getAllByRole('radio')
+
+    expect(groups).toHaveLength(categoryIconGroups.length + 1)
+    expect(all[0]).toBe(none)
+    expect(all).toHaveLength(categoryIconKeys.length + 1)
+    expect(new Set(all.map(radio => (radio as HTMLInputElement).value)).size).toBe(all.length)
+    categoryIconGroups.forEach((group, index) => {
+      const radios = within(groups[index + 1]).getAllByRole('radio')
+
+      expect(groups[index + 1]).toHaveAccessibleName(en[categoryIconGroupLabelKey(group.key)])
+      expect(radios.map(radio => (radio as HTMLInputElement).value)).toEqual([...group.icons])
+      radios.forEach((radio, i) => expect(radio).toHaveAccessibleName(en[iconLabelKey(group.icons[i])]))
+    })
+    expect(within(dialog).getByRole('switch', { name: /Show on the home/ })).not.toBeChecked()
+  })
+
+  it('[E4.13][AC95] choosing an icon saves it with the changed switch, and the table shows it before the name', async () => {
     lists.map = [category(food, { name: { en: 'Toilets', de: 'Toiletten' } })]
     renderScreen()
 
     await openMenu('Toilets', 'Edit')
     const dialog = await screen.findByRole('dialog')
 
-    expect(within(dialog).queryByRole('radiogroup')).toBeNull()
-    expect(within(dialog).queryByText('Icon')).toBeNull()
-    const home = within(dialog).getByRole('switch', { name: /Show on the home/ })
-
-    expect(home).not.toBeChecked()
-    expect(within(dialog).getByText(/Sorted before you unpack/)).toBeInTheDocument()
-    await userEvent.click(home)
+    await userEvent.click(within(dialog).getByLabelText('Drinking water'))
+    expect(within(dialog).getByLabelText('Drinking water')).toBeChecked()
+    expect(within(dialog).getByLabelText('None')).not.toBeChecked()
+    await userEvent.click(within(dialog).getByRole('switch', { name: /Show on the home/ }))
+    lists.map = [category(food, { name: { en: 'Toilets', de: 'Toiletten' }, icon: 'water', showOnHome: true })]
     await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }))
 
     await waitFor(() => expect(writes('PATCH')).toHaveLength(1))
-    expect(writes('PATCH')[0].body).toEqual({ name: { en: 'Toilets', de: 'Toiletten' }, showOnHome: true })
-  })
+    expect(writes('PATCH')[0].body).toEqual({ name: { en: 'Toilets', de: 'Toiletten' }, icon: 'water', showOnHome: true })
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    await waitFor(() => expect(rowOf('Toilets').querySelector('svg.text-muted')).not.toBeNull())
+  }, 20_000)
 
-  it('[T-011] a saved switch shows in the sheet again, off clears it, and a new category sends it without an icon', async () => {
-    lists.map = [category(food, { name: { en: 'Toilets', de: 'Toiletten' }, showOnHome: true })]
+  it('[E4.13][AC95] a saved icon is checked in the sheet again, None clears it with null, and a new category sends its icon', async () => {
+    lists.map = [category(food, { name: { en: 'Toilets', de: 'Toiletten' }, icon: 'toilet', showOnHome: true })]
     renderScreen()
 
     await openMenu('Toilets', 'Edit')
     let dialog = await screen.findByRole('dialog')
 
-    expect(within(dialog).getByRole('switch', { name: /Show on the home/ })).toBeChecked()
-    await userEvent.click(within(dialog).getByRole('switch', { name: /Show on the home/ }))
+    expect(within(dialog).getByLabelText('Toilets')).toBeChecked()
+    await userEvent.click(within(dialog).getByLabelText('None'))
     await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(writes('PATCH')).toHaveLength(1))
-    expect(writes('PATCH')[0].body).toEqual({ name: { en: 'Toilets', de: 'Toiletten' }, showOnHome: false })
+    expect(writes('PATCH')[0].body).toEqual({ name: { en: 'Toilets', de: 'Toiletten' }, icon: null })
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
 
     await userEvent.click(screen.getByRole('button', { name: 'Add' }))
     dialog = await screen.findByRole('dialog')
     await userEvent.type(within(dialog).getByLabelText('English name'), 'Bakeries')
-    await userEvent.click(within(dialog).getByRole('switch', { name: /Show on the home/ }))
+    await userEvent.click(within(dialog).getByLabelText('Café'))
     await userEvent.click(within(dialog).getByRole('button', { name: 'Add category' }))
     await waitFor(() => expect(writes('POST')).toHaveLength(1))
-    expect(writes('POST')[0].body).toEqual({ name: { en: 'Bakeries' }, showOnHome: true })
+    expect(writes('POST')[0].body).toEqual({ name: { en: 'Bakeries' }, icon: 'cafe' })
+  }, 20_000)
+
+  it('[E4.13][AC95] arrow keys move within a group and Tab leaves it for the next group', async () => {
+    lists.map = [category(food, { name: { en: 'Toilets', de: 'Toiletten' } })]
+    renderScreen()
+
+    await openMenu('Toilets', 'Edit')
+    const dialog = await screen.findByRole('dialog')
+    const [first, second] = categoryIconGroups[0].icons
+
+    await userEvent.click(within(dialog).getByLabelText(en[iconLabelKey(first)]))
+    await userEvent.keyboard('{ArrowRight}')
+    expect(within(dialog).getByLabelText(en[iconLabelKey(second)])).toBeChecked()
+    await userEvent.keyboard('{ArrowLeft}')
+    expect(within(dialog).getByLabelText(en[iconLabelKey(first)])).toBeChecked()
+    await userEvent.tab()
+    const next = categoryIconGroups[1].icons[0]
+
+    expect(within(dialog).getByLabelText(en[iconLabelKey(next)])).toHaveFocus()
+  }, 20_000)
+
+  it('[E4.13][AC95] a failed save keeps the sheet open with the chosen icon and says why', async () => {
+    lists.map = [category(food, { name: { en: 'Toilets', de: 'Toiletten' } })]
+    answer = call => call.method === 'PATCH' ? problem(500, 'internal') : undefined
+    renderScreen()
+
+    await openMenu('Toilets', 'Edit')
+    const dialog = await screen.findByRole('dialog')
+
+    await userEvent.click(within(dialog).getByLabelText('Drinking water'))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }))
+
+    expect(await within(dialog).findByRole('alert')).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(within(dialog).getByLabelText('Drinking water')).toBeChecked()
+  }, 20_000)
+
+  it('[E4.13][AC95] a touch target and a wrapping grid: each icon choice is at least 44 px and the grid wraps', async () => {
+    lists.map = [category(food, { name: { en: 'Toilets', de: 'Toiletten' } })]
+    renderScreen()
+
+    await openMenu('Toilets', 'Edit')
+    const dialog = await screen.findByRole('dialog')
+    const radio = within(dialog).getByRole('radio', { name: 'Drinking water' })
+
+    expect(radio.closest('[data-slot="radio"]')).toHaveClass('size-11')
+    expect(radio.closest('[data-slot="radio"]')!.parentElement).toHaveClass('flex-wrap')
   })
 
-  it('[T-009b][AC5] the blog sheet has no icon and no home switch', async () => {
+  it('[E4.13][AC95] the blog sheet has no icon picker and no home switch', async () => {
     lists.blog = [category(walks, { name: { en: 'Tips', de: 'Tipps' } })]
     renderScreen()
 
@@ -678,6 +770,22 @@ describe('[E4.18][AC87] the category editor on a phone in German', () => {
     await userEvent.type(search, 'zzz')
     expect(screen.getByText('Keine Kategorie heißt „zzz“.')).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/\bcategories\.[a-z]/i)
+  })
+
+  it('[E4.13][AC95] the list and the page show the icon before the name, and none for a category without one', async () => {
+    lists.map = [
+      category(walks, { name: { en: 'Walks', de: 'Wanderungen' }, icon: 'hiking', position: 1 }),
+      category(food, { name: { en: 'Food', de: 'Essen' }, position: 2 }),
+    ]
+    renderScreen()
+
+    const beforeName = (name: string) => screen.getByText(name).previousElementSibling
+
+    await screen.findByText('Walks')
+    expect(beforeName('Walks')?.tagName).toBe('svg')
+    expect(beforeName('Food')).toBeNull()
+    await userEvent.click(screen.getByText('Walks'))
+    expect((await screen.findByRole('heading', { name: 'Walks' })).querySelector('svg.text-muted')).not.toBeNull()
   })
 
   it('does not offer Delete while a reorder runs', async () => {

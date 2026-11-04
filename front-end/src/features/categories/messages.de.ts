@@ -94,6 +94,9 @@ export const categoriesDe: Record<keyof typeof categoriesEn, string> = {
   'categories.home.off': 'Nicht auf der Startseite',
   'categories.col.home': 'Startseite',
   // Map category icons (T-E4.13a): group names, then one screen-reader name per key
+  'categories.icon.label': 'Symbol',
+  'categories.icon.none': 'Keines',
+  'categories.icon.hint': 'Ein Ort ohne Foto zeigt das Symbol seiner ersten Kategorie, die eines hat. Eine Unterkategorie ohne Symbol übernimmt das Symbol ihrer Kategorie.',
   'categories.iconGroup.essentials': 'Grundversorgung',
   'categories.iconGroup.transport': 'Verkehr',
   'categories.iconGroup.food-and-drink': 'Essen und Trinken',
