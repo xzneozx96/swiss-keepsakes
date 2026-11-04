@@ -1,4 +1,4 @@
-import type { ContentLanguage, Localized, PinDate, StayTag } from '@sk/domain/content'
+import type { CategoryIcon, ContentLanguage, Localized, PinDate, StayTag } from '@sk/domain/content'
 import type { Clock, UnitOfWork } from './ports.ts'
 
 // What the public reads need. Rows are plain data; the use cases choose the language and shape the response.
@@ -13,8 +13,9 @@ export interface PublicCategoryRow {
   position: number
 }
 
-// A row of the public category list: map categories carry their home switch, blog categories never do.
+// A row of the public category list: map categories carry their icon and home switch, blog categories never do.
 export interface PublicCategoryListRow extends PublicCategoryRow {
+  icon: CategoryIcon | null
   showOnHome: boolean
 }
 

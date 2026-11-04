@@ -309,7 +309,7 @@ export function createPublicReadRepository(): PublicReadRepository<Tx> {
       const result = await tx.execute<{ id: string, slug: string, name: PublicCategoryRow['name'], parent_id: string | null, show_on_home: boolean, position: number }>(sql`
         select id, slug, name, parent_id, ${show} as show_on_home, position from ${table}
          order by parent_id nulls first, position, id`)
-      return result.rows.map(r => ({ id: r.id, slug: r.slug, name: r.name, parentId: r.parent_id, showOnHome: r.show_on_home, position: r.position }))
+      return result.rows.map(r => ({ id: r.id, slug: r.slug, name: r.name, parentId: r.parent_id, icon: null, showOnHome: r.show_on_home, position: r.position }))
     },
 
     listVisiblePins: tx => loadPins(tx, null),

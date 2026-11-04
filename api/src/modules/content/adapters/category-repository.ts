@@ -24,7 +24,7 @@ const tables = {
 const json = (value: unknown) => JSON.stringify(value)
 
 function toRow(row: Row): CategoryRow {
-  return { id: row.id, storeId: row.store_id, name: row.name, slug: row.slug, parentId: row.parent_id, showOnHome: row.show_on_home, position: row.position, childCount: row.child_count, useCount: row.use_count }
+  return { id: row.id, storeId: row.store_id, name: row.name, slug: row.slug, parentId: row.parent_id, icon: null, showOnHome: row.show_on_home, position: row.position, childCount: row.child_count, useCount: row.use_count }
 }
 
 async function select(tx: Tx, storeId: string, kind: CategoryKind, id: string | null): Promise<CategoryRow[]> {

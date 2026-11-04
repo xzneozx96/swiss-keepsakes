@@ -4486,8 +4486,13 @@ export interface components {
             /** Format: uuid */
             parentId: string | null;
         };
-        /** @description A name replaces both languages. A changed parentId appends the category last under the new parent. showOnHome sets the home switch */
+        /** @description A name replaces both languages. A changed parentId appends the category last under the new parent. icon sets or clears the icon, showOnHome sets the home switch */
         CategoryPatchBody: {
+            /**
+             * @description Map categories only; null clears the icon
+             * @enum {string|null}
+             */
+            icon?: "toilet" | "water" | "wifi" | "locker" | "cash" | "bank" | "info" | "emergency" | "pharmacy" | "hospital" | "post" | "transport" | "train" | "boat" | "bicycle" | "scooter" | "car" | "airport" | "fuel" | "parking" | "charging" | "taxi" | "restaurant" | "cafe" | "bar" | "brewery" | "bakery" | "pizza" | "dessert" | "tea" | "market" | "supermarket" | "landmark" | "church" | "castle" | "tower" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "old-town" | "photo-spot" | "art" | "theatre" | "library" | "shop" | "souvenirs" | "watches" | "clothing" | "jewellery" | "books" | "bags" | "mountain" | "park" | "tree" | "lake" | "snow" | "sun" | "hiking" | "cycling" | "swimming" | "campfire" | "event" | "festival" | "concert" | "tickets" | "fair" | "sport" | "wellness" | "family" | "pets" | "holiday" | "hotel" | "laundry" | "tour" | "route" | "walk" | null;
             name?: components["schemas"]["CategoryNameInput"];
             /** Format: uuid */
             parentId?: string | null;
@@ -4496,6 +4501,11 @@ export interface components {
         };
         /** @description A new category, appended last among its siblings. The slug is made from the name and never changes */
         CategoryWriteBody: {
+            /**
+             * @description Map categories only; a blog category with an icon is 422
+             * @enum {string|null}
+             */
+            icon?: "toilet" | "water" | "wifi" | "locker" | "cash" | "bank" | "info" | "emergency" | "pharmacy" | "hospital" | "post" | "transport" | "train" | "boat" | "bicycle" | "scooter" | "car" | "airport" | "fuel" | "parking" | "charging" | "taxi" | "restaurant" | "cafe" | "bar" | "brewery" | "bakery" | "pizza" | "dessert" | "tea" | "market" | "supermarket" | "landmark" | "church" | "castle" | "tower" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "old-town" | "photo-spot" | "art" | "theatre" | "library" | "shop" | "souvenirs" | "watches" | "clothing" | "jewellery" | "books" | "bags" | "mountain" | "park" | "tree" | "lake" | "snow" | "sun" | "hiking" | "cycling" | "swimming" | "campfire" | "event" | "festival" | "concert" | "tickets" | "fair" | "sport" | "wellness" | "family" | "pets" | "holiday" | "hotel" | "laundry" | "tour" | "route" | "walk" | null;
             name: components["schemas"]["CategoryNameInput"];
             /** Format: uuid */
             parentId?: string | null;
@@ -5630,6 +5640,11 @@ export interface components {
         };
         MerchantCategory: {
             childCount: number;
+            /**
+             * @description Always null for a blog category
+             * @enum {string|null}
+             */
+            icon: "toilet" | "water" | "wifi" | "locker" | "cash" | "bank" | "info" | "emergency" | "pharmacy" | "hospital" | "post" | "transport" | "train" | "boat" | "bicycle" | "scooter" | "car" | "airport" | "fuel" | "parking" | "charging" | "taxi" | "restaurant" | "cafe" | "bar" | "brewery" | "bakery" | "pizza" | "dessert" | "tea" | "market" | "supermarket" | "landmark" | "church" | "castle" | "tower" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "old-town" | "photo-spot" | "art" | "theatre" | "library" | "shop" | "souvenirs" | "watches" | "clothing" | "jewellery" | "books" | "bags" | "mountain" | "park" | "tree" | "lake" | "snow" | "sun" | "hiking" | "cycling" | "swimming" | "campfire" | "event" | "festival" | "concert" | "tickets" | "fair" | "sport" | "wellness" | "family" | "pets" | "holiday" | "hotel" | "laundry" | "tour" | "route" | "walk" | null;
             /** Format: uuid */
             id: string;
             name: {
@@ -6315,6 +6330,11 @@ export interface components {
             };
         };
         PublicCategory: {
+            /**
+             * @description The icon of a map category (always null for a blog category)
+             * @enum {string|null}
+             */
+            icon: "toilet" | "water" | "wifi" | "locker" | "cash" | "bank" | "info" | "emergency" | "pharmacy" | "hospital" | "post" | "transport" | "train" | "boat" | "bicycle" | "scooter" | "car" | "airport" | "fuel" | "parking" | "charging" | "taxi" | "restaurant" | "cafe" | "bar" | "brewery" | "bakery" | "pizza" | "dessert" | "tea" | "market" | "supermarket" | "landmark" | "church" | "castle" | "tower" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "old-town" | "photo-spot" | "art" | "theatre" | "library" | "shop" | "souvenirs" | "watches" | "clothing" | "jewellery" | "books" | "bags" | "mountain" | "park" | "tree" | "lake" | "snow" | "sun" | "hiking" | "cycling" | "swimming" | "campfire" | "event" | "festival" | "concert" | "tickets" | "fair" | "sport" | "wellness" | "family" | "pets" | "holiday" | "hotel" | "laundry" | "tour" | "route" | "walk" | null;
             /** Format: uuid */
             id: string;
             name: {

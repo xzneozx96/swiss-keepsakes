@@ -1,4 +1,5 @@
 import {
+  categoryIconSchema,
   categoryKindSchema,
   categoryOrderBodySchema,
   categoryPatchBodySchema,
@@ -7,6 +8,7 @@ import {
   merchantCategorySchema,
   problemTypes,
 } from '@sk/api-contract'
+import { categoryIcons } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
 
 const uuid = '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d'
@@ -60,21 +62,26 @@ describe('[E4.18][AC87] merchant category schemas', () => {
   })
 
   it('a merchant category carries counts and nullable names', () => {
-    const category = { id: uuid, slug: 'walks', name: { en: 'Walks', de: null }, parentId: null, showOnHome: false, position: 1, childCount: 0, useCount: 2 }
+    const category = { id: uuid, slug: 'walks', name: { en: 'Walks', de: null }, parentId: null, icon: null, showOnHome: false, position: 1, childCount: 0, useCount: 2 }
     expect(merchantCategorySchema.parse(category)).toEqual(category)
     expect(merchantCategoryListSchema.parse({ items: [category] }).items).toHaveLength(1)
     expect(merchantCategorySchema.safeParse({ ...category, useCount: undefined }).success).toBe(false)
   })
 
-  it('[T-011][AC4] showOnHome is a boolean on a write, a patch and a response; there is no icon any more', () => {
+  it('[E4.13][AC5] the icon is one of the fixed keys (the domain list, all of them) or null, and showOnHome a boolean, on a write, a patch and a response', () => {
+    expect([...categoryIconSchema.options]).toEqual([...categoryIcons])
+    expect(categoryIcons.length).toBeGreaterThanOrEqual(60)
+    for (const icon of [...categoryIcons, null]) {
+      expect(categoryWriteBodySchema.safeParse({ name: { en: 'Walks' }, icon }).success).toBe(true)
+      expect(categoryPatchBodySchema.safeParse({ icon }).success).toBe(true)
+    }
     expect(categoryPatchBodySchema.safeParse({ showOnHome: true }).success).toBe(true)
     expect(categoryWriteBodySchema.safeParse({ name: { en: 'Walks' }, showOnHome: false }).success).toBe(true)
-    expect(categoryWriteBodySchema.safeParse({ name: { en: 'Walks' }, icon: 'toilet' }).success).toBe(false)
-    expect(categoryPatchBodySchema.safeParse({ icon: null }).success).toBe(false)
-    expect(categoryPatchBodySchema.safeParse({}).success).toBe(false)
+    expect(categoryWriteBodySchema.safeParse({ name: { en: 'Walks' }, icon: 'toilets' }).success).toBe(false)
+    expect(categoryPatchBodySchema.safeParse({ icon: 'bakeries' }).success).toBe(false)
     expect(categoryPatchBodySchema.safeParse({ showOnHome: 'yes' }).success).toBe(false)
     const category = { id: uuid, slug: 'toilets', name: { en: 'Toilets', de: null }, parentId: null, position: 1, childCount: 0, useCount: 0 }
-    expect(merchantCategorySchema.safeParse({ ...category, showOnHome: true }).success).toBe(true)
+    expect(merchantCategorySchema.safeParse({ ...category, icon: 'toilet', showOnHome: true }).success).toBe(true)
     expect(merchantCategorySchema.safeParse(category).success).toBe(false)
   })
 
