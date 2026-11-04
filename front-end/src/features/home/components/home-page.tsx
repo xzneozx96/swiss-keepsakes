@@ -50,7 +50,7 @@ export function HomePage({ read }: { read?: HomeRead }) {
           <HomeHero ref={heroEnd} />
         </div>
         <MapInvitation />
-        <ServiceTiles />
+        <ServiceTiles tiles={read?.tiles} onRetry={retry} />
         <MustVisitsSection pins={read?.pins} onRetry={retry} />
         <RoutesSection tours={read?.tours} onRetry={retry} />
         <FoodMapSection />

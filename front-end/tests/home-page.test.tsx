@@ -15,8 +15,10 @@ import { fetchKeepsakeList } from '@/features/catalog/api/keepsakes'
 import { DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startSeedDemo } from '@/features/demo/data-client'
+import { loadHomeRead } from '@/features/home/api/home-reads'
 import { HomePage } from '@/features/home/components/home-page'
 import { homeHead } from '@/features/home/lib/home-head'
+import { serviceTiles } from '@/features/home/lib/service-tiles'
 import { fetchMapCategories, fetchMapPins } from '@/features/map/api/map-client'
 import { resetAnswersStoreForTests } from '@/features/onboarding/lib/answers-store'
 import { de } from '@/i18n/de'
@@ -24,6 +26,7 @@ import { en } from '@/i18n/en'
 import { Route as HomeRoute } from '@/routes/_guest/$lang/index'
 
 vi.mock('@/lib/api-mode', () => ({ apiEnabled: true }))
+vi.mock('@/features/home/api/home-reads', () => ({ loadHomeRead: vi.fn() }))
 vi.mock('@/features/catalog/api/keepsakes', () => ({ fetchKeepsakeList: vi.fn() }))
 vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: vi.fn(), fetchMapCategories: vi.fn(), fetchMapPin: vi.fn() }))
 
@@ -71,12 +74,21 @@ async function buildRouter(url: string, dataClient?: DataClient) {
       </QueryClientProvider>
     ),
   })
+  // The route's own loader reads the blocks (the real one is `loadHomeRead`, mocked here), so the server HTML carries them.
   const home = createRoute({
     getParentRoute: () => root,
     path: '/$lang',
-    loader: ({ params }) => params.lang === 'de' ? loadDictionary('de') : undefined,
-    component: HomePage,
+    loader: async ({ params }) => {
+      if (params.lang === 'de')
+        await loadDictionary('de')
+
+      return loadHomeRead(params.lang === 'de' ? 'de' : 'en')
+    },
+    component: Page,
   })
+  function Page() {
+    return <HomePage read={home.useLoaderData()} />
+  }
   const others = ['map', 'search', 'plan', 'gifts', 'stories'].map(path => createRoute({ getParentRoute: () => root, path: `/$lang/${path}`, component: () => null }))
   const router = createRouter({ routeTree: root.addChildren([home, ...others]), history: createMemoryHistory({ initialEntries: [url] }) })
   await router.load()
@@ -93,6 +105,7 @@ beforeEach(() => {
   localStorage.clear()
   resetAnswersStoreForTests()
   vi.mocked(fetchKeepsakeList).mockReset().mockResolvedValue({ items: [swan, bridge] })
+  vi.mocked(loadHomeRead).mockReset().mockImplementation(async lang => ({ pins: [pin], tiles: serviceTiles([water], [pin], lang), tours: [] }))
   vi.mocked(fetchMapPins).mockReset().mockResolvedValue([pin])
   vi.mocked(fetchMapCategories).mockReset().mockResolvedValue([water])
 })
@@ -141,10 +154,20 @@ describe('[E4.13][AC24][AC54] the server HTML of the home', () => {
     expect(text).not.toMatch(/review|comment/i)
   })
 
-  it('is whole when the map reads have not come back: the tiles block holds its skeleton, never a blank page', async () => {
+  it('draws the service tiles in the server HTML, from the route loader, so view-source shows them (AC61, follow-up B)', async () => {
     const html = renderToString(<RouterProvider router={await buildRouter('/en')} />)
 
-    expect(html).toContain('data-skeleton="service-tiles"')
+    expect(textOf(html)).toContain('Drinking water')
+    expect(html).toContain('href="/en/map?category=drinking-water"')
+    expect(html).not.toContain('data-skeleton="service-tiles"')
+    expect(loadHomeRead).toHaveBeenCalledWith('en')
+  })
+
+  it('is whole when the loader read nothing: each block holds its error, never a blank page', async () => {
+    vi.mocked(loadHomeRead).mockResolvedValue({ pins: null, tiles: null, tours: null })
+    const html = renderToString(<RouterProvider router={await buildRouter('/en')} />)
+
+    expect(textOf(html)).toContain(en['homePage.services.failed'])
     expect(html).toContain(en['homePage.map.title'])
   })
 
@@ -190,14 +213,12 @@ describe('[E4.13][AC95] the order is the same for every visitor', () => {
 })
 
 describe('[E4.13][AC95] a failed read takes down its own block only', () => {
-  it('shows an error with retry in the tiles block while the hero, the invitation and the ending render (AC-6)', async () => {
-    vi.mocked(fetchMapCategories).mockRejectedValueOnce(new Error('down'))
+  it('shows an error with retry in the tiles block while the hero, the invitation and the ending render, and retry runs the loader again (AC-6)', async () => {
+    vi.mocked(loadHomeRead).mockResolvedValueOnce({ pins: [pin], tiles: null, tours: [] })
     render(<RouterProvider router={await buildRouter('/en')} />)
 
-    // The food map reads the same list, so it shows its own notice beside the tiles'.
     const alert = (await screen.findByText(en['homePage.services.failed'])).closest('[role="alert"]') as HTMLElement
 
-    expect(screen.getByText(en['homePage.food.failed'])).toBeInTheDocument()
     expect(screen.getByText(en['home.heroTitle'])).toBeInTheDocument()
     expect(screen.getByRole('link', { name: en['homePage.map.action'] })).toBeInTheDocument()
     expect(screen.getByText(en['home.victorinox.title'])).toBeInTheDocument()
@@ -206,6 +227,7 @@ describe('[E4.13][AC95] a failed read takes down its own block only', () => {
     await userEvent.click(within(alert).getByRole('button', { name: en['errorNotice.retry'] }))
 
     expect(await screen.findByRole('link', { name: 'Drinking water' })).toBeInTheDocument()
+    expect(loadHomeRead).toHaveBeenCalledTimes(2)
   })
 
   it('shows an error with retry in the showcase block when the keepsake read fails, and the thread and the banner still render (AC-6)', async () => {

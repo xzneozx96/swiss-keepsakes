@@ -1,3 +1,5 @@
+import type { ServiceTile } from '../lib/service-tiles'
+
 import { Skeleton } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 import { useId } from 'react'
@@ -6,8 +8,6 @@ import { ErrorNotice } from '@/components/error-notice'
 import { PickupIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { categoryIconComponents } from '@/features/categories/lib/category-icons'
-import { useMapData } from '@/features/map/api/queries'
-import { serviceTiles } from '../lib/service-tiles'
 import { SectionHeading } from './section-heading'
 
 const TILE = 'flex min-h-[78px] w-full flex-col items-start justify-between gap-2 rounded-2xl bg-surface p-3 text-start shadow-surface'
@@ -32,23 +32,22 @@ function TilesSkeleton() {
 /**
  * "Sorted before you unpack": the map categories with Show on the home on, in the merchant's order, each a tile that opens the map
  * filtered to that category and its sub-categories. A category with no published place has no tile; with no tile the block is
- * not drawn. No count is printed. The read is the guest map's own (one cached list), so a failure here is shown here only.
+ * not drawn. No count is printed. The route loader makes the tiles, so the server HTML carries them and the browser reads
+ * nothing for them: `tiles` is undefined while the loader runs and null when its read failed, which shows here only.
  */
-export function ServiceTiles() {
+export function ServiceTiles({ tiles, onRetry }: { tiles: readonly ServiceTile[] | null | undefined, onRetry: () => void }) {
   const { t, language } = useLocale()
   const headingId = useId()
-  const { categories, pins, isPending, isFailed, retry } = useMapData(language)
-  const tiles = serviceTiles(categories, pins, language)
 
-  if (!isPending && !isFailed && tiles.length === 0)
+  if (tiles && tiles.length === 0)
     return null
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3">
       <SectionHeading body={t('homePage.services.body')} id={headingId} title={t('homePage.services.title')} />
-      {isFailed
-        ? <ErrorNotice compact message={t('homePage.services.failed')} onRetry={retry} />
-        : isPending
+      {tiles === null
+        ? <ErrorNotice compact message={t('homePage.services.failed')} onRetry={onRetry} />
+        : tiles === undefined
           ? <TilesSkeleton />
           : (
               <ul className={GRID}>

@@ -1,6 +1,8 @@
 import type { PublicLanguage, PublicMapItem, PublicTourCard } from '@sk/api-contract'
+import type { ServiceTile } from '../lib/service-tiles'
 
 import { apiOrigin } from '@/features/catalog/api/api-origin'
+import { serviceTiles } from '../lib/service-tiles'
 
 const TIMEOUT_MS = 5000
 
@@ -8,6 +10,8 @@ const TIMEOUT_MS = 5000
 export interface HomeRead {
   /** The pins of the public map list (the postcards pick the must-visit ones). */
   pins: PublicMapItem[] | null
+  /** The service tiles, made from the map categories and the pins; null when either read failed. */
+  tiles: ServiceTile[] | null
   tours: PublicTourCard[] | null
 }
 
@@ -24,19 +28,25 @@ async function read<T>(call: Promise<{ data?: T, response: Response }>): Promise
 
 /**
  * The reads of the home blocks, on the server and in the browser (the server reads the API at its internal address, so the
- * HTML carries the blocks). The blocks read in parallel, and each answer is checked for itself.
+ * HTML carries the blocks). The reads run in parallel, and each answer is checked for itself.
  */
 export async function loadHomeRead(lang: PublicLanguage): Promise<HomeRead> {
   // The contract package carries Zod, so it loads with the first read and not with the first paint.
-  const { createApiClient, publicMapSchema, publicTourListSchema } = await import('@sk/api-contract')
+  const { createApiClient, publicCategoryListSchema, publicMapSchema, publicTourListSchema } = await import('@sk/api-contract')
   const client = createApiClient(apiOrigin())
   const options = () => ({ params: { query: { lang } }, signal: AbortSignal.timeout(TIMEOUT_MS) })
-  const [map, tours] = await Promise.all([
+  const [map, categories, tours] = await Promise.all([
     read(client.GET('/api/public/map', options())),
+    read(client.GET('/api/public/map-categories', options())),
     read(client.GET('/api/public/tours', options())),
   ])
   const pins = publicMapSchema.safeParse(map)
+  const mapCategories = publicCategoryListSchema.safeParse(categories)
   const cards = publicTourListSchema.safeParse(tours)
 
-  return { pins: pins.success ? pins.data.items : null, tours: cards.success ? cards.data.items : null }
+  return {
+    pins: pins.success ? pins.data.items : null,
+    tiles: pins.success && mapCategories.success ? serviceTiles(mapCategories.data.items, pins.data.items, lang) : null,
+    tours: cards.success ? cards.data.items : null,
+  }
 }

@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
 import { DataClientProvider } from '@/features/data-client'
@@ -15,12 +15,11 @@ import { HomeEnding } from '@/features/home/components/home-ending'
 import { HomeHero } from '@/features/home/components/home-hero'
 import { MapInvitation } from '@/features/home/components/map-invitation'
 import { ServiceTiles } from '@/features/home/components/service-tiles'
-import { fetchMapCategories, fetchMapPins } from '@/features/map/api/map-client'
+import { serviceTiles } from '@/features/home/lib/service-tiles'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
 
 vi.mock('@/lib/api-mode', () => ({ apiEnabled: true }))
-vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: vi.fn(), fetchMapCategories: vi.fn(), fetchMapPin: vi.fn() }))
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 
@@ -87,36 +86,13 @@ function renderAt(url: string, element: React.ReactNode) {
   return router
 }
 
-function TilesThenText() {
-  return (
-    <>
-      <ServiceTiles />
-      <p>after</p>
-    </>
-  )
-}
-
-function InvitationAndTiles() {
-  return (
-    <>
-      <MapInvitation />
-      <ServiceTiles />
-    </>
-  )
-}
-
-beforeEach(() => {
-  localStorage.clear()
-  vi.mocked(fetchMapPins).mockReset().mockResolvedValue(pins)
-  vi.mocked(fetchMapCategories).mockReset().mockResolvedValue(categories)
-})
+const tilesFor = (language: 'en' | 'de') => serviceTiles(categories, pins, language)
 
 describe('[E4.13][AC95] the service tiles block', () => {
   it('draws a tile per Show on the home category with a pin, in order, each a link to the map with its category (AC-1)', async () => {
-    renderAt('/en', <ServiceTiles />)
+    renderAt('/en', <ServiceTiles tiles={tilesFor('en')} onRetry={() => {}} />)
 
-    await screen.findByRole('link', { name: 'Drinking water' })
-    const section = screen.getByRole('region', { name: en['homePage.services.title'] })
+    const section = await screen.findByRole('region', { name: en['homePage.services.title'] })
     const links = within(section).getAllByRole('link')
 
     expect(links.map(link => link.textContent)).toEqual(['Drinking water', 'Toilets', 'Luggage lockers'])
@@ -128,15 +104,14 @@ describe('[E4.13][AC95] the service tiles block', () => {
   })
 
   it('prints no count, and no price', async () => {
-    renderAt('/en', <ServiceTiles />)
-    await screen.findByRole('link', { name: 'Drinking water' })
-    const section = screen.getByRole('region', { name: en['homePage.services.title'] })
+    renderAt('/en', <ServiceTiles tiles={tilesFor('en')} onRetry={() => {}} />)
+    const section = await screen.findByRole('region', { name: en['homePage.services.title'] })
 
     expect(section.textContent).not.toMatch(/\d|CHF/)
   })
 
   it('a category named in English only shows the English name with the language tag for a German guest (AC-3)', async () => {
-    renderAt('/de', <ServiceTiles />)
+    renderAt('/de', <ServiceTiles tiles={tilesFor('de')} onRetry={() => {}} />)
 
     const link = await screen.findByRole('link', { name: /Luggage lockers/ })
 
@@ -144,9 +119,8 @@ describe('[E4.13][AC95] the service tiles block', () => {
     expect(screen.getByRole('link', { name: 'Trinkwasser' })).toBeInTheDocument()
   })
 
-  it('shows tile-shaped skeletons while the map reads load, and no heading yet', async () => {
-    vi.mocked(fetchMapCategories).mockReturnValue(new Promise(() => {}))
-    renderAt('/en', <ServiceTiles />)
+  it('shows tile-shaped skeletons while the read is out, and no tile', async () => {
+    renderAt('/en', <ServiceTiles tiles={undefined} onRetry={() => {}} />)
 
     const skeleton = await waitFor(() => {
       const found = document.querySelector('[data-skeleton="service-tiles"]')
@@ -161,20 +135,26 @@ describe('[E4.13][AC95] the service tiles block', () => {
   })
 
   it('draws nothing, not even the heading, when no category has a tile (AC-2)', async () => {
-    vi.mocked(fetchMapPins).mockResolvedValue([])
-
-    renderAt('/en', <TilesThenText />)
+    renderAt('/en', (
+<>
+        <ServiceTiles tiles={[]} onRetry={() => {}} />
+        <p>after</p>
+      </>
+))
     await screen.findByText('after')
-    await waitFor(() => expect(fetchMapCategories).toHaveBeenCalled())
-    await waitFor(() => expect(document.querySelector('[data-skeleton="service-tiles"]')).toBeNull())
 
     expect(document.querySelector('section')).toBeNull()
     expect(screen.queryByText(en['homePage.services.title'])).toBeNull()
   })
 
-  it('a failed read shows an error with retry in the block, the other blocks still render, and retry reads again (AC-6)', async () => {
-    vi.mocked(fetchMapCategories).mockRejectedValueOnce(new Error('down'))
-    renderAt('/en', <InvitationAndTiles />)
+  it('a failed read shows an error with retry in the block, the other blocks still render, and retry asks for the read again (AC-6)', async () => {
+    const retry = vi.fn()
+    renderAt('/en', (
+<>
+        <MapInvitation />
+        <ServiceTiles tiles={null} onRetry={retry} />
+      </>
+))
 
     const alert = await screen.findByRole('alert')
 
@@ -183,8 +163,7 @@ describe('[E4.13][AC95] the service tiles block', () => {
 
     await userEvent.click(within(alert).getByRole('button', { name: en['errorNotice.retry'] }))
 
-    expect(await screen.findByRole('link', { name: 'Drinking water' })).toBeInTheDocument()
-    expect(screen.queryByRole('alert')).toBeNull()
+    expect(retry).toHaveBeenCalledTimes(1)
   })
 })
 

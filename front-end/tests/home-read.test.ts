@@ -4,7 +4,8 @@ import { loadHomeRead } from '@/features/home/api/home-reads'
 import { Route as HomeRoute } from '@/routes/_guest/$lang/index'
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
-const mapItem = { id: id(1), slug: 'bridge', latitude: 47.05, longitude: 8.3, title: 'Chapel Bridge', language: 'en', categoryIds: [], stayTag: 'both', interests: [], nextDate: null, hasMainStory: false, mainStorySlug: null, photoUrl: null, photoVariants: [], mustVisit: true, tip: 'Go at dawn.' }
+const mapItem = { id: id(1), slug: 'bridge', latitude: 47.05, longitude: 8.3, title: 'Chapel Bridge', language: 'en', categoryIds: [id(3)], stayTag: 'both', interests: [], nextDate: null, hasMainStory: false, mainStorySlug: null, photoUrl: null, photoVariants: [], mustVisit: true, tip: 'Go at dawn.' }
+const water = { id: id(3), slug: 'drinking-water', name: { en: 'Drinking water', de: 'Trinkwasser' }, parentId: null, icon: 'water', showOnHome: true, position: 1 }
 const tourCard = { id: id(2), slug: 'pilatus-above-the-city', title: 'Pilatus: Above the City', stayTag: 'multi_day', interests: [], durationMinutes: 390, coverKey: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
 
 afterEach(() => vi.unstubAllGlobals())
@@ -26,12 +27,13 @@ const json = (body: unknown) => () => new Response(JSON.stringify(body), { statu
 
 describe('[E4.13][AC95] the home read', () => {
   it('reads the public map and the published tours in the page language (AC-5, AC-6)', async () => {
-    const calls = answerWith({ '/api/public/map': json({ items: [mapItem] }), '/api/public/tours': json({ items: [tourCard] }) })
+    const calls = answerWith({ '/api/public/map': json({ items: [mapItem] }), '/api/public/map-categories': json({ items: [water] }), '/api/public/tours': json({ items: [tourCard] }) })
     const read = await loadHomeRead('de')
 
     expect(read.pins?.[0]?.title).toBe('Chapel Bridge')
     expect(read.tours?.[0]?.slug).toBe('pilatus-above-the-city')
-    expect(calls.sort()).toEqual(['/api/public/map?lang=de', '/api/public/tours?lang=de'])
+    expect(read.tiles?.map(tile => tile.name)).toEqual(['Trinkwasser'])
+    expect(calls.sort()).toEqual(['/api/public/map-categories?lang=de', '/api/public/map?lang=de', '/api/public/tours?lang=de'])
   })
 
   it('turns a failed read into null for that block only (AC-6)', async () => {
@@ -40,13 +42,15 @@ describe('[E4.13][AC95] the home read', () => {
 
     expect(read.pins).toHaveLength(1)
     expect(read.tours).toBeNull()
+    expect(read.tiles).toBeNull()
   })
 
   it('turns an answer that does not match the contract into null', async () => {
-    answerWith({ '/api/public/map': json({ items: [{ nonsense: true }] }), '/api/public/tours': json({ items: [] }) })
+    answerWith({ '/api/public/map': json({ items: [{ nonsense: true }] }), '/api/public/map-categories': json({ items: [water] }), '/api/public/tours': json({ items: [] }) })
     const read = await loadHomeRead('en')
 
     expect(read.pins).toBeNull()
+    expect(read.tiles).toBeNull()
     expect(read.tours).toEqual([])
   })
 
