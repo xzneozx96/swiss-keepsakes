@@ -1,4 +1,4 @@
-import type { StoryView } from './discovery-home'
+import type { StoryView } from '../lib/home-view'
 import type { ProductCardProps } from '@/features/catalog/components/product-card'
 
 import { buttonVariants } from '@heroui/react'

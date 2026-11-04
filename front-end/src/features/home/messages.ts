@@ -9,4 +9,6 @@ export const homeEn = {
   'homePage.services.failed': 'The first-day tips could not load.',
   'homePage.ending.seeAll': 'Show all designs',
   'homePage.ending.line': 'There’s still more of Lucerne to see first.',
+  'homePage.ending.failed': 'The Victorinox designs could not load.',
+  'homePage.meta.description': 'Your first day in Lucerne, sorted: the places we’d show a friend on the map, the practical things to find, and Victorinox keepsakes from the shop.',
 }
