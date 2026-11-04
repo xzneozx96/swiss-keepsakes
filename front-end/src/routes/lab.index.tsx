@@ -11,8 +11,8 @@ export const Route = createFileRoute('/lab/')({
 const experiments = [
   {
     to: '/lab/editor-header' as const,
-    title: 'One editor header for every merchant editor: three options (for the owner to pick)',
-    note: 'The keepsake header, the story bar and the floating save bar folded into one: A one line, B the name then a pinned white bar, C steps in the header. Keepsake (explicit save), story (autosave, DE incomplete) and place (unsaved changes) at desktop and 375 px (04.11.2026).',
+    title: 'One editor header for every merchant editor (option A), approved',
+    note: 'Option A “One line” chosen 04.11.2026 and built as the shared EditorHeader of the keepsake, story and place editors; B and C were removed. The keepsake (autosave), story (autosave) and place (explicit save) headers, and the ⋯ menu for two or more actions.',
   },
   {
     to: '/lab/keepsake-variant-design' as const,
