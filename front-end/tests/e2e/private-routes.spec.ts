@@ -5,7 +5,7 @@ const PARTNER_PATHS = ['/partner', '/partner/some-token', '/Partner/some-token',
 
 /** A piece of each screen's own text, so the test can see the server did not render the screen. `/partner` shows none. */
 const SCREEN_TEXT: Record<string, string> = {
-  '/store': 'Conversion',
+  '/store': 'Pickup points', // a sidebar label on every store page ('Conversion' left the menu on 04.11.2026)
   '/admin': 'Stores',
   '/partner/some-token': 'Commission report',
   '/lab': 'UI experiments for the prototype',
