@@ -5,6 +5,7 @@ import { type InterestCode, rankItems, type StayTag } from '../src/content'
 interface Item { id: string, stay: StayTag, interests: InterestCode[] }
 
 const item = (id: string, stay: StayTag, ...interests: InterestCode[]): Item => ({ id, stay, interests })
+const frozen = (entry: Item): Item => Object.freeze({ ...entry, interests: Object.freeze([...entry.interests]) as Item['interests'] })
 const ids = (items: readonly Item[]) => items.map(entry => entry.id)
 
 // C is newer than D, so the server list (newest first) holds C before D.
@@ -61,9 +62,9 @@ describe('[E4.4][AC38] rankItems orders by stay, then interests, then input orde
 
   it('keeps the input order for items that tie on every rule, on repeated runs, and leaves the input unchanged', () => {
     const list = Object.freeze([
-      Object.freeze(item('p', 'short_stay')),
-      Object.freeze(item('q', 'both')),
-      Object.freeze(item('r', 'short_stay')),
+      frozen(item('p', 'short_stay')),
+      frozen(item('q', 'both')),
+      frozen(item('r', 'short_stay')),
     ]) as readonly Item[]
     const prefs = { stay: 'short_stay' as const, interests: ['food-drink' as const] }
 
