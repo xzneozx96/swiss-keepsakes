@@ -1,6 +1,6 @@
 import type { SearchSources } from '@/features/search/lib/search'
 import { describe, expect, it } from 'vitest'
-import { fold } from '@/features/search/lib/fold'
+import { fold, foldDigraphs } from '@/features/search/lib/fold'
 import { interestResults, kindFilter, scoreTitle, searchAll, suggestNames } from '@/features/search/lib/search'
 import { keepsakeCard, mapItem, tourCard } from './support/search-fixtures'
 import { storyCard } from './support/story-cards'
@@ -24,6 +24,16 @@ describe('[E4.14][AC54][AC90][AC94] fold: accents, case and sharp s are ignored'
 
     expect(searchAll(s, 'lowen').map(r => [r.kind, r.title])).toEqual([['place', 'Löwendenkmal']])
     expect(searchAll(s, 'CAFE').map(r => [r.kind, r.title])).toEqual([['story', 'Café Heini']])
+  })
+
+  it('ac-1 digraphs: "Loewendenkmal", "Kaefer" and "Mueller" find Löwendenkmal, Käfer and Müller, and "blue" still matches Blue', () => {
+    const s = { ...none, pins: [mapItem({ title: 'Löwendenkmal' }), mapItem({ title: 'Käfer' }), mapItem({ title: 'Müller' }), mapItem({ title: 'Blue lake' })] }
+
+    expect(titles(s, 'Loewendenkmal')).toEqual(['Löwendenkmal'])
+    expect(titles(s, 'kaefer')).toEqual(['Käfer'])
+    expect(titles(s, 'MUELLER')).toEqual(['Müller'])
+    expect(titles(s, 'blue')).toEqual(['Blue lake'])
+    expect(foldDigraphs('Löwen Ärzte Über Straße')).toBe('loewen aerzte ueber strasse')
   })
 
   it('an empty or blank query finds nothing', () => {
@@ -79,6 +89,9 @@ describe('[E4.14][AC54][AC90][AC94] scoreTitle: equal 4, whole-word prefix 3, pr
     ['Old town lake walk', 'lake', 1],
     ['Old town lakeside', 'lake', 1],
     ['Blake', 'lake', 0],
+    ['Blake lake', 'lake', 1],
+    ['Löwendenkmal', 'loewen', 2],
+    ['Löwendenkmal', 'lowen', 2],
     ['Castle', 'lake', -1],
   ])('%s for "%s" scores %i', (title, q, score) => {
     expect(scoreTitle(title, q)).toBe(score)
@@ -94,10 +107,10 @@ describe('[E4.14][AC54][AC90][AC94] scoreTitle: equal 4, whole-word prefix 3, pr
     expect(titles(s, 'lake')).toEqual(['Lake cruise', 'Lakeside', 'Old town lake walk'])
   })
 
-  it('an equal title beats a whole-word prefix, which beats an inner match', () => {
-    const s = { ...none, stories: [storyCard({ title: 'Blake lake' }), storyCard({ title: 'Lake cruise' }), storyCard({ title: 'Lake' })] }
+  it('an equal title beats a whole-word prefix, which beats a later word-start, which beats an inner match', () => {
+    const s = { ...none, stories: [storyCard({ title: 'Blake' }), storyCard({ title: 'Blake lake' }), storyCard({ title: 'Lake cruise' }), storyCard({ title: 'Lake' })] }
 
-    expect(titles(s, 'lake')).toEqual(['Lake', 'Lake cruise', 'Blake lake'])
+    expect(titles(s, 'lake')).toEqual(['Lake', 'Lake cruise', 'Blake lake', 'Blake'])
   })
 
   it('equal scores keep the source order (stories, places, tours, keepsakes) and then the server order', () => {
@@ -114,15 +127,13 @@ describe('[E4.14][AC54][AC90][AC94] scoreTitle: equal 4, whole-word prefix 3, pr
 
 describe('[E4.14][AC54][AC90][AC94] the matcher adds no filter of its own, and no row has a price', () => {
   it('ac-4 the matcher returns only what the lists hold (the public reads omit hidden rows, see the API tests), and no row has a price', () => {
-    // The public reads already omit an expired event pin, a draft or hidden pin, and an unpublished or archived keepsake.
+    // The public reads omit an expired event pin, a draft or hidden pin, and an unpublished or archived keepsake. The API tests prove it:
+    // api/test/integration/content-public-pins.test.ts (draft, hidden), content-pin-dates.test.ts (ended), catalog-public-keepsakes.test.ts (unpublished, archived).
     const s: SearchSources = {
       ...none,
       pins: [mapItem({ title: 'Winter market' })],
       keepsakes: [keepsakeCard({ name: 'Lucerne knife' })],
     }
-
-    expect(searchAll(s, 'old event')).toEqual([])
-    expect(searchAll(s, 'unpublished mug')).toEqual([])
 
     const rows = searchAll({ ...s, keepsakes: [{ ...keepsakeCard({ name: 'Paid knife' }), priceRappen: 2500, currency: 'CHF', price: 25 } as never] }, 'knife')
 
@@ -159,7 +170,7 @@ describe('[E4.14][AC54][AC90][AC94] interestResults: a tile lists its stories, p
   const s: SearchSources = {
     stories: [storyCard({ title: 'Story food', interests: ['food-drink'] }), storyCard({ title: 'Story shop', interests: ['shopping-keepsakes'] })],
     pins: [mapItem({ title: 'Pin food', interests: ['food-drink', 'history-culture'] }), mapItem({ title: 'Pin shop', interests: ['shopping-keepsakes'] })],
-    tours: [tourCard({ title: 'Tour food', interests: ['food-drink'] })],
+    tours: [tourCard({ title: 'Tour food', interests: ['food-drink'] }), tourCard({ title: 'Tour shop', interests: ['shopping-keepsakes'] })],
     keepsakes: [keepsakeCard({ name: 'Knife' }), keepsakeCard({ name: 'Mug' })],
   }
 
@@ -167,6 +178,7 @@ describe('[E4.14][AC54][AC90][AC94] interestResults: a tile lists its stories, p
     expect(interestResults(s, 'shopping-keepsakes').map(r => [r.kind, r.title])).toEqual([
       ['story', 'Story shop'],
       ['place', 'Pin shop'],
+      ['tour', 'Tour shop'],
       ['keepsake', 'Knife'],
       ['keepsake', 'Mug'],
     ])
