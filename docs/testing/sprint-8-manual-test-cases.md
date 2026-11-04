@@ -129,6 +129,9 @@ Events go to PostHog EU. Nothing is sent unless you switch it on.
 | S8-STORY-28 | The cover picker waits for a new photo to finish processing | E4.3 / AC30 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-UI-01 | Merchant list screens share one header and toolbar | UI consistency, owner feedback 2026-11-03 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-UI-02 | Story Write screen: two columns, Short summary field, growing text boxes | E4.3 / AC30 (owner feedback 2026-11-03) | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-UI-04 | Every merchant editor has the same header, and no floating save bar | UI consistency, owner 04.11.2026 option A | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-UI-05 | The editor header stays under the store notice while the page scrolls | Owner 04.11.2026 option A (replaces the note under S8-STORY-FIX-01) | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-UI-06 | On a phone the editor header's buttons are the laptop size, and a single Delete is an icon | Owner 04.11.2026 option A | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-STORY-FIX-01 | Story editor header does not cover the store notice | E4.3 / owner fix 2026-11-03 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-SEED-STORY-01 | The seeded stories and reviews are in the Stories list | Seed stories / standing order 19 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-SEED-STORY-02 | A guest reads a story in English and in German, with photos | Seed stories / standing order 19 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
@@ -1415,6 +1418,58 @@ Run these after `pnpm exec tsx --env-file-if-exists=.env.local scripts/seed-cura
 - **Priority:** P1. **Role and device:** Guest, phone.
 
 | # | Step | Expected result |
+### S8-UI-04 Every merchant editor has the same header, and no floating save bar
+- **Story / AC:** UI consistency (owner 04.11.2026, option A of `/lab/editor-header`)
+- **Priority:** P1
+- **Role and device:** Merchant owner, desktop 1280 px
+- **Preconditions:** one published keepsake, one draft story, one published place exist.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Products > Keepsakes, open the published keepsake. | One bar at the top: a back arrow, the name, under it "● Published · Saved hh:mm", then EN / DE with a tick each, the arrows, a red "Review and publish" button and a red-tinted bin button. No white bar floats at the bottom. |
+| 2 | Point at the bin button. | A tooltip says "Delete keepsake". |
+| 3 | Press the bin button, then Cancel. | The delete (or archive) question opens; Cancel closes it and nothing changes. |
+| 4 | Press "Review and publish". | The Review and publish step opens; the red button leaves the header, and the line says what the checks say (for example "Ready to publish"). |
+| 5 | Content > Stories, open the draft story. | The same bar: the story's name, "● English · Draft · Saved hh:mm", EN / DE, "Review and publish" and the bin button ("Delete story"). |
+| 6 | Content > Places, open the published place. | The same bar: the name, "● Published · No changes", the arrows, a red "Save changes" that is greyed out, and the bin button ("Delete place"). |
+| 7 | Type one letter in the place's title. | The line says "Unsaved changes" and "Save changes" can be pressed. Undo the letter (leave without saving). |
+| 8 | Products > Keepsakes > Create. | The bar says "Not saved yet" with the red "Next"; no bin button. |
+
+- **Postconditions:** none (nothing was saved).
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-UI-05 The editor header stays under the store notice while the page scrolls
+- **Story / AC:** owner 04.11.2026 option A; replaces the note under S8-STORY-FIX-01
+- **Priority:** P1
+- **Role and device:** Merchant owner, desktop 1280 px, then phone 375 px
+- **Preconditions:** the store is not open for sale, so the yellow "Your store is not open for sale yet." notice shows.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open a story and scroll down to the end of the text. | The yellow notice stays whole at the top; the editor bar stays pinned right under it and never covers it. |
+| 2 | Scroll the same way on a keepsake and on a place. | Same: the notice, then the bar; the step list on the left stays below the bar. |
+| 3 | On the story, open Review and publish and scroll the checks on the right. | The phone preview and the checks column start under the bar and fit the window. |
+| 4 | Close the notice with its ×, then scroll. | The bar pins at the very top of the window, with no gap. |
+| 5 | At 375 px, scroll a story down. | The notice scrolls away; the bar pins at the top of the screen. |
+
+- **Postconditions:** the notice is closed for this browser session.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-UI-06 On a phone the editor header's buttons are the laptop size, and a single Delete is an icon
+- **Story / AC:** owner 04.11.2026 option A
+- **Priority:** P2
+- **Role and device:** Merchant owner, phone 375 px, then desktop 1280 px
+- **Preconditions:** one published keepsake.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open the keepsake at 375 px. | The bar shows the back arrow, the name with its line, a red "Review" button and the bin button. The EN / DE switch sits under the bar with "English · Complete". |
+| 2 | Compare the red button's height with the laptop's at 1280 px. | Both are the same height (36 px); the bin button is the same size at both widths. |
+| 3 | At 375 px, use the arrows next to "Step 1 of 3 · Details". | The next step opens. |
+
+- **Postconditions:** none.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
 |---|---|---|
 | 1 | Open the place pages of Weinmarkt, Jesuit Church, Spreuer Bridge, Lion Monument, Haus zum Fritschi, Alte Suidtersche Apotheke, both Chapel Bridge pins, Bachmann at Bahnhof Luzern UG, Coop Bahnhof Luzern and Migros Bahnhof Luzern. | Each shows its story or review as the main story link, in both languages. The three station shops also show a cover photo. |
 | 2 | Open the Chapel Bridge story. | It names both Chapel Bridge pins' places. One story, not two. |
