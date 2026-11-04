@@ -75,6 +75,12 @@ describe('[E2.12] public read schemas', () => {
     expect(missing).toEqual(expect.arrayContaining(['link', 'photos', 'mainStory', 'otherStories']))
   })
 
+  it('[E4.4][AC61] the story card carries the cover next to its key, as an address with variants or null', () => {
+    expect(Object.keys(publicStoryCardSchema.shape)).toEqual(expect.arrayContaining(['coverKey', 'cover']))
+    const missing = publicStoryCardSchema.safeParse({}).error?.issues.map(issue => issue.path[0])
+    expect(missing).toContain('cover')
+  })
+
   it('[E2.13] the public body unrolls lists as deep as the write body', () => {
     const listNodes = (schema: z.ZodType) => JSON.stringify(z.toJSONSchema(schema, { io: 'input', unrepresentable: 'any' })).split('"bulletList"').length - 1
     expect(listNodes(publicStoryBodySchema)).toBe(listNodes(storyBodySchema))

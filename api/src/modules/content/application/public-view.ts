@@ -12,6 +12,9 @@ export interface PublicCategoryList { items: PublicCategory[] }
 
 interface LanguageNotice { language: ContentLanguage, requestedLanguage: ContentLanguage, fallback: boolean, availableLanguages: ContentLanguage[] }
 
+// A cover as the public sees it: the address of the original and of each webp copy.
+export interface PublicCover { url: string, variants: { width: number, url: string }[] }
+
 export interface PublicStoryCard extends LanguageNotice {
   id: string
   slug: string
@@ -19,6 +22,7 @@ export interface PublicStoryCard extends LanguageNotice {
   excerpt: string
   readMinutes: number
   coverKey: string | null
+  cover: PublicCover | null
   stayTag: StayTag
   interests: string[]
   categories: { id: string, slug: string, name: string | null }[]
@@ -181,15 +185,18 @@ function carried(row: PublicStoryRow, requested: ContentLanguage) {
   }
 }
 
-function toCard(row: PublicStoryRow, version: PublicStoryVersionRow, notice: NonNullable<ReturnType<typeof carried>>['notice'], body: PublicStoryBody): PublicStoryCard {
+function toCard(row: PublicStoryRow, version: PublicStoryVersionRow, notice: NonNullable<ReturnType<typeof carried>>['notice'], body: PublicStoryBody, publicUrl: (key: string) => string): PublicStoryCard {
   const { published } = version
+  const coverKey = keyOf(version, published.coverMediaId)
+  const coverWidth = typeof published.coverMediaId === 'string' ? version.mediaWidths?.[published.coverMediaId.toLowerCase()] ?? null : null
   return {
     id: row.id,
     slug: version.slug,
     title: str(published.title),
     excerpt: str(published.excerpt),
     readMinutes: storyBodyReadMinutes(body),
-    coverKey: keyOf(version, published.coverMediaId),
+    coverKey,
+    cover: coverKey === null ? null : { url: publicUrl(coverKey), variants: variantsOf(coverKey, coverWidth, publicUrl) },
     stayTag: row.stayTag,
     interests: row.interests,
     categories: row.categories.map(c => ({ id: c.id, slug: c.slug, name: c.name[notice.language] ?? null })),
@@ -198,12 +205,12 @@ function toCard(row: PublicStoryRow, version: PublicStoryVersionRow, notice: Non
   }
 }
 
-export function toStoryCard(row: PublicStoryRow, requested: ContentLanguage): PublicStoryCard | null {
+export function toStoryCard(row: PublicStoryRow, requested: ContentLanguage, publicUrl: (key: string) => string): PublicStoryCard | null {
   const pick = carried(row, requested)
-  return pick && toCard(row, pick.version, pick.notice, publicBody(pick.version))
+  return pick && toCard(row, pick.version, pick.notice, publicBody(pick.version), publicUrl)
 }
 
-export function toPublicStory(row: PublicStoryRow, requested: ContentLanguage): PublicStory | null {
+export function toPublicStory(row: PublicStoryRow, requested: ContentLanguage, publicUrl: (key: string) => string): PublicStory | null {
   const pick = carried(row, requested)
   if (!pick)
     return null
@@ -211,7 +218,7 @@ export function toPublicStory(row: PublicStoryRow, requested: ContentLanguage): 
   const { published } = version
   const body = publicBody(version)
   return {
-    ...toCard(row, version, pick.notice, body),
+    ...toCard(row, version, pick.notice, body, publicUrl),
     authorName: str(published.authorName),
     body,
   }

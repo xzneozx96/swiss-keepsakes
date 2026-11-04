@@ -6780,6 +6780,16 @@ export interface components {
                 name: string | null;
                 slug: string;
             }[];
+            /** @description The cover as addresses; null when the story has no ready cover */
+            cover: {
+                /** @description The original file */
+                url: string;
+                /** @description The webp copies, smallest first; empty when the width is not known */
+                variants: {
+                    url: string;
+                    width: number;
+                }[];
+            } | null;
             coverKey: string | null;
             excerpt: string;
             /** @description True when the item is in another language than the one asked for */
@@ -7404,6 +7414,16 @@ export interface components {
                 name: string | null;
                 slug: string;
             }[];
+            /** @description The cover as addresses; null when the story has no ready cover */
+            cover: {
+                /** @description The original file */
+                url: string;
+                /** @description The webp copies, smallest first; empty when the width is not known */
+                variants: {
+                    url: string;
+                    width: number;
+                }[];
+            } | null;
             coverKey: string | null;
             excerpt: string;
             /** @description True when the item is in another language than the one asked for */

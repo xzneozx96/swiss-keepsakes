@@ -8859,6 +8859,42 @@
             },
             "type": "array"
           },
+          "cover": {
+            "description": "The cover as addresses; null when the story has no ready cover",
+            "properties": {
+              "url": {
+                "description": "The original file",
+                "type": "string"
+              },
+              "variants": {
+                "description": "The webp copies, smallest first; empty when the width is not known",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "url",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
           "coverKey": {
             "type": [
               "string",
@@ -8918,6 +8954,7 @@
           "excerpt",
           "readMinutes",
           "coverKey",
+          "cover",
           "stayTag",
           "interests",
           "categories",
@@ -11894,6 +11931,42 @@
             },
             "type": "array"
           },
+          "cover": {
+            "description": "The cover as addresses; null when the story has no ready cover",
+            "properties": {
+              "url": {
+                "description": "The original file",
+                "type": "string"
+              },
+              "variants": {
+                "description": "The webp copies, smallest first; empty when the width is not known",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "url",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
           "coverKey": {
             "type": [
               "string",
@@ -11953,6 +12026,7 @@
           "excerpt",
           "readMinutes",
           "coverKey",
+          "cover",
           "stayTag",
           "interests",
           "categories",

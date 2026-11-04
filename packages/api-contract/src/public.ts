@@ -77,6 +77,11 @@ export const publicStoryBodySchema = z.strictObject({
   ])),
 }).meta({ id: 'PublicStoryBody', description: 'The story text as one Tiptap document. Images and audio carry a storage key in place of a media id' })
 
+const publicCoverSchema = z.object({
+  url: z.string().meta({ description: 'The original file' }),
+  variants: z.array(z.object({ width: z.int(), url: z.string() })).meta({ description: 'The webp copies, smallest first; empty when the width is not known' }),
+}).meta({ id: 'PublicCover', description: 'The cover of a story, with its public addresses' })
+
 export const publicStoryCardSchema = z.object({
   id: z.uuid(),
   slug: z.string(),
@@ -84,6 +89,7 @@ export const publicStoryCardSchema = z.object({
   excerpt: z.string(),
   readMinutes: z.int().min(1),
   coverKey: z.string().nullable(),
+  cover: publicCoverSchema.nullable().meta({ description: 'The cover as addresses; null when the story has no ready cover' }),
   stayTag,
   interests: z.array(z.string()),
   categories: z.array(categoryRefSchema),

@@ -35,6 +35,8 @@ export interface PublicStoryVersionRow {
   publishedAt: Date
   // storage_key of every ready media row the published text refers to, by media id.
   mediaKeys: Record<string, string>
+  // Pixel width of each of those media rows that has one; the cover's webp copies follow from it.
+  mediaWidths?: Record<string, number | null>
 }
 
 export interface PublicStoryRow {

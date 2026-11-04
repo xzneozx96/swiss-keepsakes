@@ -1,10 +1,8 @@
-import type { Key } from '@heroui/react'
-import type { StoryCategory } from '@sk/domain/content'
+import type { PublicStoryCard } from '@sk/api-contract'
+import type { InterestCode, RankPrefs } from '@sk/domain/content'
 
-import { ScrollShadow, Skeleton, Tag, TagGroup } from '@heroui/react'
-import { STORY_CATEGORIES } from '@sk/domain/content'
-
-import { useNavigate } from '@tanstack/react-router'
+import { Button } from '@heroui/react'
+import { useHydrated, useNavigate } from '@tanstack/react-router'
 import { EmptyState } from '@/components/empty-state'
 import { ContentIcon } from '@/components/icons'
 
@@ -17,85 +15,93 @@ import { LanguageButton } from '@/components/layout/language-button'
 
 import { Media } from '@/components/media'
 import { useLocale } from '@/contexts/locale-context'
-import {
-  CategoryThumb,
-  categoryThumbItemClass,
-} from '@/features/catalog/components/category-thumb'
 import { useBack } from '@/hooks/use-back'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
-import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
-import { useArticles } from '../api/queries'
-import { publishedArticles } from '../lib/articles'
-import { ALL_STORIES_PHOTO, storyCategoryPhoto } from '../lib/categories'
+import { useOnboardingAnswers } from '../hooks/use-onboarding-answers'
+import { useRowSlide } from '../hooks/use-row-slide'
+import { rankStories } from '../lib/rank-stories'
 import { StoryCard } from './story-card'
 
-const ALL = 'all'
+const NO_ANSWERS: RankPrefs = { stay: null, interests: [] }
+
+const hasAnswers = (answers: RankPrefs) => answers.stay != null || (answers.interests ?? []).length > 0
+
+/** The photo a card shows: the 640 px copy when the cover has one (a card is at most about 400 px wide), else the largest copy, else the original. */
+function coverSrc(cover: PublicStoryCard['cover']) {
+  if (!cover)
+    return undefined
+
+  return (cover.variants.find(v => v.width >= 640) ?? cover.variants.at(-1))?.url ?? cover.url
+}
 
 /**
- * C19 Stories (spec §4.11, §5.1): the C02 list layout with a photo banner and one story per
- * row. Only stories published in the current language; never the other language's (R02).
- * The category row is the C02 filter (shared CategoryThumb); the home opens it pre-filtered.
+ * The line above the list: what the list is sorted for, or that it is newest first. Change opens the answers again
+ * (T-E4.5a). Without that opener there is nothing to offer, so the line is not drawn.
+ */
+function SortLine({ answers, onChange }: { answers: RankPrefs, onChange?: () => void }) {
+  const { t } = useLocale()
+  if (!onChange)
+    return null
+
+  const named = [
+    ...(answers.stay ? [t(`stories.sort.stay.${answers.stay}`)] : []),
+    ...(answers.interests ?? []).map((code: InterestCode) => t(`places.interest.${code}`)),
+  ]
+
+  return (
+    <p className="flex flex-wrap items-center text-label text-muted">
+      <span>{hasAnswers(answers) ? t('stories.sort.for', { answers: named.join(', ') }) : t('stories.sort.newest')}</span>
+      <span aria-hidden className="whitespace-pre"> · </span>
+      <Button className="min-h-11 px-1" size="sm" variant="ghost" onPress={onChange}>
+        {t(hasAnswers(answers) ? 'stories.sort.change' : 'stories.sort.personalise')}
+      </Button>
+    </p>
+  )
+}
+
+/**
+ * C19 Stories (spec §4.11, ADR-006): the published stories from the API, one per row. The server renders them in the order
+ * the API sends (newest first); once the page is hydrated the guest's answers re-rank them, and the rows that move slide.
+ * `stories` is null when the read failed. `onChangeAnswers` is the onboarding opener (T-E4.5a); without it the sort line is hidden.
  */
 export function StoriesPage({
-  category,
-  onCategoryChange,
+  stories,
+  onRetry,
+  onChangeAnswers,
 }: {
-  category?: StoryCategory
-  onCategoryChange: (category: StoryCategory | undefined) => void
+  stories: PublicStoryCard[] | null
+  onRetry: () => void
+  onChangeAnswers?: () => void
 }) {
   const { t, language, intlLocale } = useLocale()
-  const articles = useArticles()
-  const isLoading = useSimulatedLoading()
   const navigate = useNavigate()
   const back = useBack(() => void navigate({ to: '/$lang', params: { lang: language }, replace: true }))
   const [bannerEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
+  const answers = useOnboardingAnswers()
+  // The first render matches the server's; the answers are applied after hydration (tanstack-start.md, rule 10).
+  const hydrated = useHydrated()
+  const ordered = stories && hydrated ? rankStories(stories, answers) : stories
+  const slide = useRowSlide(ordered?.map(story => story.id) ?? [])
 
-  const published = publishedArticles(articles, language)
-  const stories = category
-    ? published.filter(s => s.category === category)
-    : published
+  const count = ordered?.length ?? 0
   const countLabel = t(
-    new Intl.PluralRules(intlLocale).select(stories.length) === 'one'
+    new Intl.PluralRules(intlLocale).select(count) === 'one'
       ? 'stories.count.one'
       : 'stories.count.other',
-    { count: stories.length },
+    { count },
   )
-  const title = category
-    ? t(`stories.category.${category}`)
-    : t('stories.title')
-
-  const filterItems = [
-    { id: ALL, name: t('stories.all'), photo: ALL_STORIES_PHOTO },
-    ...STORY_CATEGORIES.map(c => ({
-      id: c,
-      name: t(`stories.category.${c}`),
-      photo: storyCategoryPhoto[c],
-    })),
-  ]
-
-  const onSelectionChange = (keys: 'all' | Set<Key>) => {
-    const [first] = keys === 'all' ? [] : [...keys]
-
-    // Single selection never clears: tapping the selected tile keeps it selected (as C02).
-    if (first !== undefined)
-      onCategoryChange(first === ALL ? undefined : (first as StoryCategory))
-  }
 
   return (
     <div className="flex flex-1 flex-col">
       <CompactBar
         leading={<BackButton label={t('detail.back')} onPress={back} />}
-        title={title}
+        title={t('stories.title')}
         visible={scrolledPast}
       >
         <LanguageButton tone="bar" />
         <CartButton tone="bar" />
       </CompactBar>
-      <Media
-        alt=""
-        className="h-[260px]"
-        photo={category ? storyCategoryPhoto[category] : 'lucerne-old-town'}
-      >
+      <Media alt="" className="h-[260px]" photo="lucerne-old-town">
         <div
           aria-hidden
           className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-black/70"
@@ -107,9 +113,9 @@ export function StoriesPage({
           <CartButton />
         </div>
         <header className="absolute inset-x-4 bottom-10 flex flex-col gap-1 text-white">
-          <h1 className="font-serif text-display">{title}</h1>
+          <h1 className="font-serif text-display">{t('stories.title')}</h1>
           <p className="text-body text-white/85">{t('stories.intro')}</p>
-          {!isLoading && stories.length > 0 && (
+          {count > 0 && (
             <p className="text-label text-white/85 tabular-nums">
               {countLabel}
             </p>
@@ -118,77 +124,41 @@ export function StoriesPage({
       </Media>
       <div ref={bannerEnd} aria-hidden className="h-px" />
       <div className="relative -mt-6 flex flex-col gap-5 rounded-t-3xl bg-background px-4 pt-5 pb-4">
-        {published.length > 0 && (
-          <TagGroup
-            aria-label={t('stories.filter')}
-            selectedKeys={new Set([category ?? ALL])}
-            selectionMode="single"
-            onSelectionChange={onSelectionChange}
-          >
-            <ScrollShadow
-              hideScrollBar
-              className="-mx-4"
-              orientation="horizontal"
-              size={40}
-            >
-              <TagGroup.List className="flex-nowrap gap-1 px-4 pt-2 pb-1">
-                {filterItems.map(item => (
-                  <Tag
-                    key={item.id}
-                    className={`${categoryThumbItemClass} bg-transparent p-0 before:hidden hover:bg-transparent data-[selected=true]:bg-transparent data-[selected=true]:font-semibold data-[selected=true]:text-foreground`}
-                    id={item.id}
-                    textValue={item.name}
-                  >
-                    <CategoryThumb name={item.name} photo={item.photo} />
-                  </Tag>
-                ))}
-              </TagGroup.List>
-            </ScrollShadow>
-          </TagGroup>
-        )}
-        {isLoading
+        {ordered === null
           ? (
-              <ul className="flex flex-col gap-7">
-                {Array.from({ length: 3 }, (_, i) => (
-                  <li key={i} className="flex flex-col gap-2.5">
-                    <Skeleton className="aspect-[4/3] rounded-3xl" />
-                    <Skeleton className="h-5 w-4/5 rounded-lg" />
-                    <Skeleton className="h-4 w-3/5 rounded-lg" />
-                  </li>
-                ))}
-              </ul>
+              <EmptyState
+                alert
+                action={{ label: t('stories.retry'), onPress: onRetry }}
+                icon={ContentIcon}
+                message={t('stories.error')}
+              />
             )
-          : stories.length === 0
+          : ordered.length === 0
             ? (
                 <EmptyState
-                  action={
-                    category
-                      ? undefined
-                      : { label: t('placeholder.backHome'), to: '/$lang', params: { lang: language } }
-                  }
+                  action={{ label: t('placeholder.backHome'), to: '/$lang', params: { lang: language } }}
                   icon={ContentIcon}
-                  message={t(category ? 'stories.emptyCategory' : 'stories.empty')}
+                  message={t('stories.empty')}
                 />
               )
             : (
-                <ul className="flex flex-col gap-7">
-                  {stories.map(story => (
-                    <li key={story.id}>
-                      <StoryCard
-                        excerpt={story.excerpt}
-                        meta={[
-                          story.place,
-                          t('home.stories.read', { minutes: story.readMinutes }),
-                        ]
-                          .filter(Boolean)
-                          .join(' · ')}
-                        photo={story.photo}
-                        slug={story.slug}
-                        title={story.title}
-                      />
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <SortLine answers={hydrated ? answers : NO_ANSWERS} onChange={onChangeAnswers} />
+                  <ul className="flex flex-col gap-7">
+                    {ordered.map(story => (
+                      <li key={story.id} ref={slide(story.id)}>
+                        <StoryCard
+                          excerpt={story.excerpt}
+                          meta={t('home.stories.read', { minutes: story.readMinutes })}
+                          photo={coverSrc(story.cover)}
+                          slug={story.slug}
+                          tag={story.fallback ? { code: story.language.toUpperCase(), label: t(`stories.language.${story.language}`) } : undefined}
+                          title={story.title}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </>
               )}
       </div>
     </div>

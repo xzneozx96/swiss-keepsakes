@@ -48,11 +48,12 @@ async function loadStories(tx: Tx, groupIds: string[] | null): Promise<PublicSto
      where sc.group_id = any(${sql.param(foundIds)}::uuid[])
      order by c.parent_id nulls first, c.position, c.id`)
   const media = mediaIds.length === 0
-    ? { rows: [] as { id: string, store_id: string, storage_key: string }[] }
-    : await tx.execute<{ id: string, store_id: string, storage_key: string } & Record<string, unknown>>(sql`
-        select id, store_id, storage_key from content.media where id = any(${sql.param(mediaIds)}::uuid[]) and store_id = any(${sql.param(storeIds)}::uuid[]) and status = 'ready'`)
+    ? { rows: [] as { id: string, store_id: string, storage_key: string, width: number | null }[] }
+    : await tx.execute<{ id: string, store_id: string, storage_key: string, width: number | null } & Record<string, unknown>>(sql`
+        select id, store_id, storage_key, width from content.media where id = any(${sql.param(mediaIds)}::uuid[]) and store_id = any(${sql.param(storeIds)}::uuid[]) and status = 'ready'`)
   // A story only resolves media of its own store.
   const keys = new Map(media.rows.map(m => [`${m.store_id}/${m.id}`, m.storage_key]))
+  const widths = new Map(media.rows.map(m => [`${m.store_id}/${m.id}`, m.width]))
 
   const stories = new Map<string, PublicStoryRow>()
   for (const row of versions.rows) {
@@ -73,6 +74,7 @@ async function loadStories(tx: Tx, groupIds: string[] | null): Promise<PublicSto
       published: row.published,
       publishedAt: new Date(row.published_at),
       mediaKeys: Object.fromEntries(publishedStoryMediaIds(row.published).flatMap(id => (keys.has(`${row.store_id}/${id}`) ? [[id, keys.get(`${row.store_id}/${id}`)!]] : []))),
+      mediaWidths: Object.fromEntries(publishedStoryMediaIds(row.published).flatMap(id => (keys.has(`${row.store_id}/${id}`) ? [[id, widths.get(`${row.store_id}/${id}`) ?? null]] : []))),
     })
   }
   return [...stories.values()]

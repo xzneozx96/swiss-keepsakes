@@ -124,6 +124,29 @@ describe('public stories', () => {
     expect(detail.ok && 'sections' in detail.value).toBe(false)
   })
 
+  it('[E4.4][AC61] a card carries the cover as an address with its webp copies, null without a ready cover', async () => {
+    const mediaId = '0190a000-0000-7000-8000-0000000000bb'
+    const s = setup([
+      story(id1, [version('en', 'with-cover', 'With', '2090-02-01T00:00:00Z', {
+        published: doc('With', { coverMediaId: mediaId }),
+        mediaKeys: { [mediaId]: 'store/cover-1' },
+        mediaWidths: { [mediaId]: 1000 },
+      })]),
+      story(id2, [version('en', 'no-cover', 'Without', '2090-01-01T00:00:00Z')]),
+    ])
+
+    const { items } = await s.list('en')
+
+    expect(items[0]!.cover).toEqual({
+      url: 'https://media.test/store/cover-1',
+      variants: [
+        { width: 320, url: 'https://media.test/store/w320.webp' },
+        { width: 640, url: 'https://media.test/store/w640.webp' },
+      ],
+    })
+    expect(items[1]!.cover).toBeNull()
+  })
+
   it('[E2.12][AC45] a category with an English name only reads as null in German on a card and on the detail', async () => {
     const s = setup([story(id1, [version('en', 'lake-day', 'A day'), version('de', 'seetag', 'Ein Tag')], { categories: [{ id: id2, slug: 'cafes', name: { en: 'Cafes' }, parentId: null, position: 1 }] })])
 
