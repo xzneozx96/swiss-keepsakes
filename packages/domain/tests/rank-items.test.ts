@@ -96,3 +96,60 @@ describe('[E4.5][AC44] ranking sinks an item and never hides it', () => {
     expect(ranked).toHaveLength(pins.length)
   })
 })
+
+describe('[E4.4][AC38] rankItems with several interests, ties and mixed stay tags', () => {
+  const [history, food, lake, shopping, activities] = ['history-culture', 'food-drink', 'lake-mountains', 'shopping-keepsakes', 'local-activities'] as const
+
+  it('[E4.4][AC38] three chosen interests: items with 3, 2, 1 and 0 of them come in that order', () => {
+    const list = [
+      item('none', 'both'),
+      item('one', 'both', lake),
+      item('three', 'both', food, history, lake),
+      item('two', 'both', history, food),
+    ]
+
+    expect(ids(rankItems(list, { stay: null, interests: [food, history, lake] }))).toEqual(['three', 'two', 'one', 'none'])
+  })
+
+  it('[E4.4][AC38] all five interests chosen: the count of matches decides', () => {
+    const list = [
+      item('c1', 'both', shopping),
+      item('c5', 'both', history, food, lake, shopping, activities),
+      item('c0', 'both'),
+      item('c3', 'both', history, lake, activities),
+      item('c4', 'both', history, food, lake, activities),
+    ]
+
+    expect(ids(rankItems(list, { stay: 'short_stay', interests: [history, food, lake, shopping, activities] }))).toEqual(['c5', 'c4', 'c3', 'c1', 'c0'])
+  })
+
+  it('[E4.4][AC38] two items that match one different chosen interest each keep the input order, both ways round', () => {
+    const a = item('a', 'both', food)
+    const b = item('b', 'both', history)
+    const prefs = { stay: null, interests: [food, history] }
+
+    expect(ids(rankItems([a, b], prefs))).toEqual(['a', 'b'])
+    expect(ids(rankItems([b, a], prefs))).toEqual(['b', 'a'])
+  })
+
+  it('[E4.4][AC38] interests with no stay ignore the stay tags: the count decides and ties keep the input order', () => {
+    const list = [
+      item('multi0', 'multi_day'),
+      item('short1', 'short_stay', food),
+      item('both2', 'both', food, history),
+      item('multi1', 'multi_day', history),
+      item('both0', 'both'),
+    ]
+
+    expect(ids(rankItems(list, { stay: null, interests: [food, history] }))).toEqual(['both2', 'short1', 'multi1', 'multi0', 'both0'])
+  })
+
+  it('[E4.4][AC38] the stay outweighs interests: a multi-day item with all three interests ranks after a short-stay item with none', () => {
+    const list = [
+      item('multiAll', 'multi_day', food, history, lake),
+      item('shortNone', 'short_stay'),
+    ]
+
+    expect(ids(rankItems(list, { stay: 'short_stay', interests: [food, history, lake] }))).toEqual(['shortNone', 'multiAll'])
+  })
+})
