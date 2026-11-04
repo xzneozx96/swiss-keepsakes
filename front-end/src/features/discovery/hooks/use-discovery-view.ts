@@ -6,25 +6,18 @@ import type {
 
 import { isPublished, isSoldOut } from '@sk/domain/catalog'
 
-import { STORY_CATEGORIES } from '@sk/domain/content'
 import { useLocale } from '@/contexts/locale-context'
 import { useProducts } from '@/features/catalog/api/queries'
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
 import { useArticles } from '@/features/content/api/queries'
 import { publishedArticles } from '@/features/content/lib/articles'
-import {
-  ALL_STORIES_PHOTO,
-  storyCategoryPhoto,
-} from '@/features/content/lib/categories'
 import { useOrders } from '@/features/orders/api/queries'
 import { useTourRecords } from '@/features/tours/api/queries'
 import { timeBlockStories } from '../seed'
 
-const STORIES_ON_HOME = 6
-
 /** Builds the discovery home from the catalogue, the stories, the tours and the language. */
 export function useDiscoveryView(): DiscoveryHomeView {
-  const { t, language, intlLocale } = useLocale()
+  const { t, language } = useLocale()
   const demoArticles = useArticles()
   const orders = useOrders()
   const products = useProducts()
@@ -63,11 +56,6 @@ export function useDiscoveryView(): DiscoveryHomeView {
       a.links.some(l => l.kind === 'tour' && l.id === tourId),
     )
 
-  const showAllKey
-    = new Intl.PluralRules(intlLocale).select(articles.length) === 'one'
-      ? 'home.stories.showAll.one'
-      : 'home.stories.showAll.other'
-
   return {
     hero: {
       appName: t('app.name'),
@@ -76,60 +64,6 @@ export function useDiscoveryView(): DiscoveryHomeView {
       photoAlt: t('home.photoAlt'),
       searchLabel: t('search.open'),
       searchPrompt: t('home.searchPrompt'),
-    },
-    journey: {
-      title: t('home.journey.title'),
-      subtitle: t('home.journey.subtitle'),
-      steps: [
-        {
-          id: 'read',
-          photo: 'musegg-wall',
-          color: 'var(--accent)',
-          eyebrow: t('home.part.read'),
-          title: t('home.journey.read.title'),
-          line: t('home.journey.read.line'),
-        },
-        {
-          id: 'walk',
-          photo: 'rigi-vitznau-train',
-          color: 'var(--info)',
-          eyebrow: t('home.part.walk'),
-          title: t('home.journey.walk.title'),
-          line: t('home.journey.walk.line'),
-        },
-        {
-          id: 'keep',
-          photo: 'victorinox-spartan',
-          color: 'var(--chart-4)',
-          eyebrow: t('home.part.keep'),
-          title: t('home.journey.keep.title'),
-          line: t('home.journey.keep.line'),
-        },
-      ],
-    },
-    stories: {
-      eyebrow: t('home.part.read'),
-      title: t('home.stories.title'),
-      subtitle: t('home.stories.subtitle'),
-      categoriesLabel: t('stories.filter'),
-      categories: [
-        { name: t('stories.all'), photo: ALL_STORIES_PHOTO },
-        ...STORY_CATEGORIES.map(id => ({
-          id,
-          name: t(`stories.category.${id}`),
-          photo: storyCategoryPhoto[id],
-        })),
-      ],
-      items: articles.slice(0, STORIES_ON_HOME).map(a => ({
-        slug: a.slug,
-        photo: a.photo,
-        title: a.title,
-        category: t(`stories.category.${a.category}`),
-        place: a.place,
-        author: a.author.name,
-        meta: t('home.stories.read', { minutes: a.readMinutes }),
-      })),
-      showAll: t(showAllKey, { count: articles.length }),
     },
     tours: {
       eyebrow: t('home.part.walk'),

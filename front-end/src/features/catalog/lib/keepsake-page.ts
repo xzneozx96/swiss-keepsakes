@@ -36,7 +36,7 @@ export function noReviews(t: Translate, name: string): ListingReviewsProps {
   }
 }
 
-export function galleryLabelsOf(t: Translate, name: string): GiftPageProps['galleryLabels'] {
+function galleryLabelsOf(t: Translate, name: string): GiftPageProps['galleryLabels'] {
   return {
     gallery: t('gallery.label', { name }),
     photo: (n, count) => t('gallery.photo', { n, count }),

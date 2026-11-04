@@ -2,7 +2,6 @@ import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import {
-  ArticleSkeleton,
   CartSkeleton,
   GiftDetailSkeleton,
   OrderDetailSkeleton,
@@ -96,18 +95,6 @@ describe('guest screens loading', () => {
     expect(bar.className).toContain('bottom-0')
     expect(bar.querySelector('.h-12.w-28')).not.toBeNull()
     expect(bar.querySelectorAll('.rounded-full')).toHaveLength(1)
-  })
-
-  it('article: tall cover with title lines, then the sheet with the author row', () => {
-    const { container } = render(<ArticleSkeleton />)
-
-    expect(container.querySelector('.h-\\[min\\(68dvh\\,540px\\)\\]')).not.toBeNull()
-    expect(container.querySelector('.-mt-6.rounded-t-3xl .size-12.rounded-full')).not.toBeNull()
-    expect(count(container, '[data-skeleton="contents"] .h-11.rounded-full')).toBe(3)
-    expect(container.querySelector('[data-skeleton="contents"] .py-2\\.5')).not.toBeNull()
-    expect(container.querySelector('[data-skeleton="contents"] .h-0\\.5')).not.toBeNull()
-    expect(container.querySelector('[data-skeleton="bar"] .h-12.w-full')).not.toBeNull()
-    expect(container.querySelector('[data-skeleton="bar"]')!.className).toContain('safe-area-inset-bottom')
   })
 
   it('route pending: title and subtitle, then a list card of rows', () => {
