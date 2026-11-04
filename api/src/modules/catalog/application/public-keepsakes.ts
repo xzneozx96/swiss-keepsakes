@@ -140,13 +140,18 @@ export function makeListKeepsakes<T>(deps: PublicKeepsakeDeps<T>) {
       return language ? [{ row, language }] : []
     })
     const stock = await stockOf(deps, tx, shown.map(item => item.row))
-    const items: PublicKeepsakeCard[] = []
-    for (const { row, language } of shown) {
+    const coversByStore = new Map<string, string[]>()
+    for (const { row } of shown) {
       const first = row.mediaIds[0]
-      const cover = first ? (await photosOf(deps.media, tx, row.storeId, [first])).get(first.toLowerCase()) ?? null : null
-      items.push(card(row, language, cover, stock))
+      if (first)
+        coversByStore.set(row.storeId, [...(coversByStore.get(row.storeId) ?? []), first])
     }
-    return { items }
+    const covers = new Map<string, PublicKeepsakePhoto>()
+    for (const [storeId, ids] of coversByStore) {
+      for (const [id, photo] of await photosOf(deps.media, tx, storeId, ids))
+        covers.set(id, photo)
+    }
+    return { items: shown.map(({ row, language }) => card(row, language, covers.get(row.mediaIds[0]?.toLowerCase() ?? '') ?? null, stock)) }
   })
 }
 
