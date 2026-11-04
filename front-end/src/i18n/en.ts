@@ -18,6 +18,7 @@ import { partnerDashboardEn } from '@/features/partners/report/messages'
 import { placesEn } from '@/features/places/messages'
 import { reportPagesEn } from '@/features/reports/pages-messages'
 import { requestsEn } from '@/features/requests/messages'
+import { searchScreenEn } from '@/features/search/messages'
 import { storesEn } from '@/features/stores/messages'
 import { storiesMerchantEn } from '@/features/stories/messages'
 import { storiesListsEn } from '@/features/stories/messages-lists'
@@ -65,6 +66,7 @@ export const en = {
   ...multiSelectEn,
   ...stepsEn,
   ...mapEn,
+  ...searchScreenEn,
   ...mapKitEn,
   ...homeEn,
 
@@ -288,6 +290,15 @@ export const en = {
   'detail.sheet.title': 'Your keepsake',
   'detail.sheet.close': 'Close',
   'detail.sheet.add': 'Add to cart · {total}',
+  'detail.date.closedDay': 'The pickup point is closed that day. Choose another day.',
+  'detail.date.todayOver': 'Today’s opening hours are over. Choose another day.',
+  'detail.date.noDays': 'This pickup point has no open days in the next 60 days.',
+  'detail.date.chosen': '{date} · {place}',
+  'detail.legend.closedDay': 'The pickup point is closed',
+  'detail.places.none': 'The shop has not set pickup points yet.',
+  'detail.places.directions': 'Get directions',
+  'detail.places.failed': 'The pickup places could not be loaded.',
+  'detail.highlight.pickup.many': '{first}, {second} and {count} more',
   'detail.bar.choose': 'Choose a date and place',
   'detail.bar.nothingNow': 'Nothing to pay now',
   'detail.preview.atCheckout': 'Chosen at checkout',

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { hoursOfWeek, isOpenAt, zurichWeekday } from '@/features/map/lib/hours'
+import { hoursOfWeek, isOpenAt, zurichWeekday } from '@/lib/hours'
 
 const span = (day: number, opens: string, closes: string) => ({ day, opens, closes })
 const closed = 'Closed'

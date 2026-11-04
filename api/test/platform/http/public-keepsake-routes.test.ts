@@ -14,6 +14,9 @@ const useCases: PublicKeepsakeUseCases = {
   getKeepsake: async slug => (slug === 'swiss-knife'
     ? { ok: true, value: { ...card, description: { type: 'doc', content: [] }, photos: [], options: [], variants: [], otherSlug: null } }
     : { ok: false, reason: 'not-found' }),
+  getPickupPoints: async (slug, language) => (slug === 'swiss-knife'
+    ? { ok: true, value: { items: [{ id: variantId, name: language === 'de' ? 'Laden' : 'Shop', address: 'Street 1', instructions: null, mapsUrl: 'https://maps.example/a', hours: [{ weekday: 1, opens: '09:00', closes: '17:00' }] }] } }
+    : { ok: false, reason: 'not-found' }),
   getAvailability: async slug => (slug === 'swiss-knife'
     ? { ok: true, value: { items: [{ variantId, priceRappen: 3900, currency: 'CHF', available: 4 }] } }
     : { ok: false, reason: 'not-found' }),
@@ -23,7 +26,7 @@ function setup() {
   return createGuardedApp({}, undefined, { ...guardedCommands, routes: [routes => registerPublicKeepsakeRoutes(routes, useCases)] })
 }
 
-const paths = ['/api/public/keepsakes', '/api/public/keepsakes/swiss-knife', '/api/public/keepsakes/swiss-knife/availability']
+const paths = ['/api/public/keepsakes', '/api/public/keepsakes/swiss-knife', '/api/public/keepsakes/swiss-knife/availability', '/api/public/keepsakes/swiss-knife/pickup-points']
 
 describe('[E6.4][AC31][AC64] the public keepsake routes: input checks, 404 and the ETag', () => {
   it('[E6.4][AC64] lang=fr and a missing lang are 400 problems, not 500', async () => {
@@ -40,7 +43,7 @@ describe('[E6.4][AC31][AC64] the public keepsake routes: input checks, 404 and t
   it('[E6.4][AC31] AC-4: a slug that is not published, or is archived, is a 404 problem with no cache header, on the detail and on the availability', async () => {
     const { app } = setup()
 
-    for (const path of ['/api/public/keepsakes/draft-one', '/api/public/keepsakes/draft-one/availability']) {
+    for (const path of ['/api/public/keepsakes/draft-one', '/api/public/keepsakes/draft-one/availability', '/api/public/keepsakes/draft-one/pickup-points']) {
       const response = await app.request(`${path}?lang=en`)
       expect(response.status, path).toBe(404)
       expect(response.headers.get('Content-Type')).toBe('application/problem+json')
@@ -52,7 +55,7 @@ describe('[E6.4][AC31][AC64] the public keepsake routes: input checks, 404 and t
   it('[E6.4] the list and the detail carry Cache-Control max-age=30, the availability max-age=5, each a strong ETag, and a repeat with it is a 304', async () => {
     const { app } = setup()
 
-    for (const [path, cache] of [[paths[0]!, 'max-age=30'], [paths[1]!, 'max-age=30'], [paths[2]!, 'max-age=5']] as const) {
+    for (const [path, cache] of [[paths[0]!, 'max-age=30'], [paths[1]!, 'max-age=30'], [paths[2]!, 'max-age=5'], [paths[3]!, 'max-age=30']] as const) {
       const first = await app.request(`${path}?lang=en`)
       const tag = first.headers.get('ETag')!
       expect(first.status, path).toBe(200)
@@ -88,5 +91,17 @@ describe('[E6.4][AC31][AC64] the public keepsake routes: input checks, 404 and t
       expect(response.headers.getSetCookie()).toEqual([])
     }
     expect(calls.readSession).toBe(before)
+  })
+})
+
+describe('[E6.4][AC26] the public pickup points route', () => {
+  it('[E6.4][AC26] AC-1: answers the points of the use case in the language asked, with the text cache header', async () => {
+    const { app } = setup()
+
+    const response = await app.request('/api/public/keepsakes/swiss-knife/pickup-points?lang=de')
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('Cache-Control')).toBe('max-age=30')
+    expect(await response.json()).toEqual({ items: [{ id: variantId, name: 'Laden', address: 'Street 1', instructions: null, mapsUrl: 'https://maps.example/a', hours: [{ weekday: 1, opens: '09:00', closes: '17:00' }] }] })
   })
 })

@@ -69,7 +69,7 @@ describe('[E4.4][AC61] story page in the server HTML', () => {
     expect(html).not.toContain('CHF')
   })
 
-  it('[AC-1] has no guest comment text, no comment form and no related or keepsake block', async () => {
+  it('[AC-1] has no guest comment text and no comment form', async () => {
     const html = await serverHtml('/en/stories/lake-day', publicStory())
 
     expect(html).not.toMatch(/comment/i)
@@ -182,13 +182,12 @@ describe('[E4.4][AC61] loader', () => {
     expect((await readStoryPage('en', 'lake-day')).availableLanguages).toEqual(['en'])
   })
 
-  it('[AC-5] the loader data leaves out what the page does not draw', async () => {
+  it('[AC-5] the loader data carries the related stories and keepsake cards the page draws', async () => {
     const { readStoryPage } = await import('@/features/content/lib/read-story')
     api.loadPublicStory.mockResolvedValueOnce(publicStory())
     const data = await readStoryPage('en', 'lake-day')
 
-    expect(Object.keys(data.story)).not.toContain('related')
-    expect(Object.keys(data.story)).not.toContain('keepsakes')
+    expect(Object.keys(data.story)).toEqual(expect.arrayContaining(['related', 'keepsakes', 'places']))
   })
 })
 

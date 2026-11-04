@@ -21,6 +21,7 @@ import { useScrolledPast } from '@/hooks/use-scrolled-past'
 import { useOnboardingAnswers } from '../hooks/use-onboarding-answers'
 import { useRowSlide } from '../hooks/use-row-slide'
 import { filterStories, offeredCategories, resolveCategory } from '../lib/category-filter'
+import { coverSrc } from '../lib/cover-src'
 import { rankStories } from '../lib/rank-stories'
 import { StoryCard } from './story-card'
 
@@ -29,14 +30,6 @@ const ALL = 'all'
 const NO_ANSWERS: RankPrefs = { stay: null, interests: [] }
 
 const hasAnswers = (answers: RankPrefs) => answers.stay != null || (answers.interests ?? []).length > 0
-
-/** The photo a card shows: the 640 px copy when the cover has one (a card is at most about 400 px wide), else the largest copy, else the original. */
-function coverSrc(cover: PublicStoryCard['cover']) {
-  if (!cover)
-    return undefined
-
-  return (cover.variants.find(v => v.width >= 640) ?? cover.variants.at(-1))?.url ?? cover.url
-}
 
 /**
  * The line above the list: what the list is sorted for, or that it is newest first. Change opens the answers again

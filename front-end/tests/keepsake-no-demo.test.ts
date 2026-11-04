@@ -2,7 +2,8 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
+const FRONT_END = join(import.meta.dirname, '..')
+const read = (path: string) => readFileSync(join(FRONT_END, path), 'utf8')
 
 // The demo catalog (seed, demo client, query hooks) is read by other screens that later stories move to the API.
 const DEMO_CATALOG = /catalog\/seed|catalog\/victorinox|catalog\/categories|catalog\/api\/(queries|demo-client|client)|\/queries'|use-product-card|use-gift-detail|use-product-reviews|useProducts|useDemoNow|data-client\/(?!api-transport|errors)/
@@ -29,8 +30,8 @@ describe('[E6.4][AC52] AC-6 the keepsake list and page read only the API', () =>
   })
 
   it('the demo keepsake page hook and the demo cart toast are gone', () => {
-    const hooks = readdirSync(join(process.cwd(), 'src/features/catalog/hooks'))
-    const lib = readdirSync(join(process.cwd(), 'src/features/catalog/lib'))
+    const hooks = readdirSync(join(FRONT_END, 'src/features/catalog/hooks'))
+    const lib = readdirSync(join(FRONT_END, 'src/features/catalog/lib'))
 
     expect(hooks).not.toContain('use-gift-detail.ts')
     expect(lib).not.toContain('cart-toast.ts')

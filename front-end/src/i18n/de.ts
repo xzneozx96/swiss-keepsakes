@@ -20,6 +20,7 @@ import { partnerDashboardDe } from '@/features/partners/report/messages.de'
 import { placesDe } from '@/features/places/messages.de'
 import { reportPagesDe } from '@/features/reports/pages-messages.de'
 import { requestsDe } from '@/features/requests/messages.de'
+import { searchScreenDe } from '@/features/search/messages.de'
 import { storesDe } from '@/features/stores/messages.de'
 import { storiesListsDe } from '@/features/stories/messages-lists.de'
 import { storiesMediaDe } from '@/features/stories/messages-media.de'
@@ -67,6 +68,7 @@ export const de: Record<MessageKey, string> = {
   ...multiSelectDe,
   ...stepsDe,
   ...mapDe,
+  ...searchScreenDe,
   ...mapKitDe,
   ...homeDe,
 
@@ -297,6 +299,15 @@ export const de: Record<MessageKey, string> = {
   'detail.sheet.title': 'Ihr Andenken',
   'detail.sheet.close': 'Schliessen',
   'detail.sheet.add': 'In den Warenkorb · {total}',
+  'detail.date.closedDay': 'Der Abholort ist an diesem Tag geschlossen. Wählen Sie einen anderen Tag.',
+  'detail.date.todayOver': 'Die Öffnungszeiten für heute sind vorbei. Wählen Sie einen anderen Tag.',
+  'detail.date.noDays': 'Dieser Abholort hat in den nächsten 60 Tagen keine Öffnungstage.',
+  'detail.date.chosen': '{date} · {place}',
+  'detail.legend.closedDay': 'Der Abholort ist geschlossen',
+  'detail.places.none': 'Der Laden hat noch keine Abholorte festgelegt.',
+  'detail.places.directions': 'Route anzeigen',
+  'detail.places.failed': 'Die Abholorte konnten nicht geladen werden.',
+  'detail.highlight.pickup.many': '{first}, {second} und {count} weitere',
   'detail.bar.choose': 'Datum und Ort wählen',
   'detail.bar.nothingNow': 'Jetzt nichts bezahlen',
   'detail.preview.atCheckout': 'Wird an der Kasse gewählt',

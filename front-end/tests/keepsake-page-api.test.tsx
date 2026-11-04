@@ -87,6 +87,8 @@ beforeEach(() => {
       availabilityCalls += 1
       return availability()
     }
+    if (url.pathname.endsWith('/pickup-points'))
+      return Response.json({ items: [] })
     return detail(url.searchParams.get('lang'))
   })
 })

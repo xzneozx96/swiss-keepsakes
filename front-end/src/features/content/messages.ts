@@ -30,6 +30,7 @@ export const contentEn = {
   'article.contents': 'In this story',
   'article.linked': 'Bring a piece of it home',
   'article.more': 'More to discover',
+  'article.places': 'Places in this story',
   'article.comments': 'Comments',
   'article.showAll.one': 'Show {count} comment',
   'article.showAll.other': 'Show all {count} comments',

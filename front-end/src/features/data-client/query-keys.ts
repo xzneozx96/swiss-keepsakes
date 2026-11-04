@@ -7,6 +7,8 @@ export const queryKeys = {
     products: ['catalog', 'products'],
     subcategories: ['catalog', 'subcategories'],
     pickupPlaces: ['catalog', 'pickupPlaces'],
+    keepsakeAvailability: ['catalog', 'keepsakeAvailability'],
+    keepsakePickupPoints: ['catalog', 'keepsakePickupPoints'],
   },
   categories: {
     list: ['categories', 'list'],
@@ -24,6 +26,7 @@ export const queryKeys = {
     detail: ['keepsakes', 'detail'],
     /** The public list a guest reads (`GET /api/public/keepsakes`), one entry per language. */
     publicList: ['keepsakes', 'public'],
+    tourBlock: ['keepsakes', 'list', 'tour-block'],
   },
   media: {
     list: ['media', 'list'],

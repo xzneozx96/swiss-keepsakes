@@ -1,5 +1,5 @@
 import type { ContentLanguage } from '@sk/domain/content'
-import type { Localized, LocalizedDoc, MediaDirectory, MediaInfo, ProductOption, StockLevel, StockLevels, UnitOfWork } from '../ports.ts'
+import type { Localized, LocalizedDoc, MediaDirectory, MediaInfo, PickupPlaceRepository, ProductOption, StockLevel, StockLevels, UnitOfWork } from '../ports.ts'
 import type { Result } from './failure.ts'
 import { descriptionLanguages, languagesOf } from '@sk/domain/content'
 import { fail, ok } from './failure.ts'
@@ -43,6 +43,11 @@ export interface PublicKeepsakeDeps<T> {
   stockLevels?: StockLevels<T>
 }
 
+// The pickup read lists the store's active points through the pickup repository's own `list` (the same module, ADR-013).
+export interface PublicPickupDeps<T> extends PublicKeepsakeDeps<T> {
+  pickups: Pick<PickupPlaceRepository<T>, 'list'>
+}
+
 interface LanguageNotice {
   language: ContentLanguage
   requestedLanguage: ContentLanguage
@@ -69,6 +74,18 @@ export interface PublicKeepsake extends PublicKeepsakeCard {
   variants: { id: string, values: Record<string, string>, photo: PublicKeepsakePhoto | null }[]
   otherSlug: string | null
 }
+
+// A point as a guest sees it: the text in one language and nothing the merchant's screens use to manage it.
+export interface PublicPickupPoint {
+  id: string
+  name: string
+  address: string
+  instructions: string | null
+  mapsUrl: string
+  hours: { weekday: number, opens: string, closes: string }[]
+}
+
+export interface PublicPickupPoints { items: PublicPickupPoint[] }
 
 export interface PublicKeepsakeAvailability {
   items: { variantId: string, priceRappen: number, currency: 'CHF', available: number }[]
@@ -186,5 +203,26 @@ export function makeGetAvailability<T>(deps: PublicKeepsakeDeps<T>) {
       return fail({ reason: 'not-found' })
     const stock = await stockOf(deps, tx, [row])
     return ok({ items: row.variants.map(variant => ({ variantId: variant.id, priceRappen: variant.priceRappen, currency: 'CHF' as const, available: unitsOf(stock.get(variant.id)) })) })
+  })
+}
+
+// The active pickup points of the store that owns the keepsake, by the merchant's order, in the language asked for with
+// the other one as the fallback. An unpublished, archived or unknown keepsake is a 404; a store with no point is an empty list.
+export function makeGetPickupPoints<T>(deps: PublicPickupDeps<T>) {
+  return async (slug: string, requested: ContentLanguage): Promise<Result<PublicPickupPoints>> => deps.uow.run(async (tx) => {
+    const row = await deps.reads.findPublishedBySlug(tx, slug, requested)
+    if (!row || !notice(row, requested))
+      return fail({ reason: 'not-found' })
+    const places = await deps.pickups.list(tx, row.storeId, false)
+    return ok({
+      items: places.map(place => ({
+        id: place.id,
+        name: label(place.name, requested),
+        address: label(place.address, requested),
+        instructions: place.instructions ? label(place.instructions, requested) || null : null,
+        mapsUrl: place.mapsLink,
+        hours: place.hours.map(span => ({ weekday: span.weekday, opens: span.opens, closes: span.closes })),
+      })),
+    })
   })
 }

@@ -1,6 +1,6 @@
 import type { NextDate, PublicPin } from '@sk/api-contract'
 import type { Language } from '@sk/domain/shared'
-import type { HoursSpan } from './hours'
+import type { HoursSpan } from '@/lib/hours'
 
 /** A story the sheet links to. */
 export interface PlaceStory {
