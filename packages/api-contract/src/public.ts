@@ -150,6 +150,9 @@ export const publicMapItemSchema = z.object({
   hasMainStory: z.boolean(),
   mainStorySlug: z.string().nullable(),
   photoUrl: z.string().nullable().meta({ description: 'The smallest copy of the cover photo; null when the pin has none' }),
+  photoVariants: z.array(z.object({ width: z.int(), url: z.string() })).meta({ description: 'The webp copies of the cover, smallest first (320, 640, 1280, 1920 px as far as the image is wide); empty without a cover' }),
+  mustVisit: z.boolean().meta({ description: 'The merchant\'s must-visit flag' }),
+  tip: z.string().meta({ description: 'The local tip in the carried language, with the same fallback as the title; empty when the pin has none' }),
 }).meta({ id: 'PublicMapItem', description: 'One pin on the map list' })
 
 export const publicMapSchema = z.object({

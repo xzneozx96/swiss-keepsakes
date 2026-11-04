@@ -8434,6 +8434,10 @@
               "null"
             ]
           },
+          "mustVisit": {
+            "description": "The merchant's must-visit flag",
+            "type": "boolean"
+          },
           "nextDate": {
             "$ref": "#/components/schemas/NextDate"
           },
@@ -8443,6 +8447,25 @@
               "string",
               "null"
             ]
+          },
+          "photoVariants": {
+            "description": "The webp copies of the cover, smallest first (320, 640, 1280, 1920 px as far as the image is wide); empty without a cover",
+            "items": {
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "width": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "width",
+                "url"
+              ],
+              "type": "object"
+            },
+            "type": "array"
           },
           "slug": {
             "type": [
@@ -8456,6 +8479,10 @@
               "multi_day",
               "both"
             ],
+            "type": "string"
+          },
+          "tip": {
+            "description": "The local tip in the carried language, with the same fallback as the title; empty when the pin has none",
             "type": "string"
           },
           "title": {
@@ -8475,7 +8502,10 @@
           "nextDate",
           "hasMainStory",
           "mainStorySlug",
-          "photoUrl"
+          "photoUrl",
+          "photoVariants",
+          "mustVisit",
+          "tip"
         ],
         "type": "object"
       },

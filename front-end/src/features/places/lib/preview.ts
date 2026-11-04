@@ -77,6 +77,9 @@ export function previewItem(form: PlaceForm, language: Language, options: { stor
     hasMainStory: hasStory,
     mainStorySlug: hasStory ? PREVIEW_STORY_SLUG : null,
     photoUrl: null,
+    photoVariants: [],
+    mustVisit: form.mustVisit,
+    tip: (shown === 'de' ? form.tipDe : form.tipEn).trim(),
   }
 
   return { item, located }

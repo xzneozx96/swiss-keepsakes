@@ -92,6 +92,7 @@ interface PinJoinRow {
   cover_media_id: string | null
   main_story_group_id: string | null
   first_published_at: Date
+  must_visit: boolean
 }
 
 type DateJoinRow = PinDate & { place_id: string }
@@ -112,7 +113,7 @@ function byPlace<V extends { place_id: string }>(rows: V[]) {
 async function loadPins(tx: Tx, pinId: string | null): Promise<PublicPinRow[]> {
   const pins = await tx.execute<PinJoinRow & Record<string, unknown>>(sql`
     select v.id, v.slug, v.latitude, v.longitude, v.address, p.maps_link, v.weekly_hours, v.stay_tag, v.interests, v.published,
-           v.cover_media_id, v.main_story_group_id, p.first_published_at
+           v.cover_media_id, v.main_story_group_id, p.first_published_at, p.must_visit
       from content.public_pins v
       join content.places p on p.id = v.id and p.status = 'published'${pinId ? sql` where v.id = ${pinId}` : sql``}
      order by p.first_published_at desc, v.id desc`)
@@ -164,6 +165,7 @@ async function loadPins(tx: Tx, pinId: string | null): Promise<PublicPinRow[]> {
     interests: row.interests,
     name: row.published.name ?? {},
     tip: row.published.tip ?? {},
+    mustVisit: row.must_visit,
     firstPublishedAt: new Date(row.first_published_at),
     photoKey: (row.cover_media_id && coverOf.get(row.cover_media_id)?.storage_key) || null,
     photoWidth: (row.cover_media_id && coverOf.get(row.cover_media_id)?.width) || null,

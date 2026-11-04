@@ -53,6 +53,9 @@ function pin(n: number, title: string, categoryIds: string[], extra: Partial<Pub
     hasMainStory: false,
     mainStorySlug: null,
     photoUrl: null,
+    photoVariants: [],
+    mustVisit: false,
+    tip: '',
     ...extra,
   }
 }

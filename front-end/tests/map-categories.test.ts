@@ -32,6 +32,9 @@ function pin(n: number, categoryIds: string[]): PublicMapItem {
     hasMainStory: false,
     mainStorySlug: null,
     photoUrl: null,
+    photoVariants: [],
+    mustVisit: false,
+    tip: '',
   }
 }
 

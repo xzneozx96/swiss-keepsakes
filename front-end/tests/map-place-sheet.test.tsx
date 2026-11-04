@@ -25,6 +25,9 @@ const item: PublicMapItem = {
   hasMainStory: false,
   mainStorySlug: null,
   photoUrl: null,
+  photoVariants: [],
+  mustVisit: false,
+  tip: '',
 }
 
 const full: PlaceDetail = {

@@ -6367,12 +6367,21 @@ export interface components {
             latitude: number;
             longitude: number;
             mainStorySlug: string | null;
+            /** @description The merchant's must-visit flag */
+            mustVisit: boolean;
             nextDate: components["schemas"]["NextDate"];
             /** @description The smallest copy of the cover photo; null when the pin has none */
             photoUrl: string | null;
+            /** @description The webp copies of the cover, smallest first (320, 640, 1280, 1920 px as far as the image is wide); empty without a cover */
+            photoVariants: {
+                url: string;
+                width: number;
+            }[];
             slug: string | null;
             /** @enum {string} */
             stayTag: "short_stay" | "multi_day" | "both";
+            /** @description The local tip in the carried language, with the same fallback as the title; empty when the pin has none */
+            tip: string;
             title: string;
         };
         /** @description A photo of a pin, with its public addresses */

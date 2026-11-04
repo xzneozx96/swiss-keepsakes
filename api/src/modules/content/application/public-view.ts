@@ -266,6 +266,10 @@ export interface PublicMapItem {
   mainStorySlug: string | null
   // The smallest copy of the cover, for a pin or a card thumbnail; null when the pin has no ready cover.
   photoUrl: string | null
+  // The webp copies of that cover, smallest first; empty without a cover or when its width is unknown.
+  photoVariants: { width: number, url: string }[]
+  mustVisit: boolean
+  tip: string
 }
 
 export interface PublicMap { items: PublicMapItem[] }
@@ -382,6 +386,9 @@ export function toMapItem(row: PublicPinRow, requested: ContentLanguage, now: Da
     hasMainStory: pin.hasMainStory,
     mainStorySlug: pin.mainStorySlug,
     photoUrl: row.photoKey ? (variantsOf(row.photoKey, row.photoWidth, publicUrl)[0]?.url ?? publicUrl(row.photoKey)) : null,
+    photoVariants: row.photoKey ? variantsOf(row.photoKey, row.photoWidth, publicUrl) : [],
+    mustVisit: row.mustVisit,
+    tip: pin.tip,
   }
 }
 

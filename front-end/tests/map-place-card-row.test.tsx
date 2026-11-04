@@ -21,6 +21,9 @@ const pin: PublicMapItem = {
   hasMainStory: false,
   mainStorySlug: null,
   photoUrl: null,
+  photoVariants: [],
+  mustVisit: false,
+  tip: '',
 }
 
 function row(bottom?: number) {

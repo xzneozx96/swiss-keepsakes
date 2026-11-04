@@ -63,6 +63,9 @@ function pin(n: number, title: string, extra: Partial<PublicMapItem> = {}): Publ
     hasMainStory: false,
     mainStorySlug: null,
     photoUrl: null,
+    photoVariants: [],
+    mustVisit: false,
+    tip: '',
     ...extra,
   }
 }

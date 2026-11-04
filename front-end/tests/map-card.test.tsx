@@ -28,6 +28,9 @@ function pin(n: number, extra: Partial<PublicMapItem> = {}): PublicMapItem {
     hasMainStory: false,
     mainStorySlug: null,
     photoUrl: null,
+    photoVariants: [],
+    mustVisit: false,
+    tip: '',
     ...extra,
   }
 }

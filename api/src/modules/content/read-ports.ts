@@ -65,6 +65,8 @@ export interface PublicPinRow {
   photoKey: string | null
   // Pixel width of that cover, which decides the variants that exist.
   photoWidth: number | null
+  // The merchant's must-visit flag on the pin.
+  mustVisit: boolean
   dates: PinDate[]
   // The categories on the pin, and the parents of those that are sub-categories.
   categories: PublicCategoryRow[]
