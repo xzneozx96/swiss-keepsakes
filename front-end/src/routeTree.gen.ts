@@ -43,6 +43,7 @@ import { Route as LabMediaRouteImport } from './routes/lab.media'
 import { Route as LabOnboardingFullscreenRouteImport } from './routes/lab.onboarding-fullscreen'
 import { Route as LabOpeningHoursRouteImport } from './routes/lab.opening-hours'
 import { Route as LabOrderCardsRouteImport } from './routes/lab.order-cards'
+import { Route as LabPickupCardRouteImport } from './routes/lab.pickup-card'
 import { Route as LabPinsRouteImport } from './routes/lab.pins'
 import { Route as LabPrivateTourRouteImport } from './routes/lab.private-tour'
 import { Route as LabQuantityRouteImport } from './routes/lab.quantity'
@@ -282,6 +283,11 @@ const LabOpeningHoursRoute = LabOpeningHoursRouteImport.update({
 const LabOrderCardsRoute = LabOrderCardsRouteImport.update({
   id: '/lab/order-cards',
   path: '/lab/order-cards',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabPickupCardRoute = LabPickupCardRouteImport.update({
+  id: '/lab/pickup-card',
+  path: '/lab/pickup-card',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabPinsRoute = LabPinsRouteImport.update({
@@ -678,6 +684,7 @@ export interface FileRoutesByFullPath {
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
   '/lab/opening-hours': typeof LabOpeningHoursRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
+  '/lab/pickup-card': typeof LabPickupCardRoute
   '/lab/pins': typeof LabPinsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
   '/lab/quantity': typeof LabQuantityRoute
@@ -780,6 +787,7 @@ export interface FileRoutesByTo {
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
   '/lab/opening-hours': typeof LabOpeningHoursRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
+  '/lab/pickup-card': typeof LabPickupCardRoute
   '/lab/pins': typeof LabPinsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
   '/lab/quantity': typeof LabQuantityRoute
@@ -886,6 +894,7 @@ export interface FileRoutesById {
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
   '/lab/opening-hours': typeof LabOpeningHoursRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
+  '/lab/pickup-card': typeof LabPickupCardRoute
   '/lab/pins': typeof LabPinsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
   '/lab/quantity': typeof LabQuantityRoute
@@ -993,6 +1002,7 @@ export interface FileRouteTypes {
     | '/lab/onboarding-fullscreen'
     | '/lab/opening-hours'
     | '/lab/order-cards'
+    | '/lab/pickup-card'
     | '/lab/pins'
     | '/lab/private-tour'
     | '/lab/quantity'
@@ -1095,6 +1105,7 @@ export interface FileRouteTypes {
     | '/lab/onboarding-fullscreen'
     | '/lab/opening-hours'
     | '/lab/order-cards'
+    | '/lab/pickup-card'
     | '/lab/pins'
     | '/lab/private-tour'
     | '/lab/quantity'
@@ -1200,6 +1211,7 @@ export interface FileRouteTypes {
     | '/lab/onboarding-fullscreen'
     | '/lab/opening-hours'
     | '/lab/order-cards'
+    | '/lab/pickup-card'
     | '/lab/pins'
     | '/lab/private-tour'
     | '/lab/quantity'
@@ -1303,6 +1315,7 @@ export interface RootRouteChildren {
   LabOnboardingFullscreenRoute: typeof LabOnboardingFullscreenRoute
   LabOpeningHoursRoute: typeof LabOpeningHoursRoute
   LabOrderCardsRoute: typeof LabOrderCardsRoute
+  LabPickupCardRoute: typeof LabPickupCardRoute
   LabPinsRoute: typeof LabPinsRoute
   LabPrivateTourRoute: typeof LabPrivateTourRoute
   LabQuantityRoute: typeof LabQuantityRoute
@@ -1560,6 +1573,13 @@ declare module '@tanstack/react-router' {
       path: '/lab/order-cards'
       fullPath: '/lab/order-cards'
       preLoaderRoute: typeof LabOrderCardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/pickup-card': {
+      id: '/lab/pickup-card'
+      path: '/lab/pickup-card'
+      fullPath: '/lab/pickup-card'
+      preLoaderRoute: typeof LabPickupCardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab/pins': {
@@ -2245,6 +2265,7 @@ const rootRouteChildren: RootRouteChildren = {
   LabOnboardingFullscreenRoute: LabOnboardingFullscreenRoute,
   LabOpeningHoursRoute: LabOpeningHoursRoute,
   LabOrderCardsRoute: LabOrderCardsRoute,
+  LabPickupCardRoute: LabPickupCardRoute,
   LabPinsRoute: LabPinsRoute,
   LabPrivateTourRoute: LabPrivateTourRoute,
   LabQuantityRoute: LabQuantityRoute,
