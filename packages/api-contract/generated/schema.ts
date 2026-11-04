@@ -358,6 +358,227 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/keepsakes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description The language asked for. A keepsake that has no version in it comes back in the other language, marked `fallback` */
+                    lang: "en" | "de";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The published keepsakes, newest first. No price and no stock figure */
+                200: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicKeepsakeList"];
+                    };
+                };
+                /** @description The If-None-Match tag still matches. No body */
+                304: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/keepsakes/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description The language asked for. A keepsake that has no version in it comes back in the other language, marked `fallback` */
+                    lang: "en" | "de";
+                };
+                header?: never;
+                path: {
+                    /** @description The slug of either language */
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description One published keepsake: text, photos, options and the combinations for sale. No price and no stock figure */
+                200: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicKeepsake"];
+                    };
+                };
+                /** @description The If-None-Match tag still matches. No body */
+                304: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such published keepsake */
+                404: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/keepsakes/{slug}/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description The language asked for. A keepsake that has no version in it comes back in the other language, marked `fallback` */
+                    lang: "en" | "de";
+                };
+                header?: never;
+                path: {
+                    /** @description The slug of either language */
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The price and the units of each combination for sale. The only public keepsake read with a price */
+                200: {
+                    headers: {
+                        /** @description `max-age=5` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicKeepsakeAvailability"];
+                    };
+                };
+                /** @description The If-None-Match tag still matches. No body */
+                304: {
+                    headers: {
+                        /** @description `max-age=5` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such published keepsake */
+                404: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/map": {
         parameters: {
             query?: never;
@@ -6330,6 +6551,135 @@ export interface components {
         };
         PublicCategoryList: {
             items: components["schemas"]["PublicCategory"][];
+        };
+        PublicKeepsake: {
+            availableLanguages: components["schemas"]["PublicLanguage"][];
+            /** @description The first photo, null when it is not ready */
+            cover: {
+                /** @description The original file */
+                url: string;
+                /** @description The webp copies, smallest first */
+                variants: {
+                    url: string;
+                    width: number;
+                }[];
+            } | null;
+            description: components["schemas"]["PublicKeepsakeDescription"];
+            /** @description True when the item is in another language than the one asked for */
+            fallback: boolean;
+            /** Format: uuid */
+            id: string;
+            language: components["schemas"]["PublicLanguage"];
+            name: string;
+            options: components["schemas"]["PublicKeepsakeOption"][];
+            /** @description The slug of the other language, for the language switcher. Null when that language has no version */
+            otherSlug: string | null;
+            /** @description The ready photos in the merchant's order */
+            photos: components["schemas"]["PublicKeepsakePhoto"][];
+            requestedLanguage: components["schemas"]["PublicLanguage"];
+            /** @description The slug of the language carried */
+            slug: string;
+            /** @description True when every combination for sale has no unit available */
+            soldOut: boolean;
+            variants: components["schemas"]["PublicKeepsakeCombination"][];
+        };
+        /** @description The price and the units of each combination for sale. The only public keepsake read with a price. Cached for 5 seconds */
+        PublicKeepsakeAvailability: {
+            items: {
+                /** @description Units on hand minus units reserved, never below 0 */
+                available: number;
+                /** @enum {string} */
+                currency: "CHF";
+                /** @description The price in rappen (CHF 0.01) */
+                priceRappen: number;
+                /** Format: uuid */
+                variantId: string;
+            }[];
+        };
+        PublicKeepsakeCard: {
+            availableLanguages: components["schemas"]["PublicLanguage"][];
+            /** @description The first photo, null when it is not ready */
+            cover: {
+                /** @description The original file */
+                url: string;
+                /** @description The webp copies, smallest first */
+                variants: {
+                    url: string;
+                    width: number;
+                }[];
+            } | null;
+            /** @description True when the item is in another language than the one asked for */
+            fallback: boolean;
+            /** Format: uuid */
+            id: string;
+            language: components["schemas"]["PublicLanguage"];
+            name: string;
+            requestedLanguage: components["schemas"]["PublicLanguage"];
+            /** @description The slug of the language carried */
+            slug: string;
+            /** @description True when every combination for sale has no unit available */
+            soldOut: boolean;
+        };
+        /** @description A combination that is for sale. A combination that is not listed is not sold (ADR-017) */
+        PublicKeepsakeCombination: {
+            /**
+             * Format: uuid
+             * @description The variant id, the key of the availability read
+             */
+            id: string;
+            /** @description The photo of the combination, null for none */
+            photo: {
+                /** @description The original file */
+                url: string;
+                /** @description The webp copies, smallest first */
+                variants: {
+                    url: string;
+                    width: number;
+                }[];
+            } | null;
+            /** @description The value id of each option id. Empty for a keepsake with no option */
+            values: {
+                [key: string]: string;
+            };
+        };
+        /** @description The description as one Tiptap document: paragraphs, hard breaks, lists, bold, italic and links */
+        PublicKeepsakeDescription: {
+            content: {
+                attrs?: {
+                    [key: string]: unknown;
+                };
+                content?: unknown[];
+                marks?: unknown[];
+                text?: string;
+                type: string;
+            }[];
+            /** @enum {string} */
+            type: "doc";
+        };
+        /** @description The published keepsakes of all stores, newest first */
+        PublicKeepsakeList: {
+            items: components["schemas"]["PublicKeepsakeCard"][];
+        };
+        PublicKeepsakeOption: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @description In the order guests see them */
+            values: {
+                /** Format: uuid */
+                id: string;
+                label: string;
+            }[];
+        };
+        /** @description A photo of a keepsake, with its public addresses */
+        PublicKeepsakePhoto: {
+            /** @description The original file */
+            url: string;
+            /** @description The webp copies, smallest first */
+            variants: {
+                url: string;
+                width: number;
+            }[];
         };
         /** @enum {string} */
         PublicLanguage: "en" | "de";
