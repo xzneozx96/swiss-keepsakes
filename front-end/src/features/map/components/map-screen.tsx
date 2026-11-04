@@ -1,11 +1,12 @@
 import type { PublicMapItem } from '@sk/api-contract'
 
+import type { MapSearch } from '@/features/map/lib/search-params'
+
 import { Button } from '@heroui/react'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 
-import { BulletListIcon, CloseIcon, FilterIcon, PickupIcon } from '@/components/icons'
-import { useMap } from '@/components/map/map-context'
+import { CloseIcon } from '@/components/icons'
 import { MapControls } from '@/components/map/map-controls'
 import { MapView } from '@/components/map/map-view'
 import { PhotoCluster, PhotoPin } from '@/components/map/pin-faces'
@@ -13,13 +14,14 @@ import { PinLayer } from '@/components/map/pin-layer'
 import { useLocale } from '@/contexts/locale-context'
 import { mapQueries, useMapData } from '@/features/map/api/queries'
 import { useRankedPins } from '@/features/map/hooks/use-ranked-pins'
-import { categoryName, isHighlighted, keepHighlighted, pinCategoryNames, topLevelCategories } from '@/features/map/lib/categories'
+import { categoryName, isLit, keepFiltered, pinCategoryNames, pinIcon } from '@/features/map/lib/categories'
 import { CARD_ROW_BOTTOM, CARD_ROW_HEIGHT, CONTROLS, MAP_BOTTOM_CLEAR } from '@/features/map/lib/layout'
 import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
+import { filterAddress, resolveMapFilter } from '@/features/map/lib/search-params'
 import { track, useTrackAllowed } from '@/lib/analytics/track'
 import { apiEnabled } from '@/lib/api-mode'
 import { CategoriesSheet } from './categories-sheet'
-import { MapControlsSkeleton } from './map-skeleton'
+import { MapPills } from './map-pills'
 import { PinList } from './pin-list'
 import { PlaceCardRow } from './place-card'
 import { PlaceSheet } from './place-sheet'
@@ -30,38 +32,6 @@ const NO_PINS: PublicMapItem[] = []
 const LUCERNE: [number, number] = [8.3068, 47.0535]
 const MAP_VIEW = { center: LUCERNE, zoom: 15.2, minZoom: 12, maxZoom: 18.5 }
 
-/** The Categories and Map or List buttons over the map: skeletons while the map draws or the places are on the way, nothing when there are none. */
-function MapPills({ chosenCount, dataPending, hasPins, view, onFilter, onView }: {
-  chosenCount: number
-  dataPending: boolean
-  hasPins: boolean
-  view: View
-  onFilter: () => void
-  onView: () => void
-}) {
-  const { t } = useLocale()
-  const { state, drawn } = useMap()
-
-  if (state === 'loading' || !drawn || dataPending)
-    return <MapControlsSkeleton />
-  if (!hasPins)
-    return null
-
-  return (
-    <div className="absolute inset-x-0 top-0 z-10 flex items-start gap-2 px-3 pt-3">
-      <Button aria-haspopup="dialog" className="pill min-h-11 shadow-sm" size="sm" variant="secondary" onPress={onFilter}>
-        <FilterIcon size={16} />
-        {chosenCount > 0 ? t('map.categoriesCount', { count: chosenCount }) : t('map.categories')}
-      </Button>
-      <span className="flex-1" />
-      <Button className="pill min-h-11 shadow-sm" size="sm" variant="secondary" onPress={onView}>
-        {view === 'map' ? <BulletListIcon size={16} /> : <PickupIcon size={16} />}
-        {t(view === 'map' ? 'map.view.list' : 'map.view.map')}
-      </Button>
-    </div>
-  )
-}
-
 /**
  * N02, option B "Cards" (docs/ux/pins-design.md): a flat aerial map between the top edge and the
  * guest tab bar, with a Categories button and a Map or List switch over it. A pin opens its card
@@ -70,14 +40,20 @@ function MapPills({ chosenCount, dataPending, hasPins, view, onFilter, onView }:
  * map and never removes one, while the card row and the list hold only the chosen places. `place` is the slug of
  * `?place=<slug>`: its card opens once the places have loaded, and a slug the map does not hold shows a notice (AC90).
  * Show more on a card opens the details sheet of the open pin (N03, E4.7).
+ * `category` and `dated` are the address's filters (E4.13): they open the map filtered, a `place` clears them, and a
+ * choice in the sheet is written back through `onSearchChange` (the route replaces the address, never pushes).
  */
-export function MapScreen({ place }: { place?: string }) {
+export function MapScreen({ place, category, dated, onSearchChange }: MapSearch & { onSearchChange?: (search: MapSearch) => void }) {
   const { t, language, intlLocale } = useLocale()
   const data = useMapData(language)
   const headingId = useId()
   const [today] = useState(() => zurichToday(new Date()))
   // Empty means All.
   const [chosen, setChosen] = useState<string[]>([])
+  const [datedOnly, setDatedOnly] = useState(false)
+  // The address's filter is read once per value, when the categories have arrived: the raw address and the cleaned one both count as read.
+  const [handledFilter, setHandledFilter] = useState<string[]>([])
+  const [badCategory, setBadCategory] = useState(false)
   const [view, setView] = useState<View>('map')
   const [selectedId, setSelectedId] = useState<string>()
   const [filterOpen, setFilterOpen] = useState(false)
@@ -95,9 +71,14 @@ export function MapScreen({ place }: { place?: string }) {
   const rankedPins = useRankedPins(data.pins)
   const ranked = dataReady ? rankedPins : NO_PINS
   const located = useMemo(() => ranked.map(pin => ({ ...pin, coordinates: [pin.longitude, pin.latitude] as [number, number] })), [ranked])
-  const kept = keepHighlighted(ranked, chosen, data.categories)
+  const filter = { chosen, datedOnly }
+  const kept = keepFiltered(ranked, filter, data.categories)
   const litIds = new Set(kept.map(pin => pin.id))
-  const dimmedIds = useMemo(() => new Set(ranked.filter(pin => !isHighlighted(pin, chosen, data.categories)).map(pin => pin.id)), [ranked, chosen, data.categories])
+  const dimmedIds = useMemo(() => new Set(ranked.filter(pin => !isLit(pin, { chosen, datedOnly }, data.categories)).map(pin => pin.id)), [ranked, chosen, datedOnly, data.categories])
+  const resolved = useMemo(() => dataReady ? resolveMapFilter({ place, category, dated }, data.categories) : undefined, [dataReady, place, category, dated, data.categories])
+  const addressKey = JSON.stringify({ place, category, dated })
+  const filterHandled = handledFilter.includes(addressKey)
+  const isFiltered = chosen.length > 0 || datedOnly
   const openId = view === 'map' && selectedId !== undefined && litIds.has(selectedId) ? selectedId : undefined
   const chosenCount = chosen.length
   const openPin = openId ? ranked.find(pin => pin.id === openId) : undefined
@@ -105,6 +86,12 @@ export function MapScreen({ place }: { place?: string }) {
   const index = openPin ? kept.findIndex(pin => pin.id === openPin.id) : -1
   const insets = { top: CONTROLS, bottom: openId ? CARD_ROW_BOTTOM + CARD_ROW_HEIGHT + 8 : MAP_BOTTOM_CLEAR }
 
+  if (resolved && !filterHandled) {
+    setHandledFilter([addressKey, JSON.stringify(resolved.address)])
+    setChosen(resolved.chosen)
+    setDatedOnly(resolved.datedOnly)
+    setBadCategory(resolved.unknownCategory)
+  }
   if (dataReady && place !== undefined && handledPlace !== place) {
     const match = ranked.find(pin => pin.slug === place)
 
@@ -113,7 +100,7 @@ export function MapScreen({ place }: { place?: string }) {
     if (match)
       setSelectedId(match.id)
   }
-  if (dataReady && place === undefined && !firstOpened && kept.length > 0) {
+  if (dataReady && filterHandled && place === undefined && !firstOpened && kept.length > 0) {
     setFirstOpened(true)
     if (selectedId === undefined)
       setSelectedId(kept[0]!.id)
@@ -122,6 +109,12 @@ export function MapScreen({ place }: { place?: string }) {
   const reportedDeepLinkRef = useRef<string | undefined>(undefined)
 
   const trackAllowed = useTrackAllowed()
+
+  // A place link, or a slug no category carries, leaves a filter in the address that the map does not apply: the address is cleaned to match (replace).
+  useEffect(() => {
+    if (resolved?.addressChanged)
+      onSearchChange?.(resolved.address)
+  }, [resolved, onSearchChange])
 
   // The deep link counts as an opened pin once. While the guest gate holds (the session is not answered) the pin is not marked reported:
   // it is sent when the gate opens, and never when the gate has closed for a merchant.
@@ -172,9 +165,14 @@ export function MapScreen({ place }: { place?: string }) {
   }
 
   function applyFilter(next: string[]) {
-    const first = keepHighlighted(ranked, next, data.categories)[0]
+    const first = keepFiltered(ranked, { chosen: next, datedOnly: false }, data.categories)[0]
 
+    // The sheet's choice is the whole filter (its counts ignore dates, and it has no switch for them), and it moves the address
+    // off any place link, so a copied address reproduces the view.
     setChosen(next)
+    setDatedOnly(false)
+    setFirstOpened(true)
+    onSearchChange?.(filterAddress(next, data.categories, false))
     setFilterOpen(false)
     setMoreOpen(false)
     setView('map')
@@ -185,15 +183,17 @@ export function MapScreen({ place }: { place?: string }) {
   }
 
   const dateCopy = { until: (day: string) => t('map.date.until', { day }), from: (time: string) => t('map.date.from', { time }) }
-  const matchesNothing = dataReady && chosenCount > 0 && kept.length === 0
+  const matchesNothing = dataReady && isFiltered && kept.length === 0
   const places = t(kept.length === 1 ? 'map.places.one' : 'map.places.other', { count: kept.length })
-  const announce = chosenCount === 0
+  const announce = !isFiltered
     ? t(ranked.length === 1 ? 'map.announce.all.one' : 'map.announce.all.other', { count: ranked.length })
-    : t('map.announce.some', {
-        categories: topLevelCategories(data.categories).filter(category => chosen.includes(category.id)).map(category => categoryName(category, language)).join(', '),
-        count: kept.length,
-        total: ranked.length,
-      })
+    : chosenCount === 0
+      ? t('map.announce.dated', { count: kept.length, total: ranked.length })
+      : t('map.announce.some', {
+          categories: data.categories.filter(category => chosen.includes(category.id)).map(category => categoryName(category, language)).join(', '),
+          count: kept.length,
+          total: ranked.length,
+        })
 
   return (
     <section aria-labelledby={headingId} className="relative min-h-[28rem] flex-1 overflow-hidden">
@@ -227,12 +227,12 @@ export function MapScreen({ place }: { place?: string }) {
           followSelected
           dimmedIds={dimmedIds}
           pins={located}
-          renderCluster={(members, zoomIn) => <PhotoCluster count={members.length} dimmed={members.every(member => dimmedIds.has(member.id))} onPress={zoomIn} />}
+          renderCluster={(members, zoomIn) => <PhotoCluster count={members.length} icons={members.slice(0, 2).map(member => pinIcon(member, data.categories))} dimmed={members.every(member => dimmedIds.has(member.id))} onPress={zoomIn} />}
           renderPin={(pin, state) => {
             const date = pin.nextDate ? nextDateLine(pin.nextDate, today, intlLocale, dateCopy) : undefined
             const label = [pin.title, date && `${t('map.pin.event')}, ${date}`, state.dimmed && t('map.pin.dimmed')].filter(Boolean).join(', ')
 
-            return <PhotoPin dimmed={state.dimmed} emphasized={chosenCount > 0 && !state.dimmed} id={pin.id} label={label} photoSrc={pin.photoUrl ?? undefined} title={pin.title} selected={state.selected} onPress={state.select} />
+            return <PhotoPin dimmed={state.dimmed} emphasized={isFiltered && !state.dimmed} id={pin.id} label={label} icon={pinIcon(pin, data.categories)} photoSrc={pin.photoUrl ?? undefined} title={pin.title} selected={state.selected} onPress={state.select} />
           }}
           selectedId={openId}
           onSelect={openFromPin}
@@ -244,6 +244,7 @@ export function MapScreen({ place }: { place?: string }) {
               // Only the open card has read its pin: the others open the position. The card shows no tip (owner 2026-11-03), so it never changes size when the read arrives.
               ...(pin.id === openId && detail.data ? { mapsLink: detail.data.mapsLink } : {}),
             })}
+            iconOf={pin => pinIcon(pin, data.categories)}
             photoOf={pin => pin.photoUrl ?? undefined}
             pins={kept}
             selectedId={openId}
@@ -274,11 +275,11 @@ export function MapScreen({ place }: { place?: string }) {
         </div>
       )}
 
-      {gone && (
+      {(gone || badCategory) && (
         <div className="absolute start-3 end-[68px] top-[70px] z-[9] flex justify-center">
           <div className="flex w-full items-center gap-2 rounded-3xl bg-surface py-2 ps-5 pe-2 shadow-overlay" role="status">
-            <p className="flex-1 text-sm">{t('map.gone')}</p>
-            <Button isIconOnly aria-label={t('map.gone.close')} className="size-11 min-w-11 rounded-full" variant="tertiary" onPress={() => setGone(false)}>
+            <p className="flex-1 text-sm">{t(gone ? 'map.gone' : 'map.category.unknown')}</p>
+            <Button isIconOnly aria-label={t('map.gone.close')} className="size-11 min-w-11 rounded-full" variant="tertiary" onPress={() => gone ? setGone(false) : setBadCategory(false)}>
               <CloseIcon size={18} />
             </Button>
           </div>

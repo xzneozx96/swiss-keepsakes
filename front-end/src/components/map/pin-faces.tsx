@@ -1,3 +1,5 @@
+import type { CategoryIcon } from '@sk/api-contract'
+
 import { useLocale } from '@/contexts/locale-context'
 import { MapThumb } from './map-thumb'
 
@@ -20,12 +22,14 @@ function PinLabel({ title }: { title?: string }) {
 }
 
 /** A round photo pin (the place icon on the lake blue without a photo). A pin the filter keeps is lit and, with a filter chosen, grows; a pin outside it is dimmed, never hidden. */
-export function PhotoPin({ id, label, title, photoSrc, selected, dimmed, emphasized, onPress }: {
+export function PhotoPin({ id, label, title, photoSrc, icon, selected, dimmed, emphasized, onPress }: {
   id: string
   label: string
   /** Written above the pin when the layer shows labels. */
   title?: string
   photoSrc?: string
+  /** The category icon drawn where there is no photo. */
+  icon?: CategoryIcon | null
   selected: boolean
   dimmed: boolean
   /** A category is chosen and this pin is in it. */
@@ -47,6 +51,7 @@ export function PhotoPin({ id, label, title, photoSrc, selected, dimmed, emphasi
       <PinLabel title={title} />
       <MapThumb
         className={`rounded-full border-[3px] shadow-[0_4px_14px_rgb(31_24_17/0.35)] transition-[width,height] duration-200 motion-reduce:transition-none ${selected ? 'border-accent' : 'border-[#fffaf4]'} ${size}`}
+        icon={icon}
         iconSize={selected ? 24 : 18}
         src={photoSrc}
       />
@@ -56,7 +61,7 @@ export function PhotoPin({ id, label, title, photoSrc, selected, dimmed, emphasi
 }
 
 /** Close pins as two overlapping photos and the count. */
-export function PhotoCluster({ count, dimmed, onPress }: { count: number, dimmed: boolean, onPress: () => void }) {
+export function PhotoCluster({ count, dimmed, icons = [], onPress }: { count: number, dimmed: boolean, /** The icons of the first two pins, drawn on the two faces. */ icons?: (CategoryIcon | null)[], onPress: () => void }) {
   const { t } = useLocale()
 
   return (
@@ -70,6 +75,7 @@ export function PhotoCluster({ count, dimmed, onPress }: { count: number, dimmed
         <MapThumb
           key={i}
           className={`size-10 rounded-full border-[3px] border-[#fffaf4] shadow-[0_4px_14px_rgb(31_24_17/0.3)] ${i > 0 ? '-ms-5' : ''}`}
+          icon={icons[i]}
           iconSize={18}
         />
       ))}

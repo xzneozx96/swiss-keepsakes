@@ -11,7 +11,7 @@ const GROUP_PATH = `/api/store/${storeId}/story-groups/${groupId}`
 
 /** One blog category as the API lists it (`useCategories(storeId, 'blog')`). */
 export function categoryItem(id: string, en: string | null, de: string | null = null, parentId: string | null = null, position = 0) {
-  return { id, slug: id, name: { en, de }, parentId, showOnHome: false, position, childCount: 0, useCount: 0 }
+  return { id, slug: id, name: { en, de }, parentId, icon: null, showOnHome: false, position, childCount: 0, useCount: 0 }
 }
 
 /** The PATCHes of the group row itself (not of a version), in the order they were sent. */

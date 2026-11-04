@@ -1,4 +1,4 @@
-import type { ContentLanguage, Localized, PinDate, StayTag, TourGuideDoc } from '@sk/domain/content'
+import type { CategoryIcon, ContentLanguage, Localized, PinDate, StayTag, TourGuideDoc } from '@sk/domain/content'
 import type { Tx } from '../../../platform/db/client.ts'
 import type { PublicCategoryRow, PublicPinDetailRow, PublicPinRow, PublicReadRepository, PublicStoryDetailRow, PublicStoryRow, PublicTourRow, StoredStoryDoc } from '../read-ports.ts'
 import { sql } from 'drizzle-orm'
@@ -113,6 +113,7 @@ interface PinJoinRow {
   cover_media_id: string | null
   main_story_group_id: string | null
   first_published_at: Date
+  must_visit: boolean
 }
 
 type DateJoinRow = PinDate & { place_id: string }
@@ -135,7 +136,7 @@ async function loadPins(tx: Tx, pinIds: string[] | null): Promise<PublicPinRow[]
     return []
   const pins = await tx.execute<PinJoinRow & Record<string, unknown>>(sql`
     select v.id, v.slug, v.latitude, v.longitude, v.address, p.maps_link, v.weekly_hours, v.stay_tag, v.interests, v.published,
-           v.cover_media_id, v.main_story_group_id, p.first_published_at
+           v.cover_media_id, v.main_story_group_id, p.first_published_at, p.must_visit
       from content.public_pins v
       join content.places p on p.id = v.id and p.status = 'published'${pinIds ? sql` where v.id = any(${sql.param(pinIds)}::uuid[])` : sql``}
      order by p.first_published_at desc, v.id desc`)
@@ -187,6 +188,7 @@ async function loadPins(tx: Tx, pinIds: string[] | null): Promise<PublicPinRow[]
     interests: row.interests,
     name: row.published.name ?? {},
     tip: row.published.tip ?? {},
+    mustVisit: row.must_visit,
     firstPublishedAt: new Date(row.first_published_at),
     photoKey: (row.cover_media_id && coverOf.get(row.cover_media_id)?.storage_key) || null,
     photoWidth: (row.cover_media_id && coverOf.get(row.cover_media_id)?.width) || null,
@@ -326,14 +328,14 @@ export function createPublicReadRepository(): PublicReadRepository<Tx> {
     },
 
     async listCategories(tx, kind) {
-      // Only map categories have a home switch (the blog table has no such column).
-      const [table, show] = kind === 'map'
-        ? [sql`content.map_categories`, sql`show_on_home`]
-        : [sql`content.blog_categories`, sql`false`]
-      const result = await tx.execute<{ id: string, slug: string, name: PublicCategoryRow['name'], parent_id: string | null, show_on_home: boolean, position: number }>(sql`
-        select id, slug, name, parent_id, ${show} as show_on_home, position from ${table}
+      // Only map categories have an icon and a home switch (the blog table has no such columns).
+      const [table, icon, show] = kind === 'map'
+        ? [sql`content.map_categories`, sql`icon`, sql`show_on_home`]
+        : [sql`content.blog_categories`, sql`null::text`, sql`false`]
+      const result = await tx.execute<{ id: string, slug: string, name: PublicCategoryRow['name'], parent_id: string | null, icon: CategoryIcon | null, show_on_home: boolean, position: number }>(sql`
+        select id, slug, name, parent_id, ${icon} as icon, ${show} as show_on_home, position from ${table}
          order by parent_id nulls first, position, id`)
-      return result.rows.map(r => ({ id: r.id, slug: r.slug, name: r.name, parentId: r.parent_id, showOnHome: r.show_on_home, position: r.position }))
+      return result.rows.map(r => ({ id: r.id, slug: r.slug, name: r.name, parentId: r.parent_id, icon: r.icon, showOnHome: r.show_on_home, position: r.position }))
     },
 
     listVisiblePins: tx => loadPins(tx, null),

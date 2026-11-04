@@ -1,4 +1,4 @@
-import type { PublicMapItem } from '@sk/api-contract'
+import type { CategoryIcon, PublicMapItem } from '@sk/api-contract'
 
 import { Button } from '@heroui/react'
 
@@ -24,10 +24,11 @@ export interface CardExtras {
  * booking or payment button, no review summary. The `‹ n of m ›` steps are commented out (owner 2026-11-02): the cards
  * still swipe, and Show more takes the row.
  */
-function PlaceCard({ pin, active, photoSrc, extras, /* nav, */ directions, onMore }: {
+function PlaceCard({ pin, active, photoSrc, icon, extras, /* nav, */ directions, onMore }: {
   pin: PublicMapItem
   active: boolean
   photoSrc?: string
+  icon?: CategoryIcon | null
   extras?: CardExtras
   // nav: React.ComponentProps<typeof MapCard>['nav']
   directions: boolean
@@ -55,7 +56,7 @@ function PlaceCard({ pin, active, photoSrc, extras, /* nav, */ directions, onMor
       id={pin.id}
       layout="pin"
       // nav={nav}
-      thumb={<MapThumb className="size-full" iconSize={32} src={photoSrc} />}
+      thumb={<MapThumb className="size-full" icon={icon} iconSize={32} src={photoSrc} />}
       title={pin.title}
       titleLang={pin.language}
     />
@@ -72,6 +73,7 @@ export function PlaceCardRow({
   pins,
   selectedId,
   photoOf,
+  iconOf,
   extrasOf,
   bottom = CARD_ROW_BOTTOM,
   directions = true,
@@ -83,6 +85,8 @@ export function PlaceCardRow({
   selectedId: string
   /** The picture of a pin, when the caller knows it (the place editor's preview); without it a card shows the place icon. */
   photoOf?: (pin: PublicMapItem) => string | undefined
+  /** The category icon a pin draws where it has no picture. */
+  iconOf?: (pin: PublicMapItem) => CategoryIcon | null
   /** The category names and map link of a pin, when the caller knows them. */
   extrasOf?: (pin: PublicMapItem) => CardExtras | undefined
   /** Space under the row (px). The guest map keeps `CARD_ROW_BOTTOM`; the editor's preview has no tab bar or music button. */
@@ -102,7 +106,7 @@ export function PlaceCardRow({
       bottom={bottom}
       items={pins}
       label={t(pins.length === 1 ? 'map.places.one' : 'map.places.other', { count: pins.length })}
-      renderCard={(pin, { active /* , nav */ }) => <PlaceCard active={active} directions={directions} extras={extrasOf?.(pin)} /* nav={nav} */ photoSrc={photoOf?.(pin)} pin={pin} onMore={onMore} />}
+      renderCard={(pin, { active /* , nav */ }) => <PlaceCard active={active} directions={directions} extras={extrasOf?.(pin)} /* nav={nav} */ icon={iconOf?.(pin)} photoSrc={photoOf?.(pin)} pin={pin} onMore={onMore} />}
       selectedId={selectedId}
       onClose={onClose}
       onSelect={onSelect}

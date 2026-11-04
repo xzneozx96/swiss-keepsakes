@@ -180,14 +180,14 @@ describe('public stories', () => {
     expect(items[0]!.publishedAt).toBe('2090-02-01T00:00:00.000Z')
   })
 
-  it('[E2.12][AC45] categories keep the order given, show the names that exist with no fill, and carry the home switch', async () => {
-    const s = setup([], [{ id: id1, slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, showOnHome: false, position: 1 }, { id: id2, slug: 'cafes', name: { en: 'Cafes' }, parentId: id1, showOnHome: true, position: 1 }])
+  it('[E2.12][AC45] categories keep the order given, show the names that exist with no fill, and carry the icon and home switch', async () => {
+    const s = setup([], [{ id: id1, slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, icon: null, showOnHome: false, position: 1 }, { id: id2, slug: 'cafes', name: { en: 'Cafes' }, parentId: id1, icon: 'cafe', showOnHome: true, position: 1 }])
 
     const { items } = await s.categories('map')
 
     expect(items).toEqual([
-      { id: id1, slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, showOnHome: false, position: 1 },
-      { id: id2, slug: 'cafes', name: { en: 'Cafes', de: null }, parentId: id1, showOnHome: true, position: 1 },
+      { id: id1, slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, icon: null, showOnHome: false, position: 1 },
+      { id: id2, slug: 'cafes', name: { en: 'Cafes', de: null }, parentId: id1, icon: 'cafe', showOnHome: true, position: 1 },
     ])
   })
 
@@ -333,6 +333,7 @@ function pinRow(n: number, over: Partial<PublicPinRow> = {}): PublicPinRow {
     categories: [],
     parentCategories: [],
     mainStorySlugs: {},
+    mustVisit: false,
     ...over,
   }
 }

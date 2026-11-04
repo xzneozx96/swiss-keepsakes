@@ -26,6 +26,9 @@ export function mapItem(over: Partial<PublicMapItem> & { title: string }): Publi
     hasMainStory: false,
     mainStorySlug: null,
     photoUrl: null,
+    photoVariants: [],
+    mustVisit: false,
+    tip: '',
     ...over,
   }
 }

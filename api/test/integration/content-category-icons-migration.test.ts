@@ -3,6 +3,7 @@ import { randomBytes, randomUUID } from 'node:crypto'
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { categoryIcons } from '@sk/domain/content'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { Client, Pool as PgPool } from 'pg'
@@ -44,13 +45,13 @@ function folderUpTo(last: number): string {
   return folder
 }
 
-async function databaseAt0015(): Promise<Pool> {
+async function databaseAt(last: number): Promise<Pool> {
   const database = `sk_test_${randomBytes(6).toString('hex')}`
   scratchDatabases.push(database)
   await admin(`create database ${database}`)
   const pool = new PgPool({ connectionString: withDatabase(inject('databaseUrlUnpooled'), database), max: 1 })
   pools.push(pool)
-  await migrate(drizzle({ client: pool }), { migrationsFolder: folderUpTo(15) })
+  await migrate(drizzle({ client: pool }), { migrationsFolder: folderUpTo(last) })
   return pool
 }
 
@@ -95,7 +96,7 @@ async function columns(pool: Pool, table: string) {
 
 describe('[T-009b][AC3] migration 0016 moves the place service and food kind into category icons', () => {
   it('[T-009b][AC3] links the pins to categories with the icon, creates the missing ones, drops the columns and runs twice', async () => {
-    const pool = await databaseAt0015()
+    const pool = await databaseAt(15)
     const store = randomUUID()
     const other = randomUUID()
     const free = await category(pool, store, 'free-essentials', 'Free essentials', 'Gratis und praktisch')
@@ -165,8 +166,8 @@ describe('[T-009b][AC3] migration 0016 moves the place service and food kind int
       await pool.query(statement)
     expect(await counts()).toEqual(snapshot)
 
-    // 0018 (T-011) drops the icon and its CHECK, keeps the home switch and the rows, and runs twice.
-    await migrate(drizzle({ client: pool }), { migrationsFolder })
+    // 0018 (T-011) drops the icon and its CHECK, keeps the home switch and the rows, and runs twice. Stop there: 0026 puts the icon back.
+    await migrate(drizzle({ client: pool }), { migrationsFolder: folderUpTo(18) })
     expect(await columns(pool, 'map_categories')).not.toContain('icon')
     expect(await columns(pool, 'map_categories')).toContain('show_on_home')
     expect((await pool.query(`select 1 from pg_constraint where conname = 'map_categories_icon_check'`)).rowCount).toBe(0)
@@ -176,5 +177,46 @@ describe('[T-009b][AC3] migration 0016 moves the place service and food kind int
     for (const statement of drop.split('--> statement-breakpoint'))
       await pool.query(statement)
     expect(await counts()).toEqual(kept)
+  })
+})
+
+const rowsOf = async (pool: Pool) => (await pool.query(`select id, store_id, name, slug, parent_id, show_on_home, position from content.map_categories order by id`)).rows
+
+describe('[E4.13][AC1] migration 0026 gives a map category an icon again', () => {
+  it('[E4.13][AC1] adds a nullable icon column and the CHECK on the domain list, changes no row, and runs twice', async () => {
+    const pool = await databaseAt(25)
+    const store = randomUUID()
+    const free = await category(pool, store, 'free-essentials', 'Free essentials', 'Gratis und praktisch')
+    const toilets = await category(pool, store, 'toilets', 'Toilets', 'Toiletten', free)
+    await pool.query(`update content.map_categories set show_on_home = true where id = $1`, [toilets])
+    expect(await columns(pool, 'map_categories')).not.toContain('icon')
+    const before = await rowsOf(pool)
+
+    await migrate(drizzle({ client: pool }), { migrationsFolder })
+
+    const column = (await pool.query<{ type: string, nullable: string }>(`select data_type as type, is_nullable as nullable from information_schema.columns where table_schema = 'content' and table_name = 'map_categories' and column_name = 'icon'`)).rows
+    expect(column).toEqual([{ type: 'text', nullable: 'YES' }])
+    expect(await rowsOf(pool)).toEqual(before)
+    expect((await pool.query(`select 1 from content.map_categories where icon is not null`)).rowCount).toBe(0)
+    // No other table and no other column changed: the home switch is as it was.
+    expect((await pool.query<{ on_home: boolean }>(`select show_on_home as on_home from content.map_categories where id = $1`, [toilets])).rows[0]!.on_home).toBe(true)
+
+    // The CHECK holds exactly the domain list.
+    const definition = (await pool.query<{ def: string }>(`select pg_get_constraintdef(oid) as def from pg_constraint where conname = 'map_categories_icon_check' and conrelid = 'content.map_categories'::regclass`)).rows[0]!.def
+    const keys = Array.from(definition.matchAll(/'([^']+)'::text/g), match => match[1]!)
+    expect([...keys].sort()).toEqual([...categoryIcons].sort())
+    for (const icon of categoryIcons)
+      await pool.query(`update content.map_categories set icon = $1 where id = $2`, [icon, toilets])
+    await expect(pool.query(`update content.map_categories set icon = 'toilets' where id = $1`, [toilets])).rejects.toMatchObject({ constraint: 'map_categories_icon_check' })
+    await pool.query(`update content.map_categories set icon = null where id = $1`, [toilets])
+
+    // Run the same file again: nothing fails and nothing changes.
+    const sql = readFileSync(join(migrationsFolder, '0026_map_category_icon.sql'), 'utf8')
+    await pool.query(`update content.map_categories set icon = 'water' where id = $1`, [toilets])
+    for (const statement of sql.split('--> statement-breakpoint'))
+      await pool.query(statement)
+    expect((await pool.query<{ icon: string }>(`select icon from content.map_categories where id = $1`, [toilets])).rows[0]!.icon).toBe('water')
+    expect((await rowsOf(pool))).toEqual(before)
+    expect((await pool.query(`select 1 from pg_constraint where conname = 'map_categories_icon_check'`)).rowCount).toBe(1)
   })
 })

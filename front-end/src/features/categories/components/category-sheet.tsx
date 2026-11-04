@@ -1,4 +1,4 @@
-import type { CategoryKind, MerchantCategory } from '@sk/api-contract'
+import type { CategoryIcon, CategoryKind, MerchantCategory } from '@sk/api-contract'
 import type { MessageKey } from '@/i18n/en'
 
 import { Button, Form, Input, Label, ListBox, Select, Switch, TextField } from '@heroui/react'
@@ -11,6 +11,7 @@ import { useSubmit } from '@/features/data-client/use-command'
 import { useIdempotencyKey } from '@/features/stores/hooks/use-idempotency-key'
 import { problemTypeToMessageKey } from '../lib/category-problems'
 import { nameOf } from '../lib/category-tree'
+import { IconPicker } from './icon-picker'
 
 const ROOT = 'root'
 
@@ -36,6 +37,7 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
   const [nameEn, setNameEn] = useState(category?.name.en ?? '')
   const [nameDe, setNameDe] = useState(category?.name.de ?? '')
   const [parent, setParent] = useState(initialParent ?? ROOT)
+  const [icon, setIcon] = useState<CategoryIcon | null>(category?.icon ?? null)
   const [showOnHome, setShowOnHome] = useState(category?.showOnHome ?? false)
   const [nameMissing, setNameMissing] = useState(false)
   // Both show their refusal inline (failureKey below), so the cache stays silent on error.
@@ -48,7 +50,7 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
     ...(nameDe.trim() === '' ? {} : { de: nameDe.trim() }),
   }
   const parentId = parent === ROOT ? null : parent
-  const key = useIdempotencyKey({ storeId, kind, id: category?.id, name, parentId, showOnHome })
+  const key = useIdempotencyKey({ storeId, kind, id: category?.id, name, parentId, icon, showOnHome })
   const failure = error instanceof ApiProblem ? error : undefined
   const failureKey: MessageKey | undefined = error ? (failure ? problemTypeToMessageKey(failure.type) : 'categories.problem.generic') : undefined
   const parents = roots.filter(root => root.id !== category?.id)
@@ -74,12 +76,13 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
         id: category.id,
         name,
         ...(fixedAtTop || parentId === category.parentId ? {} : { parentId }),
+        ...(kind === 'map' && icon !== category.icon ? { icon } : {}),
         ...(kind === 'map' && showOnHome !== category.showOnHome ? { showOnHome } : {}),
         idempotencyKey: key.next(),
       }, callbacks)
     }
     else {
-      create.submit({ storeId, kind, name, ...(parentId === null ? {} : { parentId }), ...(kind === 'map' && showOnHome ? { showOnHome } : {}), idempotencyKey: key.next() }, callbacks)
+      create.submit({ storeId, kind, name, ...(parentId === null ? {} : { parentId }), ...(kind === 'map' && icon !== null ? { icon } : {}), ...(kind === 'map' && showOnHome ? { showOnHome } : {}), idempotencyKey: key.next() }, callbacks)
     }
   }
 
@@ -170,6 +173,13 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
             )}
         {kind === 'map' && (
           <>
+            <IconPicker
+              value={icon}
+              onChange={(next) => {
+                setIcon(next)
+                reset()
+              }}
+            />
             <Switch
               isSelected={showOnHome}
               onChange={(next) => {

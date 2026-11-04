@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { categoryIconSchema } from './categories.ts'
 import { BODY_LIST_LEVELS, listItemSchema } from './content.ts'
 
 // What the public reads return: published text in one language, media as a storage key, and no price anywhere.
@@ -167,6 +168,9 @@ export const publicMapItemSchema = z.object({
   hasMainStory: z.boolean(),
   mainStorySlug: z.string().nullable(),
   photoUrl: z.string().nullable().meta({ description: 'The smallest copy of the cover photo; null when the pin has none' }),
+  photoVariants: z.array(z.object({ width: z.int(), url: z.string() })).meta({ description: 'The webp copies of the cover, smallest first (320, 640, 1280, 1920 px as far as the image is wide); empty without a cover' }),
+  mustVisit: z.boolean().meta({ description: 'The merchant\'s must-visit flag' }),
+  tip: z.string().meta({ description: 'The local tip in the carried language, with the same fallback as the title; empty when the pin has none' }),
 }).meta({ id: 'PublicMapItem', description: 'One pin on the map list' })
 
 export const publicMapSchema = z.object({
@@ -211,6 +215,7 @@ export const publicCategorySchema = z.object({
   slug: z.string(),
   name: z.object({ en: z.string().nullable(), de: z.string().nullable() }),
   parentId: z.uuid().nullable(),
+  icon: categoryIconSchema.nullable().meta({ description: 'The icon of a map category (always null for a blog category)' }),
   showOnHome: z.boolean().meta({ description: 'Whether a map category is listed on the home (always false for a blog category)' }),
   position: z.int(),
 }).meta({ id: 'PublicCategory' })

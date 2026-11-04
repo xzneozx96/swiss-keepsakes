@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { categoryLabel, includedParents, toggleCategory, visibleCategories } from '@/features/stories/lib/categories'
 
 function category(id: string, en: string | null, de: string | null, parentId: string | null = null, position = 0): MerchantCategory {
-  return { id, slug: id, parentId, name: { en, de }, showOnHome: false, position, childCount: 0, useCount: 0 }
+  return { id, slug: id, parentId, name: { en, de }, icon: null, showOnHome: false, position, childCount: 0, useCount: 0 }
 }
 
 const all = [

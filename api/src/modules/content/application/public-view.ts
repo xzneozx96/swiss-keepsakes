@@ -1,4 +1,4 @@
-import type { ContentLanguage, Localized, PinDate, StayTag } from '@sk/domain/content'
+import type { CategoryIcon, ContentLanguage, Localized, PinDate, StayTag } from '@sk/domain/content'
 import type { PublicCategoryListRow, PublicPinDetailRow, PublicPinRow, PublicStoryDetailRow, PublicStoryKeepsakeCard, PublicStoryRow, PublicStoryVersionRow, PublicTourRow } from '../read-ports.ts'
 import { isSafeLinkHref, languagesOf, STORY_BODY_LIMITS, storyBodyReadMinutes, variantKey, variantWidthsFor } from '@sk/domain/content'
 import { pickLanguage } from './language.ts'
@@ -7,7 +7,7 @@ import { nextDate, withParents } from './pin-dates.ts'
 // Rows to the public response shapes. Nothing here reads a store or a price. The application layer may not import
 // the API contract, so the shapes are written here; the tests parse every output with the contract schemas.
 
-export interface PublicCategory { id: string, slug: string, name: { en: string | null, de: string | null }, parentId: string | null, showOnHome: boolean, position: number }
+export interface PublicCategory { id: string, slug: string, name: { en: string | null, de: string | null }, parentId: string | null, icon: CategoryIcon | null, showOnHome: boolean, position: number }
 export interface PublicCategoryList { items: PublicCategory[] }
 
 interface LanguageNotice { language: ContentLanguage, requestedLanguage: ContentLanguage, fallback: boolean, availableLanguages: ContentLanguage[] }
@@ -175,7 +175,7 @@ function publicBody(version: PublicStoryVersionRow, publicUrl: (key: string) => 
 }
 
 export function toPublicCategory(row: PublicCategoryListRow): PublicCategory {
-  return { id: row.id, slug: row.slug, name: { en: row.name.en ?? null, de: row.name.de ?? null }, parentId: row.parentId, showOnHome: row.showOnHome, position: row.position }
+  return { id: row.id, slug: row.slug, name: { en: row.name.en ?? null, de: row.name.de ?? null }, parentId: row.parentId, icon: row.icon, showOnHome: row.showOnHome, position: row.position }
 }
 
 // The version carried and the notice about it, or null when the story has no published version.
@@ -300,6 +300,10 @@ export interface PublicMapItem {
   mainStorySlug: string | null
   // The smallest copy of the cover, for a pin or a card thumbnail; null when the pin has no ready cover.
   photoUrl: string | null
+  // The webp copies of that cover, smallest first; empty without a cover or when its width is unknown.
+  photoVariants: { width: number, url: string }[]
+  mustVisit: boolean
+  tip: string
 }
 
 export interface PublicMap { items: PublicMapItem[] }
@@ -416,6 +420,9 @@ export function toMapItem(row: PublicPinRow, requested: ContentLanguage, now: Da
     hasMainStory: pin.hasMainStory,
     mainStorySlug: pin.mainStorySlug,
     photoUrl: row.photoKey ? (variantsOf(row.photoKey, row.photoWidth, publicUrl)[0]?.url ?? publicUrl(row.photoKey)) : null,
+    photoVariants: row.photoKey ? variantsOf(row.photoKey, row.photoWidth, publicUrl) : [],
+    mustVisit: row.mustVisit,
+    tip: pin.tip,
   }
 }
 

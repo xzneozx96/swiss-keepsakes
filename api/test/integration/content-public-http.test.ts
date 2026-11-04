@@ -173,7 +173,7 @@ describe('[E2.12] the public routes over the real app and the database', () => {
     const map = await (await get(env, '/api/public/map?lang=en')).json() as { items: Record<string, unknown>[] }
     const item = map.items.find(i => i.id === id)!
 
-    expect(Object.keys(item).sort()).toEqual(['categoryIds', 'hasMainStory', 'id', 'interests', 'language', 'latitude', 'longitude', 'mainStorySlug', 'nextDate', 'photoUrl', 'slug', 'stayTag', 'title'])
+    expect(Object.keys(item).sort()).toEqual(['categoryIds', 'hasMainStory', 'id', 'interests', 'language', 'latitude', 'longitude', 'mainStorySlug', 'mustVisit', 'nextDate', 'photoUrl', 'photoVariants', 'slug', 'stayTag', 'tip', 'title'])
     expect(item).toMatchObject({ title: 'A place', hasMainStory: true, mainStorySlug: story.slug, language: 'en' })
   })
 

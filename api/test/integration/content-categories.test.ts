@@ -28,7 +28,7 @@ const env = createContentHttp({ pool, db }, undefined, undefined, {
 })
 
 type Kind = 'map' | 'blog'
-interface Category { id: string, slug: string, name: { en: string | null, de: string | null }, parentId: string | null, showOnHome: boolean, position: number, childCount: number, useCount: number }
+interface Category { id: string, slug: string, name: { en: string | null, de: string | null }, parentId: string | null, icon: string | null, showOnHome: boolean, position: number, childCount: number, useCount: number }
 
 const table = (kind: Kind) => kind === 'map' ? 'map_categories' : 'blog_categories'
 
@@ -258,21 +258,22 @@ describe.each(['map', 'blog'] as const)('[E4.18][AC87] the %s category list over
     expect(audit.rows).toEqual([{ entity: `${kind}_category`, action: 'created' }])
   })
 
-  it('[T-011][AC4] the home switch is set, shown again after a reload and in the public list; false clears it; an icon is 400 and no list carries one', async () => {
+  it('[T-011][AC4] the home switch is set, shown again after a reload and in the public list; false clears it; the icon is saved, read, listed publicly and cleared with null; a blog category has none, a key outside the set is 400', async () => {
     const s = await setup()
     if (kind === 'blog') {
       // A blog category is never on the home: true is 422, and the lists say false.
       expect((await s.create(kind, { name: { en: 'Tips' }, showOnHome: true })).status).toBe(422)
       const tips = await s.made(kind, { name: { en: 'Tips' }, showOnHome: false })
-      expect(tips).toMatchObject({ showOnHome: false })
+      expect(tips).toMatchObject({ icon: null, showOnHome: false })
       expect((await env.call(s.url(kind, `/${tips.id}`), { method: 'PATCH', headers: s.as, body: { showOnHome: true } })).status).toBe(422)
-      expect((await publicNames(kind)).get(tips.id)).toMatchObject({ showOnHome: false })
+      expect((await env.call(s.url(kind, `/${tips.id}`), { method: 'PATCH', headers: s.as, body: { icon: 'cafe' } })).status).toBe(422)
+      expect((await s.create(kind, { name: { en: 'Cafes' }, icon: 'cafe' })).status).toBe(422)
+      expect((await publicNames(kind)).get(tips.id)).toMatchObject({ icon: null, showOnHome: false })
       return
     }
     const free = await s.made(kind, { name: { en: 'Free essentials' } })
     const toilets = await s.made(kind, { name: { en: 'Toilets', de: 'Toiletten' }, parentId: free.id })
-    expect(toilets).toMatchObject({ showOnHome: false })
-    expect(toilets).not.toHaveProperty('icon')
+    expect(toilets).toMatchObject({ icon: null, showOnHome: false })
     const patch = (body: object) => env.call(s.url(kind, `/${toilets.id}`), { method: 'PATCH', headers: s.as, body })
 
     const saved = await patch({ showOnHome: true })
@@ -280,22 +281,36 @@ describe.each(['map', 'blog'] as const)('[E4.18][AC87] the %s category list over
     expect(await saved.json()).toMatchObject({ showOnHome: true, name: { en: 'Toilets', de: 'Toiletten' }, parentId: free.id })
     expect((await s.list(kind)).find(c => c.id === toilets.id)).toMatchObject({ showOnHome: true })
     expect((await publicNames(kind)).get(toilets.id)).toMatchObject({ showOnHome: true })
-    expect((await publicNames(kind)).get(toilets.id)).not.toHaveProperty('icon')
     expect((await publicNames(kind)).get(free.id)).toMatchObject({ showOnHome: false })
     // A name change keeps it; false clears it.
     expect(await (await patch({ name: { en: 'Toilets', de: 'WC' } })).json()).toMatchObject({ showOnHome: true })
     expect(await (await patch({ showOnHome: false })).json()).toMatchObject({ showOnHome: false })
-    expect((await patch({ icon: 'toilet' })).status).toBe(400)
+    expect((await patch({ icon: 'toilets' })).status).toBe(400)
+    // The icon: saved and read again, kept by a name change, in the public list, cleared by null.
+    expect(await (await patch({ icon: 'water' })).json()).toMatchObject({ icon: 'water', showOnHome: false })
+    expect((await s.list(kind)).find(c => c.id === toilets.id)).toMatchObject({ icon: 'water' })
+    expect((await publicNames(kind)).get(toilets.id)).toMatchObject({ icon: 'water', showOnHome: false })
+    expect((await publicNames(kind)).get(free.id)).toMatchObject({ icon: null })
+    expect(await (await patch({ name: { en: 'Toilets', de: 'WC' } })).json()).toMatchObject({ icon: 'water' })
+    expect(await (await patch({ icon: null })).json()).toMatchObject({ icon: null })
+    expect((await publicNames(kind)).get(toilets.id)).toMatchObject({ icon: null })
+    await patch({ icon: 'toilet' })
     const bakeries = await s.create(kind, { name: { en: 'Bakeries' }, showOnHome: true })
     expect(bakeries.status).toBe(201)
     expect(await bakeries.json()).toMatchObject({ showOnHome: true })
-    expect((await s.create(kind, { name: { en: 'Cafes' }, icon: 'cafe' })).status).toBe(400)
-    const audit = await pool.query<{ action: string, after: { showOnHome: boolean } | null }>('select action, after from platform.audit_log where entity_id = $1 order by id', [toilets.id])
-    expect(audit.rows.map(r => [r.action, r.after?.showOnHome ?? null])).toEqual([
-      ['created', false],
-      ['updated', true],
-      ['updated', true],
-      ['updated', false],
+    const cafes = await s.create(kind, { name: { en: 'Cafes' }, icon: 'cafe' })
+    expect(cafes.status).toBe(201)
+    expect(await cafes.json()).toMatchObject({ icon: 'cafe' })
+    const audit = await pool.query<{ action: string, after: { icon: string | null, showOnHome: boolean } | null }>('select action, after from platform.audit_log where entity_id = $1 order by id', [toilets.id])
+    expect(audit.rows.map(r => [r.action, r.after?.icon ?? null, r.after?.showOnHome ?? null])).toEqual([
+      ['created', null, false],
+      ['updated', null, true],
+      ['updated', null, true],
+      ['updated', null, false],
+      ['updated', 'water', false],
+      ['updated', 'water', false],
+      ['updated', null, false],
+      ['updated', 'toilet', false],
     ])
   })
 

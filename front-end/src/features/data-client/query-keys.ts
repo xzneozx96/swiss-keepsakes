@@ -24,6 +24,8 @@ export const queryKeys = {
   keepsakes: {
     list: ['keepsakes', 'list'],
     detail: ['keepsakes', 'detail'],
+    /** The public list a guest reads (`GET /api/public/keepsakes`), one entry per language. */
+    publicList: ['keepsakes', 'public'],
     tourBlock: ['keepsakes', 'list', 'tour-block'],
   },
   media: {

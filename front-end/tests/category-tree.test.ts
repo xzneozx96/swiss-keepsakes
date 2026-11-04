@@ -5,7 +5,7 @@ import { canMove, displayOrder, matches, nameOf, refusalOf, reorderedIds, withOr
 
 const uuid = (n: number) => `0198a000-0000-7000-8000-00000000000${n}`
 function make(n: number, parentId: number | null, en: string | null, de: string | null, counts = { childCount: 0, useCount: 0 }) {
-  return merchantCategorySchema.parse({ id: uuid(n), slug: `c${n}`, name: { en, de }, parentId: parentId === null ? null : uuid(parentId), position: n, showOnHome: false, ...counts })
+  return merchantCategorySchema.parse({ id: uuid(n), slug: `c${n}`, name: { en, de }, parentId: parentId === null ? null : uuid(parentId), icon: null, position: n, showOnHome: false, ...counts })
 }
 
 const sights = make(1, null, 'Sights', 'Sehenswürdigkeiten', { childCount: 2, useCount: 0 })

@@ -31,7 +31,7 @@ export function CategoriesSheet({
   const top = topLevelCategories(categories)
   const topIds = top.map(category => category.id)
   const [draft, setDraft] = useState(() => chosen.length > 0 ? chosen : topIds)
-  const allPicked = draft.length === topIds.length
+  const allPicked = topIds.every(topId => draft.includes(topId))
   const count = allPicked ? pins.length : keepHighlighted(pins, draft, categories).length
 
   return (

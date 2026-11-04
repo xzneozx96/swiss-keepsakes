@@ -12,6 +12,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { useLevelDrag } from '../hooks/use-level-drag'
 import { childrenOf, matches, nameOf, refusalOf, rootsOf } from '../lib/category-tree'
 import { DropSlot, Grip } from './category-drag'
+import { CategoryNameIcon } from './category-name-icon'
 
 const NAME_WIDTHS = ['w-3/5', 'w-1/2', 'w-2/3', 'w-2/5', 'w-1/2']
 const card = 'flex flex-col gap-3 rounded-3xl bg-surface p-4 shadow-surface'
@@ -150,6 +151,7 @@ function CategoryList({ items, kind, actions, onPage }: { items: MerchantCategor
       <button className="flex min-w-0 flex-1 items-center gap-3 py-3 pe-4 text-start outline-none focus-visible:focus-ring" type="button" onClick={() => onPage(category.id)}>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="flex items-center gap-1.5">
+            <CategoryNameIcon icon={category.icon} />
             <span className="font-semibold [overflow-wrap:anywhere]">{nameOf(category)}</span>
           </span>
           {parent && <span className="text-xs text-muted">{t('categories.phone.in', { name: nameOf(parent) })}</span>}
@@ -221,6 +223,7 @@ function CategoryPage({ category, items, kind, actions, busy, onPage }: {
         <span className="text-label text-muted">{parent ? t('categories.phone.subOf', { name: nameOf(parent) }) : t('categories.phone.topLevel')}</span>
         <div className="flex items-start justify-between gap-3">
           <h2 className="flex min-w-0 items-center gap-2 text-heading [overflow-wrap:anywhere]">
+            <CategoryNameIcon icon={category.icon} />
             {nameOf(category)}
           </h2>
           <Button className="min-h-11 shrink-0" variant="secondary" onPress={() => actions.edit(category)}>
@@ -265,6 +268,7 @@ function CategoryPage({ category, items, kind, actions, busy, onPage }: {
                     <button className="flex min-w-0 flex-1 items-center gap-3 py-2.5 pe-4 text-start outline-none focus-visible:focus-ring" type="button" onClick={() => onPage(kid.id)}>
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-1.5 text-sm font-medium">
+                          <CategoryNameIcon icon={kid.icon} />
                           <span className="[overflow-wrap:anywhere]">{nameOf(kid)}</span>
                         </span>
                         <OtherName category={kid} />

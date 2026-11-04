@@ -2,7 +2,7 @@ import type { Article } from '@sk/domain/content'
 import type {
   DiscoveryHomeView,
   StoryView,
-} from '../components/discovery-home'
+} from '../lib/home-view'
 
 import { isPublished, isSoldOut } from '@sk/domain/catalog'
 

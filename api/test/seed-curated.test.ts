@@ -1,6 +1,6 @@
-import { descriptionLength, interestCodes } from '@sk/domain/content'
+import { categoryIcons, descriptionLength, interestCodes } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
-import { buildPlan, categorySpecs, loadData, parseFlags, placeChanges, productInput } from '../scripts/seed-curated.ts'
+import { buildPlan, categorySpecs, iconPlan, loadData, parseFlags, placeChanges, productInput } from '../scripts/seed-curated.ts'
 
 const data = loadData()
 const empty = { categories: [], placeTitles: new Set<string>(), keepsakeNames: new Set<string>(), hashes: new Set<string>() }
@@ -79,6 +79,31 @@ describe('[seed-curated] the curated data maps to writes', () => {
   it('reuses a category by its English name when the slug differs', () => {
     const plan = buildPlan(data, { ...empty, categories: [{ id: 'x', slug: 'public-holidays', nameEn: 'Public holidays' }] })
     expect(plan.categoriesToCreate.map(c => c.slug)).not.toContain('holidays')
+  })
+})
+
+describe('[E4.13][AC7] the seed icon step plans additions only', () => {
+  it('[E4.13][AC7] every icon of the spec table is a key of the domain list', () => {
+    const icons = categorySpecs.flatMap(spec => spec.icon ?? [])
+    expect(icons.length).toBeGreaterThan(10)
+    expect(icons.every(icon => (categoryIcons as readonly string[]).includes(icon))).toBe(true)
+  })
+
+  it('[E4.13][AC7] gives an icon to the seeded categories that have none, never to one that has it, found by slug or English name', () => {
+    const rows = [
+      { id: 'a', slug: 'toilets', nameEn: 'Toilets', icon: null },
+      { id: 'b', slug: 'water', nameEn: 'Drinking water', icon: 'lake' },
+      { id: 'c', slug: 'my-own-slug', nameEn: 'Churches', icon: null },
+      { id: 'd', slug: 'sights', nameEn: 'Sights', icon: null },
+      { id: 'e', slug: 'not-in-the-seed', nameEn: 'Something else', icon: null },
+    ] as const
+    const additions = iconPlan(categorySpecs, rows)
+    expect(additions).toEqual([{ id: 'a', icon: 'toilet' }, { id: 'c', icon: 'church' }])
+  })
+
+  it('[E4.13][AC7] plans nothing when every seeded category has its icon', () => {
+    const rows = categorySpecs.map((spec, i) => ({ id: String(i), slug: spec.slug, nameEn: spec.name.en, icon: spec.icon ?? 'info' }))
+    expect(iconPlan(categorySpecs, rows)).toEqual([])
   })
 })
 

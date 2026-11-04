@@ -6,6 +6,7 @@ import { stepsEn } from '@/components/step-messages'
 import { categoriesEn } from '@/features/categories/messages'
 import { contentMerchantEn } from '@/features/content/merchant/messages'
 import { contentEn } from '@/features/content/messages'
+import { homeEn } from '@/features/home/messages'
 import { inventoryEn } from '@/features/inventory/messages'
 import { keepsakesEn } from '@/features/keepsakes/messages'
 import { mapEn } from '@/features/map/messages'
@@ -67,6 +68,7 @@ export const en = {
   ...mapEn,
   ...searchScreenEn,
   ...mapKitEn,
+  ...homeEn,
 
   'app.name': 'Swiss Keepsakes',
   'app.prototypeBadge': 'Prototype · mock data',

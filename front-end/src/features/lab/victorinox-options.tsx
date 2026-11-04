@@ -4,7 +4,7 @@
  * V3 to V5 are in victorinox-options-2.tsx. Lab-only copy is written in English.
  */
 import type { ProductCardProps } from '@/features/catalog/components/product-card'
-import type { StoryView } from '@/features/discovery/components/discovery-home'
+import type { StoryView } from '@/features/discovery/lib/home-view'
 
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'

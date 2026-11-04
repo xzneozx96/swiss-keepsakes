@@ -4785,8 +4785,13 @@ export interface components {
             /** Format: uuid */
             parentId: string | null;
         };
-        /** @description A name replaces both languages. A changed parentId appends the category last under the new parent. showOnHome sets the home switch */
+        /** @description A name replaces both languages. A changed parentId appends the category last under the new parent. icon sets or clears the icon, showOnHome sets the home switch */
         CategoryPatchBody: {
+            /**
+             * @description Map categories only; null clears the icon
+             * @enum {string|null}
+             */
+            icon?: "toilet" | "water" | "wifi" | "locker" | "cash" | "bank" | "info" | "emergency" | "pharmacy" | "hospital" | "post" | "transport" | "train" | "boat" | "bicycle" | "scooter" | "car" | "airport" | "fuel" | "parking" | "charging" | "taxi" | "restaurant" | "cafe" | "bar" | "brewery" | "bakery" | "pizza" | "dessert" | "tea" | "market" | "supermarket" | "landmark" | "church" | "castle" | "tower" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "old-town" | "photo-spot" | "art" | "theatre" | "library" | "shop" | "souvenirs" | "watches" | "clothing" | "jewellery" | "books" | "bags" | "mountain" | "park" | "tree" | "lake" | "snow" | "sun" | "hiking" | "cycling" | "swimming" | "campfire" | "event" | "festival" | "concert" | "tickets" | "fair" | "sport" | "wellness" | "family" | "pets" | "holiday" | "hotel" | "laundry" | "tour" | "route" | "walk" | null;
             name?: components["schemas"]["CategoryNameInput"];
             /** Format: uuid */
             parentId?: string | null;
@@ -4795,6 +4800,11 @@ export interface components {
         };
         /** @description A new category, appended last among its siblings. The slug is made from the name and never changes */
         CategoryWriteBody: {
+            /**
+             * @description Map categories only; a blog category with an icon is 422
+             * @enum {string|null}
+             */
+            icon?: "toilet" | "water" | "wifi" | "locker" | "cash" | "bank" | "info" | "emergency" | "pharmacy" | "hospital" | "post" | "transport" | "train" | "boat" | "bicycle" | "scooter" | "car" | "airport" | "fuel" | "parking" | "charging" | "taxi" | "restaurant" | "cafe" | "bar" | "brewery" | "bakery" | "pizza" | "dessert" | "tea" | "market" | "supermarket" | "landmark" | "church" | "castle" | "tower" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "old-town" | "photo-spot" | "art" | "theatre" | "library" | "shop" | "souvenirs" | "watches" | "clothing" | "jewellery" | "books" | "bags" | "mountain" | "park" | "tree" | "lake" | "snow" | "sun" | "hiking" | "cycling" | "swimming" | "campfire" | "event" | "festival" | "concert" | "tickets" | "fair" | "sport" | "wellness" | "family" | "pets" | "holiday" | "hotel" | "laundry" | "tour" | "route" | "walk" | null;
             name: components["schemas"]["CategoryNameInput"];
             /** Format: uuid */
             parentId?: string | null;
@@ -5929,6 +5939,11 @@ export interface components {
         };
         MerchantCategory: {
             childCount: number;
+            /**
+             * @description Always null for a blog category
+             * @enum {string|null}
+             */
+            icon: "toilet" | "water" | "wifi" | "locker" | "cash" | "bank" | "info" | "emergency" | "pharmacy" | "hospital" | "post" | "transport" | "train" | "boat" | "bicycle" | "scooter" | "car" | "airport" | "fuel" | "parking" | "charging" | "taxi" | "restaurant" | "cafe" | "bar" | "brewery" | "bakery" | "pizza" | "dessert" | "tea" | "market" | "supermarket" | "landmark" | "church" | "castle" | "tower" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "old-town" | "photo-spot" | "art" | "theatre" | "library" | "shop" | "souvenirs" | "watches" | "clothing" | "jewellery" | "books" | "bags" | "mountain" | "park" | "tree" | "lake" | "snow" | "sun" | "hiking" | "cycling" | "swimming" | "campfire" | "event" | "festival" | "concert" | "tickets" | "fair" | "sport" | "wellness" | "family" | "pets" | "holiday" | "hotel" | "laundry" | "tour" | "route" | "walk" | null;
             /** Format: uuid */
             id: string;
             name: {
@@ -6614,6 +6629,11 @@ export interface components {
             };
         };
         PublicCategory: {
+            /**
+             * @description The icon of a map category (always null for a blog category)
+             * @enum {string|null}
+             */
+            icon: "toilet" | "water" | "wifi" | "locker" | "cash" | "bank" | "info" | "emergency" | "pharmacy" | "hospital" | "post" | "transport" | "train" | "boat" | "bicycle" | "scooter" | "car" | "airport" | "fuel" | "parking" | "charging" | "taxi" | "restaurant" | "cafe" | "bar" | "brewery" | "bakery" | "pizza" | "dessert" | "tea" | "market" | "supermarket" | "landmark" | "church" | "castle" | "tower" | "bridge" | "monument" | "museum" | "viewpoint" | "square" | "old-town" | "photo-spot" | "art" | "theatre" | "library" | "shop" | "souvenirs" | "watches" | "clothing" | "jewellery" | "books" | "bags" | "mountain" | "park" | "tree" | "lake" | "snow" | "sun" | "hiking" | "cycling" | "swimming" | "campfire" | "event" | "festival" | "concert" | "tickets" | "fair" | "sport" | "wellness" | "family" | "pets" | "holiday" | "hotel" | "laundry" | "tour" | "route" | "walk" | null;
             /** Format: uuid */
             id: string;
             name: {
@@ -6785,12 +6805,21 @@ export interface components {
             latitude: number;
             longitude: number;
             mainStorySlug: string | null;
+            /** @description The merchant's must-visit flag */
+            mustVisit: boolean;
             nextDate: components["schemas"]["NextDate"];
             /** @description The smallest copy of the cover photo; null when the pin has none */
             photoUrl: string | null;
+            /** @description The webp copies of the cover, smallest first (320, 640, 1280, 1920 px as far as the image is wide); empty without a cover */
+            photoVariants: {
+                url: string;
+                width: number;
+            }[];
             slug: string | null;
             /** @enum {string} */
             stayTag: "short_stay" | "multi_day" | "both";
+            /** @description The local tip in the carried language, with the same fallback as the title; empty when the pin has none */
+            tip: string;
             title: string;
         };
         /** @description A photo of a pin, with its public addresses */

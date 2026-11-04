@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
 import { useLatest } from '@/hooks/use-latest'
-import { MapContext } from './map-context'
+import { GUEST_TAB_BAR, MapContext } from './map-context'
 import { MapCredits } from './map-credits'
 import { MapStatusLayer } from './map-status'
 import { useMapInstance } from './use-map-instance'
@@ -42,6 +42,7 @@ export function MapView({
   creditsBottom,
   overlay,
   safeArea = false,
+  tabBarSpace = true,
   className = '',
   onRetry,
   onFailed,
@@ -63,6 +64,8 @@ export function MapView({
   /** How far the credits sit above the frame's bottom edge (px). Without it they stay clear of `insets.bottom` (above the screen's card); a screen that keeps them in the corner passes 8. */
   creditsBottom?: number
   safeArea?: boolean
+  /** The frame ends above the guest tab bar, so overlays at its foot keep `GUEST_TAB_BAR` px clear (the guest map screen). `false` for a map that ends where the page goes on (the home's embedded map): `useMap().tabBarSpace` is then 0. */
+  tabBarSpace?: boolean
   /** Controls drawn over the map that stay pressable when the map is `inert` (they may use `useMap()` too). */
   overlay?: ReactNode
   className?: string
@@ -145,9 +148,10 @@ export function MapView({
     }
   }, [fullscreen])
 
+  const tabBar = tabBarSpace ? GUEST_TAB_BAR : 0
   const value = useMemo<MapContextValue>(
-    () => ({ map, maplibre, state, drawn, mode, insets, frameRef, fullscreen, setFullscreen }),
-    [map, maplibre, state, drawn, mode, insets, fullscreen],
+    () => ({ map, maplibre, state, drawn, mode, insets, tabBarSpace: tabBar, frameRef, fullscreen, setFullscreen }),
+    [map, maplibre, state, drawn, mode, insets, tabBar, fullscreen],
   )
   const loading = state === 'loading' || !drawn
   const shown: MapStatus | undefined = state === 'error' || status === 'failed'

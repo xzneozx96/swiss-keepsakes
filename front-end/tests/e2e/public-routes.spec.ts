@@ -227,14 +227,13 @@ test('[E3.2][AC01] a guest moves between two pages with no sign-in prompt', asyn
   await page.evaluate(() => {
     (window as unknown as { marker: string }).marker = 'kept'
   })
-  await expect(page.getByText('Come and see it for yourself')).toBeVisible()
+  await expect(page.getByText('First time in Lucerne?')).toBeVisible()
   expect(await page.getByText('Sign in', { exact: true }).count()).toBe(0)
 
-  await page.locator('main a[href="/en/stories"]').first().click()
+  await page.locator('nav a[href="/en/tours"]').first().click()
 
-  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/en\/stories$/)
-  await expect(page.getByRole('heading', { level: 1, name: 'Local stories' })).toBeVisible()
-  await expect(page.getByText('Come and see it for yourself')).toHaveCount(0)
+  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/en\/tours$/)
+  await expect(page.getByText('First time in Lucerne?')).toHaveCount(0)
   expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBe('kept')
   expect(await page.getByText('Sign in', { exact: true }).count()).toBe(0)
   expect(urls.some(url => url.includes('sign-in'))).toBe(false)

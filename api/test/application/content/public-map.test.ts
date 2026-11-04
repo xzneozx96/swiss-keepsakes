@@ -44,6 +44,7 @@ function pin(n: number, over: Partial<PublicPinDetailRow> = {}): PublicPinDetail
     categories: [],
     parentCategories: [],
     mainStorySlugs: {},
+    mustVisit: false,
     link: null,
     photos: [],
     stories: [],
@@ -189,6 +190,21 @@ describe('public map list', () => {
     expect(byId(unknown).photoUrl).toBe('https://media.test/s/b/o.jpg')
     expect(byId(none).photoUrl).toBeNull()
     expect(JSON.stringify(items)).not.toContain('photoKey')
+  })
+
+  it('[E4.13][AC54][AC95] the list item carries mustVisit, the tip in the carried language with the English fallback, and the cover variants, and no price', async () => {
+    const s = setup({ pins: [
+      pin(1, { mustVisit: true, tip: { en: 'Tip EN', de: 'Tipp DE' }, photoKey: 's/a/o.jpg', photoWidth: 1500 }),
+      pin(2, { name: { en: 'Only EN' }, tip: { en: 'Tip EN' } }),
+    ] })
+    const en = (await s.map('en')).items
+    const de = (await s.map('de')).items
+    const byId = (items: typeof en, n: number) => items.find(i => i.id === uuid(n))!
+
+    expect(byId(en, 1)).toMatchObject({ mustVisit: true, tip: 'Tip EN', photoVariants: [{ width: 320, url: 'https://media.test/s/a/w320.webp' }, { width: 640, url: 'https://media.test/s/a/w640.webp' }, { width: 1280, url: 'https://media.test/s/a/w1280.webp' }] })
+    expect(byId(de, 1).tip).toBe('Tipp DE')
+    expect(byId(de, 2)).toMatchObject({ mustVisit: false, tip: 'Tip EN', language: 'en', photoVariants: [] })
+    expect(publicMapSchema.safeParse({ items: de }).success).toBe(true)
   })
 
   it('[E2.12][AC88][D-5] a pin that falls back to English keeps the English main story slug, not the reader\'s language', async () => {
