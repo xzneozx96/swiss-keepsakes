@@ -177,7 +177,7 @@ describe('public story reads over the database', () => {
     const ours = items.filter(i => i.id === parent.id || i.id === child.rows[0]!.id)
 
     expect(ours).toEqual([
-      { id: parent.id, slug: parent.slug, name: { en: 'Food', de: 'Essen' }, parentId: null, showOnHome: false, position: 1 },
+      { id: parent.id, slug: parent.slug, name: { en: 'Food', de: 'Essen' }, parentId: null, icon: null, showOnHome: false, position: 1 },
       expect.objectContaining({ id: child.rows[0]!.id, name: { en: 'Cafes', de: 'Cafés' }, parentId: parent.id }),
     ])
     expect((await categories('map')).items.some(i => i.id === parent.id)).toBe(false)
