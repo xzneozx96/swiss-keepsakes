@@ -1,4 +1,4 @@
-import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
+import type { PublicCategory, PublicKeepsakeCard, PublicMapItem } from '@sk/api-contract'
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -11,6 +11,7 @@ import { renderToString } from 'react-dom/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
+import { fetchKeepsakeList } from '@/features/catalog/api/keepsakes'
 import { DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startSeedDemo } from '@/features/demo/data-client'
@@ -23,6 +24,7 @@ import { en } from '@/i18n/en'
 import { Route as HomeRoute } from '@/routes/_guest/$lang/index'
 
 vi.mock('@/lib/api-mode', () => ({ apiEnabled: true }))
+vi.mock('@/features/catalog/api/keepsakes', () => ({ fetchKeepsakeList: vi.fn() }))
 vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: vi.fn(), fetchMapCategories: vi.fn(), fetchMapPin: vi.fn() }))
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
@@ -45,6 +47,10 @@ const pin: PublicMapItem = {
   mustVisit: false,
   tip: '',
 }
+
+const photo = { url: 'https://cdn.test/swan.jpg', variants: [{ width: 320, url: 'https://cdn.test/swan-320.webp' }, { width: 800, url: 'https://cdn.test/swan-800.webp' }] }
+const swan: PublicKeepsakeCard = { id: id(200), slug: 'victorinox-swan', name: 'Victorinox Swan', cover: photo, soldOut: false, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en', 'de'] }
+const bridge: PublicKeepsakeCard = { id: id(201), slug: 'victorinox-kapellbruecke', name: 'Victorinox Kapellbrücke', cover: null, soldOut: true, language: 'de', requestedLanguage: 'en', fallback: true, availableLanguages: ['de'] }
 
 type DataClient = ReturnType<typeof startSeedDemo>['dataClient']
 
@@ -86,6 +92,7 @@ function textOf(html: string) {
 beforeEach(() => {
   localStorage.clear()
   resetAnswersStoreForTests()
+  vi.mocked(fetchKeepsakeList).mockReset().mockResolvedValue({ items: [swan, bridge] })
   vi.mocked(fetchMapPins).mockReset().mockResolvedValue([pin])
   vi.mocked(fetchMapCategories).mockReset().mockResolvedValue([water])
 })
@@ -202,11 +209,8 @@ describe('[E4.13][AC95] a failed read takes down its own block only', () => {
   })
 
   it('shows an error with retry in the showcase block when the keepsake read fails, and the thread and the banner still render (AC-6)', async () => {
-    const demo = startSeedDemo()
-    const products = vi.fn().mockRejectedValueOnce(new Error('down')).mockImplementation(demo.dataClient.catalog.products)
-    const dataClient = { ...demo.dataClient, catalog: { ...demo.dataClient.catalog, products } } as DataClient
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-    render(<RouterProvider router={await buildRouter('/en', dataClient)} />)
+    vi.mocked(fetchKeepsakeList).mockRejectedValueOnce(new Error('down'))
+    render(<RouterProvider router={await buildRouter('/en')} />)
 
     const alert = await screen.findByText(en['homePage.ending.failed'])
 
@@ -218,6 +222,23 @@ describe('[E4.13][AC95] a failed read takes down its own block only', () => {
 
     await waitFor(() => expect(screen.getByText(en['home.victorinox.title'])).toBeInTheDocument())
     expect(screen.queryByText(en['homePage.ending.failed'])).toBeNull()
+  })
+})
+
+describe('[E4.13][AC54] the Victorinox showcase reads the public keepsake list', () => {
+  it('shows the real keepsakes, each opening its own page, sold out marked, a photo where there is one and no price (follow-up A)', async () => {
+    render(<RouterProvider router={await buildRouter('/en')} />)
+
+    const swanLink = await screen.findByRole('link', { name: /Swan/ })
+
+    expect(fetchKeepsakeList).toHaveBeenCalledWith('en')
+    expect(swanLink).toHaveAttribute('href', '/en/gifts/victorinox-swan')
+    expect(swanLink.querySelector('img')).toHaveAttribute('src', 'https://cdn.test/swan-800.webp')
+    // A keepsake only in German links to its own German address and says so.
+    expect(screen.getByRole('link', { name: /Kapellbrücke/ })).toHaveAttribute('href', '/de/gifts/victorinox-kapellbruecke')
+    expect(within(screen.getByRole('link', { name: /Kapellbrücke/ })).getByText(en['gifts.soldOut'])).toBeInTheDocument()
+    expect(within(swanLink).queryByText(en['gifts.soldOut'])).toBeNull()
+    expect(document.body.textContent).not.toContain('CHF')
   })
 })
 
@@ -241,6 +262,11 @@ describe('[E4.13][AC95] the demo layer is gone from the home', () => {
 
     expect(readers.sort()).toEqual(['must-visits-section.tsx', 'routes-section.tsx'])
     expect(read('routes/_guest/$lang/index.tsx')).not.toMatch(/onboarding/i)
+  })
+
+  it('the home reads no demo catalogue: the showcase takes the public keepsake list', () => {
+    for (const file of homeFiles(join(SRC, 'features/home')))
+      expect({ file, hit: readFileSync(file, 'utf8').match(/catalogQueries|useDataClient|useProducts|@sk\/domain\/catalog/)?.[0] }).toEqual({ file, hit: undefined })
   })
 
   it('the components that only the old home drew are deleted', () => {
