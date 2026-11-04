@@ -1,8 +1,8 @@
 import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
-import type { RankPrefs } from '@sk/domain/content'
 
 import { Skeleton } from '@heroui/react'
 import { useQuery } from '@tanstack/react-query'
+import { useHydrated } from '@tanstack/react-router'
 import { useId, useMemo, useState } from 'react'
 
 import { ErrorNotice } from '@/components/error-notice'
@@ -19,6 +19,7 @@ import { PlaceCardRow } from '@/features/map/components/place-card'
 import { PlaceSheet } from '@/features/map/components/place-sheet'
 import { isLit, keepFiltered, pinCategoryNames, pinIcon } from '@/features/map/lib/categories'
 import { CARD_ROW_HEIGHT, CONTROLS } from '@/features/map/lib/layout'
+import { useOnboardingAnswers } from '@/features/onboarding/hooks/use-onboarding-answers'
 import { track } from '@/lib/analytics/track'
 import { apiEnabled } from '@/lib/api-mode'
 import { foodMapSelection } from '../lib/food-map'
@@ -26,7 +27,7 @@ import { SectionHeading } from './section-heading'
 
 type View = 'map' | 'list'
 
-const NO_PREFS: RankPrefs = {}
+const NO_ANSWERS = { stay: null, interests: [] }
 const LUCERNE: [number, number] = [8.3068, 47.0535]
 const MAP_VIEW = { center: LUCERNE, zoom: 15.2, minZoom: 12, maxZoom: 18.5 }
 /** The frame's height (px), the same before the map loads, so the page does not jump (home-design.md section 4: 548 px on the phone). */
@@ -39,13 +40,16 @@ const CARD_ROW_BOTTOM = 8
  * sub-categories on load. Its pins, Categories sheet, List, card row and place sheet are the guest map's own components
  * (docs/ux/home-design.md section 4); the other categories are one tap away in the sheet and the guest map is not linked.
  * The map draws only near the viewport (`LazyMapView`) and with cooperative gestures, so one finger scrolls the page.
- * `prefs` are the guest's answers: they order the pins and the cards with the map list's ranking and hide none. Until the
- * guest's answers have a store in the browser (E4.5) the home passes none. Not drawn when the category is not there. No price anywhere.
+ * The guest's saved answers order the pins and the cards (interests first, then the stay, as the postcards are) and hide none;
+ * the server draws the server order and the answers apply once the page is hydrated. Not drawn when the category is not there. No price anywhere.
  * The pins and categories are the home loader's read of the map list (undefined while it loads, null when it failed).
  */
-export function FoodMapSection({ pins, categories, onRetry, prefs = NO_PREFS }: { pins: readonly PublicMapItem[] | null | undefined, categories: PublicCategory[] | null | undefined, onRetry: () => void, prefs?: RankPrefs }) {
+export function FoodMapSection({ pins, categories, onRetry }: { pins: readonly PublicMapItem[] | null | undefined, categories: PublicCategory[] | null | undefined, onRetry: () => void }) {
   const { t } = useLocale()
   const headingId = useId()
+  const hydrated = useHydrated()
+  const stored = useOnboardingAnswers()
+  const prefs = hydrated ? stored : NO_ANSWERS
   const isFailed = pins === null || categories === null
   const isPending = pins === undefined || categories === undefined
   const selection = useMemo(() => pins && categories ? foodMapSelection(pins, categories, prefs) : undefined, [pins, categories, prefs])

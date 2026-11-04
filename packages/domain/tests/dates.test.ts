@@ -11,6 +11,7 @@ import {
   zurichDate,
   zurichInstant,
   zurichOffsetMinutes,
+  zurichTime,
 } from '../src/dates'
 
 const iso = (d: Date) => d.toISOString()
@@ -21,6 +22,13 @@ describe('[E1.6] Zurich calendar day', () => {
     expect(zurichDate(new Date('2026-01-15T23:00:00Z'))).toBe('2026-01-16')
     expect(zurichDate(new Date('2026-07-15T21:59:59Z'))).toBe('2026-07-15')
     expect(zurichDate(new Date('2026-07-15T22:00:00Z'))).toBe('2026-07-16')
+  })
+
+  it('reads the wall-clock time as HH:mm, winter and summer, with midnight as 00:00', () => {
+    expect(zurichTime(new Date('2026-01-15T22:59:00Z'))).toBe('23:59')
+    expect(zurichTime(new Date('2026-07-15T21:59:00Z'))).toBe('23:59')
+    expect(zurichTime(new Date('2026-01-15T23:00:00Z'))).toBe('00:00')
+    expect(zurichTime(new Date('2026-07-15T22:05:00Z'))).toBe('00:05')
   })
 
   it('changes offset on 2026-03-29 and 2026-10-25 at 01:00 UTC', () => {

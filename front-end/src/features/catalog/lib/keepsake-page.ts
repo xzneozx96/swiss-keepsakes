@@ -2,7 +2,7 @@ import type { Media, Product, PublicKeepsake, PublicKeepsakePhoto } from '@sk/ap
 import type { IntlLocale, Language, RichNode } from '@sk/domain/shared'
 import type { GiftPageProps } from '../components/gift-detail'
 import type { ChoiceVariant, Chosen } from './variant-choice'
-import type { ListingReviewsProps } from '@/components/listings/listing-reviews'
+import type { ListingReviewsProps } from '@/features/catalog/components/listing-reviews'
 import type { MessageKey } from '@/i18n/en'
 
 import { isEmptyDescription } from '@sk/domain/content'

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { type InterestCode, rankItems, type StayTag } from '../src/content'
+import { type InterestCode, isInterestCode, rankByTags, rankItems, type StayTag } from '../src/content'
 
 interface Item { id: string, stay: StayTag, interests: InterestCode[] }
 
@@ -151,5 +151,31 @@ describe('[E4.4][AC38] rankItems with several interests, ties and mixed stay tag
     ]
 
     expect(ids(rankItems(list, { stay: 'short_stay', interests: [food, history, lake] }))).toEqual(['shortNone', 'multiAll'])
+  })
+})
+
+describe('[E4.4][AC38] rankByTags ranks anything with a stay tag and interest strings', () => {
+  const tagged = (id: string, stayTag: StayTag, interests: string[]) => ({ id, stayTag, interests })
+
+  it('orders like rankItems and drops nothing', () => {
+    const list = [tagged('a', 'multi_day', ['food-drink']), tagged('b', 'short_stay', []), tagged('c', 'both', ['food-drink'])]
+
+    expect(rankByTags(list, { stay: 'short_stay', interests: ['food-drink'] }).map(entry => entry.id)).toEqual(['c', 'b', 'a'])
+    expect(rankByTags(list, {})).toEqual(list)
+  })
+
+  it('ignores an interest string outside the closed list', () => {
+    const list = [tagged('odd', 'both', ['not-an-interest']), tagged('food', 'both', ['food-drink'])]
+
+    expect(rankByTags(list, { interests: ['food-drink'] }).map(entry => entry.id)).toEqual(['food', 'odd'])
+  })
+})
+
+describe('[E4.5][AC37] isInterestCode', () => {
+  it('accepts the closed list and nothing else, whatever the type', () => {
+    expect(isInterestCode('food-drink')).toBe(true)
+    expect(isInterestCode('Food-Drink')).toBe(false)
+    expect(isInterestCode(3)).toBe(false)
+    expect(isInterestCode(null)).toBe(false)
   })
 })

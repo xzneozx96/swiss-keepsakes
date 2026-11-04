@@ -1,6 +1,6 @@
 import { zurichDate } from '@sk/domain/catalog'
-import { addCalendarDays } from '@sk/domain/dates'
-import { calendarDay, dateTimeFormat } from '@sk/domain/shared'
+import { addCalendarDays, zurichTime } from '@sk/domain/dates'
+import { calendarDay } from '@sk/domain/shared'
 
 /** One weekly span of a pickup point as the public read sends it: weekday 1 (Monday) to 7, `HH:MM`, closes `24:00` or before opens for the next morning. */
 export interface PickupSpan { weekday: number, opens: string, closes: string }
@@ -11,11 +11,6 @@ export const PICKUP_WINDOW_DAYS = 60
 /** Monday is 1 and Sunday is 7, the way hours are stored. */
 function weekdayOf(isoDate: string): number {
   return calendarDay(isoDate).getUTCDay() || 7
-}
-
-/** The time on the Zurich wall clock as `HH:MM`. */
-function zurichTime(at: Date): string {
-  return dateTimeFormat('en-GB', { timeZone: 'Europe/Zurich', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(at)
 }
 
 /** A span that closes before it opens runs into the next morning, so it cannot have ended on its own day. */

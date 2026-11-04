@@ -2,6 +2,7 @@ import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
 import type { EventPin } from '../lib/events'
 import { Skeleton } from '@heroui/react'
 
+import { zurichDate } from '@sk/domain/dates'
 import { Link } from '@tanstack/react-router'
 import { useId, useMemo, useState } from 'react'
 import { ErrorNotice } from '@/components/error-notice'
@@ -9,7 +10,6 @@ import { MapThumb } from '@/components/map/map-thumb'
 import { useLocale } from '@/contexts/locale-context'
 import { Rail } from '@/features/discovery/components/section'
 import { pinIcon } from '@/features/map/lib/categories'
-import { zurichToday } from '@/features/map/lib/next-date'
 
 import { dayParts, eventsSplit, shownDay, whenLine } from '../lib/events'
 import { SectionHeading } from './section-heading'
@@ -171,7 +171,7 @@ export function EventsSection({ pins, categories, onRetry }: { pins: readonly Pu
   const isFailed = pins === null || categories === null
   const isPending = pins === undefined || categories === undefined
   const [now] = useState(() => new Date())
-  const today = zurichToday(now)
+  const today = zurichDate(now)
   const split = useMemo(() => eventsSplit(pins ?? [], now), [pins, now])
   const empty = split.thisWeek.length === 0 && split.comingUp.length === 0
 

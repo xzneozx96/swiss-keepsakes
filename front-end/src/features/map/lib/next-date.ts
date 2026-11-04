@@ -1,14 +1,7 @@
 import type { NextDate } from '@sk/api-contract'
 import type { IntlLocale } from '@sk/domain/shared'
 
-import { dateTimeFormat, formatShortDate } from '@sk/domain/shared'
-
-const SHOP_ZONE = 'Europe/Zurich'
-
-/** Today's calendar day (YYYY-MM-DD) in the shop's time zone. */
-export function zurichToday(now: Date) {
-  return dateTimeFormat('en-CA', { timeZone: SHOP_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now)
-}
+import { formatShortDate } from '@sk/domain/shared'
 
 const hhmm = (time: string) => time.slice(0, 5)
 

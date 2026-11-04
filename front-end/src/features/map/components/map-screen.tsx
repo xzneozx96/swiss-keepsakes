@@ -1,8 +1,9 @@
 import type { PublicMapItem } from '@sk/api-contract'
 
 import type { MapSearch } from '@/features/map/lib/search-params'
-
 import { Button } from '@heroui/react'
+
+import { zurichDate } from '@sk/domain/dates'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 
@@ -16,7 +17,7 @@ import { mapQueries, useMapData } from '@/features/map/api/queries'
 import { useRankedPins } from '@/features/map/hooks/use-ranked-pins'
 import { categoryName, isLit, keepFiltered, pinCategoryNames, pinIcon } from '@/features/map/lib/categories'
 import { CARD_ROW_BOTTOM, CARD_ROW_HEIGHT, CONTROLS, MAP_BOTTOM_CLEAR } from '@/features/map/lib/layout'
-import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
+import { nextDateLine } from '@/features/map/lib/next-date'
 import { filterAddress, resolveMapFilter } from '@/features/map/lib/search-params'
 import { track, useTrackAllowed } from '@/lib/analytics/track'
 import { apiEnabled } from '@/lib/api-mode'
@@ -47,7 +48,7 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
   const { t, language, intlLocale } = useLocale()
   const data = useMapData(language)
   const headingId = useId()
-  const [today] = useState(() => zurichToday(new Date()))
+  const [today] = useState(() => zurichDate(new Date()))
   // Empty means All.
   const [chosen, setChosen] = useState<string[]>([])
   const [datedOnly, setDatedOnly] = useState(false)

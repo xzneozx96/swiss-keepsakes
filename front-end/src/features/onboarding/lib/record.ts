@@ -1,11 +1,11 @@
-import type { InterestCode } from '@sk/domain/content'
+import type { InterestCode, StayChoice } from '@sk/domain/content'
 
-import { interestCodes } from '@sk/domain/content'
+import { isInterestCode } from '@sk/domain/content'
 
 /** The localStorage key of the onboarding answers (ADR-006). They never leave the browser. */
 export const ONBOARDING_KEY = 'sk.onboarding'
 
-export type Stay = 'short_stay' | 'multi_day'
+export type Stay = StayChoice
 
 const STAYS: readonly string[] = ['short_stay', 'multi_day']
 
@@ -19,10 +19,6 @@ export interface OnboardingRecord {
 }
 
 export const EMPTY_RECORD: OnboardingRecord = Object.freeze({ v: 1, segment: null, interests: [], answeredAt: null, dismissedAt: null }) as OnboardingRecord
-
-function isInterest(value: unknown): value is InterestCode {
-  return typeof value === 'string' && (interestCodes as readonly string[]).includes(value)
-}
 
 function dateOf(value: unknown): string | null {
   return typeof value === 'string' && !Number.isNaN(Date.parse(value)) ? value : null
@@ -42,7 +38,7 @@ export function parseRecord(raw: unknown): OnboardingRecord {
   return {
     v: 1,
     segment: typeof segment === 'string' && STAYS.includes(segment) ? segment as Stay : null,
-    interests: Array.isArray(interests) ? [...new Set(interests.filter(isInterest))] : [],
+    interests: Array.isArray(interests) ? [...new Set(interests.filter(isInterestCode))] : [],
     answeredAt: dateOf(answeredAt),
     dismissedAt: dateOf(dismissedAt),
   }

@@ -1,7 +1,8 @@
 import type { PublicMapItem } from '@sk/api-contract'
 import type { PlaceDetail, PlaceStory } from '@/features/map/lib/place-detail'
-
 import { Button, Skeleton } from '@heroui/react'
+
+import { zurichDate } from '@sk/domain/dates'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
@@ -9,7 +10,7 @@ import { ArrowUpRightIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, LinkIco
 import { InfoNote } from '@/components/info-note'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
-import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
+import { nextDateLine } from '@/features/map/lib/next-date'
 import { hoursOfWeek, zurichWeekday } from '@/lib/hours'
 import { DirectionsLink } from './directions-link'
 import { PlacePhotos } from './place-photos'
@@ -96,7 +97,7 @@ function StoryRow({ story, main, onReadStory, onStoryClick }: { story: PlaceStor
 /** The facts of a place, each only when present: next date, hours, address with the map button, website, then the stories. */
 function Facts({ detail, directions, onReadStory, onStoryClick, onOutboundClick }: { detail: PlaceDetail, directions: boolean, onReadStory?: () => void, onStoryClick?: () => void, onOutboundClick?: () => void }) {
   const { t, intlLocale } = useLocale()
-  const [today] = useState(() => zurichToday(new Date()))
+  const [today] = useState(() => zurichDate(new Date()))
   const date = detail.nextDate
     ? nextDateLine(detail.nextDate, today, intlLocale, { until: day => t('map.date.until', { day }), from: time => t('map.date.from', { time }) })
     : undefined

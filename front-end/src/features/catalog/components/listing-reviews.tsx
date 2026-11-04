@@ -1,4 +1,4 @@
-import type { ReviewView } from '@/features/catalog/components/review-item'
+import type { ReviewView } from './review-item'
 
 import { Button } from '@heroui/react'
 import { useState } from 'react'
@@ -6,9 +6,9 @@ import { useState } from 'react'
 import { EmptyState } from '@/components/empty-state'
 import { RatingIcon } from '@/components/icons'
 
-import { ReviewItem } from '@/features/catalog/components/review-item'
-import { ReviewSummary } from '@/features/catalog/components/review-summary'
-import { ReviewsSheet } from '@/features/catalog/components/reviews-sheet'
+import { ReviewItem } from './review-item'
+import { ReviewSummary } from './review-summary'
+import { ReviewsSheet } from './reviews-sheet'
 
 export interface ListingReviewsProps {
   title: string

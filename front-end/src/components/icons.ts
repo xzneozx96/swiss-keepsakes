@@ -172,7 +172,7 @@ export { ArrowUp as ArrowUpIcon } from 'reicon-react'
 export { ArrowDown as ArrowDownIcon } from 'reicon-react'
 export { MapPoint as PinLinkIcon } from 'reicon-react'
 
-// Map category icons (fixed list of 78, owner 2026-11-04, G-S9-D-SMALL). One alias per key; see features/categories/lib/category-icons.ts.
+// Map category icons (fixed list of 78, owner 2026-11-04, G-S9-D-SMALL). One alias per key; see components/category-icons.ts.
 export { Bath as CategoryToiletIcon } from 'reicon-react'
 export { Drop as CategoryWaterIcon } from 'reicon-react'
 export { Wifi as CategoryWifiIcon } from 'reicon-react'

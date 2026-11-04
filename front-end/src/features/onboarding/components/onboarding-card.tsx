@@ -6,7 +6,7 @@ import { CloseIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { photoUrl } from '@/lib/photos'
 import { useOnboardingAudience } from '../hooks/use-onboarding-audience'
-import { getRecord, getServerRecord, subscribe } from '../lib/answers-store'
+import { useOnboardingRecord } from '../hooks/use-onboarding-record'
 import { openOnboarding } from '../lib/opener'
 import { showsCard } from '../lib/rules'
 import { getVisit, hideCard, subscribeVisit } from '../lib/visit'
@@ -24,7 +24,7 @@ export function OnboardingCard() {
   const { t } = useLocale()
   const pathname = useLocation({ select: l => l.pathname })
   const audience = useOnboardingAudience()
-  const record = useSyncExternalStore(subscribe, getRecord, getServerRecord)
+  const record = useOnboardingRecord()
   const visit = useSyncExternalStore(subscribeVisit, getVisit, () => null)
   const eligible = showsCard({ record, visit, audience, pathname })
   const [shown, setShown] = useState(false)
