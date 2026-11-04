@@ -35,6 +35,8 @@ export interface PublicStoryVersionRow {
   publishedAt: Date
   // storage_key of every ready media row the published text refers to, by media id.
   mediaKeys: Record<string, string>
+  // Pixel width of each of those media rows that has one; the cover's webp copies follow from it.
+  mediaWidths?: Record<string, number | null>
 }
 
 export interface PublicStoryRow {
@@ -43,6 +45,15 @@ export interface PublicStoryRow {
   interests: string[]
   categories: PublicCategoryRow[]
   versions: PublicStoryVersionRow[]
+}
+
+// What a story's own read adds to the row the list shares: the pins it tags (only those `content.public_pins` lets
+// through, in the editor's order), the stories it relates to (only those with a published version, in the editor's
+// order) and the ids of the keepsakes it links (in the editor's order; the catalog says which of them can be shown).
+export interface PublicStoryDetailRow extends PublicStoryRow {
+  places: PublicPinRow[]
+  related: PublicStoryRow[]
+  keepsakeProductIds: string[]
 }
 
 // A pin that `content.public_pins` lets through. Dates come from content.place_dates so that the injected clock decides
@@ -116,7 +127,7 @@ export interface PublicReadRepository<T> {
   // One row per story group that has a published version.
   listPublishedStories: (tx: T) => Promise<PublicStoryRow[]>
   // The group whose published version has this slug in `language`, else in the other language.
-  findPublishedStoryBySlug: (tx: T, slug: string, language: ContentLanguage) => Promise<PublicStoryRow | undefined>
+  findPublishedStoryBySlug: (tx: T, slug: string, language: ContentLanguage) => Promise<PublicStoryDetailRow | undefined>
   // Every category of the kind, in all stores, parents first, then by position.
   listCategories: (tx: T, kind: 'map' | 'blog') => Promise<PublicCategoryListRow[]>
   // Pins in `content.public_pins` (published, and dated in the future or undated), newest first.
@@ -134,4 +145,18 @@ export interface ReadDeps<T> {
   clock: Clock
   // The public address of a storage key (the original or a variant), as the merchant views build it.
   publicUrl: (key: string) => string
+}
+
+// A keepsake as a story shows it: no price. The port is filled in main.ts from the catalog's public read, so content
+// never reads a catalog table (ADR-013). It returns only the keepsakes a guest can see, in the order of `ids`.
+export interface PublicStoryKeepsakeCard {
+  id: string
+  slug: string
+  name: string
+  cover: { url: string, variants: { width: number, url: string }[] } | null
+  soldOut: boolean
+}
+
+export interface StoryReadDeps<T> extends ReadDeps<T> {
+  keepsakeCards: (ids: string[], language: ContentLanguage) => Promise<PublicStoryKeepsakeCard[]>
 }

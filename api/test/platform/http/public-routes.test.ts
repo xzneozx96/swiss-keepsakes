@@ -53,13 +53,14 @@ describe('[E2.12] the public routes: input checks and the ETag', () => {
   })
 
   it('[E2.12] a detail 200 is conditional too, and an unknown item is a 404 problem', async () => {
-    const app = setup({ getStory: async () => ({ ok: true, value: { id: pinId, slug: 'old-town', title: 'Old town', excerpt: '', readMinutes: 1, coverKey: null, stayTag: 'both', interests: [], categories: [], publishedAt: '2090-01-01T00:00:00.000Z', language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'], authorName: '', body: { type: 'doc', content: [] } } }) })
+    const app = setup({ getStory: async () => ({ ok: true, value: { id: pinId, slug: 'old-town', title: 'Old town', excerpt: '', readMinutes: 1, coverKey: null, cover: null, stayTag: 'both', interests: [], categories: [], publishedAt: '2090-01-01T00:00:00.000Z', language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'], authorName: '', body: { type: 'doc', content: [] }, versions: [{ language: 'en', slug: 'old-town' }], places: [], related: [], keepsakes: [{ id: pinId, slug: 'mug', name: 'Mug', cover: null, soldOut: true }] } }) })
 
     const found = await app.request('/api/public/stories/old-town?lang=en')
     const again = await app.request('/api/public/stories/old-town?lang=en', { headers: { 'If-None-Match': found.headers.get('ETag')! } })
     const missing = await setup().request(`/api/public/places/${pinId}?lang=en`)
 
     expect(found.status).toBe(200)
+    expect(await found.json()).toMatchObject({ versions: [{ language: 'en', slug: 'old-town' }], keepsakes: [{ slug: 'mug', soldOut: true }] })
     expect(again.status).toBe(304)
     expect(missing.status).toBe(404)
     expect(missing.headers.get('Content-Type')).toBe('application/problem+json')

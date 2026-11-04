@@ -52,7 +52,7 @@ const publicOrderedListSchema = z.strictObject({ type: z.literal('orderedList'),
 
 const publicImageSchema = z.strictObject({
   type: z.literal('image'),
-  attrs: z.strictObject({ key: z.string().nullable(), alt: z.string(), caption: z.string() }),
+  attrs: z.strictObject({ key: z.string().nullable(), url: z.string().nullable(), variants: z.array(z.object({ width: z.int(), url: z.string() })), alt: z.string(), caption: z.string() }),
 })
 const publicVideoSchema = z.strictObject({
   type: z.literal('video'),
@@ -60,7 +60,7 @@ const publicVideoSchema = z.strictObject({
 })
 const publicAudioSchema = z.strictObject({
   type: z.literal('audio'),
-  attrs: z.strictObject({ key: z.string().nullable(), title: z.string(), caption: z.string() }),
+  attrs: z.strictObject({ key: z.string().nullable(), url: z.string().nullable(), title: z.string(), caption: z.string() }),
 })
 
 export const publicStoryBodySchema = z.strictObject({
@@ -77,6 +77,11 @@ export const publicStoryBodySchema = z.strictObject({
   ])),
 }).meta({ id: 'PublicStoryBody', description: 'The story text as one Tiptap document. Images and audio carry a storage key in place of a media id' })
 
+const publicCoverSchema = z.object({
+  url: z.string().meta({ description: 'The original file' }),
+  variants: z.array(z.object({ width: z.int(), url: z.string() })).meta({ description: 'The webp copies, smallest first; empty when the width is not known' }),
+}).meta({ id: 'PublicCover', description: 'The cover of a story, with its public addresses' })
+
 export const publicStoryCardSchema = z.object({
   id: z.uuid(),
   slug: z.string(),
@@ -84,6 +89,7 @@ export const publicStoryCardSchema = z.object({
   excerpt: z.string(),
   readMinutes: z.int().min(1),
   coverKey: z.string().nullable(),
+  cover: publicCoverSchema.nullable().meta({ description: 'The cover as addresses; null when the story has no ready cover' }),
   stayTag,
   interests: z.array(z.string()),
   categories: z.array(categoryRefSchema),
@@ -95,9 +101,21 @@ export const publicStoryListSchema = z.object({
   items: z.array(publicStoryCardSchema),
 }).meta({ id: 'PublicStoryList' })
 
+export const publicStoryKeepsakeSchema = z.object({
+  id: z.uuid(),
+  slug: z.string(),
+  name: z.string(),
+  cover: publicCoverSchema.nullable(),
+  soldOut: z.boolean(),
+}).meta({ id: 'PublicStoryKeepsake', description: 'A keepsake card on a story: no price. A sold-out keepsake stays in the list; an unpublished or archived one is absent' })
+
 export const publicStorySchema = publicStoryCardSchema.extend({
   authorName: z.string(),
   body: publicStoryBodySchema,
+  versions: z.array(z.object({ language: publicLanguageSchema, slug: z.string() })).meta({ description: 'Every published version of the story, the one carried included, for the language switcher and hreflang' }),
+  places: z.array(z.object({ id: z.uuid(), slug: z.string().nullable(), name: z.string() })).meta({ description: 'The visible pins the story tags, in the editor order; a hidden, expired or unpublished pin is left out' }),
+  related: z.array(publicStoryCardSchema).max(3).meta({ description: 'Up to three published related stories, in the editor order' }),
+  keepsakes: z.array(publicStoryKeepsakeSchema).meta({ description: 'The keepsakes the story links, in the editor order' }),
 }).meta({ id: 'PublicStory' })
 
 const publicPhotoSchema = z.object({
