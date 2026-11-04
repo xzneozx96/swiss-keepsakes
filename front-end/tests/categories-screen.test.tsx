@@ -34,7 +34,7 @@ let answer: ((call: Call) => Response | undefined) | undefined
 let demo: ReturnType<typeof startDemo>
 
 function category(id: string, over: Record<string, unknown> = {}) {
-  return merchantCategorySchema.parse({ id, slug: id, name: { en: 'Walks', de: 'Wanderungen' }, parentId: null, showOnHome: false, position: 1, childCount: 0, useCount: 0, ...over })
+  return merchantCategorySchema.parse({ id, slug: id, name: { en: 'Walks', de: 'Wanderungen' }, parentId: null, icon: null, showOnHome: false, position: 1, childCount: 0, useCount: 0, ...over })
 }
 
 const problem = (status: number, type: string) => Response.json(problemSchema.parse({ type, status, title: type, instance: '/x', requestId: 'req-1' }), { status })
