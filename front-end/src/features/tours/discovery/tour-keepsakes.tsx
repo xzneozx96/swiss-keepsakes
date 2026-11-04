@@ -1,41 +1,39 @@
-import { isPublished, isSoldOut } from '@sk/domain/catalog'
+import { Skeleton } from '@heroui/react'
+import { useQuery } from '@tanstack/react-query'
 import { useLocale } from '@/contexts/locale-context'
-import { useProducts } from '@/features/catalog/api/queries'
+import { fetchKeepsakeList } from '@/features/catalog/api/keepsakes'
 import { ProductCard } from '@/features/catalog/components/product-card'
-import { useProductCard } from '@/features/catalog/hooks/use-product-card'
+import { toKeepsakeCard } from '@/features/catalog/lib/keepsake-card'
+import { queryKeys } from '@/features/data-client'
+import { fromApi } from '@/features/data-client/api-transport'
 import { Rail } from '@/features/discovery/components/section'
-import { useOrders } from '@/features/orders/api/queries'
 
 /** Guests see at most this many linked keepsakes. */
 export const MAX_TOUR_KEEPSAKES = 3
 
 /**
- * The keepsakes the merchant linked to a tour (R21), as ordinary gift cards that open the gift
- * page. They are ordered separately, so there is no cart button and nothing joins the
- * booking. A keepsake that is a draft, archived or sold out is left out, and with none left
- * the block is not shown at all.
+ * A few real published keepsakes, as the ordinary cards of the keepsake list that open the keepsake page
+ * (AC31, no price, AC54). Until the tour editor can pick them (E6.9) the block shows the first
+ * MAX_TOUR_KEEPSAKES of the public list, newest first. They are ordered separately, so there is no cart
+ * button and nothing joins the booking. The list is read in the browser, so the server HTML never carries a
+ * failed read. While it loads the block shows a skeleton of the cards; with none published, or when the read
+ * fails, the block is not shown at all, heading included.
  */
 export function TourKeepsakes({
-  ids,
   variant = 'page',
 }: {
-  ids: string[] | undefined
   /** "page" is C09's block near the end; "confirmation" is the light reminder on C13. */
   variant?: 'page' | 'confirmation'
 }) {
-  const { t } = useLocale()
-  const orders = useOrders()
-  const demoProducts = useProducts()
-  const toCard = useProductCard()
-  const products = (ids ?? [])
-    .map(id => demoProducts.find(p => p.id === id))
-    .filter(
-      (p): p is NonNullable<typeof p> =>
-        !!p && isPublished(p) && !isSoldOut(p, orders),
-    )
-    .slice(0, MAX_TOUR_KEEPSAKES)
+  const { t, language } = useLocale()
+  const list = useQuery({
+    ...fromApi,
+    queryKey: [...queryKeys.keepsakes.list, 'tour-block', language],
+    queryFn: () => fetchKeepsakeList(language),
+  })
+  const items = list.data?.items.slice(0, MAX_TOUR_KEEPSAKES)
 
-  if (!products.length)
+  if (list.isError || (items && !items.length))
     return null
   const confirmation = variant === 'confirmation'
 
@@ -61,13 +59,28 @@ export function TourKeepsakes({
             : 'tourDiscovery.keepsakes.intro',
         )}
       </p>
-      <Rail label={t('tourDiscovery.keepsakes.title')}>
-        {products.map(product => (
-          <li key={product.id} className="flex">
-            <ProductCard {...toCard(product)} layout="carousel" />
-          </li>
-        ))}
-      </Rail>
+      {items
+        ? (
+            <Rail label={t('tourDiscovery.keepsakes.title')}>
+              {items.map(item => (
+                <li key={item.id} className="flex">
+                  <ProductCard {...toKeepsakeCard(item, t)} layout="carousel" />
+                </li>
+              ))}
+            </Rail>
+          )
+        : (
+            <div aria-busy data-skeleton="tour-keepsakes">
+              <Rail label={t('tourDiscovery.keepsakes.title')}>
+                {Array.from({ length: MAX_TOUR_KEEPSAKES }, (_, i) => (
+                  <li key={i} className="flex w-60 shrink-0 snap-start flex-col gap-2.5">
+                    <Skeleton className="aspect-[4/3] rounded-3xl" />
+                    <Skeleton className="h-5 w-4/5 rounded-lg" />
+                  </li>
+                ))}
+              </Rail>
+            </div>
+          )}
     </section>
   )
 }
