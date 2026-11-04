@@ -1020,6 +1020,8 @@ CREATE TABLE catalog.product_media (
 -- Hours are local Europe/Zurich times of day. Amended 2026-11-03 (gate G-S8-D5, migration 0022_pickup_places): a span may cross
 -- midnight. A `closes` before `opens` closes the next morning, `24:00` closes at midnight, and `opens` equal to `closes` is refused.
 -- The orders module reads a wrapping span when it validates a pickup time (E6.9, E7.x). `row_version` is added for If-Match (ADR-014).
+-- Amended 2026-11-04 (gate G-S8-PICKUP-DELETE): a point that no order or handover names can be deleted, and its hours rows go with it
+-- (the cascade below). Orders and handovers hold the point as a plain id, so the use case checks `SalesDirectory.usedPickupPlaceIds` (ADR-024).
 CREATE TABLE catalog.pickup_places (
   id           uuid PRIMARY KEY DEFAULT uuidv7(),
   store_id     uuid NOT NULL,
@@ -2057,7 +2059,7 @@ No partitioning. The largest table, `analytics.events`, stays near 3 million row
 | Table in backend.md section 5 | Status in this plan |
 |---|---|
 | `stores`, `store_memberships`, `store_invitations`, `guest_profiles`, `platform_admins` | Built, unchanged |
-| `pickup_places` | Created in `catalog` as the pickup point list of the handover record (name, address, instructions, weekly hours). `orders.pickup_place_id` and `handovers.pickup_place_id` hold its id as a plain value |
+| `pickup_places` | Created in `catalog` as the pickup point list of the handover record (name, address, instructions, weekly hours). `orders.pickup_place_id` and `handovers.pickup_place_id` hold its id as a plain value. Amended 2026-11-04 (gate G-S8-PICKUP-DELETE): a point can be deleted while no order or handover names it, so the plain id has no foreign key to stop a wrong delete and `SalesDirectory.usedPickupPlaceIds` is the only guard (ADR-024). No planned DDL here puts a foreign key on `catalog.pickup_places` (the `cart_lines`, `orders` and `handovers` columns are plain `uuid`). If one is added, it is `ON DELETE RESTRICT`, not `CASCADE` |
 | `product_pickup_places` | Not built. The record has one list for every product, so the link table is not needed until a product needs its own places |
 | `platform.audit_log`, `idempotency_keys`, `webhook_events`, `notifications.sent_mail` | Built, unchanged. `audit_log` also records publishes and guide updates |
 | `subcategories` | Replaced by `catalog.product_categories`, a tree per store with a link table, tables only in Phase 1 (owner M10). The four fixed categories and merchant sub-categories of D17 stay retired |

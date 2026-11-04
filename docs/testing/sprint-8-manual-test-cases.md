@@ -14,7 +14,7 @@ The cases are grouped by PR, in this merge order. Test and merge in this order. 
 | 1 | Lark sync and plan docs (T-LARK, T-DOCS) | S8-LARK-01 to 03 |
 | 2 | E6.3 stock: inventory page, stock in the keepsake editor (migration 0021) | S8-INV-01 to 09 |
 | 3 | E6.5 opening stock for the five Victorinox knives | S8-STOCK-SEED-01 to 04 |
-| 4 | E6.6 pickup points (migrations 0022 and 0025) | S8-PICKUP-01 to 14 |
+| 4 | E6.6 pickup points (migrations 0022 and 0025) | S8-PICKUP-01 to 17 |
 | 5 | E8.7 analytics events and the map card tip fix (migration 0023) | S8-EVENTS-01 to 07, S8-MAP-01 |
 | 6 | E4.3 story editor | S8-STORY-01 to 28 |
 | 7 | UI consistency and story fixes (list headers, story Write layout, story header notice) | S8-UI-01, S8-UI-02, S8-STORY-FIX-01 |
@@ -87,6 +87,9 @@ Events go to PostHog EU. Nothing is sent unless you switch it on.
 | S8-PICKUP-12 | A missing or unreadable link is refused at the field | E6.6 / AC26 (gate G-S8-PICKUP-MAPS) | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-PICKUP-13 | The merchant's own address is never overwritten, and a new link moves the pin | E6.6 / AC26 (gate G-S8-PICKUP-MAPS) | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-PICKUP-14 | The Location block in German | E6.6 / AC26 (gate G-S8-PICKUP-MAPS) | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-PICKUP-15 | Delete an active pickup point | E6.6 / AC26 (gate G-S8-PICKUP-DELETE) | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-PICKUP-16 | Delete an archived pickup point | E6.6 / AC26 (gate G-S8-PICKUP-DELETE) | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-PICKUP-17 | Cancel the delete, and the dialog in German | E6.6 / AC26 (gate G-S8-PICKUP-DELETE) | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-EVENTS-01 | Events arrive in PostHog with closed values only | E8.7 / AC37, AC60 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-EVENTS-02 | A merchant page and a switched-off build send nothing | E8.7 / AC37 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-EVENTS-03 | A guest's deep-linked pin is recorded once | E8.7 / AC60 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
@@ -685,6 +688,56 @@ Terminal cases except S8-STOCK-SEED-02 and 04, which use the browser. The seed m
 
 - **Postconditions:** none.
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-PICKUP-15 Delete an active pickup point
+- **Story / AC:** E6.6 / AC26 (gate G-S8-PICKUP-DELETE)
+- **Priority:** P1
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** the Pickup points page with at least two active points, "Point A" and "Point B". No order exists yet, so no point is named by one.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | On the ticket of Point A, look at the buttons at the bottom. | "Archive" and "Delete" sit side by side, both in the soft red style. |
+| 2 | Press "Delete". | A dialog asks "Delete Point A?" and says it can't be undone and that a point an order or a handover names should be archived instead. Nothing is deleted yet. |
+| 3 | Press "Delete" in the dialog. | The button shows a spinner, then the dialog closes. The toast says "Point A deleted". Point A has left the list and Point B is still there. |
+| 4 | Reload the page, then tick "Archived" in the Status filter. | Point A is in neither list. |
+| 5 | Open Point B and check its hours. | They are unchanged. |
+
+- **Postconditions:** Point A no longer exists. Point B is unchanged.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-PICKUP-16 Delete an archived pickup point
+- **Story / AC:** E6.6 / AC26 (gate G-S8-PICKUP-DELETE)
+- **Priority:** P2
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** one archived pickup point, "Point C" (archive one with case S8-PICKUP-05).
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Tick "Archived" in the Status filter. | Point C shows with "Restore" and "Delete". |
+| 2 | Press "Delete" on Point C and confirm. | The dialog asks "Delete Point C?". After you confirm, the toast says "Point C deleted" and the ticket leaves the list. |
+| 3 | Reload and tick "Archived". | Point C is gone. |
+| 4 | Add a new pickup point. | It saves. Deleting left no gap that blocks a new point. |
+
+- **Postconditions:** Point C no longer exists.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+### S8-PICKUP-17 Cancel the delete, and the dialog in German
+- **Story / AC:** E6.6 / AC26 (gate G-S8-PICKUP-DELETE)
+- **Priority:** P3
+- **Role and device:** Owner, desktop 1280 px
+- **Preconditions:** one active pickup point; the interface is set to German.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Press "Löschen" on the ticket. | A dialog asks "<Name> löschen?" in German. |
+| 2 | Press "Abbrechen". | The dialog closes. The point is still in the list. |
+| 3 | Press "Löschen" again and confirm. | The toast says "<Name> gelöscht" and the point leaves the list. |
+
+- **Postconditions:** the point no longer exists.
+- **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
+
+Not testable in the browser yet: a point that an order or a handover names is refused with "An order or a handover names this pickup point, so it can’t be deleted. Archive it instead." That needs E7.1, which wires `SalesDirectory.usedPickupPlaceIds`. Until then an integration test stands in for the order (`api/test/integration/catalog-pickup.test.ts`).
 
 ## PR 5: E8.7 analytics events and the map card
 
