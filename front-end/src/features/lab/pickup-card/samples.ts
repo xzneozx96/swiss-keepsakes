@@ -65,4 +65,21 @@ export const samples: PickupPlace[] = [
     hours: [1, 2, 3, 4, 5, 6, 7].map(weekday => ({ weekday, opens: '07:00', closes: '22:00' })),
     position: 4,
   },
+  {
+    ...base,
+    id: '00000000-0000-4000-8000-0000000000a6',
+    name: { en: 'Bucherer Lucerne, customer service', de: 'Bucherer Luzern, Kundendienst' },
+    address: { en: 'Schwanenplatz 5, 6004 Lucerne', de: 'Schwanenplatz 5, 6004 Luzern' },
+    instructions: null,
+    archived: false,
+    // A lunch break on weekdays: two spans a day.
+    hours: [
+      ...[1, 2, 3, 4, 5].flatMap(weekday => [
+        { weekday, opens: '08:00', closes: '12:00' },
+        { weekday, opens: '13:30', closes: '18:00' },
+      ]),
+      { weekday: 6, opens: '09:00', closes: '14:00' },
+    ],
+    position: 5,
+  },
 ]

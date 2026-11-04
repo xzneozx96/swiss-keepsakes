@@ -1,5 +1,6 @@
 import type { PickupPlace } from '@sk/api-contract'
 import type { DataTableColumn } from '@/components/data-table'
+import type { MessageKey } from '@/i18n/en'
 
 import { pickText } from '@sk/domain/shared'
 
@@ -10,9 +11,58 @@ import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { StatusText } from '@/features/keepsakes/components/status-text'
 import { languagesOf } from '@/features/pickup/lib/form'
-import { hoursLine } from '@/features/pickup/lib/hours-line'
+import { DAYS } from '@/features/places/lib/hours'
 
 function noop() {}
+
+type Translate = ReturnType<typeof useLocale>['t']
+
+/**
+ * The weekly hours as one line per day group: "Mon to Sat · 10:00 – 18:00". The same grouping as `hoursLine`
+ * (pickup lib): days with the same spans share a group, three or more days in a row read "Mon to Wed", one or two
+ * read by name. A day with two spans keeps them on its line: "Mon · 08:00 – 12:00, 13:30 – 18:00".
+ * Lab copy; the real build moves it into the pickup lib with tests.
+ */
+function hoursGroups(spans: PickupPlace['hours'], t: Translate): string[] {
+  const day = (n: number) => t(`places.day.${n}` as MessageKey)
+  const textOf = (n: number) => spans.filter(s => s.weekday === n).map(s => `${s.opens} – ${s.closes}`).join(', ')
+  const groups = new Map<string, number[][]>()
+
+  for (const n of DAYS) {
+    const text = textOf(n)
+
+    if (text === '')
+      continue
+    const runs = groups.get(text) ?? []
+    const last = runs.at(-1)
+
+    if (last && last.at(-1) === n - 1 && textOf(n - 1) === text)
+      last.push(n)
+    else
+      runs.push([n])
+    groups.set(text, runs)
+  }
+
+  return [...groups]
+    .sort(([, a], [, b]) => (a[0]?.[0] ?? 0) - (b[0]?.[0] ?? 0))
+    .map(([text, runs]) => {
+      const days = runs.map(run => run.length >= 3 ? t('pickup.hours.range', { from: day(run[0] as number), to: day(run.at(-1) as number) }) : run.map(day).join(', '))
+
+      return `${days.join(', ')} · ${text}`
+    })
+}
+
+/** One line per day group; "No opening hours" as one muted line. */
+function Hours({ lines, className = '' }: { lines: string[], className?: string }) {
+  if (!lines.length)
+    return <span className={`text-muted ${className}`}>No opening hours</span>
+
+  return (
+    <span className={`flex flex-col tabular-nums ${className}`}>
+      {lines.map(line => <span key={line}>{line}</span>)}
+    </span>
+  )
+}
 
 function useRowText() {
   const { t, language } = useLocale()
@@ -20,7 +70,7 @@ function useRowText() {
   return {
     name: (place: PickupPlace) => pickText(place.name, language).text,
     address: (place: PickupPlace) => pickText(place.address, language).text,
-    hours: (place: PickupPlace) => hoursLine(place.hours, t) || 'No opening hours',
+    hours: (place: PickupPlace) => hoursGroups(place.hours, t),
   }
 }
 
@@ -78,7 +128,7 @@ function PickupCards({ places, label }: { places: PickupPlace[], label: string }
               {name(place)}
             </button>
             <span className="text-label text-muted">{address(place)}</span>
-            <span className="text-label text-muted tabular-nums">{hours(place)}</span>
+            <Hours className="text-label text-muted" lines={hours(place)} />
             <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
               <Status place={place} />
               <LanguageChip place={place} />
@@ -117,7 +167,7 @@ export function PickupTable({ places, label }: { places: PickupPlace[], label: s
         </div>
       ),
     },
-    { id: 'hours', header: 'Opening hours', headerClassName: 'w-[30%]', cellClassName: 'tabular-nums', render: hours },
+    { id: 'hours', header: 'Opening hours', headerClassName: 'w-[30%]', cellClassName: 'whitespace-nowrap', render: place => <Hours lines={hours(place)} /> },
     { id: 'languages', header: 'Languages', skeleton: 'chip', cellClassName: 'whitespace-nowrap', render: place => <LanguageChip place={place} /> },
     { id: 'status', header: 'Status', headerClassName: 'whitespace-nowrap', cellClassName: 'whitespace-nowrap', render: place => <Status place={place} /> },
   ]
