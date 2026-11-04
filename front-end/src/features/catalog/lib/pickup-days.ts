@@ -43,6 +43,13 @@ export function isPickupDay(hours: readonly PickupSpan[], isoDate: string, now: 
   return spans.some(span => endsOnItsDay(span) ? time < span.closes : true)
 }
 
+/** Whether the point has a span that starts on the weekday of `isoDate`, whatever the time now. */
+export function opensOnWeekday(hours: readonly PickupSpan[], isoDate: string): boolean {
+  const weekday = weekdayOf(isoDate)
+
+  return hours.some(span => span.weekday === weekday)
+}
+
 /** The first day the point can be picked from now, or undefined when it has none in the window. */
 export function earliestPickupDay(hours: readonly PickupSpan[], now: Date): string | undefined {
   const today = zurichDate(now)

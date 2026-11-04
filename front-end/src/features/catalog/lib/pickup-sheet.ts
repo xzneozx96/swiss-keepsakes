@@ -9,8 +9,8 @@ import { parseDate } from '@internationalized/date'
 import { zurichDate } from '@sk/domain/catalog'
 import { addCalendarDays } from '@sk/domain/dates'
 import { formatShortDate } from '@sk/domain/shared'
-import { hoursOfWeek } from '@/features/map/lib/hours'
-import { earliestPickupDay, isPickupDay, PICKUP_WINDOW_DAYS } from './pickup-days'
+import { hoursOfWeek } from '@/lib/hours'
+import { earliestPickupDay, isPickupDay, opensOnWeekday, PICKUP_WINDOW_DAYS } from './pickup-days'
 
 type Translate = (key: MessageKey, vars?: Record<string, string | number>) => string
 export type PickupPoint = PublicPickupPoints['items'][number]
@@ -78,7 +78,10 @@ export function pickupDateField(input: {
 
       return day >= today && day <= last && !isPickupDay(point.hours, day, now)
     },
-    reasonFor: day => day >= today && day <= last ? t('detail.date.closedDay') : undefined,
+    // Today with a span that has ended is not "closed that day": the opening hours are over.
+    reasonFor: day => day < today || day > last
+      ? undefined
+      : day === today && opensOnWeekday(point.hours, day) ? t('detail.date.todayOver') : t('detail.date.closedDay'),
     legend: { title: t('detail.legend.title'), closed: t('detail.legend.closedDay') },
     value,
     onChange,

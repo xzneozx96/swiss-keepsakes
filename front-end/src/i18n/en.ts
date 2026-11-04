@@ -285,6 +285,7 @@ export const en = {
   'detail.sheet.close': 'Close',
   'detail.sheet.add': 'Add to cart · {total}',
   'detail.date.closedDay': 'The pickup point is closed that day. Choose another day.',
+  'detail.date.todayOver': 'Today’s opening hours are over. Choose another day.',
   'detail.date.noDays': 'This pickup point has no open days in the next 60 days.',
   'detail.date.chosen': '{date} · {place}',
   'detail.legend.closedDay': 'The pickup point is closed',

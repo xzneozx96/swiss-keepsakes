@@ -71,6 +71,8 @@ export interface GiftPageProps {
     icon: 'pickup' | 'pay'
     title: string
     body: string
+    /** The text is still being read: a skeleton line shows in its place. */
+    loading?: boolean
   }[]
   sheet: { title: string, closeLabel: string }
   variant: {
@@ -99,6 +101,8 @@ export interface GiftPageProps {
     }[]
     /** Said in the "Pickup places" fold-out when there are no options. */
     emptyText?: string
+    /** The points are being read, or the read failed: the fold-out shows a skeleton or the error with a retry. */
+    state?: PickupReadState
   }
   sections: {
     aboutTitle: string
@@ -156,7 +160,7 @@ export interface GiftShopperProps {
       value: string | null
       onChange: (id: string) => void
       error?: string
-      state?: 'loading' | { error: string, retryLabel: string, onRetry: () => void }
+      state?: PickupReadState
     }
     date?: PickupDateFieldProps
   }
@@ -172,6 +176,9 @@ export interface GiftShopperProps {
   backLabel: string
   onBack: () => void
 }
+
+/** The read of the pickup points that has not answered: loading, or failed with a retry. */
+type PickupReadState = 'loading' | { error: string, retryLabel: string, onRetry: () => void }
 
 export type GiftDetailProps = GiftPageProps & GiftShopperProps
 
@@ -288,7 +295,9 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
                 <Icon aria-hidden className="mt-0.5 shrink-0" size={26} />
                 <div className="flex flex-col gap-0.5">
                   <span className="font-semibold">{h.title}</span>
-                  <span className="text-sm text-muted">{h.body}</span>
+                  {h.loading
+                    ? <Skeleton aria-hidden className="h-4 w-48 rounded-lg" data-skeleton="pickup-line" />
+                    : <span className="text-sm text-muted">{h.body}</span>}
                 </div>
               </li>
             )
@@ -328,36 +337,38 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
             </Accordion.Heading>
             <Accordion.Panel>
               <Accordion.Body>
-                {place.options.length === 0 && place.emptyText
-                  ? <p className="text-sm">{place.emptyText}</p>
-                  : (
-                      <ul className="flex flex-col gap-4">
-                        {place.options.map(p => (
-                          <li key={p.id} className="flex flex-col">
-                            <span className="font-semibold text-foreground">
-                              {p.name}
-                            </span>
-                            {p.address && <span className="text-sm">{p.address}</span>}
-                            {p.schedule
-                              ? p.schedule.map(line => (
-                                  <span key={line.days} className="text-sm">{line.days} {line.value}</span>
-                                ))
-                              : p.hours && <span className="text-sm">{p.hours}</span>}
-                            {p.instructions && <span className="text-sm text-muted">{p.instructions}</span>}
-                            {p.directions && (
-                              <a
-                                className="mt-1 self-start rounded text-sm font-semibold underline underline-offset-4 outline-none focus-visible:focus-ring"
-                                href={p.directions.href}
-                                rel="noopener noreferrer"
-                                target="_blank"
-                              >
-                                {p.directions.label}
-                              </a>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                {place.state
+                  ? <PickupReadStatus state={place.state} />
+                  : place.options.length === 0 && place.emptyText
+                    ? <p className="text-sm">{place.emptyText}</p>
+                    : (
+                        <ul className="flex flex-col gap-4">
+                          {place.options.map(p => (
+                            <li key={p.id} className="flex flex-col">
+                              <span className="font-semibold text-foreground">
+                                {p.name}
+                              </span>
+                              {p.address && <span className="text-sm">{p.address}</span>}
+                              {p.schedule
+                                ? p.schedule.map(line => (
+                                    <span key={line.days} className="text-sm">{line.days} {line.value}</span>
+                                  ))
+                                : p.hours && <span className="text-sm">{p.hours}</span>}
+                              {p.instructions && <span className="text-sm text-muted">{p.instructions}</span>}
+                              {p.directions && (
+                                <a
+                                  className="mt-1 self-start rounded text-sm font-semibold underline underline-offset-4 outline-none focus-visible:focus-ring"
+                                  href={p.directions.href}
+                                  rel="noopener noreferrer"
+                                  target="_blank"
+                                >
+                                  {p.directions.label}
+                                </a>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
               </Accordion.Body>
             </Accordion.Panel>
           </Accordion.Item>
@@ -581,10 +592,8 @@ function GiftSheet({
   )
 }
 
-/** The pickup place choice: the points of the store, a skeleton of them while they are read, or an error with a retry. */
-function PickupPlaces({ options, place }: { options: GiftPageProps['place']['options'], place: NonNullable<GiftShopperProps['pickup']>['place'] }) {
-  const state = place.state
-
+/** The pickup read that has not answered: a skeleton shaped like the place rows, or the error with a retry. */
+function PickupReadStatus({ state, id }: { state: PickupReadState, id?: string }) {
   if (state === 'loading') {
     return (
       <div aria-hidden className="flex flex-col gap-3" data-skeleton="pickup">
@@ -602,14 +611,18 @@ function PickupPlaces({ options, place }: { options: GiftPageProps['place']['opt
     )
   }
 
-  if (state) {
-    return (
-      <div className="flex flex-col items-start gap-2" id="gift-place" role="alert">
-        <span className="text-sm text-danger">{state.error}</span>
-        <Button size="sm" variant="secondary" onPress={state.onRetry}>{state.retryLabel}</Button>
-      </div>
-    )
-  }
+  return (
+    <div className="flex flex-col items-start gap-2" id={id} role="alert">
+      <span className="text-sm text-danger">{state.error}</span>
+      <Button size="sm" variant="secondary" onPress={state.onRetry}>{state.retryLabel}</Button>
+    </div>
+  )
+}
+
+/** The pickup place choice: the points of the store, a skeleton of them while they are read, or an error with a retry. */
+function PickupPlaces({ options, place }: { options: GiftPageProps['place']['options'], place: NonNullable<GiftShopperProps['pickup']>['place'] }) {
+  if (place.state)
+    return <PickupReadStatus id="gift-place" state={place.state} />
 
   // No "*": every sheet field is needed. Missing choices show an error on add.
   return (

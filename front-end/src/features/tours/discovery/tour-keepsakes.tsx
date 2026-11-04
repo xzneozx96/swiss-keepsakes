@@ -28,7 +28,7 @@ export function TourKeepsakes({
   const { t, language } = useLocale()
   const list = useQuery({
     ...fromApi,
-    queryKey: [...queryKeys.keepsakes.list, 'tour-block', language],
+    queryKey: [...queryKeys.keepsakes.tourBlock, language],
     queryFn: () => fetchKeepsakeList(language),
   })
   const items = list.data?.items.slice(0, MAX_TOUR_KEEPSAKES)

@@ -9,6 +9,7 @@ import { formatMoney, formatShortDate } from '@sk/domain/shared'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
+import { queryKeys } from '@/features/data-client'
 import { fetchAvailability, fetchPickupPoints } from '../api/keepsake'
 import { publicKeepsakePage } from '../lib/keepsake-page'
 import { isPickupDay } from '../lib/pickup-days'
@@ -39,7 +40,7 @@ export function useKeepsakeDetail(detail: PublicKeepsake, lang: PublicLanguage):
   const [pickupDate, setPickupDate] = useState<CalendarDate | null>(null)
 
   const read = useQuery({
-    queryKey: ['public-keepsake-availability', detail.slug, lang],
+    queryKey: [...queryKeys.catalog.keepsakeAvailability, detail.slug, lang],
     queryFn: () => fetchAvailability(detail.slug, lang),
     staleTime: AVAILABILITY_STALE_MS,
     retry: false,
@@ -49,7 +50,7 @@ export function useKeepsakeDetail(detail: PublicKeepsake, lang: PublicLanguage):
     : { state: read.isError && !read.isFetching ? 'failed' : 'loading' }
 
   const pickupRead = useQuery({
-    queryKey: ['public-keepsake-pickup', detail.slug, lang],
+    queryKey: [...queryKeys.catalog.keepsakePickupPoints, detail.slug, lang],
     queryFn: () => fetchPickupPoints(detail.slug, lang),
     staleTime: PICKUP_STALE_MS,
     retry: false,
@@ -65,6 +66,9 @@ export function useKeepsakeDetail(detail: PublicKeepsake, lang: PublicLanguage):
     setPickupDate(date => (date && next && isPickupDay(next.hours, date.toString(), now) ? date : null))
   }
   const chosenDay = point && pickupDate ? t('detail.date.chosen', { date: formatShortDate(pickupDate.toString(), zurichDate(now), intlLocale), place: point.name }) : undefined
+  const readState = pickupRead.isError && !pickupRead.isFetching
+    ? { error: t('detail.places.failed'), retryLabel: t('routeError.retry'), onRetry: () => void pickupRead.refetch() }
+    : 'loading' as const
   const pickupPlace = { label: t('detail.place.label'), value: point?.id ?? null, onChange: choosePlace }
 
   const { page, variant, choice, soldOut } = publicKeepsakePage({ ...detail, fallback: preferredLanguage !== undefined && !detail.availableLanguages.includes(preferredLanguage) }, { t, intlLocale, availability, chosen: picked })
@@ -75,20 +79,17 @@ export function useKeepsakeDetail(detail: PublicKeepsake, lang: PublicLanguage):
 
   return {
     ...page,
-    // Until the points are read (or when the read failed) the page keeps its neutral pickup lines.
-    highlights: points ? [{ ...page.highlights[0], body: pickupHighlight(points, t) }, ...page.highlights.slice(1)] : page.highlights,
-    place: points ? { options: placeOptions(points, t, intlLocale), emptyText: t('detail.places.none') } : page.place,
-    sections: points && points.length > 0 ? { ...page.sections, dateRow: { title: t('detail.date.label'), value: chosenDay, action: t('detail.bar.choose') } } : page.sections,
-    note: !points ? page.note : points.length === 0 ? t('detail.places.none') : t('detail.date.note'),
+    // Until the points are read the pickup lines show a skeleton, or the error with a retry (a failed read leaves the highlight out).
+    highlights: !points
+      ? readState === 'loading'
+        ? [{ ...page.highlights[0], body: '', loading: true }, ...page.highlights.slice(1)]
+        : page.highlights.slice(1)
+      : [{ ...page.highlights[0], body: pickupHighlight(points, t) }, ...page.highlights.slice(1)],
+    place: points ? { options: placeOptions(points, t, intlLocale), emptyText: t('detail.places.none') } : { options: [], state: readState },
+    sections: points?.length === 0 ? page.sections : { ...page.sections, dateRow: { title: t('detail.date.label'), value: chosenDay, action: t('detail.bar.choose') } },
+    note: points?.length === 0 ? t('detail.places.none') : t('detail.date.note'),
     pickup: !points
-      ? {
-          place: {
-            ...pickupPlace,
-            state: pickupRead.isError && !pickupRead.isFetching
-              ? { error: t('detail.places.failed'), retryLabel: t('routeError.retry'), onRetry: () => void pickupRead.refetch() }
-              : 'loading' as const,
-          },
-        }
+      ? { place: { ...pickupPlace, state: readState } }
       : points.length === 0
         ? undefined
         : { place: pickupPlace, date: point ? pickupDateField({ point, now, value: pickupDate, onChange: setPickupDate, t, intlLocale }) : undefined },
@@ -114,7 +115,7 @@ export function useKeepsakeDetail(detail: PublicKeepsake, lang: PublicLanguage):
     },
     bar: {
       price: total ?? '',
-      summary: t('detail.preview.atCheckout'),
+      summary: points?.length === 0 ? t('detail.preview.atCheckout') : chosenDay ?? t('detail.bar.choose'),
       chip: t('detail.bar.nothingNow'),
       addLabel: t('detail.bar.add'),
       addDisabled: !ready,

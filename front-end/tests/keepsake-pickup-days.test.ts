@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { earliestPickupDay, isPickupDay, PICKUP_WINDOW_DAYS } from '@/features/catalog/lib/pickup-days'
+import { earliestPickupDay, isPickupDay, opensOnWeekday, PICKUP_WINDOW_DAYS } from '@/features/catalog/lib/pickup-days'
 
 const span = (weekday: number, opens: string, closes: string) => ({ weekday, opens, closes })
 const everyDay = [1, 2, 3, 4, 5, 6, 7].map(day => span(day, '09:00', '17:00'))
@@ -62,5 +62,19 @@ describe('[E6.4][AC26] the days a pickup point can be picked', () => {
     expect(PICKUP_WINDOW_DAYS).toBe(60)
     expect(isPickupDay(everyDay, '2027-01-02', now)).toBe(true)
     expect(isPickupDay(everyDay, '2027-01-03', now)).toBe(false)
+  })
+
+  it('[AC26] a Sunday span is weekday 7', () => {
+    const sunday = [span(7, '10:00', '14:00')]
+    const now = tuesday('10:00')
+
+    expect(isPickupDay(sunday, '2026-11-08', now)).toBe(true)
+    expect(isPickupDay(sunday, '2026-11-09', now)).toBe(false)
+    expect(earliestPickupDay(sunday, now)).toBe('2026-11-08')
+  })
+
+  it('[AC26] tells a day with no span from today after its span ended', () => {
+    expect(opensOnWeekday(everyDay, '2026-11-03')).toBe(true)
+    expect(opensOnWeekday([span(1, '09:00', '17:00')], '2026-11-03')).toBe(false)
   })
 })

@@ -287,7 +287,8 @@ describe('[E6.4][AC26] pickup place and date in the keepsake sheet', { timeout: 
     expect(sheetIn()!.querySelector<HTMLInputElement>('input[type="radio"]')).toBeChecked()
     await user.click(within(sheetIn()!).getByText('Close sheet'))
     await user.click(foldOut('Pickup date'))
-    expect(screen.getByText('Mon 9 Nov · Station kiosk')).toBeInTheDocument()
+    // The bar and the fold-out row both show it.
+    expect(screen.getAllByText('Mon 9 Nov · Station kiosk')).toHaveLength(2)
 
     // Add to cart is a placeholder: pressing it sends nothing either.
     await user.click(barButton()!)
@@ -296,6 +297,82 @@ describe('[E6.4][AC26] pickup place and date in the keepsake sheet', { timeout: 
 
     expect(log.length).toBeGreaterThan(0)
     expect(log.every(r => r.method === 'GET' && r.body === '')).toBe(true)
-    expect(log.some(r => r.url.includes('2026-11-09') || r.url.includes(ids.a))).toBe(false)
+    // The only pickup request is the read by slug: its query is the language and nothing the guest chose.
+    const reads = log.filter(r => r.url.includes('/pickup-points'))
+
+    expect(reads.length).toBeGreaterThan(0)
+    expect(reads.every(r => [...new URL(r.url).searchParams.keys()].join() === 'lang')).toBe(true)
+    expect(log.every(r => new URL(r.url).pathname.startsWith('/api/public/keepsakes/'))).toBe(true)
+  })
+
+  it('[AC26] the bar shows the chosen day and place, or asks for them; no points keeps the checkout line', async () => {
+    pickups = () => Response.json({ items: [point(ids.a, 'Station kiosk', monTue), point(ids.b, 'Old town shop', tueOnly)] })
+    const { user, sheet } = await openSheet()
+
+    await waitFor(() => expect(within(sheet).getByText('Old town shop')).toBeInTheDocument())
+    expect(screen.queryByText('Chosen at checkout')).toBeNull()
+    expect(screen.getAllByText('Choose a date and place').length).toBeGreaterThan(0)
+    await user.click(within(sheet).getByText('Station kiosk'))
+    await waitFor(() => expect(cell('2026-11-09')).not.toBeNull())
+    await user.click(cell('2026-11-09')!)
+
+    expect(screen.getAllByText('Mon 9 Nov · Station kiosk').length).toBeGreaterThan(0)
+  })
+
+  it('[AC26] while the points load the highlight and the places fold-out show a skeleton, never the old checkout line', async () => {
+    pickups = () => new Promise<Response>(() => {})
+    const { user, sheet } = await openSheet()
+
+    await user.click(within(sheet).getByText('Close sheet'))
+    await user.click(foldOut('Where you’ll pick it up'))
+
+    expect(document.querySelector('[data-skeleton="pickup-line"]')).not.toBeNull()
+    expect(document.querySelectorAll('[data-skeleton="pickup"]').length).toBeGreaterThan(0)
+    expect(screen.queryByText('Chosen at checkout')).toBeNull()
+    expect(screen.queryByText('Guests choose the pickup place and date at checkout.')).toBeNull()
+  })
+
+  it('[AC26] a failed read shows the error with retry in the places fold-out too; retry brings the places', async () => {
+    pickups = () => Response.json({ title: 'down' }, { status: 503 })
+    const { user, sheet } = await openSheet()
+
+    await waitFor(() => expect(sheet.querySelector('[role="alert"]')).not.toBeNull())
+    await user.click(within(sheet).getByText('Close sheet'))
+    await user.click(foldOut('Where you’ll pick it up'))
+    const alerts = screen.getAllByText('The pickup places could not be loaded.')
+
+    expect(alerts.length).toBeGreaterThan(0)
+    pickups = () => Response.json({ items: [point(ids.a, 'Station kiosk', monTue)] })
+    await user.click(alerts[0]!.closest('[role="alert"]')!.querySelector('button')!)
+
+    await waitFor(() => expect(screen.getByText('Station kiosk street 1, 6003 Luzern')).toBeInTheDocument())
+  })
+
+  it('[AC26] today after closing says the opening hours are over, not that the point is closed that day', async () => {
+    pickups = () => Response.json({ items: [point(ids.a, 'Station kiosk', everyDay)] })
+    at('2026-11-03T18:30:00+01:00')
+    const { user, sheet } = await openSheet()
+
+    await waitFor(() => expect(cell('2026-11-03')).not.toBeNull())
+    await user.click(cell('2026-11-03')!)
+
+    expect(within(sheet).getByRole('alert')).toHaveTextContent('Today’s opening hours are over. Choose another day.')
+  })
+
+  it('[AC26] a field the API adds later does not fail the pickup area', async () => {
+    pickups = () => Response.json({ items: [{ ...point(ids.a, 'Station kiosk', monTue.map(s => ({ ...s, note: 'x' }))), futureField: 1 }], extra: true })
+    const { sheet } = await openSheet()
+
+    await waitFor(() => expect(sheet.querySelector('#gift-date')).not.toBeNull())
+    expect(sheet.querySelector('[role="alert"]')).toBeNull()
+  })
+
+  it('[AC26] a Sunday span (weekday 7) makes the Sundays pickable', async () => {
+    pickups = () => Response.json({ items: [point(ids.a, 'Sunday kiosk', [span(7, '10:00', '14:00')])] })
+    await openSheet()
+
+    await waitFor(() => expect(cell('2026-11-08')).not.toBeNull())
+    expect(cell('2026-11-08')).not.toHaveAttribute('data-unavailable', 'true')
+    expect(cell('2026-11-09')).toHaveAttribute('data-unavailable', 'true')
   })
 })
