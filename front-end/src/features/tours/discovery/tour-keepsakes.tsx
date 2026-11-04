@@ -1,11 +1,9 @@
 import { Skeleton } from '@heroui/react'
 import { useQuery } from '@tanstack/react-query'
 import { useLocale } from '@/contexts/locale-context'
-import { fetchKeepsakeList } from '@/features/catalog/api/keepsakes'
+import { guestKeepsakeList } from '@/features/catalog/api/keepsake-list-query'
 import { ProductCard } from '@/features/catalog/components/product-card'
 import { toKeepsakeCard } from '@/features/catalog/lib/keepsake-card'
-import { queryKeys } from '@/features/data-client'
-import { fromApi } from '@/features/data-client/api-transport'
 import { Rail } from '@/features/discovery/components/section'
 
 /** Guests see at most this many linked keepsakes. */
@@ -27,11 +25,10 @@ export function TourKeepsakes({
 }) {
   const { t, language } = useLocale()
   const list = useQuery({
-    ...fromApi,
-    queryKey: [...queryKeys.keepsakes.tourBlock, language],
-    queryFn: () => fetchKeepsakeList(language),
+    ...guestKeepsakeList(language),
+    select: ({ items }) => items.slice(0, MAX_TOUR_KEEPSAKES),
   })
-  const items = list.data?.items.slice(0, MAX_TOUR_KEEPSAKES)
+  const items = list.data
 
   if (list.isError || (items && !items.length))
     return null
