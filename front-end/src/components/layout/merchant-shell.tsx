@@ -4,7 +4,7 @@ import type { MessageKey } from '@/i18n/en'
 
 import { Button, Drawer } from '@heroui/react'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import {
   ChevronDownIcon,
@@ -298,6 +298,26 @@ const tabLink
   = 'group relative flex h-16 w-full flex-col items-center justify-center gap-1 text-xs text-muted outline-none focus-visible:focus-ring data-[status=active]:font-semibold data-[status=active]:text-accent'
 
 /**
+ * Writes the store notice's height to `--merchant-notice-height` on the content column, so a bar that pins
+ * under the notice on desktop (where the notice sticks too) can start below it (`BAR_TOP`, notice-aware-bar.ts).
+ * The notice is `empty:hidden` without content, so the height is 0 then; a dismissed notice writes 0 again.
+ */
+function useNoticeHeight(notice: HTMLElement | null) {
+  useEffect(() => {
+    const column = notice?.parentElement
+
+    if (!notice || !column)
+      return
+    const measure = () => column.style.setProperty('--merchant-notice-height', `${notice.offsetHeight}px`)
+    const observer = new ResizeObserver(measure)
+
+    measure()
+    observer.observe(notice)
+    return () => observer.disconnect()
+  }, [notice])
+}
+
+/**
  * Merchant dashboard frame (UX spec §3.2). Phones: bottom navigation with Dashboard,
  * Operations, Calendar and More (a sheet with the other sections). From 1024px: a sidebar.
  */
@@ -316,6 +336,7 @@ export function MerchantShell({ children, notice }: {
   // Groups start unfolded; the set holds the ones the user folded.
   const [folded, setFolded] = useState<Set<string>>(() => new Set())
   const [barSlot, setBarSlot] = useState<HTMLElement | null>(null)
+  const [noticeSlot, setNoticeSlot] = useState<HTMLElement | null>(null)
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const labelOf = (item: NavItem) => t(item.label)
@@ -323,6 +344,8 @@ export function MerchantShell({ children, notice }: {
   const { primary: phonePrimary, more: phoneMore } = readyPhone()
   // The shop mark opens the first ready page (Today is a prototype for now).
   const landing = sidebar[0]?.pages?.[0]?.to ?? sidebar[0]?.to ?? '/store'
+
+  useNoticeHeight(noticeSlot)
 
   return (
     <div className="flex flex-1">
@@ -457,6 +480,7 @@ export function MerchantShell({ children, notice }: {
             bar pins to the top) and sticks on desktop. It takes the width and padding of the main column;
             a notice brings its own vertical padding, so the main column drops its top padding below it. */}
         <div
+          ref={setNoticeSlot}
           data-merchant-notice=""
           className="mx-auto w-full max-w-6xl bg-background px-4 empty:hidden lg:sticky lg:top-0 lg:z-10 lg:px-8"
         >

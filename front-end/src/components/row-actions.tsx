@@ -25,15 +25,18 @@ export function RowActions<Id extends string>({
   label,
   actions,
   onAction,
+  triggerClassName,
 }: {
   /** Accessible name of the button and the menu, e.g. "Actions for Hotel am See". */
   label: string
   actions: RowAction<Id>[]
   onAction?: (id: Id) => void
+  /** The ⋯ button's size where a bar sets one for all its buttons (the editor header). */
+  triggerClassName?: string
 }) {
   return (
     <Dropdown>
-      <Button isIconOnly aria-label={label} size="sm" variant="tertiary">
+      <Button isIconOnly aria-label={label} className={triggerClassName} size="sm" variant="tertiary">
         <MoreIcon size={18} />
       </Button>
       {/* As wide as its longest label: placed near the screen edge it would otherwise shrink and wrap. */}
