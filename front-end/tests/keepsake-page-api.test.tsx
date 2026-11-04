@@ -258,7 +258,8 @@ describe('[E6.4] the keepsake page', { timeout: 180_000 }, () => {
       render(<RouterProvider router={router} />)
 
       expect(await screen.findByText('A mug with the old bridge.')).toBeInTheDocument()
-      await new Promise(resolve => setTimeout(resolve, 300))
+      // The availability has settled (the bar is live), so the saved language has been read too.
+      await waitFor(() => expect(barButton()).toBeEnabled())
       expect(document.body.textContent).not.toContain('only available in')
     }
     finally {

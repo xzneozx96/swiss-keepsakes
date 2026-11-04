@@ -23,13 +23,14 @@ vi.mock('@sk/api-contract', async (importOriginal) => {
   return { ...actual, createApiClient: () => ({ GET: m.tours }) }
 })
 
-function wrapper({ children }: { children: React.ReactNode }) {
-  const client = new QueryClient()
+let client: QueryClient
 
+function wrapper({ children }: { children: React.ReactNode }) {
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>
 }
 
 beforeEach(() => {
+  client = new QueryClient()
   vi.clearAllMocks()
   m.api.on = true
   m.stories.mockResolvedValue([])
@@ -65,7 +66,11 @@ describe('[E4.14][AC94] useSearchSources names the kind whose read failed', () =
     m.api.on = false
     const { result } = renderHook(() => useSearchSources('en'), { wrapper })
 
-    await new Promise(resolve => setTimeout(resolve, 20))
+    // The four lists are registered and idle: a disabled query never starts, so nothing is left to wait for.
+    const queries = client.getQueryCache().getAll()
+
+    expect(queries).toHaveLength(4)
+    expect(queries.map(query => query.state.fetchStatus)).toEqual(['idle', 'idle', 'idle', 'idle'])
     expect(result.current.failed).toEqual([])
     expect(result.current.isLoading).toBe(false)
     expect([m.stories, m.pins, m.tours, m.keepsakes].map(fn => fn.mock.calls.length)).toEqual([0, 0, 0, 0])
