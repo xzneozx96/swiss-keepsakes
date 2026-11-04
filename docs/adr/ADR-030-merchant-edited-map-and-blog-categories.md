@@ -45,8 +45,12 @@ We will add two merchant-edited lists to the `content` module, and keep the inte
 - **B. One shared list for pins and stories.** One editor and one table. But the map would show chips such as Legends that no pin uses, and the story list would show Photo spots, so each side would need a filter on "used here". Rejected.
 - **C. Categories replace interests.** One concept for the visitor. But interests drive onboarding ranking (Q26, AC38), and merchant-edited names cannot be the stable codes that the ranking function and the analytics events use. Rejected.
 
+## Amendments
+- 2026-11-04 (gate G-S9-ICON, owner, `docs/decisions/2026-11-04-roadmap-reorder.md`): the map category icon removed on 2026-11-02 is restored, because the home tiles (E4.13) and the photo-less pins read it. A new migration, `0026`, adds `content.map_categories.icon` and its CHECK on the 24 keys back. The icon list, `placeIcon`, the contract field, the API validation, the Categories-sheet picker and the seed icon step return from commits `dcdacc16`, `e14ffb6c` and `324e40e9`. A blog category still has no icon. The guest map gets a `category` search parameter that filters to a category and its sub-categories. Planned, not built.
+
 ## History
 - 2026-10-27 proposed
 - 2026-10-27 accepted (gate G11)
 - 2026-11-02 amended (owner: a map category gets a Show on the home switch; built in T-009 and T-009b, migration `0016`; the icon added with it was removed in T-011, migration `0018`)
 - 2026-10-29 note: the story editor design (`docs/decisions/2026-10-29-story-editor-design.md`) applies the rule that a parent covers items tagged only with its sub-categories (R5) with replacement. Choosing a sub-category tags only it, choosing a parent replaces its sub-category, and a parent never selects its children. The decision above stands. Whether the API refuses a story tagged with both a parent and its child is open
+- 2026-11-04 amended (gate G-S9-ICON, owner: the map category icon is restored with migration `0026`; planned, not built)

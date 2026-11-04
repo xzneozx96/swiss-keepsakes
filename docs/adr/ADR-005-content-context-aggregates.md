@@ -50,8 +50,12 @@ We will keep stories, places and tour guides in the `content` module and give ea
 - **C. Keep language versions as the unit and point pins at a version.** Breaks when one language is unpublished, and hreflang cannot be derived. Rejected.
 - **D. Separate `places` module.** A cleaner name, but place and story publish rules and tags change together, and two modules would need cross-module transactions on every publish. Not needed now.
 
+## Amendments
+- 2026-11-04 (gate G-S9-ICON, owner, `docs/decisions/2026-11-04-roadmap-reorder.md`): the map category icon removed on 2026-11-02 comes back with a new migration, `0026` (ADR-030). A pin without a photo reads the icon by the `placeIcon` rule. Planned, not built. The Pin aggregate is otherwise unchanged.
+
 ## History
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
 - 2026-10-27 amended (gate G11, `docs/decisions/2026-10-27-map-pins-and-events.md`)
 - 2026-11-02 amended (owner): the pin's service type and food kind are replaced by a Show on the home switch on the map category (ADR-030, migration `0016`, built in T-009; the icon it also added was removed by `0018` in T-011); must-visit stays on the pin
+- 2026-11-04 amended (gate G-S9-ICON, owner: the map category icon is restored with migration `0026`; planned, not built)
