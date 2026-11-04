@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
 import { render, screen } from '@testing-library/react'
@@ -109,7 +110,7 @@ describe('[E6.4] the tour keepsake block', () => {
   })
 
   it('[E6.4] AC-5 the block source reads none of the demo keepsake hooks', () => {
-    const source = readFileSync('src/features/tours/discovery/tour-keepsakes.tsx', 'utf8')
+    const source = readFileSync(join(import.meta.dirname, '..', 'src/features/tours/discovery/tour-keepsakes.tsx'), 'utf8')
 
     for (const demo of ['useProducts', 'useOrders', 'useProductCard', 'isPublished', 'isSoldOut'])
       expect(source).not.toContain(demo)
