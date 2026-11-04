@@ -1,4 +1,4 @@
-import type { PublicCategoryListRow, PublicReadRepository, PublicStoryRow, PublicStoryVersionRow, StoredStoryDoc } from '../../../src/modules/content/read-ports.ts'
+import type { PublicCategoryListRow, PublicPinRow, PublicReadRepository, PublicStoryDetailRow, PublicStoryKeepsakeCard, PublicStoryRow, PublicStoryVersionRow, StoredStoryDoc } from '../../../src/modules/content/read-ports.ts'
 import { publicCategoryListSchema, publicStoryListSchema, publicStorySchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 import { makeListCategories } from '../../../src/modules/content/application/read-categories.ts'
@@ -15,10 +15,16 @@ function story(id: string, versions: PublicStoryVersionRow[], over: Partial<Publ
   return { id, stayTag: 'both', interests: [], categories: [], versions, ...over }
 }
 
-function setup(stories: PublicStoryRow[], categories: PublicCategoryListRow[] = []) {
+type StoryFixture = PublicStoryRow & Partial<Pick<PublicStoryDetailRow, 'places' | 'related' | 'keepsakeProductIds'>>
+
+function setup(stories: StoryFixture[], categories: PublicCategoryListRow[] = [], keepsakeCards: PublicStoryKeepsakeCard[] = []) {
+  const asked: { ids: string[], language: string }[] = []
   const reads: PublicReadRepository<null> = {
     listPublishedStories: async () => stories,
-    findPublishedStoryBySlug: async (_tx, slug) => stories.find(s => s.versions.some(v => v.slug === slug)),
+    findPublishedStoryBySlug: async (_tx, slug) => {
+      const found = stories.find(s => s.versions.some(v => v.slug === slug))
+      return found && { places: [], related: [], keepsakeProductIds: [], ...found }
+    },
     listCategories: async () => categories,
     listVisiblePins: async () => [],
     findVisiblePin: async () => undefined,
@@ -27,7 +33,10 @@ function setup(stories: PublicStoryRow[], categories: PublicCategoryListRow[] = 
   }
   const deps = { uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) }, reads, clock: createManualClock(new Date('2026-10-27T10:00:00Z')), publicUrl: (key: string) => `https://media.test/${key}` }
   const listStories = makeListStories(deps)
-  const getStory = makeGetStory(deps)
+  const getStory = makeGetStory({ ...deps, keepsakeCards: async (ids, language) => {
+    asked.push({ ids, language })
+    return keepsakeCards
+  } })
   const listCategories = makeListCategories(deps)
   // Every output must satisfy the public contract schemas (the application layer cannot import them).
   return {
@@ -39,6 +48,7 @@ function setup(stories: PublicStoryRow[], categories: PublicCategoryListRow[] = 
       return result
     },
     categories: async (...args: Parameters<typeof listCategories>) => publicCategoryListSchema.parse(await listCategories(...args)),
+    asked,
   }
 }
 
@@ -116,8 +126,8 @@ describe('public stories', () => {
     expect(items[0]!.excerpt).toBe('A day excerpt')
     expect(items[0]!.readMinutes).toBeGreaterThanOrEqual(1)
     expect(detail.ok && detail.value.body).toEqual({ type: 'doc', content: [
-      { type: 'image', attrs: { key: 'store/key-1', alt: 'a lake', caption: 'c' } },
-      { type: 'audio', attrs: { key: null, title: 't', caption: '' } },
+      { type: 'image', attrs: { key: 'store/key-1', url: 'https://media.test/store/key-1', variants: [], alt: 'a lake', caption: 'c' } },
+      { type: 'audio', attrs: { key: null, url: null, title: 't', caption: '' } },
       { type: 'paragraph', content: [{ type: 'text', text: 'p' }] },
     ] })
     expect(detail.ok && 'intro' in detail.value).toBe(false)
@@ -227,8 +237,8 @@ describe('public stories', () => {
     const detail = await s.get('odd', 'en')
 
     expect(detail.ok && detail.value.body.content).toEqual([
-      { type: 'image', attrs: { key: null, alt: '', caption: 'no id' } },
-      { type: 'audio', attrs: { key: null, title: 't', caption: '' } },
+      { type: 'image', attrs: { key: null, url: null, variants: [], alt: '', caption: 'no id' } },
+      { type: 'audio', attrs: { key: null, url: null, title: 't', caption: '' } },
       { type: 'video', attrs: { youtubeId: 'dQw4w9WgXcQ', title: 'v', caption: '' } },
       { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'H' }] },
       { type: 'paragraph', content: [
@@ -300,5 +310,110 @@ describe('public stories', () => {
     })
 
     expect(keys.filter(k => /price|amount|chf|currency|cost/i.test(k))).toEqual([])
+  })
+})
+
+function pinRow(n: number, over: Partial<PublicPinRow> = {}): PublicPinRow {
+  return {
+    id: `0190a000-0000-7000-8000-0000000001${String(n).padStart(2, '0')}`,
+    slug: { en: `pin-${n}`, de: `ort-${n}` },
+    latitude: 47.05,
+    longitude: 8.3,
+    address: null,
+    mapsLink: null,
+    weeklyHours: [],
+    stayTag: 'both',
+    interests: [],
+    name: { en: `Pin ${n}`, de: `Ort ${n}` },
+    tip: { en: 'Tip', de: 'Tipp' },
+    firstPublishedAt: new Date('2090-01-01T00:00:00Z'),
+    photoKey: null,
+    photoWidth: null,
+    dates: [],
+    categories: [],
+    parentCategories: [],
+    mainStorySlugs: {},
+    ...over,
+  }
+}
+
+const keepsakeCard = (n: number, soldOut = false): PublicStoryKeepsakeCard => ({ id: `0190a000-0000-7000-8000-0000000002${String(n).padStart(2, '0')}`, slug: `keepsake-${n}`, name: `Keepsake ${n}`, cover: null, soldOut })
+
+describe('public story detail extras', () => {
+  it('[E4.4][AC61] AC-1: a story with both languages lists both slugs, a story in English only lists one', async () => {
+    const s = setup([
+      story(id1, [version('en', 'lake-day', 'A day'), version('de', 'seetag', 'Ein Tag')]),
+      story(id2, [version('en', 'only-en', 'Only')]),
+    ])
+
+    const both = await s.get('lake-day', 'en')
+    const one = await s.get('only-en', 'en')
+
+    expect(both.ok && both.value.versions).toEqual([{ language: 'de', slug: 'seetag' }, { language: 'en', slug: 'lake-day' }])
+    expect(one.ok && one.value.versions).toEqual([{ language: 'en', slug: 'only-en' }])
+  })
+
+  it('[E4.4][AC31][AC54] AC-2: the keepsake cards come from the port by the linked ids in the language carried, with no price', async () => {
+    const cards = [keepsakeCard(1), keepsakeCard(2, true)]
+    const linked = [cards[0]!.id, cards[1]!.id, '0190a000-0000-7000-8000-000000000299']
+    const s = setup([{ ...story(id1, [version('en', 'lake-day', 'A day')]), keepsakeProductIds: linked }], [], cards)
+
+    const detail = await s.get('lake-day', 'de')
+
+    expect(detail.ok && detail.value.keepsakes).toEqual(cards)
+    expect(s.asked).toEqual([{ ids: linked, language: 'en' }])
+    expect(JSON.stringify(detail.ok && detail.value.keepsakes)).not.toMatch(/price|amount|chf|currency|rappen/i)
+  })
+
+  it('[E4.4][AC31] AC-2: a story with no keepsake link asks the port for nothing and has no cards', async () => {
+    const s = setup([story(id1, [version('en', 'lake-day', 'A day')])], [], [keepsakeCard(1)])
+
+    const detail = await s.get('lake-day', 'en')
+
+    expect(detail.ok && detail.value.keepsakes).toEqual([])
+    expect(s.asked).toEqual([])
+  })
+
+  it('[E4.4][AC33] AC-3: related stories are at most three, published only, in the editor order, in the language carried where it exists', async () => {
+    const relId = (n: number) => `0190a000-0000-7000-8000-0000000003${String(n).padStart(2, '0')}`
+    const related = [
+      story(relId(3), [version('en', 'third', 'Third'), version('de', 'dritte', 'Dritte')]),
+      story(relId(2), []),
+      story(relId(1), [version('en', 'first', 'First')]),
+      story(relId(4), [version('en', 'fourth', 'Fourth')]),
+    ]
+    const s = setup([{ ...story(id1, [version('en', 'lake-day', 'A day'), version('de', 'seetag', 'Ein Tag')]), related }])
+
+    const detail = await s.get('seetag', 'de')
+
+    expect(detail.ok && detail.value.related.map(r => [r.slug, r.language])).toEqual([['dritte', 'de'], ['first', 'en'], ['fourth', 'en']])
+  })
+
+  it('[E4.4][AC61] AC-4: a pin whose last date has passed is left out of the place tags, a visible one stays with its name in the language carried', async () => {
+    const visible = pinRow(1)
+    const expired = pinRow(2, { dates: [{ id: 'd1', firstDay: '2026-09-01', lastDay: '2026-09-02', startTime: null, endTime: null }] })
+    const undated = pinRow(3, { name: { en: 'Only English' }, slug: { en: 'only-english' } })
+    const s = setup([{ ...story(id1, [version('en', 'lake-day', 'A day'), version('de', 'seetag', 'Ein Tag')]), places: [visible, expired, undated] }])
+
+    const detail = await s.get('seetag', 'de')
+
+    expect(detail.ok && detail.value.places).toEqual([
+      { id: visible.id, slug: 'ort-1', name: 'Ort 1' },
+      { id: undated.id, slug: 'only-english', name: 'Only English' },
+    ])
+  })
+
+  it('[E4.4][AC61] the body carries an address for an image with its webp copies and for audio', async () => {
+    const imageId = '0190a000-0000-7000-8000-0000000000c1'
+    const audioId = '0190a000-0000-7000-8000-0000000000c2'
+    const body = { type: 'doc', content: [{ type: 'image', attrs: { mediaId: imageId, alt: 'a', caption: '' } }, { type: 'audio', attrs: { mediaId: audioId, title: 't', caption: '' } }] }
+    const s = setup([story(id1, [version('en', 'media', 'M', undefined, { published: doc('M', { body }), mediaKeys: { [imageId]: 'store/img-1', [audioId]: 'store/a-1' }, mediaWidths: { [imageId]: 700 } })])])
+
+    const detail = await s.get('media', 'en')
+
+    expect(detail.ok && detail.value.body.content).toEqual([
+      { type: 'image', attrs: { key: 'store/img-1', url: 'https://media.test/store/img-1', variants: [{ width: 320, url: 'https://media.test/store/w320.webp' }, { width: 640, url: 'https://media.test/store/w640.webp' }], alt: 'a', caption: '' } },
+      { type: 'audio', attrs: { key: 'store/a-1', url: 'https://media.test/store/a-1', title: 't', caption: '' } },
+    ])
   })
 })

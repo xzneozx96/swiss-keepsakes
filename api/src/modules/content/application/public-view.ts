@@ -1,5 +1,5 @@
 import type { ContentLanguage, Localized, PinDate, StayTag } from '@sk/domain/content'
-import type { PublicCategoryListRow, PublicPinDetailRow, PublicPinRow, PublicStoryRow, PublicStoryVersionRow, PublicTourRow } from '../read-ports.ts'
+import type { PublicCategoryListRow, PublicPinDetailRow, PublicPinRow, PublicStoryDetailRow, PublicStoryKeepsakeCard, PublicStoryRow, PublicStoryVersionRow, PublicTourRow } from '../read-ports.ts'
 import { isSafeLinkHref, languagesOf, STORY_BODY_LIMITS, storyBodyReadMinutes, variantKey, variantWidthsFor } from '@sk/domain/content'
 import { pickLanguage } from './language.ts'
 import { nextDate, withParents } from './pin-dates.ts'
@@ -48,15 +48,20 @@ export type PublicBodyNode
     | { type: 'heading', attrs: { level: 2 | 3 }, content?: PublicBodyInline[] }
     | { type: 'blockquote', content: PublicBodyParagraph[] }
     | PublicBodyList
-    | { type: 'image', attrs: { key: string | null, alt: string, caption: string } }
+    | { type: 'image', attrs: { key: string | null, url: string | null, variants: { width: number, url: string }[], alt: string, caption: string } }
     | { type: 'video', attrs: { youtubeId: string, title: string, caption: string } }
-    | { type: 'audio', attrs: { key: string | null, title: string, caption: string } }
+    | { type: 'audio', attrs: { key: string | null, url: string | null, title: string, caption: string } }
 
 export interface PublicStoryBody { type: 'doc', content: PublicBodyNode[] }
 
 export interface PublicStory extends PublicStoryCard {
   authorName: string
   body: PublicStoryBody
+  // Every published version, the one carried included, for the language switcher and hreflang.
+  versions: { language: ContentLanguage, slug: string }[]
+  places: { id: string, slug: string | null, name: string }[]
+  related: PublicStoryCard[]
+  keepsakes: PublicStoryKeepsakeCard[]
 }
 
 export interface PublicStoryList { items: PublicStoryCard[] }
@@ -130,7 +135,7 @@ function publicList(node: Json, depth: number): PublicBodyList {
   return { type: node.type === 'orderedList' ? 'orderedList' : 'bulletList', content: items }
 }
 
-function publicBlock(node: unknown, version: PublicStoryVersionRow): PublicBodyNode[] {
+function publicBlock(node: unknown, version: PublicStoryVersionRow, publicUrl: (key: string) => string): PublicBodyNode[] {
   if (!isObject(node))
     return []
   const attrs = attrsOf(node)
@@ -144,10 +149,15 @@ function publicBlock(node: unknown, version: PublicStoryVersionRow): PublicBodyN
     case 'bulletList':
     case 'orderedList':
       return [publicList(node, 2)]
-    case 'image':
-      return [{ type: 'image', attrs: { key: keyOf(version, attrs.mediaId), alt: str(attrs.alt), caption: str(attrs.caption) } }]
-    case 'audio':
-      return [{ type: 'audio', attrs: { key: keyOf(version, attrs.mediaId), title: str(attrs.title), caption: str(attrs.caption) } }]
+    case 'image': {
+      const key = keyOf(version, attrs.mediaId)
+      const width = typeof attrs.mediaId === 'string' ? version.mediaWidths?.[attrs.mediaId.toLowerCase()] ?? null : null
+      return [{ type: 'image', attrs: { key, url: key === null ? null : publicUrl(key), variants: key === null ? [] : variantsOf(key, width, publicUrl), alt: str(attrs.alt), caption: str(attrs.caption) } }]
+    }
+    case 'audio': {
+      const key = keyOf(version, attrs.mediaId)
+      return [{ type: 'audio', attrs: { key, url: key === null ? null : publicUrl(key), title: str(attrs.title), caption: str(attrs.caption) } }]
+    }
     case 'video':
       return typeof attrs.youtubeId === 'string' && youtubePattern.test(attrs.youtubeId)
         ? [{ type: 'video', attrs: { youtubeId: attrs.youtubeId, title: str(attrs.title), caption: str(attrs.caption) } }]
@@ -158,10 +168,10 @@ function publicBlock(node: unknown, version: PublicStoryVersionRow): PublicBodyN
 }
 
 // A body that is missing or not a document reads as an empty one.
-function publicBody(version: PublicStoryVersionRow): PublicStoryBody {
+function publicBody(version: PublicStoryVersionRow, publicUrl: (key: string) => string): PublicStoryBody {
   const body = version.published.body
   const content = isObject(body) && body.type === 'doc' ? childrenOf(body) : []
-  return { type: 'doc', content: content.flatMap(node => publicBlock(node, version)) }
+  return { type: 'doc', content: content.flatMap(node => publicBlock(node, version, publicUrl)) }
 }
 
 export function toPublicCategory(row: PublicCategoryListRow): PublicCategory {
@@ -207,20 +217,37 @@ function toCard(row: PublicStoryRow, version: PublicStoryVersionRow, notice: Non
 
 export function toStoryCard(row: PublicStoryRow, requested: ContentLanguage, publicUrl: (key: string) => string): PublicStoryCard | null {
   const pick = carried(row, requested)
-  return pick && toCard(row, pick.version, pick.notice, publicBody(pick.version), publicUrl)
+  return pick && toCard(row, pick.version, pick.notice, publicBody(pick.version, publicUrl), publicUrl)
 }
 
-export function toPublicStory(row: PublicStoryRow, requested: ContentLanguage, publicUrl: (key: string) => string): PublicStory | null {
+// The language the story is carried in, for the parts that hang off it (related cards, places, keepsakes).
+export function storyLanguage(row: PublicStoryRow, requested: ContentLanguage): ContentLanguage | null {
+  return carried(row, requested)?.notice.language ?? null
+}
+
+// The story detail. `keepsakes` are the cards the catalog gave for the linked ids. Related stories and pins are read in
+// the language the story carries, where they have it.
+export function toPublicStory(row: PublicStoryDetailRow, requested: ContentLanguage, now: Date, publicUrl: (key: string) => string, keepsakes: PublicStoryKeepsakeCard[]): PublicStory | null {
   const pick = carried(row, requested)
   if (!pick)
     return null
-  const { version } = pick
+  const { version, notice: info } = pick
   const { published } = version
-  const body = publicBody(version)
+  const body = publicBody(version, publicUrl)
   return {
-    ...toCard(row, version, pick.notice, body, publicUrl),
+    ...toCard(row, version, info, body, publicUrl),
     authorName: str(published.authorName),
     body,
+    versions: row.versions.map(v => ({ language: v.language, slug: v.slug })).sort((a, b) => (a.language < b.language ? -1 : 1)),
+    places: row.places.flatMap((place) => {
+      const tag = toPinCore(place, info.language, now)
+      return tag ? [{ id: tag.id, slug: tag.slug, name: tag.title }] : []
+    }),
+    related: row.related.flatMap((other) => {
+      const card = toStoryCard(other, info.language, publicUrl)
+      return card ? [card] : []
+    }).slice(0, 3),
+    keepsakes,
   }
 }
 
@@ -344,9 +371,9 @@ function toPinCore(row: PublicPinRow, requested: ContentLanguage, now: Date): Pi
 }
 
 // A story as the pin card lists it: the version in the language the card carries, or null when it has none.
-function pinStory(row: PublicStoryRow, language: ContentLanguage): PublicPinStory | null {
+function pinStory(row: PublicStoryRow, language: ContentLanguage, publicUrl: (key: string) => string): PublicPinStory | null {
   const version = row.versions.find(v => v.language === language)
-  return version ? { slug: version.slug, title: str(version.published.title), readMinutes: storyBodyReadMinutes(publicBody(version)) } : null
+  return version ? { slug: version.slug, title: str(version.published.title), readMinutes: storyBodyReadMinutes(publicBody(version, publicUrl)) } : null
 }
 
 function variantsOf(key: string, width: number | null, publicUrl: (key: string) => string) {
@@ -358,7 +385,7 @@ export function toPublicPin(row: PublicPinDetailRow, requested: ContentLanguage,
   if (!core)
     return null
   const stories = row.stories
-    .map(story => ({ story, listed: pinStory(story, core.language), newest: Math.max(...story.versions.map(v => v.publishedAt.getTime())) }))
+    .map(story => ({ story, listed: pinStory(story, core.language, publicUrl), newest: Math.max(...story.versions.map(v => v.publishedAt.getTime())) }))
     .sort((a, b) => b.newest - a.newest || (a.story.id < b.story.id ? -1 : 1))
   const main = stories.find(entry => entry.story.id === row.mainStoryId)?.listed ?? null
   return {

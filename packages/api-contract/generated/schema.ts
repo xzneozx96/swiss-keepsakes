@@ -6552,6 +6552,16 @@ export interface components {
         PublicCategoryList: {
             items: components["schemas"]["PublicCategory"][];
         };
+        /** @description The cover of a story, with its public addresses */
+        PublicCover: {
+            /** @description The original file */
+            url: string;
+            /** @description The webp copies, smallest first; empty when the width is not known */
+            variants: {
+                url: string;
+                width: number;
+            }[];
+        } | null;
         PublicKeepsake: {
             availableLanguages: components["schemas"]["PublicLanguage"][];
             /** @description The first photo, null when it is not ready */
@@ -6797,15 +6807,31 @@ export interface components {
             /** Format: uuid */
             id: string;
             interests: string[];
+            /** @description The keepsakes the story links, in the editor order */
+            keepsakes: components["schemas"]["PublicStoryKeepsake"][];
             language: components["schemas"]["PublicLanguage"];
+            /** @description The visible pins the story tags, in the editor order; a hidden, expired or unpublished pin is left out */
+            places: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                slug: string | null;
+            }[];
             /** Format: date-time */
             publishedAt: string;
             readMinutes: number;
+            /** @description Up to three published related stories, in the editor order */
+            related: components["schemas"]["PublicStoryCard"][];
             requestedLanguage: components["schemas"]["PublicLanguage"];
             slug: string;
             /** @enum {string} */
             stayTag: "short_stay" | "multi_day" | "both";
             title: string;
+            /** @description Every published version of the story, the one carried included, for the language switcher and hreflang */
+            versions: {
+                language: components["schemas"]["PublicLanguage"];
+                slug: string;
+            }[];
         };
         /** @description The story text as one Tiptap document. Images and audio carry a storage key in place of a media id */
         PublicStoryBody: {
@@ -7383,6 +7409,11 @@ export interface components {
                     alt: string;
                     caption: string;
                     key: string | null;
+                    url: string | null;
+                    variants: {
+                        url: string;
+                        width: number;
+                    }[];
                 };
                 /** @enum {string} */
                 type: "image";
@@ -7399,6 +7430,7 @@ export interface components {
                     caption: string;
                     key: string | null;
                     title: string;
+                    url: string | null;
                 };
                 /** @enum {string} */
                 type: "audio";
@@ -7440,6 +7472,15 @@ export interface components {
             /** @enum {string} */
             stayTag: "short_stay" | "multi_day" | "both";
             title: string;
+        };
+        /** @description A keepsake card on a story: no price. A sold-out keepsake stays in the list; an unpublished or archived one is absent */
+        PublicStoryKeepsake: {
+            cover: components["schemas"]["PublicCover"];
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            soldOut: boolean;
         };
         PublicStoryList: {
             items: components["schemas"]["PublicStoryCard"][];

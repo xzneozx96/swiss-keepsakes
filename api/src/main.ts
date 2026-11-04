@@ -29,7 +29,7 @@ import { registerContentRoutes } from './modules/content/adapters/routes.ts'
 import { createS3Storage, createUnconfiguredStorage } from './modules/content/adapters/s3-storage.ts'
 import { createStoryRepository } from './modules/content/adapters/story-repository.ts'
 import { createTourRepository } from './modules/content/adapters/tour-repository.ts'
-import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryGroup, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeFailMedia, makeFindAddressAt, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetStoryGroup, makeGetStoryLinks, makeGetStoryVersionText, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListStoryGroups, makeListTours, makeLookupMediaByHash, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makePurgeOldVersions, makeReadMapsPosition, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeResolveMapsLink, makeRetireLibraryMedia, makeRetireMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
+import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryGroup, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeFailMedia, makeFindAddressAt, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetStoryGroup, makeGetStoryLinks, makeGetStoryVersionText, makeGetTour, makeHidePin, makeKeepsakeCards, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListStoryGroups, makeListTours, makeLookupMediaByHash, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makePurgeOldVersions, makeReadMapsPosition, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeResolveMapsLink, makeRetireLibraryMedia, makeRetireMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
 import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
@@ -253,7 +253,12 @@ async function main() {
       replaceMedia: makeReplaceMedia({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, graceHours: config.MEDIA_GRACE_HOURS }),
       publicUrl: storage.publicUrl,
       listStories: makeListStories(readDeps),
-      getStory: makeGetStory(readDeps),
+      // The keepsake cards come from the catalog's public list, by id. publicKeepsakeUseCases is built further down; this runs only when a story is read.
+      getStory: makeGetStory({
+        ...readDeps,
+        // eslint-disable-next-line ts/no-use-before-define -- called per request, after startup has built it
+        keepsakeCards: makeKeepsakeCards(language => publicKeepsakeUseCases.listKeepsakes(language)),
+      }),
       getPin: makeGetPin(readDeps),
       listTours: makeListTours(readDeps),
       getTour: makeGetTour(readDeps),

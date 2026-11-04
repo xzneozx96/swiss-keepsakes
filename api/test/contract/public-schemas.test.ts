@@ -10,6 +10,7 @@ import {
   publicPinSchema,
   publicStoryBodySchema,
   publicStoryCardSchema,
+  publicStoryKeepsakeSchema,
   publicStoryListSchema,
   publicStorySchema,
   publicTourCardSchema,
@@ -26,6 +27,7 @@ const schemas = {
   nextDateSchema,
   publicStoryBodySchema,
   publicStoryCardSchema,
+  publicStoryKeepsakeSchema,
   publicStoryListSchema,
   publicStorySchema,
   publicPinSchema,
@@ -79,6 +81,19 @@ describe('[E2.12] public read schemas', () => {
     expect(Object.keys(publicStoryCardSchema.shape)).toEqual(expect.arrayContaining(['coverKey', 'cover']))
     const missing = publicStoryCardSchema.safeParse({}).error?.issues.map(issue => issue.path[0])
     expect(missing).toContain('cover')
+  })
+
+  it('[E4.4][AC54][AC61] the story detail adds versions, places, related cards and keepsake cards, and a keepsake card has no price', () => {
+    expect(Object.keys(publicStorySchema.shape)).toEqual(expect.arrayContaining(['versions', 'places', 'related', 'keepsakes']))
+    expect(Object.keys(publicStoryCardSchema.shape)).not.toEqual(expect.arrayContaining(['versions', 'keepsakes']))
+    expect(Object.keys(publicStoryKeepsakeSchema.shape).sort()).toEqual(['cover', 'id', 'name', 'slug', 'soldOut'])
+    const names = propertyNames(z.toJSONSchema(publicStoryKeepsakeSchema, { unrepresentable: 'any' }))
+    expect(names.filter(n => /price|amount|cost|fee|currency|money|rappen/i.test(n))).toEqual([])
+  })
+
+  it('[E4.4][AC61] the body image and audio carry an address next to the key', () => {
+    const image = publicStoryBodySchema.safeParse({ type: 'doc', content: [{ type: 'image', attrs: { key: 'k', url: 'https://m/k', variants: [], alt: '', caption: '' } }, { type: 'audio', attrs: { key: null, url: null, title: '', caption: '' } }] })
+    expect(image.success).toBe(true)
   })
 
   it('[E2.13] the public body unrolls lists as deep as the write body', () => {

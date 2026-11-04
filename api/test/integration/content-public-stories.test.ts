@@ -18,7 +18,12 @@ afterAll(async () => {
 
 const deps = { uow: createUnitOfWork(db), reads: createPublicReadRepository(), clock: systemClock, publicUrl: (key: string) => `https://media.test/${key}` }
 const list = makeListStories(deps)
-const get = makeGetStory(deps)
+// The catalog's part is a port filled in main.ts; here it answers with a card for each id it is given.
+const keepsakeAsks: string[][] = []
+const get = makeGetStory({ ...deps, keepsakeCards: async (ids) => {
+  keepsakeAsks.push(ids)
+  return ids.map(id => ({ id, slug: `k-${id.slice(0, 4)}`, name: 'Keepsake', cover: null, soldOut: false }))
+} })
 const categories = makeListCategories(deps)
 
 const slug = () => `s-${randomUUID().slice(0, 8)}`
@@ -147,7 +152,7 @@ describe('public story reads over the database', () => {
     const result = await get(s, 'en')
 
     expect(result.ok && result.value.coverKey).toBe(readyKey)
-    expect(result.ok && result.value.body.content[0]).toEqual({ type: 'image', attrs: { key: null, alt: '', caption: '' } })
+    expect(result.ok && result.value.body.content[0]).toEqual({ type: 'image', attrs: { key: null, url: null, variants: [], alt: '', caption: '' } })
   })
 
   it('[E2.12][AC45] a media id of another store is not resolved', async () => {
@@ -198,7 +203,7 @@ describe('public story reads over the database', () => {
     const result = await get(s, 'en')
 
     expect(result.ok && result.value.coverKey).toBe(rows[0]!.storage_key)
-    expect(result.ok && result.value.body.content[0]).toEqual({ type: 'image', attrs: { key: rows[0]!.storage_key, alt: '', caption: '' } })
+    expect(result.ok && result.value.body.content[0]).toEqual({ type: 'image', attrs: { key: rows[0]!.storage_key, url: `https://media.test/${rows[0]!.storage_key}`, variants: expect.any(Array), alt: '', caption: '' } })
   })
 
   it('[E2.12][AC64] an unpublished German version with old text does not count: English is carried and only English is available', async () => {
@@ -222,7 +227,7 @@ describe('public story reads over the database', () => {
     const listed = (await list('en')).items.find(i => i.id === g)
 
     expect(listed?.title).toBe('Odd shape')
-    expect(detail.ok && detail.value.body.content).toEqual([{ type: 'image', attrs: { key: null, alt: '', caption: 'no id' } }, { type: 'audio', attrs: { key: null, title: 't', caption: '' } }])
+    expect(detail.ok && detail.value.body.content).toEqual([{ type: 'image', attrs: { key: null, url: null, variants: [], alt: '', caption: 'no id' } }, { type: 'audio', attrs: { key: null, url: null, title: 't', caption: '' } }])
   })
 
   it('[E2.12][AC45] a published document with only a title and an empty body (the minimum the database accepts) reads', async () => {
@@ -233,5 +238,83 @@ describe('public story reads over the database', () => {
     const detail = await get(s, 'en')
 
     expect(detail.ok && detail.value).toMatchObject({ title: 'Minimal', excerpt: '', coverKey: null, readMinutes: 1, body: { type: 'doc', content: [] } })
+  })
+
+  it('[E4.4][AC30][AC61] AC-1: the detail lists every published version with its slug; a draft German version is not listed', async () => {
+    const store = randomUUID()
+    const g = await group(store)
+    const en = await version(store, g, 'en', 'published', 'Lake day')
+    const de = await version(store, g, 'de', 'published', 'Seetag')
+    const only = await group(store)
+    const onlyEn = await version(store, only, 'en', 'published', 'English only')
+    await version(store, only, 'de', 'draft', 'Entwurf')
+
+    const both = await get(en, 'en')
+    const one = await get(onlyEn, 'en')
+
+    expect(both.ok && both.value.versions).toEqual([{ language: 'de', slug: de }, { language: 'en', slug: en }])
+    expect(one.ok && one.value.versions).toEqual([{ language: 'en', slug: onlyEn }])
+  })
+
+  it('[E4.4][AC33] AC-3: related stories come in the editor order, a draft one is left out, German is carried where it exists', async () => {
+    const store = randomUUID()
+    const g = await group(store)
+    await version(store, g, 'en', 'published', 'Main')
+    const mainDe = await version(store, g, 'de', 'published', 'Haupt')
+    const a = await group(store)
+    await version(store, a, 'en', 'published', 'A')
+    const aDe = await version(store, a, 'de', 'published', 'A de')
+    const draft = await group(store)
+    await version(store, draft, 'en', 'draft', 'Draft')
+    const c = await group(store)
+    const cEn = await version(store, c, 'en', 'published', 'C')
+    for (const [position, id] of [[1, c], [2, draft], [3, a]] as const)
+      await pool.query('insert into content.story_related (group_id, store_id, position, related_group_id) values ($1, $2, $3, $4)', [g, store, position, id])
+
+    const found = await get(mainDe, 'de')
+
+    expect(found.ok && found.value.related.map(r => [r.id, r.slug, r.language])).toEqual([[c, cEn, 'en'], [a, aDe, 'de']])
+  })
+
+  it('[E4.4][AC61] AC-4: the place tags hold the visible pins in the editor order, not an expired, a hidden or a draft one', async () => {
+    const store = randomUUID()
+    const g = await group(store)
+    const s = await version(store, g, 'en', 'published', 'Tagging')
+    const pin = async (status: 'draft' | 'published' | 'hidden', name: string) => (await pool.query<{ id: string }>(
+      `insert into content.places (store_id, status, slug, latitude, longitude, published, first_published_at)
+       values ($1, $2, $3, 47.05, 8.3, $4, $5) returning id`,
+      [store, status, JSON.stringify({ en: slug() }), JSON.stringify({ name: { en: name }, tip: { en: 'Tip' } }), status === 'draft' ? null : new Date().toISOString()],
+    )).rows[0]!.id
+    const visible = await pin('published', 'Visible')
+    const expired = await pin('published', 'Expired')
+    const hidden = await pin('hidden', 'Hidden')
+    const draft = await pin('draft', 'Draft')
+    const second = await pin('published', 'Second')
+    await pool.query('insert into content.place_dates (place_id, store_id, first_day, last_day) values ($1, $2, $3, $4)', [expired, store, '2020-01-01', '2020-01-02'])
+    for (const [position, id] of [[1, visible], [2, expired], [3, hidden], [4, draft], [5, second]] as const)
+      await pool.query('insert into content.story_group_places (group_id, place_id, store_id, position) values ($1, $2, $3, $4)', [g, id, store, position])
+
+    const found = await get(s, 'en')
+
+    expect(found.ok && found.value.places.map(p => [p.id, p.name])).toEqual([[visible, 'Visible'], [second, 'Second']])
+  })
+
+  it('[E4.4][AC31] AC-2: the linked keepsake ids reach the port in the editor order, and a story with none asks for nothing', async () => {
+    const store = randomUUID()
+    const g = await group(store)
+    const s = await version(store, g, 'en', 'published', 'Linking')
+    const bare = await group(store)
+    const bareSlug = await version(store, bare, 'en', 'published', 'Bare')
+    const ids = [randomUUID(), randomUUID(), randomUUID()]
+    for (const [i, id] of ids.entries())
+      await pool.query('insert into content.story_keepsake_links (group_id, store_id, position, product_id) values ($1, $2, $3, $4)', [g, store, 3 - i, id])
+    keepsakeAsks.length = 0
+
+    const found = await get(s, 'en')
+    const none = await get(bareSlug, 'en')
+
+    expect(keepsakeAsks).toEqual([[...ids].reverse()])
+    expect(found.ok && found.value.keepsakes.map(k => k.id)).toEqual([...ids].reverse())
+    expect(none.ok && none.value.keepsakes).toEqual([])
   })
 })

@@ -122,7 +122,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     replaceMedia: makeReplaceMedia({ uow, media: createMediaRepository(), storage, jobs, audit: createAuditLog(writeClock), clock: writeClock, graceHours: 24 }),
     publicUrl: storage.publicUrl,
     listStories: makeListStories(readDeps),
-    getStory: makeGetStory(readDeps),
+    getStory: makeGetStory({ ...readDeps, keepsakeCards: async () => [] }),
     getPin: makeGetPin(readDeps),
     listTours: makeListTours(readDeps),
     getTour: makeGetTour(readDeps),

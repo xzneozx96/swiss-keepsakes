@@ -1,9 +1,9 @@
 import type { ContentLanguage } from '@sk/domain/content'
-import type { ReadDeps } from '../read-ports.ts'
+import type { ReadDeps, StoryReadDeps } from '../read-ports.ts'
 import type { Result } from './failure.ts'
 import type { PublicStory, PublicStoryCard, PublicStoryList } from './public-view.ts'
 import { fail, ok } from './failure.ts'
-import { toPublicStory, toStoryCard } from './public-view.ts'
+import { storyLanguage, toPublicStory, toStoryCard } from './public-view.ts'
 
 // Newest first by the date of the version carried; the id breaks a tie. No cache: a republished story reads at once.
 const newestFirst = (a: PublicStoryCard, b: PublicStoryCard) => (a.publishedAt < b.publishedAt ? 1 : a.publishedAt > b.publishedAt ? -1 : a.id < b.id ? 1 : -1)
@@ -19,10 +19,15 @@ export function makeListStories<T>({ uow, reads, publicUrl }: ReadDeps<T>) {
   }
 }
 
-export function makeGetStory<T>({ uow, reads, publicUrl }: ReadDeps<T>) {
+// The story detail. The keepsake cards come through a port after the read transaction ends: the catalog opens its own.
+export function makeGetStory<T>({ uow, reads, clock, publicUrl, keepsakeCards }: StoryReadDeps<T>) {
   return async (slug: string, language: ContentLanguage): Promise<Result<PublicStory>> => {
     const row = await uow.run(tx => reads.findPublishedStoryBySlug(tx, slug, language))
-    const story = row && toPublicStory(row, language, publicUrl)
+    const carriedIn = row && storyLanguage(row, language)
+    if (!row || !carriedIn)
+      return fail({ reason: 'not-found' })
+    const cards = row.keepsakeProductIds.length > 0 ? await keepsakeCards(row.keepsakeProductIds, carriedIn) : []
+    const story = toPublicStory(row, language, clock.now(), publicUrl, cards)
     return story ? ok(story) : fail({ reason: 'not-found' })
   }
 }

@@ -1,6 +1,6 @@
 import type { ContentLanguage, Localized, PinDate, StayTag, TourGuideDoc } from '@sk/domain/content'
 import type { Tx } from '../../../platform/db/client.ts'
-import type { PublicCategoryRow, PublicPinDetailRow, PublicPinRow, PublicReadRepository, PublicStoryRow, PublicTourRow, StoredStoryDoc } from '../read-ports.ts'
+import type { PublicCategoryRow, PublicPinDetailRow, PublicPinRow, PublicReadRepository, PublicStoryDetailRow, PublicStoryRow, PublicTourRow, StoredStoryDoc } from '../read-ports.ts'
 import { sql } from 'drizzle-orm'
 import { publishedStoryMediaIds } from './story-media-ids.ts'
 
@@ -80,6 +80,25 @@ async function loadStories(tx: Tx, groupIds: string[] | null): Promise<PublicSto
   return [...stories.values()]
 }
 
+// What the story detail adds to the shared row, each in the editor's order (the link tables hold the position). The pins
+// go through content.public_pins, so a hidden, draft or fully past pin is absent; a related story with no published
+// version is absent too. One connection runs one query at a time inside a transaction, so these go one after another.
+async function loadStoryLinks(tx: Tx, groupId: string): Promise<Pick<PublicStoryDetailRow, 'places' | 'related' | 'keepsakeProductIds'>> {
+  const tagged = await tx.execute<{ place_id: string } & Record<string, unknown>>(sql`
+    select place_id from content.story_group_places where group_id = ${groupId} order by position`)
+  const relations = await tx.execute<{ related_group_id: string } & Record<string, unknown>>(sql`
+    select related_group_id from content.story_related where group_id = ${groupId} order by position`)
+  const keepsakes = await tx.execute<{ product_id: string } & Record<string, unknown>>(sql`
+    select product_id from content.story_keepsake_links where group_id = ${groupId} order by position`)
+  const pins = await loadPins(tx, tagged.rows.map(r => r.place_id))
+  const stories = await loadStories(tx, relations.rows.map(r => r.related_group_id))
+  return {
+    places: tagged.rows.flatMap(r => pins.filter(pin => pin.id === r.place_id)),
+    related: relations.rows.flatMap(r => stories.filter(story => story.id === r.related_group_id)),
+    keepsakeProductIds: keepsakes.rows.map(r => r.product_id),
+  }
+}
+
 interface PinJoinRow {
   id: string
   slug: Localized | null
@@ -111,12 +130,14 @@ function byPlace<V extends { place_id: string }>(rows: V[]) {
 
 // Pins that content.public_pins lets through, newest first. Dates, categories, main stories and cover keys come in
 // four more queries for all pins together, never one per pin.
-async function loadPins(tx: Tx, pinId: string | null): Promise<PublicPinRow[]> {
+async function loadPins(tx: Tx, pinIds: string[] | null): Promise<PublicPinRow[]> {
+  if (pinIds?.length === 0)
+    return []
   const pins = await tx.execute<PinJoinRow & Record<string, unknown>>(sql`
     select v.id, v.slug, v.latitude, v.longitude, v.address, p.maps_link, v.weekly_hours, v.stay_tag, v.interests, v.published,
            v.cover_media_id, v.main_story_group_id, p.first_published_at
       from content.public_pins v
-      join content.places p on p.id = v.id and p.status = 'published'${pinId ? sql` where v.id = ${pinId}` : sql``}
+      join content.places p on p.id = v.id and p.status = 'published'${pinIds ? sql` where v.id = any(${sql.param(pinIds)}::uuid[])` : sql``}
      order by p.first_published_at desc, v.id desc`)
   if (pins.rows.length === 0)
     return []
@@ -300,7 +321,8 @@ export function createPublicReadRepository(): PublicReadRepository<Tx> {
          where status = 'published' and slug = ${slug}
          order by (language = ${language}) desc limit 1`)
       const groupId = found.rows[0]?.group_id
-      return groupId ? (await loadStories(tx, [groupId]))[0] : undefined
+      const story = groupId ? (await loadStories(tx, [groupId]))[0] : undefined
+      return story && { ...story, ...(await loadStoryLinks(tx, story.id)) }
     },
 
     async listCategories(tx, kind) {
@@ -317,7 +339,7 @@ export function createPublicReadRepository(): PublicReadRepository<Tx> {
     listVisiblePins: tx => loadPins(tx, null),
 
     async findVisiblePin(tx, id) {
-      const row = (await loadPins(tx, id))[0]
+      const row = (await loadPins(tx, [id]))[0]
 
       return row && { ...row, ...(await loadPinExtras(tx, id)) }
     },
