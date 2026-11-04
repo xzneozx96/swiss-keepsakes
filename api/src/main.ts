@@ -7,9 +7,11 @@ import { createMediaUses } from './modules/catalog/adapters/media-uses.ts'
 import { createPickupRepository } from './modules/catalog/adapters/pickup-repository.ts'
 import { registerPickupRoutes } from './modules/catalog/adapters/pickup-routes.ts'
 import { createProductRepository } from './modules/catalog/adapters/product-repository.ts'
+import { createPublicKeepsakeReads } from './modules/catalog/adapters/public-repository.ts'
+import { registerPublicKeepsakeRoutes } from './modules/catalog/adapters/public-routes.ts'
 import { registerCatalogRoutes } from './modules/catalog/adapters/routes.ts'
 import { createSkuDirectory } from './modules/catalog/adapters/sku-directory.ts'
-import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeletePickupPlace, makeDeleteProduct, makeGetPickupPlace, makeGetProduct, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from './modules/catalog/index.ts'
+import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeletePickupPlace, makeDeleteProduct, makeGetAvailability, makeGetKeepsake, makeGetPickupPlace, makeGetPickupPoints, makeGetProduct, makeListKeepsakes, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from './modules/catalog/index.ts'
 import { createAddressRegister } from './modules/content/adapters/address-register-fetch.ts'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
@@ -315,10 +317,18 @@ async function main() {
       restorePickupPlace: makeRestorePickupPlace(pickupDeps),
       deletePickupPlace: makeDeletePickupPlace(pickupDeps),
     })
+    // The public keepsake reads fail with an exception, not a Result, like the content reads: a database error is a 500.
+    const publicKeepsakeDeps = { uow, reads: createPublicKeepsakeReads(), media: catalogDeps.media, stockLevels: catalogDeps.stockLevels, pickups: pickupDeps.pickups }
+    const publicKeepsakeUseCases = {
+      listKeepsakes: makeListKeepsakes(publicKeepsakeDeps),
+      getKeepsake: makeGetKeepsake(publicKeepsakeDeps),
+      getAvailability: makeGetAvailability(publicKeepsakeDeps),
+      getPickupPoints: makeGetPickupPoints(publicKeepsakeDeps),
+    }
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),
       withoutIdempotencyKey: [invitationPreviewPath, mediaLookupPath],
-      routes: [app => registerIdentityRoutes(app, useCases), app => registerContentRoutes(app, contentUseCases), app => registerCatalogRoutes(app, catalogUseCases), app => registerInventoryRoutes(app, inventoryUseCases), app => registerPickupRoutes(app, pickupUseCases)],
+      routes: [app => registerIdentityRoutes(app, useCases), app => registerContentRoutes(app, contentUseCases), app => registerCatalogRoutes(app, catalogUseCases), app => registerInventoryRoutes(app, inventoryUseCases), app => registerPickupRoutes(app, pickupUseCases), app => registerPublicKeepsakeRoutes(app, publicKeepsakeUseCases)],
     }
     const server = await startHttpServer(createApp(logger, checkHealth, identity, commands).fetch, config.HOST, config.PORT, logger)
     stops.unshift(server.close)

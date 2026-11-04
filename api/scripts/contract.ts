@@ -1,6 +1,7 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
 import type { OpenAPI3 } from 'openapi-typescript'
 import type { PickupUseCases } from '../src/modules/catalog/adapters/pickup-routes.ts'
+import type { PublicKeepsakeUseCases } from '../src/modules/catalog/adapters/public-routes.ts'
 import type { CatalogUseCases } from '../src/modules/catalog/adapters/routes.ts'
 import type { ContentUseCases } from '../src/modules/content/adapters/routes.ts'
 import type { IdentityUseCases } from '../src/modules/identity/adapters/routes.ts'
@@ -10,6 +11,7 @@ import { fileURLToPath } from 'node:url'
 import openapiTS, { astToString } from 'openapi-typescript'
 import { z } from 'zod'
 import { registerPickupRoutes } from '../src/modules/catalog/adapters/pickup-routes.ts'
+import { registerPublicKeepsakeRoutes } from '../src/modules/catalog/adapters/public-routes.ts'
 import { registerCatalogRoutes } from '../src/modules/catalog/adapters/routes.ts'
 import { registerContentRoutes } from '../src/modules/content/adapters/routes.ts'
 import { registerIdentityRoutes } from '../src/modules/identity/adapters/routes.ts'
@@ -28,7 +30,7 @@ const unreachable = new Proxy({}, {
   get: () => async () => {
     throw new Error('The contract build calls no use case')
   },
-}) as IdentityUseCases & ContentUseCases & CatalogUseCases & InventoryUseCases & PickupUseCases
+}) as IdentityUseCases & ContentUseCases & CatalogUseCases & InventoryUseCases & PickupUseCases & PublicKeepsakeUseCases
 
 // The real routes. Building the document calls neither the logger nor the health check.
 export function contractApp(): OpenAPIHono<AppEnv> {
@@ -43,7 +45,7 @@ export function contractApp(): OpenAPIHono<AppEnv> {
     idempotency: async (_c, next) => {
       await next()
     },
-    routes: [app => registerIdentityRoutes(app, unreachable), app => registerContentRoutes(app, unreachable), app => registerCatalogRoutes(app, unreachable), app => registerInventoryRoutes(app, unreachable), app => registerPickupRoutes(app, unreachable)],
+    routes: [app => registerIdentityRoutes(app, unreachable), app => registerContentRoutes(app, unreachable), app => registerCatalogRoutes(app, unreachable), app => registerInventoryRoutes(app, unreachable), app => registerPickupRoutes(app, unreachable), app => registerPublicKeepsakeRoutes(app, unreachable)],
   })
 }
 
