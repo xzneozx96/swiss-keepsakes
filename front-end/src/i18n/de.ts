@@ -20,6 +20,7 @@ import { partnerDashboardDe } from '@/features/partners/report/messages.de'
 import { placesDe } from '@/features/places/messages.de'
 import { reportPagesDe } from '@/features/reports/pages-messages.de'
 import { requestsDe } from '@/features/requests/messages.de'
+import { searchScreenDe } from '@/features/search/messages.de'
 import { storesDe } from '@/features/stores/messages.de'
 import { storiesListsDe } from '@/features/stories/messages-lists.de'
 import { storiesMediaDe } from '@/features/stories/messages-media.de'
@@ -67,6 +68,7 @@ export const de: Record<MessageKey, string> = {
   ...multiSelectDe,
   ...stepsDe,
   ...mapDe,
+  ...searchScreenDe,
   ...mapKitDe,
   ...homeDe,
 

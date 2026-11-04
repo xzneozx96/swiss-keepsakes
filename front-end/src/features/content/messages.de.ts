@@ -33,6 +33,7 @@ export const contentDe: Record<keyof typeof contentEn, string> = {
   'article.contents': 'In dieser Geschichte',
   'article.linked': 'Ein Stück davon mitnehmen',
   'article.more': 'Mehr entdecken',
+  'article.places': 'Orte in dieser Geschichte',
   'article.comments': 'Kommentare',
   'article.showAll.one': '{count} Kommentar anzeigen',
   'article.showAll.other': 'Alle {count} Kommentare anzeigen',
