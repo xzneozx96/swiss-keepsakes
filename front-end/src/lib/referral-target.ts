@@ -14,14 +14,25 @@ export function referralTarget(to: string | null): string | null {
   return LANGUAGE_SEGMENT.test(to) && !FORBIDDEN.test(to) ? to : null
 }
 
-/** The `Location` of the referral redirect. It reads only `to` and the language headers, never the code, so every code gives the same answer. */
+/** The one fixed marker the redirect adds: the guest shell reads it once into the visit entry and removes it from the address. It names no code and no partner. */
+export const PARTNER_VIA = 'via=partner'
+
+function withMarker(target: string): string {
+  const hash = target.indexOf('#')
+  const path = hash === -1 ? target : target.slice(0, hash)
+  const fragment = hash === -1 ? '' : target.slice(hash)
+
+  return `${path}${path.includes('?') ? '&' : '?'}${PARTNER_VIA}${fragment}`
+}
+
+/** The `Location` of the referral redirect. It reads only `to` and the language headers, never the code, so every code gives the same answer. The target carries the partner marker. */
 export function referralLocation(request: Request): string {
   const target = referralTarget(new URL(request.url).searchParams.get('to'))
   if (target)
-    return target
+    return withMarker(target)
   const language = resolveLandingLanguage({
     cookie: request.headers.get('cookie'),
     acceptLanguage: request.headers.get('accept-language'),
   })
-  return `/${language}`
+  return withMarker(`/${language}`)
 }

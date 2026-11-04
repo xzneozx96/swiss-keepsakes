@@ -12,6 +12,7 @@ import { mapEn } from '@/features/map/messages'
 import { mediaEn } from '@/features/media/messages'
 import { productsEn } from '@/features/merchant/products/messages'
 import { salesOverviewEn } from '@/features/merchant/sales/messages'
+import { onboardingEn } from '@/features/onboarding/messages'
 import { partnerDashboardEn } from '@/features/partners/report/messages'
 import { placesEn } from '@/features/places/messages'
 import { reportPagesEn } from '@/features/reports/pages-messages'
@@ -40,6 +41,7 @@ export const en = {
   ...tourDetailEn,
   ...tourReviewsEn,
   ...contentEn,
+  ...onboardingEn,
   ...contentMerchantEn,
   ...requestsEn,
   ...partnerDashboardEn,
