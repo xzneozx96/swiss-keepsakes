@@ -183,6 +183,13 @@
       "when": 1794373753729,
       "tag": "0025_pickup_maps",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794460153729,
+      "tag": "0026_map_category_icon",
+      "breakpoints": true
     }
   ]
 }

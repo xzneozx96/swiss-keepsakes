@@ -83,11 +83,11 @@ describe('[E4.2][AC41] migration 0010: five interests in the database', () => {
 })
 
 describe('[E4.2][AC68] migration 0010: the pin columns and the photo table', () => {
-  it('[T-009b][AC3] the service and food columns of the place are gone (0016), and a map category has no icon column (0018) and keeps the home switch', async () => {
+  it('[T-009b][AC3] the service and food columns of the place are gone (0016), and a map category has a nullable icon column again (0026) and keeps the home switch', async () => {
     const store = randomUUID()
 
     expect(await count(pool, `select count(*) from information_schema.columns where table_schema = 'content' and table_name = 'places' and column_name in ('service_type', 'food_kind')`)).toBe(0)
-    expect(await count(pool, `select count(*) from information_schema.columns where table_schema = 'content' and table_name = 'map_categories' and column_name = 'icon'`)).toBe(0)
+    expect(await count(pool, `select count(*) from information_schema.columns where table_schema = 'content' and table_name = 'map_categories' and column_name = 'icon'`)).toBe(1)
     await pool.query(`insert into content.map_categories (store_id, name, slug) values ($1, '{"en":"X"}', 'x')`, [store])
     const { rows } = await pool.query<{ show_on_home: boolean }>(`select show_on_home from content.map_categories where store_id = $1 limit 1`, [store])
     expect(rows[0]).toEqual({ show_on_home: false })

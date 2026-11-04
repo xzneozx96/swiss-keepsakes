@@ -1,4 +1,4 @@
-import type { Localized, WeeklySpan } from '@sk/domain/content'
+import type { CategoryIcon, Localized, WeeklySpan } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { Tx } from '../src/platform/db/client.ts'
 import { createHash } from 'node:crypto'
@@ -32,9 +32,10 @@ import { placeStoriesStep } from './seed-place-stories.ts'
 // `pnpm --filter @sk/api db:seed:curated [--dry-run] [--stock-only]` loads the curated places, categories and keepsakes of
 // `seed-data/curated/` into one store (owner, 2026-11-02). It only adds: a category, place or keepsake that exists is
 // left alone, and nothing is updated or deleted. Everything goes through the content and catalog use cases, so the
-// database rules, the audit rows and the publish checks hold. Photos go through the media path (signed PUT, confirm,
+// database rules, the audit rows and the publish checks hold (the icon step is the exception: a guarded update of the icon column, no audit row). Photos go through the media path (signed PUT, confirm,
 // process) and are deduplicated by sha256, so a second run uploads nothing. The guard and the store pick are those of
 // `db:seed`: DATABASE_URL only, a remote host needs SEED_ALLOW_REMOTE_DATABASE=1, and the URL is never printed.
+// The icon step (T-E4.13a) is add only too: it sets the icon of a seeded category that has none and never overwrites one.
 // One step is not add-only (standing order 16): the opening stock of `seed-data/curated/opening-stock.json` sets a stock row
 // that still holds the migration's 0 with no history, through the inventory set-stock use case, as the store's owner.
 // Faults in that plan (an unknown code, a SKU with no row, no owner) stop the run before anything is written.
@@ -82,32 +83,34 @@ export interface CategorySpec {
   slug: string
   name: Required<Localized>
   parent: string | null
+  icon: CategoryIcon | null
   showOnHome: boolean
 }
 
 // The category table of SEED-common.md. A category that the store has (same slug, or the same English name) is reused
-// as it is; only the missing ones are created, parents first.
+// as it is; only the missing ones are created, parents first, with the icon of the decision of 2026-11-04. A category that exists
+// and has no icon gets the icon of its spec in the icon step (`iconStep`); one that has an icon keeps it.
 export const categorySpecs: CategorySpec[] = [
-  { slug: 'sights', name: { en: 'Sights', de: 'Sehenswürdigkeiten' }, parent: null, showOnHome: false },
-  { slug: 'bridges', name: { en: 'Bridges', de: 'Brücken' }, parent: 'sights', showOnHome: false },
-  { slug: 'churches', name: { en: 'Churches', de: 'Kirchen' }, parent: 'sights', showOnHome: false },
-  { slug: 'historic-buildings', name: { en: 'Historic buildings', de: 'Historische Bauten' }, parent: 'sights', showOnHome: false },
-  { slug: 'squares', name: { en: 'Squares', de: 'Plätze' }, parent: 'sights', showOnHome: false },
-  { slug: 'monuments', name: { en: 'Monuments', de: 'Denkmäler' }, parent: 'sights', showOnHome: false },
-  { slug: 'viewpoints', name: { en: 'Viewpoints', de: 'Aussichtspunkte' }, parent: 'sights', showOnHome: false },
-  { slug: 'food-and-drink', name: { en: 'Food and drink', de: 'Essen und Trinken' }, parent: null, showOnHome: false },
-  { slug: 'chocolate', name: { en: 'Chocolate', de: 'Schokolade' }, parent: 'food-and-drink', showOnHome: false },
-  { slug: 'cafes', name: { en: 'Cafés and bakeries', de: 'Cafés und Bäckereien' }, parent: 'food-and-drink', showOnHome: false },
-  { slug: 'supermarkets', name: { en: 'Supermarkets', de: 'Supermärkte' }, parent: 'food-and-drink', showOnHome: false },
-  { slug: 'shopping', name: { en: 'Shopping', de: 'Einkaufen' }, parent: null, showOnHome: false },
-  { slug: 'department-stores', name: { en: 'Department stores', de: 'Warenhäuser' }, parent: 'shopping', showOnHome: false },
-  { slug: 'free-essentials', name: { en: 'Free essentials', de: 'Gratis und praktisch' }, parent: null, showOnHome: false },
-  { slug: 'toilets', name: { en: 'Toilets', de: 'Toiletten' }, parent: 'free-essentials', showOnHome: true },
-  { slug: 'water', name: { en: 'Drinking water', de: 'Trinkwasser' }, parent: 'free-essentials', showOnHome: true },
-  { slug: 'useful-info', name: { en: 'Useful info', de: 'Gut zu wissen' }, parent: null, showOnHome: false },
-  { slug: 'holidays', name: { en: 'Public holidays', de: 'Feiertage' }, parent: 'useful-info', showOnHome: false },
-  { slug: 'emergency', name: { en: 'Emergency', de: 'Notfall' }, parent: 'useful-info', showOnHome: false },
-  { slug: 'boats-and-mountains', name: { en: 'Boats and mountains', de: 'Schiff und Berge' }, parent: 'useful-info', showOnHome: false },
+  { slug: 'sights', name: { en: 'Sights', de: 'Sehenswürdigkeiten' }, parent: null, icon: null, showOnHome: false },
+  { slug: 'bridges', name: { en: 'Bridges', de: 'Brücken' }, parent: 'sights', icon: 'bridge', showOnHome: false },
+  { slug: 'churches', name: { en: 'Churches', de: 'Kirchen' }, parent: 'sights', icon: 'church', showOnHome: false },
+  { slug: 'historic-buildings', name: { en: 'Historic buildings', de: 'Historische Bauten' }, parent: 'sights', icon: 'landmark', showOnHome: false },
+  { slug: 'squares', name: { en: 'Squares', de: 'Plätze' }, parent: 'sights', icon: 'square', showOnHome: false },
+  { slug: 'monuments', name: { en: 'Monuments', de: 'Denkmäler' }, parent: 'sights', icon: 'monument', showOnHome: false },
+  { slug: 'viewpoints', name: { en: 'Viewpoints', de: 'Aussichtspunkte' }, parent: 'sights', icon: 'viewpoint', showOnHome: false },
+  { slug: 'food-and-drink', name: { en: 'Food and drink', de: 'Essen und Trinken' }, parent: null, icon: null, showOnHome: false },
+  { slug: 'chocolate', name: { en: 'Chocolate', de: 'Schokolade' }, parent: 'food-and-drink', icon: null, showOnHome: false },
+  { slug: 'cafes', name: { en: 'Cafés and bakeries', de: 'Cafés und Bäckereien' }, parent: 'food-and-drink', icon: 'cafe', showOnHome: false },
+  { slug: 'supermarkets', name: { en: 'Supermarkets', de: 'Supermärkte' }, parent: 'food-and-drink', icon: 'supermarket', showOnHome: false },
+  { slug: 'shopping', name: { en: 'Shopping', de: 'Einkaufen' }, parent: null, icon: 'shop', showOnHome: false },
+  { slug: 'department-stores', name: { en: 'Department stores', de: 'Warenhäuser' }, parent: 'shopping', icon: 'shop', showOnHome: false },
+  { slug: 'free-essentials', name: { en: 'Free essentials', de: 'Gratis und praktisch' }, parent: null, icon: null, showOnHome: false },
+  { slug: 'toilets', name: { en: 'Toilets', de: 'Toiletten' }, parent: 'free-essentials', icon: 'toilet', showOnHome: true },
+  { slug: 'water', name: { en: 'Drinking water', de: 'Trinkwasser' }, parent: 'free-essentials', icon: 'water', showOnHome: true },
+  { slug: 'useful-info', name: { en: 'Useful info', de: 'Gut zu wissen' }, parent: null, icon: 'info', showOnHome: false },
+  { slug: 'holidays', name: { en: 'Public holidays', de: 'Feiertage' }, parent: 'useful-info', icon: 'holiday', showOnHome: false },
+  { slug: 'emergency', name: { en: 'Emergency', de: 'Notfall' }, parent: 'useful-info', icon: 'emergency', showOnHome: false },
+  { slug: 'boats-and-mountains', name: { en: 'Boats and mountains', de: 'Schiff und Berge' }, parent: 'useful-info', icon: 'boat', showOnHome: false },
 ]
 
 export interface Snapshot {
@@ -244,9 +247,34 @@ async function readSnapshot(pool: Pool, storeId: string): Promise<Snapshot> {
   }
 }
 
-async function hasHomeColumn(pool: Pool): Promise<boolean> {
-  const { rows } = await pool.query<{ column_name: string }>(`select column_name from information_schema.columns where table_schema = 'content' and table_name = 'map_categories' and column_name = 'show_on_home'`)
-  return rows.length === 1
+async function hasIconColumns(pool: Pool): Promise<boolean> {
+  const { rows } = await pool.query<{ column_name: string }>(`select column_name from information_schema.columns where table_schema = 'content' and table_name = 'map_categories' and column_name in ('icon', 'show_on_home')`)
+  return rows.length === 2
+}
+
+// The icon each category of the store should get: the spec of the category (found by slug or English name, as the plan does)
+// has an icon and the category has none. A category that has an icon keeps it, whatever the spec says.
+export function iconPlan(specs: readonly CategorySpec[], rows: readonly { id: string, slug: string, nameEn: string | null, icon: string | null }[]): { id: string, icon: CategoryIcon }[] {
+  return rows.flatMap((row) => {
+    const spec = specs.find(candidate => candidate.slug === row.slug || candidate.name.en === row.nameEn)
+    return spec?.icon && row.icon === null ? [{ id: row.id, icon: spec.icon }] : []
+  })
+}
+
+// The icon step: add only. Sets the icon of the seeded categories that have none (the update itself says `icon is null`, so a
+// category that gets an icon between the read and the write keeps it) and touches no other column, not even updated_at.
+// Runs on every run, also when every category exists. Returns how many it would set (dry) or set. Exported for its integration test.
+export async function iconStep(pool: Pool, storeId: string, dry: boolean): Promise<number> {
+  const { rows } = await pool.query<{ id: string, slug: string, name_en: string | null, icon: string | null }>(`select id, slug, name->>'en' as name_en, icon from content.map_categories where store_id = $1`, [storeId])
+  const additions = iconPlan(categorySpecs, rows.map(row => ({ id: row.id, slug: row.slug, nameEn: row.name_en, icon: row.icon })))
+  let set = additions.length
+  if (!dry) {
+    set = 0
+    for (const { id, icon } of additions)
+      set += (await pool.query(`update content.map_categories set icon = $3 where store_id = $1 and id = $2 and icon is null`, [storeId, id, icon])).rowCount ?? 0
+  }
+  process.stdout.write(`${dry ? 'Would set' : 'Set'} the icon of ${set} categories that have none.\n`)
+  return set
 }
 
 interface Photo { dir: string, file: string, alt: Required<Localized> }
@@ -339,9 +367,9 @@ async function main(): Promise<number> {
       if (!files.has(key))
         files.set(key, readFileSync(join(mediaDir, photo.dir, photo.file)))
     }
-    const homeColumn = await hasHomeColumn(pool)
+    const iconColumns = await hasIconColumns(pool)
     printPlan(plan, snapshot, files, dry)
-    process.stdout.write(`Home column (migration 0016): ${homeColumn ? 'present' : 'missing'}\n`)
+    process.stdout.write(`Icon and home columns (migrations 0016 and 0026): ${iconColumns ? 'present' : 'missing'}\n`)
     const quantities = loadOpeningStock()
     const inventoryReady = await openingStockReady(pool)
     process.stdout.write(`Inventory tables (migration 0021): ${inventoryReady ? 'present' : 'missing'}\n`)
@@ -350,6 +378,8 @@ async function main(): Promise<number> {
     if (stockPlan && reportStockPlan(stockPlan))
       return 1
     if (dry) {
+      if (iconColumns)
+        await iconStep(pool, storeId, true)
       // The stories need their places; on a database that has none yet they are planned after the places exist.
       if (plan.placesToCreate.length > 0) {
         process.stdout.write('Stories: planned after the places exist.\n')
@@ -357,9 +387,9 @@ async function main(): Promise<number> {
       }
       return await placeStoriesStep(pool, storeId, { dry })
     }
-    // The content use cases read the home column, so nothing can be written until migration 0016 is applied.
-    if (!homeColumn) {
-      process.stderr.write('Migration 0016 is not applied to this database. Nothing was written.\n')
+    // The content use cases read the icon and home columns, so nothing can be written until migration 0026 is applied.
+    if (!iconColumns) {
+      process.stderr.write('Migration 0026 is not applied to this database. Nothing was written.\n')
       return 3
     }
     if (!inventoryReady) {
@@ -370,6 +400,7 @@ async function main(): Promise<number> {
       process.stdout.write('Nothing to create.\n')
     else if (await run(pool, storeId, data, plan, snapshot, files) !== 0)
       return 1
+    await iconStep(pool, storeId, false)
     const stockCode = await openingStock(pool, storeId, quantities)
     return stockCode !== 0 ? stockCode : await placeStoriesStep(pool, storeId, { dry })
   }
@@ -436,7 +467,7 @@ async function run(pool: Pool, storeId: string, data: Data, plan: Plan, snapshot
       ids.set(spec.slug, existing.id)
       continue
     }
-    const created = await createCategory(actor, storeId, 'map', { name: spec.name, parentId: spec.parent ? ids.get(spec.parent) ?? null : null, showOnHome: spec.showOnHome }, null)
+    const created = await createCategory(actor, storeId, 'map', { name: spec.name, parentId: spec.parent ? ids.get(spec.parent) ?? null : null, icon: spec.icon, showOnHome: spec.showOnHome }, null)
     if (!created.ok)
       throw new SeedError(`Category ${spec.slug} was refused: ${created.reason}`)
     ids.set(spec.slug, created.value.id)
