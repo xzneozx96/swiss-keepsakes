@@ -275,7 +275,7 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
     : {
         save: { text: status.status, tone: status.tone },
         steps: { onPrevious: back, onNext: isReview ? undefined : next },
-        primary: { label: t('places.action.save'), onPress: saveChanges, isDisabled: busy || !dirty },
+        primary: { label: t('places.action.save'), shortLabel: t('places.action.saveShort'), onPress: saveChanges, isDisabled: busy || !dirty },
       }
 
   return {

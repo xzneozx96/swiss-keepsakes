@@ -186,6 +186,7 @@ export const placesEn = {
   'places.action.publish': 'Publish',
   'places.action.saveDraft': 'Save draft',
   'places.action.save': 'Save changes',
+  'places.action.saveShort': 'Save',
   'places.action.hide': 'Hide from map',
   'places.action.unhide': 'Show on map again',
   'places.action.delete': 'Delete',

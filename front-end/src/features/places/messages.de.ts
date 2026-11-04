@@ -188,6 +188,7 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.action.publish': 'Veröffentlichen',
   'places.action.saveDraft': 'Entwurf speichern',
   'places.action.save': 'Änderungen speichern',
+  'places.action.saveShort': 'Speichern',
   'places.action.hide': 'Von der Karte nehmen',
   'places.action.unhide': 'Wieder auf der Karte zeigen',
   'places.action.delete': 'Löschen',
