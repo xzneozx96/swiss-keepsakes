@@ -10,7 +10,7 @@ import { useBack } from '@/hooks/use-back'
 export const Route = createFileRoute('/_guest/$lang/stories/$slug')({
   ssr: true,
   staticData: { hideTabBar: true, ownsBottomSpace: true },
-  loader: ({ params }) => readStoryPage(params.lang, params.slug),
+  loader: ({ params, location }) => readStoryPage(params.lang, params.slug, location),
   head: ({ loaderData }) => (loaderData ? storyHead(loaderData.story) : {}),
   pendingComponent: StorySkeleton,
   component: StoryRoute,
