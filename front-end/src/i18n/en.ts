@@ -17,6 +17,7 @@ import { partnerDashboardEn } from '@/features/partners/report/messages'
 import { placesEn } from '@/features/places/messages'
 import { reportPagesEn } from '@/features/reports/pages-messages'
 import { requestsEn } from '@/features/requests/messages'
+import { searchScreenEn } from '@/features/search/messages'
 import { storesEn } from '@/features/stores/messages'
 import { storiesMerchantEn } from '@/features/stories/messages'
 import { storiesListsEn } from '@/features/stories/messages-lists'
@@ -64,6 +65,7 @@ export const en = {
   ...multiSelectEn,
   ...stepsEn,
   ...mapEn,
+  ...searchScreenEn,
   ...mapKitEn,
 
   'app.name': 'Swiss Keepsakes',

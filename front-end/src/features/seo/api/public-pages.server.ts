@@ -1,7 +1,7 @@
 import type { PublicLanguage } from '@sk/api-contract'
 import type { PublicCard, PublishedPages } from '../lib/sitemap'
 import { createApiClient, publicStoryCardSchema, publicTourCardSchema } from '@sk/api-contract'
-import { serverApiOrigin } from './api-origin'
+import { apiOrigin } from '@/features/catalog/api/api-origin'
 
 const LANGUAGES: readonly PublicLanguage[] = ['en', 'de']
 const CACHE_MS = 60_000
@@ -50,7 +50,7 @@ async function readCards(
 
 async function readAll(now: () => number): Promise<PublishedPages> {
   // The client reads globalThis.fetch when it is created, so build it per load.
-  const client = createApiClient(serverApiOrigin())
+  const client = createApiClient(apiOrigin())
   const [storiesEn, storiesDe, toursEn, toursDe] = await Promise.all(
     (['stories', 'tours'] as const).flatMap(kind => LANGUAGES.map(lang => readCards(client, kind, lang))),
   )
