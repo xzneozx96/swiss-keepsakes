@@ -1,17 +1,18 @@
 import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
 
+import type { ServiceTile } from '@/features/home/lib/service-tiles'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
 
+import { describe, expect, it, vi } from 'vitest'
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
 import { DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startSeedDemo } from '@/features/demo/data-client'
-import { HomeEnding } from '@/features/home/components/home-ending'
 
+import { HomeEnding } from '@/features/home/components/home-ending'
 import { HomeHero } from '@/features/home/components/home-hero'
 import { MapInvitation } from '@/features/home/components/map-invitation'
 import { ServiceTiles } from '@/features/home/components/service-tiles'
@@ -86,6 +87,24 @@ function renderAt(url: string, element: React.ReactNode) {
   return router
 }
 
+function TilesThenText({ tiles }: { tiles: ServiceTile[] }) {
+  return (
+    <>
+      <ServiceTiles tiles={tiles} onRetry={() => {}} />
+      <p>after</p>
+    </>
+  )
+}
+
+function InvitationAndTiles({ tiles, onRetry }: { tiles: ServiceTile[] | null, onRetry: () => void }) {
+  return (
+    <>
+      <MapInvitation />
+      <ServiceTiles tiles={tiles} onRetry={onRetry} />
+    </>
+  )
+}
+
 const tilesFor = (language: 'en' | 'de') => serviceTiles(categories, pins, language)
 
 describe('[E4.13][AC95] the service tiles block', () => {
@@ -135,12 +154,7 @@ describe('[E4.13][AC95] the service tiles block', () => {
   })
 
   it('draws nothing, not even the heading, when no category has a tile (AC-2)', async () => {
-    renderAt('/en', (
-<>
-        <ServiceTiles tiles={[]} onRetry={() => {}} />
-        <p>after</p>
-      </>
-))
+    renderAt('/en', <TilesThenText tiles={[]} />)
     await screen.findByText('after')
 
     expect(document.querySelector('section')).toBeNull()
@@ -149,12 +163,7 @@ describe('[E4.13][AC95] the service tiles block', () => {
 
   it('a failed read shows an error with retry in the block, the other blocks still render, and retry asks for the read again (AC-6)', async () => {
     const retry = vi.fn()
-    renderAt('/en', (
-<>
-        <MapInvitation />
-        <ServiceTiles tiles={null} onRetry={retry} />
-      </>
-))
+    renderAt('/en', <InvitationAndTiles onRetry={retry} tiles={null} />)
 
     const alert = await screen.findByRole('alert')
 
