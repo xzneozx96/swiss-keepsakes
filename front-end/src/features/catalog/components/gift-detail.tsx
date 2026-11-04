@@ -3,8 +3,8 @@ import type { RichNode } from '@sk/domain/shared'
 import type { ChoiceOption, ChoiceVariant, Chosen } from '../lib/variant-choice'
 import type { PickupDateFieldProps } from './pickup-date-field'
 import type { IconComponent } from '@/components/icons'
-import type { ListingReviewsProps } from '@/components/listings/listing-reviews'
 import type { PhotoGalleryLabels } from '@/components/photo-gallery'
+import type { ListingReviewsProps } from '@/features/catalog/components/listing-reviews'
 
 import {
   Accordion,
@@ -42,13 +42,13 @@ import {
   ListingDetailHeader,
   ListingFavouriteButton,
 } from '@/components/listings/listing-detail-header'
-import { ListingReviews } from '@/components/listings/listing-reviews'
 import { PhotoGallery } from '@/components/photo-gallery'
 import { QuantityStepper } from '@/components/quantity-stepper'
 import { Stars } from '@/components/rating'
 import { RichText } from '@/components/rich-text'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
+import { ListingReviews } from '@/features/catalog/components/listing-reviews'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
 import { photoUrl } from '@/lib/photos'
 import { PickupDateField } from './pickup-date-field'

@@ -3,9 +3,10 @@ import type { CategoryIcon } from '@sk/api-contract'
 import { Description, Label, Radio, RadioGroup } from '@heroui/react'
 import { categoryIconGroups } from '@sk/domain/content'
 
+import { categoryIconComponents } from '@/components/category-icons'
 import { choiceCard } from '@/components/choice-card'
 import { useLocale } from '@/contexts/locale-context'
-import { categoryIconComponents, categoryIconGroupLabelKey, iconLabelKey } from '../lib/category-icons'
+import { categoryIconGroupLabelKey, iconLabelKey } from '../lib/category-icons'
 
 const NO_ICON = 'none'
 

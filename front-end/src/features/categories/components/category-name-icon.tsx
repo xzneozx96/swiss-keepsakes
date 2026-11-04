@@ -1,6 +1,6 @@
 import type { CategoryIcon } from '@sk/api-contract'
 
-import { categoryIconComponents } from '../lib/category-icons'
+import { categoryIconComponents } from '@/components/category-icons'
 
 /** The icon of a map category, drawn before its name. Nothing when the category has none. */
 export function CategoryNameIcon({ icon }: { icon: CategoryIcon | null }) {
