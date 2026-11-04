@@ -2,6 +2,7 @@ import {
   publicKeepsakeAvailabilitySchema,
   publicKeepsakeListSchema,
   publicKeepsakeSchema,
+  publicPickupPointsSchema,
 } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
@@ -77,5 +78,35 @@ describe('[E6.4][AC54][AC55] the public keepsake list and detail', () => {
     const names = Object.keys(publicKeepsakeSchema.shape)
 
     expect(names).toEqual(expect.arrayContaining(['otherSlug', 'language', 'requestedLanguage', 'fallback', 'availableLanguages', 'description', 'photos', 'options', 'variants']))
+  })
+})
+
+describe('[E6.4][AC26] the public pickup points', () => {
+  const internal = /^(?:storeId|store_id|latitude|longitude|lat|lng|position|archived|archivedAt|rowVersion|row_version)$/i
+
+  it('[E6.4][AC26] AC-1: the schema names the guest fields and no store id, latitude, longitude, position, archived flag or row version', () => {
+    const names = propertyNames(z.toJSONSchema(publicPickupPointsSchema, { unrepresentable: 'any' }))
+
+    expect(names).toEqual(expect.arrayContaining(['items', 'id', 'name', 'address', 'instructions', 'mapsUrl', 'hours', 'weekday', 'opens', 'closes']))
+    expect(names.filter(key => internal.test(key))).toEqual([])
+  })
+
+  it('[E6.4][AC26] AC-1: the OpenAPI response of the read has none either, however deep', () => {
+    const document = openApiDocument(contractApp())
+    const components = (document.components?.schemas ?? {}) as Record<string, unknown>
+    const operation = (document.paths as Record<string, { get: { responses: Record<string, unknown> } }>)['/api/public/keepsakes/{slug}/pickup-points']?.get.responses['200']
+
+    expect(operation).toBeDefined()
+    const names = reachableNames(operation, components)
+    expect(names.length).toBeGreaterThan(8)
+    expect(names.filter(key => internal.test(key))).toEqual([])
+  })
+
+  it('[E6.4][AC26] AC-1: the schema refuses a body that carries a store id, and strips nothing silently', () => {
+    const point = { id: '0190f0c2-0000-7000-8000-0000000000f1', name: 'Shop', address: 'Street 1', instructions: null, mapsUrl: 'https://maps.example', hours: [{ weekday: 1, opens: '09:00', closes: '17:00' }] }
+
+    expect(publicPickupPointsSchema.safeParse({ items: [point] }).success).toBe(true)
+    expect(publicPickupPointsSchema.safeParse({ items: [{ ...point, storeId: point.id }] }).success).toBe(false)
+    expect(publicPickupPointsSchema.safeParse({ items: [{ ...point, latitude: 47 }] }).success).toBe(false)
   })
 })

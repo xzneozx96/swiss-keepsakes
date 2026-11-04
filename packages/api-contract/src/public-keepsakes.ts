@@ -64,8 +64,30 @@ export const publicKeepsakeAvailabilitySchema = z.object({
   })),
 }).meta({ id: 'PublicKeepsakeAvailability', description: 'The price and the units of each combination for sale. The only public keepsake read with a price. Cached for 5 seconds' })
 
+// The pickup points of the store that owns a keepsake (E6.4). Strict, so a store id, a pin or a row version added by
+// mistake fails the contract test. The text is in the language asked for, or the other one when that point has none.
+const pickupSpanSchema = z.strictObject({
+  weekday: z.int().meta({ description: '1 (Monday) to 7 (Sunday)' }),
+  opens: z.string().meta({ description: 'HH:MM' }),
+  closes: z.string().meta({ description: 'HH:MM, or 24:00. Before opens means the next morning: the span belongs to the day it starts' }),
+}).meta({ id: 'PublicPickupSpan' })
+
+const pickupPointSchema = z.strictObject({
+  id: z.uuid(),
+  name: z.string(),
+  address: z.string(),
+  instructions: z.string().nullable().meta({ description: 'Hand-over instructions, null for none' }),
+  mapsUrl: z.string().meta({ description: 'The Google Maps link of the point, for directions' }),
+  hours: z.array(pickupSpanSchema).meta({ description: 'The weekly spans, by weekday then opening time. Empty when the merchant gave none' }),
+}).meta({ id: 'PublicPickupPoint' })
+
+export const publicPickupPointsSchema = z.strictObject({
+  items: z.array(pickupPointSchema).meta({ description: 'The active pickup points by the merchant\'s order. No store id, pin, position, archived flag or row version' }),
+}).meta({ id: 'PublicPickupPoints', description: 'The active pickup points of the store that owns a published keepsake' })
+
 export type PublicKeepsakePhoto = z.infer<typeof publicKeepsakePhotoSchema>
 export type PublicKeepsakeCard = z.infer<typeof publicKeepsakeCardSchema>
 export type PublicKeepsakeList = z.infer<typeof publicKeepsakeListSchema>
 export type PublicKeepsake = z.infer<typeof publicKeepsakeSchema>
 export type PublicKeepsakeAvailability = z.infer<typeof publicKeepsakeAvailabilitySchema>
+export type PublicPickupPoints = z.infer<typeof publicPickupPointsSchema>

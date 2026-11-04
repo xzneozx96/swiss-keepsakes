@@ -579,6 +579,84 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/keepsakes/{slug}/pickup-points": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description The language asked for. A keepsake that has no version in it comes back in the other language, marked `fallback` */
+                    lang: "en" | "de";
+                };
+                header?: never;
+                path: {
+                    /** @description The slug of either language */
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The active pickup points of the store that owns the keepsake, by the merchant's order. No store id, pin, position, archived flag or row version */
+                200: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicPickupPoints"];
+                    };
+                };
+                /** @description The If-None-Match tag still matches. No body */
+                304: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such published keepsake */
+                404: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/map": {
         parameters: {
             query?: never;
@@ -6754,6 +6832,31 @@ export interface components {
                 url: string;
                 width: number;
             }[];
+        };
+        PublicPickupPoint: {
+            address: string;
+            /** @description The weekly spans, by weekday then opening time. Empty when the merchant gave none */
+            hours: components["schemas"]["PublicPickupSpan"][];
+            /** Format: uuid */
+            id: string;
+            /** @description Hand-over instructions, null for none */
+            instructions: string | null;
+            /** @description The Google Maps link of the point, for directions */
+            mapsUrl: string;
+            name: string;
+        };
+        /** @description The active pickup points of the store that owns a published keepsake */
+        PublicPickupPoints: {
+            /** @description The active pickup points by the merchant's order. No store id, pin, position, archived flag or row version */
+            items: components["schemas"]["PublicPickupPoint"][];
+        };
+        PublicPickupSpan: {
+            /** @description HH:MM, or 24:00. Before opens means the next morning: the span belongs to the day it starts */
+            closes: string;
+            /** @description HH:MM */
+            opens: string;
+            /** @description 1 (Monday) to 7 (Sunday) */
+            weekday: number;
         };
         /** @description The pin card */
         PublicPin: {
