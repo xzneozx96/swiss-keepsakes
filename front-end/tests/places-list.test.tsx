@@ -51,8 +51,8 @@ describe('[E4.2][AC68] the Places entry of the Content menu', () => {
     const entry = SECTION_PAGES.content.find(page => page.id === 'places')
 
     expect(entry).toMatchObject({ to: '/store/content/places', label: 'merchantContent.tab.places' })
-    expect(en['merchantContent.tab.places']).toBe('Places')
-    expect(de['merchantContent.tab.places']).toBe('Orte')
+    expect(en['merchantContent.tab.places']).toBe('Locations and events')
+    expect(de['merchantContent.tab.places']).toBe('Orte und Veranstaltungen')
   })
 })
 
@@ -600,7 +600,7 @@ describe('[E4.2][AC68] N16 the list', () => {
     await screen.findAllByRole('link', { name: 'Kapellbrücke' })
     expect(screen.getAllByRole('link', { name: 'Ort hinzufügen' })[0]).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Anlass hinzufügen' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Orte' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Orte und Veranstaltungen' })).toBeInTheDocument()
     expect(within(rowOf('Kapellbrücke')).getByText('Vorbei · nicht auf der Karte')).toBeInTheDocument()
     expect(screen.getByRole('searchbox', { name: 'Nach Titel oder Kartenlink suchen' })).toBeInTheDocument()
   })

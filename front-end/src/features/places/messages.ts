@@ -1,6 +1,6 @@
 /** Content > Places (E4.2): the list N16, the editor N17 and the copy of the API problems. */
 export const placesEn = {
-  'places.list.title': 'Places',
+  'places.list.title': 'Locations and events',
   'places.list.intro': 'Pins on the guest map: places to see, eat or use, and events with dates.',
   'places.list.addPlace': 'Add place',
   'places.list.addEvent': 'Add event',
@@ -197,7 +197,7 @@ export const placesEn = {
   'places.toast.published': 'Published. The pin is on the map.',
   'places.toast.draftSaved': 'Draft saved.',
   'places.toast.saved': 'Changes saved.',
-  'merchantContent.tab.places': 'Places',
+  'merchantContent.tab.places': 'Locations and events',
   'places.apiOnly': 'This screen works with the live API only.',
   'places.noStore': 'You do not belong to a store yet, so there are no places to edit.',
   'places.loadFailed': 'The places could not be loaded.',
@@ -241,7 +241,7 @@ export const placesEn = {
   'places.review.slugPending': 'Made from the title when you publish',
   'places.confirm.cancel': 'Cancel',
   'places.action.edit': 'Edit',
-  'places.table.label': 'Places',
+  'places.table.label': 'Locations and events',
   'places.hide.unsaved': 'Save your changes first. Hiding the pin would discard them.',
   'places.hasChanges': 'Changes not published yet. Publish to send them to guests.',
   'places.hoursAddFirst': 'Add hours',

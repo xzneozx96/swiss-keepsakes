@@ -2,7 +2,7 @@ import type { placesEn } from './messages'
 
 /** German for Content > Places (E4.2). The German is a proposal the merchant has not reviewed. */
 export const placesDe: Record<keyof typeof placesEn, string> = {
-  'places.list.title': 'Orte',
+  'places.list.title': 'Orte und Veranstaltungen',
   'places.list.intro': 'Punkte auf der Gästekarte: Orte zum Ansehen, Essen oder Nutzen und Anlässe mit Datum.',
   'places.list.addPlace': 'Ort hinzufügen',
   'places.list.addEvent': 'Anlass hinzufügen',
@@ -199,7 +199,7 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.toast.published': 'Veröffentlicht. Der Punkt ist auf der Karte.',
   'places.toast.draftSaved': 'Entwurf gespeichert.',
   'places.toast.saved': 'Änderungen gespeichert.',
-  'merchantContent.tab.places': 'Orte',
+  'merchantContent.tab.places': 'Orte und Veranstaltungen',
   'places.apiOnly': 'Dieser Bildschirm funktioniert nur mit der Live-API.',
   'places.noStore': 'Sie gehören noch zu keinem Geschäft, daher gibt es keine Orte zu bearbeiten.',
   'places.loadFailed': 'Die Orte konnten nicht geladen werden.',
@@ -243,7 +243,7 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.review.slugPending': 'Wird beim Veröffentlichen aus dem Titel erstellt',
   'places.confirm.cancel': 'Abbrechen',
   'places.action.edit': 'Bearbeiten',
-  'places.table.label': 'Orte',
+  'places.table.label': 'Orte und Veranstaltungen',
   'places.hide.unsaved': 'Speichern Sie zuerst Ihre Änderungen. Beim Ausblenden gingen sie verloren.',
   'places.hasChanges': 'Änderungen noch nicht veröffentlicht. Veröffentlichen Sie, damit Gäste sie sehen.',
   'places.hoursAddFirst': 'Zeiten hinzufügen',
