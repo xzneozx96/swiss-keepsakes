@@ -9,6 +9,7 @@ export const contentEn = {
   'stories.empty': 'There are no stories in English yet.',
   'stories.filter': 'Story categories',
   'stories.all': 'All stories',
+  'stories.filterAll': 'All',
   'stories.category.eat': 'Eat & drink',
   'stories.category.town': 'Around town',
   'stories.category.lake': 'Lake & mountains',

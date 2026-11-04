@@ -1,4 +1,4 @@
-import type { PublicLanguage, PublicStoryCard } from '@sk/api-contract'
+import type { PublicCategory, PublicLanguage, PublicStoryCard } from '@sk/api-contract'
 import { createIsomorphicFn } from '@tanstack/react-start'
 import { serverApiOrigin } from '@/features/seo/api/api-origin'
 
@@ -24,4 +24,17 @@ export async function loadPublicStories(lang: PublicLanguage): Promise<PublicSto
     throw new Error(`Stories answered ${response.status}`)
 
   return publicStoryListSchema.parse(data).items
+}
+
+/** Every blog category, parents first, with both names, as `GET /api/public/blog-categories` sends them. Throws when the read fails; the list then shows without a filter. */
+export async function loadBlogCategories(lang: PublicLanguage): Promise<PublicCategory[]> {
+  const { createApiClient, publicCategoryListSchema } = await import('@sk/api-contract')
+  const { data, response } = await createApiClient(apiOrigin()).GET('/api/public/blog-categories', {
+    params: { query: { lang } },
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  })
+  if (!response.ok)
+    throw new Error(`Blog categories answered ${response.status}`)
+
+  return publicCategoryListSchema.parse(data).items
 }

@@ -15,6 +15,17 @@ function StoryRowSkeleton() {
   )
 }
 
+/** The category row: chips as the TagGroup draws them (rounded, 44 px high). The widths vary like category names. */
+function ChipsSkeleton() {
+  return (
+    <div className="flex gap-2 overflow-hidden" data-skeleton="chips">
+      {['w-14', 'w-24', 'w-20', 'w-28', 'w-20'].map((width, i) => (
+        <Skeleton key={i} className={`h-11 shrink-0 rounded-xl ${width}`} data-skeleton="chip" />
+      ))}
+    </div>
+  )
+}
+
 export function StoriesListSkeleton({ rows = 3 }: { rows?: number }) {
   return (
     <ul aria-busy className="flex flex-col gap-7">
@@ -23,12 +34,13 @@ export function StoriesListSkeleton({ rows = 3 }: { rows?: number }) {
   )
 }
 
-/** The whole screen while the list loads: the 260 px photo banner and the story rows (the sort line is drawn only once the answers opener exists). */
+/** The whole screen while the list loads: the 260 px photo banner, the category chips and the story rows (the sort line is drawn only once the answers opener exists). */
 export function StoriesSkeleton() {
   return (
     <div className="flex flex-1 flex-col" data-skeleton="stories">
       <Skeleton className="h-[260px]" />
       <div className="relative -mt-6 flex flex-col gap-5 rounded-t-3xl bg-background px-4 pt-5 pb-4">
+        <ChipsSkeleton />
         <StoriesListSkeleton />
       </div>
     </div>

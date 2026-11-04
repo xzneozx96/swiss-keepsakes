@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query'
-import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
-import { render, screen, waitFor } from '@testing-library/react'
+import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider, useNavigate, useSearch } from '@tanstack/react-router'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderToString } from 'react-dom/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -11,6 +11,7 @@ import { DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startSeedDemo } from '@/features/demo/data-client'
 import { en } from '@/i18n/en'
+import { blogCategory, ref } from './support/blog-categories'
 import { storyCard } from './support/story-cards'
 
 const answers = vi.hoisted(() => ({ value: { stay: null, interests: [] } as { stay: 'short_stay' | 'multi_day' | null, interests: string[] } }))
@@ -19,7 +20,7 @@ vi.mock('@/features/content/hooks/use-onboarding-answers', () => ({ useOnboardin
 
 type Props = Parameters<typeof StoriesPage>[0]
 
-async function buildRouter(url: string, props: Props) {
+async function buildRouter(url: string, props: Props, Component?: () => React.JSX.Element) {
   // The cart button in the page bar reads the demo cart; the stories themselves come in through props.
   const demo = startSeedDemo()
   const root = createRootRoute({
@@ -35,7 +36,7 @@ async function buildRouter(url: string, props: Props) {
       </QueryClientProvider>
     ),
   })
-  const page = createRoute({ getParentRoute: () => root, path: '/$lang/stories', component: () => <StoriesPage {...props} /> })
+  const page = createRoute({ getParentRoute: () => root, path: '/$lang/stories', component: Component ?? (() => <StoriesPage {...props} />) })
   // The German dictionary is a lazy chunk; the route waits for it as the real guest layout does.
   const withDictionary = url.startsWith('/de') ? loadDictionary('de') : Promise.resolve()
   await withDictionary
@@ -158,5 +159,150 @@ describe('[E4.4] guest stories list', () => {
     expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
     await userEvent.click(screen.getByRole('button', { name: en['stories.retry'] }))
     expect(onRetry).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('[E4.4][AC30] blog category filter', () => {
+  const legends = blogCategory({ slug: 'legends', name: { en: 'Legends', de: 'Sagen' }, position: 2 })
+  const tips = blogCategory({ slug: 'practical-tips', name: { en: 'Practical tips', de: null }, position: 3 })
+  const history = blogCategory({ slug: 'swiss-history', name: { en: 'Swiss history', de: 'Schweizer Geschichte' }, position: 1 })
+  const castles = blogCategory({ slug: 'castles', name: { en: 'Castles', de: 'Burgen' }, parentId: history.id, position: 1 })
+  const categories = [history, legends, tips, castles]
+
+  const castle = storyCard({ title: 'Castle story', categories: [ref(castles)] })
+  const legend1 = storyCard({ title: 'Legend one', categories: [ref(legends)], publishedAt: '2026-09-03T00:00:00.000Z' })
+  const legend2 = storyCard({ title: 'Legend two', categories: [ref(legends)], stayTag: 'short_stay', interests: ['food-drink'], publishedAt: '2026-09-02T00:00:00.000Z' })
+  const legend3 = storyCard({ title: 'Legend three', categories: [ref(legends)], publishedAt: '2026-09-01T00:00:00.000Z' })
+  const tip = storyCard({ title: 'Tip story', categories: [ref(tips)] })
+  const stories = [castle, legend1, legend2, legend3, tip]
+
+  const chips = () => screen.getByRole('grid', { name: /Story categories|Kategorien der Geschichten/ })
+  const chipNames = () => within(chips()).getAllByRole('row').map(r => r.textContent)
+
+  /** The page as the route wires it: the address holds the choice and a choice navigates. */
+  async function renderFiltered(url: string, over: Partial<Props> = {}) {
+    function Wired() {
+      const { category } = useSearch({ strict: false }) as { category?: string }
+      const navigate = useNavigate()
+      return (
+        <StoriesPage
+          categories={categories}
+          category={category}
+          stories={stories}
+          onCategoryChange={slug => void navigate({ to: '/$lang/stories', params: { lang: url.slice(1, 3) }, search: slug ? { category: slug } : {} })}
+          onRetry={() => {}}
+          {...over}
+        />
+      )
+    }
+    const router = await buildRouter(url, { stories, onRetry: () => {} }, Wired)
+    render(<RouterProvider router={router} />)
+    return router
+  }
+
+  it('[E4.4][AC30] AC-1 the row shows All and only the categories with a story', async () => {
+    await renderFiltered('/en/stories')
+
+    expect(chipNames()).toEqual(['All', 'Swiss history', 'Castles', 'Legends', 'Practical tips'])
+  })
+
+  it('[E4.4][AC30] AC-1 a category with no story here is not offered', async () => {
+    await renderFiltered('/en/stories', { stories: [legend1, tip] })
+
+    expect(chipNames()).toEqual(['All', 'Legends', 'Practical tips'])
+  })
+
+  it('[E4.4][AC30] AC-2 a parent keeps its sub-category stories and the count follows the filter', async () => {
+    await renderFiltered('/en/stories')
+
+    await userEvent.click(within(chips()).getByRole('row', { name: 'Swiss history' }))
+
+    await waitFor(() => expect(titles()).toEqual(['Castle story']))
+    expect(screen.getByText('1 story')).toBeInTheDocument()
+  })
+
+  it('[E4.4][AC30] AC-2 a sub-category keeps only its own stories', async () => {
+    await renderFiltered('/en/stories?category=castles')
+
+    expect(titles()).toEqual(['Castle story'])
+  })
+
+  it('[E4.4][AC61] AC-3 a choice pushes ?category= and Back returns to All', async () => {
+    const router = await renderFiltered('/en/stories')
+
+    await userEvent.click(within(chips()).getByRole('row', { name: 'Legends' }))
+    await waitFor(() => expect(router.state.location.search).toEqual({ category: 'legends' }))
+    expect(titles()).toHaveLength(3)
+
+    act(() => router.history.back())
+    await waitFor(() => expect(router.state.location.search).toEqual({}))
+    await waitFor(() => expect(titles()).toHaveLength(5))
+    expect(within(chips()).getByRole('row', { name: 'All' })).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('[E4.4][AC61] AC-3 choosing All removes the parameter', async () => {
+    const router = await renderFiltered('/en/stories?category=legends')
+
+    await userEvent.click(within(chips()).getByRole('row', { name: 'All' }))
+
+    await waitFor(() => expect(router.state.location.search).toEqual({}))
+  })
+
+  it('[E4.4][AC61] AC-3 the server HTML of a shared link lists only that category', async () => {
+    const router = await buildRouter('/en/stories?category=legends', { stories, categories, category: 'legends', onRetry: () => {} })
+
+    const html = renderToString(<RouterProvider router={router} />)
+
+    expect(html).toContain('Legend one')
+    expect(html).not.toContain('Castle story')
+    expect(html).not.toContain('Tip story')
+  })
+
+  it('[E4.4][AC30] AC-4 an unknown or unused slug shows every story with All selected and the address unchanged', async () => {
+    for (const slug of ['no-such-topic', 'swiss-history-unused']) {
+      const router = await renderFiltered(`/en/stories?category=${slug}`, { stories: [legend1, tip] })
+
+      expect(titles()).toHaveLength(2)
+      expect(within(chips()).getByRole('row', { name: 'All' })).toHaveAttribute('aria-selected', 'true')
+      expect(router.state.location.search).toEqual({ category: slug })
+      cleanup()
+    }
+  })
+
+  it('[E4.4][AC38] AC-5 the filter comes first, then the answers rank inside it', async () => {
+    answers.value = { stay: 'short_stay', interests: ['food-drink'] }
+    await renderFiltered('/en/stories?category=legends')
+
+    await waitFor(() => expect(titles()[0]).toBe('Legend two'))
+    expect(titles()).toHaveLength(3)
+    expect(titles()).not.toContain('Tip story')
+  })
+
+  it('[E4.4][AC54] AC-6 a category named only in English shows that name to a German guest, and All is Alle', async () => {
+    await renderFiltered('/de/stories')
+
+    expect(chipNames()).toEqual(['Alle', 'Schweizer Geschichte', 'Burgen', 'Sagen', 'Practical tips'])
+    expect(screen.getByText('5 Geschichten')).toBeInTheDocument()
+  })
+
+  it('[E4.4][AC54] AC-6 no CHF on the page, filtered or not', async () => {
+    const router = await buildRouter('/en/stories?category=legends', { stories, categories, category: 'legends', onRetry: () => {} })
+
+    expect(renderToString(<RouterProvider router={router} />)).not.toContain('CHF')
+  })
+
+  it('[E4.4][AC30] AC-7 a failed category read shows the stories with no filter row and no alert', async () => {
+    await renderFiltered('/en/stories?category=legends', { categories: null })
+
+    expect(titles()).toHaveLength(5)
+    expect(screen.queryByRole('grid', { name: en['stories.filter'] })).toBeNull()
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('[E4.4][AC61] a selected chip carries a check, not only a colour', async () => {
+    await renderFiltered('/en/stories?category=legends')
+
+    expect(within(within(chips()).getByRole('row', { name: 'Legends' })).getByTestId('chip-check')).toBeInTheDocument()
+    expect(within(within(chips()).getByRole('row', { name: 'All' })).queryByTestId('chip-check')).toBeNull()
   })
 })

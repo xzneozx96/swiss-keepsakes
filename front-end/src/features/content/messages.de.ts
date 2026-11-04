@@ -12,6 +12,7 @@ export const contentDe: Record<keyof typeof contentEn, string> = {
   'stories.empty': 'Es gibt noch keine Geschichten auf Deutsch.',
   'stories.filter': 'Kategorien der Geschichten',
   'stories.all': 'Alle Geschichten',
+  'stories.filterAll': 'Alle',
   'stories.category.eat': 'Essen & Trinken',
   'stories.category.town': 'In der Stadt',
   'stories.category.lake': 'See & Berge',
