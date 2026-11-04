@@ -3,6 +3,7 @@ import { descriptionText } from '@sk/domain/content'
 import {
   createFileRoute,
   notFound,
+  redirect,
   useCanGoBack,
   useNavigate,
   useRouter,
@@ -13,6 +14,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { fetchKeepsake } from '@/features/catalog/api/keepsake'
 import { GiftDetail } from '@/features/catalog/components/gift-detail'
 import { useKeepsakeDetail } from '@/features/catalog/hooks/use-keepsake-detail'
+import { richNodeOf } from '@/features/catalog/lib/keepsake-page'
 import { alternateHead } from '@/features/seo/lib/page-head'
 import { isLanguage } from '@/lib/language-routing'
 
@@ -24,13 +26,17 @@ export const Route = createFileRoute('/_guest/$lang/gifts/$slug')({
   ssr: true,
   // The bottom bar is sticky in the screen's own flow, so the shell reserves no tab-bar space.
   staticData: { hideTabBar: true, ownsBottomSpace: true },
-  loader: async ({ params }) => {
+  // The address carries the slug of its own language. Any other address (the slug of the other language, or a language the keepsake has no version in) goes to the version that exists.
+  loader: async ({ params, location }) => {
     if (!isLanguage(params.lang))
       throw notFound()
     const keepsake = await fetchKeepsake(params.slug, params.lang)
 
     if (!keepsake)
       throw notFound()
+
+    if (keepsake.language !== params.lang || keepsake.slug !== params.slug)
+      throw redirect({ to: '/$lang/gifts/$slug', params: { lang: keepsake.language, slug: keepsake.slug }, search: location.search, hash: location.hash, statusCode: 302 })
 
     return { keepsake, lang: params.lang }
   },
@@ -40,7 +46,7 @@ export const Route = createFileRoute('/_guest/$lang/gifts/$slug')({
     const { keepsake } = loaderData
     const other = keepsake.language === 'en' ? 'de' : 'en'
     const slugs = { [keepsake.language]: keepsake.slug, ...(keepsake.otherSlug && { [other]: keepsake.otherSlug }) }
-    const text = descriptionText(keepsake.description as never).replace(BLANKS, ' ').trim()
+    const text = descriptionText(richNodeOf(keepsake.description)).replace(BLANKS, ' ').trim()
     const image = keepsake.cover?.url
 
     return alternateHead({

@@ -9,7 +9,7 @@ import { useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
 import { fetchAvailability } from '../api/keepsake'
 import { publicKeepsakePage } from '../lib/keepsake-page'
-import { pickValue } from '../lib/variant-choice'
+import { settleChoice } from '../lib/variant-choice'
 import { useFavourite } from './use-favourites'
 
 /** Price and units change with every order, so they are read again after a few seconds, never served from the page. */
@@ -21,7 +21,7 @@ const AVAILABILITY_STALE_MS = 5_000
  * the cart is a placeholder until release 4: the button does nothing.
  */
 export function useKeepsakeDetail(detail: PublicKeepsake, lang: PublicLanguage): Omit<GiftDetailProps, 'onBack'> {
-  const { t, intlLocale } = useLocale()
+  const { t, intlLocale, preferredLanguage } = useLocale()
   const { saved, toggle } = useFavourite(detail.id)
   const [picked, setPicked] = useState<Chosen>()
   const [quantity, setQuantity] = useState(1)
@@ -36,7 +36,7 @@ export function useKeepsakeDetail(detail: PublicKeepsake, lang: PublicLanguage):
     ? { state: 'ready', byVariant: new Map(read.data.items.map(item => [item.variantId, item])) }
     : { state: read.isError && !read.isFetching ? 'failed' : 'loading' }
 
-  const { page, variant, choice, soldOut } = publicKeepsakePage(detail, { t, intlLocale, availability, chosen: picked })
+  const { page, variant, choice, soldOut } = publicKeepsakePage({ ...detail, fallback: detail.fallback || (preferredLanguage !== undefined && preferredLanguage !== detail.language) }, { t, intlLocale, availability, chosen: picked })
   const max = Math.max(1, choice?.available ?? 1)
   const count = Math.min(quantity, max)
   const total = choice ? formatMoney((choice.priceRappen * count) / 100, intlLocale) : undefined
@@ -55,7 +55,7 @@ export function useKeepsakeDetail(detail: PublicKeepsake, lang: PublicLanguage):
     },
     variant: {
       ...variant,
-      onChange: (optionId, valueId) => setPicked(pickValue(variant.chosen, optionId, valueId)),
+      onChange: (optionId, valueId) => setPicked(settleChoice(variant.options, variant.variants, variant.chosen, optionId, valueId)),
     },
     quantity: {
       label: t('detail.quantity.label'),

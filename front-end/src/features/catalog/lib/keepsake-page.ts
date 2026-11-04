@@ -7,7 +7,8 @@ import type { MessageKey } from '@/i18n/en'
 
 import { isEmptyDescription } from '@sk/domain/content'
 import { formatMoney, pickText } from '@sk/domain/shared'
-import { chosenVariant, galleryOrder, valueReasons } from './variant-choice'
+import { photoCopy } from './photo-copy'
+import { blockedValues, chosenVariant, galleryOrder, valueReasons } from './variant-choice'
 
 type Translate = (key: MessageKey, vars?: Record<string, string | number>) => string
 
@@ -45,13 +46,12 @@ export function galleryLabelsOf(t: Translate, name: string): GiftPageProps['gall
   }
 }
 
-/** The smallest resized copy at least `width` wide, else the original; undefined until the file is ready. */
-function mediaSrc(media: Pick<Media, 'publicUrl' | 'variants'> | null | undefined, width: number): string | undefined {
+/** The copy a gallery shows, else the original; undefined until the file is ready. */
+function mediaSrc(media: Pick<Media, 'publicUrl' | 'variants'> | null | undefined): string | undefined {
   if (!media)
     return undefined
-  const copy = [...media.variants].sort((a, b) => a.width - b.width).find(v => v.width >= width)
 
-  return copy?.url ?? media.publicUrl ?? undefined
+  return photoCopy(media.variants, GALLERY_WIDTH) ?? media.publicUrl ?? undefined
 }
 
 const forSale = (variant: Product['variants'][number]) => variant.status === 'published'
@@ -93,7 +93,7 @@ export function keepsakePage(
     return src
   }
 
-  keepsake.photos.forEach(media => addPhoto(mediaSrc(media, GALLERY_WIDTH)))
+  keepsake.photos.forEach(media => addPhoto(mediaSrc(media)))
 
   const options = keepsake.options.map(option => ({
     id: option.id,
@@ -101,7 +101,7 @@ export function keepsakePage(
     values: option.values.map(value => ({ id: value.id, label: pickText(value.label, language).text })),
   }))
   const variants = keepsake.variants.map((variant): ChoiceVariant => {
-    const photo = addPhoto(mediaSrc(variant.photo, GALLERY_WIDTH))
+    const photo = addPhoto(mediaSrc(variant.photo))
 
     return {
       id: variant.id,
@@ -163,9 +163,26 @@ export type AvailabilityView
   = | { state: 'loading' | 'failed' }
     | { state: 'ready', byVariant: ReadonlyMap<string, { priceRappen: number, available: number }> }
 
-/** The smallest resized copy at least `width` wide, else the original. */
-function photoSrc(photo: PublicKeepsakePhoto): string {
-  return [...photo.variants].sort((a, b) => a.width - b.width).find(v => v.width >= GALLERY_WIDTH)?.url ?? photo.url
+const photoSrc = (photo: PublicKeepsakePhoto) => photoCopy(photo.variants, GALLERY_WIDTH) ?? photo.url
+
+/** The description as the renderer's rich-text node. The contract types a node's children as unknown, so the shape is read here. */
+export function richNodeOf(value: unknown): RichNode {
+  if (typeof value !== 'object' || value === null)
+    return {}
+  const node: RichNode = {}
+
+  if ('type' in value && typeof value.type === 'string')
+    node.type = value.type
+  if ('text' in value && typeof value.text === 'string')
+    node.text = value.text
+  if ('content' in value && Array.isArray(value.content))
+    node.content = value.content.map(richNodeOf)
+  if ('marks' in value && Array.isArray(value.marks))
+    node.marks = value.marks.flatMap(mark => typeof mark === 'object' && mark !== null && 'type' in mark && typeof mark.type === 'string' ? [{ type: mark.type, ...('attrs' in mark && typeof mark.attrs === 'object' && mark.attrs !== null && { attrs: { ...mark.attrs } }) }] : [])
+  if ('attrs' in value && typeof value.attrs === 'object' && value.attrs !== null)
+    node.attrs = { ...value.attrs }
+
+  return node
 }
 
 /**
@@ -181,7 +198,8 @@ export function publicKeepsakePage(
 ) {
   const { t, intlLocale, availability } = input
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
-  const description = isEmptyDescription(detail.description as RichNode) ? undefined : detail.description as RichNode
+  const doc = richNodeOf(detail.description)
+  const description = isEmptyDescription(doc) ? undefined : doc
 
   const photos = detail.photos.map(photoSrc)
   const options = detail.options.map(option => ({
@@ -248,7 +266,7 @@ export function publicKeepsakePage(
       options,
       variants,
       chosen,
-      reasons: valueReasons(options, variants, chosen, t('detail.variant.notSold')),
+      reasons: blockedValues(options, variants, t('detail.variant.notSold')),
     },
     /** The combination that can be bought now, with its price and units; undefined until the availability is ready. */
     choice: live && row ? { id: live.id, price: money(row.priceRappen), priceRappen: row.priceRappen, available: row.available } : undefined,

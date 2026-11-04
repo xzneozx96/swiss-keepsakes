@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  blockedValues,
   chosenVariant,
   galleryOrder,
   pickValue,
+  settleChoice,
   valueReasons,
 } from '@/features/catalog/lib/variant-choice'
 
@@ -60,5 +62,18 @@ describe('variant choice by option values', () => {
     expect(galleryOrder(['a', 'b', 'c'], undefined)).toEqual(['a', 'b', 'c'])
     expect(galleryOrder(['a', 'b'], 7)).toEqual(['a', 'b'])
     expect(galleryOrder(['a', 'b'], 0)).toEqual(['a', 'b'])
+  })
+
+  it('blocks a value only when no combination with it can be picked', () => {
+    expect(blockedValues(options, variants, 'not sold')).toEqual({ size: {}, colour: {} })
+    const soldOut = variants.map(v => v.values.size === 'l' ? { ...v, reason: 'Sold out' } : v)
+
+    expect(blockedValues(options, soldOut, 'not sold')).toEqual({ size: { l: 'Sold out' }, colour: { red: 'Sold out' } })
+  })
+
+  it('moves the other options to a combination that exists, keeping as many choices as it can', () => {
+    expect(settleChoice(options, variants, { size: 's', colour: 'nat' }, 'colour', 'red')).toEqual({ size: 'l', colour: 'red' })
+    expect(settleChoice(options, variants, { size: 'l', colour: 'red' }, 'size', 's')).toEqual({ size: 's', colour: 'nat' })
+    expect(settleChoice(options, variants, { size: 's', colour: 'nat' }, 'size', 'l')).toEqual({ size: 'l', colour: 'red' })
   })
 })

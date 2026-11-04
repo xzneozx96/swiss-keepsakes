@@ -359,7 +359,7 @@ export function OrderDetailSkeleton() {
   )
 }
 
-/** C03 Gift detail: the 4:3.4 photo, the overlapping sheet (centred title, stats grid, seller row, highlights, about, two accordion rows), and the sticky price bar. */
+/** C03 Gift detail: the 4:3.4 photo, the overlapping sheet (centred title, highlights, about, two accordion rows), and the sticky price bar. */
 export function GiftDetailSkeleton() {
   return (
     <div aria-busy className="flex flex-1 flex-col" data-skeleton="gift">

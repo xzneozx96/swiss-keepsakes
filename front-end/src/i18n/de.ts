@@ -206,9 +206,6 @@ export const de: Record<MessageKey, string> = {
   'gifts.soldOut': 'Ausverkauft',
   'gifts.textInEnglish': 'Text auf Englisch',
   'gifts.textInGerman': 'Text auf Deutsch',
-  'gifts.emptyCategory': 'In dieser Kategorie gibt es zurzeit keine Andenken.',
-  'gifts.noResults': 'Keine Andenken passen zu «{query}».',
-  'gifts.showAll': 'Alle Andenken zeigen',
   'gifts.empty': 'Zurzeit sind keine Andenken im Verkauf.',
   'detail.back': 'Zurück',
   'detail.notFound':

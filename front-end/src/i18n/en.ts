@@ -198,9 +198,6 @@ export const en = {
   'gifts.soldOut': 'Sold out',
   'gifts.textInEnglish': 'Text in English',
   'gifts.textInGerman': 'Text in German',
-  'gifts.emptyCategory': 'No keepsakes in this category at the moment.',
-  'gifts.noResults': 'No keepsakes match “{query}”.',
-  'gifts.showAll': 'Show all keepsakes',
   'gifts.empty': 'No keepsakes for sale yet.',
   'detail.back': 'Back',
   'detail.notFound':

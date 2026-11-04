@@ -1,3 +1,4 @@
+import type { Language } from '@sk/domain/shared'
 import type { ReactNode } from 'react'
 
 import { Chip, ToggleButton } from '@heroui/react'
@@ -12,6 +13,8 @@ import { useLocale } from '@/contexts/locale-context'
 export interface ListingCardProps {
   to: '/$lang/gifts/$slug' | '/$lang/tours/$slug'
   slug: string
+  /** The language of the address; the guest's own when left out. */
+  lang?: Language
   name: string
   photo?: string
   /** A card without a price (the public keepsake list, AC54) leaves `fromLabel` and `price` out. */
@@ -77,6 +80,7 @@ export function sameListing(
 export const ListingCard = memo(function ListingCard({
   to,
   slug,
+  lang,
   name,
   photo,
   fromLabel,
@@ -163,7 +167,7 @@ export const ListingCard = memo(function ListingCard({
             </div>
           )
         : (
-            <Link className={contentClass} params={{ lang: language, slug }} to={to}>
+            <Link className={contentClass} params={{ lang: lang ?? language, slug }} to={to}>
               {content}
             </Link>
           )}

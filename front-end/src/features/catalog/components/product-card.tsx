@@ -1,9 +1,12 @@
+import type { Language } from '@sk/domain/shared'
 import { memo } from 'react'
 
 import { ListingCard, sameListing } from '@/components/listing-card'
 
 export interface ProductCardProps {
   slug: string
+  /** The language of the address, when it is not the guest's (a keepsake that has no version in the guest's language). */
+  lang?: Language
   name: string
   photo?: string
   /** "from" label, e.g. "from" / "ab". Left out with `price` on the public list, which shows no price. */

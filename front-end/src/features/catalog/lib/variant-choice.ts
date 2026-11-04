@@ -79,3 +79,48 @@ export function galleryOrder<T>(photos: T[], index: number | undefined): T[] {
 
   return [photos[index], ...photos.slice(0, index), ...photos.slice(index + 1)]
 }
+
+/**
+ * Why a value cannot be picked at all: no combination with it can be picked (sold out or not sold). Unlike
+ * `valueReasons`, other chosen values do not block it, so a guest can switch from Red/S to Blue/L; `settleChoice`
+ * then moves the other options to a combination that exists.
+ */
+export function blockedValues(
+  options: ChoiceOption[],
+  variants: ChoiceVariant[],
+  missing: string,
+): Record<string, Record<string, string>> {
+  return Object.fromEntries(
+    options.map(option => [
+      option.id,
+      Object.fromEntries(
+        option.values.flatMap((value) => {
+          const candidates = variants.filter(v => v.values[option.id] === value.id)
+
+          return candidates.some(v => !v.reason) ? [] : [[value.id, candidates[0]?.reason ?? missing]]
+        }),
+      ),
+    ]),
+  )
+}
+
+/** The choice after picking a value: the combination it makes when that can be picked, else the pickable combination with it that keeps most of the other choices. */
+export function settleChoice(
+  options: ChoiceOption[],
+  variants: ChoiceVariant[],
+  chosen: Chosen,
+  optionId: string,
+  valueId: string,
+): Chosen {
+  const next = pickValue(chosen, optionId, valueId)
+  const exact = chosenVariant(options, variants, next)
+
+  if (exact && !exact.reason)
+    return next
+  const kept = (v: ChoiceVariant) => options.filter(o => v.values[o.id] === chosen[o.id]).length
+  const best = variants
+    .filter(v => !v.reason && v.values[optionId] === valueId)
+    .sort((a, b) => kept(b) - kept(a))[0]
+
+  return best ? { ...best.values } : next
+}

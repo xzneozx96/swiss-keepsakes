@@ -126,7 +126,6 @@ export interface GiftShopperProps {
     label: string
     message: string
     actionLabel: string
-    subcategory?: string
   }
   sheet: { addLabel: string, /** The sheet's add button cannot be pressed: the choice is not one that can be bought. */ addDisabled?: boolean }
   quantity: {
@@ -178,8 +177,8 @@ const highlightIcon: Record<
 
 /**
  * C03 Gift detail in the order of the Airbnb listing page (owner references, Airbnb iOS
- * Jun 2025, screens 36, 38, 42, 45): photos; title; stats row with the laurel badge;
- * seller; highlights; translation notice; About; reviews (laurel rating, swipeable
+ * Jun 2025, screens 36, 38, 42, 45): photos; title and one rating line;
+ * highlights; translation notice; About; reviews (laurel rating, swipeable
  * cards, "Show all" opens the reviews sheet); where to pick it up; then the things to know
  * (pickup date row, cancellation policy, payment). Every choice is made in a bottom
  * sheet opened from the sticky price bar or the pickup date row.
@@ -400,9 +399,6 @@ export function GiftDetail(props: GiftDetailProps | GiftPreviewProps) {
                 </div>
                 <Link
                   className={buttonVariants({ size: 'lg', variant: 'secondary' })}
-                  search={
-                    soldOut.subcategory ? { subcategory: soldOut.subcategory } : {}
-                  }
                   to="/$lang/gifts"
                   params={{ lang: language }}
                 >

@@ -136,33 +136,6 @@ describe('[E6.4] the keepsake page', { timeout: 180_000 }, () => {
     expect(barButton()).toBeNull()
   })
 
-  it('[AC52] AC-2 a combination that is not sold cannot be reached and shows no price', async () => {
-    detail = () => Response.json(keepsake({
-      options: [
-        { id: ids.colour, name: 'Colour', values: [{ id: ids.red, label: 'Red' }, { id: ids.blue, label: 'Blue' }] },
-        { id: ids.size, name: 'Size', values: [{ id: ids.s, label: 'S' }, { id: ids.l, label: 'L' }] },
-      ],
-      variants: [
-        { id: ids.v1, values: { [ids.colour]: ids.red, [ids.size]: ids.s }, photo: null },
-        { id: ids.v2, values: { [ids.colour]: ids.blue, [ids.size]: ids.l }, photo: null },
-      ],
-    }))
-    availability = () => Response.json({ items: [
-      { variantId: ids.v1, priceRappen: 1990, currency: 'CHF', available: 4 },
-      { variantId: ids.v2, priceRappen: 2490, currency: 'CHF', available: 4 },
-    ] })
-    const router = await routerAt('/en/gifts/kapellbruecke-mug')
-    render(<RouterProvider router={router} />)
-
-    const { sheet } = await openSheet()
-
-    // Red is chosen first, so Size L (Red/L) is not sold and Blue/S is not reachable either way.
-    expect(row(sheet, 'L')).toHaveAttribute('aria-disabled', 'true')
-    expect(within(sheet).getByText('L: This combination is not sold')).toBeInTheDocument()
-    expect(within(sheet).getByText(/Add to cart · .*19\.90/).closest('button')).toBeEnabled()
-    expect(document.body.textContent).not.toMatch(/24\.90/)
-  })
-
   it('[AC54] AC-3 the server HTML has the name and description and no price; the price comes after the browser loads the availability', async () => {
     detail = () => Response.json(keepsake())
     const router = await routerAt('/en/gifts/kapellbruecke-mug')
@@ -222,7 +195,24 @@ describe('[E6.4] the keepsake page', { timeout: 180_000 }, () => {
     expect(router.state.matches.some(m => isNotFound(m.error))).toBe(true)
   })
 
-  it('[AC64] AC-5 English text only, in German: the English text shows with the language notice and no German alternate', async () => {
+  it('[AC64] a German address carrying the English slug of a keepsake that has a German version goes to the German slug', async () => {
+    detail = () => Response.json(keepsake({ language: 'de', requestedLanguage: 'de', fallback: false, name: 'Kapellbrücke-Tasse', slug: 'kapellbruecke-tasse', otherSlug: 'kapellbruecke-mug' }))
+    const router = await routerAt('/de/gifts/kapellbruecke-mug?x=1#top')
+
+    expect(router.state.location.pathname).toBe('/de/gifts/kapellbruecke-tasse')
+    expect(router.state.location.search).toEqual({ x: 1 })
+    expect(router.state.location.hash).toBe('top')
+    expect(router.state.matches.some(m => isNotFound(m.error))).toBe(false)
+  })
+
+  it('[AC64] the canonical slug of the language does not redirect', async () => {
+    detail = () => Response.json(keepsake({ language: 'de', requestedLanguage: 'de', fallback: false, name: 'Kapellbrücke-Tasse', slug: 'kapellbruecke-tasse', otherSlug: 'kapellbruecke-mug' }))
+    const router = await routerAt('/de/gifts/kapellbruecke-tasse')
+
+    expect(router.state.location.pathname).toBe('/de/gifts/kapellbruecke-tasse')
+  })
+
+  it('[AC64] AC-5 English text only, asked in German: the address goes to the English version, which shows its text with the language notice and no German alternate', async () => {
     detail = () => Response.json(keepsake({
       language: 'en',
       requestedLanguage: 'de',
@@ -232,10 +222,11 @@ describe('[E6.4] the keepsake page', { timeout: 180_000 }, () => {
     }))
     const router = await routerAt('/de/gifts/kapellbruecke-mug')
 
+    expect(router.state.location.pathname).toBe('/en/gifts/kapellbruecke-mug')
     const html = renderToString(<RouterProvider router={router} />)
 
     expect(html).toContain('A mug with the old bridge.')
-    expect(html).toContain('nur auf Englisch')
+    expect(html).toContain('only available in English')
     expect(html).toMatch(/rel="canonical"[^>]*href="[^"]*\/en\/gifts\/kapellbruecke-mug"/)
     expect(html).not.toMatch(/hrefLang="de"/i)
   })
@@ -261,5 +252,77 @@ describe('[E6.4] the keepsake page', { timeout: 180_000 }, () => {
     expect(await screen.findAllByText(/19\.90/)).not.toHaveLength(0)
     await waitFor(() => expect(barButton()).toBeEnabled())
     expect(availabilityCalls).toBe(2)
+  })
+
+  it('[AC52][AC53] AC-1 picking the sold-out size changes nothing: the choice and the price stay', async () => {
+    detail = () => Response.json(keepsake())
+    const router = await routerAt('/en/gifts/kapellbruecke-mug')
+    render(<RouterProvider router={router} />)
+
+    const { user, sheet } = await openSheet()
+    await user.click(row(sheet, 'L'))
+
+    expect(row(sheet, 'S')).toHaveAttribute('aria-selected', 'true')
+    expect(row(sheet, 'L')).not.toHaveAttribute('aria-selected', 'true')
+    expect(within(sheet).getByText(/Add to cart · .*19\.90/)).toBeInTheDocument()
+  })
+
+  it('[AC52] AC-2 picking Blue moves the size to the one sold with it; Blue/S is never a choice', async () => {
+    detail = () => Response.json(keepsake({
+      options: [
+        { id: ids.colour, name: 'Colour', values: [{ id: ids.red, label: 'Red' }, { id: ids.blue, label: 'Blue' }] },
+        { id: ids.size, name: 'Size', values: [{ id: ids.s, label: 'S' }, { id: ids.l, label: 'L' }] },
+      ],
+      variants: [
+        { id: ids.v1, values: { [ids.colour]: ids.red, [ids.size]: ids.s }, photo: null },
+        { id: ids.v2, values: { [ids.colour]: ids.blue, [ids.size]: ids.l }, photo: null },
+      ],
+    }))
+    availability = () => Response.json({ items: [
+      { variantId: ids.v1, priceRappen: 1990, currency: 'CHF', available: 4 },
+      { variantId: ids.v2, priceRappen: 2490, currency: 'CHF', available: 4 },
+    ] })
+    const router = await routerAt('/en/gifts/kapellbruecke-mug')
+    render(<RouterProvider router={router} />)
+
+    const { user, sheet } = await openSheet()
+    await user.click(row(sheet, 'Blue'))
+
+    expect(row(sheet, 'Blue')).toHaveAttribute('aria-selected', 'true')
+    expect(row(sheet, 'L')).toHaveAttribute('aria-selected', 'true')
+    expect(row(sheet, 'S')).not.toHaveAttribute('aria-selected', 'true')
+    expect(within(sheet).getByText(/Add to cart · .*24\.90/)).toBeInTheDocument()
+    await user.click(row(sheet, 'S'))
+    expect(row(sheet, 'Red')).toHaveAttribute('aria-selected', 'true')
+    expect(within(sheet).getByText(/Add to cart · .*19\.90/)).toBeInTheDocument()
+  })
+
+  it('[AC52] a variant with a photo moves it to the front of the gallery when chosen; a variant without one keeps the order', async () => {
+    detail = () => Response.json(keepsake())
+    availability = () => Response.json({ items: sizeAvailability.map(i => ({ ...i, available: 4 })) })
+    const router = await routerAt('/en/gifts/kapellbruecke-mug')
+    render(<RouterProvider router={router} />)
+
+    const firstPhoto = () => document.querySelector<HTMLImageElement>('img[src*="media.example"]')?.getAttribute('src')
+    const { user, sheet } = await openSheet()
+
+    expect(firstPhoto()).toContain('/a-800')
+    await user.click(row(sheet, 'L'))
+    await waitFor(() => expect(firstPhoto()).toContain('/b-800'))
+    await user.click(row(sheet, 'S'))
+    await waitFor(() => expect(firstPhoto()).toContain('/a-800'))
+  })
+
+  it('[AC52][AC53] a keepsake with no options shows its price after load, no choice in the sheet, and says how many units are left', async () => {
+    detail = () => Response.json(keepsake({ options: [], variants: [{ id: ids.v1, values: {}, photo: null }] }))
+    availability = () => Response.json({ items: [{ variantId: ids.v1, priceRappen: 3900, currency: 'CHF', available: 3 }] })
+    const router = await routerAt('/en/gifts/kapellbruecke-mug')
+    render(<RouterProvider router={router} />)
+
+    const { sheet } = await openSheet()
+
+    expect(within(sheet).getByText(/Add to cart · .*39\.00/)).toBeInTheDocument()
+    expect(sheet.querySelector('#gift-variant')).toBeNull()
+    expect(within(sheet).getByText('3 available')).toBeInTheDocument()
   })
 })
