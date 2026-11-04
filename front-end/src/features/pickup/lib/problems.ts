@@ -1,7 +1,16 @@
+import type { MessageKey } from '@/i18n/en'
+
 import { ApiProblem } from '@/features/data-client/errors'
 
 /** The `errors[].code` the API gives a 422 when the shop already has 100 active pickup points, and the `type` it reads as here. */
 export const pickupLimitType = 'pickup-limit'
+
+/** The copy of each API problem a pickup delete can meet, shown in the confirm dialog. */
+export const pickupDeleteProblemKeys: Partial<Record<string, MessageKey>> = {
+  'pickup-in-use': 'pickup.problem.inUse',
+  'precondition-failed': 'pickup.problem.stale',
+  'not-found': 'pickup.problem.gone',
+}
 
 /**
  * A 422 `validation-failed` whose reason is the 100-point limit reads as its own `type`, `pickup-limit`, so the

@@ -5,9 +5,10 @@ import { useRef } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { useLocale } from '@/contexts/locale-context'
+import { ApiProblem } from '@/features/data-client/errors'
 import { useSubmit } from '@/features/data-client/use-command'
 import { usePickupPlaces } from '@/features/pickup/api/queries'
-import { pickupLimitType } from '@/features/pickup/lib/problems'
+import { pickupDeleteProblemKeys, pickupLimitType } from '@/features/pickup/lib/problems'
 import { useMe } from '@/features/stores/api/queries'
 import { keepsKey } from '@/features/stores/hooks/use-idempotency-key'
 import { currentStore } from '@/features/stores/lib/current-store'
@@ -15,7 +16,7 @@ import { apiEnabled } from '@/lib/api-mode'
 
 /**
  * The data of M14 on the API: the store the person works in, its active points always (the tab badge) and its
- * archived points while the tab is open, plus archive (after a confirm) and restore. `dialog` must be rendered.
+ * archived points while the tab is open, plus archive and delete (each after a confirm) and restore. `dialog` must be rendered.
  */
 export function usePickupPoints(isOpen: boolean) {
   const { t, language } = useLocale()
@@ -24,9 +25,12 @@ export function usePickupPoints(isOpen: boolean) {
   const active = usePickupPlaces(storeId, { archived: false })
   const archived = usePickupPlaces(isOpen ? storeId : undefined, { archived: true })
   const { confirm, dialog } = useConfirm()
+  // The name the toast of a finished delete uses: the point is gone from the list by then.
+  const removedNameRef = useRef('')
   const nameOf = (place: PickupPlace) => pickText(place.name, language).text
   // The confirm dialog shows a refusal of the archive, so the cache stays silent on its error.
   const archiveCommand = useSubmit('pickup', 'archive', { meta: { success: place => t('products.archivedToast', { name: nameOf(place) }), silent: true } })
+  const removeCommand = useSubmit('pickup', 'remove', { meta: { success: () => t('pickup.toast.deleted', { name: removedNameRef.current }), silent: true } })
   const restoreCommand = useSubmit('pickup', 'restore', { meta: { success: place => t('pickup.toast.restored', { name: nameOf(place) }), error: { [pickupLimitType]: 'pickup.problem.limit' } } })
 
   // One key per intent (this action on this row version), kept while a retry is safe, as `useIdempotencyKey` does
@@ -68,6 +72,31 @@ export function usePickupPoints(isOpen: boolean) {
     })
   }
 
+  const remove = (place: PickupPlace) => {
+    if (!storeId || removeCommand.isPending)
+      return
+    removedNameRef.current = nameOf(place)
+    void confirm({
+      title: t('pickup.delete.title', { name: nameOf(place) }),
+      body: t('pickup.delete.body'),
+      confirmLabel: t('pickup.action.delete'),
+      problem: error => t(pickupDeleteProblemKeys[error instanceof ApiProblem ? error.type : ''] ?? 'confirm.failed'),
+      run: () => {
+        const { intent, key } = keyFor('remove', place)
+
+        return removeCommand.submitAsync({ storeId, id: place.id, ifMatch: place.rowVersion, idempotencyKey: key })
+          .then((result) => {
+            settle(intent)
+
+            return result
+          }, (error: Error) => {
+            settle(intent, error)
+            throw error
+          })
+      },
+    })
+  }
+
   const restore = (place: PickupPlace) => {
     if (!storeId)
       return
@@ -79,5 +108,5 @@ export function usePickupPoints(isOpen: boolean) {
     )
   }
 
-  return { storeId, me, active, archived, archive, restore, dialog }
+  return { storeId, me, active, archived, archive, restore, remove, dialog }
 }

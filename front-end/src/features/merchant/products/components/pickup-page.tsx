@@ -90,7 +90,7 @@ export function PickupPage() {
       return <EmptyState icon={PickupIcon} message={t(view.length === 1 && view[0] === 'archived' ? 'products.empty.archived' : 'products.empty.pickup')} />
     }
 
-    return <PickupPoints label={t('pickup.title')} places={showing} onArchive={pickup.archive} onOpen={place => setSheet({ place })} onRestore={pickup.restore} />
+    return <PickupPoints label={t('pickup.title')} places={showing} onArchive={pickup.archive} onDelete={pickup.remove} onOpen={place => setSheet({ place })} onRestore={pickup.restore} />
   }
 
   return (

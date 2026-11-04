@@ -1,4 +1,4 @@
-import type { PickupPlace, PickupPlaceList, PickupPlacePatchBody, PickupPlaceWriteBody } from '@sk/api-contract'
+import type { PickupPlace, PickupPlaceList, PickupPlacePatchBody, PickupPlaceRemoval, PickupPlaceWriteBody } from '@sk/api-contract'
 
 /** A command carries the `Idempotency-Key` of the user's intent (`useIdempotencyKey`), so a retry of it is the same request to the API. */
 export type Keyed<T> = T & { idempotencyKey: string }
@@ -18,4 +18,6 @@ export interface PickupClient {
   save: (input: Keyed<Versioned & PickupPlacePatchBody>) => Promise<PickupPlace>
   archive: (input: Keyed<Versioned>) => Promise<PickupPlace>
   restore: (input: Keyed<Versioned>) => Promise<PickupPlace>
+  /** Deletes the point, active or archived, with its hours. The API refuses with `pickup-in-use` (409) when an order or a handover names it. */
+  remove: (input: Keyed<Versioned>) => Promise<PickupPlaceRemoval>
 }

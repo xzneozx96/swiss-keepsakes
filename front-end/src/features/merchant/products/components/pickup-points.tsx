@@ -3,7 +3,7 @@ import type { PickupPlace } from '@sk/api-contract'
 import { Button } from '@heroui/react'
 import { pickText } from '@sk/domain/shared'
 
-import { ArchiveIcon, ChevronRightIcon, ClockIcon, PickupIcon, RestoreIcon } from '@/components/icons'
+import { ArchiveIcon, ChevronRightIcon, ClockIcon, PickupIcon, RestoreIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { languagesOf } from '@/features/pickup/lib/form'
 import { hoursLine } from '@/features/pickup/lib/hours-line'
@@ -12,12 +12,14 @@ import { LanguageChip } from './status-chips'
 /**
  * M14 Pickup points as M11's third tab: one ticket per point, as the M03 cards. An active point's name opens the
  * editor (its hit area covers the card) and it can be archived; an archived point is not edited, only restored.
+ * Either can be deleted; the API refuses when an order or a handover names the point.
  */
-export function PickupPoints({ places, label, onOpen, onArchive, onRestore }: {
+export function PickupPoints({ places, label, onOpen, onArchive, onDelete, onRestore }: {
   places: PickupPlace[]
   label: string
   onOpen: (place: PickupPlace) => void
   onArchive: (place: PickupPlace) => void
+  onDelete: (place: PickupPlace) => void
   onRestore: (place: PickupPlace) => void
 }) {
   const { t, language } = useLocale()
@@ -68,7 +70,7 @@ export function PickupPoints({ places, label, onOpen, onArchive, onRestore }: {
                     <span className={hours ? 'tabular-nums' : 'text-muted'}>{hours || t('products.place.noHours')}</span>
                   </p>
                   {instructions && <p className="text-pretty text-muted">{instructions}</p>}
-                  <div className="relative mt-1 flex">
+                  <div className="relative mt-1 flex flex-wrap gap-2">
                     {place.archived
                       ? (
                           <Button aria-label={`${t('pickup.action.restore')} ${name}`} className="max-lg:min-h-11" size="sm" variant="secondary" onPress={() => onRestore(place)}>
@@ -82,6 +84,10 @@ export function PickupPoints({ places, label, onOpen, onArchive, onRestore }: {
                             {t('products.action.archive')}
                           </Button>
                         )}
+                    <Button aria-label={`${t('pickup.action.delete')} ${name}`} className="max-lg:min-h-11" size="sm" variant="danger-soft" onPress={() => onDelete(place)}>
+                      <TrashIcon aria-hidden size={16} />
+                      {t('pickup.action.delete')}
+                    </Button>
                   </div>
                 </div>
               </article>

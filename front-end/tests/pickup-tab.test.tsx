@@ -37,6 +37,7 @@ let archivedPoints: ReturnType<typeof point>[]
 let hold: Promise<void> | undefined
 let failNext: boolean
 let refuseRestoreAtLimit: boolean
+let refuseDelete: 'in-use' | 'stale' | undefined
 
 function point(n: number, over: Record<string, unknown> = {}) {
   return pickupPlaceSchema.parse({
@@ -69,6 +70,7 @@ beforeEach(async () => {
   hold = undefined
   failNext = false
   refuseRestoreAtLimit = false
+  refuseDelete = undefined
   vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
     const request = input instanceof Request ? input : new Request(input, init)
     const url = new URL(request.url)
@@ -80,6 +82,16 @@ beforeEach(async () => {
     await hold
     if (call.method === 'GET' && url.pathname === base)
       return Response.json(pickupPlaceListSchema.parse({ items: url.searchParams.get('archived') === 'true' ? archivedPoints : active }))
+    if (call.method === 'DELETE') {
+      const id = url.pathname.replace(`${base}/`, '')
+
+      if (refuseDelete)
+        return Response.json({ type: refuseDelete === 'in-use' ? 'pickup-in-use' : 'precondition-failed', status: refuseDelete === 'in-use' ? 409 : 412, title: 'x' }, { status: refuseDelete === 'in-use' ? 409 : 412, headers: { 'content-type': 'application/problem+json' } })
+      active = active.filter(p => p.id !== id)
+      archivedPoints = archivedPoints.filter(p => p.id !== id)
+
+      return Response.json({ id })
+    }
     const [, id, action] = url.pathname.replace(`${base}/`, '').match(/^([^/]+)\/(archive|restore)$/) ?? []
 
     if (action === 'archive') {
@@ -231,6 +243,71 @@ describe('[E6.6][AC26] M14 the Pickup points page on the API', { timeout: 30_000
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `${base}/0198a000-0000-7000-8000-0000000000d1/archive`, ifMatch: '3' })
     expect(await screen.findByText('No pickup points yet.')).toBeInTheDocument()
+  })
+
+  it('[S8-PICKUP-DELETE] delete asks first with the point named, sends DELETE with the row version, and the ticket leaves', async () => {
+    const toasted = vi.spyOn(toast, 'success')
+
+    active = [point(1), point(2)]
+    await renderTab()
+    await screen.findByText('Point 1')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Delete Point 1' }))
+    expect(writes()).toHaveLength(0)
+    const dialog = await screen.findByRole('alertdialog')
+
+    expect(within(dialog).getByText('Delete Point 1?')).toBeInTheDocument()
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]).toMatchObject({ method: 'DELETE', path: `${base}/0198a000-0000-7000-8000-0000000000d1`, ifMatch: '3' })
+    await waitFor(() => expect(screen.queryByText('Point 1')).not.toBeInTheDocument())
+    expect(screen.getByText('Point 2')).toBeInTheDocument()
+    expect(toasted).toHaveBeenCalledWith('Point 1 deleted')
+  })
+
+  it('[S8-PICKUP-DELETE] cancelling the delete dialog sends nothing', async () => {
+    active = [point(1)]
+    await renderTab()
+    await screen.findByText('Point 1')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Delete Point 1' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Cancel' }))
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(writes()).toHaveLength(0)
+    expect(screen.getByText('Point 1')).toBeInTheDocument()
+  })
+
+  it('[S8-PICKUP-DELETE] a point an order names (409 pickup-in-use) stays and the dialog says to archive it instead', async () => {
+    active = [point(1)]
+    refuseDelete = 'in-use'
+    await renderTab()
+    await screen.findByText('Point 1')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Delete Point 1' }))
+    const dialog = await screen.findByRole('alertdialog')
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+    expect(await within(dialog).findByText('An order or a handover names this pickup point, so it can’t be deleted. Archive it instead.')).toBeInTheDocument()
+    expect(screen.getByText('Point 1')).toBeInTheDocument()
+  })
+
+  it('[S8-PICKUP-DELETE] an archived point can be deleted too', async () => {
+    archivedPoints = [point(1, { archived: true })]
+    await renderTab()
+    await screen.findByText('No pickup points yet.')
+
+    await userEvent.click(screen.getByRole('button', { name: /^Status/ }))
+    await userEvent.click(await screen.findByRole('checkbox', { name: /Archived/ }))
+    await userEvent.keyboard('{Escape}')
+    await userEvent.click(within(await ticket('Point 1')).getByRole('button', { name: 'Delete Point 1' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]).toMatchObject({ method: 'DELETE', ifMatch: '3' })
+    await waitFor(() => expect(screen.queryByText('Point 1')).not.toBeInTheDocument())
   })
 
   it('the archived list shows Restore, not an edit button, and Restore sends the row version', async () => {

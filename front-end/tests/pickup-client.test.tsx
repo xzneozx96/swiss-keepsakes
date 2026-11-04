@@ -124,6 +124,21 @@ describe('[E6.6][AC26] the pickup point commands', () => {
     ])
   })
 
+  it('delete sends one keyed DELETE with the row version, and a refused delete throws an ApiProblem pickup-in-use', async () => {
+    answer = () => Response.json({ id: placeId })
+    const { result } = renderHook(() => useCommand('pickup', 'remove'), { wrapper })
+
+    await act(async () => {
+      await expect(result.current.mutateAsync({ storeId, id: placeId, ifMatch: 4, idempotencyKey: 'k5' })).resolves.toEqual({ id: placeId })
+    })
+    expect(calls.filter(c => c.method !== 'GET')).toEqual([{ method: 'DELETE', path: `/api/store/${storeId}/pickup-places/${placeId}`, key: 'k5', ifMatch: '4', body: undefined }])
+
+    answer = () => Response.json(problemSchema.parse({ type: 'pickup-in-use', status: 409, title: 'x', instance: '/x', requestId: 'r' }), { status: 409 })
+    await act(async () => {
+      await expect(result.current.mutateAsync({ storeId, id: placeId, ifMatch: 4, idempotencyKey: 'k6' })).rejects.toMatchObject({ status: 409, type: 'pickup-in-use' })
+    })
+  })
+
   it('a stale save throws an ApiProblem with the problem type precondition-failed', async () => {
     answer = () => Response.json(problemSchema.parse({ type: 'precondition-failed', status: 412, title: 'x', instance: '/x', requestId: 'r' }), { status: 412 })
     const { result } = renderHook(() => useCommand('pickup', 'save'), { wrapper })

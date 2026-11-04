@@ -38,5 +38,10 @@ export function createPickupClient(): PickupClient {
         ...keyed(idempotencyKey),
         params: { path: { storeId, placeId: id }, header: { 'If-Match': String(ifMatch) } },
       })),
+    remove: async ({ storeId, id, ifMatch, idempotencyKey }) =>
+      answer((await loadClient()).DELETE('/api/store/{storeId}/pickup-places/{placeId}', {
+        ...keyed(idempotencyKey),
+        params: { path: { storeId, placeId: id }, header: { 'If-Match': String(ifMatch) } },
+      })),
   }
 }

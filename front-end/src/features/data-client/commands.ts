@@ -126,6 +126,7 @@ export const commandAffects: {
     save: [queryKeys.pickup.list],
     archive: [queryKeys.pickup.list],
     restore: [queryKeys.pickup.list],
+    remove: [queryKeys.pickup.list],
   },
   places: {
     create: [queryKeys.places.list, queryKeys.places.pin],
