@@ -10,6 +10,11 @@ export const Route = createFileRoute('/lab/')({
 
 const experiments = [
   {
+    to: '/lab/editor-header' as const,
+    title: 'One editor header for every merchant editor: three options (for the owner to pick)',
+    note: 'The keepsake header, the story bar and the floating save bar folded into one: A one line, B the name then a pinned white bar, C steps in the header. Keepsake (explicit save), story (autosave, DE incomplete) and place (unsaved changes) at desktop and 375 px (04.11.2026).',
+  },
+  {
     to: '/lab/keepsake-variant-design' as const,
     title: 'Keepsake variants, v2: three calmer designs (options for the owner to pick)',
     note: 'After B1 to B3 were turned down as too dense: V1 a quiet grouped list that opens in place, V2 one variant at a time like a settings page, V3 a sentence (“Sell Medium Edelweiss for CHF 39”) over quiet tiles. Laptop and phone width, a sold combination, invalid SKU and price, a refused archive and a new keepsake (31.10.2026).',
