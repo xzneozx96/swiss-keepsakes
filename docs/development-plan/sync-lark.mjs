@@ -409,9 +409,14 @@ function deleteRetired(plan, state, ids, force) {
 // <slug> go out as {slug} and any other angle bracket as a guillemet. The plan keeps its own text.
 export const larkSafe = (text) => text.replace(/<([^<>\n]*)>/g, "{$1}").replace(/</g, "‹").replace(/>/g, "›");
 
+// Lark refuses a description over 3000 characters or 10000 bytes. A longer story text is cut, so the depends,
+// acceptance and source lines always arrive; the plan keeps the full text.
+const DESCRIPTION_CHARS = 3000;
+const DESCRIPTION_BYTES = 10000;
+const CUT_NOTE = " … (full text in the plan)";
+
 export function describe(story) {
-  return larkSafe([
-    story.story,
+  const tail = [
     "",
     `Side: ${story.side}`,
     `Depends on: ${story.depends || "nothing"}`,
@@ -420,7 +425,15 @@ export function describe(story) {
     story.acceptance,
     "",
     "Source: docs/development-plan/delivery-plan.md",
-  ].join("\n"));
+  ].join("\n");
+  const fits = (text) => [...text].length <= DESCRIPTION_CHARS && Buffer.byteLength(text) <= DESCRIPTION_BYTES;
+  const full = larkSafe(`${story.story}\n${tail}`);
+  if (fits(full)) return full;
+  const chars = [...larkSafe(story.story)];
+  const safeTail = larkSafe(`\n${tail}`);
+  let keep = Math.max(0, DESCRIPTION_CHARS - [...safeTail].length - [...CUT_NOTE].length);
+  while (keep > 0 && !fits(`${chars.slice(0, keep).join("")}${CUT_NOTE}${safeTail}`)) keep -= 50;
+  return `${chars.slice(0, Math.max(0, keep)).join("")}${CUT_NOTE}${safeTail}`;
 }
 
 export function title(story) {

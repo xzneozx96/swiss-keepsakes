@@ -411,3 +411,14 @@ test("title and describe send no angle brackets, which blank the task in the Lar
   for (const text of [title(story), describe(story)]) assert.doesNotMatch(text, /[<>]/);
   assert.match(title(story), /place=\{slug\}/);
 });
+
+test("describe stays inside Lark's description limit and keeps depends, acceptance and source (E4.13)", () => {
+  const story = { id: "E4.13", story: "Home ".repeat(900), side: "FE", depends: "E4.4, E6.4", acceptance: "No price appears (AC54).", adrs: "" };
+  const text = describe(story);
+  assert.ok([...text].length <= 3000, `${[...text].length} characters`);
+  assert.ok(Buffer.byteLength(text) <= 10000);
+  assert.match(text, /Depends on: E4\.4, E6\.4/);
+  assert.match(text, /No price appears \(AC54\)\./);
+  assert.match(text, /Source: docs\/development-plan\/delivery-plan\.md/);
+  assert.match(text, /full text in the plan/);
+});
