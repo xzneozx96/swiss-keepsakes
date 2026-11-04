@@ -1,6 +1,6 @@
 import type { PublicKeepsakeList, PublicLanguage } from '@sk/api-contract'
 import { answer, timeout } from '@/features/data-client/api-transport'
-import { apiOrigin } from './api-origin'
+import { apiOrigin } from '@/lib/api-origin'
 
 /** The published keepsakes in one language. A failed read throws; the route turns that into its error state. */
 export async function fetchKeepsakeList(lang: PublicLanguage): Promise<PublicKeepsakeList> {

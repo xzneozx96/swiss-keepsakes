@@ -314,7 +314,7 @@ describe('[E4.13][AC95] the demo layer is gone from the home', () => {
 
   it('the home hooks take their query keys from the shared key file, never inline', () => {
     expect(read('features/home/hooks/use-victorinox-items.ts')).not.toMatch(/queryKey: \[\s*'/)
-    expect(read('features/home/hooks/use-victorinox-items.ts')).toContain('queryKeys.keepsakes.publicList')
+    expect(read('features/home/hooks/use-victorinox-items.ts')).toContain('guestKeepsakeList')
   })
 
   it('the components that only the old home drew are deleted', () => {

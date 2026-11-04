@@ -1,5 +1,5 @@
 import type { SearchKind, SearchSources } from '@/features/search/lib/search'
-import { createMemoryHistory, createRootRoute, createRoute, createRouter, RouterProvider } from '@tanstack/react-router'
+import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -19,6 +19,9 @@ const full: SearchSources = {
   tours: [tourCard({ title: 'Old town walk', slug: 'old-town-walk', interests: ['food-drink'] })],
   keepsakes: [keepsakeCard({ name: 'Lion knife', slug: 'lion-knife' })],
 }
+
+// The route reads its lists through this hook; the tests below give it the fixtures and keep the route, its `?q=` and its screen real.
+vi.mock('@/features/search/api/search-reads', () => ({ useSearchSources: () => ({ sources: full, failed: [], isLoading: false }) }))
 
 interface Options {
   sources?: SearchSources
@@ -191,6 +194,27 @@ describe('[E4.14][AC54] no price, noindex', () => {
   it('ac-5: the route sends noindex, renders in the browser only', () => {
     expect(searchRoute.options.ssr).toBe(false)
     expect(searchRoute.options.head?.({} as never)).toMatchObject(noIndexHead())
+  })
+})
+
+describe('[E4.14][AC94] the route binds the field to ?q=', () => {
+  it('ac-4: /en/search?q=lion opens with "lion" in the field and its results listed', async () => {
+    const root = createRootRoute({ component: () => (
+      <LocaleProvider>
+        <Outlet />
+      </LocaleProvider>
+    ) })
+    const search = searchRoute.update({ getParentRoute: () => root, path: '/$lang/search' } as never)
+    const pages = ['/$lang/map', '/$lang/stories/$slug', '/$lang/tours/$slug', '/$lang/gifts/$slug', '/$lang/plan'].map(path => createRoute({ getParentRoute: () => root, path, component: () => null }))
+    const router = createRouter({ routeTree: root.addChildren([search, ...pages]), history: createMemoryHistory({ initialEntries: ['/en/search?q=lion'] }) })
+
+    render(<RouterProvider router={router} />)
+
+    expect(await screen.findByRole('searchbox')).toHaveValue('lion')
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('3 results for “lion”'))
+    expect(within(screen.getByRole('list', { name: /results/i })).getAllByRole('link').map(link => link.getAttribute('href'))).toEqual(
+      expect.arrayContaining(['/en/map?place=lion-monument', '/en/stories/lion-story', '/en/gifts/lion-knife']),
+    )
   })
 })
 

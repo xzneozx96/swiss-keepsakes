@@ -6,6 +6,7 @@ import { safeHref } from '@sk/domain/shared'
 import { Fragment, useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
+import { pickVariant, widestVariant } from '@/lib/pick-variant'
 import { headingsOf } from '../lib/story-body'
 import { sectionAnchor } from './article-contents'
 import { AudioPlayer } from './audio-player'
@@ -65,9 +66,7 @@ function Inlines({ nodes, places, language }: { nodes: readonly Inline[] | undef
 
 /** The 640 px copy when the image has one (the column is at most about 560 px), else the largest copy, else the original. */
 function imageSrc(url: string, variants: Variants) {
-  const widest = [...variants].sort((a, b) => a.width - b.width)
-
-  return (widest.find(v => v.width >= 640) ?? widest.at(-1))?.url ?? url
+  return (pickVariant(variants, 640) ?? widestVariant(variants))?.url ?? url
 }
 
 function Figure({ children, caption }: { children: React.ReactNode, caption: string }) {

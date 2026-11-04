@@ -4,6 +4,7 @@ import type { MessageKey } from '@/i18n/en'
 
 import { isEmptyDescription } from '@sk/domain/content'
 import { formatMoney } from '@sk/domain/shared'
+import { pickVariant } from '@/lib/pick-variant'
 
 /**
  * What the editor holds while it is typed: the name is a string for every language, empty when there is none. The
@@ -90,9 +91,7 @@ export function toRappen(francs: number | undefined): number | undefined {
 
 /** The smallest resized copy that is at least `width` wide, else the original; undefined until the file is ready. */
 export function photoSrc(media: Pick<Media, 'publicUrl' | 'variants'>, width: number): string | undefined {
-  const variant = [...media.variants].sort((a, b) => a.width - b.width).find(v => v.width >= width)
-
-  return variant?.url ?? media.publicUrl ?? undefined
+  return pickVariant(media.variants, width)?.url ?? media.publicUrl ?? undefined
 }
 
 export type StatusTone = 'success' | 'warning' | 'neutral'

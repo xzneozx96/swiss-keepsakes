@@ -7,7 +7,7 @@ import type { MessageKey } from '@/i18n/en'
 
 import { isEmptyDescription } from '@sk/domain/content'
 import { formatMoney, pickText } from '@sk/domain/shared'
-import { photoCopy } from './photo-copy'
+import { pickVariant } from '@/lib/pick-variant'
 import { blockedValues, chosenVariant, galleryOrder, valueReasons } from './variant-choice'
 
 type Translate = (key: MessageKey, vars?: Record<string, string | number>) => string
@@ -36,7 +36,7 @@ export function noReviews(t: Translate, name: string): ListingReviewsProps {
   }
 }
 
-export function galleryLabelsOf(t: Translate, name: string): GiftPageProps['galleryLabels'] {
+function galleryLabelsOf(t: Translate, name: string): GiftPageProps['galleryLabels'] {
   return {
     gallery: t('gallery.label', { name }),
     photo: (n, count) => t('gallery.photo', { n, count }),
@@ -51,7 +51,7 @@ function mediaSrc(media: Pick<Media, 'publicUrl' | 'variants'> | null | undefine
   if (!media)
     return undefined
 
-  return photoCopy(media.variants, GALLERY_WIDTH) ?? media.publicUrl ?? undefined
+  return pickVariant(media.variants, GALLERY_WIDTH)?.url ?? media.publicUrl ?? undefined
 }
 
 const forSale = (variant: Product['variants'][number]) => variant.status === 'published'
@@ -163,7 +163,7 @@ export type AvailabilityView
   = | { state: 'loading' | 'failed' }
     | { state: 'ready', byVariant: ReadonlyMap<string, { priceRappen: number, available: number }> }
 
-const photoSrc = (photo: PublicKeepsakePhoto) => photoCopy(photo.variants, GALLERY_WIDTH) ?? photo.url
+const photoSrc = (photo: PublicKeepsakePhoto) => pickVariant(photo.variants, GALLERY_WIDTH)?.url ?? photo.url
 
 /** The description as the renderer's rich-text node. The contract types a node's children as unknown, so the shape is read here. */
 export function richNodeOf(value: unknown): RichNode {

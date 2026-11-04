@@ -1,8 +1,9 @@
 import type { PublicStory } from '@sk/api-contract'
+import type { DataClient } from '@/features/data-client'
 
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
@@ -10,14 +11,21 @@ import { describe, expect, it, vi } from 'vitest'
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
 import { StoryPage } from '@/features/content/components/story-page'
 import { DataClientProvider } from '@/features/data-client'
-import { DemoProvider } from '@/features/demo'
-import { startSeedDemo } from '@/features/demo/data-client'
 import { publicStory } from './support/public-story'
 import { storyCard } from './support/story-cards'
 
 const api = vi.hoisted(() => ({ loadPublicStory: vi.fn() }))
 
 vi.mock('@/features/content/api/public-story', () => api)
+// The header's cart button reads the demo store, which these blocks do not use.
+vi.mock('@/components/layout/cart-button', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/components/layout/cart-button')>()
+
+  return { ...actual, CartButton: () => null }
+})
+
+// The page's onboarding card asks for a client, but a server render runs no query: an empty one, and no demo store.
+const NO_CALLS = {} as DataClient
 
 type Keepsake = PublicStory['keepsakes'][number]
 
@@ -31,15 +39,13 @@ function keepsake(over: Partial<Keepsake> & { name: string, slug: string }): Kee
 }
 
 async function html(url: string, story: PublicStory) {
-  const demo = startSeedDemo()
+  const queryClient = new QueryClient()
   const root = createRootRoute({
     component: () => (
-      <QueryClientProvider client={demo.queryClient}>
-        <DataClientProvider client={demo.dataClient}>
+      <QueryClientProvider client={queryClient}>
+        <DataClientProvider client={NO_CALLS}>
           <LocaleProvider>
-            <DemoProvider store={demo.store}>
-              <Outlet />
-            </DemoProvider>
+            <Outlet />
           </LocaleProvider>
         </DataClientProvider>
       </QueryClientProvider>
@@ -107,6 +113,15 @@ describe('[E4.4][AC33] related stories', () => {
     expect(out).toMatch(/href="\/en\/stories\/pier-food"/)
     expect(out).toMatch(/href="\/de\/stories\/seebummel"/)
     expect(out).toContain('Lake walk')
+  })
+
+  it('[AC-3] four related stories show the first three', async () => {
+    const related = ['one', 'two', 'three', 'four'].map(slug => storyCard({ title: `Story ${slug}`, slug }))
+    const out = await html('/en/stories/lake-day', publicStory({ related } as Partial<PublicStory>))
+
+    expect(out.match(/href="\/en\/stories\/(one|two|three|four)"/g)).toHaveLength(3)
+    expect(out).toContain('Story three')
+    expect(out).not.toContain('Story four')
   })
 
   it('[AC-3] no related stories draws no heading', async () => {

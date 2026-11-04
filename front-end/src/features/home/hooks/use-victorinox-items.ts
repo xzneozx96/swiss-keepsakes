@@ -1,10 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { useLocale } from '@/contexts/locale-context'
-import { fetchKeepsakeList } from '@/features/catalog/api/keepsakes'
+import { guestKeepsakeList } from '@/features/catalog/api/keepsake-list-query'
 import { toKeepsakeCard } from '@/features/catalog/lib/keepsake-card'
-import { fromApi } from '@/features/data-client/api-transport'
-import { queryKeys } from '@/features/data-client/query-keys'
 import { apiEnabled } from '@/lib/api-mode'
 
 /**
@@ -15,10 +13,8 @@ import { apiEnabled } from '@/lib/api-mode'
 export function useVictorinoxItems() {
   const { language, t } = useLocale()
   const { data, isPending, isError, refetch } = useQuery({
-    ...fromApi,
-    queryKey: [...queryKeys.keepsakes.publicList, language],
+    ...guestKeepsakeList(language),
     enabled: apiEnabled,
-    queryFn: () => fetchKeepsakeList(language),
     // The shipped showcase has no sold-out state, so a sold-out keepsake is left out.
     select: list => list.items.filter(item => !item.soldOut).map(item => toKeepsakeCard(item, t)),
   })

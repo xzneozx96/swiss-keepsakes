@@ -112,19 +112,12 @@ describe('[E4.14][AC54][AC90][AC94] scoreTitle: equal 4, whole-word prefix 3, pr
   })
 })
 
-describe('[E4.14][AC54][AC90][AC94] the matcher adds no filter of its own, and no row has a price', () => {
-  it('ac-4 the matcher returns only what the lists hold (the public reads omit hidden rows, see the API tests), and no row has a price', () => {
-    // The public reads already omit an expired event pin, a draft or hidden pin, and an unpublished or archived keepsake.
-    const s: SearchSources = {
-      ...none,
-      pins: [mapItem({ title: 'Winter market' })],
-      keepsakes: [keepsakeCard({ name: 'Lucerne knife' })],
-    }
-
-    expect(searchAll(s, 'old event')).toEqual([])
-    expect(searchAll(s, 'unpublished mug')).toEqual([])
-
-    const rows = searchAll({ ...s, keepsakes: [{ ...keepsakeCard({ name: 'Paid knife' }), priceRappen: 2500, currency: 'CHF', price: 25 } as never] }, 'knife')
+// Hidden rows are not the matcher's business: the public reads leave them out, and the API integration tests cover that
+// (api/test/integration/content-pin-dates.test.ts: an ended, a draft and a hidden pin are never listed;
+// catalog-public-keepsakes.test.ts: an unpublished and an archived keepsake are not listed).
+describe('[E4.14][AC54][AC90][AC94] a result row carries no price', () => {
+  it('ac-4 a keepsake that came with a price still gives a row with the seven search fields and no price', () => {
+    const rows = searchAll({ ...none, keepsakes: [{ ...keepsakeCard({ name: 'Paid knife' }), priceRappen: 2500, currency: 'CHF', price: 25 } as never] }, 'knife')
 
     expect(rows).toHaveLength(1)
     expect(Object.keys(rows[0]!).sort()).toEqual(['interests', 'key', 'kind', 'link', 'photoKey', 'photoUrl', 'title'])
