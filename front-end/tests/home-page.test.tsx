@@ -58,6 +58,7 @@ const tours = [tour(1, 'Pilatus above the city', 'multi_day'), tour(2, 'Old town
 const photo = { url: 'https://cdn.test/swan.jpg', variants: [{ width: 320, url: 'https://cdn.test/swan-320.webp' }, { width: 800, url: 'https://cdn.test/swan-800.webp' }] }
 const swan: PublicKeepsakeCard = { id: id(200), slug: 'victorinox-swan', name: 'Victorinox Swan', cover: photo, soldOut: false, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en', 'de'] }
 const bridge: PublicKeepsakeCard = { id: id(201), slug: 'victorinox-kapellbruecke', name: 'Victorinox Kapellbrücke', cover: null, soldOut: true, language: 'de', requestedLanguage: 'en', fallback: true, availableLanguages: ['de'] }
+const champ: PublicKeepsakeCard = { id: id(203), slug: 'swisschamp', name: 'Swisschamp', cover: photo, soldOut: false, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
 const lion: PublicKeepsakeCard = { id: id(202), slug: 'victorinox-lion', name: 'Victorinox Löwe', cover: null, soldOut: false, language: 'de', requestedLanguage: 'en', fallback: true, availableLanguages: ['de'] }
 
 type DataClient = ReturnType<typeof startSeedDemo>['dataClient']
@@ -109,7 +110,7 @@ function textOf(html: string) {
 beforeEach(() => {
   localStorage.clear()
   resetAnswersStoreForTests()
-  vi.mocked(fetchKeepsakeList).mockReset().mockResolvedValue({ items: [swan, bridge, lion] })
+  vi.mocked(fetchKeepsakeList).mockReset().mockResolvedValue({ items: [swan, bridge, lion, champ] })
   vi.mocked(loadHomeRead).mockReset().mockImplementation(async lang => ({ pins: [pin, mustVisit], categories: [water], tiles: serviceTiles([water], [pin, mustVisit], lang), tours }))
   vi.mocked(fetchMapPins).mockReset().mockResolvedValue([pin])
   vi.mocked(fetchMapCategories).mockReset().mockResolvedValue([water])
@@ -273,6 +274,8 @@ describe('[E4.13][AC54] the Victorinox showcase reads the public keepsake list',
     expect(swanLink).toHaveAttribute('href', '/en/gifts/victorinox-swan')
     // The tile draws the shipped cut-out art, not the cover photo.
     expect(swanLink.querySelector('img')?.getAttribute('src')).not.toContain('cdn.test')
+    // A slug with no art draws the cover photo in the same slot, named by the keepsake.
+    expect(within(screen.getByRole('link', { name: /Swisschamp/ })).getByRole('img', { name: 'Swisschamp' })).toHaveAttribute('src', 'https://cdn.test/swan-800.webp')
     // A keepsake only in German links to its own German address (ADR-002).
     expect(screen.getByRole('link', { name: /Löwe/ })).toHaveAttribute('href', '/de/gifts/victorinox-lion')
     // The shipped showcase has no sold-out state, so a sold-out keepsake is left out.
