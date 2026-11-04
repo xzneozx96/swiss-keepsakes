@@ -13,8 +13,16 @@ import { DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
 
+const view = vi.hoisted(() => ({ wide: true }))
+
+vi.mock('@/hooks/use-is-wide', () => ({ useIsWide: () => view.wide }))
+
 const DELETE = { id: 'delete', label: 'Delete keepsake', icon: TrashIcon, isDanger: true }
 const HIDE = { id: 'hide', label: 'Hide from the map', icon: HiddenIcon }
+
+beforeEach(() => {
+  view.wide = true
+})
 
 function renderHeader(props: Partial<EditorHeaderProps> = {}) {
   const handlers = { onBack: vi.fn(), onAction: vi.fn(), onPrimary: vi.fn() }
@@ -92,14 +100,23 @@ describe('the shared editor header', () => {
     expect(onAction).toHaveBeenCalledWith('delete')
   })
 
-  it('the step arrows call the editor, and a missing handler leaves its arrow off', async () => {
+  it('the step arrows call the editor, and an arrow shows only with its handler', async () => {
     const onNext = vi.fn()
 
     renderHeader({ steps: { onNext } })
 
-    expect(screen.getByRole('button', { name: 'Previous step' })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: 'Previous step' })).toBeNull()
     await userEvent.click(screen.getByRole('button', { name: 'Next' }))
     expect(onNext).toHaveBeenCalledOnce()
+  })
+
+  it('phones: the switch and the arrows leave the header (the page and the step line have them), the short label shows', () => {
+    view.wide = false
+    renderHeader({ languageSwitch: <span>EN | DE</span>, steps: { onNext: vi.fn() }, primary: { label: 'Review and publish', shortLabel: 'Review', onPress: vi.fn() } })
+
+    expect(screen.queryByText('EN | DE')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Next' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Review and publish' })).toHaveTextContent('Review')
   })
 
   it('the red action and the icon buttons have one size at every width (owner, 04.11.2026)', () => {

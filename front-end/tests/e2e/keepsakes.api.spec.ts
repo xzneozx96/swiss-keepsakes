@@ -36,7 +36,8 @@ async function storeWithOwner(browser: Browser) {
   return owner
 }
 
-const bar = (page: Page) => page.getByTestId('step-bar')
+/** The shared editor header: the save line and the red action (Next while creating). */
+const bar = (page: Page) => page.locator('[data-editor-header]')
 
 test('[T-005][T-008] creates a keepsake in one request from Review and publish and opens the saved editor there', async ({ browser }) => {
   test.setTimeout(180_000)

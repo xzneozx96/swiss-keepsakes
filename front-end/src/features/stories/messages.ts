@@ -44,7 +44,6 @@ export const storiesMerchantEn = {
   'merchantStories.loading': 'Loading stories',
   'storyEditor.back.toStories': 'Back to Stories',
   'storyEditor.back.toWriting': 'Back to writing',
-  'storyEditor.more': 'More actions',
   'storyEditor.menu.delete': 'Delete story',
   'storyEditor.language.en': 'English',
   'storyEditor.language.de': 'Deutsch',

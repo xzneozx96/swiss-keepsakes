@@ -1,5 +1,6 @@
 import { Skeleton } from '@heroui/react'
 
+import { EditorHeaderSkeleton } from '@/components/layout/editor-header'
 import { BAR_PULL_UP } from '@/components/layout/notice-aware-bar'
 import { useLocale } from '@/contexts/locale-context'
 
@@ -69,19 +70,16 @@ export function StepBodySkeleton() {
 }
 
 /**
- * The stepped editor's shape (a saved keepsake and a new one): the header with the back arrow, the title and the status
- * chip, the step list on a laptop (a step line and a progress bar on a phone), and the blocks of the first step.
+ * The stepped editor's shape (a saved keepsake and a new one): the shared editor header, the full language switch on a
+ * phone, the step list on a laptop (a step line and a progress bar on a phone), and the blocks of the first step.
  */
 export function StepEditorSkeleton() {
   const { t } = useLocale()
 
   return (
     <div aria-busy="true" aria-label={t('keepsakes.loading')} className="flex min-w-0 flex-col gap-5">
-      <div className="flex items-center gap-3">
-        <Skeleton className="size-10 shrink-0 rounded-full max-lg:hidden" />
-        <Skeleton className="h-8 w-56 rounded-lg" />
-        <Skeleton className="h-7 w-20 shrink-0 rounded-full" />
-      </div>
+      <EditorHeaderSkeleton />
+      <Skeleton className="h-9 w-full rounded-full lg:hidden" />
       <div className="flex min-w-0 flex-col gap-5 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start lg:gap-8">
         <div className="hidden flex-col gap-3 lg:flex">
           {[0, 1, 2].map(row => (

@@ -245,6 +245,7 @@ export const keepsakesEn = {
   'keepsakes.variants.incomplete.one': '1 variant needs a price or a valid code.',
   'keepsakes.variants.incomplete.other': '{count} variants need a price or a valid code.',
   'keepsakes.review.saveDraft': 'Save as draft',
+  'keepsakes.review.short': 'Review',
 
   'keepsakes.state.missingOptions': 'Option names missing',
   'keepsakes.variants.finishOption': 'Finish the option with Done first.',
@@ -317,6 +318,7 @@ export const keepsakesEn = {
 
   'keepsakes.status.archived': 'Archived',
   'keepsakes.remove.action': 'Delete',
+  'keepsakes.remove.header': 'Delete keepsake',
   'keepsakes.remove.deleteTitle': 'Delete {name}?',
   'keepsakes.remove.deleteBody': 'It can’t be undone. Its photos stay in your library.',
   'keepsakes.remove.deleteConfirm': 'Delete',

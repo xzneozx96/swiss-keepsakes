@@ -8,6 +8,7 @@ import type { DetailCardId } from './story-details-panel'
 
 import { useState } from 'react'
 
+import { BELOW_BAR_TOP } from '@/components/layout/notice-aware-bar'
 import { PageTabs } from '@/components/page-tabs'
 import { useLocale } from '@/contexts/locale-context'
 import { useIsWide } from '@/hooks/use-is-wide'
@@ -107,11 +108,11 @@ export function StoryReviewScreen({ storeId, groupEditor, language, version, edi
 
   return (
     <div className="-mx-4 grid grid-cols-[minmax(0,1fr)_440px] lg:-mx-8">
-      <section aria-label={t('storyPublish.tab.preview')} className="sticky top-16 flex h-[calc(100dvh-4rem)] flex-col items-center gap-3 self-start bg-default/50 px-6 py-5">
+      <section aria-label={t('storyPublish.tab.preview')} className={`sticky ${BELOW_BAR_TOP} flex h-[calc(100dvh-4rem-var(--merchant-notice-height,0px))] flex-col items-center gap-3 self-start bg-default/50 px-6 py-5`}>
         <p className="text-sm text-muted">{t('storyPublish.preview.hint')}</p>
         {preview}
       </section>
-      <aside aria-label={t('storyPublish.panel.label')} className="sticky top-16 flex h-[calc(100dvh-4rem)] flex-col gap-4 self-start overflow-y-auto border-s border-separator bg-background p-5">
+      <aside aria-label={t('storyPublish.panel.label')} className={`sticky ${BELOW_BAR_TOP} flex h-[calc(100dvh-4rem-var(--merchant-notice-height,0px))] flex-col gap-4 self-start overflow-y-auto border-s border-separator bg-background p-5`}>
         <div className="flex flex-col gap-4 rounded-3xl bg-surface p-5 shadow-surface">
           {card('card')}
           <hr className="border-separator" />

@@ -1,5 +1,7 @@
 import { Skeleton } from '@heroui/react'
 
+import { EditorHeaderSkeleton } from '@/components/layout/editor-header'
+
 const card = 'flex flex-col gap-4 rounded-3xl bg-surface p-5 shadow-surface'
 
 /** Back link, title with its sub-line, and the status chips of a detail screen. */
@@ -151,13 +153,13 @@ export function EditorFormSkeleton({ cards = 2 }: { cards?: number }) {
 }
 
 /**
- * A stepped editor (`components/step-layout.tsx`) while it loads: the header, the step list on the left from 1024 px
+ * A stepped editor (`components/step-layout.tsx`) while it loads: the shared editor header, the step list on the left from 1024 px
  * (a numbered mark over two lines per step), the step bar on phones (title, All steps, progress), and the step's form cards on the right.
  */
 export function StepEditorSkeleton({ steps = 6, cards = 2 }: { steps?: number, cards?: number }) {
   return (
     <div aria-hidden className="flex flex-col gap-5 lg:gap-6">
-      <DetailHeaderSkeleton chips={1} />
+      <EditorHeaderSkeleton />
       <div className="flex min-w-0 flex-col gap-5 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start lg:gap-8">
         <ol className="hidden flex-col gap-2 lg:flex">
           {Array.from({ length: steps }, (_, i) => (

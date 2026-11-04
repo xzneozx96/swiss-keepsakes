@@ -9,6 +9,7 @@ import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
 import { BubbleMenu } from '@tiptap/react/menus'
 import { useEffect, useRef, useState } from 'react'
 
+import { BELOW_BAR_TOP } from '@/components/layout/notice-aware-bar'
 import { useLocale } from '@/contexts/locale-context'
 import { useIsWide } from '@/hooks/use-is-wide'
 import { useLatest } from '@/hooks/use-latest'
@@ -124,7 +125,7 @@ export default function StoryBodyEditor({ storeId, pins, body, language, onChang
   return (
     <div className="relative flex flex-col gap-3">
       {isWide && (
-        <div className="sticky top-16 z-10 -mx-2 flex flex-col gap-2 rounded-2xl bg-surface/95 px-2 py-1.5 backdrop-blur">
+        <div className={`sticky ${BELOW_BAR_TOP} z-10 -mx-2 flex flex-col gap-2 rounded-2xl bg-surface/95 px-2 py-1.5 backdrop-blur`}>
           <div aria-label={t('storyEditor.format.toolbar')} className="flex flex-wrap items-center gap-0.5 rounded-xl border border-separator p-1" role="toolbar">
             <FormatButtons big={false} editor={editor} linkOpen={linkOpen} state={state} onInsert={() => openInsert()} onLink={toggleLink} onPin={openPin} />
             <span className="flex-1" />

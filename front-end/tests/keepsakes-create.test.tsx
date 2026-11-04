@@ -58,13 +58,18 @@ const language = { current: 'en' }
 
 const stepButtons = () => within(screen.getByRole('navigation', { name: language.current === 'de' ? 'Schritte' : 'Steps' })).getAllByRole('button')
 
+/** The shared editor header: Back, the name, the status and save line, the red action. */
+function editorHeader() {
+  return document.querySelector<HTMLElement>('[data-editor-header]')!
+}
+
 describe('[E6.1][create] a new keepsake in the stepped editor, in English', () => {
   it('[T-005] opens in the same editor as a saved keepsake: three steps, a Draft chip, the bar not saved yet, and Review closed', async () => {
     renderKeepsakes('/store/products/new')
 
     await nameField()
     expect(screen.getByRole('heading', { level: 1, name: 'New keepsake' })).toBeInTheDocument()
-    expect(within(screen.getByTestId('keepsake-status')).getByText('Draft')).toBeInTheDocument()
+    expect(within(editorHeader()).getByText('Draft')).toBeInTheDocument()
     expect(stepButtons().map(button => button.getAttribute('aria-label')?.replace(/,.*$/, ''))).toEqual(['1. Details', '2. Options and variants', '3. Review and publish'])
     expect(stepButtons().map(button => (button as HTMLButtonElement).disabled)).toEqual([true, true, true])
     expect(screen.queryByText('1. Details', { selector: 'li' })).not.toBeInTheDocument()
@@ -162,7 +167,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     await waitFor(() => expect(router.state.location.pathname).toBe(`/store/products/${productId}`), SLOW)
     expect(router.state.location.search).toMatchObject({ step: 'review' })
     expect(await screen.findByTestId('review-screen', undefined, SLOW)).toBeInTheDocument()
-    expect(within(screen.getByTestId('keepsake-status')).getByText('Draft')).toBeInTheDocument()
+    expect(within(editorHeader()).getByText('Draft')).toBeInTheDocument()
     expect(writes().filter(call => call.path.endsWith('/publish'))).toHaveLength(0)
     expect(success).toHaveBeenCalledExactlyOnceWith('Knife created as a draft with 1 variant.')
   })

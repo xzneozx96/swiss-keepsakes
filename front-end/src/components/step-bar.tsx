@@ -2,7 +2,7 @@ import { Button } from '@heroui/react'
 
 import { useEffect, useState } from 'react'
 
-import { ArrowRightIcon, BackIcon, StatusSuccessIcon, TrashIcon } from '@/components/icons'
+import { ArrowRightIcon, BackIcon, StatusSuccessIcon } from '@/components/icons'
 
 import { useLocale } from '@/contexts/locale-context'
 
@@ -65,27 +65,21 @@ export function StepBar({
   onBack,
   onForward,
   secondary,
-  destructive,
   primary,
   isSaving,
   aboveTabBar = true,
-  inline = false,
 }: {
   status: string
   tone: 'muted' | 'danger' | 'success'
   onBack?: () => void
   onForward?: () => void
   secondary?: BarAction
-  /** A destructive action, such as Delete: danger style, trash icon, icon only under 640px. Sits before the arrows. */
-  destructive?: BarAction
   /** The screen's one red action. A screen that saves by itself leaves it out. */
   primary?: BarAction
   /** A save is on its way: its two actions are off. */
   isSaving: boolean
   /** The phone bar rides above the merchant tab bar. A page without one (the store's first setup) sets it false and the bar sits at the bottom edge. */
   aboveTabBar?: boolean
-  /** The bar sits in the flow, at the end of the step's column, and floats over nothing. Without it the bar floats (fixed on phones, sticky from 1024px). */
-  inline?: boolean
 }) {
   const { t } = useLocale()
   const keyboardOpen = useKeyboardOpen()
@@ -93,9 +87,7 @@ export function StepBar({
   return (
     <div
       data-testid="step-bar"
-      className={inline
-        ? 'relative'
-        : `fixed inset-x-3 ${aboveTabBar ? 'bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]' : 'bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]'} z-10 sm:inset-x-4 lg:sticky lg:inset-x-auto lg:bottom-6 ${keyboardOpen ? 'max-lg:hidden' : ''}`}
+      className={`fixed inset-x-3 ${aboveTabBar ? 'bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]' : 'bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]'} z-10 sm:inset-x-4 lg:sticky lg:inset-x-auto lg:bottom-6 ${keyboardOpen ? 'max-lg:hidden' : ''}`}
     >
       <div className="flex items-center gap-2 rounded-2xl bg-surface px-3 py-2 shadow-surface lg:px-4 lg:py-3">
         <span
@@ -111,19 +103,6 @@ export function StepBar({
           </span>
         </span>
         <div className="flex shrink-0 items-center gap-1.5 lg:gap-2">
-          {destructive && (
-            // One button: the label is read at every width and only shown from 640px, the icon stands alone below.
-            <Button
-              className="max-sm:size-9 max-sm:px-0"
-              isDisabled={destructive.isDisabled}
-              size="sm"
-              variant="danger-soft"
-              onPress={destructive.onPress}
-            >
-              <TrashIcon aria-hidden size={16} />
-              <span className="max-sm:sr-only">{destructive.label}</span>
-            </Button>
-          )}
           {onBack && (
             <Button
               isIconOnly

@@ -41,7 +41,7 @@ const stateKey = {
  * `missingOptionNames` is how many option and value names a language still lacks: a language that is otherwise complete
  * says so.
  */
-export function KeepsakeLanguageSwitch({ value, selected, onChange, missingOptionNames }: { value: KeepsakeText, selected: Language, onChange: (language: Language) => void, missingOptionNames?: Record<Language, number> }) {
+export function KeepsakeLanguageSwitch({ value, selected, onChange, missingOptionNames, compact = false }: { value: KeepsakeText, selected: Language, onChange: (language: Language) => void, missingOptionNames?: Record<Language, number>, compact?: boolean }) {
   const { t } = useLocale()
   const status = (language: Language) => {
     const state = languageState(value, language)
@@ -54,6 +54,7 @@ export function KeepsakeLanguageSwitch({ value, selected, onChange, missingOptio
 
   return (
     <LanguageVersionSwitch
+      compact={compact}
       label={t('keepsakes.language.switch')}
       languages={LANGUAGES.map(id => ({ id, label: t(`keepsakes.language.${id}`), short: id.toUpperCase() }))}
       selected={selected}

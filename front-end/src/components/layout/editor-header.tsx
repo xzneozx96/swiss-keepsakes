@@ -1,13 +1,14 @@
 import type { IconComponent } from '@/components/icons'
 import type { StatusTextTone } from '@/components/status-text'
 
-import { Button, Tooltip } from '@heroui/react'
+import { Button, Skeleton, Tooltip } from '@heroui/react'
 
 import { ArrowRightIcon, BackIcon, StatusSuccessIcon } from '@/components/icons'
 import { BAR_PULL_UP, BAR_TOP } from '@/components/layout/notice-aware-bar'
 import { RowActions } from '@/components/row-actions'
 import { StatusText } from '@/components/status-text'
 import { useLocale } from '@/contexts/locale-context'
+import { useIsWide } from '@/hooks/use-is-wide'
 
 export interface EditorHeaderAction {
   id: string
@@ -38,9 +39,9 @@ export interface EditorHeaderProps {
    * changes" (explicit save), or what a review step says instead.
    */
   save?: { text: string, tone: 'muted' | 'warning' | 'danger' | 'success' }
-  /** The compact language switch, shown from 1024 px; on phones the editor shows the full one on the page. */
+  /** The compact language switch, shown from 1024 px (`useIsWide`); on phones the editor shows the full one on the page. */
   languageSwitch?: React.ReactNode
-  /** Previous and next step, from 1024 px (phones use the step line). A missing handler turns its arrow off. */
+  /** Previous and next step, from 1024 px (phones use the step line). An arrow shows only with its handler (none back on the first step, none on to the last, none on when Next is the red action). */
   steps?: { onPrevious?: () => void, onNext?: () => void }
   /** A quiet second action beside the red one (Save draft). */
   secondary?: EditorHeaderButton
@@ -101,6 +102,10 @@ function SecondaryActions({ actions, moreLabel, onAction }: Pick<EditorHeaderPro
  */
 export function EditorHeader({ backLabel, onBack, title, status, save, languageSwitch, steps, secondary, primary, actions = [], onAction, moreLabel }: EditorHeaderProps) {
   const { t } = useLocale()
+  // One tree at a time: below 1024 px the switch is on the page and the arrows on the step line, so neither is twice.
+  const isWide = useIsWide()
+  const arrows = isWide ? steps : undefined
+  const switchNode = isWide ? languageSwitch : undefined
 
   return (
     <div className={`sticky ${BAR_TOP} z-30 -mx-4 border-b border-separator bg-background/90 backdrop-blur-xl lg:-mx-8 ${BAR_PULL_UP}`} data-editor-header="">
@@ -123,21 +128,25 @@ export function EditorHeader({ backLabel, onBack, title, status, save, languageS
             </span>
           )}
         </div>
-        {languageSwitch && <div className="shrink-0 max-lg:hidden">{languageSwitch}</div>}
-        {steps && (
+        {switchNode && <div className="shrink-0">{switchNode}</div>}
+        {arrows && (
           <>
-            {languageSwitch && <Rule />}
-            <span className="flex shrink-0 items-center gap-1 max-lg:hidden">
-              <Button isIconOnly aria-label={t('steps.back')} className={ICON_BUTTON} isDisabled={!steps.onPrevious} size="sm" variant="tertiary" onPress={steps.onPrevious}>
-                <BackIcon aria-hidden size={18} />
-              </Button>
-              <Button isIconOnly aria-label={t('steps.next')} className={ICON_BUTTON} isDisabled={!steps.onNext} size="sm" variant="tertiary" onPress={steps.onNext}>
-                <ArrowRightIcon aria-hidden size={18} />
-              </Button>
+            {switchNode && <Rule />}
+            <span className="flex shrink-0 items-center gap-1">
+              {arrows.onPrevious && (
+                <Button isIconOnly aria-label={t('steps.back')} className={ICON_BUTTON} size="sm" variant="tertiary" onPress={arrows.onPrevious}>
+                  <BackIcon aria-hidden size={18} />
+                </Button>
+              )}
+              {arrows.onNext && (
+                <Button isIconOnly aria-label={t('steps.next')} className={ICON_BUTTON} size="sm" variant="tertiary" onPress={arrows.onNext}>
+                  <ArrowRightIcon aria-hidden size={18} />
+                </Button>
+              )}
             </span>
           </>
         )}
-        {(secondary || primary) && (languageSwitch || steps) && <Rule />}
+        {(secondary || primary) && (switchNode || arrows) && <Rule />}
         {secondary && (
           <Button aria-label={secondary.label} className={`shrink-0 ${BUTTON}`} isDisabled={secondary.isDisabled} variant="tertiary" onPress={secondary.onPress}>
             <ButtonLabel button={secondary} />
@@ -150,6 +159,20 @@ export function EditorHeader({ backLabel, onBack, title, status, save, languageS
         )}
         {actions.length > 0 && <SecondaryActions actions={actions} moreLabel={moreLabel} onAction={onAction} />}
       </div>
+    </div>
+  )
+}
+
+/** The header's shape while an editor loads: Back, the name and its line, and the red action. */
+export function EditorHeaderSkeleton() {
+  return (
+    <div className={`-mx-4 flex h-16 items-center gap-3 border-b border-separator px-2 lg:-mx-8 ${BAR_PULL_UP} lg:px-6`}>
+      <Skeleton className="size-11 shrink-0 rounded-full" />
+      <div className="flex flex-1 flex-col gap-1.5">
+        <Skeleton className="h-4 w-40 rounded-full" />
+        <Skeleton className="h-3 w-28 rounded-full" />
+      </div>
+      <Skeleton className="h-9 w-20 shrink-0 rounded-full lg:w-36" />
     </div>
   )
 }

@@ -4,9 +4,11 @@ import { Button, ProgressBar } from '@heroui/react'
 
 import { useState } from 'react'
 
+import { ArrowRightIcon, BackIcon } from '@/components/icons'
 import { SheetFrame } from '@/components/sheet-frame'
 import { StepLine, StepMark, StepStatusText } from '@/components/step-marks'
 import { useLocale } from '@/contexts/locale-context'
+import { useIsWide } from '@/hooks/use-is-wide'
 
 /** The status word of a step that is not the one being edited. */
 const stepStatusKey = {
@@ -37,7 +39,7 @@ export function StepLayout({
   onGo,
   children,
   quietTitle = false,
-  barInFlow = false,
+  underHeader,
 }: {
   steps: StepView[]
   current: string
@@ -46,11 +48,16 @@ export function StepLayout({
   children: React.ReactNode
   /** From 1024px the step list already names the step, so its title is kept for screen readers only. */
   quietTitle?: boolean
-  /** The step bar sits in the flow at the end of the column, so no room is kept under the column for a floating one. */
-  barInFlow?: boolean
+  /**
+   * The editor has the pinned EditorHeader and no step bar: the list pins below the header, no room is kept for a
+   * floating bar, and the phone step line carries the step arrows (the header has them from 1024 px).
+   */
+  underHeader?: { onPrevious?: () => void, onNext?: () => void }
 }) {
   const { t } = useLocale()
   const [sheetOpen, setSheetOpen] = useState(false)
+  // The header has the arrows from 1024 px; the phone line has them below, never both.
+  const isWide = useIsWide()
   const index = steps.findIndex(s => s.id === current)
   const step = steps[index]
   const srStatus = (s: StepView) =>
@@ -60,7 +67,7 @@ export function StepLayout({
     <div className="flex min-w-0 flex-col gap-5 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start lg:gap-8">
       <nav
         aria-label={t('steps.label')}
-        className="sticky top-6 hidden lg:block"
+        className={`sticky hidden lg:block ${underHeader ? 'top-[calc(var(--merchant-notice-height,0px)+5.5rem)]' : 'top-6'}`}
       >
         <ol className="flex flex-col">
           {steps.map((s, i) => {
@@ -99,7 +106,7 @@ export function StepLayout({
           })}
         </ol>
       </nav>
-      <div className={`flex min-w-0 flex-col gap-5 lg:gap-6 ${barInFlow ? '' : 'pb-20 lg:pb-0'}`}>
+      <div className={`flex min-w-0 flex-col gap-5 lg:gap-6 ${underHeader ? '' : 'pb-20 lg:pb-0'}`}>
         {sheetOpen && (
           <SheetFrame
             isOpen
@@ -172,14 +179,30 @@ export function StepLayout({
               </span>
               {step?.label}
             </h2>
-            <Button
-              className="shrink-0 lg:hidden"
-              size="sm"
-              variant="tertiary"
-              onPress={() => setSheetOpen(true)}
-            >
-              {t('steps.all')}
-            </Button>
+            <span className="flex shrink-0 items-center gap-1 lg:hidden">
+              {underHeader && !isWide && (
+                <>
+                  {underHeader.onPrevious && (
+                    <Button isIconOnly aria-label={t('steps.back')} className="size-9" size="sm" variant="tertiary" onPress={underHeader.onPrevious}>
+                      <BackIcon aria-hidden size={18} />
+                    </Button>
+                  )}
+                  {underHeader.onNext && (
+                    <Button isIconOnly aria-label={t('steps.next')} className="size-9" size="sm" variant="tertiary" onPress={underHeader.onNext}>
+                      <ArrowRightIcon aria-hidden size={18} />
+                    </Button>
+                  )}
+                </>
+              )}
+              <Button
+                className="shrink-0"
+                size="sm"
+                variant="tertiary"
+                onPress={() => setSheetOpen(true)}
+              >
+                {t('steps.all')}
+              </Button>
+            </span>
           </div>
           <ProgressBar
             aria-label={t('steps.progress')}

@@ -153,6 +153,7 @@ export function StoryVersionEditor({ storeId, group, language, accountName, scre
         save={saveStatusOf(t, intlLocale, worseState(editor.state, groupEditor.state), editor.savedAt)}
         screen={screen}
         switchNode={switcher(true)}
+        title={editor.fields.title.trim() || t('merchantStories.untitled')}
         versionState={editor.versionState}
         onBack={screen === 'review' ? () => onScreen('write') : guard.leave}
         onDelete={() => void remove.ask({ groupId: group.id, name: editor.fields.title.trim() || t('merchantStories.untitled'), published: [group.versions.en, group.versions.de].some(version => version?.status === 'published') })}

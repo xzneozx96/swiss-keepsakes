@@ -50,6 +50,8 @@ function open(placeId: string, options: { start?: 'dates', language?: 'en' | 'de
 const writes = () => api.calls.filter(call => call.method !== 'GET' && call.path.startsWith(`/api/store/${storeId}/pins`))
 const press = (name: string | RegExp) => userEvent.click(screen.getByRole('button', { name }))
 // The review has Publish beside the phone and in the step bar: both are the same action.
+/** The status in the shared editor header, as dot text. */
+const headerStatus = () => document.querySelector<HTMLElement>('[data-editor-header] [data-status-tone]')!
 const publish = () => userEvent.click(screen.getAllByRole('button', { name: 'Publish' })[0]!)
 const type = (label: string, text: string) => userEvent.type(screen.getByLabelText(label), text)
 // A time input has a segment for the hours and one for the minutes: typing the four digits fills both.
@@ -86,7 +88,7 @@ async function nextTo(step: string) {
 }
 
 describe('[E4.2][AC68] N17 a new place', () => {
-  it('on phones the status chip sits in the ← bar next to the title, and the header copy of it is hidden', async () => {
+  it('the shared editor header is the one bar at every width: nothing docks into the shell\'s phone slot', async () => {
     const slot = document.body.appendChild(document.createElement('div'))
     await renderInRouter(
       <MerchantBarSlotContext value={slot}>
@@ -96,9 +98,9 @@ describe('[E4.2][AC68] N17 a new place', () => {
     )
 
     await heading('Place on the map')
-    expect(within(slot).getByText('Draft')).toBeInTheDocument()
-    expect(slot.querySelectorAll('[data-testid="places-status"]')).toHaveLength(0)
-    expect(screen.getByTestId('places-status')).toHaveClass('max-lg:hidden')
+    expect(slot).toBeEmptyDOMElement()
+    expect(headerStatus()).toHaveTextContent('Draft')
+    expect(screen.queryByTestId('step-bar')).toBeNull()
     slot.remove()
   })
 
@@ -109,7 +111,7 @@ describe('[E4.2][AC68] N17 a new place', () => {
     for (const label of ['Place on the map', 'Text and photo', 'Hours and dates', 'Categories and tags', 'Story and link', 'Review and publish'])
       expect(screen.getAllByText(label).length).toBeGreaterThan(0)
     expect(screen.queryByText(/type of place/i)).not.toBeInTheDocument()
-    expect(screen.getByTestId('places-status')).toHaveTextContent('Draft')
+    expect(headerStatus()).toHaveTextContent('Draft')
   })
 
   it('[E4.2][AC68] saves a draft with the position and a key, and no map link, then moves to the pin\'s own address', async () => {
@@ -238,29 +240,30 @@ describe('[E4.2][AC68] N17 text per language', () => {
 })
 
 describe('[E4.2][AC68] N17 header', () => {
-  it('[E4.2][AC68] is one row: a back button named All places, the title, then the status chip', async () => {
+  it('[E4.2][AC68] is one row: Back (All places), the title over the status and the save state, Save changes and Delete place', async () => {
     api.pin = livePin()
-    await open(uuid(10))
+    const { router } = await open(uuid(10))
     await heading('Place on the map')
 
-    const title = screen.getByRole('heading', { level: 1, name: 'Chapel Bridge' })
-    const back = screen.getByRole('link', { name: 'All places' })
-    const status = screen.getByTestId('places-status')
-    expect(back).toHaveAttribute('href', '/store/content/places')
-    expect(back).not.toHaveTextContent('All places')
-    expect(back.parentElement).toBe(title.parentElement)
-    expect(status.parentElement).toBe(title.parentElement)
-    expect(Array.from(title.parentElement!.children)).toEqual([back, title, status])
-    expect(status).toHaveTextContent('Published')
-    expect(status.querySelector('.chip--success')).not.toBeNull()
+    const header = screen.getByRole('heading', { level: 1, name: 'Chapel Bridge' }).closest('[data-editor-header]') as HTMLElement
+
+    expect(headerStatus()).toHaveTextContent('Published')
+    expect(headerStatus()).toHaveAttribute('data-status-tone', 'success')
+    expect(within(header).getByRole('status')).toHaveTextContent('No changes')
+    // Explicit save: nothing changed, so Save changes is off; the one secondary action is its own icon button.
+    expect(within(header).getByRole('button', { name: 'Save changes' })).toBeDisabled()
+    expect(within(header).getByRole('button', { name: 'Delete place' })).toBeInTheDocument()
+    expect(within(header).queryByRole('button', { name: /more actions/i })).toBeNull()
+    await userEvent.click(within(header).getByRole('button', { name: 'All places' }))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/store/content/places'))
   })
 
   it('[E4.2][AC68] shows draft in the neutral colour and hidden in the warning colour, as the list does', async () => {
     await open('new')
     await heading('Place on the map')
 
-    expect(screen.getByTestId('places-status')).toHaveTextContent('Draft')
-    expect(screen.getByTestId('places-status').querySelector('.chip--default')).not.toBeNull()
+    expect(headerStatus()).toHaveTextContent('Draft')
+    expect(headerStatus()).toHaveAttribute('data-status-tone', 'neutral')
   })
 
   it('[E4.2][AC68] a hidden place reads Hidden in the warning colour', async () => {
@@ -268,8 +271,8 @@ describe('[E4.2][AC68] N17 header', () => {
     await open(uuid(10))
     await heading('Place on the map')
 
-    expect(screen.getByTestId('places-status')).toHaveTextContent('Hidden')
-    expect(screen.getByTestId('places-status').querySelector('.chip--warning')).not.toBeNull()
+    expect(headerStatus()).toHaveTextContent('Hidden')
+    expect(headerStatus()).toHaveAttribute('data-status-tone', 'warning')
   })
 
   it('[E4.2][AC68] the form card starts level with the step list: nothing sits above the first card', async () => {
@@ -374,7 +377,7 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
 
     await heading('Hours and dates')
     expect(screen.getByText('Date 1')).toBeInTheDocument()
-    expect(screen.getByTestId('places-status')).toHaveTextContent('Draft')
+    expect(headerStatus()).toHaveTextContent('Draft')
   })
 
   it('[E4.2][AC86] the day, from and to fields are the phone\'s own date input, not free text', async () => {
@@ -1323,7 +1326,7 @@ describe('[E4.2][AC79][AC85] N17 a pin that exists', () => {
     api.answer = call => (call.method === 'PATCH' ? Response.json(livePin({ rowVersion: 4, draft: { title: { en: 'Chapel Bridge, Lucerne' }, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} } })) : undefined)
     await open(uuid(10))
     await heading('Place on the map')
-    expect(screen.getByTestId('places-status')).toHaveTextContent('Published')
+    expect(headerStatus()).toHaveTextContent('Published')
     await userEvent.click(screen.getAllByRole('button', { name: /Text and photo/ }).at(0)!)
     await heading('Text and photo')
     await userEvent.clear(screen.getByLabelText('Title in English'))
@@ -1464,6 +1467,6 @@ describe('[E4.2][AC79][AC85] N17 a pin that exists', () => {
     for (const label of ['Text und Foto', 'Öffnungszeiten und Daten', 'Kategorien und Tags', 'Geschichte und Link', 'Prüfen und veröffentlichen'])
       expect(screen.getAllByText(label).length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: 'Entwurf speichern' })).toBeInTheDocument()
-    expect(screen.getByTestId('places-status')).toHaveTextContent('Entwurf')
+    expect(headerStatus()).toHaveTextContent('Entwurf')
   })
 })

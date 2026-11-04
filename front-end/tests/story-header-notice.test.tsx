@@ -54,7 +54,7 @@ async function renderInShell(bar: React.ReactNode, notice?: React.ReactNode) {
 }
 
 const header = (
-  <StoryHeader language="en" save={{ status: 'Saved', tone: 'success' }} screen="write" switchNode={<span>EN | DE</span>} versionState="draft" onBack={vi.fn()} onDelete={vi.fn()} onReview={vi.fn()} />
+  <StoryHeader language="en" save={{ status: 'Saved', tone: 'success' }} screen="write" title="The Chapel Bridge" switchNode={<span>EN | DE</span>} versionState="draft" onBack={vi.fn()} onDelete={vi.fn()} onReview={vi.fn()} />
 )
 
 /** The shell's own rule: the variant prefix under which the main column drops its desktop top padding. */

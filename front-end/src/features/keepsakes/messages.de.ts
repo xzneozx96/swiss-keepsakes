@@ -246,6 +246,7 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.variants.incomplete.one': '1 Variante braucht einen Preis oder einen gültigen Code.',
   'keepsakes.variants.incomplete.other': '{count} Varianten brauchen einen Preis oder einen gültigen Code.',
   'keepsakes.review.saveDraft': 'Als Entwurf speichern',
+  'keepsakes.review.short': 'Prüfen',
 
   'keepsakes.state.missingOptions': 'Optionsnamen fehlen',
   'keepsakes.variants.finishOption': 'Schliessen Sie zuerst die Option mit Fertig ab.',
@@ -318,6 +319,7 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
 
   'keepsakes.status.archived': 'Archiviert',
   'keepsakes.remove.action': 'Löschen',
+  'keepsakes.remove.header': 'Andenken löschen',
   'keepsakes.remove.deleteTitle': '{name} löschen?',
   'keepsakes.remove.deleteBody': 'Das lässt sich nicht rückgängig machen. Die Fotos bleiben in Ihrer Bibliothek.',
   'keepsakes.remove.deleteConfirm': 'Löschen',

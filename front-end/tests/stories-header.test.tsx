@@ -18,7 +18,7 @@ function renderHeader(props: Partial<Parameters<typeof StoryHeader>[0]> = {}) {
 
   render(
     <LocaleProvider>
-      <StoryHeader language="en" save={save} screen="write" switchNode={<span data-testid="switch">EN | DE</span>} versionState="draft" {...handlers} {...props} />
+      <StoryHeader language="en" save={save} screen="write" title="The Chapel Bridge" switchNode={<span data-testid="switch">EN | DE</span>} versionState="draft" {...handlers} {...props} />
     </LocaleProvider>,
   )
 
@@ -38,8 +38,11 @@ function renderSwitch(props: Partial<Parameters<typeof StoryLanguageSwitch>[0]> 
 }
 
 describe('[E4.3][AC45] story header and switch', () => {
-  it('[E4.3][AC45] the title line reads English · Draft and Deutsch · Published', () => {
+  it('[E4.3][AC45] the name is the title, and the line under it reads English · Draft and Deutsch · Published', () => {
     const first = renderHeader()
+
+    expect(screen.getByRole('heading', { level: 1, name: 'The Chapel Bridge' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Delete story' })).toBeInTheDocument()
 
     expect(screen.getByText('English · Draft')).toBeInTheDocument()
     expect(first.onBack).not.toHaveBeenCalled()
@@ -85,13 +88,13 @@ describe('[E4.3][AC45] story header and switch', () => {
     view.wide = false
     renderHeader()
     expect(screen.queryByTestId('switch')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Review' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Review and publish' })).toHaveTextContent(/^Review/)
   })
 
   it('[E4.3][AC45] Review calls onReview and Back calls onBack', async () => {
     const { onBack, onReview } = renderHeader()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Review' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Review and publish' }))
     await userEvent.click(screen.getByRole('button', { name: 'Back to Stories' }))
     expect(onReview).toHaveBeenCalledTimes(1)
     expect(onBack).toHaveBeenCalledTimes(1)
@@ -103,8 +106,8 @@ describe('[E4.3][AC45] story header and switch', () => {
     document.body.innerHTML = ''
     renderHeader({ screen: 'review' })
     expect(screen.getByRole('button', { name: 'Back to writing' })).toBeInTheDocument()
-    expect(screen.getByText('Review and publish')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Review' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Review and publish' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Review/ })).not.toBeInTheDocument()
   })
 
   it('[E4.3][AC45] the stale notice is an alert with a Reload button', async () => {

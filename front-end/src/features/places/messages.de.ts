@@ -191,6 +191,7 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.action.hide': 'Von der Karte nehmen',
   'places.action.unhide': 'Wieder auf der Karte zeigen',
   'places.action.delete': 'Löschen',
+  'places.action.deletePlace': 'Ort löschen',
   'places.save.saving': 'Speichert …',
   'places.save.saved': 'Alle Änderungen gespeichert',
   'places.save.unsaved': 'Ungespeicherte Änderungen',

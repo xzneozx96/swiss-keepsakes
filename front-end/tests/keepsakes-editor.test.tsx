@@ -67,6 +67,11 @@ async function openEditor(step?: 'options' | 'variants') {
   return router
 }
 
+/** The shared editor header: Back, the name, the status and save line, the red action. */
+function editorHeader() {
+  return document.querySelector<HTMLElement>('[data-editor-header]')!
+}
+
 describe('[E6.1][AC55] M12 the edit screen in English', () => {
   it('[T-003] lays the editor out like the place editor: the step list, white blocks, the name, the status and the bar', async () => {
     await openEditor()
@@ -77,7 +82,7 @@ describe('[E6.1][AC55] M12 the edit screen in English', () => {
     expect(screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Name and text', 'Photos', 'Partner\'s commission rate (%)'])
     expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.id)).toEqual(['step-title'])
     expect(screen.getByRole('heading', { level: 1, name: 'Victorinox Classic' })).toBeInTheDocument()
-    expect(within(screen.getByTestId('keepsake-status')).getByText('Draft')).toBeInTheDocument()
+    expect(within(editorHeader()).getByText('Draft')).toBeInTheDocument()
     expect(screen.getByText(/^Saved \d/)).toBeInTheDocument()
   })
 
@@ -454,17 +459,17 @@ describe('[T-008][AC2] the Price card saves the one variant', () => {
 /** The step list's button for Review and publish: it saves what is typed, then opens the step. */
 const openReview = () => userEvent.click(screen.getByRole('button', { name: /^3\. Review and publish/ }))
 
-/** The bar's red action; the bar is a sibling of the step body, so it is found on the page. */
-const bar = () => screen.getByTestId('step-bar')
-
 describe('[E6.1][review] Review and publish, the last step', () => {
-  it('[T-004] is the last step of the list and the header has no button for it', async () => {
-    await openEditor()
+  it('[T-004] is the last step of the list, and the header\'s red action opens it (Details autosave; owner, 04.11.2026)', async () => {
+    const router = await openEditor()
 
     const steps = within(screen.getByRole('navigation', { name: 'Steps' }))
 
     expect(steps.getAllByRole('button').map(button => button.getAttribute('aria-label')?.replace(/,.*$/, ''))).toEqual(['1. Details', '2. Options and variants', '3. Review and publish'])
-    expect(screen.queryByRole('button', { name: /^Review/ })).not.toBeInTheDocument()
+    await userEvent.click(within(editorHeader()).getByRole('button', { name: 'Review and publish' }))
+    expect(await screen.findByTestId('review-screen', undefined, SLOW)).toBeInTheDocument()
+    expect(router.state.location.search).toMatchObject({ step: 'review' })
+    expect(within(editorHeader()).queryByRole('button', { name: 'Review and publish' })).not.toBeInTheDocument()
   })
 
   it('[T-004] opens from the step list, shows the preview and the checks, and Back returns to Options and variants', async () => {
@@ -528,7 +533,7 @@ describe('[E6.1][review] Review and publish, the last step', () => {
     expect(within(review).getByTestId('publish-checks')).toBeInTheDocument()
     expect(within(review).getByText(/No Deutsch name and text/)).toBeInTheDocument()
     expect(within(review).getByRole('button', { name: 'Publish' })).toBeEnabled()
-    expect(within(bar()).queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument()
+    expect(within(editorHeader()).queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument()
   })
 
   it('[T-004] blocking checks switch Publish off, name what is missing and Edit goes to the Details step with the Photos block', async () => {
@@ -564,7 +569,7 @@ describe('[E6.1][review] Review and publish, the last step', () => {
     expect(router.state.location.search).toMatchObject({ step: 'options' })
   })
 
-  it('[T-004] on a phone one bar is pinned: it says what the checks say, with Back, and the checks and Publish sit in the step', async () => {
+  it('[T-004] on a phone the header says what the checks say, the step line has Back, and the checks and Publish sit in the step', async () => {
     current = product({ blocking: [{ code: 'language', card: 'basics' }] })
     await openEditor()
 
@@ -572,8 +577,8 @@ describe('[E6.1][review] Review and publish, the last step', () => {
     const checks = await screen.findByTestId('publish-checks', undefined, SLOW)
 
     expect(checks).toHaveTextContent('Add the name and the text in English or German.')
-    expect(within(bar()).getByText('1 thing stops publishing')).toBeInTheDocument()
-    expect(within(bar()).getByRole('button', { name: 'Previous step' })).toBeInTheDocument()
+    expect(within(editorHeader()).getByText('1 thing stops publishing')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Previous step' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Publish' })).toBeDisabled()
     expect(screen.getAllByRole('button', { name: 'Publish' })).toHaveLength(1)
   })
@@ -589,7 +594,7 @@ describe('[E6.1][review] Review and publish, the last step', () => {
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `${detail}/publish`, ifMatch: '1' })
-    expect(await within(screen.getByTestId('keepsake-status')).findByText('Published')).toBeInTheDocument()
+    expect(await within(editorHeader()).findByText('Published')).toBeInTheDocument()
     expect(await screen.findByRole('button', { name: 'Unpublish keepsake' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument()
     expect(success).toHaveBeenCalledExactlyOnceWith('Published in English. Guests see it within about a minute.')
@@ -644,7 +649,7 @@ describe('[E6.1][review] Review and publish, the last step', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Unpublish' }))
 
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
-    expect(await within(screen.getByTestId('keepsake-status')).findByText('Draft')).toBeInTheDocument()
+    expect(await within(editorHeader()).findByText('Draft')).toBeInTheDocument()
   })
 
   it('[T-004] a live keepsake with no edits has only Unpublish in the card', async () => {
@@ -682,7 +687,7 @@ describe('[E6.1][review] Review and publish, the last step', () => {
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `${detail}/unpublish`, ifMatch: '1' })
-    expect(await within(screen.getByTestId('keepsake-status')).findByText('Draft')).toBeInTheDocument()
+    expect(await within(editorHeader()).findByText('Draft')).toBeInTheDocument()
     expect(success).toHaveBeenCalledExactlyOnceWith('The keepsake is a draft again.')
   })
 

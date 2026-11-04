@@ -145,6 +145,7 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
   // Options that are held count as unsaved changes: the bar says so until the step is left.
   const save = saveStatusOf(t, intlLocale, editor.state === 'saved' && held.hasHeld ? 'unsaved' : editor.state, editor.savedAt)
   const onReview = step === 'review'
+  const shown = onReview && editor.state === 'saved' ? summary : save
   const notices = (
     <>
       {editor.state === 'stale' && (
@@ -160,16 +161,19 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
   return (
     <>
       <KeepsakeFrame
-        bar={{
-          // On Review and publish the bar says what the checks say; an edit that is not saved still shows its own state.
-          ...(onReview && editor.state === 'saved' ? summary : save),
-          isSaving: false,
-          onBack: index > 0 ? () => void go(KEEPSAKE_STEPS[index - 1]!) : undefined,
-          onForward: index < KEEPSAKE_STEPS.length - 1 ? () => void go(KEEPSAKE_STEPS[index + 1]!) : undefined,
-        }}
         canGo={() => true}
         current={step}
-        languageSwitch={<KeepsakeLanguageSwitch missingOptionNames={{ en: missingNames(options.options, 'en'), de: missingNames(options.options, 'de') }} selected={editLanguage} value={draft} onChange={setEditLanguage} />}
+        header={{
+          // On Review and publish the line says what the checks say; an edit that is not saved still shows its own state.
+          save: { text: shown.status, tone: shown.tone },
+          steps: {
+            onPrevious: index > 0 ? () => void go(KEEPSAKE_STEPS[index - 1]!) : undefined,
+            onNext: index < KEEPSAKE_STEPS.length - 1 ? () => void go(KEEPSAKE_STEPS[index + 1]!) : undefined,
+          },
+          // Details autosave, so the red action is Review and publish; on that step the publish card has the buttons.
+          primary: onReview ? undefined : { label: t('keepsakes.step.review'), shortLabel: t('keepsakes.review.short'), onPress: () => void go('review') },
+        }}
+        languageSwitch={compact => <KeepsakeLanguageSwitch compact={compact} missingOptionNames={{ en: missingNames(options.options, 'en'), de: missingNames(options.options, 'de') }} selected={editLanguage} value={draft} onChange={setEditLanguage} />}
         notices={notices}
         status={{ tone: status.tone, label: t(status.key) }}
         steps={steps}

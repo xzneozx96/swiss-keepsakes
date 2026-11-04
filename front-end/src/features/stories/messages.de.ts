@@ -44,7 +44,6 @@ export const storiesMerchantDe: Record<keyof typeof storiesMerchantEn, string> =
   'merchantStories.problem.forbidden': 'Sie dürfen die Geschichten dieses Shops nicht bearbeiten.',
   'merchantStories.loading': 'Geschichten werden geladen',
   'storyEditor.back.toStories': 'Zurück zu den Geschichten',
-  'storyEditor.more': 'Weitere Aktionen',
   'storyEditor.menu.delete': 'Geschichte löschen',
   'storyEditor.back.toWriting': 'Zurück zum Schreiben',
   'storyEditor.language.en': 'Englisch',

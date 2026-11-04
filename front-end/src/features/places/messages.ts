@@ -189,6 +189,7 @@ export const placesEn = {
   'places.action.hide': 'Hide from map',
   'places.action.unhide': 'Show on map again',
   'places.action.delete': 'Delete',
+  'places.action.deletePlace': 'Delete place',
   'places.save.saving': 'Saving…',
   'places.save.saved': 'All changes saved',
   'places.save.unsaved': 'Unsaved changes',

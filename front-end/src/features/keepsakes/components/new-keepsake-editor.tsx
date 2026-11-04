@@ -222,17 +222,16 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
   return (
     <>
       <KeepsakeFrame
-        bar={{
-          status: t('keepsakes.save.notSavedYet'),
-          tone: 'muted',
-          isSaving: create.isPending || publishing,
-          onBack: index > 0 ? () => open(DRAFT_STEPS[index - 1]!) : undefined,
-          // On the last step Publish and Save as draft sit in the publish card.
-          primary: last ? undefined : { label: t('steps.next'), onPress: () => go(DRAFT_STEPS[index + 1]!) },
-        }}
         canGo={id => (DRAFT_STEPS as readonly string[]).includes(id) && DRAFT_STEPS.indexOf(id as DraftStep) <= reached}
         current={step}
-        languageSwitch={<KeepsakeLanguageSwitch missingOptionNames={{ en: missingNames(draft.options, 'en'), de: missingNames(draft.options, 'de') }} selected={editLanguage} value={value} onChange={setEditLanguage} />}
+        header={{
+          save: { text: t('keepsakes.save.notSavedYet'), tone: 'muted' },
+          // Next is the red action, so only the arrow back shows.
+          steps: { onPrevious: index > 0 ? () => open(DRAFT_STEPS[index - 1]!) : undefined },
+          // On the last step Publish and Save as draft sit in the publish card.
+          primary: last ? undefined : { label: t('steps.next'), onPress: () => go(DRAFT_STEPS[index + 1]!), isDisabled: create.isPending || publishing },
+        }}
+        languageSwitch={compact => <KeepsakeLanguageSwitch compact={compact} missingOptionNames={{ en: missingNames(draft.options, 'en'), de: missingNames(draft.options, 'de') }} selected={editLanguage} value={value} onChange={setEditLanguage} />}
         notices={failure && <p className="rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">{failure}</p>}
         status={{ tone: 'neutral', label: t('keepsakes.status.draft') }}
         steps={steps}

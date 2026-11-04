@@ -2,7 +2,7 @@ import type { Pin } from '@sk/api-contract'
 import type { StepStatus } from '@sk/domain/catalog'
 import type { FormErrors, PlaceForm } from '../lib/form'
 import type { StartStep } from '../lib/search-params'
-import type { StepBar } from '@/components/step-bar'
+import type { EditorHeaderProps } from '@/components/layout/editor-header'
 import type { MessageKey } from '@/i18n/en'
 
 import { useQueryClient } from '@tanstack/react-query'
@@ -262,15 +262,21 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
         : { status: t(!pin ? 'places.bar.notSaved' : dirty ? 'places.bar.unsaved' : 'places.bar.noChanges'), tone: 'muted' as const }
   const back = index === 0 ? undefined : () => go(STEP_IDS[index - 1]!)
   const next = () => go(STEP_IDS[Math.min(index + 1, STEP_IDS.length - 1)]!)
-  const bar: Omit<React.ComponentProps<typeof StepBar>, never> = !pin || pin.status === 'draft'
+  // What the shared editor header says and offers: a draft saves as a draft and moves on with Next; a live pin saves its
+  // changes, and Save changes is off while nothing changed.
+  const header: Pick<EditorHeaderProps, 'save' | 'steps' | 'secondary' | 'primary'> = !pin || pin.status === 'draft'
     ? {
-        ...status,
-        isSaving: busy,
-        onBack: back,
-        secondary: { label: t('places.action.saveDraft'), onPress: saveDraft },
-        primary: isReview ? { label: t('places.action.publish'), onPress: doPublish } : { label: t('places.action.next'), onPress: next },
+        save: { text: status.status, tone: status.tone },
+        // Next is the red action here, so only the arrow back shows.
+        steps: { onPrevious: back },
+        secondary: { label: t('places.action.saveDraft'), onPress: saveDraft, isDisabled: busy },
+        primary: isReview ? { label: t('places.action.publish'), onPress: doPublish, isDisabled: busy } : { label: t('places.action.next'), onPress: next },
       }
-    : { ...status, isSaving: busy, onBack: back, onForward: isReview ? undefined : next, primary: { label: t('places.action.save'), onPress: saveChanges } }
+    : {
+        save: { text: status.status, tone: status.tone },
+        steps: { onPrevious: back, onNext: isReview ? undefined : next },
+        primary: { label: t('places.action.save'), onPress: saveChanges, isDisabled: busy || !dirty },
+      }
 
   return {
     pin,
@@ -285,7 +291,7 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
     steps,
     go,
     canGo: (id: string) => pin !== undefined || STEP_IDS.indexOf(id as StepId) <= reached,
-    bar,
+    header,
     notice,
     busy,
     dialog,
