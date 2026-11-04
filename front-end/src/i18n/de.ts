@@ -14,6 +14,7 @@ import { mapDe } from '@/features/map/messages.de'
 import { mediaDe } from '@/features/media/messages.de'
 import { productsDe } from '@/features/merchant/products/messages.de'
 import { salesOverviewDe } from '@/features/merchant/sales/messages.de'
+import { onboardingDe } from '@/features/onboarding/messages.de'
 import { partnerDashboardDe } from '@/features/partners/report/messages.de'
 import { placesDe } from '@/features/places/messages.de'
 import { reportPagesDe } from '@/features/reports/pages-messages.de'
@@ -42,6 +43,7 @@ export const de: Record<MessageKey, string> = {
   ...tourDetailDe,
   ...tourReviewsDe,
   ...contentDe,
+  ...onboardingDe,
   ...contentMerchantDe,
   ...requestsDe,
   ...partnerDashboardDe,
