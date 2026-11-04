@@ -71,7 +71,7 @@ describe('merchant navigation keeps a page active on its own screens', () => {
   it.each([
     ['place editor', '/store/content/places/01a18a53-4376-71e9-bbbd-ec5ead42dea6', '/store/content/places', '/store/content'],
     ['article editor', '/store/content/articles/a1', '/store/content', '/store/content/places'],
-    ['gift editor', '/store/products/gifts/p1', '/store/products', '/store/products/pickup'],
+    ['gift editor', '/store/products/p1', '/store/products', '/store/products/pickup'],
     ['partner detail', '/store/partners/pt1', '/store/partners', '/store/partners/analytics'],
     ['order detail', '/store/orders/o1', '/store/orders', '/store/calendar'],
     ['partner analytics', '/store/partners/analytics', '/store/partners/analytics', '/store/partners'],

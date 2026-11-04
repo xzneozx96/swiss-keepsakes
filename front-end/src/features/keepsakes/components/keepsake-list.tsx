@@ -24,7 +24,7 @@ import { KeepsakeGate } from './keepsake-gate'
 import { KeepsakeNotice } from './keepsake-notice'
 import { KeepsakePhoto } from './keepsake-photo'
 
-const editHref = (id: string) => `/store/products/gifts/${id}`
+const editHref = (id: string) => `/store/products/${id}`
 
 function useRowText() {
   const { t, language, intlLocale } = useLocale()
@@ -73,7 +73,7 @@ function KeepsakeCards({ items, label, onRemove }: { items: ProductListItem[], l
     <ul aria-label={label} className="flex flex-col gap-3 lg:hidden">
       {items.map(item => (
         <li key={item.id} className="flex items-center gap-1 rounded-3xl bg-surface p-3 shadow-surface" data-keepsake={item.id}>
-          <Link className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl outline-none focus-visible:focus-ring" params={{ productId: item.id }} to="/store/products/gifts/$productId">
+          <Link className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl outline-none focus-visible:focus-ring" params={{ productId: item.id }} to="/store/products/$productId">
             <KeepsakePhoto className="size-14 shrink-0 rounded-xl" media={item.cover} width={160} />
             <span className="flex min-w-0 flex-col">
               <span className="line-clamp-2 text-sm font-semibold [overflow-wrap:anywhere]">{name(item)}</span>

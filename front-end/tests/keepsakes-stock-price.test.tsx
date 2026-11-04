@@ -53,7 +53,7 @@ beforeEach(async () => {
 })
 
 async function openStep() {
-  renderKeepsakes(`/store/products/gifts/${productId}?step=options`)
+  renderKeepsakes(`/store/products/${productId}?step=options`)
   await screen.findByRole('region', { name: 'Options' }, SLOW)
 
   return screen.getByRole('region', { name: 'Price' })
@@ -129,7 +129,7 @@ describe(`${tag} the Quantity field of the Price block`, () => {
 
   it(`${tag} AC-5 a new keepsake sends the quantity with its variant on create`, async () => {
     state.answer = call => (call.method === 'POST' && call.path === base ? Response.json(product(), { status: 201 }) : call.method === 'GET' && call.path === detail ? Response.json(product()) : call.method === 'GET' && call.path === base ? Response.json(list([listItem()])) : undefined)
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
     await userEvent.type(await screen.findByLabelText('Name (English)', undefined, SLOW), 'Knife')
     await userEvent.click(screen.getByRole('button', { name: 'Next' }))
     const card = await screen.findByRole('region', { name: 'Price' })
@@ -147,7 +147,7 @@ describe(`${tag} the Quantity field of the Price block`, () => {
 
   it(`${tag} AC-5 a new keepsake with an empty Quantity shows no error and sends no quantity (0)`, async () => {
     state.answer = call => (call.method === 'POST' && call.path === base ? Response.json(product(), { status: 201 }) : call.method === 'GET' && call.path === detail ? Response.json(product()) : call.method === 'GET' && call.path === base ? Response.json(list([listItem()])) : undefined)
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
     await userEvent.type(await screen.findByLabelText('Name (English)', undefined, SLOW), 'Knife')
     await userEvent.click(screen.getByRole('button', { name: 'Next' }))
     const card = await screen.findByRole('region', { name: 'Price' })

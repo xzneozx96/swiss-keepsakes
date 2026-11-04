@@ -108,7 +108,7 @@ beforeEach(async () => {
 const nameField = () => screen.findByLabelText('Name (English)', undefined, SLOW)
 
 async function openStep() {
-  const router = renderKeepsakes(`/store/products/gifts/${productId}?step=options`)
+  const router = renderKeepsakes(`/store/products/${productId}?step=options`)
 
   await screen.findByRole('region', { name: 'Options' }, SLOW)
 
@@ -785,7 +785,7 @@ describe('[T-008][AC7] one language switch for the editor', () => {
       variants: [{ id: variantId, skuCode: 'VX-S', mediaId: null, photo: null, priceRappen: 3900, status: 'published', values: { [id(0xC1)]: id(0xC2) } }],
     })
     serve()
-    renderKeepsakes(`/store/products/gifts/${productId}`)
+    renderKeepsakes(`/store/products/${productId}`)
     await nameField()
 
     expect(screen.getAllByRole('tab')).toHaveLength(2)
@@ -816,7 +816,7 @@ describe('[T-008][AC9] a new keepsake: the same step, held in the browser', () =
   const next = () => userEvent.click(screen.getByRole('button', { name: 'Next' }))
 
   async function toOptions() {
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
     await userEvent.type(await nameField(), 'Knife')
     await next()
     await screen.findByRole('region', { name: 'Price' })
@@ -922,7 +922,7 @@ describe('[T-008][i18n] the merged step in German', () => {
   beforeEach(() => writeStored('sk.language', 'de'))
 
   it('[T-008][i18n] the Price card, the options and the variants read in German, with no key left over', async () => {
-    renderKeepsakes(`/store/products/gifts/${productId}?step=options`)
+    renderKeepsakes(`/store/products/${productId}?step=options`)
 
     await screen.findByRole('region', { name: 'Preis' }, SLOW)
     await userEvent.click(screen.getByRole('button', { name: 'Option hinzufügen' }))
@@ -955,7 +955,7 @@ describe('[E6.2][AC52][T-017] the preview is the guest page', () => {
   const openPreview = async () => {
     current = sized()
     serve()
-    renderKeepsakes(`/store/products/gifts/${productId}`)
+    renderKeepsakes(`/store/products/${productId}`)
     await nameField()
     await userEvent.click(screen.getByRole('button', { name: /^3\. Review and publish/ }))
 

@@ -86,6 +86,8 @@ import { Route as StorePartnersIndexRouteImport } from './routes/store/partners/
 import { Route as StorePartnersPartnerIdRouteImport } from './routes/store/partners/$partnerId'
 import { Route as StorePartnersAnalyticsRouteImport } from './routes/store/partners/analytics'
 import { Route as StoreProductsIndexRouteImport } from './routes/store/products/index'
+import { Route as StoreProductsProductIdRouteImport } from './routes/store/products/$productId'
+import { Route as StoreProductsNewRouteImport } from './routes/store/products/new'
 import { Route as StoreProductsPickupRouteImport } from './routes/store/products/pickup'
 import { Route as StoreReportsIndexRouteImport } from './routes/store/reports/index'
 import { Route as StoreReportsCostsRouteImport } from './routes/store/reports/costs'
@@ -501,6 +503,16 @@ const StoreProductsIndexRoute = StoreProductsIndexRouteImport.update({
   path: '/products/',
   getParentRoute: () => StoreRoute,
 } as any)
+const StoreProductsProductIdRoute = StoreProductsProductIdRouteImport.update({
+  id: '/products/$productId',
+  path: '/products/$productId',
+  getParentRoute: () => StoreRoute,
+} as any)
+const StoreProductsNewRoute = StoreProductsNewRouteImport.update({
+  id: '/products/new',
+  path: '/products/new',
+  getParentRoute: () => StoreRoute,
+} as any)
 const StoreProductsPickupRoute = StoreProductsPickupRouteImport.update({
   id: '/products/pickup',
   path: '/products/pickup',
@@ -728,6 +740,8 @@ export interface FileRoutesByFullPath {
   '/store/orders/$orderId': typeof StoreOrdersOrderIdRoute
   '/store/partners/$partnerId': typeof StorePartnersPartnerIdRoute
   '/store/partners/analytics': typeof StorePartnersAnalyticsRoute
+  '/store/products/$productId': typeof StoreProductsProductIdRoute
+  '/store/products/new': typeof StoreProductsNewRoute
   '/store/products/pickup': typeof StoreProductsPickupRoute
   '/store/reports/costs': typeof StoreReportsCostsRoute
   '/store/reports/guests': typeof StoreReportsGuestsRoute
@@ -831,6 +845,8 @@ export interface FileRoutesByTo {
   '/store/orders/$orderId': typeof StoreOrdersOrderIdRoute
   '/store/partners/$partnerId': typeof StorePartnersPartnerIdRoute
   '/store/partners/analytics': typeof StorePartnersAnalyticsRoute
+  '/store/products/$productId': typeof StoreProductsProductIdRoute
+  '/store/products/new': typeof StoreProductsNewRoute
   '/store/products/pickup': typeof StoreProductsPickupRoute
   '/store/reports/costs': typeof StoreReportsCostsRoute
   '/store/reports/guests': typeof StoreReportsGuestsRoute
@@ -940,6 +956,8 @@ export interface FileRoutesById {
   '/store/orders/$orderId': typeof StoreOrdersOrderIdRoute
   '/store/partners/$partnerId': typeof StorePartnersPartnerIdRoute
   '/store/partners/analytics': typeof StorePartnersAnalyticsRoute
+  '/store/products/$productId': typeof StoreProductsProductIdRoute
+  '/store/products/new': typeof StoreProductsNewRoute
   '/store/products/pickup': typeof StoreProductsPickupRoute
   '/store/reports/costs': typeof StoreReportsCostsRoute
   '/store/reports/guests': typeof StoreReportsGuestsRoute
@@ -1049,6 +1067,8 @@ export interface FileRouteTypes {
     | '/store/orders/$orderId'
     | '/store/partners/$partnerId'
     | '/store/partners/analytics'
+    | '/store/products/$productId'
+    | '/store/products/new'
     | '/store/products/pickup'
     | '/store/reports/costs'
     | '/store/reports/guests'
@@ -1152,6 +1172,8 @@ export interface FileRouteTypes {
     | '/store/orders/$orderId'
     | '/store/partners/$partnerId'
     | '/store/partners/analytics'
+    | '/store/products/$productId'
+    | '/store/products/new'
     | '/store/products/pickup'
     | '/store/reports/costs'
     | '/store/reports/guests'
@@ -1260,6 +1282,8 @@ export interface FileRouteTypes {
     | '/store/orders/$orderId'
     | '/store/partners/$partnerId'
     | '/store/partners/analytics'
+    | '/store/products/$productId'
+    | '/store/products/new'
     | '/store/products/pickup'
     | '/store/reports/costs'
     | '/store/reports/guests'
@@ -1889,6 +1913,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreProductsIndexRouteImport
       parentRoute: typeof StoreRoute
     }
+    '/store/products/$productId': {
+      id: '/store/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/store/products/$productId'
+      preLoaderRoute: typeof StoreProductsProductIdRouteImport
+      parentRoute: typeof StoreRoute
+    }
+    '/store/products/new': {
+      id: '/store/products/new'
+      path: '/products/new'
+      fullPath: '/store/products/new'
+      preLoaderRoute: typeof StoreProductsNewRouteImport
+      parentRoute: typeof StoreRoute
+    }
     '/store/products/pickup': {
       id: '/store/products/pickup'
       path: '/products/pickup'
@@ -2196,6 +2234,8 @@ interface StoreRouteChildren {
   StoreOrdersOrderIdRoute: typeof StoreOrdersOrderIdRoute
   StorePartnersPartnerIdRoute: typeof StorePartnersPartnerIdRoute
   StorePartnersAnalyticsRoute: typeof StorePartnersAnalyticsRoute
+  StoreProductsProductIdRoute: typeof StoreProductsProductIdRoute
+  StoreProductsNewRoute: typeof StoreProductsNewRoute
   StoreProductsPickupRoute: typeof StoreProductsPickupRoute
   StoreRequestsAnalyticsRoute: typeof StoreRequestsAnalyticsRoute
   StoreRequestsQuestionsRoute: typeof StoreRequestsQuestionsRoute
@@ -2231,6 +2271,8 @@ const StoreRouteChildren: StoreRouteChildren = {
   StoreOrdersOrderIdRoute: StoreOrdersOrderIdRoute,
   StorePartnersPartnerIdRoute: StorePartnersPartnerIdRoute,
   StorePartnersAnalyticsRoute: StorePartnersAnalyticsRoute,
+  StoreProductsProductIdRoute: StoreProductsProductIdRoute,
+  StoreProductsNewRoute: StoreProductsNewRoute,
   StoreProductsPickupRoute: StoreProductsPickupRoute,
   StoreRequestsAnalyticsRoute: StoreRequestsAnalyticsRoute,
   StoreRequestsQuestionsRoute: StoreRequestsQuestionsRoute,

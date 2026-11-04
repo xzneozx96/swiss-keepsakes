@@ -73,7 +73,7 @@ async function openWith(figures: Figures[]) {
   current = product({ options: [sizeOf(3)], variants: figures.map((figure, index) => variantOf(index, figure)) })
   await setUpHarness()
   serve()
-  renderKeepsakes(`/store/products/gifts/${productId}?step=options`)
+  renderKeepsakes(`/store/products/${productId}?step=options`)
   await screen.findByRole('region', { name: 'Variants' }, SLOW)
 }
 
@@ -168,7 +168,7 @@ describe(`${tag} the quantity box of a variant row`, () => {
     current = product({ variants: [{ id: id(0xA0), skuCode: null, mediaId: null, photo: null, priceRappen: 4000, status: 'published', values: {}, onHand: 6, reserved: 0, available: 6 }] })
     await setUpHarness()
     serve()
-    renderKeepsakes(`/store/products/gifts/${productId}?step=options`)
+    renderKeepsakes(`/store/products/${productId}?step=options`)
     await screen.findByRole('region', { name: 'Options' }, SLOW)
     await userEvent.click(screen.getAllByRole('button', { name: /^Add (another )?option$/ })[0]!)
     await userEvent.type(await screen.findByLabelText('Option name in English', { selector: 'input' }), 'Size')
@@ -187,7 +187,7 @@ describe(`${tag} stock of a new keepsake`, () => {
 
   async function toOptions() {
     await setUpHarness()
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
     await userEvent.type(await screen.findByLabelText('Name (English)', undefined, SLOW), 'Knife')
     await next()
 

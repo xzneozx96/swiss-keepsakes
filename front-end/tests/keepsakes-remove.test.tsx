@@ -114,7 +114,7 @@ describe('[E6.1][remove] the editor', () => {
 
       return undefined
     }
-    const router = renderKeepsakes(`/store/products/gifts/${productId}`)
+    const router = renderKeepsakes(`/store/products/${productId}`)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Delete' }))
     const dialog = await screen.findByRole('alertdialog')
@@ -128,7 +128,7 @@ describe('[E6.1][remove] the editor', () => {
 
   it('[E6.1][remove] an archived keepsake opens as a notice, not an editor', async () => {
     state.answer = call => (call.method === 'GET' && call.path === `${base}/${productId}` ? Response.json(product({ status: 'archived', slug: { en: 'x' } })) : undefined)
-    renderKeepsakes(`/store/products/gifts/${productId}`)
+    renderKeepsakes(`/store/products/${productId}`)
 
     expect(await screen.findByText(/This keepsake is archived/)).toBeInTheDocument()
     expect(screen.queryByTestId('keepsake-editor')).not.toBeInTheDocument()

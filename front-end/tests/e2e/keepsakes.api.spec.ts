@@ -48,7 +48,7 @@ test('[T-005][T-008] creates a keepsake in one request from Review and publish a
     if (request.method() !== 'GET' && new URL(request.url()).pathname.includes('/products'))
       writes.push(`${request.method()} ${new URL(request.url()).pathname.replace(/^.*\/products/, '/products')}`)
   })
-  await owner.goto('/store/products/gifts/new')
+  await owner.goto('/store/products/new')
   await expect(owner.getByRole('heading', { name: 'Name and text' })).toBeVisible({ timeout: FIRST_LOAD })
   await expect(bar(owner).getByText('Not saved yet')).toBeVisible()
   await owner.screenshot({ path: `${EVIDENCE}/api-new-details-375.png` })

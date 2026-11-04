@@ -60,7 +60,7 @@ const stepButtons = () => within(screen.getByRole('navigation', { name: language
 
 describe('[E6.1][create] a new keepsake in the stepped editor, in English', () => {
   it('[T-005] opens in the same editor as a saved keepsake: three steps, a Draft chip, the bar not saved yet, and Review closed', async () => {
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await nameField()
     expect(screen.getByRole('heading', { level: 1, name: 'New keepsake' })).toBeInTheDocument()
@@ -75,7 +75,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
   })
 
   it('[T-005] Next needs a name in one language, and says so at the name field', async () => {
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await nameField()
     await next()
@@ -87,7 +87,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
   })
 
   it('[T-005] a name in German alone is enough, and the text is not required to make a draft', async () => {
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await nameField()
     await userEvent.click(screen.getByRole('tab', { name: /Deutsch/ }))
@@ -100,7 +100,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
   })
 
   it('[T-007B] Next on Options and variants goes to Review and publish and sends nothing; the bar then offers Publish and Save as draft', async () => {
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await toOptions()
     expect(screen.queryByRole('button', { name: 'Create keepsake' })).not.toBeInTheDocument()
@@ -116,7 +116,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
   })
 
   it('[T-008] Next with no price stays on Options and variants and names it; the price is held in the browser and the steps can be opened again', async () => {
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await toOptions()
     await next()
@@ -134,7 +134,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
   })
 
   it('[T-007B] a new keepsake has no status in the Price card, since the create request has none, and says so', async () => {
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await toOptions()
     const card = screen.getByRole('region', { name: 'Price' })
@@ -148,7 +148,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
 
   it('[T-007B] Save as draft makes a hidden draft in one request and opens the saved editor on Review and publish', async () => {
     const success = vi.spyOn(toast, 'success')
-    const router = renderKeepsakes('/store/products/gifts/new')
+    const router = renderKeepsakes('/store/products/new')
 
     await toOptions()
     await setPrice('39')
@@ -159,7 +159,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: base, body: { name: { en: 'Knife' }, text: {}, photoIds: [], commissionRate: 0, options: [], variants: [{ skuCode: null, mediaId: null, priceRappen: 3900, values: {} }] } })
     expect(writes()[0]!.key).toBeTruthy()
-    await waitFor(() => expect(router.state.location.pathname).toBe(`/store/products/gifts/${productId}`), SLOW)
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/store/products/${productId}`), SLOW)
     expect(router.state.location.search).toMatchObject({ step: 'review' })
     expect(await screen.findByTestId('review-screen', undefined, SLOW)).toBeInTheDocument()
     expect(within(screen.getByTestId('keepsake-status')).getByText('Draft')).toBeInTheDocument()
@@ -187,7 +187,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
 
       return answer(call)
     }
-    const router = renderKeepsakes('/store/products/gifts/new')
+    const router = renderKeepsakes('/store/products/new')
 
     await userEvent.type(await nameField(), 'Knife')
     await userEvent.type(await screen.findByLabelText('Description (English)', undefined, SLOW), 'A knife')
@@ -206,17 +206,17 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     await waitFor(() => expect(keepsake()).toHaveLength(2), SLOW)
     expect(keepsake()[0]).toMatchObject({ method: 'POST', path: base })
     expect(keepsake()[1]).toMatchObject({ method: 'POST', path: `${base}/${productId}/publish`, ifMatch: '1' })
-    await waitFor(() => expect(router.state.location.pathname).toBe(`/store/products/gifts/${productId}`), SLOW)
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/store/products/${productId}`), SLOW)
     expect(success).toHaveBeenCalledExactlyOnceWith('Published in English. Guests see it within about a minute.')
   })
 
   it('[T-007B] the draft survives a reload: the name, the price and the step come back, and leaving for good clears them', async () => {
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await toOptions()
     await setPrice('39')
     cleanup()
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     expect(await within(await screen.findByRole('region', { name: 'Price' }, SLOW)).findByLabelText('Price, CHF')).toHaveValue('39.00')
     expect(screen.getByText(/Step 2 of 3/)).toBeInTheDocument()
@@ -226,13 +226,13 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Discard keepsake' }))
     await screen.findByTestId('keepsake-list')
     cleanup()
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     expect(await nameField()).toHaveValue('')
   })
 
   it('[T-007B] Review reads the draft: it blocks Publish for a missing photo and names it, and Edit opens the step', async () => {
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await toOptions()
     await setPrice('39')
@@ -247,7 +247,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
   })
 
   it('[T-005] the commission set in Details goes with the create request', async () => {
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await userEvent.type(await nameField(), 'Knife')
     const increase = screen.getAllByRole('button', { name: /increase|increment/i })[0]!
@@ -266,7 +266,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
   })
 
   it('[T-005] pressing Save as draft twice makes one keepsake', async () => {
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await toOptions()
     await setPrice('10', 'K-1')
@@ -284,7 +284,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     const danger = vi.spyOn(toast, 'danger')
 
     state.answer = call => (call.method === 'POST' ? problem(409, 'sku-code-taken') : answer(call))
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await toOptions()
     const card = screen.getByRole('region', { name: 'Price' })
@@ -308,7 +308,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
   })
 
   it('[T-005] Back goes to the step before with what was typed, and the arrow asks before it drops it', async () => {
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await toOptions()
     await userEvent.click(await screen.findByRole('button', { name: 'Previous step' }))
@@ -329,7 +329,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
   })
 
   it('[T-005] leaves at once when nothing was typed', async () => {
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await nameField()
     await userEvent.click(screen.getByRole('button', { name: 'Back to Keepsakes' }))
@@ -338,7 +338,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
   })
 
   it('[E6.1][AC55] has no engraving, sub-category, deposit or pay-later field on any step', async () => {
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await nameField()
     expect(document.body.textContent).not.toMatch(/engrav|sub-?categor|deposit|pay later/i)
@@ -380,7 +380,7 @@ describe('[T-005] photos on a new keepsake', () => {
   it('[T-005] refuses Save as draft while a photo is still uploading, and makes it with the photo once the upload is done', { timeout: 20_000 }, async () => {
     const release = holdUpload()
 
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await userEvent.type(await nameField(), 'Knife')
     await userEvent.upload(screen.getByTestId('photo-input'), new File(['x'], 'knife.jpg', { type: 'image/jpeg' }))
@@ -413,7 +413,7 @@ describe('[E6.1][i18n] a new keepsake in German', () => {
   })
 
   it('[E6.1][i18n] shows the steps, the refusals and the discard confirm in German', async () => {
-    renderKeepsakes('/store/products/gifts/new')
+    renderKeepsakes('/store/products/new')
 
     await screen.findByRole('heading', { level: 1, name: 'Neues Andenken' }, SLOW)
     expect(screen.getByText(/Schritt 1 von 3/)).toBeInTheDocument()

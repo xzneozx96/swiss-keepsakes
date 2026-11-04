@@ -60,7 +60,7 @@ const nameField = () => screen.findByLabelText('Name (English)', undefined, SLOW
 
 /** The editor on a step; the controls of Details are mounted in every step (that step is only hidden), so the name field is the ready signal. */
 async function openEditor(step?: 'options' | 'variants') {
-  const router = renderKeepsakes(`/store/products/gifts/${productId}${step ? `?step=${step}` : ''}`)
+  const router = renderKeepsakes(`/store/products/${productId}${step ? `?step=${step}` : ''}`)
 
   await nameField()
 
@@ -485,7 +485,7 @@ describe('[E6.1][review] Review and publish, the last step', () => {
   })
 
   it('[T-004] the old ?view=review address opens the step', async () => {
-    renderKeepsakes(`/store/products/gifts/${productId}?view=review`)
+    renderKeepsakes(`/store/products/${productId}?view=review`)
 
     expect(await screen.findByTestId('review-screen', undefined, SLOW)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^3\. Review and publish/ })).toHaveAttribute('aria-current', 'step')
@@ -698,7 +698,7 @@ describe('[E6.1][review] Review and publish, the last step', () => {
 describe('[E6.1][412] a keepsake that is not there', () => {
   it('[E6.1] says so with a way back to the list', async () => {
     state.answer = call => (call.path === detail ? problem(404, 'not-found') : undefined)
-    renderKeepsakes(`/store/products/gifts/${productId}`)
+    renderKeepsakes(`/store/products/${productId}`)
 
     expect(await screen.findByText('This keepsake no longer exists.', undefined, SLOW)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Back to Keepsakes' })).toHaveAttribute('href', '/store/products')
@@ -709,7 +709,7 @@ describe('[E6.1][i18n] M12 in German', () => {
   beforeEach(() => writeStored('sk.language', 'de'))
 
   it('[E6.1][i18n] shows the editor, its steps, blocks and variants in German, with no engraving and no key left over', async () => {
-    renderKeepsakes(`/store/products/gifts/${productId}`)
+    renderKeepsakes(`/store/products/${productId}`)
 
     await screen.findByLabelText('Name (English)', undefined, SLOW)
     await screen.findByRole('heading', { level: 3, name: 'Name und Text' }, SLOW)
@@ -728,7 +728,7 @@ describe('[E6.1][i18n] M12 in German', () => {
   it('[E6.1][i18n] shows Review and publish with its checks and warnings in German', async () => {
     current = product({ photos: [], blocking: [{ code: 'photos', card: 'photos' }], warnings: [{ code: 'other-language', card: 'basics', language: 'de' }, { code: 'commission-zero', card: 'commission' }] })
     view.wide = true
-    renderKeepsakes(`/store/products/gifts/${productId}?step=review`)
+    renderKeepsakes(`/store/products/${productId}?step=review`)
 
     const review = await screen.findByTestId('review-screen', undefined, SLOW)
 

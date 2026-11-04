@@ -567,7 +567,7 @@ export function useGiftEditor(
         if (!product) {
           markJustCreated(next.id)
           void navigate({
-            to: '/store/products/gifts/$productId',
+            to: '/store/products/$productId',
             params: { productId: next.id },
             replace: true,
           })

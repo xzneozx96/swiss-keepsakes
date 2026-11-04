@@ -20,5 +20,5 @@ export function keepsakeSearch(search: Record<string, unknown>): { step?: Exclud
 }
 
 export const KEEPSAKES_PATH = '/store/products'
-export const KEEPSAKE_PATH = '/store/products/gifts/$productId'
-export const NEW_KEEPSAKE_PATH = '/store/products/gifts/new'
+export const KEEPSAKE_PATH = '/store/products/$productId'
+export const NEW_KEEPSAKE_PATH = '/store/products/new'

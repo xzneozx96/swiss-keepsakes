@@ -68,7 +68,7 @@ beforeEach(async () => {
 })
 
 async function openStep() {
-  renderKeepsakes(`/store/products/gifts/${productId}?step=options`)
+  renderKeepsakes(`/store/products/${productId}?step=options`)
   await screen.findByRole('region', { name: 'Options' }, SLOW)
 }
 
@@ -313,7 +313,7 @@ describe('[T-019][AC0] leaving the held options by any route', () => {
     const router = renderKeepsakes('/store/products', createBrowserHistory())
 
     await screen.findByTestId('keepsake-list', undefined, SLOW)
-    await router.navigate({ to: '/store/products/gifts/$productId', params: { productId }, search: { step: 'options' } })
+    await router.navigate({ to: '/store/products/$productId', params: { productId }, search: { step: 'options' } })
     await screen.findByRole('region', { name: 'Options' }, SLOW)
     await startOption('Size', ['XS', 'S'])
     await done()
@@ -337,7 +337,7 @@ describe('[T-019][AC0] leaving the held options by any route', () => {
     const router = renderKeepsakes('/store/products', createBrowserHistory())
 
     await screen.findByTestId('keepsake-list', undefined, SLOW)
-    await router.navigate({ to: '/store/products/gifts/$productId', params: { productId }, search: { step: 'options' } })
+    await router.navigate({ to: '/store/products/$productId', params: { productId }, search: { step: 'options' } })
     await screen.findByRole('region', { name: 'Options' }, SLOW)
     const unload = () => {
       const event = new Event('beforeunload', { cancelable: true })

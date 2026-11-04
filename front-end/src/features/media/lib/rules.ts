@@ -87,7 +87,7 @@ export const EDITOR_PATH: Record<MediaUse['pageKind'], (id: string) => string> =
   story: id => `/store/content/articles/${id}`,
   place: id => `/store/content/places/${id}`,
   tour: id => `/store/products/tours/${id}`,
-  keepsake: id => `/store/products/gifts/${id}`,
+  keepsake: id => `/store/products/${id}`,
 }
 
 /** The smallest picture the file has, for a thumbnail; the original when it has no variants. */

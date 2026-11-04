@@ -19,7 +19,7 @@ async function openWith(codes: (string | null)[]) {
 
   await setUpHarness()
   state.answer = call => (call.method === 'GET' && call.path === `${base}/${productId}` ? Response.json(current) : call.method === 'GET' && call.path === base ? Response.json(list([listItem()])) : undefined)
-  renderKeepsakes(`/store/products/gifts/${productId}?step=options`)
+  renderKeepsakes(`/store/products/${productId}?step=options`)
   await screen.findByRole('region', { name: 'Variants' }, { timeout: 8000 })
 
   return within(screen.getByRole('region', { name: 'Variants' })).getAllByTestId('variant-row')

@@ -153,10 +153,10 @@ export async function setUpHarness() {
 export function renderKeepsakes(initial: string, history = createMemoryHistory({ initialEntries: [initial] })) {
   const root = createRootRoute({ component: Outlet })
   const index = createRoute({ getParentRoute: () => root, path: '/store/products', component: KeepsakeList })
-  const create = createRoute({ getParentRoute: () => root, path: '/store/products/gifts/new', component: NewKeepsake })
+  const create = createRoute({ getParentRoute: () => root, path: '/store/products/new', component: NewKeepsake })
   const edit = createRoute({
     getParentRoute: () => root,
-    path: '/store/products/gifts/$productId',
+    path: '/store/products/$productId',
     validateSearch: keepsakeSearch,
     component: function Edit() {
       const { productId: id } = edit.useParams()

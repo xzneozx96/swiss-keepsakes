@@ -170,7 +170,7 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
 
         queryClient.setQueryData(detail, created)
         clearDraft(storeId)
-        const done = () => void navigate({ to: '/store/products/gifts/$productId', params: { productId: created.id }, search: { step: 'review' }, replace: true })
+        const done = () => void navigate({ to: '/store/products/$productId', params: { productId: created.id }, search: { step: 'review' }, replace: true })
 
         if (!andPublish) {
           done()
@@ -277,7 +277,7 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
   )
 }
 
-/** `/store/products/gifts/new`: a new keepsake in the stepped editor, held in the browser until Create keepsake. */
+/** `/store/products/new`: a new keepsake in the stepped editor, held in the browser until Create keepsake. */
 export function NewKeepsake() {
   return (
     <KeepsakeGate fallback={<StepEditorSkeleton />}>

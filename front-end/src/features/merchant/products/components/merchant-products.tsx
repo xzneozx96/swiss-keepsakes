@@ -108,7 +108,7 @@ export function MerchantProducts({ tab }: { tab: ProductsTab }) {
       void navigate({
         to:
           kind === 'gift'
-            ? '/store/products/gifts/$productId'
+            ? '/store/products/$productId'
             : '/store/products/tours/$tourId',
         params: { productId: row.id, tourId: row.id },
       })
@@ -223,7 +223,7 @@ export function MerchantProducts({ tab }: { tab: ProductsTab }) {
             className={buttonVariants({ size: 'sm', className: 'shrink-0' })}
             to={
               tab === 'gifts'
-                ? '/store/products/gifts/new'
+                ? '/store/products/new'
                 : '/store/products/tours/new'
             }
           >

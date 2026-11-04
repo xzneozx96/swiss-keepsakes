@@ -72,7 +72,7 @@ export function useMerchantProducts() {
 
     return {
       id: product.id,
-      href: `/store/products/gifts/${product.id}`,
+      href: `/store/products/${product.id}`,
       name: pick(product.name),
       photo: product.photo,
       subcategoryId: product.subcategoryId,

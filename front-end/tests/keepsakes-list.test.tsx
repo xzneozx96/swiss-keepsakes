@@ -58,7 +58,7 @@ describe('[E6.1][list] M11 the keepsake list in English', () => {
     expect(screen.queryByRole('button', { name: /categor/i })).not.toBeInTheDocument()
     const create = screen.getByRole('link', { name: 'Create' })
 
-    expect(create).toHaveAttribute('href', '/store/products/gifts/new')
+    expect(create).toHaveAttribute('href', '/store/products/new')
   })
 
   it('[E6.1][list] a row opens its keepsake, and the phone card does too', async () => {
@@ -67,7 +67,7 @@ describe('[E6.1][list] M11 the keepsake list in English', () => {
 
     const { cards } = await loaded('Classic')
 
-    expect(within(cards).getByRole('link')).toHaveAttribute('href', `/store/products/gifts/${productId}`)
+    expect(within(cards).getByRole('link')).toHaveAttribute('href', `/store/products/${productId}`)
     expect(within(cards).getByText('1 variant')).toBeInTheDocument()
   })
 
@@ -106,7 +106,7 @@ describe('[E6.1][list] M11 the keepsake list in English', () => {
     await loaded('Classic')
     await userEvent.click(screen.getAllByRole('button', { name: 'Actions for Classic' })[0]!)
 
-    expect(await screen.findByRole('menuitem', { name: 'Edit' })).toHaveAttribute('href', `/store/products/gifts/${productId}`)
+    expect(await screen.findByRole('menuitem', { name: 'Edit' })).toHaveAttribute('href', `/store/products/${productId}`)
   })
 })
 

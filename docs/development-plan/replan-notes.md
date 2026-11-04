@@ -100,8 +100,8 @@ The key is the route file for rows of table 1 of the inventory, and the N-id for
 | `store/orders/index.tsx` | M03 | Redesign | E7.3 |
 | `store/orders/$orderId.tsx` | M04 | Redesign | E7.4 |
 | `store/products/index.tsx` | M11 | Redesign | E6.1 |
-| `store/products/gifts/new.tsx` | M12 | Redesign | E6.1 |
-| `store/products/gifts/$productId.tsx` | M12 | Redesign | E6.1 |
+| `store/products/new.tsx` | M12 | Redesign | E6.1 |
+| `store/products/$productId.tsx` | M12 | Redesign | E6.1 |
 | `store/products/tours/index.tsx` | M11 | Redesign | E4.9 |
 | `store/products/tours/new.tsx` | M13 | Redesign | E4.9 |
 | `store/products/tours/$tourId.tsx` | M13 | Redesign | E4.9 |
