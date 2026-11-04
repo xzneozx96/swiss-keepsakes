@@ -126,8 +126,15 @@ Events go to PostHog EU. Nothing is sent unless you switch it on.
 | S8-UI-01 | Merchant list screens share one header and toolbar | UI consistency, owner feedback 2026-11-03 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-UI-02 | Story Write screen: two columns, Short summary field, growing text boxes | E4.3 / AC30 (owner feedback 2026-11-03) | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
 | S8-STORY-FIX-01 | Story editor header does not cover the store notice | E4.3 / owner fix 2026-11-03 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-SEED-STORY-01 | The seeded stories and reviews are in the Stories list | Seed stories / standing order 19 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-SEED-STORY-02 | A guest reads a story in English and in German, with photos | Seed stories / standing order 19 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-SEED-STORY-03 | Place pages show the main story | Seed stories / standing order 19 | P1 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-SEED-STORY-04 | More to discover | Seed stories / standing order 19 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-SEED-STORY-05 | The Manor review stays a draft until it has a cover | Seed stories / standing order 19 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-SEED-STORY-06 | The stories step changes nothing on a second run | Seed stories / standing order 19 | P2 | ☐ Pass ☐ Fail ☐ Blocked | |
+| S8-SEED-STORY-07 | Facts read right (editorial check) | Seed stories / standing order 19 | P3 | ☐ Pass ☐ Fail ☐ Blocked | |
 
-Counts: 74 cases. P1: 19, P2: 35, P3: 20.
+Counts: 81 cases. P1: 22, P2: 37, P3: 22.
 
 ## PR 1: Lark and plan docs
 
@@ -1308,3 +1315,67 @@ Merchant UI changes made after the first draft of this file. They are on main, n
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
 
 - **Note:** scrolling the page down with the notice shown is a known separate item (the header pins over the sticky notice).
+
+## Seeded stories and reviews (S8-SEED-STORY)
+
+Run these after `pnpm exec tsx --env-file-if-exists=.env.local scripts/seed-curated.ts --stories-only` has run on dev (4 November 2026).
+
+### S8-SEED-STORY-01 The seeded stories and reviews are in the Stories list
+- **Story / AC:** Seed stories / standing order 19. **Priority:** P1. **Role and device:** Owner, desktop.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open Merchant > Stories. | 11 stories: 7 stories and the Bachmann, Coop and Migros reviews with EN and DE published, and the Manor review with both languages draft. The old prototype stories are gone. |
+| 2 | Open "Crossing the Chapel Bridge". | The cover is a photo of the bridge with the Water Tower. The body has headings, short paragraphs and 8 photos, each with a caption. There is no Sources line. |
+
+### S8-SEED-STORY-02 A guest reads a story in English and in German, with photos
+- **Priority:** P1. **Role and device:** Guest, phone 375 px.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open /en/stories/the-dying-lion-of-lucerne. | Cover photo, headings, short paragraphs, 7 photos with captions, a bullet list under Visiting, reading time shown, no Sources line. |
+| 2 | Switch to German (/de/stories/der-sterbende-loewe-von-luzern). | Natural German in the Sie form, same structure and photos, no English left, captions in German. |
+| 3 | Tap a photo. | The photo opens larger, and its alt text is read by a screen reader (check with the reader on). |
+
+### S8-SEED-STORY-03 Place pages show the main story
+- **Priority:** P1. **Role and device:** Guest, phone.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open the place pages of Weinmarkt, Jesuit Church, Spreuer Bridge, Lion Monument, Haus zum Fritschi, Alte Suidtersche Apotheke, both Chapel Bridge pins, Bachmann at Bahnhof Luzern UG, Coop Bahnhof Luzern and Migros Bahnhof Luzern. | Each shows its story or review as the main story link, in both languages. The three station shops also show a cover photo. |
+| 2 | Open the Chapel Bridge story. | It names both Chapel Bridge pins' places. One story, not two. |
+| 3 | Open the Manor Luzern place page. | No story link is shown, because its review is still a draft. |
+
+### S8-SEED-STORY-04 More to discover
+- **Priority:** P3. **Role and device:** Guest.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open "A pause on the Weinmarkt". | Three related stories: the old pharmacy, Fritschi and the Jesuit Church. |
+| 2 | Open the Lion Monument story. | No related stories block. |
+
+### S8-SEED-STORY-05 The Manor review stays a draft until it has a cover
+- **Priority:** P2. **Role and device:** Owner, desktop.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open the Manor review in the editor. | Subject place Manor Luzern; Facts checked on 4 Nov 2026; no cover; both languages draft. |
+| 2 | Try to publish. | Refused with "cover" missing. |
+| 3 | Add a photo of the store as cover and publish both languages. | Publishes; the guest page shows the review and the Manor place page links to it. |
+
+### S8-SEED-STORY-06 The stories step changes nothing on a second run
+- **Priority:** P2 (developer). **Role and device:** Developer, terminal, under the Neon lock.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | From `api/`, run `scripts/seed-curated.ts --stories-only --dry-run` with the remote-database setting. | "Will upload 0 photos", "rewrite 0 story versions", "create 0 stories and reviews, skipping 11". |
+| 2 | Run it again without `--dry-run`. | "Nothing was changed." |
+
+### S8-SEED-STORY-07 Facts read right (editorial check)
+- **Priority:** P3. **Role and device:** Owner or editor.
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Read each EN story against its sources in the data files (`api/scripts/seed-data/stories`). | No sentence copies a source. Dates and numbers match (Chapel Bridge about 1365 and the fire of 18 August 1993, Spreuer Bridge 1408, Jesuit Church 1666 to 1677, Lion Monument 1820 to 1821). |
+| 2 | Open the opening hours in the Bachmann, pharmacy and Jesuit Church texts. | They match the operators' own pages and say "as of November 2026". |
+| 3 | Read the Coop review. | It sends guests to coop.ch for hours and location. |
