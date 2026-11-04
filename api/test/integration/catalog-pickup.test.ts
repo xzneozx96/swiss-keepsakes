@@ -20,7 +20,12 @@ const mapsFetch = (async (input: URL | string) => {
   asked.push(String(input))
   return String(input) === shortLink ? new Response(null, { status: 302, headers: { location: placeLink } }) : new Response(null, { status: 404 })
 }) as typeof fetch
-const env = createCatalogHttp(testDatabase, { mapsFetch })
+// The orders module is not built, so this stand-in names the points an order would: a delete of one of them is refused (gate G-S8-PICKUP-DELETE).
+const named = new Set<string>()
+const env = createCatalogHttp(testDatabase, {
+  mapsFetch,
+  sales: { soldProductIds: async () => new Set<string>(), soldSkuIds: async () => new Set<string>(), usedPickupPlaceIds: async (_tx, _storeId, ids) => new Set(ids.filter(id => named.has(id))) },
+})
 
 interface Span { weekday: number, opens: string, closes: string }
 interface View {
@@ -176,7 +181,6 @@ describe('[E6.6][AC26] pickup points over HTTP', () => {
     expect(await restored.json()).toMatchObject({ archived: false, position: 4, rowVersion: 3, hours: [{ weekday: 2, opens: '10:00', closes: '12:00' }] })
     expect((await list()).map(item => [item.name.en, item.position])).toEqual([['First', 1], ['Third', 3], ['Second', 4]])
     expect((await send(`/${second.id}/restore`, 'POST')).status).toBe(428)
-    expect((await send(`/${second.id}`, 'DELETE')).status).toBe(404)
   })
 
   it('[E6.6][AC26] AC-7: a point of another store is 404 and not in the list', async () => {
@@ -231,9 +235,10 @@ describe('[E6.6][AC26] pickup points over HTTP', () => {
       env.call(`${base}/order`, { method: 'PUT', headers: stranger.headers, body: { ids: [point.id] } }),
       env.call(`${base}/${point.id}/archive`, { method: 'POST', headers: as }),
       env.call(`${base}/${point.id}/restore`, { method: 'POST', headers: as }),
+      env.call(`${base}/${point.id}`, { method: 'DELETE', headers: as }),
     ]
 
-    expect((await Promise.all(calls)).map(response => response.status)).toEqual([403, 403, 403, 403, 403])
+    expect((await Promise.all(calls)).map(response => response.status)).toEqual([403, 403, 403, 403, 403, 403])
     expect(await list()).toEqual([point])
     expect((await send(`/${point.id}`, 'GET')).status).toBe(200)
   })
@@ -375,5 +380,61 @@ describe('[E6.6][AC26] pickup points over HTTP', () => {
       { entity: 'pickup_place', action: 'created', store_id: store.storeId },
       { entity: 'pickup_place', action: 'archived', store_id: store.storeId },
     ])
+  })
+
+  describe('[S8-PICKUP-DELETE] delete', () => {
+    const hourCount = async (id: string) => Number((await pool.query<{ n: string }>(`select count(*) as n from catalog.pickup_place_hours where place_id = $1`, [id])).rows[0]!.n)
+
+    it('deletes an active point with its hours, closes the position gap for nobody else, and writes one audit entry', async () => {
+      const { created, send, withVersion, list, store } = await setup({ fresh: true })
+      const first = await created({ name: { en: 'A' } })
+      const second = await created({ name: { en: 'B' } })
+      expect(await hourCount(first.id)).toBe(6)
+
+      const removed = await send(`/${first.id}`, 'DELETE', undefined, withVersion(1))
+      expect(removed.status).toBe(200)
+      expect(await removed.json()).toEqual({ id: first.id })
+      expect(await hourCount(first.id)).toBe(0)
+      expect((await send(`/${first.id}`, 'GET')).status).toBe(404)
+      expect(await list()).toEqual([second])
+      const { rows } = await pool.query<{ action: string, store_id: string }>(`select action, store_id from platform.audit_log where entity = 'pickup_place' and entity_id = $1 order by at, id`, [first.id])
+      expect(rows).toEqual([{ action: 'created', store_id: store.storeId }, { action: 'deleted', store_id: store.storeId }])
+    })
+
+    it('deletes an archived point too, and the deleted slot frees room under the limit of active points', async () => {
+      const { created, send, withVersion, list } = await setup({ fresh: true })
+      const point = await created()
+      const other = await created({ name: { en: 'Other' } })
+      await send(`/${point.id}/archive`, 'POST', undefined, withVersion(1))
+
+      expect((await send(`/${point.id}`, 'DELETE', undefined, withVersion(2))).status).toBe(200)
+      expect(await list('?archived=true')).toEqual([])
+      expect(await list()).toEqual([other])
+    })
+
+    it('refuses a point an order names with 409 pickup-in-use and changes nothing; archive still works', async () => {
+      const { created, send, withVersion, list } = await setup({ fresh: true })
+      const point = await created()
+      named.add(point.id)
+
+      const refused = await send(`/${point.id}`, 'DELETE', undefined, withVersion(1))
+      expect(refused.status).toBe(409)
+      expect(await refused.json()).toMatchObject({ type: expect.stringContaining('pickup-in-use') })
+      expect(await list()).toEqual([point])
+      expect(await hourCount(point.id)).toBe(6)
+      expect((await send(`/${point.id}/archive`, 'POST', undefined, withVersion(1))).status).toBe(200)
+    })
+
+    it('a stale If-Match is 412, a missing one 428, and another store\'s point is 404, all changing nothing', async () => {
+      const { created, send, withVersion, list } = await setup({ fresh: true })
+      const point = await created()
+      await send(`/${point.id}`, 'PATCH', { name: { en: 'Second' } }, withVersion(1))
+      expect((await send(`/${point.id}`, 'DELETE', undefined, withVersion(1))).status).toBe(412)
+      expect((await send(`/${point.id}`, 'DELETE')).status).toBe(428)
+      expect(await list()).toEqual([expect.objectContaining({ id: point.id, rowVersion: 2 })])
+
+      const mine = await setup({ fresh: true })
+      expect((await mine.send(`/${point.id}`, 'DELETE', undefined, mine.withVersion(2))).status).toBe(404)
+    })
   })
 })

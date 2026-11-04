@@ -6090,6 +6090,19 @@
         },
         "type": "object"
       },
+      "PickupPlaceRemoval": {
+        "description": "The pickup point that was deleted",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
       "PickupPlaceWriteBody": {
         "additionalProperties": false,
         "description": "A new pickup point, appended last. The Google Maps link is required; the position (latitude, longitude) is read from it",
@@ -7215,7 +7228,7 @@
             "type": "string"
           },
           "type": {
-            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, keepsake-archived, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, maps-link-unreadable, address-not-found, address-lookup-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken, stock-below-reserved. Show generic copy for any other",
+            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, keepsake-archived, pickup-in-use, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, maps-link-unreadable, address-not-found, address-lookup-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken, stock-below-reserved. Show generic copy for any other",
             "type": "string"
           }
         },
@@ -20210,6 +20223,70 @@
       }
     },
     "/api/store/{storeId}/pickup-places/{placeId}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "placeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPlaceRemoval"
+                }
+              }
+            },
+            "description": "The pickup point, active or archived, is deleted with its hours. 409 `pickup-in-use` when an order or a handover names it: archive it instead",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
       "get": {
         "parameters": [
           {
@@ -20392,7 +20469,7 @@
                 }
               }
             },
-            "description": "The pickup point is archived and leaves the active list. An archived point is returned as it is. There is no delete: orders and handovers keep naming it",
+            "description": "The pickup point is archived and leaves the active list. An archived point is returned as it is. A point that an order or a handover names can only be archived",
             "headers": {
               "ETag": {
                 "description": "The row version, as `\"<rowVersion>\"`",

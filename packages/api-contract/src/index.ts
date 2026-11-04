@@ -154,6 +154,8 @@ export {
   pickupPlaceOrderBodySchema,
   type PickupPlacePatchBody,
   pickupPlacePatchBodySchema,
+  type PickupPlaceRemoval,
+  pickupPlaceRemovalSchema,
   pickupPlaceSchema,
   type PickupPlaceWriteBody,
   pickupPlaceWriteBodySchema,

@@ -131,6 +131,11 @@ export function createPickupRepository(): PickupPlaceRepository<Tx> {
          where p.store_id = ${storeId} and p.id = v.id`)
     },
 
+    async remove(tx, place) {
+      // The hours go with the point through the foreign key's ON DELETE CASCADE (0022).
+      await tx.execute(sql`delete from catalog.pickup_places where store_id = ${place.storeId} and id = ${place.id}`)
+    },
+
     async setArchived(tx, place, archived, at) {
       // A restored point goes to the end of the active list, so it never ties with a point that took its place.
       const position = archived ? sql`position` : sql`(select coalesce(max(position), 0) + 1 from catalog.pickup_places where store_id = ${place.storeId} and archived_at is null)`

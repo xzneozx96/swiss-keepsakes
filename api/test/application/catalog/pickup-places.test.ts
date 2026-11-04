@@ -1,9 +1,9 @@
 import type { Actor } from '@sk/domain/identity'
 import type { PickupDeps } from '../../../src/modules/catalog/application/deps.ts'
-import type { PickupPlace, PickupPlaceRepository } from '../../../src/modules/catalog/ports.ts'
+import type { PickupPlace, PickupPlaceRepository, SalesDirectory } from '../../../src/modules/catalog/ports.ts'
 import { PICKUP_MAX_PLACES as CONTRACT_MAX_PLACES } from '@sk/api-contract'
 import { describe, expect, it, vi } from 'vitest'
-import { makeArchivePickupPlace, makeCreatePickupPlace, makeGetPickupPlace, makeListPickupPlaces, makeReorderPickupPlaces, makeRestorePickupPlace, makeSavePickupPlace } from '../../../src/modules/catalog/application/pickup-places.ts'
+import { makeArchivePickupPlace, makeCreatePickupPlace, makeDeletePickupPlace, makeGetPickupPlace, makeListPickupPlaces, makeReorderPickupPlaces, makeRestorePickupPlace, makeSavePickupPlace } from '../../../src/modules/catalog/application/pickup-places.ts'
 import { PICKUP_MAX_PLACES } from '../../../src/modules/catalog/application/pickup-rules.ts'
 
 const storeId = '0190f0c2-0000-7000-8000-00000000000a'
@@ -38,6 +38,7 @@ function setup(rows: PickupPlace[] = [place('a'), place('b', { position: 2 })]) 
     save: vi.fn(async (_tx: null, current: PickupPlace) => current),
     setPositions: vi.fn(async () => {}),
     setArchived: vi.fn(async (_tx: null, current: PickupPlace) => current),
+    remove: vi.fn(async () => {}),
   } as unknown as PickupPlaceRepository<null>
   const maps = { positionOf: vi.fn(async (_link: string): Promise<{ latitude: number, longitude: number } | undefined> => ({ latitude: 46.9, longitude: 7.4 })) }
   const deps: PickupDeps<null> = {
@@ -64,6 +65,7 @@ describe('[E6.6][AC26] pickup point use cases', () => {
       await makeReorderPickupPlaces(deps)(guest, storeId, ['a', 'b'], null),
       await makeArchivePickupPlace(deps)(guest, storeId, 'a', 3, null),
       await makeRestorePickupPlace(deps)(guest, storeId, 'a', 3, null),
+      await makeDeletePickupPlace(deps)(guest, storeId, 'a', 3, null),
     ]
 
     for (const result of results)
@@ -248,5 +250,64 @@ describe('[E6.6][AC26] pickup point use cases', () => {
     await makeCreatePickupPlace(deps)(owner, storeId, body, null)
 
     expect(vi.mocked(deps.audit.record).mock.lastCall![1].after).toMatchObject({ mapsLink: expect.any(String), latitude: expect.any(Number), longitude: expect.any(Number) })
+  })
+
+  describe('[S8-PICKUP-DELETE] delete', () => {
+    const usedBy = (...ids: string[]): SalesDirectory<null> => ({ soldProductIds: async () => new Set<string>(), soldSkuIds: async () => new Set<string>(), usedPickupPlaceIds: vi.fn(async (_tx: null, _store: string, asked: string[]) => new Set(asked.filter(id => ids.includes(id)))) })
+
+    it('deletes an active or an archived point that nothing names, records one audit entry, and keeps the others', async () => {
+      const { repo, deps } = setup([place('a'), place('b', { position: 2, archived: true })])
+
+      expect(await makeDeletePickupPlace(deps)(owner, storeId, 'a', 3, 'req-1')).toEqual({ ok: true, value: { id: 'a' } })
+      expect(await makeDeletePickupPlace(deps)(owner, storeId, 'b', 3, 'req-2')).toEqual({ ok: true, value: { id: 'b' } })
+      expect(repo.remove).toHaveBeenCalledTimes(2)
+      expect(repo.remove).toHaveBeenNthCalledWith(1, null, expect.objectContaining({ id: 'a' }))
+      expect(deps.audit.record).toHaveBeenNthCalledWith(1, null, expect.objectContaining({ storeId, entity: 'pickup_place', entityId: 'a', action: 'deleted', requestId: 'req-1', before: expect.objectContaining({ name: { en: 'Shop' }, archived: false }) }))
+      expect(vi.mocked(deps.audit.record).mock.calls[0]![1]).not.toHaveProperty('after')
+    })
+
+    it('deletes when the point is not among the used ones of the sales port', async () => {
+      const { repo, deps } = setup()
+      const sales = usedBy('b')
+
+      expect(await makeDeletePickupPlace({ ...deps, sales })(owner, storeId, 'a', 3, null)).toMatchObject({ ok: true })
+      expect(sales.usedPickupPlaceIds).toHaveBeenCalledWith(null, storeId, ['a'])
+      expect(repo.remove).toHaveBeenCalledTimes(1)
+    })
+
+    it('refuses a point that an order or a handover names: in-use, nothing removed, nothing audited', async () => {
+      const { repo, deps } = setup()
+
+      expect(await makeDeletePickupPlace({ ...deps, sales: usedBy('a') })(owner, storeId, 'a', 3, null)).toMatchObject({ ok: false, reason: 'in-use' })
+      expect(repo.remove).not.toHaveBeenCalled()
+      expect(deps.audit.record).not.toHaveBeenCalled()
+    })
+
+    it('refuses a stale If-Match with stale, and an unknown or other-store point with not-found', async () => {
+      const { repo, deps } = setup()
+
+      expect(await makeDeletePickupPlace(deps)(owner, storeId, 'a', 2, null)).toMatchObject({ ok: false, reason: 'stale' })
+      expect(await makeDeletePickupPlace(deps)(owner, storeId, 'zzz', 3, null)).toMatchObject({ ok: false, reason: 'not-found' })
+      expect(repo.remove).not.toHaveBeenCalled()
+      expect(deps.audit.record).not.toHaveBeenCalled()
+    })
+
+    it('a staff member of another store is forbidden and the repository is not touched', async () => {
+      const { repo, deps } = setup()
+      const other: Actor = { kind: 'staff', userId: 'u2', guestId: 'g-u2', stores: new Map([['0190f0c2-0000-7000-8000-00000000000b', 'owner']]) }
+
+      expect(await makeDeletePickupPlace(deps)(other, storeId, 'a', 3, null)).toMatchObject({ ok: false, reason: 'forbidden' })
+      expect(repo.find).not.toHaveBeenCalled()
+    })
+
+    it('takes the list lock before the row, like archive, so a reorder never reads a point that is leaving', async () => {
+      const { repo, deps } = setup()
+      await makeDeletePickupPlace(deps)(owner, storeId, 'a', 3, null)
+
+      const lock = vi.mocked(repo.lockList).mock.invocationCallOrder[0]!
+      const row = vi.mocked(repo.find).mock.invocationCallOrder[0]!
+      expect(lock).toBeLessThan(row)
+      expect(repo.find).toHaveBeenCalledWith(null, storeId, 'a', true)
+    })
   })
 })

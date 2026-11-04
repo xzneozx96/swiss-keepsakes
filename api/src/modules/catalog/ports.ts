@@ -256,6 +256,9 @@ export interface SalesDirectory<T> {
   // The same for a variant: which of these SKU ids an order line names (`orders.order_lines.sku_id`, ADR-023). A variant
   // that none names is deleted when it is removed, one that does is archived.
   soldSkuIds: (tx: T, storeId: string, skuIds: string[]) => Promise<Set<string>>
+  // Which of these pickup points an order or a handover names (E7.1+, ADR-024). A point that none names can be deleted;
+  // one that is named can only be archived (gate G-S8-PICKUP-DELETE, 2026-11-04).
+  usedPickupPlaceIds: (tx: T, storeId: string, placeIds: string[]) => Promise<Set<string>>
 }
 
 // The stories and tours that link a keepsake, by its plain id (ADR-013). The content module fills this through the
@@ -388,4 +391,6 @@ export interface PickupPlaceRepository<T> {
   setPositions: (tx: T, storeId: string, ids: string[], at: Date) => Promise<void>
   // Keeps the position and the hours; bumps row_version.
   setArchived: (tx: T, place: PickupPlace, archived: boolean, at: Date) => Promise<PickupPlace>
+  // Deletes the point; its hours rows go with it (the foreign key cascades).
+  remove: (tx: T, place: PickupPlace) => Promise<void>
 }

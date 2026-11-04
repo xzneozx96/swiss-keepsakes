@@ -92,6 +92,7 @@ export function failureProblem(failure: Failure): FailureProblem {
     case 'media-invalid': return { status: 422, type: 'media-invalid', title: 'A file you chose is not available here, or is not a photo.' }
     case 'media-processing': return { status: 422, type: 'media-processing', title: 'A photo is still being processed. Try again in a moment.', mediaIds: failure.mediaIds }
     case 'archived': return { status: 409, type: 'keepsake-archived', title: 'This keepsake is archived and can’t be changed.' }
+    case 'in-use': return { status: 409, type: 'pickup-in-use', title: 'An order or a handover names this pickup point, so it can’t be deleted. Archive it instead.' }
     case 'not-published': return { status: 409, type: 'not-published', title: 'This keepsake is not published.' }
     case 'slug-conflict': return { status: 409, type: 'slug-conflict', title: 'Another keepsake just took this web address. Publish again.' }
     case 'sku-code-taken': return { status: 409, type: 'sku-code-taken', title: 'This SKU code is already used in your shop.' }

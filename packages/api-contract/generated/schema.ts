@@ -2340,7 +2340,43 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    placeId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The pickup point, active or archived, is deleted with its hours. 409 `pickup-in-use` when an order or a handover names it: archive it instead */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PickupPlaceRemoval"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch: {
@@ -2412,7 +2448,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description The pickup point is archived and leaves the active list. An archived point is returned as it is. There is no delete: orders and handovers keep naming it */
+                /** @description The pickup point is archived and leaves the active list. An archived point is returned as it is. A point that an order or a handover names can only be archived */
                 200: {
                     headers: {
                         /** @description The row version, as `"<rowVersion>"` */
@@ -5747,6 +5783,11 @@ export interface components {
             mapsLink?: string;
             name?: components["schemas"]["PickupNameInput"];
         };
+        /** @description The pickup point that was deleted */
+        PickupPlaceRemoval: {
+            /** Format: uuid */
+            id: string;
+        };
         /** @description A new pickup point, appended last. The Google Maps link is required; the position (latitude, longitude) is read from it */
         PickupPlaceWriteBody: {
             address: components["schemas"]["PickupAddressInput"];
@@ -6049,7 +6090,7 @@ export interface components {
             skuId?: string;
             status: number;
             title: string;
-            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, keepsake-archived, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, maps-link-unreadable, address-not-found, address-lookup-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken, stock-below-reserved. Show generic copy for any other */
+            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, keepsake-archived, pickup-in-use, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, maps-link-unreadable, address-not-found, address-lookup-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken, stock-below-reserved. Show generic copy for any other */
             type: string;
         };
         /** @description A keepsake with its working copy, variants and publish checks */

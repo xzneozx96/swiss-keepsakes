@@ -52,7 +52,7 @@ function setup(found: Product | undefined, reserved = new Map<string, number>(),
     clock: { now: () => new Date('2026-10-30T08:00:00Z') },
     reservations: { reservedBySku: async () => reserved },
     keepsakeLinks: { removeAll: async () => {} },
-    sales: { soldProductIds: async () => new Set<string>(), soldSkuIds: async (_tx: null, _store: string, ids: string[]) => new Set(ids.filter(id => sold.has(id))) },
+    sales: { soldProductIds: async () => new Set<string>(), usedPickupPlaceIds: async () => new Set<string>(), soldSkuIds: async (_tx: null, _store: string, ids: string[]) => new Set(ids.filter(id => sold.has(id))) },
   }
   return { repo, deps }
 }

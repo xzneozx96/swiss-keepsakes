@@ -75,6 +75,11 @@ export const pickupPlaceListQuerySchema = z.object({
   archived: z.enum(['true', 'false']).optional().meta({ description: 'true lists the archived points; the default lists the active ones' }),
 }).meta({ id: 'PickupPlaceListQuery' })
 
+export const pickupPlaceRemovalSchema = z.object({
+  id: z.uuid(),
+}).meta({ id: 'PickupPlaceRemoval', description: 'The pickup point that was deleted' })
+
+export type PickupPlaceRemoval = z.infer<typeof pickupPlaceRemovalSchema>
 export type PickupPlaceWriteBody = z.infer<typeof pickupPlaceWriteBodySchema>
 export type PickupPlacePatchBody = z.infer<typeof pickupPlacePatchBodySchema>
 export type PickupPlaceOrderBody = z.infer<typeof pickupPlaceOrderBodySchema>

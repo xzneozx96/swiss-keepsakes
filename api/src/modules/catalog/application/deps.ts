@@ -23,4 +23,6 @@ export interface PickupDeps<T> {
   maps: MapsPositions
   audit: AuditLog<T>
   clock: Clock
+  // Left out until the orders module wires E7.1. Without it no point counts as used, so a delete removes it.
+  sales?: SalesDirectory<T>
 }

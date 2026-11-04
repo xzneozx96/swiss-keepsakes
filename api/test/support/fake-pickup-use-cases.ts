@@ -26,5 +26,6 @@ export function createFakePickupUseCases(): PickupUseCases {
     reorderPickupPlaces: async () => ({ ok: true, value: [] }),
     archivePickupPlace: async (_actor, storeId, placeId, ifMatch) => ({ ok: true, value: { ...place(storeId, placeId, ifMatch + 1), archived: true } }),
     restorePickupPlace: async (_actor, storeId, placeId, ifMatch) => ({ ok: true, value: place(storeId, placeId, ifMatch + 1) }),
+    deletePickupPlace: async (_actor, _storeId, placeId) => ({ ok: true, value: { id: placeId } }),
   }
 }

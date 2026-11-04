@@ -6,7 +6,7 @@ import type { Result } from '../application/failure.ts'
 import type { PickupTextInput } from '../application/pickup-rules.ts'
 import type { PickupPlace, PickupPlaceEdit, PickupSpan } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { pickupPlaceListQuerySchema, pickupPlaceListSchema, pickupPlaceOrderBodySchema, pickupPlacePatchBodySchema, pickupPlaceSchema, pickupPlaceWriteBodySchema } from '@sk/api-contract'
+import { pickupPlaceListQuerySchema, pickupPlaceListSchema, pickupPlaceOrderBodySchema, pickupPlacePatchBodySchema, pickupPlaceRemovalSchema, pickupPlaceSchema, pickupPlaceWriteBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
@@ -22,6 +22,7 @@ export interface PickupUseCases {
   reorderPickupPlaces: (actor: Actor, storeId: string, ids: string[], requestId: string | null) => Promise<Result<PickupPlace[]>>
   archivePickupPlace: (actor: Actor, storeId: string, placeId: string, ifMatch: number, requestId: string | null) => Promise<Result<PickupPlace>>
   restorePickupPlace: (actor: Actor, storeId: string, placeId: string, ifMatch: number, requestId: string | null) => Promise<Result<PickupPlace>>
+  deletePickupPlace: (actor: Actor, storeId: string, placeId: string, ifMatch: number, requestId: string | null) => Promise<Result<{ id: string }>>
 }
 
 const placeParams = z.object({ storeId: z.uuid(), placeId: z.uuid() })
@@ -82,7 +83,7 @@ const archiveRoute = createRoute({
   path: `${path}/{placeId}/archive`,
   request: { params: placeParams, ...withIfMatch },
   responses: {
-    200: { description: 'The pickup point is archived and leaves the active list. An archived point is returned as it is. There is no delete: orders and handovers keep naming it', headers: etagHeaders, content: json(pickupPlaceSchema) },
+    200: { description: 'The pickup point is archived and leaves the active list. An archived point is returned as it is. A point that an order or a handover names can only be archived', headers: etagHeaders, content: json(pickupPlaceSchema) },
     ...problemResponses,
   },
 })
@@ -93,6 +94,16 @@ const restoreRoute = createRoute({
   request: { params: placeParams, ...withIfMatch },
   responses: {
     200: { description: 'The pickup point is active again, with its hours and its place in the order. An active point is returned as it is', headers: etagHeaders, content: json(pickupPlaceSchema) },
+    ...problemResponses,
+  },
+})
+
+const deleteRoute = createRoute({
+  method: 'delete',
+  path: `${path}/{placeId}`,
+  request: { params: placeParams, ...withIfMatch },
+  responses: {
+    200: { description: 'The pickup point, active or archived, is deleted with its hours. 409 `pickup-in-use` when an order or a handover names it: archive it instead', headers: requestIdHeader, content: json(pickupPlaceRemovalSchema) },
     ...problemResponses,
   },
 })
@@ -167,5 +178,15 @@ export function registerPickupRoutes(app: OpenAPIHono<AppEnv>, useCases: PickupU
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(view(result.value), 200, etag(result.value))
+  })
+
+  app.openapi(deleteRoute, async (c) => {
+    const ifMatch = readIfMatch(c)
+    if (!ifMatch.ok)
+      return ifMatch.response
+    const result = await useCases.deletePickupPlace(c.get('actor'), c.get('store').storeId, c.req.valid('param').placeId, ifMatch.version, c.get('requestId'))
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json(result.value, 200)
   })
 }

@@ -9,7 +9,7 @@ import { registerPickupRoutes } from './modules/catalog/adapters/pickup-routes.t
 import { createProductRepository } from './modules/catalog/adapters/product-repository.ts'
 import { registerCatalogRoutes } from './modules/catalog/adapters/routes.ts'
 import { createSkuDirectory } from './modules/catalog/adapters/sku-directory.ts'
-import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetPickupPlace, makeGetProduct, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from './modules/catalog/index.ts'
+import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeletePickupPlace, makeDeleteProduct, makeGetPickupPlace, makeGetProduct, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from './modules/catalog/index.ts'
 import { createAddressRegister } from './modules/content/adapters/address-register-fetch.ts'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
@@ -313,6 +313,7 @@ async function main() {
       reorderPickupPlaces: makeReorderPickupPlaces(pickupDeps),
       archivePickupPlace: makeArchivePickupPlace(pickupDeps),
       restorePickupPlace: makeRestorePickupPlace(pickupDeps),
+      deletePickupPlace: makeDeletePickupPlace(pickupDeps),
     })
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),

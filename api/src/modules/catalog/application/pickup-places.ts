@@ -7,8 +7,8 @@ import { mayEditCatalog, staffActor } from './access.ts'
 import { fail, ok } from './failure.ts'
 import { checkHours, checkPickupText, PICKUP_MAX_PLACES } from './pickup-rules.ts'
 
-// The merchant's pickup points (E6.6). Every use case needs edit-catalog in the store. A point is archived, never deleted
-// (ADR-013: handovers and orders name it by plain id). The rules of the text and the hours are in pickup-rules.ts.
+// The merchant's pickup points (E6.6). Every use case needs edit-catalog in the store. A point that no order or handover
+// names can be deleted; once one does it can only be archived (ADR-013: they name it by plain id; gate G-S8-PICKUP-DELETE). The rules of the text and the hours are in pickup-rules.ts.
 
 const audited = (place: PickupPlace) => ({ name: place.name, address: place.address, mapsLink: place.mapsLink, latitude: place.latitude, longitude: place.longitude, instructions: place.instructions, position: place.position, archived: place.archived, hours: place.hours, rowVersion: place.rowVersion })
 
@@ -141,3 +141,25 @@ function makeSetArchived<T>({ uow, pickups, audit, clock }: PickupDeps<T>, archi
 
 export const makeArchivePickupPlace = <T>(deps: PickupDeps<T>) => makeSetArchived(deps, true)
 export const makeRestorePickupPlace = <T>(deps: PickupDeps<T>) => makeSetArchived(deps, false)
+
+// Archived or active, a point that nothing names is removed with its hours. Without a sales directory (orders are not
+// built yet) nothing counts as used. The list lock is taken first, as archive does, since the active set changes.
+export function makeDeletePickupPlace<T>({ uow, pickups, audit, sales }: PickupDeps<T>) {
+  return async (actor: Actor, storeId: string, placeId: string, ifMatch: number, requestId: string | null): Promise<Result<{ id: string }>> => {
+    if (!mayEditCatalog(actor, storeId))
+      return fail({ reason: 'forbidden' })
+    return uow.run(async (tx) => {
+      await pickups.lockList(tx, storeId)
+      const place = await pickups.find(tx, storeId, placeId, true)
+      if (!place)
+        return fail({ reason: 'not-found' })
+      if (place.rowVersion !== ifMatch)
+        return fail({ reason: 'stale' })
+      if (sales && (await sales.usedPickupPlaceIds(tx, storeId, [place.id])).has(place.id))
+        return fail({ reason: 'in-use' })
+      await pickups.remove(tx, place)
+      await audit.record(tx, { storeId, actor: staffActor(actor), entity: 'pickup_place', entityId: place.id, action: 'deleted', before: audited(place), requestId })
+      return ok({ id: place.id })
+    })
+  }
+}

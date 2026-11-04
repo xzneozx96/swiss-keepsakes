@@ -10,7 +10,7 @@ import { createPickupRepository } from '../../src/modules/catalog/adapters/picku
 import { registerPickupRoutes } from '../../src/modules/catalog/adapters/pickup-routes.ts'
 import { createProductRepository } from '../../src/modules/catalog/adapters/product-repository.ts'
 import { registerCatalogRoutes } from '../../src/modules/catalog/adapters/routes.ts'
-import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetPickupPlace, makeGetProduct, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
+import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeletePickupPlace, makeDeleteProduct, makeGetPickupPlace, makeGetProduct, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
 import { createKeepsakeLinks } from '../../src/modules/content/adapters/keepsake-links.ts'
 import { createMapsLinks } from '../../src/modules/content/adapters/maps-link-fetch.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
@@ -88,7 +88,7 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
   })
   // A short link is followed by `options.mapsFetch`; the default asks nobody, so a test never calls Google.
   const mapsFetch = options.mapsFetch ?? (async () => new Response(null, { status: 404 }))
-  const pickupDeps = { uow, pickups: createPickupRepository(), maps: { positionOf: makeReadMapsPosition({ links: createMapsLinks(mapsFetch), clock: systemClock }) }, audit: deps.audit, clock: systemClock }
+  const pickupDeps = { uow, pickups: createPickupRepository(), maps: { positionOf: makeReadMapsPosition({ links: createMapsLinks(mapsFetch), clock: systemClock }) }, audit: deps.audit, clock: systemClock, ...(options.sales && { sales: options.sales }) }
   const pickupUseCases = guardUseCases({
     listPickupPlaces: makeListPickupPlaces(pickupDeps),
     getPickupPlace: makeGetPickupPlace(pickupDeps),
@@ -97,6 +97,7 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
     reorderPickupPlaces: makeReorderPickupPlaces(pickupDeps),
     archivePickupPlace: makeArchivePickupPlace(pickupDeps),
     restorePickupPlace: makeRestorePickupPlace(pickupDeps),
+    deletePickupPlace: makeDeletePickupPlace(pickupDeps),
   })
   const app = createApp(createLogger('silent'), async () => ({ database: true, jobs: true }), {
     authHandler: auth.handler,

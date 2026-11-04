@@ -56,7 +56,7 @@ function setup(found: Product | undefined, sold: string[] = []) {
     media: { find: async () => [] },
     audit,
     clock: { now: () => new Date('2026-11-01T08:00:00Z') },
-    sales: { soldProductIds, soldSkuIds: async () => new Set<string>() },
+    sales: { soldProductIds, soldSkuIds: async () => new Set<string>(), usedPickupPlaceIds: async () => new Set<string>() },
     keepsakeLinks,
   }
   return { repo, deps, audit, soldProductIds, keepsakeLinks }

@@ -45,6 +45,7 @@ export const problemTypes = [
   'version-exists',
   'not-published',
   'keepsake-archived',
+  'pickup-in-use',
   'content-in-use',
   'media-type-not-allowed',
   'media-too-large',
