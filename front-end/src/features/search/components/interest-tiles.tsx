@@ -21,7 +21,7 @@ export function InterestTiles({ onPick }: { onPick: (interest: InterestCode) => 
           return (
             <li key={code} className={wide ? 'col-span-2' : undefined}>
               <button
-                className={`relative flex w-full overflow-hidden rounded-2xl text-start outline-none focus-visible:focus-ring active:scale-[0.98] motion-safe:transition-transform ${wide ? 'h-28' : 'aspect-[4/3]'}`}
+                className={`relative flex w-full overflow-hidden rounded-2xl text-start outline-none focus-visible:focus-ring motion-safe:active:scale-[0.98] motion-safe:transition-transform ${wide ? 'h-28' : 'aspect-[4/3]'}`}
                 data-photo={photo}
                 type="button"
                 onClick={() => onPick(code)}

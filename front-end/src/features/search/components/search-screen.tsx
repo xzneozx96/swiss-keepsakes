@@ -108,6 +108,13 @@ export function SearchScreen({ sources, failed, isLoading, urlQuery, onQueryComm
   const shown = active === 'all' ? results : results.filter(r => r.kind === active)
   const missing = KINDS.filter(k => failed.includes(k)).map(k => t(`searchScreen.group.${k}`)).join(', ')
   const noMatch = showing && !isLoading && results.length === 0
+  const names = noMatch ? suggestNames(sources) : []
+  const hasResults = showing && !isLoading && results.length > 0
+  const countLine = !hasResults
+    ? ''
+    : interest
+      ? t(shown.length === 1 ? 'searchScreen.interestCount.one' : 'searchScreen.interestCount.other', { count: shown.length, interest: t(`searchScreen.interest.${interest}`) })
+      : t(shown.length === 1 ? 'searchScreen.resultCount.one' : 'searchScreen.resultCount.other', { count: shown.length, query })
 
   return (
     <div className="flex flex-col">
@@ -139,12 +146,18 @@ export function SearchScreen({ sources, failed, isLoading, urlQuery, onQueryComm
         {interest && <InterestChip interest={interest} onClear={() => setChosen(undefined)} />}
         {showing && failed.length > 0 && <p className="text-label text-muted">{t('searchScreen.failed', { kinds: missing })}</p>}
         {showing && isLoading && <SearchRowsSkeleton label={t('searchScreen.searching')} />}
+        {/* One live region, always mounted, so a screen reader announces its text change (the count, or the no-match line). */}
+        <div className={noMatch ? 'flex flex-col gap-1 pt-2' : undefined} role="status">
+          {noMatch && (
+            <>
+              <p className="font-serif text-card-title">{t('searchScreen.noResults', { query })}</p>
+              {names.length > 0 && <p className="text-sm text-muted">{t('searchScreen.noResultsHint', { names: names.join(', ') })}</p>}
+            </>
+          )}
+          {countLine && <p className="text-label text-muted">{countLine}</p>}
+        </div>
         {noMatch && (
           <>
-            <div className="flex flex-col gap-1 pt-2" role="status">
-              <p className="font-serif text-card-title">{t('searchScreen.noResults', { query })}</p>
-              <p className="text-sm text-muted">{t('searchScreen.noResultsHint', { names: suggestNames(sources).join(', ') })}</p>
-            </div>
             <InterestTiles onPick={setChosen} />
             <AdviceBanner
               action={t('home.advice.action')}
@@ -154,14 +167,9 @@ export function SearchScreen({ sources, failed, isLoading, urlQuery, onQueryComm
             />
           </>
         )}
-        {showing && !isLoading && results.length > 0 && (
+        {hasResults && (
           <>
             {filter && <KindFilter active={active} items={filter} onChange={setKind} />}
-            <p className="text-label text-muted" role="status">
-              {interest
-                ? t(shown.length === 1 ? 'searchScreen.interestCount.one' : 'searchScreen.interestCount.other', { count: shown.length, interest: t(`searchScreen.interest.${interest}`) })
-                : t(shown.length === 1 ? 'searchScreen.resultCount.one' : 'searchScreen.resultCount.other', { count: shown.length, query })}
-            </p>
             <ul aria-label={t('searchScreen.results')} className="-mt-3 flex flex-col divide-y divide-separator">
               {shown.map(result => (
                 <li key={result.key}>

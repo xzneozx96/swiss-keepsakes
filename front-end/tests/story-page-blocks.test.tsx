@@ -146,8 +146,8 @@ describe('[E4.4] blocks are independent', () => {
 
 const src = join(__dirname, '..', 'src')
 
-describe('[E4.4] story demo data is gone', () => {
-  it('[AC-5] the deleted demo files are gone', () => {
+describe('[E4.4] the guest story page and route have no demo data', () => {
+  it('[AC-5] the deleted guest story page demo files are gone', () => {
     for (const file of [
       'features/content/components/article-page.tsx',
       'features/content/components/article-comments.tsx',

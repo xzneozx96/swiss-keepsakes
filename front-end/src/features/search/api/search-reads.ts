@@ -6,6 +6,7 @@ import { fetchKeepsakeList } from '@/features/catalog/api/keepsakes'
 import { loadPublicStories } from '@/features/content/api/public-stories'
 import { answer, fromApi, loadClient, timeout } from '@/features/data-client/api-transport'
 import { mapQueries } from '@/features/map/api/queries'
+import { apiEnabled } from '@/lib/api-mode'
 
 /** The published tours in one language, as `GET /api/public/tours` sends them. A failed read throws. */
 export async function fetchTourCards(lang: PublicLanguage): Promise<PublicTourCard[]> {
@@ -16,14 +17,14 @@ export async function fetchTourCards(lang: PublicLanguage): Promise<PublicTourCa
 }
 
 const searchQueries = {
-  stories: (lang: PublicLanguage) => queryOptions({ ...fromApi, queryKey: ['search', 'stories', lang], queryFn: () => loadPublicStories(lang) }),
-  tours: (lang: PublicLanguage) => queryOptions({ ...fromApi, queryKey: ['search', 'tours', lang], queryFn: () => fetchTourCards(lang) }),
-  keepsakes: (lang: PublicLanguage) => queryOptions({ ...fromApi, queryKey: ['search', 'keepsakes', lang], queryFn: async () => (await fetchKeepsakeList(lang)).items }),
+  stories: (lang: PublicLanguage) => queryOptions({ ...fromApi, queryKey: ['search', 'stories', lang], queryFn: () => loadPublicStories(lang), enabled: apiEnabled }),
+  tours: (lang: PublicLanguage) => queryOptions({ ...fromApi, queryKey: ['search', 'tours', lang], queryFn: () => fetchTourCards(lang), enabled: apiEnabled }),
+  keepsakes: (lang: PublicLanguage) => queryOptions({ ...fromApi, queryKey: ['search', 'keepsakes', lang], queryFn: async () => (await fetchKeepsakeList(lang)).items, enabled: apiEnabled }),
 }
 
 /**
  * The four lists the search reads, each on its own so one failed read leaves the others (`failed` names it). The pins are
- * the cached map read (ADR-006). `isLoading` is true only while a read is in flight, so a build without the API shows no skeleton.
+ * the cached map read (ADR-006). `isLoading` is true only while a read is in flight. Like the pins read, the three lists wait for the API (`apiEnabled`), so a build without it sends no request, shows no skeleton and no failure notice.
  */
 export function useSearchSources(lang: PublicLanguage) {
   const stories = useQuery(searchQueries.stories(lang))

@@ -214,6 +214,37 @@ describe('[E4.14][AC94] no results and a failed read', () => {
     expect(await screen.findByText('Noch nichts zu «zzzz»')).toBeInTheDocument()
   })
 
+  it('ac-6: with no names to suggest, the hint is not shown (EN)', async () => {
+    const user = await renderScreen({ sources: none })
+
+    await user.type(screen.getByRole('searchbox'), 'zzzz')
+
+    expect(await screen.findByText('Nothing for “zzzz” yet')).toBeInTheDocument()
+    expect(screen.queryByText(/look around the map/)).not.toBeInTheDocument()
+  })
+
+  it('ac-6 de: with no names to suggest, the hint is not shown', async () => {
+    const user = await renderScreen({ sources: none, url: '/de/search' })
+
+    await user.type(screen.getByRole('searchbox'), 'zzzz')
+
+    expect(await screen.findByText('Noch nichts zu «zzzz»')).toBeInTheDocument()
+    expect(screen.queryByText(/auf der Karte/)).not.toBeInTheDocument()
+  })
+
+  it('the status region stays mounted while its text changes between count and no-match', async () => {
+    const user = await renderScreen()
+
+    const region = screen.getByRole('status')
+
+    expect(region).toBeEmptyDOMElement()
+    await user.type(screen.getByRole('searchbox'), 'lion')
+    await waitFor(() => expect(region).toHaveTextContent('3 results for “lion”'))
+    await user.type(screen.getByRole('searchbox'), 'zzz')
+    await waitFor(() => expect(region).toHaveTextContent('Nothing for “lionzzz” yet'))
+    expect(screen.getByRole('status')).toBe(region)
+  })
+
   it('ac-6: a failed keepsake read still shows the other kinds, with a notice', async () => {
     const user = await renderScreen({ sources: { ...full, keepsakes: [] }, failed: ['keepsake'] })
 

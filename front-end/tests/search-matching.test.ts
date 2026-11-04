@@ -112,8 +112,8 @@ describe('[E4.14][AC54][AC90][AC94] scoreTitle: equal 4, whole-word prefix 3, pr
   })
 })
 
-describe('[E4.14][AC54][AC90][AC94] hidden things and prices never show', () => {
-  it('ac-4 the lists hold no expired pin or unpublished keepsake, so their names find nothing, and no row has a price', () => {
+describe('[E4.14][AC54][AC90][AC94] the matcher adds no filter of its own, and no row has a price', () => {
+  it('ac-4 the matcher returns only what the lists hold (the public reads omit hidden rows, see the API tests), and no row has a price', () => {
     // The public reads already omit an expired event pin, a draft or hidden pin, and an unpublished or archived keepsake.
     const s: SearchSources = {
       ...none,
