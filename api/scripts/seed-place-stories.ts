@@ -85,7 +85,7 @@ export interface StoryPlan {
   // Photos the store does not hold yet.
   uploads: StoryPhoto[]
   // A stored version that is not the data yet (or is not published): saved as the draft, then published.
-  refreshes: { key: string, version: StoredVersion, draft: StoryDraft }[]
+  refreshes: { key: string, version: StoredVersion, draft: StoryDraft, publish: boolean }[]
   // Places with no cover that get the photo as their cover.
   placeCovers: { placeId: string, slug: string, photo: StoryPhoto }[]
   // Places that would get a cover but hold unpublished changes of a person: left alone.
@@ -205,8 +205,9 @@ export function planPlaceStories(stories: readonly PlaceStory[], snapshot: Story
         const stored = snapshot.versions.find(v => v.slug === story.slug[language] && v.language === language)
         if (!stored)
           continue
-        if (cover === null) {
-          plan.faults.push(`Story ${story.key} (${language}) has no cover: no cover photo, and the place ${story.coverFrom} has none.`)
+        // A story with no cover cannot be published: a stored draft is brought to the text and stays a draft.
+        if (cover === null && stored.status === 'published') {
+          plan.faults.push(`Story ${story.key} (${language}) is published and has no cover: no cover photo, and the place ${story.coverFrom} has none.`)
           continue
         }
         if (stored.pendingDraft) {
@@ -214,8 +215,8 @@ export function planPlaceStories(stories: readonly PlaceStory[], snapshot: Story
           continue
         }
         const draft = placeStoryDraft(story, language, cover, refs)
-        if (stored.status !== 'published' || !sameDraft(stored.doc, draft))
-          plan.refreshes.push({ key: story.key, version: stored, draft })
+        if (cover === null ? !sameDraft(stored.doc, draft) : stored.status !== 'published' || !sameDraft(stored.doc, draft))
+          plan.refreshes.push({ key: story.key, version: stored, draft, publish: cover !== null })
       }
       const groupId = snapshot.versions.find(v => v.slug === story.slug.en)?.groupId
       for (const slug of story.mainStoryFor) {
@@ -300,7 +301,7 @@ export function describePlan(plan: StoryPlan, dry: boolean): string {
   const lines = [
     `${verb} upload ${plan.uploads.length} photos: ${plan.uploads.map(photo => photo.key).join(', ') || '-'}`,
     `${verb} set the cover of ${plan.placeCovers.length} places: ${plan.placeCovers.map(entry => entry.slug).join(', ') || '-'}${plan.coversSkipped.length ? ` (skipping ${plan.coversSkipped.join(', ')}: unpublished changes of a person)` : ''}`,
-    `${verb} rewrite and publish ${plan.refreshes.length} story versions: ${plan.refreshes.map(r => `${r.key}/${r.version.language}`).join(', ') || '-'}`,
+    `${verb} rewrite ${plan.refreshes.length} story versions (published again unless they have no cover): ${plan.refreshes.map(r => `${r.key}/${r.version.language}`).join(', ') || '-'}`,
     `${verb} set the main story of ${plan.links.length} places for existing stories`,
     `${verb} create ${plan.creates.length} stories and reviews, skipping ${plan.skipped.length}${plan.skipped.length ? ` (${plan.skipped.map(s => s.key).join(', ')})` : ''}:`,
     ...plan.creates.map(item => `  ${item.story.kind} ${item.story.slug.en} / ${item.story.slug.de}: ${item.publish ? 'published' : `draft (${item.draftReason})`}, places ${item.story.places.join(', ')}, main story of ${item.mainStoryPlaceIds.length} places`),
@@ -342,10 +343,15 @@ export async function applyPlaceStories(pool: Pool, storeId: string, plan: Story
   }
 
   // Stored versions: the draft is replaced as a whole, and the version goes live again.
-  for (const { key, version, draft } of plan.refreshes) {
+  for (const { key, version, draft, publish: goLive } of plan.refreshes) {
     const saved = await saveVersion(actor, storeId, version.groupId, version.language, version.rowVersion, { draft: { ...version.doc, ...draft } }, null)
     if (!saved.ok)
       throw new SeedError(`The text of ${key} (${version.language}) was refused: ${saved.reason}`)
+    if (!goLive) {
+      log(`Rewrote ${key} (${version.language}); it has no cover and stays a draft`)
+      counts.refreshed += 1
+      continue
+    }
     const live = await publish(actor, storeId, version.groupId, version.language, saved.value.rowVersion, null)
     if (!live.ok)
       throw new SeedError(`The text of ${key} (${version.language}) was not published: ${live.reason}${'gaps' in live ? ` ${live.gaps.join(',')}` : ''}`)

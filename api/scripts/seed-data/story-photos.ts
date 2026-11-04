@@ -42,7 +42,7 @@ export const storyPhotos: StoryPhoto[] = [
     author: 'Jvanree',
     licence: 'CC0',
     description: 'Chapel Bridge in Lucerne (Kapellbrücke Luzern 2 by Juliet van Ree.jpg)',
-    alt: { en: 'The south end of the covered bridge with stairs to the deck, visitors on the quay, the Water Tower ahead and the Jesuit Church at the right.', de: 'Das Südende der gedeckten Brücke mit der Treppe zum Gehweg, Besuchern auf dem Quai, dem Wasserturm voraus und der Jesuitenkirche rechts.' },
+    alt: { en: 'The south end of the covered bridge with stairs to the deck, visitors on the quay, the Water Tower ahead and the Jesuit Church at the right.', de: 'Das Südende der gedeckten Brücke mit der Treppe zum Gehweg, Besuchern auf dem Quai, vorn dem Wasserturm und rechts der Jesuitenkirche.' },
     caption: { en: 'Walking onto the bridge at its south end, with the Water Tower ahead.', de: 'Der Zugang zur Brücke am Südende, vorn der Wasserturm.' },
   },
   {
@@ -63,7 +63,7 @@ export const storyPhotos: StoryPhoto[] = [
     licence: 'CC0',
     description: 'Digital copy of slide taken in 1993. Complete indexed photo collection at WorldHistoryPics.com. (Luzern Wasserturm (9808379594).jpg)',
     alt: { en: 'The octagonal stone Water Tower with its brown roof from close by, with a church tower in the distance.', de: 'Der achteckige Wasserturm aus Stein mit braunem Dach aus der Nähe, in der Ferne ein Kirchturm.' },
-    caption: { en: 'The Water Tower in a slide taken in August 1993, a few weeks before the fire.', de: 'Der Wasserturm auf einem Dia vom August 1993, wenige Wochen vor dem Brand.' },
+    caption: { en: 'The Water Tower in a slide from 1993, the summer of the fire.', de: 'Der Wasserturm auf einem Dia von 1993, dem Sommer des Brands.' },
   },
   {
     key: 'cb-merian',
@@ -93,7 +93,7 @@ export const storyPhotos: StoryPhoto[] = [
     licence: 'CC0',
     description: 'Switzerland, 1993; digital copy of print. Complete indexed photo collection at WorldHistoryPics.com. (Kappelbrucke and Wasserturm (10574321255).jpg)',
     alt: { en: 'The Water Tower and the Chapel Bridge seen from the quay, with the Jesuit Church at the left and a lamp post in front.', de: 'Wasserturm und Kapellbrücke vom Quai aus gesehen, links die Jesuitenkirche und davor ein Laternenmast.' },
-    caption: { en: 'A print from 1993, shortly before the fire, with the Jesuit Church at the left.', de: 'Ein Abzug von 1993, kurz vor dem Brand, links die Jesuitenkirche.' },
+    caption: { en: 'A photograph from 1993, before the fire, with the Jesuit Church at the left.', de: 'Eine Fotografie von 1993, vor dem Brand, links die Jesuitenkirche.' },
   },
   {
     key: 'cb-seebruecke-chapel',
@@ -153,7 +153,7 @@ export const storyPhotos: StoryPhoto[] = [
     licence: 'Public domain',
     description: 'Spreuerbrucke Panel 50, The child (50 Das Kind.jpg)',
     alt: { en: 'Triangular painting of a room in which a skeleton bends over a small child, while a woman stands at the right.', de: 'Dreieckiges Gemälde einer Stube, in der sich ein Skelett über ein kleines Kind beugt, rechts steht eine Frau.' },
-    caption: { en: 'The Child, one of the panels in which Death meets the very young.', de: 'Das Kind, eines der Bilder, in denen der Tod den ganz Jungen begegnet.' },
+    caption: { en: 'The Child, one of the panels in which Death meets the very young.', de: 'Das Kind, eines der Bilder, in denen der Tod den ganz Kleinen begegnet.' },
   },
   {
     key: 'sp-berchem',
@@ -293,7 +293,7 @@ export const storyPhotos: StoryPhoto[] = [
     licence: 'Public domain',
     description: 'Print no. "16700".; Forms part of: Views of Switzerland in the Photochrom print collection.; Title from the Detroit Publishing Co., Catalogu (Lion Monument, and fountain, Lucerne, Switzerland-LCCN2001703055.jpg)',
     alt: { en: 'Colour print of the lion in its cliff with a tall jet of water in the pond in front and swans on the water.', de: 'Farbdruck des Löwen in seiner Felswand mit einem hohen Wasserstrahl im Teich davor und Schwänen auf dem Wasser.' },
-    caption: { en: 'An old colour print (a photochrom) with a fountain jet in the pond.', de: 'Ein alter Farbdruck (Photochrom) mit einem Springbrunnen im Teich.' },
+    caption: { en: 'An old colour print with a fountain jet in the pond.', de: 'Ein alter Farbdruck mit einem Springbrunnen im Teich.' },
   },
   {
     key: 'lion-sketch',
@@ -442,8 +442,8 @@ export const storyPhotos: StoryPhoto[] = [
     author: 'Leonhard Lenz',
     licence: 'CC0',
     description: 'Luzern railway station. (Luzern railway station 2022-10-01 06.jpg)',
-    alt: { en: 'A busy station concourse with a glass roof, information screens and escalators at the right.', de: 'Eine belebte Bahnhofshalle mit Glasdach, Anzeigetafeln und Rolltreppen rechts.' },
-    caption: { en: 'The station concourse with its glass roof and escalators.', de: 'Die Bahnhofshalle mit Glasdach und Rolltreppen.' },
+    alt: { en: 'A busy station concourse with a glass roof, information screens and escalators at the right.', de: 'Eine belebte Bahnhofhalle mit Glasdach, Anzeigetafeln und Rolltreppen rechts.' },
+    caption: { en: 'The station concourse with its glass roof and escalators.', de: 'Die Bahnhofhalle mit Glasdach und Rolltreppen.' },
   },
   {
     key: 'st-hall',
@@ -462,7 +462,7 @@ export const storyPhotos: StoryPhoto[] = [
     author: 'Leonhard Lenz',
     licence: 'CC0',
     description: 'Luzern railway station. (Luzern railway station 2022-10-01 01.jpg)',
-    alt: { en: 'The wet station forecourt in front of the long station hall, with pedestrians, umbrellas and autumn trees.', de: 'Der nasse Bahnhofplatz vor der langen Bahnhofshalle, mit Fussgängern, Regenschirmen und Herbstbäumen.' },
+    alt: { en: 'The wet station forecourt in front of the long station hall, with pedestrians, umbrellas and autumn trees.', de: 'Der nasse Bahnhofplatz vor der langen Bahnhofhalle, mit Fussgängern, Regenschirmen und Herbstbäumen.' },
     caption: { en: 'The station forecourt, the way into the station from the city.', de: 'Der Bahnhofplatz, der Zugang zum Bahnhof aus der Stadt.' },
   },
   {

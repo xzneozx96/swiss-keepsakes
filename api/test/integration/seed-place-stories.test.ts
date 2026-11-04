@@ -112,10 +112,14 @@ describe('[seed-place-stories] the stories step on a scratch store', () => {
 
     expect(first.groups).toHaveLength(11)
     expect(first.groups.filter(g => g.kind === 'editorial_review')).toHaveLength(4)
-    for (const group of first.groups) {
+    // The Manor review has no cover photo, so it is created as a draft; every other text is published with a cover.
+    const manor = first.groups.find(g => g.versions[0].slug.startsWith('warenhaus-manor'))
+    expect(manor.versions.map((v: { s: string }) => v.s)).toEqual(['draft', 'draft'])
+    for (const group of first.groups.filter(g => g !== manor)) {
       expect(group.versions.map((v: { l: string, s: string }) => `${v.l}:${v.s}`)).toEqual(['de:published', 'en:published'])
       expect(group.versions.every((v: { cover: string | null, draft: boolean }) => v.cover !== null && !v.draft)).toBe(true)
     }
+    expect(first.pins.find(p => p.id === store.placeIds.get('manor-luzern-a1'))!.main_story_group_id).toBe(manor.id)
     // Every photo of the data is in the library once, and the shops without a cover got one.
     const photoKeys = new Set(stories.flatMap(storyPhotoKeys).concat(covers.map(c => c.photo)))
     expect(store.uploads).toHaveLength(photoKeys.size)
@@ -127,7 +131,7 @@ describe('[seed-place-stories] the stories step on a scratch store', () => {
        where v.store_id = $1 and exists (select 1 from content.media m where m.store_id = $1 and m.id::text = node->'attrs'->>'mediaId')`, [store.storeId])
     const expected = stories.reduce((n, s) => n + (['en', 'de'] as const).reduce((m, l) => m + s.versions[l].blocks.filter(b => typeof b !== 'string' && 'photo' in b).length, 0), 0)
     expect(images.rows[0].n).toBe(expected)
-    expect(out.stdout).toContain('11 created (22 versions published)')
+    expect(out.stdout).toContain('11 created (20 versions published)')
 
     out.stdout = ''
     expect(await placeStoriesStep(pool, store.storeId, { dry: false }, stories, { uploader: store.uploader, covers })).toBe(0)
@@ -151,8 +155,9 @@ describe('[seed-place-stories] the stories step on a scratch store', () => {
 
     out.stdout = ''
     expect(await placeStoriesStep(pool, store.storeId, { dry: true }, stories, { uploader: store.uploader, covers })).toBe(0)
-    expect(out.stdout).toContain('Would rewrite and publish 22 story versions')
+    expect(out.stdout).toContain('Would rewrite 22 story versions')
     expect(out.stdout).toMatch(/Would upload \d+ photos/)
+    expect(out.stdout).toContain('Would rewrite 22 story versions')
     expect(await store.state()).toEqual(before)
 
     out.stdout = ''
@@ -161,18 +166,23 @@ describe('[seed-place-stories] the stories step on a scratch store', () => {
     const after = await store.state()
     expect(after.groups).toHaveLength(11)
     for (const group of after.groups) {
-      expect(group.versions.map((v: { s: string }) => v.s)).toEqual(['published', 'published'])
-      expect(group.versions.every((v: { draft: boolean }) => !v.draft)).toBe(true)
+      const isManor = group.versions[0].slug.startsWith('warenhaus-manor')
+      // The Manor review has no cover photo: it gets the new text and stays a draft.
+      expect(group.versions.map((v: { s: string }) => v.s)).toEqual(isManor ? ['draft', 'draft'] : ['published', 'published'])
+      if (!isManor)
+        expect(group.versions.every((v: { draft: boolean }) => !v.draft)).toBe(true)
     }
-    const titles = after.groups.flatMap(g => g.versions.map((v: { title: string }) => v.title)).sort()
-    expect(titles).toEqual(stories.flatMap(s => [s.versions.en.title, s.versions.de.title]).sort())
+    const titles = after.groups.filter(g => !g.versions[0].slug.startsWith('warenhaus-manor')).flatMap(g => g.versions.map((v: { title: string }) => v.title)).sort()
+    expect(titles).toEqual(stories.filter(s => s.key !== 'manor-review').flatMap(s => [s.versions.en.title, s.versions.de.title]).sort())
+    const manorTitles = (await pool.query(`select draft->>'title' t from content.story_versions where store_id = $1 and (slug like 'warenhaus-manor%' or slug like 'manor-department%') order by language`, [store.storeId])).rows.map(r => r.t)
+    expect(manorTitles).toEqual([stories.find(s => s.key === 'manor-review')!.versions.de.title, stories.find(s => s.key === 'manor-review')!.versions.en.title])
     // Links, groups and main stories are untouched; only the three shop pins gained a cover.
     expect(after.groups.map(g => ({ id: g.id, kind: g.kind, places: g.places, related: g.related }))).toEqual(before.groups.map(g => ({ id: g.id, kind: g.kind, places: g.places, related: g.related })))
     expect(after.pins.map(p => p.main_story_group_id)).toEqual(before.pins.map(p => p.main_story_group_id))
     expect(after.pins.filter(p => p.cover_media_id === null)).toHaveLength(1)
     // The audit trail records the publish of each rewritten version.
     const audit = await pool.query(`select count(*)::int n from platform.audit_log where store_id = $1 and entity = 'story-version' and action = 'published'`, [store.storeId])
-    expect(audit.rows[0].n).toBeGreaterThanOrEqual(22)
+    expect(audit.rows[0].n).toBeGreaterThanOrEqual(20)
 
     out.stdout = ''
     expect(await placeStoriesStep(pool, store.storeId, { dry: false }, stories, { uploader: store.uploader, covers })).toBe(0)
