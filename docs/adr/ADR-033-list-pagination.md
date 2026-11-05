@@ -342,7 +342,7 @@ The owner did not answer the remaining three questions. The coordinator's defaul
 
 ## Amendments
 - 2026-11-05 (owner, chat 05.11.2026), two decisions after acceptance. The body above is updated to match.
-  - **Page size.** Every paged list, cursor and numbered alike, returns 10 rows by default and at most 20 per request. This replaces the earlier maximum of 100 (§ 1, § 6). Admin stores move from default 50 to default 10. The sitemap and search loops use `limit=20`. The media library's photo wall (24 a page today) moves to 20 in slice 5 unless the owner grants it 24. The page size is not the cap of a whole list (see the Decision).
+  - **Page size.** Every paged list, cursor and numbered alike, returns 10 rows by default and at most 20 per request. This replaces the earlier maximum of 100 (§ 1, § 6). Admin stores move from default 50 to default 10. The sitemap and search loops use `limit=20`. The media library's photo wall (24 a page today) moves to 20 in slice 5: the owner chose 20 for consistency (05.11.2026). The page size is not the cap of a whole list (see the Decision).
   - **Tours are paged.** `GET /api/public/tours` moves from "whole, cap 200" to the cursor, 10 a load with infinite scroll, like the other guest lists, because "there might be more in the future". It lands in slice 3 with guest keepsakes. The home routes rail asks for the first page. Search reads tours through its page loop until the search slice (6).
 
 ## History
