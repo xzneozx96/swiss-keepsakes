@@ -1,8 +1,9 @@
 import type { ContentLanguage, Pin, PinDate, PinDraft, PinStoryOption } from '@sk/domain/content'
 import type { Tx } from '../../../platform/db/client.ts'
-import type { MediaRecord, PinChanges, PinListRow, PinRepository } from '../ports.ts'
+import type { MediaRecord, PinChanges, PinListPage, PinListQuery, PinListRow, PinRepository, PinStoryOptionsQuery } from '../ports.ts'
 import { contentLanguages } from '@sk/domain/content'
 import { sql } from 'drizzle-orm'
+import { offsetOf } from '../../../platform/db/offset.ts'
 import { record } from './media-repository.ts'
 
 // The document stores the title under `name`: places_published_fields_check reads published->'name'.
@@ -184,8 +185,8 @@ interface ListRow {
   cm_created_at: string | Date
 }
 
-// One query for the whole list: the dates and category ids are aggregated per pin, so a store with hundreds of pins is one round trip.
-async function listRows(tx: Tx, storeId: string): Promise<PinListRow[]> {
+// The rows of one page: the dates and category ids are aggregated per pin, so a page is one round trip. The order is the page's.
+async function listRows(tx: Tx, storeId: string, ids: string[]): Promise<PinListRow[]> {
   const found = await tx.execute<ListRow & Record<string, unknown>>(sql`
     select p.id, p.status, p.slug, p.latitude, p.longitude, p.stay_tag, p.interests, p.cover_media_id, p.main_story_group_id,
            cm.id as cm_id, cm.store_id as cm_store_id, cm.kind as cm_kind, cm.storage_key as cm_storage_key, cm.content_type as cm_content_type,
@@ -202,9 +203,9 @@ async function listRows(tx: Tx, storeId: string): Promise<PinListRow[]> {
            (select l.url from content.place_links l where l.place_id = p.id and l.store_id = p.store_id limit 1) as outbound_url
       from content.places p
       left join content.media cm on cm.id = p.cover_media_id and cm.store_id = p.store_id and cm.status = 'ready'
-     where p.store_id = ${storeId}
-     order by p.updated_at desc, p.id`)
-  return found.rows.map(row => ({
+     where p.store_id = ${storeId} and p.id = any(${sql.param(ids)}::uuid[])`)
+  const rank = new Map(ids.map((id, index) => [id, index]))
+  return found.rows.sort((a, b) => rank.get(a.id)! - rank.get(b.id)!).map(row => ({
     id: row.id,
     status: row.status,
     draft: toDraft(row.draft),
@@ -226,17 +227,106 @@ async function listRows(tx: Tx, storeId: string): Promise<PinListRow[]> {
   }))
 }
 
-async function storyOptionRows(tx: Tx, storeId: string): Promise<PinStoryOption[]> {
+const emptyCounts = {
+  statuses: { draft: 0, published: 0, hidden: 0, ended: 0 },
+  stays: { short_stay: 0, multi_day: 0, both: 0 },
+  types: { place: 0, event: 0 },
+}
+
+// One numbered page (ADR-033 section 6). The facets count with the search and the other groups, not their own ticks, so each
+// group has its own query. `ended` is worked out the way the domain does (`hasEnded`): Zurich local time at `now`, a date ends
+// at its last day plus its end time (to the minute), or at midnight without one. The search is position(), not ILIKE, so a % or _
+// in it is a plain character (as the media library does).
+async function listPage(tx: Tx, storeId: string, query: PinListQuery, now: Date): Promise<PinListPage> {
+  const local = sql`(${now.toISOString()}::timestamptz at time zone 'Europe/Zurich')`
+  const pins = sql`
+    pins as (
+      select s.*, case when s.has_dates then 'event' else 'place' end as kind,
+             case when s.status = 'published' and s.has_dates and not s.upcoming then 'ended' else s.status end as lstatus
+        from (
+          select p.id, p.status, p.created_at, p.updated_at, p.stay_tag,
+                 coalesce((select array_agg(c.category_id) from content.place_categories c where c.place_id = p.id and c.store_id = p.store_id), '{}'::uuid[]) as cats,
+                 exists (select 1 from content.place_dates d where d.place_id = p.id) as has_dates,
+                 exists (select 1 from content.place_dates d where d.place_id = p.id
+                            and not (d.last_day < ${local}::date
+                                     or (d.last_day = ${local}::date and d.end_time is not null and to_char(d.end_time, 'HH24:MI') <= to_char(${local}, 'HH24:MI')))) as upcoming,
+                 coalesce(p.draft, p.published)->'name'->>'en' as title_en,
+                 coalesce(p.draft, p.published)->'name'->>'de' as title_de
+            from content.places p
+           where p.store_id = ${storeId}
+        ) s
+    )`
+  const text = (array: string[]) => sql`${sql.param(array)}::text[]`
+  const categoryIds = query.category.filter(id => id !== 'none')
+  const filters = {
+    q: query.q ? sql`(position(lower(${query.q}) in lower(coalesce(title_en, ''))) > 0 or position(lower(${query.q}) in lower(coalesce(title_de, ''))) > 0)` : undefined,
+    status: query.status.length > 0 ? sql`lstatus = any(${text(query.status)})` : undefined,
+    stay: query.stay.length > 0 ? sql`stay_tag = any(${text(query.stay)})` : undefined,
+    type: query.type.length > 0 ? sql`kind = any(${text(query.type)})` : undefined,
+    category: query.category.length > 0 ? sql`(cats && ${sql.param(categoryIds)}::uuid[] or (${query.category.includes('none')} and cardinality(cats) = 0))` : undefined,
+  }
+  // The conditions of every group but `skip`, as one `where`.
+  const where = (skip?: keyof typeof filters) => {
+    const parts = Object.entries(filters).flatMap(([group, part]) => (part && group !== skip ? [part] : []))
+    return parts.length === 0 ? sql`true` : sql.join(parts, sql` and `)
+  }
+  const order = query.sort === 'edited' ? sql`updated_at desc, id desc` : sql`created_at desc, id desc`
+  const facet = async <K extends string>(group: keyof typeof filters, column: string, keys: readonly K[]) => {
+    const found = await tx.execute<{ key: K, count: number }>(sql`
+      with ${pins} select ${sql.raw(column)}::text as key, count(*)::int as count from pins where ${where(group)} group by 1`)
+    return Object.fromEntries(keys.map(key => [key, found.rows.find(row => row.key === key)?.count ?? 0])) as Record<K, number>
+  }
+  // One after the other: a transaction holds one connection, and node-postgres deprecates overlapping queries on it.
+  const ids = await tx.execute<{ id: string }>(sql`
+      with ${pins} select id from pins where ${where()} order by ${order} limit ${query.pageSize} offset ${offsetOf(query.page, query.pageSize)}`)
+  const total = await tx.execute<{ count: number }>(sql`with ${pins} select count(*)::int as count from pins where ${where()}`)
+  const statuses = await facet('status', 'lstatus', Object.keys(emptyCounts.statuses) as (keyof typeof emptyCounts.statuses)[])
+  const stays = await facet('stay', 'stay_tag', Object.keys(emptyCounts.stays) as (keyof typeof emptyCounts.stays)[])
+  const types = await facet('type', 'kind', Object.keys(emptyCounts.types) as (keyof typeof emptyCounts.types)[])
+  // A pin counts under each of its categories and under their parents, once.
+  const categoryCounts = await tx.execute<{ id: string, count: number }>(sql`
+      with ${pins}
+      select k.cid::text as id, count(distinct s.id)::int as count
+        from pins s
+       cross join lateral (
+               select unnest(s.cats) as cid
+                union
+               select c.parent_id from content.map_categories c where c.store_id = ${storeId} and c.id = any(s.cats) and c.parent_id is not null
+             ) k
+       where ${where('category')}
+       group by k.cid`)
+  const none = await tx.execute<{ count: number }>(sql`
+    with ${pins} select count(*)::int as count from pins where cardinality(cats) = 0 and ${where('category')}`)
+  const rows = ids.rows.length === 0 ? [] : await listRows(tx, storeId, ids.rows.map(row => row.id))
+  return {
+    rows,
+    total: total.rows[0]!.count,
+    statuses,
+    stays,
+    types,
+    categories: { none: none.rows[0]!.count, ...Object.fromEntries(categoryCounts.rows.map(row => [row.id, row.count])) },
+  }
+}
+
+// The picker's matches: live story groups whose title in either language holds `q`, newest first, at most `limit`; the chosen group is
+// added when it is not among them, whatever its state. A title is the published one, else the draft's (as the picker has always shown it).
+async function storyOptionRows(tx: Tx, storeId: string, { q, groupId, limit }: PinStoryOptionsQuery): Promise<PinStoryOption[]> {
   const found = await tx.execute<{ group_id: string, kind: PinStoryOption['kind'], title: PinStoryOption['title'], statuses: Partial<Record<ContentLanguage, 'draft' | 'published'>> } & Record<string, unknown>>(sql`
-    select g.id as group_id, g.kind,
-           coalesce(jsonb_object_agg(v.language, coalesce(v.published->>'title', v.draft->>'title'))
-                    filter (where coalesce(v.published->>'title', v.draft->>'title') is not null), '{}'::jsonb) as title,
-           coalesce(jsonb_object_agg(v.language, v.status) filter (where v.language is not null), '{}'::jsonb) as statuses
-      from content.story_groups g
-      join content.story_versions v on v.group_id = g.id and v.store_id = g.store_id
-     where g.store_id = ${storeId}
-     group by g.id, g.kind, g.created_at
-     order by g.created_at desc, g.id`)
+    with options as (
+      select g.id as group_id, g.kind, g.created_at,
+             coalesce(jsonb_object_agg(v.language, coalesce(v.published->>'title', v.draft->>'title'))
+                      filter (where coalesce(v.published->>'title', v.draft->>'title') is not null), '{}'::jsonb) as title,
+             coalesce(jsonb_object_agg(v.language, v.status) filter (where v.language is not null), '{}'::jsonb) as statuses,
+             bool_or(v.status = 'published') as live,
+             ${q ? sql`bool_or(position(lower(${q}) in lower(coalesce(v.published->>'title', v.draft->>'title', ''))) > 0)` : sql`true`} as hit
+        from content.story_groups g
+        join content.story_versions v on v.group_id = g.id and v.store_id = g.store_id
+       where g.store_id = ${storeId}
+       group by g.id, g.kind, g.created_at
+    )
+    (select group_id, kind, title, statuses, created_at from options where live and hit order by created_at desc, group_id desc limit ${limit})
+    ${groupId ? sql`union select group_id, kind, title, statuses, created_at from options where group_id = ${groupId}` : sql``}
+    order by created_at desc, group_id desc`)
   return found.rows.map((row) => {
     const languages = { en: row.statuses.en ?? 'none', de: row.statuses.de ?? 'none' } as const
     return { groupId: row.group_id, kind: row.kind, title: row.title, languages, publishedLanguages: contentLanguages.filter(language => languages[language] === 'published') }
@@ -327,9 +417,9 @@ export function createPinRepository(): PinRepository<Tx> {
       return new Set(found.rows.map(row => row.taken))
     },
 
-    list: (tx, storeId) => listRows(tx, storeId),
+    list: (tx, storeId, query, now) => listPage(tx, storeId, query, now),
 
-    storyOptions: (tx, storeId) => storyOptionRows(tx, storeId),
+    storyOptions: (tx, storeId, query) => storyOptionRows(tx, storeId, query),
 
     async idsInStore(tx, storeId, ids) {
       const found = await tx.execute<{ id: string }>(sql`

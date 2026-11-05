@@ -2900,7 +2900,24 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description Comma separated category ids, or `none` for a pin with no category. A pin matches any of them */
+                    category?: string;
+                    /** @description The page, from 1. A page past the end answers no items and the real total */
+                    page?: number;
+                    /** @description Rows a page, 1 to 20 */
+                    pageSize?: number;
+                    /** @description Matches the title of either language, in any case */
+                    q?: string;
+                    /** @description `edited`: last edit first (`updated_at desc, id desc`). `created`: newest first (`created_at desc, id desc`) */
+                    sort?: "edited" | "created";
+                    /** @description Comma separated: draft, published, hidden, ended. A pin matches any of them. `ended` is a published pin whose dates are all over */
+                    status?: string;
+                    /** @description Comma separated: short_stay, multi_day, both */
+                    stay?: string;
+                    /** @description Comma separated: place (no dates), event (with dates) */
+                    type?: string;
+                };
                 header?: never;
                 path: {
                     storeId: string;
@@ -2909,7 +2926,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Every pin of the store, most recently edited first. `ended` is a live pin whose dates are all over */
+                /** @description One page of the pins of the store, with the total and the facet counts. `ended` is a live pin whose dates are all over */
                 200: {
                     headers: {
                         "X-Request-Id": components["headers"]["RequestId"];
@@ -3225,7 +3242,14 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description The story already chosen: it is in the answer whatever its state or title, so the picker can name it */
+                    groupId?: string;
+                    /** @description How many matches to return, 1 to 20 */
+                    limit?: number;
+                    /** @description Matches the title of either language, in any case */
+                    q?: string;
+                };
                 header?: never;
                 path: {
                     storeId: string;
@@ -3234,7 +3258,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description The story groups of the store, for the main-story picker */
+                /** @description The story groups of the store that match the search, for the main-story picker */
                 200: {
                     headers: {
                         "X-Request-Id": components["headers"]["RequestId"];
@@ -6235,9 +6259,35 @@ export interface components {
                 opens: string;
             }[];
         };
-        /** @description Every pin of the store, most recently edited first */
+        /** @description One page of the pins of the store */
         PinList: {
+            /** @description The pins of each category (its children count too) that match the search and the other filters, not the category filter. `none` counts the pins with no category */
+            categories: {
+                [key: string]: number;
+            };
             items: components["schemas"]["PinListItem"][];
+            page: number;
+            pageSize: number;
+            /** @description The pins of each status that match the search and the other filters, not the status filter */
+            statuses: {
+                draft: number;
+                ended: number;
+                hidden: number;
+                published: number;
+            };
+            /** @description The pins of each stay that match the search and the other filters, not the stay filter */
+            stays: {
+                both: number;
+                multi_day: number;
+                short_stay: number;
+            };
+            /** @description The rows that match the filters, before paging */
+            total: number;
+            /** @description The pins of each type that match the search and the other filters, not the type filter */
+            types: {
+                event: number;
+                place: number;
+            };
         };
         /** @description A pin as one row of the merchant list */
         PinListItem: {
@@ -6333,7 +6383,7 @@ export interface components {
                 en?: string;
             };
         };
-        /** @description Story groups of the store, most recently created first */
+        /** @description The first `limit` matches of the search, and the chosen story when it is not among them: story groups with a live language, most recently created first. Not paged */
         PinStoryOptionList: {
             items: components["schemas"]["PinStoryOption"][];
         };

@@ -1,6 +1,6 @@
 import type { Pin, PinStoryOption } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
-import type { MerchantPinEntry, PinListRow } from '../ports.ts'
+import type { MerchantPinEntry, PinListCounts, PinListQuery, PinListRow, PinStoryOptionsQuery } from '../ports.ts'
 import type { Result } from './failure.ts'
 import type { PinDeps } from './pin-deps.ts'
 import { nextDate, pinListStatus } from '@sk/domain/content'
@@ -30,14 +30,22 @@ function toEntry(row: PinListRow, now: Date): MerchantPinEntry {
   }
 }
 
-// N16: every pin of the signed-in store. A pin whose dates are all over reads as `ended`, by the injected clock.
+export interface PinListResult extends PinListCounts {
+  entries: MerchantPinEntry[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+// N16: one page of the pins of the signed-in store. A pin whose dates are all over reads as `ended`, by the injected clock;
+// the repository filters and counts on the same clock.
 export function makeListMerchantPins<T>({ uow, pins, clock }: PinDeps<T>) {
-  return async (actor: Actor, storeId: string): Promise<Result<MerchantPinEntry[]>> => {
+  return async (actor: Actor, storeId: string, query: PinListQuery): Promise<Result<PinListResult>> => {
     if (!mayManageContent(actor, storeId))
       return fail({ reason: 'forbidden' })
-    const rows = await uow.run(tx => pins.list(tx, storeId))
     const now = clock.now()
-    return ok(rows.map(row => toEntry(row, now)))
+    const { rows, total, ...counts } = await uow.run(tx => pins.list(tx, storeId, query, now))
+    return ok({ entries: rows.map(row => toEntry(row, now)), total, page: query.page, pageSize: query.pageSize, ...counts })
   }
 }
 
@@ -51,11 +59,11 @@ export function makeGetMerchantPin<T>({ uow, pins }: PinDeps<T>) {
   }
 }
 
-// The main-story picker: the story groups of the store, each with the languages that are live.
+// The main-story picker, searched as you type: live story groups of the store that match `q`, each with the languages that are live.
 export function makeListPinStoryOptions<T>({ uow, pins }: PinDeps<T>) {
-  return async (actor: Actor, storeId: string): Promise<Result<PinStoryOption[]>> => {
+  return async (actor: Actor, storeId: string, query: PinStoryOptionsQuery): Promise<Result<PinStoryOption[]>> => {
     if (!mayManageContent(actor, storeId))
       return fail({ reason: 'forbidden' })
-    return ok(await uow.run(tx => pins.storyOptions(tx, storeId)))
+    return ok(await uow.run(tx => pins.storyOptions(tx, storeId, query)))
   }
 }

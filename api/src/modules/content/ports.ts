@@ -213,6 +213,42 @@ export interface PinListRow {
   updatedAt: Date
 }
 
+// One numbered page of the pins table (ADR-033 section 6). Each filter group is an OR among its options and the groups narrow
+// together. `status` is the list status (`ended` is derived from the dates), `category` holds category ids or 'none'.
+// `edited` is `updated_at desc, id desc`; `created` is `created_at desc, id desc`.
+export interface PinListQuery {
+  status: PinListStatus[]
+  category: string[]
+  stay: StayTag[]
+  type: ('place' | 'event')[]
+  q?: string | undefined
+  sort: 'edited' | 'created'
+  page: number
+  pageSize: number
+}
+
+export type PinListStatus = 'draft' | 'published' | 'hidden' | 'ended'
+
+// Each count is what ticking the option would show: the search and the other groups apply, the group's own ticks do not.
+// A category counts its children too; `none` counts the pins with no category.
+export interface PinListCounts {
+  statuses: Record<PinListStatus, number>
+  stays: Record<StayTag, number>
+  types: Record<'place' | 'event', number>
+  categories: Record<string, number>
+}
+
+export interface PinListPage extends PinListCounts {
+  rows: PinListRow[]
+  total: number
+}
+
+export interface PinStoryOptionsQuery {
+  q?: string | undefined
+  groupId?: string | undefined
+  limit: number
+}
+
 /** A row of the merchant pin list with its cover file: the entry of the domain plus what the view needs for the photo. */
 export type MerchantPinEntry = PinListEntry & { cover: MediaRecord | null }
 
@@ -243,9 +279,11 @@ export interface PinRepository<T> {
   // The slugs in this language that pins hold, in every store, except the pin `exceptPinId`.
   slugsTaken: (tx: T, language: ContentLanguage, exceptPinId?: string) => Promise<Set<string>>
   // Every pin of the store, most recently edited first.
-  list: (tx: T, storeId: string) => Promise<PinListRow[]>
-  // The story groups of the store with their titles, for the main-story picker, most recently created first.
-  storyOptions: (tx: T, storeId: string) => Promise<PinStoryOption[]>
+  // One numbered page of the store's pins with the total and the facet counts. `now` decides which pins have `ended`.
+  list: (tx: T, storeId: string, query: PinListQuery, now: Date) => Promise<PinListPage>
+  // The story groups of the store the main-story picker offers: the ones with a live language whose title holds `q`, plus the
+  // chosen group whatever its state, most recently created first, at most `limit`.
+  storyOptions: (tx: T, storeId: string, query: PinStoryOptionsQuery) => Promise<PinStoryOption[]>
 }
 
 // What a story group save may change. A list replaces the whole list, in the order given.

@@ -110,7 +110,7 @@ export const fakeTour: TourGuide = {
 // row existed and the caller could do the thing, so a request that gets past the guard is not a 404 or a 403.
 export function createFakeContentUseCases(): ContentUseCases {
   return {
-    listMerchantPins: async () => ({ ok: true, value: [] }),
+    listMerchantPins: async (_actor, _storeId, query) => ({ ok: true, value: { entries: [], total: 0, page: query.page, pageSize: query.pageSize, statuses: { draft: 0, published: 0, hidden: 0, ended: 0 }, stays: { short_stay: 0, multi_day: 0, both: 0 }, types: { place: 0, event: 0 }, categories: { none: 0 } } }),
     getMerchantPin: async (_actor, storeId, pinId) => ({ ok: true, value: { ...fakePin, storeId, id: pinId } }),
     listPinStoryOptions: async () => ({ ok: true, value: [] }),
     createPin: async (_actor, storeId) => ({ ok: true, value: { ...fakePin, storeId } }),

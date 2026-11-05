@@ -288,3 +288,65 @@ describe('[E2.6] AC-7 who may write', () => {
     expect(response.status).toBe(201)
   })
 })
+
+describe('[ADR-033] GET pins pages', () => {
+  const seen: object[] = []
+  const app = () => setup({ listMerchantPins: async (_actor, _storeId, query) => {
+    seen.push(query)
+    return { ok: true, value: { entries: [], total: 0, page: query.page, pageSize: query.pageSize, statuses: { draft: 0, published: 0, hidden: 0, ended: 0 }, stays: { short_stay: 0, multi_day: 0, both: 0 }, types: { place: 0, event: 0 }, categories: { none: 0 } } }
+  } })
+
+  it('defaults to page 1 of 10 with no filter, last edit first, and answers the page, the total and the counts', async () => {
+    seen.length = 0
+    const response = await send(app(), 'GET', pins)
+
+    expect(response.status).toBe(200)
+    expect(seen).toEqual([{ status: [], category: [], stay: [], type: [], sort: 'edited', page: 1, pageSize: 10 }])
+    expect(await response.json()).toMatchObject({ items: [], total: 0, page: 1, pageSize: 10, statuses: { ended: 0 }, categories: { none: 0 } })
+  })
+
+  it('splits the comma lists and passes the page, the search and the sort', async () => {
+    seen.length = 0
+    await send(app(), 'GET', `${pins}?page=2&pageSize=20&status=draft,ended&category=${pinId},none&stay=both&type=event&q=%20wall&sort=created`)
+
+    expect(seen).toEqual([{ status: ['draft', 'ended'], category: [pinId, 'none'], stay: ['both'], type: ['event'], q: 'wall', sort: 'created', page: 2, pageSize: 20 }])
+  })
+
+  it.each(['pageSize=21', 'page=0', 'status=open', 'category=nope', 'stay=x', 'type=tour', 'sort=title'])('%s is a 400 validation-failed', async (query) => {
+    const response = await send(app(), 'GET', `${pins}?${query}`)
+
+    expect(response.status).toBe(400)
+    expect(await response.json()).toMatchObject({ type: 'validation-failed' })
+  })
+
+  it('a skip over 10,000 rows is a 400 on page', async () => {
+    const response = await send(app(), 'GET', `${pins}?page=501&pageSize=20&status=draft`)
+
+    expect(response.status).toBe(200)
+    const deep = await send(app(), 'GET', `${pins}?page=502&pageSize=20`)
+
+    expect(deep.status).toBe(400)
+    expect(await deep.json()).toMatchObject({ errors: [{ in: 'query', path: 'page' }] })
+  })
+
+  it('is closed to a guest and to the owner of another store', async () => {
+    expect((await send(app(), 'GET', pins, signedInAs('guest'))).status).toBe(403)
+    expect((await send(app(), 'GET', pins, signedInAs('ownerElsewhere'))).status).toBe(403)
+  })
+})
+
+describe('[ADR-033] GET pins/story-options searches', () => {
+  it('passes q, the chosen group and a limit of 10 by default, at most 20', async () => {
+    const seen: object[] = []
+    const app = setup({ listPinStoryOptions: async (_actor, _storeId, query) => {
+      seen.push(query)
+      return { ok: true, value: [] }
+    } })
+
+    expect((await send(app, 'GET', `${pins}/story-options`)).status).toBe(200)
+    expect((await send(app, 'GET', `${pins}/story-options?q=%20wall&groupId=${pinId}&limit=20`)).status).toBe(200)
+    expect((await send(app, 'GET', `${pins}/story-options?limit=21`)).status).toBe(400)
+    expect((await send(app, 'GET', `${pins}/story-options?groupId=nope`)).status).toBe(400)
+    expect(seen).toEqual([{ limit: 10 }, { q: 'wall', groupId: pinId, limit: 20 }])
+  })
+})

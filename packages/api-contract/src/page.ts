@@ -45,7 +45,10 @@ const pageSizeSchema = z.coerce.number().int().min(1).max(MAX_PAGE_LIMIT).defaul
  */
 export function numberedPageQuery<F extends z.ZodRawShape = Record<never, never>>(filters: F = {} as F) {
   return z.object({ ...filters, page: pageNumberSchema, pageSize: pageSizeSchema }).refine(
-    ({ page, pageSize }) => (page - 1) * pageSize <= MAX_OFFSET,
+    (query) => {
+      const { page, pageSize } = query as { page: number, pageSize: number }
+      return (page - 1) * pageSize <= MAX_OFFSET
+    },
     { message: `A page may not skip more than ${MAX_OFFSET} rows`, path: ['page'] },
   )
 }

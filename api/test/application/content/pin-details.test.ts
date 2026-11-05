@@ -1,6 +1,6 @@
 import type { Pin } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
-import type { AuditEntry, MediaRow, PinChanges } from '../../../src/modules/content/ports.ts'
+import type { AuditEntry, MediaRow, PinChanges, PinListQuery } from '../../../src/modules/content/ports.ts'
 import { pinListStatus } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
 import { makeCreatePin } from '../../../src/modules/content/application/create-pin.ts'
@@ -14,6 +14,7 @@ const store = 'store-1'
 const owner: Actor = { kind: 'staff', userId: 'u1', guestId: 'g1', stores: new Map([[store, 'owner']]) }
 const outsider: Actor = { kind: 'staff', userId: 'u2', guestId: 'g2', stores: new Map([['store-2', 'owner']]) }
 const complete: PinChanges = { title: { en: 'Chapel Bridge' }, latitude: 47.05, longitude: 8.3 }
+const pinQuery = (over: Partial<PinListQuery> = {}): PinListQuery => ({ status: [], category: [], stay: [], type: [], sort: 'edited', page: 1, pageSize: 20, ...over })
 const image = (id: string): MediaRow => ({ id, kind: 'image', status: 'ready' })
 
 function setup(media: MediaRow[] = [], now = '2026-11-12T11:00:00Z') {
@@ -72,13 +73,13 @@ describe('[E4.2][AC68] list and read of the signed-in store', () => {
     const withDates = await created(s, { ...complete, dates: [{ firstDay: '2026-11-09', lastDay: '2026-11-14', startTime: null, endTime: null }], mainStoryGroupId: 'g' })
     await s.create({ ...owner, stores: new Map([['store-2', 'owner']]) }, 'store-2', { title: { en: 'Other store' } }, null)
 
-    const listed = await s.list(owner, store)
+    const listed = await s.list(owner, store, pinQuery())
 
     expect(listed).toMatchObject({ ok: true })
     if (!listed.ok)
       return
-    expect(listed.value).toHaveLength(1)
-    expect(listed.value[0]).toMatchObject({ id: withDates.id, status: 'draft', title: { en: 'Chapel Bridge' }, located: true, hasDates: true, nextDate: { firstDay: '2026-11-09' }, mainStory: { groupId: 'g', published: true } })
+    expect(listed.value.entries).toHaveLength(1)
+    expect(listed.value.entries[0]).toMatchObject({ id: withDates.id, status: 'draft', title: { en: 'Chapel Bridge' }, located: true, hasDates: true, nextDate: { firstDay: '2026-11-09' }, mainStory: { groupId: 'g', published: true } })
   })
 
   it('[E4.2][AC86] a published pin whose last date has passed lists as ended', async () => {
@@ -87,9 +88,9 @@ describe('[E4.2][AC68] list and read of the signed-in store', () => {
     await s.publish(owner, store, pin.id, 1, null)
     s.clock.advance(new Date('2026-11-15T00:00:00Z').getTime() - s.clock.now().getTime())
 
-    const listed = await s.list(owner, store)
+    const listed = await s.list(owner, store, pinQuery())
 
-    expect(listed).toMatchObject({ ok: true, value: [{ id: pin.id, status: 'ended', nextDate: null }] })
+    expect(listed).toMatchObject({ ok: true, value: { entries: [{ id: pin.id, status: 'ended', nextDate: null }] } })
   })
 
   it('[E4.2][AC68] a live pin with a new draft lists the draft title', async () => {
@@ -100,16 +101,16 @@ describe('[E4.2][AC68] list and read of the signed-in store', () => {
       throw new Error('publish failed')
     await s.save(owner, store, pin.id, live.value.rowVersion, { title: { en: 'Chapel Bridge, Lucerne' } }, null)
 
-    expect(await s.list(owner, store)).toMatchObject({ ok: true, value: [{ status: 'published', title: { en: 'Chapel Bridge, Lucerne' } }] })
+    expect(await s.list(owner, store, pinQuery())).toMatchObject({ ok: true, value: { entries: [{ status: 'published', title: { en: 'Chapel Bridge, Lucerne' } }] } })
   })
 
   it('[E4.2][AC68] a member of another store gets forbidden, and a pin id of another store is not found', async () => {
     const s = setup()
     const pin = await created(s)
 
-    expect(await s.list(outsider, store)).toEqual({ ok: false, reason: 'forbidden' })
+    expect(await s.list(outsider, store, pinQuery())).toEqual({ ok: false, reason: 'forbidden' })
     expect(await s.get(outsider, store, pin.id)).toEqual({ ok: false, reason: 'forbidden' })
-    expect(await s.options(outsider, store)).toEqual({ ok: false, reason: 'forbidden' })
+    expect(await s.options(outsider, store, { limit: 10 })).toEqual({ ok: false, reason: 'forbidden' })
     expect(await s.get(owner, store, 'nope')).toEqual({ ok: false, reason: 'not-found' })
     expect(await s.get({ ...owner, stores: new Map([['store-2', 'owner']]) }, 'store-2', pin.id)).toEqual({ ok: false, reason: 'not-found' })
     expect(await s.get(owner, store, pin.id)).toMatchObject({ ok: true, value: { id: pin.id, storeId: store } })
