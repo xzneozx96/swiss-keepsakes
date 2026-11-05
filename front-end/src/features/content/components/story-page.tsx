@@ -2,14 +2,11 @@ import type { PublicStory } from '@sk/api-contract'
 
 import { dateTimeFormat } from '@sk/domain/shared'
 import { Link } from '@tanstack/react-router'
-import { useRef } from 'react'
 
 import { BackButton, CartButton, CompactBar } from '@/components/layout/cart-button'
 import { useLocale } from '@/contexts/locale-context'
 import { OnboardingCard } from '@/features/onboarding/components/onboarding-card'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
-import { contentsOf } from '../lib/story-body'
-import { ArticleContents } from './article-contents'
 import { StoryBody } from './story-body'
 import { StoryKeepsakes } from './story-keepsakes'
 import { StoryPlaces } from './story-places'
@@ -32,16 +29,13 @@ function coverImage(cover: Story['cover']) {
 }
 
 /**
- * C20 Story (spec §4.11, ADR-001): the cover with the title, the author, the date and reading time, a contents bar from the H2
- * headings, the body drawn from the story document, and a link to the other language's version. The server renders all of
+ * C20 Story (spec §4.11, ADR-001): the cover with the title, the author, the date and reading time, the body drawn from the story document, and a link to the other language's version. The server renders all of
  * it. Under the body: the places it tags, its keepsake cards and related stories (each block is left out when empty); comments come with E5.3.
  */
 export function StoryPage({ story, onBack }: { story: Story, onBack: () => void }) {
   const { t, intlLocale } = useLocale()
   const [coverEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
-  const bodyRef = useRef<HTMLDivElement>(null)
   const cover = coverImage(story.cover)
-  const sections = contentsOf(story.body).map(entry => ({ ...entry, blocks: [] }))
   const others = story.versions.filter(version => version.language !== story.language)
   // The zone is fixed, so the server and the browser print the same day.
   const date = dateTimeFormat(intlLocale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Zurich' }).format(new Date(story.publishedAt))
@@ -107,8 +101,7 @@ export function StoryPage({ story, onBack }: { story: Story, onBack: () => void 
         )}
 
         <div className="mt-6 flex flex-col">
-          {sections.length > 0 && <ArticleContents bodyRef={bodyRef} label={t('article.contents')} sections={sections} />}
-          <div ref={bodyRef} className="flex flex-col gap-4" lang={story.language}>
+          <div className="flex flex-col gap-4" lang={story.language}>
             <StoryBody body={story.body} language={story.language} places={story.places} />
           </div>
         </div>

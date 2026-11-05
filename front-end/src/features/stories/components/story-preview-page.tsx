@@ -5,14 +5,13 @@ import type { PreviewKeepsake, PreviewPin, PreviewStory } from '../lib/preview-r
 
 import { storyBodyFacts } from '@sk/domain/content'
 import { formatShortDate } from '@sk/domain/shared'
-import { useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 
 import { Media } from '@/components/media'
 import { useLocale } from '@/contexts/locale-context'
-import { ArticleContents } from '@/features/content/components/article-contents'
 import { storyBlocks } from '@/features/places/lib/story-text'
 import { avatarUrl } from '@/lib/avatars'
-import { contentsOf, headingsOf } from '../lib/preview-rules'
+import { headingsOf } from '../lib/preview-rules'
 import { StoryPreviewBody } from './story-preview-body'
 
 export interface StoryPreviewPageProps {
@@ -35,15 +34,13 @@ export interface StoryPreviewPageProps {
 }
 
 /**
- * The guest story page (C20) drawn from a draft held in memory: cover, byline, contents bar, body, places, keepsakes and
+ * The guest story page (C20) drawn from a draft held in memory: cover, byline, body, places, keepsakes and
  * more to discover. It reads the labels from the locale around it, so the caller wraps it in `LocaleOverride`.
  */
 export function StoryPreviewPage({ language, title, excerpt, cover, author, publishedOn, today, review, body, media, pinHref, places, keepsakes, related }: StoryPreviewPageProps) {
   const { t, intlLocale } = useLocale()
-  const bodyRef = useRef<HTMLDivElement>(null)
   const blocks = useMemo(() => storyBlocks(body, media, { pinHref }), [body, media, pinHref])
   const headings = useMemo(() => headingsOf(blocks), [blocks])
-  const sections = contentsOf(headings).map(chip => ({ ...chip, blocks: [] }))
   const minutes = useMemo(() => storyBodyFacts(body as StoryBody).minutes, [body])
 
   return (
@@ -68,8 +65,7 @@ export function StoryPreviewPage({ language, title, excerpt, cover, author, publ
         </p>
 
         <div className="mt-6 flex flex-col">
-          {sections.length > 0 && <ArticleContents bodyRef={bodyRef} label={t('article.contents')} sections={sections} />}
-          <div ref={bodyRef} className="flex flex-col gap-4 pt-6">
+          <div className="flex flex-col gap-4 pt-6">
             <StoryPreviewBody blocks={blocks} headings={headings} />
           </div>
         </div>

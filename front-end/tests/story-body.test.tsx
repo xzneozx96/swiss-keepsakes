@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { LocaleProvider } from '@/contexts/locale-context'
 import { StoryBody } from '@/features/content/components/story-body'
-import { contentsOf, headingsOf } from '@/features/content/lib/story-body'
+import { headingsOf } from '@/features/content/lib/story-body'
 import { fullBody, PIN_ID } from './support/public-story'
 
 const places = [{ id: PIN_ID, slug: 'chapel-bridge', name: 'Chapel Bridge' }]
@@ -132,16 +132,12 @@ describe('[E4.4][AC32][AC61] story body renderer', () => {
     expect(out).not.toContain('Hidden')
   })
 
-  it('[AC32] keeps equal headings apart with a counter and lists only H2 headings, from two of them', () => {
+  it('[AC32] keeps equal headings apart with a counter', () => {
     const body = fullBody()
     const h = (text: string, level: 2 | 3) => ({ type: 'heading' as const, attrs: { level }, content: [{ type: 'text' as const, text }] })
     body.content = [h('Same', 2), h('Same', 2), h('Sub', 3)]
 
     expect(headingsOf(body).map(x => x.id)).toEqual(['same', 'same-2', 'sub'])
-    expect(contentsOf(body)).toEqual([{ id: 'same', heading: 'Same' }, { id: 'same-2', heading: 'Same' }])
-
-    body.content = [h('Only', 2), h('Sub', 3)]
-    expect(contentsOf(body)).toEqual([])
   })
 })
 

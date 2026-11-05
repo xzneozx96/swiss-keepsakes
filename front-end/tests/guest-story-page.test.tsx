@@ -75,13 +75,12 @@ describe('[E4.4][AC61] story page in the server HTML', () => {
     expect(html).not.toMatch(/comment/i)
   })
 
-  it('[AC-2] shows the reading time and the date from the API and a contents list that jumps to the H2 headings', async () => {
+  it('[AC-2] shows the reading time and the date from the API, the H2 headings with their anchors, and no contents bar (owner, 05.11.2026)', async () => {
     const html = await serverHtml('/en/stories/lake-day', publicStory({ readMinutes: 7, publishedAt: '2026-10-03T10:00:00.000Z' }))
 
     expect(html).toContain('3 October 2026 · 7 min read')
-    expect(html).toMatch(/<nav[^>]*aria-label="In this story"/)
+    expect(html).not.toMatch(/<nav[^>]*aria-label="In this story"/)
     for (const [id, heading] of [['morning-at-the-pier', 'Morning at the pier'], ['afternoon-on-the-water', 'Afternoon on the water']]) {
-      expect(html).toContain(`data-section="${id}"`)
       expect(html).toMatch(new RegExp(`<h2[^>]*id="section-${id}"[^>]*>${heading}</h2>`))
     }
   })

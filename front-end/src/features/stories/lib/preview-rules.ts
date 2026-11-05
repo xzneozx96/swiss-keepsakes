@@ -98,10 +98,3 @@ export function headingsOf(blocks: readonly StoryBlock[]): PreviewHeading[] {
 
   return found
 }
-
-/** The chips of the contents bar: H2 with text, and only from two of them. */
-export function contentsOf(headings: readonly PreviewHeading[]): { id: string, heading: string }[] {
-  const chips = headings.filter(heading => heading.level === 2 && heading.text !== '').map(heading => ({ id: heading.id, heading: heading.text }))
-
-  return chips.length >= 2 ? chips : []
-}

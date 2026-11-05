@@ -28,10 +28,3 @@ export function headingsOf(body: Body): BodyHeading[] {
     return [{ node, id: count > 1 ? `${base}-${count}` : base, text, level: node.attrs.level }]
   })
 }
-
-/** The contents list: the H2 headings with text, and only from two of them. */
-export function contentsOf(body: Body): { id: string, heading: string }[] {
-  const entries = headingsOf(body).filter(h => h.level === 2 && h.text !== '').map(h => ({ id: h.id, heading: h.text }))
-
-  return entries.length >= 2 ? entries : []
-}

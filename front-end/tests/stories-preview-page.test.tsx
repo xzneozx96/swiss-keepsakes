@@ -145,17 +145,12 @@ describe('[E4.3][AC30][AC33][AC45][AC54] the guest story page drawn from a draft
     expect(screen.getByRole('link', { name: 'site' }).closest('p')?.textContent).toContain('evil')
   })
 
-  it('shows the contents bar from two H2 and not from one (AC-5)', async () => {
-    const view = renderPage({ body: doc(h2('Only one'), para(text('x'))) })
+  it('draws no contents bar, even with two H2 (owner, 05.11.2026)', async () => {
+    renderPage({ body: doc(h2('First'), para(text('x')), h2('Second')) })
 
     await screen.findByRole('heading', { level: 1 })
     expect(screen.queryByRole('navigation', { name: 'In this story' })).toBeNull()
-    view.unmount()
-
-    renderPage({ body: doc(h2('First'), para(text('x')), h2('Second')) })
-    const nav = await screen.findByRole('navigation', { name: 'In this story' })
-
-    expect(within(nav).getAllByRole('button').map(button => button.textContent)).toEqual(['First', 'Second'])
+    expect(screen.getAllByRole('heading', { level: 2 }).map(heading => heading.textContent)).toEqual(expect.arrayContaining(['First', 'Second']))
   })
 
   it('draws the page labels in the story language (AC-6)', async () => {
