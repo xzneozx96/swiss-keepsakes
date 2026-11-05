@@ -291,7 +291,7 @@ Each slice is one story and one PR. Each leaves every screen working.
    - Story groups and pins with `page`, `pageSize`, `total` and the tab counts.
    - The story picker as search-as-you-type.
 5. **Merchant catalog tables, numbered pages.** Products and inventory. The media library's `page` and `pageSize` limits are aligned with § 6 (maximum 20).
-6. **Search on the server.** A separate decision: `GET /api/public/search?lang&q&kind`, paged (10 a load, at most 20), over published titles. Possibly `pg_trgm`. It decides the interest-tile filter (owner decision 4). It replaces the page loops of slice 1.
+6. **Search on the server.** `GET /api/public/search?lang&q&kind`, paged (10 a load, at most 20), over published titles. Engine decided by the owner on 05.11.2026: Postgres built in, full-text search with the English and German dictionaries plus the `pg_trgm` extension for typos, partial words and Swiss spellings ("Loewendenkmal" finds "Löwendenkmal"); no hosted search service. Needs a migration for the search columns and indexes, approved separately before it runs. It decides the interest-tile filter (owner decision 4). It replaces the page loops of slice 1.
 7. **Caps.** The warnings and the cap on every whole list in § 10, and the map's warning at 800 pins.
 
 ## Consequences
