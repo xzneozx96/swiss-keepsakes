@@ -7,29 +7,6 @@ SET lock_timeout = '3s';--> statement-breakpoint
 -- Locks: ADD COLUMN ... STORED rewrites the table under ACCESS EXCLUSIVE (hundreds of rows: milliseconds; lock_timeout makes it
 -- fail instead of queueing). CREATE INDEX CONCURRENTLY is impossible here (drizzle runs each file in one transaction); a plain
 -- CREATE INDEX blocks writes for those milliseconds. For a large table, run the CREATE INDEX lines by hand with CONCURRENTLY first.
-CREATE EXTENSION);
---   2. three immutable fold functions in schema platform, so a generated column can use them;
---   3. a stored `search_text` (folded title) and `search_tsv` (English and German tsvector) column on the four tables a guest can
---      search: story versions, places, tours, products. Both are generated from the published title, so they follow every publish
---      and unpublish with no trigger and no job;
---   4. a GIN index on each tsvector and a GIN trigram index on each search_text, partial on the published rows.
---
--- Swiss spellings without `unaccent`: Neon does list `unaccent`, but it is STABLE, not IMMUTABLE, so a generated column or an index
--- cannot call it without a wrapper function, and it has no rule for oe -> ö. `platform.search_text` writes a title twice when it
--- has an umlaut: once with the accent dropped (ö -> o), once as a guest on an English keyboard types it (ö -> oe). So
--- "Löwendenkmal" is stored as "lowendenkmal loewendenkmal", and "lowen" and "loewen" both find it. The query side folds the typed
--- text with `platform.search_fold` (one form). ß -> ss, and the other Latin accents lose the mark.
---
--- Safety on a live database:
---   * ADD COLUMN ... GENERATED ... STORED rewrites the table under ACCESS EXCLUSIVE. The four tables hold hundreds of rows, so the
---     rewrite takes milliseconds; `lock_timeout = '3s'` above makes the migration fail and roll back instead of queueing behind a
---     long transaction.
---   * CREATE INDEX CONCURRENTLY is not possible here: drizzle's migrator runs every file inside one transaction. A plain CREATE INDEX
---     blocks writes for the milliseconds a few hundred rows take. If a table ever grows large, run the CREATE INDEX lines by hand
---     with CONCURRENTLY first; every step here is IF NOT EXISTS, so the migration then does nothing for them.
---   * Every statement checks what is already there, so running it twice is safe.
---   * Changing a fold function later needs the generated columns rebuilt (drop and add), because stored values do not follow it.
--- The runtime role runs no DDL; this runs with the release command like every migration.
 CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;--> statement-breakpoint
 
 -- One form of a text: accents dropped, lower case, ß as ss. Applied to the typed query and to each stored title.
