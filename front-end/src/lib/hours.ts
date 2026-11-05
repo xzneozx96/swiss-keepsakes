@@ -25,6 +25,9 @@ const hhmm = (time: string) => time.slice(0, 5)
 /** A span whose closing time is before its opening time closes the next morning (ADR-029); 24:00 is midnight. */
 const endsNextDay = (span: HoursSpan) => hhmm(span.closes) < hhmm(span.opens)
 
+/** The day's spans, earliest first. */
+const spansOf = (spans: readonly HoursSpan[], day: number) => spans.filter(span => span.day === day).sort((a, b) => a.opens.localeCompare(b.opens))
+
 /** The day before, Sunday wrapping to Monday. */
 const dayBefore = (day: number) => (day === 1 ? 7 : day - 1)
 
@@ -46,10 +49,9 @@ export function isOpenAt(spans: readonly HoursSpan[], day: number, time: string)
 
 /**
  * The week in a few lines: days in a row with the same hours share one line ("Mon–Fri"), the line that holds today is
- * marked, and `openToday` says whether the place is open at some point today. No hours at all gives no groups. Two spans
- * of one day are joined by `separator` (", " in the place sheet).
+ * marked, and `openToday` says whether the place is open at some point today. No hours at all gives no groups.
  */
-export function hoursOfWeek(spans: readonly HoursSpan[], today: number, locale: IntlLocale, closedText: string, separator = ', ') {
+export function hoursOfWeek(spans: readonly HoursSpan[], today: number, locale: IntlLocale, closedText: string) {
   if (spans.length === 0)
     return { groups: [], openToday: false }
 
@@ -57,7 +59,7 @@ export function hoursOfWeek(spans: readonly HoursSpan[], today: number, locale: 
 
   for (const day of DAYS) {
     const own = spans.filter(span => span.day === day).sort((a, b) => a.opens.localeCompare(b.opens))
-    const value = own.length > 0 ? own.map(span => `${hhmm(span.opens)}–${hhmm(span.closes)}`).join(separator) : closedText
+    const value = own.length > 0 ? own.map(span => `${hhmm(span.opens)}–${hhmm(span.closes)}`).join(', ') : closedText
     const previous = groups.at(-1)
 
     if (previous && previous.value === value && previous.last === day - 1) {
@@ -81,6 +83,57 @@ export function hoursOfWeek(spans: readonly HoursSpan[], today: number, locale: 
   }
 }
 
+/**
+ * The open days of a week in one short line (owner, 05.11.2026): days with the same hours share a group, days in a row become a
+ * range ("Mon–Fri", and "Sat–Mon" across the week's end), the others are comma-joined ("Tue, Sat"), and the groups are joined by
+ * " · ": "Mon–Fri 09:00–18:00 · Sat 09:00–17:00". Two spans of a day are comma-joined, as in the place sheet. Every day the same
+ * reads "`dailyText` 09:00–19:00". Days off are left out. Undefined without hours.
+ */
+export function weekSummary(spans: readonly HoursSpan[], locale: IntlLocale, dailyText: string) {
+  const byValue = new Map<string, number[]>()
+
+  for (const day of DAYS) {
+    const own = spansOf(spans, day)
+
+    if (own.length === 0)
+      continue
+    const value = own.map(span => `${hhmm(span.opens)}–${hhmm(span.closes)}`).join(', ')
+
+    byValue.set(value, [...(byValue.get(value) ?? []), day])
+  }
+  if (byValue.size === 0)
+    return undefined
+  const [only] = byValue
+
+  if (byValue.size === 1 && only![1].length === 7)
+    return `${dailyText} ${only![0]}`
+
+  const runName = (run: number[]) => run.length === 1 ? weekdayName(run[0]!, locale) : `${weekdayName(run[0]!, locale)}–${weekdayName(run.at(-1)!, locale)}`
+
+  return Array.from(byValue, ([value, days]) => `${dayRuns(days).map(runName).join(', ')} ${value}`).join(' · ')
+}
+
+/** Days (Monday-first, ascending) in runs of consecutive days; a run that ends on Sunday joins one that starts on Monday. */
+function dayRuns(days: readonly number[]) {
+  const runs: number[][] = []
+
+  for (const day of days) {
+    const last = runs.at(-1)
+
+    if (last && last.at(-1) === day - 1)
+      last.push(day)
+    else
+      runs.push([day])
+  }
+  const first = runs[0]!
+  const end = runs.at(-1)!
+
+  if (runs.length > 1 && first[0] === 1 && end.at(-1) === 7)
+    return [[...end, ...first], ...runs.slice(1, -1)]
+
+  return runs
+}
+
 /** Where a place stands at a moment: open until a time, opening later today, or shut for the day with its next opening. */
 export type HoursStatus
   = | { state: 'open', until: string }
@@ -89,9 +142,6 @@ export type HoursStatus
 
 /** The day `offset` days after `day`, Sunday wrapping to Monday. */
 const dayAfter = (day: number, offset: number) => ((day - 1 + offset) % 7) + 1
-
-/** The day's spans, earliest first. */
-const spansOf = (spans: readonly HoursSpan[], day: number) => spans.filter(span => span.day === day).sort((a, b) => a.opens.localeCompare(b.opens))
 
 /**
  * The status at `time` (`HH:MM`) on `day`, the way `isOpenAt` reads the hours: open until the end of the span that holds the

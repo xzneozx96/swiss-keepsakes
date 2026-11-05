@@ -73,37 +73,6 @@ describe('[E4.13][AC54][AC95] the food section selection (owner, 05.11.2026)', (
     expect(ids(newestFoodPlaces(places, categories)!.places)).toEqual(ids(places.slice(1, 6)))
   })
 
-  it('lists the kinds that hold a listed place, in position order, each with its places newest first', () => {
-    const bar = pin(1, [food.id, bars.id])
-    const bakery = pin(2, [food.id, bakeries.id])
-    const barAndBakery = pin(3, [food.id, bakeries.id, bars.id])
-    const plain = pin(4, [food.id])
-    const kinds = newestFoodPlaces([bar, bakery, barAndBakery, plain], categories)!.kinds
-
-    // Fondue holds no listed place, so it is not offered.
-    expect(kinds.map(kind => kind.category.slug)).toEqual(['bars', 'bakeries'])
-    expect(ids(kinds[0]!.places)).toEqual([bar.id, barAndBakery.id])
-    expect(ids(kinds[1]!.places)).toEqual([bakery.id, barAndBakery.id])
-  })
-
-  it('takes each kind’s five newest from all the places, so a kind older than the newest five is offered and full', () => {
-    const newBars = Array.from({ length: 7 }, (_, index) => pin(index + 1, [food.id, bars.id]))
-    const oldFondue = Array.from({ length: 6 }, (_, index) => pin(index + 20, [food.id, fondue.id]))
-    const datedFondue = pin(30, [food.id, fondue.id], { nextDate: festival })
-    const selection = newestFoodPlaces([...newBars, datedFondue, ...oldFondue], categories)!
-
-    expect(ids(selection.places)).toEqual(ids(newBars.slice(0, 5)))
-    expect(selection.kinds.map(kind => kind.category.slug)).toEqual(['bars', 'fondue'])
-    expect(ids(selection.kinds[0]!.places)).toEqual(ids(newBars.slice(0, 5)))
-    expect(ids(selection.kinds[1]!.places)).toEqual(ids(oldFondue.slice(0, 5)))
-  })
-
-  it('does not offer a kind whose only places have a date', () => {
-    const selection = newestFoodPlaces([pin(1, [food.id, bars.id]), pin(2, [food.id, fondue.id], { nextDate: festival })], categories)!
-
-    expect(selection.kinds.map(kind => kind.category.slug)).toEqual(['bars'])
-  })
-
   it('badges a card with its first kind in position order, or the food and drink category when it has none', () => {
     const barAndBakery = pin(1, [food.id, bakeries.id, bars.id])
     const plain = pin(2, [food.id])

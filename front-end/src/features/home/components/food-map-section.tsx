@@ -1,4 +1,5 @@
-import type { CategoryIcon, PublicCategory, PublicMapItem } from '@sk/api-contract'
+import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
+import type { CSSProperties } from 'react'
 import type { FoodSelection } from '../lib/food-map'
 import type { HoursStatus } from '@/lib/hours'
 
@@ -7,37 +8,51 @@ import { zurichTime } from '@sk/domain/dates'
 import { Link, useHydrated } from '@tanstack/react-router'
 import { useId, useState } from 'react'
 
-import { categoryIconComponents } from '@/components/category-icons'
 import { ErrorNotice } from '@/components/error-notice'
 import { ClockIcon, PickupIcon } from '@/components/icons'
 import { MapThumb } from '@/components/map/map-thumb'
 import { useLocale } from '@/contexts/locale-context'
 import { Rail } from '@/features/discovery/components/section'
 import { categoryName, pinIcon } from '@/features/map/lib/categories'
-import { hoursOfWeek, statusAt, weekdayName, zurichWeekday } from '@/lib/hours'
-import { photoUrl } from '@/lib/photos'
+import { statusAt, weekdayName, weekSummary, zurichWeekday } from '@/lib/hours'
 import { pickVariant, widestVariant } from '@/lib/pick-variant'
 import { kindOf, newestFoodPlaces, streetOf } from '../lib/food-map'
-import { ALL_FOOD_PHOTO, topicPhoto } from '../lib/food-topics'
 import { SectionHeading } from './section-heading'
 
 const PRESS = 'outline-none focus-visible:focus-ring motion-safe:transition-transform motion-safe:active:scale-[0.98]'
-const ALL = 'all'
 
 /** A card's photo: the 640 px copy (sharp on a 3x phone), else the widest, else the small `photoUrl`; undefined shows the category icon. */
 const cardPhoto = (pin: PublicMapItem) => (pickVariant(pin.photoVariants, 640) ?? widestVariant(pin.photoVariants))?.url ?? pin.photoUrl ?? undefined
 
-/** Today's spans of a place in Europe/Zurich ("09:00–19:00", "11:30–14:00 · 18:00–22:00"), with the place sheet's helper; none without hours or on a day off. */
-function todaySpans(pin: PublicMapItem, day: number, locale: Parameters<typeof hoursOfWeek>[2]) {
-  const group = hoursOfWeek(pin.weeklyHours, day, locale, '', ' · ').groups.find(candidate => candidate.today)
-
-  return group && !group.closed ? group.value : undefined
+/**
+ * The curved tab of the status corner, as one mask over one element, so the tint and the blur are the same everywhere and no seam
+ * can show (owner, 05.11.2026). The element is the block plus a 16 px strip on its left and under it; the mask keeps the block with
+ * a 22 px curve at its inner corner, and two concave fillets that run it into the card's top and right edges. Each curve has a
+ * 1 px soft edge, so there are no jaggies. Layers: the block without its curved corner (two rectangles), the curve, the two fillets.
+ */
+const FILLET = 'radial-gradient(circle at 0 100%, transparent 15.5px, #000 16.5px)'
+const SOLID = 'linear-gradient(#000, #000)'
+const TAB_MASK = {
+  image: [SOLID, SOLID, 'radial-gradient(circle at 100% 0, #000 21.5px, transparent 22.5px)', FILLET, FILLET].join(', '),
+  // Neighbouring layers overlap by 1 px (the rectangles reach 1 px into the curve's box, the fillets 1 px into the block), so no
+  // device pixel at a seam is covered only partly by both; the mask is one element, so an overlap never darkens.
+  size: 'calc(100% - 37px) calc(100% - 16px), calc(100% - 16px) calc(100% - 37px), 22px 22px, 17px 16px, 16px 17px',
+  position: 'right top, right top, left 16px bottom 16px, left top, right bottom',
+}
+const TAB_STYLE: CSSProperties = {
+  maskImage: TAB_MASK.image,
+  maskSize: TAB_MASK.size,
+  maskPosition: TAB_MASK.position,
+  maskRepeat: 'no-repeat',
+  WebkitMaskImage: TAB_MASK.image,
+  WebkitMaskSize: TAB_MASK.size,
+  WebkitMaskPosition: TAB_MASK.position,
+  WebkitMaskRepeat: 'no-repeat',
 }
 
 /**
- * The card's status corner: a frosted block that hugs the top-right corner (the card's own radius clips its outer corner, a soft
- * radius rounds the inner one; no fillets or edge highlight, which drew as dark wedges on 05.11.2026). A tiny uppercase word
- * The state is the big word with a dot ("Open" green and live, "Closed" red) and the small line says until when or when it
+ * The card's status corner: a frosted tab that hugs the top-right corner (the card's own radius clips its outer corner; the mask above
+ * curves the inner one and runs it into the edges). The state is the big word with a dot ("Open" green and live, "Closed" red) and the small line says until when or when it
  * opens again: "until 19:00", "Opens 14:00", "Opens tomorrow 09:00", "Opens Sat 07:00". Screen readers
  * hear one sentence instead of the pieces. Absolute, so it takes no room and nothing shifts when it appears after hydration.
  */
@@ -62,71 +77,27 @@ function StatusCorner({ status }: { status: HoursStatus }) {
       <span className="sr-only">{view.say}</span>
       <span
         aria-hidden
-        className="absolute top-0 right-0 flex flex-col items-end gap-1 rounded-bl-[22px] bg-black/55 py-3 ps-4 pe-[18px] text-white backdrop-blur-md"
+        className="absolute top-0 right-0 bg-black/55 pb-4 ps-4 text-white backdrop-blur-md"
         data-status={status.state}
+        style={TAB_STYLE}
       >
-        <span className="flex items-center gap-1.5 text-[19px] leading-6 font-extrabold tracking-[-0.01em]">
-          <span className={`size-2 rounded-full ${view.live ? 'bg-[#4ade80] shadow-[0_0_0_3px_rgb(74_222_128/0.25)] motion-safe:animate-pulse' : 'bg-[#f87171]'}`} />
-          {view.state}
+        <span className="flex flex-col items-end gap-1 py-3 ps-4 pe-[18px]">
+          <span className="flex items-center gap-1.5 text-[19px] leading-6 font-extrabold tracking-[-0.01em]">
+            <span className={`size-2 rounded-full ${view.live ? 'bg-[#4ade80] shadow-[0_0_0_3px_rgb(74_222_128/0.25)] motion-safe:animate-pulse' : 'bg-[#f87171]'}`} />
+            {view.state}
+          </span>
+          <span className="text-[12px] leading-4 font-semibold text-white/90 tabular-nums">{view.detail}</span>
         </span>
-        <span className="text-[12px] leading-4 font-semibold text-white/90 tabular-nums">{view.detail}</span>
       </span>
     </>
   )
 }
 
-/** A kind's face: its topic photo, or its icon on a soft tile of the same size and shape (never a place's photo). */
-function KindFace({ photo, icon }: { photo: string | undefined, icon: CategoryIcon | null }) {
-  const Icon = icon ? categoryIconComponents[icon] : PickupIcon
-
-  return (
-    <span className="relative flex size-[58px] items-center justify-center overflow-hidden rounded-[15px] bg-default text-muted">
-      {photo
-        ? <img alt="" className="absolute inset-0 size-full object-cover" decoding="async" loading="lazy" src={photo} />
-        : <Icon aria-hidden size={26} />}
-    </span>
-  )
-}
-
-/**
- * The kind filter, in the look of the story circles of the blog lab: a rounded-square topic photo in a ring and the name under it,
- * "All" first. The chosen one has the warm ring, the others a light one. Toggle buttons (`aria-pressed`) in the shared rail.
- */
-function KindFilter({ items, chosen, onChoose }: { items: { id: string, label: string, photo: string | undefined, icon: CategoryIcon | null }[], chosen: string, onChoose: (id: string) => void }) {
-  const { t } = useLocale()
-
-  return (
-    <Rail label={t('homePage.food.kinds')}>
-      {items.map((item) => {
-        const pressed = item.id === chosen
-
-        return (
-          <li key={item.id} className="shrink-0 snap-start pt-1">
-            <button
-              aria-pressed={pressed}
-              className="group flex w-[72px] flex-col items-center gap-1.5 rounded-xl outline-none focus-visible:focus-ring"
-              type="button"
-              onClick={() => onChoose(item.id)}
-            >
-              <span className={`rounded-[20px] p-[2.5px] ${pressed ? 'bg-gradient-to-tr from-[#f4b860] via-accent to-[#a3241a]' : 'bg-separator'}`}>
-                <span className="block rounded-[17.5px] bg-background p-[2px]">
-                  <KindFace icon={item.icon} photo={item.photo} />
-                </span>
-              </span>
-              <span className="line-clamp-2 text-center text-[12px] leading-4 font-medium group-aria-pressed:font-semibold">{item.label}</span>
-            </button>
-          </li>
-        )
-      })}
-    </Rail>
-  )
-}
-
 /**
  * A place card in the look of the blog lab's portrait story: the 4:5 photo, the dark gradient, and at the foot the glass badge with
- * the kind of place, the white serif name, today's hours and the street; the status corner at the top right. It opens the place on the map.
+ * the kind of place, the white serif name, the week's hours and the street; the status corner at the top right. It opens the place on the map.
  */
-function PlaceCard({ pin, kind, categories, spans, status }: { pin: PublicMapItem, kind: PublicCategory, categories: readonly PublicCategory[], spans: string | undefined, status: HoursStatus | undefined }) {
+function PlaceCard({ pin, kind, categories, week, status }: { pin: PublicMapItem, kind: PublicCategory, categories: readonly PublicCategory[], week: string | undefined, status: HoursStatus | undefined }) {
   const { language } = useLocale()
   const hydrated = useHydrated()
   const other = pin.language === language ? undefined : pin.language
@@ -142,12 +113,12 @@ function PlaceCard({ pin, kind, categories, spans, status }: { pin: PublicMapIte
             {categoryName(kind, language)}
           </span>
           <h3 className="font-serif text-[22px] leading-7 font-medium text-balance hyphens-auto" lang={other}>{pin.title}</h3>
-          {(spans || pin.address) && (
+          {(week || pin.address) && (
             <span className="flex flex-col gap-1 text-[12px] leading-4 font-medium text-white/85">
-              {spans && (
-                <span className="flex items-center gap-1.5 tabular-nums">
+              {week && (
+                <span className="flex items-start gap-1.5 tabular-nums">
                   <ClockIcon aria-hidden className="shrink-0" size={14} />
-                  {spans}
+                  <span className="line-clamp-2">{week}</span>
                 </span>
               )}
               {pin.address && (
@@ -166,18 +137,10 @@ function PlaceCard({ pin, kind, categories, spans, status }: { pin: PublicMapIte
   )
 }
 
-/** The filter row (five faces with a name line) and two cards with the badge, the name and the two fact lines. */
+/** Two cards with the badge, the name and the two fact lines. */
 function FoodSkeleton() {
   return (
-    <div aria-hidden className="flex flex-col gap-4" data-skeleton="food-map">
-      <div className="-mx-4 flex gap-3 overflow-hidden px-4 pt-1">
-        {Array.from({ length: 5 }, (_, index) => (
-          <div key={index} className="flex w-[72px] shrink-0 flex-col items-center gap-1.5">
-            <Skeleton className="size-[67px] rounded-[20px]" />
-            <Skeleton className="h-3 w-12 rounded-md" />
-          </div>
-        ))}
-      </div>
+    <div aria-hidden data-skeleton="food-map">
       <div className="-mx-4 flex gap-3 overflow-hidden px-4">
         {Array.from({ length: 2 }, (_, index) => (
           <div key={index} className="flex aspect-[4/5] w-[272px] shrink-0 flex-col justify-end gap-2 rounded-[28px] bg-surface p-4 shadow-surface">
@@ -192,42 +155,32 @@ function FoodSkeleton() {
   )
 }
 
-/** The filter (when there are two kinds or more), the rail of the chosen kind's places, and the map button for that kind. */
+/** The rail of the five newest places, then the button to the map filtered to food and drink. */
 function FoodPlaces({ selection, categories }: { selection: FoodSelection, categories: readonly PublicCategory[] }) {
   const { t, language, intlLocale } = useLocale()
-  const [chosen, setChosen] = useState(ALL)
   // One clock for the whole section, read once, so every card says the same about now.
   const [now] = useState(() => new Date())
   const day = zurichWeekday(now)
   const time = zurichTime(now)
-  // A kind that is gone after a new read falls back to All.
-  const kind = selection.kinds.find(candidate => candidate.category.id === chosen)
-  const places = kind?.places ?? selection.places
-  const filters = [
-    { id: ALL, label: t('homePage.food.all'), photo: photoUrl(ALL_FOOD_PHOTO), icon: selection.category.icon },
-    ...selection.kinds.map(candidate => ({ id: candidate.category.id, label: categoryName(candidate.category, language), photo: photoUrl(topicPhoto(candidate.category.icon)), icon: candidate.category.icon })),
-  ]
 
   return (
     <div className="flex flex-col gap-4">
-      {selection.kinds.length > 1 && <KindFilter chosen={kind ? chosen : ALL} items={filters} onChoose={setChosen} />}
-      {/* Keyed by the kind, so a new choice starts the rail at its first card. */}
-      <Rail key={kind?.category.id ?? ALL} label={kind ? categoryName(kind.category, language) : t('homePage.food.places')}>
-        {places.map(pin => (
+      <Rail label={t('homePage.food.places')}>
+        {selection.places.map(pin => (
           <PlaceCard
             key={pin.id}
             categories={categories}
             kind={kindOf(pin, selection)}
             pin={pin}
-            spans={todaySpans(pin, day, intlLocale)}
             status={statusAt(pin.weeklyHours, day, time)}
+            week={weekSummary(pin.weeklyHours, intlLocale, t('homePage.food.daily'))}
           />
         ))}
       </Rail>
       <Link
         className={`${buttonVariants({ variant: 'secondary', size: 'lg', fullWidth: true })} transition-transform active:scale-[0.98]`}
         params={{ lang: language }}
-        search={{ category: kind?.category.slug ?? selection.category.slug }}
+        search={{ category: selection.category.slug }}
         to="/$lang/map"
       >
         {t('homePage.food.seeAll')}
@@ -238,9 +191,8 @@ function FoodPlaces({ selection, categories }: { selection: FoodSelection, categ
 
 /**
  * "Eat and drink like a local" (owner, 05.11.2026; docs/ux/home-design.md section 4): the five food and drink places added to the
- * map most recently, newest first in the server's order and not sorted by the guest's answers, as tall photo cards in a rail. A row
- * of kinds over it (All, then each sub-category that holds an undated place) filters the rail in the page to that kind's five newest,
- * and "See all on the map" follows the chosen kind. Not drawn when the category is not there or holds no undated place. The pins and categories are the home loader's
+ * map most recently, newest first in the server's order and not sorted by the guest's answers, as tall photo cards in a rail, then
+ * "See all on the map" to the map filtered to food and drink (no kind filter since 05.11.2026). Not drawn when the category is not there or holds no undated place. The pins and categories are the home loader's
  * read of the map list (undefined while it loads, null when it failed). No price anywhere.
  */
 export function FoodMapSection({ pins, categories, onRetry }: { pins: readonly PublicMapItem[] | null | undefined, categories: readonly PublicCategory[] | null | undefined, onRetry: () => void }) {

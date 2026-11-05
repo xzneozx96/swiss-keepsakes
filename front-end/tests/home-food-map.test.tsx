@@ -81,8 +81,6 @@ function renderSection(read: Read = { pins, categories }, onRetry = () => {}) {
 }
 
 const section = async () => (await screen.findByRole('heading', { level: 2, name: en['homePage.food.title'] })).closest('section')!
-const filter = () => screen.getByRole('region', { name: en['homePage.food.kinds'] })
-const filterButtons = () => within(filter()).getAllByRole('button')
 const rail = (name = en['homePage.food.places']) => screen.getByRole('region', { name })
 const cardNames = (name?: string) => within(rail(name)).getAllByRole('heading', { level: 3 }).map(heading => heading.textContent)
 const card = (title: string) => screen.getByRole('link', { name: new RegExp(title) })
@@ -118,17 +116,26 @@ describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
 
   const corner = (title: string) => card(title).querySelector('[data-status]')
 
-  it('shows today’s actual hours under the name, with no status word in the line', async () => {
+  it('shows the week’s hours under the name, grouped by day, also on a day with no span today', async () => {
     renderSection()
     await section()
 
-    expect(card('SiP Café')).toHaveTextContent('09:00–19:00')
-    // Two spans, joined by a dot.
-    expect(card('Reussbad')).toHaveTextContent('11:30–14:00 · 18:00–22:00')
-    expect(card('SiP Café')).not.toHaveTextContent(/Today|Closed today/)
-    // No span today, and no hours at all: no hours line.
-    expect(card('Storchen')).not.toHaveTextContent('14:00–22:00')
+    expect(card('SiP Café')).toHaveTextContent('Thu 09:00–19:00 · Fri 09:00–20:00')
+    expect(card('Reussbad')).toHaveTextContent('Thu 11:30–14:00, 18:00–22:00')
+    // Storchen is open on Tuesdays only: the week still shows.
+    expect(card('Storchen')).toHaveTextContent('Tue 14:00–22:00')
+    expect(card('SiP Café').querySelector('.line-clamp-2')).toHaveTextContent('Thu 09:00–19:00 · Fri 09:00–20:00')
+    // No hours at all: no hours line.
     expect(card('Café Mamie')).not.toHaveTextContent(/\d{2}:\d{2}/)
+  })
+
+  it('says Daily when every day has the same hours', async () => {
+    const daily = pin(8, 'Daily Bakery', [food.id, cafes.id], { weeklyHours: [1, 2, 3, 4, 5, 6, 7].map(day => ({ day, opens: '07:00', closes: '18:30' })) })
+
+    renderSection({ pins: [daily], categories })
+    await section()
+
+    expect(card('Daily Bakery')).toHaveTextContent('Daily 07:00–18:30')
   })
 
   it('puts “Open” and “until” the closing time in the top corner while open, with one sentence for screen readers', async () => {
@@ -221,59 +228,24 @@ describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
     expect(card('Café Mamie').querySelector('img')).toBeNull()
   })
 
-  it('offers All and the kinds that hold a listed place, in position order, with All chosen', async () => {
-    renderSection()
-    await section()
-
-    // Fondue holds no listed place; Bars holds Storchen.
-    expect(filterButtons().map(button => button.textContent?.trim())).toEqual(['All', 'Cafés and bakeries', 'Restaurants', 'Bars'])
-    expect(filterButtons().map(button => button.getAttribute('aria-pressed'))).toEqual(['true', 'false', 'false', 'false'])
-  })
-
-  it('gives each kind the topic photo of its icon, never a place photo, and the icon on a tile without one', async () => {
-    renderSection()
-    await section()
-    const [all, cafe, restaurant, bar] = filterButtons()
-
-    expect(all!.querySelector('img')?.getAttribute('src')).toContain('food-topic-all')
-    expect(cafe!.querySelector('img')?.getAttribute('src')).toContain('food-topic-cafe')
-    expect(bar!.querySelector('img')?.getAttribute('src')).toContain('food-topic-bar')
-    // Restaurants has no icon here: a soft tile with the plain pin, no photo.
-    expect(restaurant!.querySelector('img')).toBeNull()
-    expect(restaurant!.querySelector('svg')).not.toBeNull()
-    expect(filterButtons().some(button => button.querySelector('img')?.getAttribute('src')?.startsWith('https://img.example'))).toBe(false)
-  })
-
-  it('filters the cards by the chosen kind in the page, and the button follows the kind', async () => {
-    renderSection()
-    await section()
-    const seeAll = () => screen.getByRole('link', { name: en['homePage.food.seeAll'] })
-
-    expect(seeAll()).toHaveAttribute('href', '/en/map?category=food-and-drink')
-    expect(seeAll()).toHaveTextContent(/^See all on the map$/)
-    await userEvent.click(within(filter()).getByRole('button', { name: 'Restaurants' }))
-
-    expect(cardNames('Restaurants')).toEqual(['Restaurant Reussbad', 'Storchen Restaurant & Weinbar'])
-    expect(within(filter()).getByRole('button', { name: 'Restaurants' })).toHaveAttribute('aria-pressed', 'true')
-    expect(seeAll()).toHaveAttribute('href', '/en/map?category=restaurants')
-
-    await userEvent.click(within(filter()).getByRole('button', { name: 'All' }))
-
-    expect(cardNames()).toHaveLength(4)
-    expect(seeAll()).toHaveAttribute('href', '/en/map?category=food-and-drink')
-  })
-
-  it('shows at most five cards for All and for a kind; a kind takes its own five newest', async () => {
+  it('shows at most five cards, newest first, and the button opens the map filtered to food and drink', async () => {
     const newCafes = Array.from({ length: 6 }, (_, index) => pin(10 + index, `Café ${index + 1}`, [food.id, cafes.id]))
-    const oldBar = pin(30, 'Old Bar', [food.id, bars.id])
 
-    renderSection({ pins: [...newCafes, oldBar], categories })
+    renderSection({ pins: [...newCafes, pin(30, 'Old Bar', [food.id, bars.id])], categories })
     await section()
+    const seeAll = screen.getByRole('link', { name: en['homePage.food.seeAll'] })
 
     expect(cardNames()).toEqual(['Café 1', 'Café 2', 'Café 3', 'Café 4', 'Café 5'])
-    await userEvent.click(within(filter()).getByRole('button', { name: 'Bars' }))
+    expect(seeAll).toHaveAttribute('href', '/en/map?category=food-and-drink')
+    expect(seeAll).toHaveTextContent(/^See all on the map$/)
+  })
 
-    expect(cardNames('Bars')).toEqual(['Old Bar'])
+  it('has no kind filter row', async () => {
+    renderSection()
+    await section()
+
+    expect(screen.queryAllByRole('button')).toHaveLength(0)
+    expect(screen.getAllByRole('region').map(region => region.getAttribute('aria-label'))).not.toContain('Kinds of place')
   })
 
   it('opens each place on the map', async () => {
@@ -284,14 +256,6 @@ describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
     expect(card('Café Mamie')).toHaveAttribute('href', '/en/map?place=pin-5')
   })
 
-  it('shows no filter row when the places hold one kind only', async () => {
-    renderSection({ pins: [sip, mamie], categories })
-    await section()
-
-    expect(screen.queryByRole('region', { name: en['homePage.food.kinds'] })).toBeNull()
-    expect(cardNames()).toEqual(['SiP Café', 'Café Mamie'])
-  })
-
   it('is not drawn without the category, without a food place, or with dated food places only', async () => {
     for (const read of [{ pins, categories: [walks] }, { pins: [bridge], categories }, { pins: [market], categories }]) {
       renderSection(read)
@@ -300,7 +264,7 @@ describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
     }
   })
 
-  it('shows a skeleton of the filter row and the cards while the map list loads', async () => {
+  it('shows a skeleton of the cards while the map list loads', async () => {
     renderSection({})
     await section()
 
