@@ -83,6 +83,11 @@ describe('[E2.12] public read schemas', () => {
     expect(missing).toContain('cover')
   })
 
+  it('the tour card carries the cover next to its key, as an address with variants or null', () => {
+    expect(Object.keys(publicTourCardSchema.shape)).toEqual(expect.arrayContaining(['coverKey', 'cover']))
+    expect(publicTourCardSchema.safeParse({}).error?.issues.map(issue => issue.path[0])).toContain('cover')
+  })
+
   it('[E4.4][AC54][AC61] the story detail adds versions, places, related cards and keepsake cards, and a keepsake card has no price', () => {
     expect(Object.keys(publicStorySchema.shape)).toEqual(expect.arrayContaining(['versions', 'places', 'related', 'keepsakes']))
     expect(Object.keys(publicStoryCardSchema.shape)).not.toEqual(expect.arrayContaining(['versions', 'keepsakes']))

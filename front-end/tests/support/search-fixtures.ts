@@ -42,6 +42,7 @@ export function tourCard(over: Partial<PublicTourCard> & { title: string }): Pub
     interests: [],
     durationMinutes: 90,
     coverKey: null,
+    cover: null,
     ...notice,
     ...over,
   }

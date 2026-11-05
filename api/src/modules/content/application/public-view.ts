@@ -313,6 +313,7 @@ export interface PublicTourCard extends LanguageNotice {
   interests: string[]
   durationMinutes: number | null
   coverKey: string | null
+  cover: PublicCover | null
 }
 
 export interface PublicTour extends PublicTourCard {
@@ -418,7 +419,7 @@ export function toMapItem(row: PublicPinRow, requested: ContentLanguage, now: Da
   }
 }
 
-function toTourCard(row: PublicTourRow, info: LanguageNotice): PublicTourCard {
+function toTourCard(row: PublicTourRow, info: LanguageNotice, publicUrl: (key: string) => string): PublicTourCard {
   return {
     id: row.id,
     slug: row.slug[info.language] ?? '',
@@ -427,22 +428,23 @@ function toTourCard(row: PublicTourRow, info: LanguageNotice): PublicTourCard {
     interests: row.interests,
     durationMinutes: row.durationMinutes,
     coverKey: row.coverKey,
+    cover: row.coverKey === null ? null : { url: publicUrl(row.coverKey), variants: variantsOf(row.coverKey, row.coverWidth, publicUrl) },
     ...info,
   }
 }
 
-export function toTourCardFor(row: PublicTourRow, requested: ContentLanguage): PublicTourCard | null {
+export function toTourCardFor(row: PublicTourRow, requested: ContentLanguage, publicUrl: (key: string) => string): PublicTourCard | null {
   const info = languageNotice(languagesOf(row.title), requested)
-  return info && toTourCard(row, info)
+  return info && toTourCard(row, info, publicUrl)
 }
 
-export function toPublicTour(row: PublicTourRow, requested: ContentLanguage): PublicTour | null {
+export function toPublicTour(row: PublicTourRow, requested: ContentLanguage, publicUrl: (key: string) => string): PublicTour | null {
   const info = languageNotice(languagesOf(row.title), requested)
   if (!info)
     return null
   const { language } = info
   return {
-    ...toTourCard(row, info),
+    ...toTourCard(row, info, publicUrl),
     summary: text(row.summary, language),
     meetingPoint: text(row.meetingPoint, language),
     sections: (Array.isArray(row.sections) ? row.sections : []).map(s => ({ id: s.id, heading: text(s.heading, language), body: text(s.body, language) })),

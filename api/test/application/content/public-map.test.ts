@@ -65,6 +65,7 @@ function tour(n: number, over: Partial<PublicTourRow> = {}): PublicTourRow {
     meetingPoint: { en: 'Station' },
     sections: [{ id: 's1', heading: { en: 'Heading' }, body: { en: 'Body' } }],
     coverKey: 'cover/key',
+    coverWidth: null,
     pdfKey: 'pdf/key',
     keepsakeProductIds: [],
     stops: [{ position: 1, latitude: 47, longitude: 8, title: { en: 'Stop' }, text: { en: 'Text' }, minutesFromStart: 0, key: null, placeId: null }],
@@ -395,6 +396,17 @@ describe('public pin card', () => {
 })
 
 describe('public tour guides', () => {
+  it('the cover is addresses with width variants, and null without a ready cover', async () => {
+    const s = setup({ pins: [], tours: [tour(1, { coverWidth: 700 }), tour(2, { coverKey: null, coverWidth: null })] })
+
+    const list = await s.tours('en')
+    const detail = await s.tour('tour-1', 'en')
+
+    expect(list.items[0]!.cover).toEqual({ url: 'https://media.test/cover/key', variants: [{ width: 320, url: 'https://media.test/cover/w320.webp' }, { width: 640, url: 'https://media.test/cover/w640.webp' }] })
+    expect(list.items[1]!.cover).toBeNull()
+    expect(detail.ok && detail.value.cover).toEqual(list.items[0]!.cover)
+  })
+
   it('[E2.12][AC64] a guide with English only, read as de, carries English', async () => {
     const s = setup({ pins: [], tours: [tour(1)] })
 

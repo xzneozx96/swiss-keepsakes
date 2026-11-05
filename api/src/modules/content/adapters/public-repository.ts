@@ -281,9 +281,10 @@ async function loadTours(tx: Tx, tourId: string | null, withStops: boolean): Pro
   ].filter((m): m is string => m !== null))]
   const media = mediaIds.length === 0
     ? []
-    : (await tx.execute<{ id: string, storage_key: string } & Record<string, unknown>>(sql`
-        select id, storage_key from content.media where id = any(${sql.param(mediaIds)}::uuid[]) and status = 'ready'`)).rows
+    : (await tx.execute<{ id: string, storage_key: string, width: number | null } & Record<string, unknown>>(sql`
+        select id, storage_key, width from content.media where id = any(${sql.param(mediaIds)}::uuid[]) and status = 'ready'`)).rows
   const keys = new Map(media.map(m => [m.id, m.storage_key]))
+  const widths = new Map(media.map(m => [m.id, m.width]))
   const keyOf = (id: string | null) => (id ? keys.get(id) ?? null : null)
 
   return tours.rows.map(row => ({
@@ -297,6 +298,7 @@ async function loadTours(tx: Tx, tourId: string | null, withStops: boolean): Pro
     meetingPoint: row.published.meetingPoint ?? {},
     sections: Array.isArray(row.published.sections) ? row.published.sections : [],
     coverKey: keyOf(row.cover_media_id),
+    coverWidth: (row.cover_media_id && widths.get(row.cover_media_id)) || null,
     pdfKey: keyOf(row.pdf_media_id),
     keepsakeProductIds: links.rows.filter(l => l.tour_id === row.id).map(l => l.product_id),
     stops: stops.filter(s => s.tour_id === row.id).map(s => ({

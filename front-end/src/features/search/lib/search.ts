@@ -98,8 +98,8 @@ function tour(t: PublicTourCard): SearchResult {
     key: `tour:${t.id}`,
     kind: 'tour',
     title: t.title,
-    photoUrl: null,
-    photoKey: t.coverKey,
+    photoUrl: t.cover?.variants[0]?.url ?? t.cover?.url ?? null,
+    photoKey: t.cover ? null : t.coverKey,
     link: { to: '/$lang/tours/$slug', params: { lang: t.language, slug: t.slug } },
     interests: t.interests,
   }

@@ -6650,7 +6650,7 @@ export interface components {
         PublicCategoryList: {
             items: components["schemas"]["PublicCategory"][];
         };
-        /** @description The cover of a story, with its public addresses */
+        /** @description The cover of a story or guide, with its public addresses */
         PublicCover: {
             /** @description The original file */
             url: string;
@@ -7619,6 +7619,16 @@ export interface components {
         };
         PublicTour: {
             availableLanguages: components["schemas"]["PublicLanguage"][];
+            /** @description The cover as addresses; null when the guide has no ready cover */
+            cover: {
+                /** @description The original file */
+                url: string;
+                /** @description The webp copies, smallest first; empty when the width is not known */
+                variants: {
+                    url: string;
+                    width: number;
+                }[];
+            } | null;
             coverKey: string | null;
             durationMinutes: number | null;
             /** @description True when the item is in another language than the one asked for */
@@ -7655,6 +7665,16 @@ export interface components {
         };
         PublicTourCard: {
             availableLanguages: components["schemas"]["PublicLanguage"][];
+            /** @description The cover as addresses; null when the guide has no ready cover */
+            cover: {
+                /** @description The original file */
+                url: string;
+                /** @description The webp copies, smallest first; empty when the width is not known */
+                variants: {
+                    url: string;
+                    width: number;
+                }[];
+            } | null;
             coverKey: string | null;
             durationMinutes: number | null;
             /** @description True when the item is in another language than the one asked for */

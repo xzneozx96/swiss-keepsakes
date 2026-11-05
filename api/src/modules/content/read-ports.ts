@@ -120,6 +120,8 @@ export interface PublicTourRow {
   meetingPoint: Localized
   sections: { id: string, heading: Localized, body: Localized }[]
   coverKey: string | null
+  // Pixel width of the ready cover; null when unknown or without a cover.
+  coverWidth: number | null
   pdfKey: string | null
   keepsakeProductIds: string[]
   // Filled for a detail read; the list leaves it empty.

@@ -8,6 +8,7 @@ import { ErrorNotice } from '@/components/error-notice'
 import { ClockIcon } from '@/components/icons'
 import { Media } from '@/components/media'
 import { useLocale } from '@/contexts/locale-context'
+import { coverSrc } from '@/features/content/lib/cover-src'
 import { Rail } from '@/features/discovery/components/section'
 import { useOnboardingAnswers } from '@/features/onboarding/hooks/use-onboarding-answers'
 import { routeOrder } from '../lib/routes'
@@ -26,7 +27,7 @@ function RouteCard({ tour }: { tour: PublicTourCard }) {
         params={{ lang: tour.language, slug: tour.slug }}
         to="/$lang/tours/$slug"
       >
-        <Media alt="" className="aspect-[4/3] w-full rounded-3xl" />
+        <Media alt="" className="aspect-[4/3] w-full rounded-3xl" photo={coverSrc(tour.cover)} />
         <span className="flex flex-col gap-0.5 px-0.5">
           <h3 className="font-serif text-card-title text-balance" lang={other}>{tour.title}</h3>
           {other && <span className="w-fit rounded-full bg-surface-secondary px-2 py-0.5 text-[11px] leading-4 font-medium text-muted">{t(`map.card.onlyIn.${other}`)}</span>}

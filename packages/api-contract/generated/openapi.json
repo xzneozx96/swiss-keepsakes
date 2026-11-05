@@ -8376,7 +8376,7 @@
         "type": "object"
       },
       "PublicCover": {
-        "description": "The cover of a story, with its public addresses",
+        "description": "The cover of a story or guide, with its public addresses",
         "properties": {
           "url": {
             "description": "The original file",
@@ -12689,6 +12689,42 @@
             },
             "type": "array"
           },
+          "cover": {
+            "description": "The cover as addresses; null when the guide has no ready cover",
+            "properties": {
+              "url": {
+                "description": "The original file",
+                "type": "string"
+              },
+              "variants": {
+                "description": "The webp copies, smallest first; empty when the width is not known",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "url",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
           "coverKey": {
             "type": [
               "string",
@@ -12837,6 +12873,7 @@
           "interests",
           "durationMinutes",
           "coverKey",
+          "cover",
           "language",
           "requestedLanguage",
           "fallback",
@@ -12857,6 +12894,42 @@
               "$ref": "#/components/schemas/PublicLanguage"
             },
             "type": "array"
+          },
+          "cover": {
+            "description": "The cover as addresses; null when the guide has no ready cover",
+            "properties": {
+              "url": {
+                "description": "The original file",
+                "type": "string"
+              },
+              "variants": {
+                "description": "The webp copies, smallest first; empty when the width is not known",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "url",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
           },
           "coverKey": {
             "type": [
@@ -12913,6 +12986,7 @@
           "interests",
           "durationMinutes",
           "coverKey",
+          "cover",
           "language",
           "requestedLanguage",
           "fallback",

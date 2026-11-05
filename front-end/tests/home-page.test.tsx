@@ -52,7 +52,7 @@ const pin: PublicMapItem = {
 }
 
 const mustVisit: PublicMapItem = { ...pin, id: id(101), slug: 'chapel-bridge', title: 'Chapel Bridge', mustVisit: true, tip: 'Go at dawn.' }
-const tour = (n: number, title: string, stayTag: PublicTourCard['stayTag']): PublicTourCard => ({ id: id(300 + n), slug: `tour-${n}`, title, stayTag, interests: [], durationMinutes: 390, coverKey: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] })
+const tour = (n: number, title: string, stayTag: PublicTourCard['stayTag']): PublicTourCard => ({ id: id(300 + n), slug: `tour-${n}`, title, stayTag, interests: [], durationMinutes: 390, coverKey: null, cover: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] })
 const tours = [tour(1, 'Pilatus above the city', 'multi_day'), tour(2, 'Old town in an hour', 'short_stay')]
 
 const photo = { url: 'https://cdn.test/swan.jpg', variants: [{ width: 320, url: 'https://cdn.test/swan-320.webp' }, { width: 800, url: 'https://cdn.test/swan-800.webp' }] }

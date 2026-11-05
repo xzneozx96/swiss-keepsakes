@@ -74,6 +74,12 @@ describe('[E4.14][AC54][AC90][AC94] searchAll: one list, each row names its kind
     ])
   })
 
+  it('a tour with a cover carries its smallest copy and no key', () => {
+    const tours = [tourCard({ title: 'Lucerne highlights', coverKey: 'k', cover: { url: 'https://x/t.jpg', variants: [{ width: 320, url: 'https://x/t-320.webp' }] } })]
+
+    expect(searchAll({ ...none, tours }, 'lucerne').map(r => [r.photoUrl, r.photoKey])).toEqual([['https://x/t-320.webp', null]])
+  })
+
   it('a place without a slug in the language is left out', () => {
     expect(searchAll({ ...none, pins: [mapItem({ title: 'Lucerne hidden', slug: null })] }, 'lucerne')).toEqual([])
   })

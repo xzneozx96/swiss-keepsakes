@@ -81,7 +81,7 @@ export const publicStoryBodySchema = z.strictObject({
 const publicCoverSchema = z.object({
   url: z.string().meta({ description: 'The original file' }),
   variants: z.array(z.object({ width: z.int(), url: z.string() })).meta({ description: 'The webp copies, smallest first; empty when the width is not known' }),
-}).meta({ id: 'PublicCover', description: 'The cover of a story, with its public addresses' })
+}).meta({ id: 'PublicCover', description: 'The cover of a story or guide, with its public addresses' })
 
 export const publicStoryCardSchema = z.object({
   id: z.uuid(),
@@ -185,6 +185,7 @@ export const publicTourCardSchema = z.object({
   interests: z.array(z.string()),
   durationMinutes: z.int().nullable(),
   coverKey: z.string().nullable(),
+  cover: publicCoverSchema.nullable().meta({ description: 'The cover as addresses; null when the guide has no ready cover' }),
   ...languageNoticeSchema.shape,
 }).meta({ id: 'PublicTourCard' })
 

@@ -83,6 +83,25 @@ describe('public tour guide reads over the database', () => {
     })
   })
 
+  it('[E2.12][AC64] a guide carries its ready cover as addresses with width variants, and null without one or when it is retired', async () => {
+    const store = randomUUID()
+    const cover = await media(store, 'image')
+    await pool.query(`update content.media set width = 1000 where id = $1`, [cover.id])
+    const retired = await media(store, 'image', 'retired')
+    const withCover = await tour(store, { cover: cover.id })
+    const without = await tour(store)
+    const withRetired = await tour(store, { cover: retired.id })
+
+    const items = (await listTours('en')).items
+    const detail = await getTour(withCover.slugs.en!, 'en')
+
+    const expected = { url: `https://media.test/${cover.key}`, variants: expect.arrayContaining([{ width: 320, url: expect.stringMatching(/^https:\/\/media\.test\/.*w320\.webp$/) }]) }
+    expect(items.find(i => i.id === withCover.id)?.cover).toEqual(expected)
+    expect(detail.ok && detail.value.cover).toEqual(expected)
+    expect(items.find(i => i.id === without.id)?.cover).toBeNull()
+    expect(items.find(i => i.id === withRetired.id)?.cover).toBeNull()
+  })
+
   it('[E2.12][AC45] a draft guide is not listed and its slug is a 404', async () => {
     const store = randomUUID()
     const draft = await tour(store, { status: 'draft' })
