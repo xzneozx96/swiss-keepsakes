@@ -18,12 +18,22 @@ interface StoryCardProps {
   excerpt?: string
   /** The story is in the other language than the page (ADR-002): its short code, and the language's name for screen readers. */
   tag?: { code: string, label: string }
-  layout?: 'rail' | 'list'
+  layout?: 'rail' | 'list' | 'row'
 }
+
+const LINK = {
+  rail: 'flex-col w-72 shrink-0 snap-start gap-2',
+  list: 'flex-col gap-2.5',
+  // The home's compact row: a small square photo beside the text.
+  row: 'flex-row items-center gap-3',
+}
+const PHOTO = { rail: 'rounded-3xl aspect-[16/10]', list: 'rounded-3xl aspect-[4/3]', row: 'size-24 shrink-0 rounded-2xl' }
+const TEXT = { rail: 'gap-0.5 px-1', list: 'gap-1 px-1', row: 'min-w-0 flex-1 gap-0.5' }
 
 /**
  * A story on the C01 rail or the C19 list (spec §4.11). The list layout follows the C02
- * gift card: a 4:3 photo, serif title, then the excerpt and read time.
+ * gift card: a 4:3 photo, serif title, then the excerpt and read time. The row layout is the
+ * home's stories section: a 96 px square photo with the same text beside it.
  */
 export function StoryCard({
   slug,
@@ -36,20 +46,18 @@ export function StoryCard({
   layout = 'list',
 }: StoryCardProps) {
   const { language } = useLocale()
-  const rail = layout === 'rail'
-
   return (
     <Link
-      className={`flex flex-col rounded-3xl outline-none focus-visible:focus-ring transition-transform active:scale-[0.98] ${rail ? 'w-72 shrink-0 snap-start gap-2' : 'gap-2.5'}`}
+      className={`flex rounded-3xl outline-none focus-visible:focus-ring transition-transform active:scale-[0.98] ${LINK[layout]}`}
       params={{ lang: lang ?? language, slug }}
       to="/$lang/stories/$slug"
     >
       <Media
         alt=""
-        className={`rounded-3xl ${rail ? 'aspect-[16/10]' : 'aspect-[4/3]'}`}
+        className={PHOTO[layout]}
         photo={photo}
       />
-      <div className={`flex flex-col px-1 ${rail ? 'gap-0.5' : 'gap-1'}`}>
+      <div className={`flex flex-col ${TEXT[layout]}`}>
         <h3 className="font-serif text-card-title text-balance">{title}</h3>
         {excerpt && (
           <p className="line-clamp-2 text-sm text-foreground/75">{excerpt}</p>

@@ -11,14 +11,14 @@ import { coverSrc } from '@/features/content/lib/cover-src'
 import { HOME_STORY_COUNT, newestStories } from '../lib/newest-stories'
 import { SectionHeading } from './section-heading'
 
-/** One story row as the stories list draws it: the 4:3 photo, the title, two lines of excerpt and the meta line. */
+/** The compact rows: a 96 px square photo, then the title, two lines of excerpt and the meta line. */
 function StoriesSkeleton() {
   return (
-    <ul aria-busy aria-hidden className="flex flex-col gap-7" data-skeleton="stories">
+    <ul aria-busy aria-hidden className="flex flex-col gap-4" data-skeleton="stories">
       {Array.from({ length: HOME_STORY_COUNT }, (_, index) => (
-        <li key={index} className="flex flex-col gap-2.5">
-          <Skeleton className="aspect-[4/3] rounded-3xl" />
-          <div className="flex flex-col gap-1 px-1">
+        <li key={index} className="flex items-center gap-3">
+          <Skeleton className="size-24 shrink-0 rounded-2xl" />
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
             <Skeleton className="h-5 w-4/5 rounded-lg" />
             <Skeleton className="h-3.5 w-full rounded-lg" />
             <Skeleton className="h-3.5 w-3/5 rounded-lg" />
@@ -31,7 +31,7 @@ function StoriesSkeleton() {
 }
 
 /**
- * "Stories from Lucerne": the three newest published stories as the stories list draws them, then a button to the whole list.
+ * "Stories from Lucerne": the three newest published stories as compact rows (a small photo beside the text), then a button to the whole list.
  * No filter and no sorting for the guest's answers. `stories` is undefined while the read loads and null when it failed.
  * With no story the section is not drawn.
  */
@@ -51,12 +51,13 @@ export function StoriesSection({ stories, onRetry }: { stories: readonly PublicS
           ? <StoriesSkeleton />
           : (
               <>
-                <ul className="flex flex-col gap-7">
+                <ul className="flex flex-col gap-4">
                   {newestStories(stories).map(story => (
                     <li key={story.id}>
                       <StoryCard
                         excerpt={story.excerpt}
                         lang={story.language}
+                        layout="row"
                         meta={t('home.stories.read', { minutes: story.readMinutes })}
                         photo={coverSrc(story.cover)}
                         slug={story.slug}
