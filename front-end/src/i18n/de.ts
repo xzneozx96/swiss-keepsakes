@@ -145,9 +145,9 @@ export const de: Record<MessageKey, string> = {
   'home.victorinox.eyebrow': 'Unser Partner',
   'home.victorinox.seeAll': 'Alle {count} Designs anzeigen',
   'home.victorinox.subtitle':
-    'Schweizer Taschenmesser, mit Ihrem Namen graviert',
+    'Schweizer Taschenmesser in Luzerner und alpinen Designs',
   'home.victorinox.intro':
-    'Karl Elsener eröffnete 1884 in Ibach seine Messerschmiede, und Victorinox stellt seine Messer noch immer in der Schweiz her. Wählen Sie ein Luzerner oder alpines Design in drei Grössen, und der Laden graviert Namen und Datum auf die Rückseite.',
+    'Karl Elsener eröffnete 1884 in Ibach seine Messerschmiede, und Victorinox stellt seine Messer noch immer in der Schweiz her. Wählen Sie ein Luzerner oder alpines Design in drei Grössen.',
   'home.victorinox.fact1': 'Seit 1884',
   'home.keepsakes.title': 'Weitere Andenken',
   'home.keepsakes.subtitle': 'Kleine Dinge von Luzerner Herstellern',
