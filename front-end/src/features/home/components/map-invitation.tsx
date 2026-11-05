@@ -10,6 +10,10 @@ import { SortNotice } from './sort-notice'
 
 const view = aerialView()
 
+// A percentage as the browser keeps it: the server's HTML and the browser's style must read the same, or React reports a
+// hydration mismatch (the browser keeps about six significant digits of a CSS number).
+const pct = (value: number) => `${Math.round(value * 1e4) / 1e4}%`
+
 /**
  * "First time in Lucerne?": the heading, one line, and a static aerial of the old town at 3:2 that is one link to the Map tab
  * (a picture, not a live map; no MapLibre on the home). The photos on it come from the shared photo library. Under it, the sort
@@ -36,7 +40,7 @@ export function MapInvitation() {
             className="absolute max-w-none"
             decoding="async"
             src={tile.src}
-            style={{ left: `${tile.left}%`, top: `${tile.top}%`, width: `${tile.width}%`, height: `${tile.height}%` }}
+            style={{ left: pct(tile.left), top: pct(tile.top), width: pct(tile.width), height: pct(tile.height) }}
           />
         ))}
         {view.spots.map(spot => (
@@ -44,7 +48,7 @@ export function MapInvitation() {
             key={spot.photo}
             aria-hidden
             className="absolute size-9 -translate-1/2 overflow-hidden rounded-full border-[3px] border-surface bg-charcoal shadow-overlay"
-            style={{ left: `${spot.left}%`, top: `${spot.top}%` }}
+            style={{ left: pct(spot.left), top: pct(spot.top) }}
           >
             <img alt="" className="size-full object-cover" decoding="async" loading="lazy" src={photoUrl(spot.photo)} />
           </span>
