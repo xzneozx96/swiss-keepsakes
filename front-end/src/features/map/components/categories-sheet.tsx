@@ -56,7 +56,8 @@ export function CategoriesSheet({
       onClose={onClose}
     >
       <div className="flex flex-col gap-2">
-        <p className="text-sm text-muted">{draft.length === 0 ? t('map.filter.pickOne') : t('map.filter.hint')}</p>
+        {/* Only the empty choice needs a word; that the other places stay dimmed is plain on the map (owner, 05.11.2026). */}
+        {draft.length === 0 && <p className="text-sm text-muted">{t('map.filter.pickOne')}</p>}
         <div className="flex flex-col">
           {/* The header row ticks or clears every category, as a table's select-all does. */}
           <Checkbox

@@ -43,7 +43,6 @@ export const mapDe: Record<keyof typeof mapEn, string> = {
   'map.date.until': 'Bis {day}',
   'map.date.from': 'ab {time}',
   'map.filter.title': 'Kategorien',
-  'map.filter.hint': 'Die anderen Orte bleiben gedimmt auf der Karte.',
   'map.filter.pickOne': 'Wählen Sie mindestens eine Kategorie.',
   'map.filter.all': 'Alle Kategorien',
   'map.filter.clear': 'Filter zurücksetzen',

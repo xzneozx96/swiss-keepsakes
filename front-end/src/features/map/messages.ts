@@ -42,7 +42,6 @@ export const mapEn = {
   'map.date.until': 'Until {day}',
   'map.date.from': 'from {time}',
   'map.filter.title': 'Categories',
-  'map.filter.hint': 'The other places stay on the map, dimmed.',
   'map.filter.pickOne': 'Pick at least one category.',
   'map.filter.all': 'All categories',
   'map.filter.clear': 'Clear filter',
