@@ -1,0 +1,257 @@
+{
+  "note": "Cover photos attached on dev 05.11.2026 through the store media API (owner request). All from Wikimedia Commons; CC BY / CC BY-SA need the author credit, BY-SA also share-alike.",
+  "photos": [
+    {
+      "id": "01a19b70-88ec-7d3a-808c-c0176b8fb7f6",
+      "title": "Pharmacy at the station",
+      "file": "pharmacy-at-the-station.jpg",
+      "shows": "The monumental portal of Lucerne railway station seen from the station forecourt.",
+      "author": "Karlunun",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_Bahnhofplatz_Bahnhof_175_20080706.jpg"
+    },
+    {
+      "id": "01a19b6f-d9df-7771-8531-e31372320f66",
+      "title": "Emergency numbers",
+      "file": "emergency-numbers.jpg",
+      "shows": "A Swiss ambulance marked Notruf 144 outside an ambulance station.",
+      "author": "Schutz & Rettung Zürich",
+      "licence": "CC BY-SA 3.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Rettungswagen_schutzundrettung_zuerich.jpg"
+    },
+    {
+      "id": "01a1a9bc-a598-7244-9ac1-728b59368831",
+      "title": "Sennenchilbi Weggis",
+      "file": "sennenchilbi-weggis.jpg",
+      "shows": "Weggis village church and lakeside houses.",
+      "author": "W. Bulach",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:00_0073_Weggis_-_Kirche.jpg"
+    },
+    {
+      "id": "01a1a9bc-ab8d-7ee9-9923-7e2f1ddd62eb",
+      "title": "Beizentratsch pub history tour",
+      "file": "beizentratsch-pub-history-tour.jpg",
+      "shows": "The painted house facades on the Weinmarkt square in Lucerne's old town.",
+      "author": "Zairon",
+      "licence": "CC BY-SA 3.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_Weinmarkt_4.JPG"
+    },
+    {
+      "id": "01a1a9bc-b16f-796b-9dfe-f86517a7dd9d",
+      "title": "Rudolf's Christmas",
+      "file": "rudolf-s-christmas.jpg",
+      "shows": "A fountain in the green Inseli park.",
+      "author": "Caahlo",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Inseliparkbrunnen_Nah.jpg"
+    },
+    {
+      "id": "01a1a9bc-b739-702b-a1ff-de0239a686f7",
+      "title": "Public hotel tour, Hotel Schweizerhof",
+      "file": "public-hotel-tour-hotel-schweizerhof.jpg",
+      "shows": "The Hotel Schweizerhof on the Lucerne lakefront.",
+      "author": "W. Bulach",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:00_0051_Hotel_Schweizerhof,_Luzern_(Schweiz).jpg"
+    },
+    {
+      "id": "01a1a9bc-bd1e-732f-b890-82871ce22f26",
+      "title": "Bruchweihnachten",
+      "file": "bruchweihnachten.jpg",
+      "shows": "The synagogue building on Bruchstrasse in the Bruch quarter.",
+      "author": "Gryffindor",
+      "licence": "CC BY-SA 3.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_32.jpg"
+    },
+    {
+      "id": "01a1a9bc-c330-7029-8e06-8e3eafdedacb",
+      "title": "DesignSchenken design market",
+      "file": "designschenken-design-market.jpg",
+      "shows": "The Viscose footbridge over the Kleine Emme next to Viscosistadt in Emmenbrücke.",
+      "author": "Jag9889",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Viscose_Steg_Kleine_Emme_Emmenbr%C3%BCcke-Luzern_LU_20170327-jag9889.jpg"
+    },
+    {
+      "id": "01a1a9bc-c8f1-7da5-bcea-0c90b3ea1a7c",
+      "title": "Lucerne Christmas Market",
+      "file": "lucerne-christmas-market.jpg",
+      "shows": "Franziskanerplatz, where the Christmas market takes place, with a Swiss flag.",
+      "author": "Ymblanter",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Lucerne_Franziskanerplatz_and_Bahnhofstrasse_22.jpg"
+    },
+    {
+      "id": "01a1a9bc-cebc-7124-b938-0fc4a3b31e2e",
+      "title": "Klausjagen Weggis",
+      "file": "klausjagen-weggis.jpg",
+      "shows": "Illuminated lanterns of a Klausjagen procession at night (photo from Küssnacht, same Central Swiss tradition).",
+      "author": "GabrielleMerk",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Bishops-Hats-KlausChase.jpg"
+    },
+    {
+      "id": "01a1a9bc-d4c5-7175-8ca2-78810bdd2690",
+      "title": "Lilu Light Festival Lucerne",
+      "file": "lilu-light-festival-lucerne.jpg",
+      "shows": "The Chapel Bridge and its tower lit up during the Lilu light festival.",
+      "author": "WDF Axen",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Kapellbr%C3%BCcke_am_Lilu.jpg"
+    },
+    {
+      "id": "01a1a9bc-dab0-76ca-9c66-a612c4eecb25",
+      "title": "Stoos Bathtub Race",
+      "file": "stoos-bathtub-race.jpg",
+      "shows": "The mountain village of Stoos with its small lake.",
+      "author": "Nix-dorf",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Stoos_Dorf.jpg"
+    },
+    {
+      "id": "01a1a9bc-9f47-7ec8-9dbe-0388e27a4947",
+      "title": "Gletschergarten by Night",
+      "file": "gletschergarten-by-night.jpg",
+      "shows": "A glacial pothole at the Gletschergarten in Lucerne.",
+      "author": "Leiju",
+      "licence": "CC BY-SA 3.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_Gletschergarten2.jpg"
+    },
+    {
+      "id": "01a19b70-8e24-7226-ae3a-826f426183c0",
+      "title": "Friendly toilet at the Bar Capitol",
+      "file": "friendly-toilet-at-the-bar-capitol.jpg",
+      "shows": "An ornate corner building on the Zentralstrasse in Lucerne.",
+      "author": "Paebi",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_Zentralstr_28.jpg"
+    },
+    {
+      "id": "01a19b70-8b75-7737-99e6-83540b66b70a",
+      "title": "Friendly toilet at the Restaurant Parterre",
+      "file": "friendly-toilet-at-the-restaurant-parterre.jpg",
+      "shows": "Apartment buildings and trees on a street in Lucerne's Neustadt.",
+      "author": "Paebi",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_Hotel_Central.jpg"
+    },
+    {
+      "id": "01a19b6f-30e6-7f44-9f14-3379617ec6a3",
+      "title": "Toilets at the KKL",
+      "file": "toilets-at-the-kkl.jpg",
+      "shows": "The KKL culture and congress centre with its big cantilevered roof.",
+      "author": "Photones",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:KKL_Luzern._Kultur-_und_Kongresszentrum_Luzern.jpg"
+    },
+    {
+      "id": "01a19b6f-292a-7f16-be56-0a8070511cab",
+      "title": "Toilets in the train station (McClean)",
+      "file": "toilets-in-the-train-station-mcclean.jpg",
+      "shows": "The platform hall of Lucerne railway station with a train.",
+      "author": "Ddayzzz",
+      "licence": "CC BY 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_railway_station_platform_hall_with_trains,_2026.jpg"
+    },
+    {
+      "id": "01a19b6f-339d-7b5e-a19e-9828c298d00a",
+      "title": "Public toilets at the Inseli",
+      "file": "public-toilets-at-the-inseli.jpg",
+      "shows": "The Inseli park with a fountain and the public toilet building behind the hedge.",
+      "author": "Caahlo",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Inseliparkbrunnen_Fern.jpg"
+    },
+    {
+      "id": "01a19b6f-3b5f-71b9-997f-7c2e40020627",
+      "title": "Public toilets at the Bundesplatz",
+      "file": "public-toilets-at-the-bundesplatz.jpg",
+      "shows": "An ornate corner building with towers at the Bundesplatz in Lucerne.",
+      "author": "WDF Axen",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Bundesplatz_Luzern.jpg"
+    },
+    {
+      "id": "01a19b6f-2e58-7edc-895c-f7f0765af881",
+      "title": "Public toilets at the station square",
+      "file": "public-toilets-at-the-station-square.jpg",
+      "shows": "The bus platforms on the forecourt of Lucerne railway station.",
+      "author": "Sandro Flückiger",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Busse_Luzern_Bahnhof.jpg"
+    },
+    {
+      "id": "01a19b6f-3649-79e7-b5ce-8a25c3a8e148",
+      "title": "Public toilets at the Franziskanerplatz",
+      "file": "public-toilets-at-the-franziskanerplatz.jpg",
+      "shows": "The Franciscan church buildings and a lawn at the Franziskanerplatz.",
+      "author": "Paebi",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_Franziskanerplatz_1.jpg"
+    },
+    {
+      "id": "01a19b6f-3df1-750f-8042-10373df4c170",
+      "title": "Public toilets at the Lion Monument",
+      "file": "public-toilets-at-the-lion-monument.jpg",
+      "shows": "The Lion Monument carved into the rock face.",
+      "author": "Leiju",
+      "licence": "CC BY 3.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:L%C3%B6wendenkmal_Luzern.jpg"
+    },
+    {
+      "id": "01a19b6f-38db-76cb-818d-8c0a9ed2f1fe",
+      "title": "Public toilets at the Vögeligärtli",
+      "file": "public-toilets-at-the-voegeligaertli.jpg",
+      "shows": "The Vögeligärtli park with its fountain basin and shady trees.",
+      "author": "Caahlo",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:V%C3%B6gelig%C3%A4rtlibrunnen_Fern.jpg"
+    },
+    {
+      "id": "01a19b6f-4090-7d5c-a55d-929871575bc5",
+      "title": "Public toilets at the Musegg wall",
+      "file": "public-toilets-at-the-musegg-wall.jpg",
+      "shows": "The Musegg wall with the Zyt and Wach towers and the Alps behind.",
+      "author": "JoachimKohler-HB",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_-_Museggmauer_mit_Zeitturm_und_Wachturm.jpg"
+    },
+    {
+      "id": "01a19b6f-484f-7680-8e44-9643c3c2a8b2",
+      "title": "Friendly toilet at the Wirtschaft zur Ente",
+      "file": "friendly-toilet-at-the-wirtschaft-zur-ente.jpg",
+      "shows": "A bright corner building on the Hirschengraben in Lucerne.",
+      "author": "Paebi",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_Hirschengraben_33b.jpg"
+    },
+    {
+      "id": "01a19b6f-45ab-73a6-8abb-8a47c54bfb89",
+      "title": "Public toilets at the Alpenquai",
+      "file": "public-toilets-at-the-alpenquai.jpg",
+      "shows": "The See-Club boathouse and jetty on the Alpenquai lakeshore.",
+      "author": "Twernas",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:See-Club_Luzern_Boathouse.jpg"
+    },
+    {
+      "id": "01a19b6f-431b-7824-91f2-6d01c1545c9e",
+      "title": "Public toilets at the Luzernerhof",
+      "file": "public-toilets-at-the-luzernerhof.jpg",
+      "shows": "The Lucerne lakeshore and KKL as seen from the Lido.",
+      "author": "Paradise Chronicle",
+      "licence": "CC BY-SA 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:KKL_and_Kapellbr%C3%BCcke_-_Lido.jpg"
+    },
+    {
+      "id": "01a19b6f-2bc7-7977-bf8e-3b6ca5512ab0",
+      "title": "Public toilets at the train station",
+      "file": "public-toilets-at-the-train-station.jpg",
+      "shows": "The main hall of Lucerne railway station with its wooden counters.",
+      "author": "Ddayzzz",
+      "licence": "CC BY 4.0",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_railway_station_main_hall_and_wooden_counters,_2026.jpg"
+    }
+  ]
+}
