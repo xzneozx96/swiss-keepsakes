@@ -82,15 +82,15 @@ describe('[E4.14][AC94] typing returns one list with kinds and a filter', () => 
 
     expect(within(list).getAllByRole('link').map(l => l.textContent)).toEqual(expect.arrayContaining([expect.stringContaining('Place'), expect.stringContaining('Story'), expect.stringContaining('Keepsake')]))
     expect(screen.getByRole('status')).toHaveTextContent('3 results for “lion”')
-    expect(screen.getByRole('group', { name: 'Filter results' })).toHaveTextContent('All3')
-    expect(screen.getByRole('group', { name: 'Filter results' })).toHaveTextContent('Places on the map1')
+    expect(screen.getByRole('group', { name: 'Filter results' })).toHaveTextContent('All · 3')
+    expect(screen.getByRole('group', { name: 'Filter results' })).toHaveTextContent('Places on the map · 1')
   })
 
   it('ac-2: a filter narrows the list', async () => {
     const user = await renderScreen()
 
     await user.type(screen.getByRole('searchbox'), 'lion')
-    await user.click(await screen.findByRole('group', { name: 'Filter results' }).then(r => within(r).getByText('Stories')))
+    await user.click(await screen.findByRole('group', { name: 'Filter results' }).then(r => within(r).getByRole('button', { name: /^Stories/ })))
 
     expect(within(screen.getByRole('list', { name: /results/i })).getAllByRole('link')).toHaveLength(1)
   })

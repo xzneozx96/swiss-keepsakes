@@ -3,7 +3,7 @@ import { Button, ScrollShadow } from '@heroui/react'
 export interface ChipRowItem {
   id: string
   label: string
-  /** A count shown after the label, a little lighter. */
+  /** Written after the label as "Label · N", as the shared tab row does. */
   count?: number
 }
 
@@ -38,8 +38,9 @@ export function ChipRow({ label, items, selected, onChange }: {
                   onChange(item.id)
               }}
             >
+              {/* "Label · N", the count format of the shared tab row (page-tabs.tsx). */}
               {item.label}
-              {item.count !== undefined && <span className="tabular-nums opacity-70">{item.count}</span>}
+              {item.count !== undefined && ` · ${item.count}`}
             </Button>
           )
         })}

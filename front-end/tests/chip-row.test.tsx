@@ -35,7 +35,7 @@ describe('chipRow', () => {
 
   it('shows a count after the label, with no shadow and no check icon', () => {
     render(<Harness />)
-    expect(within(grid()).getByRole('button', { name: /Alpha/ })).toHaveTextContent('Alpha2')
+    expect(within(grid()).getByRole('button', { name: /Alpha/ })).toHaveTextContent('Alpha · 2')
     for (const pill of within(grid()).getAllByRole('button')) {
       expect(pill.className).toContain('shadow-none')
       expect(pill.querySelector('svg')).toBeNull()
