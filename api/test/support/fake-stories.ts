@@ -147,6 +147,10 @@ export function createFakeStories(): StoryRepository<null> & { groups: Map<strin
       shown.sort((a, b) => key(b) - key(a) || b.group.id.localeCompare(a.group.id))
       return { rows: shown.slice((query.page - 1) * query.pageSize, query.page * query.pageSize).map(entry => entry.row), total: shown.length, tabs }
     },
+    async listGroupsByIds(_tx, storeId, ids) {
+      const page = await this.listGroups(_tx, storeId, { status: 'all', sort: 'updated', page: 1, pageSize: 1000 })
+      return page.rows.filter(row => ids.includes(row.groupId))
+    },
     async findGroup(_tx, storeId, groupId) {
       const group = groups.get(groupId)
       return group?.storeId === storeId ? group : undefined

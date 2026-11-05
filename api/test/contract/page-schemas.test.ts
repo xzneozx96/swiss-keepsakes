@@ -114,6 +114,8 @@ const WHOLE_LISTS: Record<string, WholeList> = {
   'GET /api/public/keepsakes/{slug}/availability': { reason: 'The variants of one keepsake, all shown on its page (not in the ADR table: judged whole)', expectedSize: 'tens' },
   'GET /api/store/{storeId}/categories/{kind}': { reason: 'A drag-ordered list must be whole (cap 200)', expectedSize: 'tens' },
   'GET /api/store/{storeId}/pickup-places': { reason: 'A drag-ordered list must be whole (cap 50)', expectedSize: 'under 20' },
+  'GET /api/store/{storeId}/story-groups/lookup': { reason: 'The stories the editor already references, read by id (at most 50 ids)', expectedSize: 'under 50' },
+  'GET /api/store/{storeId}/pins/lookup': { reason: 'The pins the editor already references, read by id or by link host (at most 50 ids, 50 rows)', expectedSize: 'under 50' },
   'GET /api/store/{storeId}/pins/story-options': { reason: 'Search-as-you-type: q and the first 10 matches (at most 20), no paging', expectedSize: '10' },
 }
 

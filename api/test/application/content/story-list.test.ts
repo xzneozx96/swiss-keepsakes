@@ -4,7 +4,7 @@ import type { MediaRecord, StoryListQuery } from '../../../src/modules/content/p
 import { emptyStoryBody } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
 import { makeGetStoryGroup } from '../../../src/modules/content/application/get-story-group.ts'
-import { makeListStoryGroups } from '../../../src/modules/content/application/list-story-groups.ts'
+import { makeListStoryGroups, makeListStoryGroupsByIds } from '../../../src/modules/content/application/list-story-groups.ts'
 import { createFakeMedia, mediaDefaults } from '../../support/fake-media.ts'
 import { createFakeStories } from '../../support/fake-stories.ts'
 
@@ -32,8 +32,9 @@ async function setup() {
   const uow = { run: <R>(work: (tx: null) => Promise<R>) => work(null) }
   const list = makeListStoryGroups({ uow, stories, media })
   const read = makeGetStoryGroup({ uow, stories })
+  const byIds = makeListStoryGroupsByIds({ uow, stories, media })
   const group = (at = t0, storeId = store) => stories.insertGroup(null, storeId, { kind: 'story', subjectPlaceId: null }, at)
-  return { stories, list, read, group }
+  return { stories, list, byIds, read, group }
 }
 
 describe('[E4.3][AC30] story list use case', () => {
@@ -252,5 +253,24 @@ describe('[ADR-033] story list pages', () => {
       expect([...seen].sort()).toEqual([...made].sort())
       expect(seen).toEqual([...seen].sort().reverse())
     }
+  })
+})
+
+describe('[ADR-033] story lookup by ids', () => {
+  it('reads the stories named, of this store, with the same entry as the list; a group with no version and an unknown id are left out', async () => {
+    const { stories, byIds, group } = await setup()
+    const a = await group(t0)
+    await stories.insertVersion(null, store, a.id, 'en', { draft: doc({ title: 'The wall', coverMediaId: coverEn.id }) }, t0)
+    const b = await group(t0)
+    await stories.insertVersion(null, store, b.id, 'en', { draft: doc({ title: 'Other' }) }, t0)
+    const empty = await group(t0)
+    const foreign = await group(t0, 'store-2')
+    await stories.insertVersion(null, 'store-2', foreign.id, 'en', { draft: doc() }, t0)
+
+    const result = await byIds(owner, store, [a.id, empty.id, foreign.id, 'nope'])
+
+    expect(result.ok && result.value.map(e => e.groupId)).toEqual([a.id])
+    expect(result.ok && result.value[0]).toMatchObject({ title: { en: 'The wall' }, cover: coverEn })
+    expect(await byIds(guest, store, [a.id])).toMatchObject({ ok: false, reason: 'forbidden' })
   })
 })

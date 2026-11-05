@@ -421,6 +421,17 @@ export function createPinRepository(): PinRepository<Tx> {
 
     list: (tx, storeId, query, now) => listPage(tx, storeId, query, now),
 
+    async lookup(tx, storeId, { ids, host }) {
+      // The host of an outbound link without its scheme, `www.` and path; a published pin only (a draft or hidden pin shows as plain text to guests).
+      const hostMatch = host ? sql`or (p.status = 'published' and lower(regexp_replace(l.url, '^https?://(www\\.)?([^/:?#]+).*$', '\\2')) = ${host})` : sql``
+      const found = await tx.execute<{ id: string }>(sql`
+        select p.id from content.places p
+          left join content.place_links l on l.place_id = p.id and l.store_id = p.store_id
+         where p.store_id = ${storeId} and (p.id = any(${sql.param(ids)}::uuid[]) ${hostMatch})
+         order by p.updated_at desc, p.id desc
+         limit 50`)
+      return found.rows.length === 0 ? [] : listRows(tx, storeId, found.rows.map(row => row.id))
+    },
     storyOptions: (tx, storeId, query) => storyOptionRows(tx, storeId, query),
 
     async idsInStore(tx, storeId, ids) {

@@ -4,9 +4,9 @@ import type { Actor } from '@sk/domain/identity'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
 import type { PinListResult } from '../application/list-pins.ts'
-import type { PinChanges, PinListQuery, PinStoryOptionsQuery } from '../ports.ts'
+import type { MerchantPinEntry, PinChanges, PinListQuery, PinStoryOptionsQuery } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { pinListQuerySchema, pinListSchema, pinPublishBodySchema, pinSchema, pinStoryOptionListSchema, pinStoryOptionsQuerySchema, pinWriteBodySchema } from '@sk/api-contract'
+import { pinListQuerySchema, pinListSchema, pinLookupQuerySchema, pinLookupSchema, pinPublishBodySchema, pinSchema, pinStoryOptionListSchema, pinStoryOptionsQuerySchema, pinWriteBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
@@ -19,6 +19,7 @@ export interface PinUseCases {
   publicUrl: (key: string) => string
   listMerchantPins: (actor: Actor, storeId: string, query: PinListQuery) => Promise<Result<PinListResult>>
   getMerchantPin: (actor: Actor, storeId: string, pinId: string) => Promise<Result<Pin>>
+  listPinsByIds: (actor: Actor, storeId: string, query: { ids: string[], host?: string | undefined }) => Promise<Result<MerchantPinEntry[]>>
   listPinStoryOptions: (actor: Actor, storeId: string, query: PinStoryOptionsQuery) => Promise<Result<PinStoryOption[]>>
   createPin: (actor: Actor, storeId: string, changes: PinChanges, requestId: string | null) => Promise<Result<Pin>>
   savePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, changes: PinChanges, requestId: string | null) => Promise<Result<Pin>>
@@ -42,6 +43,14 @@ const storyOptionsRoute = createRoute({
   path: '/api/store/{storeId}/pins/story-options',
   request: { params: storeParams, query: pinStoryOptionsQuerySchema },
   responses: { 200: { description: 'The story groups of the store that match the search, for the main-story picker', headers: requestIdHeader, content: json(pinStoryOptionListSchema) }, ...problemResponses },
+})
+
+// Registered before the {pinId} routes, so `lookup` is never read as a pin id.
+const lookupPinsRoute = createRoute({
+  method: 'get',
+  path: '/api/store/{storeId}/pins/lookup',
+  request: { params: storeParams, query: pinLookupQuerySchema },
+  responses: { 200: { description: 'The pins named by `ids` (at most 50) and, with `host`, the published pins linking to that host. Not paged', headers: requestIdHeader, content: json(pinLookupSchema) }, ...problemResponses },
 })
 
 const getPinRoute = createRoute({
@@ -111,6 +120,13 @@ export function registerPinRoutes(app: OpenAPIHono<AppEnv>, useCases: PinUseCase
       return problem(c, failureProblem(result))
     const { entries, ...page } = result.value
     return c.json({ ...page, items: entries.map(entry => pinListItemView(entry, useCases.publicUrl)) }, 200)
+  })
+
+  app.openapi(lookupPinsRoute, async (c) => {
+    const result = await useCases.listPinsByIds(c.get('actor'), c.get('store').storeId, c.req.valid('query'))
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json({ items: result.value.map(entry => pinListItemView(entry, useCases.publicUrl)) }, 200)
   })
 
   app.openapi(storyOptionsRoute, async (c) => {

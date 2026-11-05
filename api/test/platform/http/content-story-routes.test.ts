@@ -737,3 +737,23 @@ describe('[E4.3][AC30] Delete story and its link counts', () => {
     expect(calls).toBe(0)
   })
 })
+
+describe('[ADR-033] GET story-groups/lookup reads by id', () => {
+  it('passes the ids, allows 50, refuses 51 and a bad id, and is not read as a group id', async () => {
+    const seen: string[][] = []
+    const app = setup({ listStoryGroupsByIds: async (_actor, _storeId, ids) => {
+      seen.push(ids)
+      return { ok: true, value: [] }
+    } })
+    const ids = (count: number) => Array.from({ length: count }, (_, index) => `0190f0c2-0000-7000-8000-${String(index + 1).padStart(12, '0')}`)
+
+    const response = await send(app, 'GET', `${groups}/lookup?ids=${groupId}`)
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ items: [] })
+    expect((await send(app, 'GET', `${groups}/lookup?ids=${ids(50).join(',')}`)).status).toBe(200)
+    expect((await send(app, 'GET', `${groups}/lookup?ids=${ids(51).join(',')}`)).status).toBe(400)
+    expect((await send(app, 'GET', `${groups}/lookup?ids=x`)).status).toBe(400)
+    expect(seen[0]).toEqual([groupId])
+  })
+})

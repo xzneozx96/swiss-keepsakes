@@ -190,6 +190,17 @@ const PIN_TYPES = ['place', 'event'] as const
 const splitList = (value: string | undefined) => (value === undefined || value === '' ? [] : value.split(','))
 const listOf = <T extends string>(item: z.ZodType<T, T>) => z.string().max(1500).optional().transform(splitList).pipe(z.array(item).max(40))
 
+/** The most ids one lookup takes. */
+export const MAX_LOOKUP_IDS = 50
+const lookupIds = z.string().max(MAX_LOOKUP_IDS * 37).optional().transform(splitList).pipe(z.array(z.uuid()).max(MAX_LOOKUP_IDS))
+
+export const pinLookupQuerySchema = z.object({
+  ids: lookupIds.meta({ description: `Comma separated pin ids, at most ${MAX_LOOKUP_IDS}. An id of another store is left out` }),
+  host: z.string().trim().toLowerCase().max(253).optional().meta({ description: 'A web host such as `zyt.example`. Also returns the published pins whose outbound link is on that host (without `www.`)' }),
+})
+
+export const pinLookupSchema = z.object({ items: z.array(pinListItemSchema) }).meta({ id: 'PinLookup', description: 'The pins named by `ids` and, with `host`, the published pins linking to that host. Not paged: at most 50 ids, and at most 50 rows' })
+
 export const pinListQuerySchema = numberedPageQuery({
   status: listOf(z.enum(PIN_STATUSES)).meta({ description: 'Comma separated: draft, published, hidden, ended. A pin matches any of them. `ended` is a published pin whose dates are all over' }),
   category: listOf(z.union([z.uuid(), z.literal('none')])).meta({ description: 'Comma separated category ids, or `none` for a pin with no category. A pin matches any of them' }),
@@ -542,9 +553,13 @@ export const storyListQuerySchema = numberedPageQuery({
 
 const storyTabCounts = z.object({ all: z.int().min(0), published: z.int().min(0), drafts: z.int().min(0) })
 
+export const storyLookupQuerySchema = z.object({ ids: lookupIds.meta({ description: `Comma separated story group ids, at most ${MAX_LOOKUP_IDS}. An id of another store, or of a group with no version, is left out` }) })
+
 export const storyListSchema = numberedPageOf(storyListItemSchema, 'StoryList', {
   tabs: storyTabCounts.meta({ description: 'The groups of each tab that match the search. The status filter does not change them' }),
 }).meta({ id: 'StoryList', description: 'One page of the story groups of the store that have a version' })
+
+export const storyLookupSchema = z.object({ items: z.array(storyListItemSchema) }).meta({ id: 'StoryLookup', description: 'The story groups named by `ids`, at most 50. Not paged' })
 
 export const storyGroupDetailSchema = z.object({
   ...storyGroupSchema.shape,
@@ -635,6 +650,7 @@ export type PinWriteBody = z.infer<typeof pinWriteBodySchema>
 export type Pin = z.infer<typeof pinSchema>
 export type PinListItem = z.infer<typeof pinListItemSchema>
 export type PinList = z.infer<typeof pinListSchema>
+export type PinLookup = z.infer<typeof pinLookupSchema>
 export type PinListQuery = z.input<typeof pinListQuerySchema>
 export type PinStoryOptionsQuery = z.input<typeof pinStoryOptionsQuerySchema>
 export type PinStoryOption = z.infer<typeof pinStoryOptionSchema>
@@ -652,6 +668,7 @@ export type StoryVersion = z.infer<typeof storyVersionSchema>
 export type StoryListVersion = z.infer<typeof storyListVersionSchema>
 export type StoryListItem = z.infer<typeof storyListItemSchema>
 export type StoryList = z.infer<typeof storyListSchema>
+export type StoryLookup = z.infer<typeof storyLookupSchema>
 export type StoryListQuery = z.input<typeof storyListQuerySchema>
 export type StoryLinks = z.infer<typeof storyLinksSchema>
 export type StoryDeleted = z.infer<typeof storyDeletedSchema>

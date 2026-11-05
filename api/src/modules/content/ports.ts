@@ -281,6 +281,8 @@ export interface PinRepository<T> {
   // Every pin of the store, most recently edited first.
   // One numbered page of the store's pins with the total and the facet counts. `now` decides which pins have `ended`.
   list: (tx: T, storeId: string, query: PinListQuery, now: Date) => Promise<PinListPage>
+  // The pins with these ids and, with `host`, the published pins whose outbound link is on that host, at most 50. An id of another store has no row.
+  lookup: (tx: T, storeId: string, query: { ids: string[], host?: string | undefined }) => Promise<PinListRow[]>
   // The story groups of the store the main-story picker offers: the ones with a live language whose title holds `q`, plus the
   // chosen group whatever its state, most recently created first, at most `limit`.
   storyOptions: (tx: T, storeId: string, query: PinStoryOptionsQuery) => Promise<PinStoryOption[]>
@@ -375,6 +377,8 @@ export interface StoryRepository<T> {
   // The groups of the store that have at least one version. A group with none (left by a failed create) is left out.
   // One numbered page of the groups that have a version, with the total and the tab counts. Groups are paged, never version rows.
   listGroups: (tx: T, storeId: string, query: StoryListQuery) => Promise<StoryListPage>
+  // The groups with these ids, as the list reads them (the stories the editor already references). An id of another store or of a group with no version has no row.
+  listGroupsByIds: (tx: T, storeId: string, ids: string[]) => Promise<StoryListRow[]>
   // The group with its lists, without a lock. An id of another store has no row.
   findGroup: (tx: T, storeId: string, groupId: string) => Promise<StoryGroup | undefined>
 }

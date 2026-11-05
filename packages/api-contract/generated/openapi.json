@@ -7150,6 +7150,21 @@
         ],
         "type": "object"
       },
+      "PinLookup": {
+        "description": "The pins named by `ids` and, with `host`, the published pins linking to that host. Not paged: at most 50 ids, and at most 50 rows",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PinListItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
       "PinPublishBody": {
         "additionalProperties": false,
         "description": "Optional and empty in practice. The server makes the slug of each language from its title at the first publish and keeps it afterwards (ADR-014), so a publish never fails for a missing slug when a title exists",
@@ -17430,6 +17445,21 @@
           "null"
         ]
       },
+      "StoryLookup": {
+        "description": "The story groups named by `ids`, at most 50. Not paged",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StoryListItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
       "StoryVersion": {
         "description": "One language version of a story, with its draft and its published text",
         "properties": {
@@ -22614,6 +22644,75 @@
         }
       }
     },
+    "/api/store/{storeId}/pins/lookup": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated pin ids, at most 50. An id of another store is left out",
+            "in": "query",
+            "name": "ids",
+            "required": false,
+            "schema": {
+              "description": "Comma separated pin ids, at most 50. An id of another store is left out",
+              "maxLength": 1850,
+              "type": "string"
+            }
+          },
+          {
+            "description": "A web host such as `zyt.example`. Also returns the published pins whose outbound link is on that host (without `www.`)",
+            "in": "query",
+            "name": "host",
+            "required": false,
+            "schema": {
+              "description": "A web host such as `zyt.example`. Also returns the published pins whose outbound link is on that host (without `www.`)",
+              "maxLength": 253,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PinLookup"
+                }
+              }
+            },
+            "description": "The pins named by `ids` (at most 50) and, with `host`, the published pins linking to that host. Not paged",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/store/{storeId}/pins/story-options": {
       "get": {
         "parameters": [
@@ -23852,13 +23951,13 @@
             }
           },
           {
-            "description": "`created`: newest group first (`created_at desc, id desc`). `updated`: latest version update first, then `id desc`",
+            "description": "`updated` (default): latest version update first, then `id desc`. `created`: newest group first (`created_at desc, id desc`)",
             "in": "query",
             "name": "sort",
             "required": false,
             "schema": {
-              "default": "created",
-              "description": "`created`: newest group first (`created_at desc, id desc`). `updated`: latest version update first, then `id desc`",
+              "default": "updated",
+              "description": "`updated` (default): latest version update first, then `id desc`. `created`: newest group first (`created_at desc, id desc`)",
               "enum": [
                 "created",
                 "updated"
@@ -23964,6 +24063,64 @@
                   "type": "string"
                 }
               },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/story-groups/lookup": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated story group ids, at most 50. An id of another store, or of a group with no version, is left out",
+            "in": "query",
+            "name": "ids",
+            "required": false,
+            "schema": {
+              "description": "Comma separated story group ids, at most 50. An id of another store, or of a group with no version, is left out",
+              "maxLength": 1850,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryLookup"
+                }
+              }
+            },
+            "description": "The story groups named by `ids` (at most 50), for what the editor already references. Not paged",
+            "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }

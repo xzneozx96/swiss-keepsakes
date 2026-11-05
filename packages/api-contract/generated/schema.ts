@@ -3233,6 +3233,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/store/{storeId}/pins/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    /** @description A web host such as `zyt.example`. Also returns the published pins whose outbound link is on that host (without `www.`) */
+                    host?: string;
+                    /** @description Comma separated pin ids, at most 50. An id of another store is left out */
+                    ids?: string;
+                };
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The pins named by `ids` (at most 50) and, with `host`, the published pins linking to that host. Not paged */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PinLookup"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/store/{storeId}/pins/story-options": {
         parameters: {
             query?: never;
@@ -3835,7 +3888,7 @@ export interface paths {
                     pageSize?: number;
                     /** @description Matches the title of either language, in any case */
                     q?: string;
-                    /** @description `created`: newest group first (`created_at desc, id desc`). `updated`: latest version update first, then `id desc` */
+                    /** @description `updated` (default): latest version update first, then `id desc`. `created`: newest group first (`created_at desc, id desc`) */
                     sort?: "created" | "updated";
                     /** @description `published`: a language version is live. `drafts`: none is */
                     status?: "all" | "published" | "drafts";
@@ -4437,6 +4490,57 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/story-groups/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Comma separated story group ids, at most 50. An id of another store, or of a group with no version, is left out */
+                    ids?: string;
+                };
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The story groups named by `ids` (at most 50), for what the editor already references. Not paged */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryLookup"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6351,6 +6455,10 @@ export interface components {
             };
             /** Format: date-time */
             updatedAt: string;
+        };
+        /** @description The pins named by `ids` and, with `host`, the published pins linking to that host. Not paged: at most 50 ids, and at most 50 rows */
+        PinLookup: {
+            items: components["schemas"]["PinListItem"][];
         };
         /** @description Optional and empty in practice. The server makes the slug of each language from its title at the first publish and keeps it afterwards (ADR-014), so a publish never fails for a missing slug when a title exists */
         PinPublishBody: {
@@ -8735,6 +8843,10 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         } | null;
+        /** @description The story groups named by `ids`, at most 50. Not paged */
+        StoryLookup: {
+            items: components["schemas"]["StoryListItem"][];
+        };
         /** @description One language version of a story, with its draft and its published text */
         StoryVersion: {
             /** Format: date-time */

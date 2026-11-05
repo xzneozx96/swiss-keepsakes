@@ -61,22 +61,20 @@ export function storyVersionTextView(text: StoryVersionText, publicUrl: (key: st
 }
 
 // The list names each version's state only; the title and cover id the repository read for it are not part of the row.
-export function storyListView({ entries, total, page, pageSize, tabs }: StoryListResult, publicUrl: (key: string) => string): StoryListView {
+export function storyItemsView(entries: StoryListEntry[], publicUrl: (key: string) => string): StoryListView['items'] {
   const version = (row: StoryListEntry['languages']['en']) => row && { status: row.status, everPublished: row.everPublished, editsNotLive: row.editsNotLive, rowVersion: row.rowVersion, updatedAt: row.updatedAt.toISOString() }
-  return {
-    items: entries.map(entry => ({
-      groupId: entry.groupId,
-      kind: entry.kind,
-      title: entry.title,
-      cover: entry.cover && mediaView(entry.cover, publicUrl),
-      languages: { en: version(entry.languages.en) ?? null, de: version(entry.languages.de) ?? null },
-      updatedAt: entry.updatedAt.toISOString(),
-    })),
-    total,
-    page,
-    pageSize,
-    tabs,
-  }
+  return entries.map(entry => ({
+    groupId: entry.groupId,
+    kind: entry.kind,
+    title: entry.title,
+    cover: entry.cover && mediaView(entry.cover, publicUrl),
+    languages: { en: version(entry.languages.en) ?? null, de: version(entry.languages.de) ?? null },
+    updatedAt: entry.updatedAt.toISOString(),
+  }))
+}
+
+export function storyListView({ entries, total, page, pageSize, tabs }: StoryListResult, publicUrl: (key: string) => string): StoryListView {
+  return { items: storyItemsView(entries, publicUrl), total, page, pageSize, tabs }
 }
 
 export function storyGroupDetailView({ group, versions }: StoryGroupRead): StoryGroupDetailView {

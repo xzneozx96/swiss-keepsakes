@@ -100,6 +100,12 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
     async slugsTaken(_tx, language, exceptPinId) {
       return new Set([...rows.values()].filter(pin => pin.id !== exceptPinId).flatMap(pin => pin.slug?.[language] ?? []))
     },
+    // Mirrors the SQL: the ids of this store, plus the published pins whose outbound link is on `host` (without www.), at most 50.
+    async lookup(tx, storeId, query) {
+      const page = await this.list(tx, storeId, { status: [], category: [], stay: [], type: [], sort: 'edited', page: 1, pageSize: 1000 }, new Date(0))
+      const hostOf = (url: string | null) => (url ? new URL(url).hostname.toLowerCase().replace(/^www\./, '') : null)
+      return page.rows.filter(row => query.ids.includes(row.id) || (query.host !== undefined && row.status === 'published' && hostOf(row.outboundUrl) === query.host)).slice(0, 50)
+    },
     async storyOptions(_tx, _storeId, query) {
       optionQueries.push(query)
       return []

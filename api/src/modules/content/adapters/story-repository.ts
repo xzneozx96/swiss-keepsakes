@@ -154,6 +154,32 @@ interface ListRow {
   updated_at: Date
 }
 
+// The groups with these ids, in the order of `ids`, each with its versions; a group with no version is left out. One query, and not
+// the documents: a body can be 200 KB. The title and cover come from the draft when there is one, else from the published text.
+// A `case`, not `coalesce`, so a draft that cleared its cover does not show the live one.
+async function groupRows(tx: Tx, storeId: string, ids: string[]): Promise<StoryListRow[]> {
+  if (ids.length === 0)
+    return []
+  const found = await tx.execute<ListRow & Record<string, unknown>>(sql`
+    select g.id as group_id, g.kind, v.language, v.status,
+           case when v.draft is not null then v.draft->>'title' else v.published->>'title' end as title,
+           case when v.draft is not null then v.draft->>'coverMediaId' else v.published->>'coverMediaId' end as cover_media_id,
+           v.published is not null as ever_published,
+           (v.status = 'published' and v.draft is not null) as edits_not_live,
+           v.row_version, v.updated_at
+      from content.story_groups g
+      join content.story_versions v on v.group_id = g.id and v.store_id = g.store_id
+     where g.store_id = ${storeId} and g.id = any(${sql.param(ids)}::uuid[])
+     order by g.id, v.language`)
+  const rows = new Map<string, StoryListRow>()
+  for (const row of found.rows) {
+    const entry = rows.get(row.group_id) ?? { groupId: row.group_id, kind: row.kind, versions: [] }
+    entry.versions.push({ language: row.language, status: row.status, title: row.title ?? '', coverMediaId: row.cover_media_id, everPublished: row.ever_published, editsNotLive: row.edits_not_live, rowVersion: row.row_version, updatedAt: new Date(row.updated_at) })
+    rows.set(row.group_id, entry)
+  }
+  return ids.flatMap(id => rows.get(id) ?? [])
+}
+
 export function createStoryRepository(): StoryRepository<Tx> {
   return {
     async insertGroup(tx, storeId, input, at) {
@@ -235,29 +261,10 @@ export function createStoryRepository(): StoryRepository<Tx> {
       const order = query.sort === 'created' ? sql`created_at desc, id desc` : sql`updated_at desc, id desc`
       const ids = await tx.execute<{ id: string }>(sql`
         select id from (${groups}) s where hit and ${tab} order by ${order} limit ${query.pageSize} offset ${offsetOf(query.page, query.pageSize)}`)
-      if (ids.rows.length === 0)
-        return { rows: [], total, tabs }
-      // One query, and not the documents: a body can be 200 KB. The title and cover come from the draft when there is one,
-      // else from the published text. A `case`, not `coalesce`, so a draft that cleared its cover does not show the live one.
-      const found = await tx.execute<ListRow & Record<string, unknown>>(sql`
-        select g.id as group_id, g.kind, v.language, v.status,
-               ${title} as title,
-               case when v.draft is not null then v.draft->>'coverMediaId' else v.published->>'coverMediaId' end as cover_media_id,
-               v.published is not null as ever_published,
-               (v.status = 'published' and v.draft is not null) as edits_not_live,
-               v.row_version, v.updated_at
-          from content.story_groups g
-          join content.story_versions v on v.group_id = g.id and v.store_id = g.store_id
-         where g.store_id = ${storeId} and g.id = any(${sql.param(ids.rows.map(row => row.id))}::uuid[])
-         order by g.id, v.language`)
-      const rows = new Map<string, StoryListRow>(ids.rows.map(row => [row.id, { groupId: row.id, kind: 'story', versions: [] }]))
-      for (const row of found.rows) {
-        const entry = rows.get(row.group_id)!
-        entry.kind = row.kind
-        entry.versions.push({ language: row.language, status: row.status, title: row.title ?? '', coverMediaId: row.cover_media_id, everPublished: row.ever_published, editsNotLive: row.edits_not_live, rowVersion: row.row_version, updatedAt: new Date(row.updated_at) })
-      }
-      return { rows: [...rows.values()], total, tabs }
+      return { rows: await groupRows(tx, storeId, ids.rows.map(row => row.id)), total, tabs }
     },
+
+    listGroupsByIds: (tx, storeId, ids) => groupRows(tx, storeId, ids),
 
     async saveGroup(tx, group, changes, at) {
       await tx.execute(sql`

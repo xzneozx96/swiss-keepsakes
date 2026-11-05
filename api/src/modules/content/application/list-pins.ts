@@ -49,6 +49,18 @@ export function makeListMerchantPins<T>({ uow, pins, clock }: PinDeps<T>) {
   }
 }
 
+// The pins the editor already references, read by id (at most 50), and with `host` the published pins linking to that host: the
+// names of the pins a story tags or links, the link note of a pasted address. They read as in the list, `ended` included.
+export function makeListPinsByIds<T>({ uow, pins, clock }: PinDeps<T>) {
+  return async (actor: Actor, storeId: string, query: { ids: string[], host?: string | undefined }): Promise<Result<MerchantPinEntry[]>> => {
+    if (!mayManageContent(actor, storeId))
+      return fail({ reason: 'forbidden' })
+    const now = clock.now()
+    const rows = query.ids.length === 0 && !query.host ? [] : await uow.run(tx => pins.lookup(tx, storeId, query))
+    return ok(rows.map(row => toEntry(row, now)))
+  }
+}
+
 // N17: one pin with its draft, its photos and its link. A pin of another store is a 404.
 export function makeGetMerchantPin<T>({ uow, pins }: PinDeps<T>) {
   return async (actor: Actor, storeId: string, pinId: string): Promise<Result<Pin>> => {

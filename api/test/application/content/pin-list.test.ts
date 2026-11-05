@@ -3,7 +3,7 @@ import type { Actor } from '@sk/domain/identity'
 import type { AuditEntry, PinChanges, PinListQuery } from '../../../src/modules/content/ports.ts'
 import { describe, expect, it } from 'vitest'
 import { makeCreatePin } from '../../../src/modules/content/application/create-pin.ts'
-import { makeListMerchantPins, makeListPinStoryOptions } from '../../../src/modules/content/application/list-pins.ts'
+import { makeListMerchantPins, makeListPinsByIds, makeListPinStoryOptions } from '../../../src/modules/content/application/list-pins.ts'
 import { makePublishPin } from '../../../src/modules/content/application/publish-pin.ts'
 import { makeSavePin } from '../../../src/modules/content/application/save-pin.ts'
 import { createFakePins } from '../../support/fake-pins.ts'
@@ -25,7 +25,7 @@ function setup() {
     audit: { record: async (_tx: null, _entry: AuditEntry) => {} },
     clock,
   }
-  return { pins, clock, create: makeCreatePin(deps), save: makeSavePin(deps), publish: makePublishPin(deps), list: makeListMerchantPins(deps), options: makeListPinStoryOptions(deps) }
+  return { pins, clock, create: makeCreatePin(deps), save: makeSavePin(deps), publish: makePublishPin(deps), list: makeListMerchantPins(deps), options: makeListPinStoryOptions(deps), byIds: makeListPinsByIds(deps) }
 }
 
 // Ten pins. p0 is the oldest edit. Even ones are places, odd ones events (dates). p2 "Lion Wall" and p3 "Löwen Wall" (German only).
@@ -149,5 +149,21 @@ describe('[ADR-033] pin list pages', () => {
     expect(found).toEqual({ ok: true, value: [] })
     expect(s.pins.optionQueries).toEqual([{ q: 'wall', groupId: museum, limit: 10 }])
     expect(await s.options({ ...owner, stores: new Map([['store-2', 'owner']]) }, store, { limit: 10 })).toEqual({ ok: false, reason: 'forbidden' })
+  })
+
+  it('reads pins by id, only of this store, and by the host of a published pin\'s link', async () => {
+    const s = await ten()
+    const linked = s.pins.rows.get(s.ids[4]!)!
+    s.pins.rows.set(linked.id, { ...linked, outboundUrl: 'https://www.zyt.example/tower' })
+    const draft = s.pins.rows.get(s.ids[2]!)!
+    s.pins.rows.set(draft.id, { ...draft, outboundUrl: 'https://zyt.example/draft' })
+    const other = await s.create({ ...owner, stores: new Map([['store-2', 'owner']]) }, 'store-2', { title: { en: 'Other' } }, null) as { value: Pin }
+
+    const byIds = await s.byIds(owner, store, { ids: [s.ids[1]!, s.ids[3]!, other.value.id] })
+    const byHost = await s.byIds(owner, store, { ids: [], host: 'zyt.example' })
+
+    expect(byIds.ok && byIds.value.map(e => e.id).sort()).toEqual([s.ids[1], s.ids[3]].sort())
+    expect(byHost.ok && byHost.value.map(e => e.id)).toEqual([s.ids[4]])
+    expect(await s.byIds({ ...owner, stores: new Map([['store-2', 'owner']]) }, store, { ids: [] })).toEqual({ ok: false, reason: 'forbidden' })
   })
 })

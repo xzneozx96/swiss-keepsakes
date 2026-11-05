@@ -350,3 +350,23 @@ describe('[ADR-033] GET pins/story-options searches', () => {
     expect(seen).toEqual([{ limit: 10 }, { q: 'wall', groupId: pinId, limit: 20 }])
   })
 })
+
+describe('[ADR-033] GET pins/lookup reads by id', () => {
+  it('passes the ids and the host, allows 50 ids, and refuses 51, a bad id and a guest', async () => {
+    const seen: object[] = []
+    const app = setup({ listPinsByIds: async (_actor, _storeId, query) => {
+      seen.push(query)
+      return { ok: true, value: [] }
+    } })
+    const ids = (count: number) => Array.from({ length: count }, (_, index) => `0190f0c2-0000-7000-8000-${String(index + 1).padStart(12, '0')}`)
+
+    expect((await send(app, 'GET', `${pins}/lookup?ids=${pinId},${ids(1)[0]}&host=ZYT.example`)).status).toBe(200)
+    expect((await send(app, 'GET', `${pins}/lookup`)).status).toBe(200)
+    expect((await send(app, 'GET', `${pins}/lookup?ids=${ids(50).join(',')}`)).status).toBe(200)
+    expect((await send(app, 'GET', `${pins}/lookup?ids=${ids(51).join(',')}`)).status).toBe(400)
+    expect((await send(app, 'GET', `${pins}/lookup?ids=nope`)).status).toBe(400)
+    expect((await send(app, 'GET', `${pins}/lookup`, signedInAs('guest'))).status).toBe(403)
+    expect(seen[0]).toEqual({ ids: [pinId, ids(1)[0]], host: 'zyt.example' })
+    expect(seen[1]).toEqual({ ids: [] })
+  })
+})
