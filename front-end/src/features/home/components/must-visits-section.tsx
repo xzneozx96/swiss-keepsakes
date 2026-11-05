@@ -42,7 +42,7 @@ function SortPill({ stay, interests }: { stay: string | null | undefined, intere
   )
 }
 
-/** A postcard: the photo fills the 300 px card at 4:5, the name and the tip sit on a soft dark gradient, the story is a pill on the photo. */
+/** A postcard: the photo fills the 300 px card at 4:5, the name and the tip (at most two lines) sit on a soft dark gradient, the story is a pill on the photo. */
 function Postcard({ pin }: { pin: PublicMapItem }) {
   const { t, language } = useLocale()
   const photo = (pickVariant(pin.photoVariants, POSTCARD_PHOTO_WIDTH) ?? widestVariant(pin.photoVariants))?.url ?? pin.photoUrl ?? undefined
@@ -57,7 +57,7 @@ function Postcard({ pin }: { pin: PublicMapItem }) {
           <span className="absolute inset-x-0 bottom-0 flex flex-col gap-2 p-4 text-white">
             <h3 className="font-serif text-[23px] leading-7 font-medium text-balance" lang={other}>{pin.title}</h3>
             {other && <span className="w-fit rounded-full bg-black/45 px-2 py-0.5 text-[11px] leading-4 font-medium">{t(`map.card.onlyIn.${other}`)}</span>}
-            {pin.tip && <span className="text-sm leading-5 text-white/90">{pin.tip}</span>}
+            {pin.tip && <span className="line-clamp-2 text-sm leading-5 text-white/90">{pin.tip}</span>}
           </span>
         </Link>
         {pin.mainStorySlug && (
