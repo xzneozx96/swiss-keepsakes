@@ -39,6 +39,11 @@ describe('[ADR-033] the table search params', () => {
     expect(parseStoriesSearch({ page: '-2' }).page).toBeUndefined()
   })
 
+  it('a page past the 10,000-row skip limit opens at the last page the API serves', () => {
+    expect(parseStoriesSearch({ page: '2000' }).page).toBe(1001)
+    expect(parsePlacesSearch({ page: '2000' }).page).toBe(1001)
+  })
+
   it('pins: each group is a list of known options, from a comma string or an array', () => {
     expect(parsePlacesSearch({ status: 'draft,ended,nope', stay: ['both'], type: 'event', category: 'none,0190f0c2-0000-7000-8000-0000000000a1', q: 'x', page: '2' })).toEqual({
       status: ['draft', 'ended'],

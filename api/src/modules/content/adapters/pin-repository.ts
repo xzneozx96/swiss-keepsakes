@@ -251,7 +251,9 @@ async function listPage(tx: Tx, storeId: string, query: PinListQuery, now: Date)
                             and not (d.last_day < ${local}::date
                                      or (d.last_day = ${local}::date and d.end_time is not null and to_char(d.end_time, 'HH24:MI') <= to_char(${local}, 'HH24:MI')))) as upcoming,
                  coalesce(p.draft, p.published)->'name'->>'en' as title_en,
-                 coalesce(p.draft, p.published)->'name'->>'de' as title_de
+                 coalesce(p.draft, p.published)->'name'->>'de' as title_de,
+                 p.slug->>'en' as slug_en,
+                 p.slug->>'de' as slug_de
             from content.places p
            where p.store_id = ${storeId}
         ) s
@@ -259,7 +261,7 @@ async function listPage(tx: Tx, storeId: string, query: PinListQuery, now: Date)
   const text = (array: string[]) => sql`${sql.param(array)}::text[]`
   const categoryIds = query.category.filter(id => id !== 'none')
   const filters = {
-    q: query.q ? sql`(position(lower(${query.q}) in lower(coalesce(title_en, ''))) > 0 or position(lower(${query.q}) in lower(coalesce(title_de, ''))) > 0)` : undefined,
+    q: query.q ? sql`(${sql.join(['title_en', 'title_de', 'slug_en', 'slug_de'].map(column => sql`position(lower(${query.q}) in lower(coalesce(${sql.raw(column)}, ''))) > 0`), sql` or `)})` : undefined,
     status: query.status.length > 0 ? sql`lstatus = any(${text(query.status)})` : undefined,
     stay: query.stay.length > 0 ? sql`stay_tag = any(${text(query.stay)})` : undefined,
     type: query.type.length > 0 ? sql`kind = any(${text(query.type)})` : undefined,

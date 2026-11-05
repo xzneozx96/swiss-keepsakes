@@ -52,7 +52,7 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
       const own = [...rows.values()].filter(pin => pin.storeId === storeId)
       const statusOf = (pin: Pin) => pinListStatus(pin, now)
       const kindOf = (pin: Pin) => (pin.dates.length > 0 ? 'event' : 'place')
-      const text = (pin: Pin) => [(pin.draft ?? pin.published)?.title.en, (pin.draft ?? pin.published)?.title.de]
+      const text = (pin: Pin) => [(pin.draft ?? pin.published)?.title.en, (pin.draft ?? pin.published)?.title.de, pin.slug?.en, pin.slug?.de]
       const matches = (pin: Pin, skip: 'status' | 'category' | 'stay' | 'type' | null) =>
         (needle === undefined || needle === '' || text(pin).some(title => title?.toLowerCase().includes(needle)))
         && (skip === 'status' || query.status.length === 0 || query.status.includes(statusOf(pin)))

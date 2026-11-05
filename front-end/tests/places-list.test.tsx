@@ -683,4 +683,12 @@ describe('[ADR-033] the pins table reads numbered pages from the server', () => 
     expect(Object.fromEntries(reads().at(-1)!)).toEqual({ q: 'Pin 07', page: '1', pageSize: '10' })
     expect(reads().filter(read => read.has('q'))).toHaveLength(1)
   })
+
+  it('[ADR-033] a page past the end moves to the last page that exists, and an empty store to page 1', async () => {
+    api.items = many(25)
+    const { router } = await renderInRouter(<PlacesAtRoute />, { path: `${path}?page=9` })
+
+    await waitFor(() => expect(here(router)).toEqual({ page: 3 }))
+    await screen.findAllByRole('link', { name: 'Pin 21' })
+  })
 })

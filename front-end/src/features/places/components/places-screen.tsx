@@ -19,6 +19,7 @@ import { ApiProblem } from '@/features/data-client/errors'
 import { useMe } from '@/features/stores/api/queries'
 import { currentStore } from '@/features/stores/lib/current-store'
 import { useListLoading } from '@/hooks/use-list-loading'
+import { useLastPageFallback } from '@/hooks/use-last-page-fallback'
 import { useSearchBox } from '@/hooks/use-search-box'
 import { apiEnabled } from '@/lib/api-mode'
 import { usePlaces } from '../api/queries'
@@ -113,6 +114,8 @@ export function PlacesScreen({ search, onSearch }: { search: PlacesSearch, onSea
   const actions = usePlaceActions(store?.storeId ?? '')
   const groups = usePlaceFilterGroups(places.data ?? NO_COUNTS, search, (categories.data?.items ?? []).map(category => ({ id: category.id, label: category.name.en ?? category.name.de ?? '', parentId: category.parentId ?? undefined })), onSearch)
   const shown = places.data?.items ?? []
+  const goToPage = useCallback((next: number) => onSearch({ page: next > 1 ? next : undefined }), [onSearch])
+  useLastPageFallback(places.data && !places.isPlaceholderData ? { rows: shown.length, total: places.data.total } : undefined, page, PLACES_PAGE_SIZE, goToPage)
   const label = t('places.table.label')
 
   if (!apiEnabled)
@@ -163,7 +166,7 @@ export function PlacesScreen({ search, onSearch }: { search: PlacesSearch, onSea
                 isLoading={loading || !store}
                 items={shown}
                 label={label}
-                paging={serverPager({ page, pageSize: PLACES_PAGE_SIZE, total: places.data?.total ?? 0, go: next => onSearch({ page: next > 1 ? next : undefined }) })}
+                paging={serverPager({ page, pageSize: PLACES_PAGE_SIZE, total: places.data?.total ?? 0, go: goToPage })}
                 onAction={onAction}
               />
             </>

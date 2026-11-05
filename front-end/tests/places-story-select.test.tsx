@@ -148,26 +148,26 @@ describe('[E4.2][AC68] the story select of step 5', () => {
 describe('[ADR-033] the story picker searches on the server as you type', () => {
   const optionReads = () => api.calls.filter(call => call.method === 'GET' && call.path.startsWith(`/api/store/${storeId}/pins/story-options`)).map(call => new URL(call.path, 'http://x').searchParams)
 
-  it('asks for the first 10 matches, and sends the search once, a moment after the last key', async () => {
-    api.stories = Array.from({ length: 14 }, (_, index) => story(40 + index, `Story ${index + 1}`, 'published', 'none'))
+  it('asks for the first 20 matches, and sends the search once, a moment after the last key', async () => {
+    api.stories = Array.from({ length: 24 }, (_, index) => story(40 + index, `Story ${index + 1}`, 'published', 'none'))
     await openStoryStep()
     await waitFor(() => expect(field()).toBeEnabled())
     await userEvent.click(field())
 
-    expect(Object.fromEntries(optionReads().at(-1)!)).toEqual({ limit: '10' })
-    expect(offered()).toHaveLength(11)
+    expect(Object.fromEntries(optionReads().at(-1)!)).toEqual({ limit: '20' })
+    expect(offered()).toHaveLength(21)
     await userEvent.type(screen.getByRole('searchbox', { name: 'Search Story behind this place' }), 'Story 12')
 
     await waitFor(() => expect(offered()).toEqual(['None', 'Story 12']))
     expect(optionReads().filter(read => read.has('q'))).toHaveLength(1)
-    expect(Object.fromEntries(optionReads().at(-1)!)).toEqual({ q: 'Story 12', limit: '10' })
+    expect(Object.fromEntries(optionReads().at(-1)!)).toEqual({ q: 'Story 12', limit: '20' })
   })
 
   it('names the linked story even when it is not among the matches, because the server always sends it', async () => {
-    api.stories = [...Array.from({ length: 12 }, (_, index) => story(40 + index, `Story ${index + 1}`, 'published', 'none')), story(60, 'Chosen one', 'draft', 'none')]
+    api.stories = [...Array.from({ length: 24 }, (_, index) => story(40 + index, `Story ${index + 1}`, 'published', 'none')), story(60, 'Chosen one', 'draft', 'none')]
     await openStoryStep(uuid(60))
 
     await waitFor(() => expect(shown()).toHaveTextContent('Chosen one (not published)'))
-    expect(Object.fromEntries(optionReads().at(-1)!)).toEqual({ groupId: uuid(60), limit: '10' })
+    expect(Object.fromEntries(optionReads().at(-1)!)).toEqual({ groupId: uuid(60), limit: '20' })
   })
 })

@@ -19,7 +19,7 @@ export function StepLinks({ form, patch, errors, storeId }: StepProps) {
   const { t, language } = useLocale()
   const [search, setSearch] = useState('')
   // Search as you type: the server answers the first matches of the search, and always the chosen story (ADR-033).
-  const stories = useStoryOptions(storeId, { q: search.trim() || undefined, groupId: form.mainStoryGroupId ?? undefined, limit: 10 })
+  const stories = useStoryOptions(storeId, { q: search.trim() || undefined, groupId: form.mainStoryGroupId ?? undefined, limit: 20 })
   const chosen = stories.data?.items.find(option => option.groupId === form.mainStoryGroupId)
   const titleOf = (title: { en?: string, de?: string }) => title[language] ?? title[language === 'en' ? 'de' : 'en'] ?? t('places.row.untitled')
   const options = (stories.data?.items ?? [])

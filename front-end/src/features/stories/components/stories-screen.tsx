@@ -12,6 +12,7 @@ import { PageTabs } from '@/components/page-tabs'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useListLoading } from '@/hooks/use-list-loading'
+import { useLastPageFallback } from '@/hooks/use-last-page-fallback'
 import { useSearchBox } from '@/hooks/use-search-box'
 import { useStories } from '../api/queries'
 import { useCreateStory } from '../hooks/use-create-story'
@@ -66,6 +67,8 @@ function StoriesBody({ storeId, search, onSearch, onNew, newPending, onDelete }:
   const counts = list.data?.tabs ?? NO_COUNTS
   const rows = list.data?.items ?? []
   const total = list.data?.total ?? 0
+  const goToPage = useCallback((next: number) => onSearch({ page: next > 1 ? next : undefined }), [onSearch])
+  useLastPageFallback(list.data && !list.isPlaceholderData ? { rows: rows.length, total } : undefined, page, STORIES_PAGE_SIZE, goToPage)
   const searching = q !== ''
   const empty = searching
     ? { icon: ContentIcon, message: t('merchantStories.emptySearch', { query: q }) }
@@ -101,7 +104,7 @@ function StoriesBody({ storeId, search, onSearch, onNew, newPending, onDelete }:
           isLoading={isLoading}
           items={rows}
           label={t('merchantStories.title')}
-          paging={serverPager({ page, pageSize: STORIES_PAGE_SIZE, total, go: next => onSearch({ page: next > 1 ? next : undefined }) })}
+          paging={serverPager({ page, pageSize: STORIES_PAGE_SIZE, total, go: goToPage })}
           onDelete={onDelete}
         />
       )}

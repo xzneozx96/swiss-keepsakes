@@ -101,6 +101,14 @@ describe('[ADR-033] pin list pages', () => {
     expect(result.ok && result.value.total).toBe(2)
   })
 
+  it('the search also matches the web address (slug) of either language, which a title search would miss', async () => {
+    const s = await ten()
+
+    const result = await s.list(owner, store, query({ q: 'pin-4' }))
+
+    expect(result.ok && result.value.entries.map(e => e.id)).toEqual([s.ids[4]])
+  })
+
   it('each facet count applies the search and the other groups but not its own ticks', async () => {
     const s = await ten()
 

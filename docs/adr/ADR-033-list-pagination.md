@@ -345,7 +345,10 @@ The owner did not answer the remaining three questions. The coordinator's defaul
   - **Page size.** Every paged list, cursor and numbered alike, returns 10 rows by default and at most 20 per request. This replaces the earlier maximum of 100 (§ 1, § 6). Admin stores move from default 50 to default 10. The sitemap and search loops use `limit=20`. The media library's photo wall (24 a page today) moves to 20 in slice 5: the owner chose 20 for consistency (05.11.2026). The page size is not the cap of a whole list (see the Decision).
   - **Tours are paged.** `GET /api/public/tours` moves from "whole, cap 200" to the cursor, 10 a load with infinite scroll, like the other guest lists, because "there might be more in the future". It lands in slice 3 with guest keepsakes. The home routes rail asks for the first page. Search reads tours through its page loop until the search slice (6).
 
+- 2026-11-05: Merchant stories table default order is last updated first (`updated_at desc, id desc`), not created; owner decision, to keep the order merchants saw before and match the Updated column.
+
 ## History
 - 2026-11-05 proposed (owner question on pagination; research and audit of every list route)
 - 2026-11-05 accepted (owner, chat 05.11.2026): rank within each page; numbered pages for per-store merchant tables; 10 a page with infinite scroll for guest stories; the map never cuts pins. Coordinator defaults for search interest filter (deferred), story order (shown version's date) and "N stories" (kept)
 - 2026-11-05 amended (owner, chat 05.11.2026): page size 10 by default and 20 at most on every paged list; tours paged like the other guest lists (slice 3)
+- 2026-11-05 amended (owner): merchant stories table opens with the last updated story first (see Amendments)

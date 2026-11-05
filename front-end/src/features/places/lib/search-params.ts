@@ -1,3 +1,5 @@
+import { MAX_OFFSET } from '@sk/api-contract'
+
 /** `?start=dates`: Add event opens a new place on the dates step. Read by the editor route's `validateSearch`. */
 export const START_STEPS = ['dates'] as const
 export type StartStep = typeof START_STEPS[number]
@@ -20,6 +22,9 @@ export interface PlacesSearch {
 
 export const PLACES_PAGE_SIZE = 10
 
+/** The last page the API serves at this page size: it refuses a skip over 10,000 rows. A link past it opens here, and the screen moves to the last real page. */
+const MAX_PAGE = Math.floor(MAX_OFFSET / PLACES_PAGE_SIZE) + 1
+
 const TOKEN = /^[\w-]{1,40}$/
 
 function listOf(value: unknown, allowed?: readonly string[]): string[] | undefined {
@@ -39,6 +44,6 @@ export function parsePlacesSearch(search: Record<string, unknown>): PlacesSearch
     stay: listOf(search.stay, ['short_stay', 'multi_day', 'both']),
     type: listOf(search.type, ['place', 'event']),
     q: typeof search.q === 'string' && search.q.trim() ? search.q : undefined,
-    page: Number.isInteger(page) && page > 1 ? page : undefined,
+    page: Number.isInteger(page) && page > 1 ? Math.min(page, MAX_PAGE) : undefined,
   }
 }

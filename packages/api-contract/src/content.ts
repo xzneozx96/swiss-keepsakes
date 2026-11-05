@@ -537,7 +537,7 @@ export const STORY_TABS = ['all', 'published', 'drafts'] as const
 export const storyListQuerySchema = numberedPageQuery({
   status: z.enum(STORY_TABS).default('all').meta({ description: '`published`: a language version is live. `drafts`: none is' }),
   q: z.string().trim().max(200).optional().meta({ description: 'Matches the title of either language, in any case' }),
-  sort: z.enum(['created', 'updated']).default('created').meta({ description: '`created`: newest group first (`created_at desc, id desc`). `updated`: latest version update first, then `id desc`' }),
+  sort: z.enum(['created', 'updated']).default('updated').meta({ description: '`updated` (default): latest version update first, then `id desc`. `created`: newest group first (`created_at desc, id desc`)' }),
 })
 
 const storyTabCounts = z.object({ all: z.int().min(0), published: z.int().min(0), drafts: z.int().min(0) })

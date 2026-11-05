@@ -495,4 +495,14 @@ describe('[ADR-033] the stories table reads numbered pages from the server', () 
     // One read for the whole word, not one for each letter.
     expect(reads().filter(read => read.has('q'))).toHaveLength(1)
   })
+
+  it('[ADR-033] a page past the end, or one emptied by a delete, moves to the last page that exists', async () => {
+    answerStories(many(25))
+    renderStories('/store/content?page=9')
+
+    await waitFor(() => expect(here()).toEqual({ page: 3 }))
+    const { grid } = await loaded('Story 21')
+
+    expect(titles(grid)).toHaveLength(5)
+  })
 })

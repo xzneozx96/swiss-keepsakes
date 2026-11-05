@@ -554,12 +554,12 @@ describe('[E4.3][AC30] the story reads', () => {
       return { ok: true, value: { entries: [], total: 0, page: query.page, pageSize: query.pageSize, tabs: { all: 0, published: 0, drafts: 0 } } }
     } })
 
-    it('defaults to page 1 of 10, every tab, newest created first', async () => {
+    it('defaults to page 1 of 10, every tab, last updated first', async () => {
       seen.length = 0
       const response = await send(app(), 'GET', groups)
 
       expect(response.status).toBe(200)
-      expect(seen).toEqual([{ status: 'all', sort: 'created', page: 1, pageSize: 10 }])
+      expect(seen).toEqual([{ status: 'all', sort: 'updated', page: 1, pageSize: 10 }])
     })
 
     it('passes the page, the page size, the status tab, the trimmed search and the sort to the use case', async () => {
