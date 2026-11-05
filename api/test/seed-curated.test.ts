@@ -6,10 +6,10 @@ const data = loadData()
 const empty = { categories: [], placeTitles: new Set<string>(), keepsakeNames: new Set<string>(), hashes: new Set<string>() }
 
 describe('[seed-curated] the curated data maps to writes', () => {
-  it('has the 33 places of the review, the 11 events and 6 food places of 05.11.2026 and 5 keepsakes', () => {
-    expect(data.places).toHaveLength(50)
+  it('has the 33 places of the review, the 11 events and 13 food places of 05.11.2026 and 5 keepsakes', () => {
+    expect(data.places).toHaveLength(57)
     expect(data.places.filter(place => place.group === 'events')).toHaveLength(11)
-    expect(data.places.filter(place => place.group === 'food')).toHaveLength(6)
+    expect(data.places.filter(place => place.group === 'food')).toHaveLength(13)
     expect(data.keepsakes).toHaveLength(5)
   })
 
@@ -65,7 +65,7 @@ describe('[seed-curated] the curated data maps to writes', () => {
 
   it('plans everything on an empty store and nothing again once it exists', () => {
     const first = buildPlan(data, empty)
-    expect(first.placesToCreate).toHaveLength(50)
+    expect(first.placesToCreate).toHaveLength(57)
     expect(first.keepsakesToCreate).toHaveLength(5)
     const again = buildPlan(data, {
       categories: categorySpecs.map((c, i) => ({ id: String(i), slug: c.slug, nameEn: c.name.en })),
@@ -134,6 +134,10 @@ describe('[seed-curated] --group', () => {
     expect(plan.keepsakesToCreate).toEqual([])
   })
 
+  it('links every place to an https address, as place_links_url_check requires', () => {
+    expect(data.places.map(p => p.record.outboundUrl).filter(url => url !== null && !url.startsWith('https://'))).toEqual([])
+  })
+
   it('puts times only on single-day dates, as place_dates_times_check requires', () => {
     const timedRanges = data.places.flatMap(p => p.record.dates).filter(d => (d.startTime !== null || d.endTime !== null) && d.firstDay !== d.lastDay)
     expect(timedRanges).toEqual([])
@@ -146,10 +150,10 @@ describe('[seed-curated] --group', () => {
 })
 
 describe('[seed-curated] --group=food', () => {
-  it('plans the 6 food places and only the food categories they need', () => {
+  it('plans the 13 food places and only the food categories they need', () => {
     const { plan } = groupPlan(data, empty, 'food')
-    expect(plan.placesToCreate).toHaveLength(6)
-    expect(plan.categoriesToCreate.map(spec => spec.slug).sort()).toEqual(['bars', 'food-and-drink', 'restaurants'])
+    expect(plan.placesToCreate).toHaveLength(13)
+    expect(plan.categoriesToCreate.map(spec => spec.slug).sort()).toEqual(['bars', 'cafes', 'chocolate', 'food-and-drink', 'markets', 'restaurants'])
     expect(data.places.filter(p => p.group === 'food').every(p => p.record.photos.length > 0)).toBe(true)
   })
 })

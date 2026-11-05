@@ -104,6 +104,7 @@ export const categorySpecs: CategorySpec[] = [
   { slug: 'supermarkets', name: { en: 'Supermarkets', de: 'Supermärkte' }, parent: 'food-and-drink', icon: 'supermarket', showOnHome: false },
   { slug: 'restaurants', name: { en: 'Restaurants', de: 'Restaurants' }, parent: 'food-and-drink', icon: 'restaurant', showOnHome: false },
   { slug: 'bars', name: { en: 'Bars', de: 'Bars' }, parent: 'food-and-drink', icon: 'bar', showOnHome: false },
+  { slug: 'markets', name: { en: 'Markets', de: 'Märkte' }, parent: 'food-and-drink', icon: 'market', showOnHome: false },
   { slug: 'shopping', name: { en: 'Shopping', de: 'Einkaufen' }, parent: null, icon: 'shop', showOnHome: false },
   { slug: 'department-stores', name: { en: 'Department stores', de: 'Warenhäuser' }, parent: 'shopping', icon: 'shop', showOnHome: false },
   { slug: 'free-essentials', name: { en: 'Free essentials', de: 'Gratis und praktisch' }, parent: null, icon: null, showOnHome: false },

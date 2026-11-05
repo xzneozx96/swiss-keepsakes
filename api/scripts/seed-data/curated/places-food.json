@@ -545,5 +545,543 @@
       "https://www.luzern.com/de/gastro/bar-lounge-hotel-des-balances",
       "https://www.openstreetmap.org/search?query=Hotel%20des%20Balances%20Luzern"
     ]
+  },
+  {
+    "key": "cafe-mamie",
+    "title": {
+      "en": "Café Mamie & Patisserie",
+      "de": "Café Mamie & Patisserie"
+    },
+    "tip": {
+      "en": "A French-style pâtisserie and café in the Neustadt, with modern pastries and a breakfast menu. Pick a pastry with a coffee, or sit down for a late breakfast. It is a small place with mid-priced menus.",
+      "de": "Eine Pâtisserie und ein Café im französischen Stil in der Neustadt, mit modernen Kreationen und einer Frühstückskarte. Man nimmt ein Gebäck zum Kaffee oder setzt sich zu einem späten Frühstück. Das Lokal ist klein, die Preise sind mittel."
+    },
+    "localTip": {
+      "en": "Groups of four or more can reserve, and smaller parties simply walk in.",
+      "de": "Ab vier Personen kann man reservieren, kleinere Gruppen kommen einfach vorbei."
+    },
+    "latitude": 47.04506,
+    "longitude": 8.306462,
+    "address": "Bundesstrasse 21, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.045060,8.306462",
+    "weeklyHours": [
+      {
+        "day": 4,
+        "opens": "07:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 5,
+        "opens": "07:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 6,
+        "opens": "07:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 7,
+        "opens": "07:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 1,
+        "opens": "07:00",
+        "closes": "18:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [
+      "food-drink"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://cafemamie.ch",
+    "categories": [
+      "cafes"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "cafe-mamie.jpg",
+        "alt": {
+          "en": "An ornate corner building with two towers at the Bundesplatz, a short walk from the café",
+          "de": "Ein verziertes Eckhaus mit zwei Türmen am Bundesplatz, ein kurzes Stück vom Café entfernt"
+        },
+        "author": "WDF Axen",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Bundesplatz_Luzern.jpg"
+      }
+    ],
+    "sources": [
+      "https://cafemamie.ch/",
+      "https://www.myswitzerland.com/en/experiences/food-wine/restaurant/cafe-patisserie-mamie/",
+      "https://www.luzern.com/en/gastro/mamie-cafe-patisserie"
+    ]
+  },
+  {
+    "key": "cafe-tacuba-neustadt",
+    "title": {
+      "en": "Café Tacuba Neustadt",
+      "de": "Café Tacuba Neustadt"
+    },
+    "tip": {
+      "en": "A neighbourhood café from a local coffee roaster, serving coffee in the Neustadt, a few minutes from the station. It is a relaxed stop for a flat white or filter coffee. Prices are mid-priced.",
+      "de": "Ein Quartiercafé einer lokalen Kaffeerösterei in der Neustadt, wenige Minuten vom Bahnhof. Hier trinkt man entspannt einen Flat White oder Filterkaffee. Die Preise sind mittel."
+    },
+    "localTip": {
+      "en": "The same team roasts its beans in Lucerne, so ask which coffee is new.",
+      "de": "Das Team röstet seine Bohnen selbst in Luzern, fragen Sie nach dem neuesten Kaffee."
+    },
+    "latitude": 47.047496,
+    "longitude": 8.30718,
+    "address": "Hirschmattstrasse 36, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.047496,8.307180",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "07:30",
+        "closes": "18:00"
+      },
+      {
+        "day": 2,
+        "opens": "07:30",
+        "closes": "18:00"
+      },
+      {
+        "day": 3,
+        "opens": "07:30",
+        "closes": "18:00"
+      },
+      {
+        "day": 4,
+        "opens": "07:30",
+        "closes": "18:00"
+      },
+      {
+        "day": 5,
+        "opens": "07:30",
+        "closes": "18:00"
+      },
+      {
+        "day": 6,
+        "opens": "09:00",
+        "closes": "17:00"
+      },
+      {
+        "day": 7,
+        "opens": "09:00",
+        "closes": "17:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [
+      "food-drink"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.cafetacuba.ch",
+    "categories": [
+      "cafes"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "cafe-tacuba-neustadt.jpg",
+        "alt": {
+          "en": "The Hotel Monopol and Metropol building at the Pilatusstrasse junction, a few minutes from the café",
+          "de": "Das Gebäude des Hotels Monopol und Metropol an der Pilatusstrasse, wenige Minuten vom Café entfernt"
+        },
+        "author": "JoachimKohler-HB",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Hotel_Monopol_in_Luzern.jpg"
+      }
+    ],
+    "sources": [
+      "http://www.cafetacuba.ch/",
+      "https://www.luzern.com/de/gastro/cafe-tacuba-neustadt",
+      "https://www.luzern.com/en/the-city/food-drinks/brunch-cafes"
+    ]
+  },
+  {
+    "key": "heini-loewenplatz",
+    "title": {
+      "en": "HEINI Löwenplatz",
+      "de": "HEINI Löwenplatz"
+    },
+    "tip": {
+      "en": "The Löwenplatz branch of a Lucerne confiserie, with a shop and a café by the Lion Monument. Buy a Luzerner Birnenweggen or Lebkuchen to take home, or stay for a cake and breakfast. Prices are mid-priced.",
+      "de": "Die Filiale einer Luzerner Confiserie am Löwenplatz, mit Laden und Café beim Löwendenkmal. Kaufen Sie einen Luzerner Birnenweggen oder Lebkuchen zum Mitnehmen, oder bleiben Sie für ein Stück Kuchen und ein Frühstück. Die Preise sind mittel."
+    },
+    "localTip": {
+      "en": "Breakfast is served until closing, so it also works as a late brunch.",
+      "de": "Das Frühstück gibt es bis Ladenschluss, es passt also auch als später Brunch."
+    },
+    "latitude": 47.057184,
+    "longitude": 8.311508,
+    "address": "Löwenplatz 9, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.057184,8.311508",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "06:00",
+        "closes": "18:30"
+      },
+      {
+        "day": 2,
+        "opens": "06:00",
+        "closes": "18:30"
+      },
+      {
+        "day": 3,
+        "opens": "06:00",
+        "closes": "18:30"
+      },
+      {
+        "day": 4,
+        "opens": "06:00",
+        "closes": "18:30"
+      },
+      {
+        "day": 5,
+        "opens": "06:00",
+        "closes": "18:30"
+      },
+      {
+        "day": 6,
+        "opens": "07:00",
+        "closes": "17:00"
+      },
+      {
+        "day": 7,
+        "opens": "09:00",
+        "closes": "17:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [
+      "food-drink"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.heini.ch/ueber-heini/standorte/heini-loewenplatz-luzern/",
+    "categories": [
+      "cafes",
+      "chocolate"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "heini-loewenplatz.jpg",
+        "alt": {
+          "en": "The Lion Monument carved into the rock, a few steps from the Löwenplatz",
+          "de": "Das in den Fels gehauene Löwendenkmal, wenige Schritte vom Löwenplatz entfernt"
+        },
+        "author": "Andrew Bossi",
+        "licence": "CC BY-SA 2.5",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:6315_-_Luzern_-_Löwendenkmal.JPG"
+      }
+    ],
+    "sources": [
+      "https://www.heini.ch/ueber-heini/standorte/oeffnungzeiten/",
+      "https://www.luzern.com/en/the-city/food-drinks/brunch-cafes",
+      "https://www.openstreetmap.org/search?query=Heini%20L%C3%B6wenplatz%20Luzern"
+    ]
+  },
+  {
+    "key": "restaurant-buendnerland",
+    "title": {
+      "en": "Restaurant Bündnerland",
+      "de": "Restaurant Bündnerland"
+    },
+    "tip": {
+      "en": "A restaurant in the old town that cooks the food of Graubünden, with cheese fondue and raclette on the menu. It is a cosy place for a cold evening. Prices are mid-priced.",
+      "de": "Ein Restaurant in der Altstadt mit Bündner Küche, auf der Karte stehen Käsefondue und Raclette. Es ist ein gemütlicher Ort für einen kalten Abend. Die Preise sind mittel."
+    },
+    "localTip": {
+      "en": "Reserve ahead for fondue evenings, as the room is small and popular.",
+      "de": "Für Fondue-Abende vorher reservieren, die Stube ist klein und beliebt."
+    },
+    "latitude": 47.05288,
+    "longitude": 8.306079,
+    "address": "Eisengasse 15, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.052880,8.306079",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "12:00",
+        "closes": "22:30"
+      },
+      {
+        "day": 2,
+        "opens": "12:00",
+        "closes": "22:30"
+      },
+      {
+        "day": 3,
+        "opens": "12:00",
+        "closes": "22:30"
+      },
+      {
+        "day": 4,
+        "opens": "12:00",
+        "closes": "22:30"
+      },
+      {
+        "day": 5,
+        "opens": "12:00",
+        "closes": "22:30"
+      },
+      {
+        "day": 6,
+        "opens": "12:00",
+        "closes": "22:30"
+      },
+      {
+        "day": 7,
+        "opens": "12:00",
+        "closes": "22:30"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [
+      "food-drink"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://buendnerland-luzern.ch",
+    "categories": [
+      "restaurants"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "restaurant-buendnerland.jpg",
+        "alt": {
+          "en": "A pedestrian street in Lucerne's old town with painted houses, close to Eisengasse",
+          "de": "Eine Fussgängergasse in der Luzerner Altstadt mit bemalten Häusern, nahe der Eisengasse"
+        },
+        "author": "Ymblanter",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Lucerne_Kapellgasse_28.jpg"
+      }
+    ],
+    "sources": [
+      "https://buendnerland-luzern.ch/",
+      "https://www.myswitzerland.com/en/experiences/food-wine/restaurant/restaurant-buendnerland-luzern/",
+      "https://www.luzern.com/en/the-city/food-drinks/restaurants"
+    ]
+  },
+  {
+    "key": "storchen-weinbar",
+    "title": {
+      "en": "Storchen Restaurant & Weinbar",
+      "de": "Storchen Restaurant & Weinbar"
+    },
+    "tip": {
+      "en": "A restaurant and wine bar on the Kornmarkt in the old town, with a wine cellar and Mediterranean tapas. It suits a glass of wine with a few small plates. Prices are mid-priced to upmarket.",
+      "de": "Ein Restaurant mit Weinbar am Kornmarkt in der Altstadt, mit Weinkeller und mediterranen Tapas. Es passt für ein Glas Wein mit ein paar kleinen Tellern. Die Preise sind mittel bis gehoben."
+    },
+    "localTip": {
+      "en": "Closed on Sundays and Mondays, so plan your wine evening for midweek or Saturday.",
+      "de": "Sonntag und Montag sind Ruhetage, planen Sie den Weinabend also unter der Woche oder am Samstag."
+    },
+    "latitude": 47.052196,
+    "longitude": 8.30564,
+    "address": "Kornmarkt 9, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.052196,8.305640",
+    "weeklyHours": [
+      {
+        "day": 2,
+        "opens": "14:00",
+        "closes": "22:00"
+      },
+      {
+        "day": 3,
+        "opens": "11:30",
+        "closes": "00:30"
+      },
+      {
+        "day": 4,
+        "opens": "11:30",
+        "closes": "00:30"
+      },
+      {
+        "day": 5,
+        "opens": "11:30",
+        "closes": "00:30"
+      },
+      {
+        "day": 6,
+        "opens": "09:00",
+        "closes": "00:30"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [
+      "food-drink"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.storchenluzern.ch/",
+    "categories": [
+      "bars",
+      "restaurants"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "storchen-weinbar.jpg",
+        "alt": {
+          "en": "The Kornmarkt square with the town hall tower at dusk, in Lucerne's old town",
+          "de": "Der Kornmarkt mit dem Rathausturm in der Dämmerung in der Luzerner Altstadt"
+        },
+        "author": "Santiago Puig Vilado…",
+        "licence": "CC BY-SA 3.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Square_of_Luzern_in_a_summer_night_-_panoramio.jpg"
+      }
+    ],
+    "sources": [
+      "http://www.storchenluzern.ch/",
+      "https://www.luzern.com/de/gastro/storchen-restaurant-weinbar-luzern",
+      "https://www.myswitzerland.com/en/experiences/food-wine/restaurant/restaurant-storchen/"
+    ]
+  },
+  {
+    "key": "sip-cafe",
+    "title": {
+      "en": "SiP Café",
+      "de": "SiP Café"
+    },
+    "tip": {
+      "en": "A small specialty coffee café on the Weinmarkt in the old town, with brunch and signature drinks. Take a coffee outside on the cobbled square. Prices are mid-priced.",
+      "de": "Ein kleines Specialty-Coffee-Café am Weinmarkt in der Altstadt, mit Brunch und Signature Drinks. Den Kaffee trinkt man draussen auf dem Kopfsteinpflaster. Die Preise sind mittel."
+    },
+    "localTip": {
+      "en": "No bookings here, so just walk in.",
+      "de": "Hier kann man nicht reservieren, kommen Sie einfach vorbei."
+    },
+    "latitude": 47.052088,
+    "longitude": 8.304668,
+    "address": "Weinmarkt 14, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.052088,8.304668",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "09:00",
+        "closes": "19:00"
+      },
+      {
+        "day": 2,
+        "opens": "09:00",
+        "closes": "19:00"
+      },
+      {
+        "day": 3,
+        "opens": "09:00",
+        "closes": "19:00"
+      },
+      {
+        "day": 4,
+        "opens": "09:00",
+        "closes": "19:00"
+      },
+      {
+        "day": 5,
+        "opens": "09:00",
+        "closes": "19:00"
+      },
+      {
+        "day": 6,
+        "opens": "09:00",
+        "closes": "19:00"
+      },
+      {
+        "day": 7,
+        "opens": "09:00",
+        "closes": "19:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [
+      "food-drink"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.sipluzern.ch/weinmarkt-1",
+    "categories": [
+      "cafes"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "sip-cafe.jpg",
+        "alt": {
+          "en": "Painted historic houses on the Weinmarkt in Lucerne's old town",
+          "de": "Bemalte historische Häuser am Weinmarkt in der Luzerner Altstadt"
+        },
+        "author": "Ymblanter",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Lucerne_Weinmarkt_4.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.sipluzern.ch/weinmarkt-1",
+      "https://www.luzern.com/de/gastro/sip-cafe",
+      "https://www.openstreetmap.org/search?query=SiP%20Weinmarkt%20Luzern"
+    ]
+  },
+  {
+    "key": "luzerner-wochenmarkt",
+    "title": {
+      "en": "Luzerner Wochenmarkt",
+      "de": "Luzerner Wochenmarkt"
+    },
+    "tip": {
+      "en": "The weekly market along both banks of the Reuss, with stalls at the Rathausquai, Unter der Egg, Jesuitenplatz and Bahnhofstrasse. Buy fruit, cheese, bread and local specialities for a picnic. Prices are low to mid-priced.",
+      "de": "Der Wochenmarkt entlang beider Reussufer, mit Ständen am Rathausquai, Unter der Egg, Jesuitenplatz und an der Bahnhofstrasse. Hier kauft man Obst, Käse, Brot und regionale Spezialitäten für ein Picknick. Die Preise sind tief bis mittel."
+    },
+    "localTip": {
+      "en": "Go early on a Saturday, as the best shopping is before noon.",
+      "de": "Am Samstag früh kommen, der Einkauf lohnt sich vor dem Mittag am meisten."
+    },
+    "latitude": 47.051941,
+    "longitude": 8.306929,
+    "address": "Rathausquai, Unter der Egg, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.051941,8.306929",
+    "weeklyHours": [
+      {
+        "day": 2,
+        "opens": "07:00",
+        "closes": "12:00"
+      },
+      {
+        "day": 6,
+        "opens": "07:00",
+        "closes": "12:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [
+      "food-drink"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.luzerner-wochenmarkt.ch",
+    "categories": [
+      "markets"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "luzerner-wochenmarkt.jpg",
+        "alt": {
+          "en": "The Rathausquai along the Reuss with the old-town houses and the Chapel Bridge",
+          "de": "Der Rathausquai an der Reuss mit den Altstadthäusern und der Kapellbrücke"
+        },
+        "author": "Ymblanter",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Lucerne_Rathausquai.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.luzerner-wochenmarkt.ch/",
+      "https://www.luzern.com/de/stadt/erleben/shopping/maerkte-in-luzern",
+      "https://www.stadtluzern.ch/_docn/6579629/Marktdaten_2026.pdf"
+    ]
   }
 ]
