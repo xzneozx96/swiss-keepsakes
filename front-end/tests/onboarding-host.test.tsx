@@ -254,12 +254,12 @@ describe('[E4.5][AC38] closing the flow re-ranks the stories list', () => {
   it('[E4.5][AC38] short stay and food and drink put the matching story first and keep every story', async () => {
     markDismissed()
     await renderApp('/en/stories', {
-      stories: () => <StoriesPage stories={[newest, hike, food]} onChangeAnswers={() => openOnboarding('change')} onRetry={() => {}} />,
+      stories: () => <StoriesPage stories={[newest, hike, food]} onRetry={() => {}} />,
     })
     const user = userEvent.setup()
 
     await waitFor(() => expect(titles()).toEqual(['Newest story', 'Long hike', 'Food walk']))
-    await user.click(screen.getByRole('button', { name: 'Sort for my trip' }))
+    act(() => openOnboarding('change'))
     await user.click(await screen.findByRole('row', { name: /Just today/ }))
     await user.click(screen.getByRole('button', { name: 'Continue' }))
     await user.click(await screen.findByRole('row', { name: /Food and drink/ }))
@@ -269,6 +269,5 @@ describe('[E4.5][AC38] closing the flow re-ranks the stories list', () => {
     await waitFor(() => expect(titles()[0]).toBe('Food walk'))
     expect(titles()).toHaveLength(3)
     expect(titles()).toEqual(expect.arrayContaining(['Food walk', 'Long hike', 'Newest story']))
-    expect(screen.getByText(/Sorted for/).parentElement).toHaveTextContent('Sorted for: Just today, Food and drink · Change')
   })
 })

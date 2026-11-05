@@ -19,10 +19,6 @@ export const contentDe: Record<keyof typeof contentEn, string> = {
   'stories.category.craft': 'Handwerk',
   'stories.emptyCategory':
     'Hier gibt es noch keine Geschichten. Die ersten folgen bald.',
-  'stories.sort.newest': 'Neueste zuerst',
-  'stories.sort.personalise': 'Für meine Reise sortieren',
-  'stories.sort.for': 'Sortiert für: {answers}',
-  'stories.sort.change': 'Ändern',
   'stories.sort.stay.short_stay': 'Nur heute',
   'stories.sort.stay.multi_day': 'Ein paar Tage',
   'stories.language.en': 'Englisch',

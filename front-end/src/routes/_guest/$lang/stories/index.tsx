@@ -4,7 +4,6 @@ import { loadBlogCategories, loadPublicStories } from '@/features/content/api/pu
 import { StoriesPage } from '@/features/content/components/stories-page'
 import { StoriesSkeleton } from '@/features/content/components/stories-skeleton'
 import { storiesHead } from '@/features/content/lib/stories-head'
-import { openOnboarding } from '@/features/onboarding/lib/opener'
 import { isLanguage } from '@/lib/language-routing'
 
 interface StoriesSearch {
@@ -48,7 +47,6 @@ function StoriesRoute() {
       stories={stories}
       // A choice is a history entry, so Back returns to the previous filter; All drops the parameter.
       onCategoryChange={slug => void navigate({ to: '/$lang/stories', params: { lang }, search: slug ? { category: slug } : {} })}
-      onChangeAnswers={() => openOnboarding('change')}
       onRetry={() => void router.invalidate()}
     />
   )

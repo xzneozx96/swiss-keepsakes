@@ -1,10 +1,8 @@
-import type { Key } from '@heroui/react'
 import type { PublicCategory, PublicStoryCard } from '@sk/api-contract'
-import type { InterestCode, RankPrefs } from '@sk/domain/content'
 
-import { Button, ScrollShadow, Tag, TagGroup } from '@heroui/react'
 import { rankByTags } from '@sk/domain/content'
 import { useHydrated, useNavigate } from '@tanstack/react-router'
+import { ChipRow } from '@/components/chip-row'
 import { EmptyState } from '@/components/empty-state'
 import { ContentIcon } from '@/components/icons'
 
@@ -27,36 +25,7 @@ import { StoryCard } from './story-card'
 
 const ALL = 'all'
 
-const NO_ANSWERS: RankPrefs = { stay: null, interests: [] }
-
-const hasAnswers = (answers: RankPrefs) => answers.stay != null || (answers.interests ?? []).length > 0
-
-/**
- * The line above the list: what the list is sorted for, or that it is newest first. Change opens the answers again
- * (T-E4.5a). Without that opener there is nothing to offer, so the line is not drawn.
- */
-function SortLine({ answers, onChange }: { answers: RankPrefs, onChange?: () => void }) {
-  const { t } = useLocale()
-  if (!onChange)
-    return null
-
-  const named = [
-    ...(answers.stay ? [t(`stories.sort.stay.${answers.stay}`)] : []),
-    ...(answers.interests ?? []).map((code: InterestCode) => t(`places.interest.${code}`)),
-  ]
-
-  return (
-    <p className="flex flex-wrap items-center text-label text-muted">
-      <span>{hasAnswers(answers) ? t('stories.sort.for', { answers: named.join(', ') }) : t('stories.sort.newest')}</span>
-      <span aria-hidden className="whitespace-pre"> · </span>
-      <Button className="min-h-11 px-1" size="sm" variant="ghost" onPress={onChange}>
-        {t(hasAnswers(answers) ? 'stories.sort.change' : 'stories.sort.personalise')}
-      </Button>
-    </p>
-  )
-}
-
-/** The single-choice category row (ADR-030): All, then the offered categories. A selected chip shows a check as well as its colour; each chip is 44 px high. */
+/** The single-choice category row (ADR-030): All, then the offered categories. */
 function CategoryChips({
   options,
   selected,
@@ -67,43 +36,9 @@ function CategoryChips({
   onChange: (slug: string | null) => void
 }) {
   const { t } = useLocale()
-  const items = [{ slug: ALL, label: t('stories.filterAll') }, ...options]
+  const items = [{ id: ALL, label: t('stories.filterAll') }, ...options.map(o => ({ id: o.slug, label: o.label }))]
 
-  // Single selection never clears: tapping the selected chip keeps it selected.
-  const onSelectionChange = (keys: 'all' | Set<Key>) => {
-    const [first] = keys === 'all' ? [] : [...keys]
-    if (first !== undefined)
-      onChange(first === ALL ? null : String(first))
-  }
-
-  return (
-    <TagGroup
-      aria-label={t('stories.filter')}
-      selectedKeys={new Set([selected ?? ALL])}
-      selectionMode="single"
-      size="lg"
-      onSelectionChange={onSelectionChange}
-    >
-      <ScrollShadow hideScrollBar className="-mx-4" orientation="horizontal" size={40}>
-        <TagGroup.List className="flex-nowrap px-4 py-1">
-          {items.map(item => (
-            <Tag key={item.slug} id={item.slug} textValue={item.label}>
-              {({ isSelected }) => (
-                <span className="flex min-h-11 items-center gap-1 whitespace-nowrap">
-                  {isSelected && (
-                    <svg aria-hidden data-testid="chip-check" fill="none" viewBox="0 0 24 24">
-                      <path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" />
-                    </svg>
-                  )}
-                  {item.label}
-                </span>
-              )}
-            </Tag>
-          ))}
-        </TagGroup.List>
-      </ScrollShadow>
-    </TagGroup>
-  )
+  return <ChipRow items={items} label={t('stories.filter')} selected={selected ?? ALL} onChange={id => onChange(id === ALL ? null : id)} />
 }
 
 /**
@@ -111,7 +46,7 @@ function CategoryChips({
  * the API sends (newest first); once the page is hydrated the guest's answers re-rank them, and the rows that move slide.
  * `stories` is null when the read failed. `categories` is the blog category tree (null when its read failed: no filter row);
  * `category` is the slug in the address, applied only when a story here has it. The filter runs first, then the answers rank
- * what is left. `onChangeAnswers` is the onboarding opener (T-E4.5a); without it the sort line is hidden.
+ * what is left.
  */
 export function StoriesPage({
   stories,
@@ -119,14 +54,12 @@ export function StoriesPage({
   category,
   onCategoryChange,
   onRetry,
-  onChangeAnswers,
 }: {
   stories: PublicStoryCard[] | null
   categories?: PublicCategory[] | null
   category?: string
   onCategoryChange?: (slug: string | null) => void
   onRetry: () => void
-  onChangeAnswers?: () => void
 }) {
   const { t, language, intlLocale } = useLocale()
   const navigate = useNavigate()
@@ -202,7 +135,6 @@ export function StoriesPage({
             : (
                 <>
                   {options.length > 0 && onCategoryChange && <CategoryChips options={options} selected={chosen} onChange={onCategoryChange} />}
-                  <SortLine answers={hydrated ? answers : NO_ANSWERS} onChange={onChangeAnswers} />
                   <ul className="flex flex-col gap-7">
                     {ordered.map(story => (
                       <li key={story.id} ref={slide(story.id)}>

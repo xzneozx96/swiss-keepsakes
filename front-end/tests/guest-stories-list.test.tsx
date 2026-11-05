@@ -77,16 +77,6 @@ describe('[E4.4] guest stories list', () => {
     expect(html.indexOf('Middle story')).toBeLessThan(html.indexOf('Oldest story'))
   })
 
-  it('[E4.4][AC38] the server HTML shows the newest-first line, so the first browser render matches it', async () => {
-    answers.value = { stay: 'short_stay', interests: ['food-drink'] }
-    const router = await buildRouter('/en/stories', { stories: [newest], onRetry: () => {}, onChangeAnswers: () => {} })
-
-    const html = renderToString(<RouterProvider router={router} />)
-
-    expect(html).toContain('Newest first')
-    expect(html).not.toContain('Sorted for')
-  })
-
   it('[E4.4][AC38] answers put the matching stories first in the browser and hide none', async () => {
     const food = storyCard({ title: 'Food walk', stayTag: 'short_stay', interests: ['food-drink'], publishedAt: '2026-09-01T00:00:00.000Z' })
     const hike = storyCard({ title: 'Long hike', stayTag: 'multi_day', interests: ['lake-mountains'], publishedAt: '2026-09-02T00:00:00.000Z' })
@@ -99,31 +89,12 @@ describe('[E4.4] guest stories list', () => {
     expect(titles()).toEqual(expect.arrayContaining(['Food walk', 'Long hike', 'Newest story']))
   })
 
-  it('[E4.4][AC38] no answers keep the server order and the line reads "Newest first · Sort for my trip"', async () => {
-    const onChangeAnswers = vi.fn()
-    await renderPage({ stories: [newest, middle, oldest], onRetry: () => {}, onChangeAnswers })
+  it('[E4.4][AC38] no answers keep the server order and the page draws no sort line', async () => {
+    await renderPage({ stories: [newest, middle, oldest], onRetry: () => {} })
 
     expect(titles()).toEqual(['Newest story', 'Middle story', 'Oldest story'])
-    expect(screen.getByText(/Newest first/).parentElement).toHaveTextContent('Newest first · Sort for my trip')
-    await userEvent.click(screen.getByRole('button', { name: 'Sort for my trip' }))
-    expect(onChangeAnswers).toHaveBeenCalledTimes(1)
-  })
-
-  it('[E4.4][AC38] with answers the line names them and Change opens the answers again', async () => {
-    const onChangeAnswers = vi.fn()
-    answers.value = { stay: 'short_stay', interests: ['food-drink'] }
-    await renderPage({ stories: [newest], onRetry: () => {}, onChangeAnswers })
-
-    expect(screen.getByText(/Sorted for/).parentElement).toHaveTextContent('Sorted for: Just today, Food and drink · Change')
-    await userEvent.click(screen.getByRole('button', { name: 'Change' }))
-    expect(onChangeAnswers).toHaveBeenCalledTimes(1)
-  })
-
-  it('[E4.4][AC38] the line shows nothing until the answers opener exists', async () => {
-    await renderPage({ stories: [newest], onRetry: () => {} })
-
-    expect(screen.queryByText(/Newest first/)).toBeNull()
-    expect(screen.queryByText(/Sorted for/)).toBeNull()
+    expect(screen.queryByText(/Newest first|Sorted for/)).toBeNull()
+    expect(screen.queryByRole('button', { name: /Sort for my trip|Change/ })).toBeNull()
   })
 
   it('[E4.4][AC64] a story that fell back to the other language shows its language tag, one in the guest language shows none', async () => {
@@ -318,10 +289,10 @@ describe('[E4.4][AC30] blog category filter', { timeout: 60_000 }, () => {
     expect(screen.queryByRole('alert')).toBeNull()
   })
 
-  it('[E4.4][AC61] a selected chip carries a check, not only a colour', async () => {
+  it('[E4.4][AC61] a selected chip is marked selected and draws no extra check (the app-wide tag style draws the one check)', async () => {
     await renderFiltered('/en/stories?category=legends')
 
-    expect(within(within(chips()).getByRole('row', { name: 'Legends' })).getByTestId('chip-check')).toBeInTheDocument()
-    expect(within(within(chips()).getByRole('row', { name: 'All' })).queryByTestId('chip-check')).toBeNull()
+    expect(within(chips()).getByRole('row', { name: 'Legends' })).toHaveAttribute('aria-selected', 'true')
+    expect(chips().querySelectorAll('svg')).toHaveLength(0)
   })
 })

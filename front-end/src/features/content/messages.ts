@@ -16,10 +16,6 @@ export const contentEn = {
   'stories.category.craft': 'Swiss craft',
   'stories.emptyCategory':
     'No stories here yet. The first ones are on their way.',
-  'stories.sort.newest': 'Newest first',
-  'stories.sort.personalise': 'Sort for my trip',
-  'stories.sort.for': 'Sorted for: {answers}',
-  'stories.sort.change': 'Change',
   'stories.sort.stay.short_stay': 'Just today',
   'stories.sort.stay.multi_day': 'A few days',
   'stories.language.en': 'English',

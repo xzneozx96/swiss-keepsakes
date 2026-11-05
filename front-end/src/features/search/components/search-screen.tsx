@@ -1,11 +1,11 @@
-import type { Key } from 'react'
 import type { InterestCode } from './interest-codes'
 import type { SearchKind, SearchSources } from '@/features/search/lib/search'
 
-import { SearchField, Tag, TagGroup } from '@heroui/react'
+import { SearchField } from '@heroui/react'
 import { useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 
+import { ChipRow } from '@/components/chip-row'
 import { CloseIcon } from '@/components/icons'
 import { BackButton } from '@/components/layout/cart-button'
 import { useLocale } from '@/contexts/locale-context'
@@ -46,39 +46,13 @@ function KindFilter({ items, active, onChange }: {
   onChange: (kind: 'all' | SearchKind) => void
 }) {
   const { t } = useLocale()
+  const chips = items.map(item => ({
+    id: item.kind,
+    label: item.kind === 'all' ? t('searchScreen.filterAll') : t(`searchScreen.group.${item.kind}`),
+    count: item.count,
+  }))
 
-  function change(keys: 'all' | Set<Key>) {
-    const [first] = keys === 'all' ? [] : [...keys]
-
-    if (first !== undefined)
-      onChange(first as 'all' | SearchKind)
-  }
-
-  return (
-    <TagGroup
-      disallowEmptySelection
-      aria-label={t('searchScreen.filterLabel')}
-      selectedKeys={new Set([active])}
-      selectionMode="single"
-      size="lg"
-      onSelectionChange={change}
-    >
-      <TagGroup.List className="flex-nowrap overflow-x-auto py-1 [scrollbar-width:none]">
-        {items.map((item) => {
-          const label = item.kind === 'all' ? t('searchScreen.filterAll') : t(`searchScreen.group.${item.kind}`)
-
-          return (
-            <Tag key={item.kind} id={item.kind} textValue={`${label} ${item.count}`}>
-              <span className="flex min-h-11 items-center gap-1 whitespace-nowrap">
-                {label}
-                <span className="text-muted tabular-nums">{item.count}</span>
-              </span>
-            </Tag>
-          )
-        })}
-      </TagGroup.List>
-    </TagGroup>
-  )
+  return <ChipRow items={chips} label={t('searchScreen.filterLabel')} selected={active} onChange={kind => onChange(kind as 'all' | SearchKind)} />
 }
 
 /**
