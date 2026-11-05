@@ -216,7 +216,7 @@ describe('[E4.13][AC95] the order follows the guest\'s interests below the tiles
   it('draws the default order with no answers (AC-1)', async () => {
     const { names, thread } = await headings()
 
-    expect(names).toEqual([...head, title('must'), en['homePage.stories.title'], title('routes'), title('food'), title('events'), en['home.victorinox.title'], en['home.advice.title']])
+    expect(names).toEqual([...head, title('must'), title('routes'), en['homePage.stories.title'], title('food'), title('events'), en['home.victorinox.title'], en['home.advice.title']])
     expect(thread).toContain('#173f52')
   })
 
@@ -226,7 +226,7 @@ describe('[E4.13][AC95] the order follows the guest\'s interests below the tiles
     answerWith(['food-drink'])
     const { names, aboveSections } = await headings()
 
-    expect(names).toEqual([...head, title('food'), title('must'), en['homePage.stories.title'], title('routes'), title('events'), en['home.victorinox.title'], en['home.advice.title']])
+    expect(names).toEqual([...head, title('food'), title('must'), title('routes'), en['homePage.stories.title'], title('events'), en['home.victorinox.title'], en['home.advice.title']])
     expect(aboveSections).toEqual(without.aboveSections)
   })
 
@@ -234,14 +234,14 @@ describe('[E4.13][AC95] the order follows the guest\'s interests below the tiles
     answerWith(['local-activities', 'history-culture'])
     const { names } = await headings()
 
-    expect(names).toEqual([...head, title('must'), title('events'), en['homePage.stories.title'], title('routes'), title('food'), en['home.victorinox.title'], en['home.advice.title']])
+    expect(names).toEqual([...head, title('must'), title('events'), title('routes'), en['homePage.stories.title'], title('food'), en['home.victorinox.title'], en['home.advice.title']])
   })
 
   it('puts the Victorinox showcase first for shopping-keepsakes, and the thread no longer starts from lake blue (AC-4)', async () => {
     answerWith(['shopping-keepsakes'])
     const { names, thread } = await headings()
 
-    expect(names).toEqual([...head, en['home.victorinox.title'], title('must'), en['homePage.stories.title'], title('routes'), title('food'), title('events'), en['home.advice.title']])
+    expect(names).toEqual([...head, en['home.victorinox.title'], title('must'), title('routes'), en['homePage.stories.title'], title('food'), title('events'), en['home.advice.title']])
     expect(thread).not.toContain('#173f52')
   })
 
@@ -251,9 +251,9 @@ describe('[E4.13][AC95] the order follows the guest\'s interests below the tiles
     const at = (text: string) => textOf(html).indexOf(text)
 
     expect(at(title('must'))).toBeGreaterThan(at(en['homePage.services.title']))
-    expect(at(title('must'))).toBeLessThan(at(en['homePage.stories.title']))
-    expect(at(en['homePage.stories.title'])).toBeLessThan(at(title('routes')))
-    expect(at(title('routes'))).toBeLessThan(at(title('food')))
+    expect(at(title('must'))).toBeLessThan(at(title('routes')))
+    expect(at(title('routes'))).toBeLessThan(at(en['homePage.stories.title']))
+    expect(at(en['homePage.stories.title'])).toBeLessThan(at(title('food')))
     expect(at(title('food'))).toBeLessThan(at(title('events')))
   })
 })

@@ -30,12 +30,12 @@ function SortPill({ stay, interests }: { stay: string | null | undefined, intere
 
   return (
     <button
-      className="flex min-h-11 w-fit max-w-full items-center gap-2 rounded-full border border-separator bg-surface ps-3 pe-2.5 text-[13px] leading-[18px] font-semibold shadow-surface outline-none focus-visible:focus-ring motion-safe:transition-transform motion-safe:active:scale-[0.98]"
+      className="flex min-h-11 w-full items-center gap-2 rounded-full border border-separator bg-surface ps-3 pe-2.5 text-[13px] leading-[18px] font-semibold outline-none sm:w-fit sm:max-w-full focus-visible:focus-ring motion-safe:transition-transform motion-safe:active:scale-[0.98]"
       type="button"
       onClick={() => openOnboarding('change')}
     >
       <FilterIcon aria-hidden className="shrink-0 text-accent" size={16} />
-      <span key={text} className="truncate motion-safe:animate-rise">{text}</span>
+      <span key={text} className="min-w-0 flex-1 truncate text-start motion-safe:animate-rise">{text}</span>
       {answered && <span className="shrink-0 text-accent">{t('homePage.sort.change')}</span>}
       <ChevronRightIcon aria-hidden className="shrink-0 text-muted" size={16} />
     </button>

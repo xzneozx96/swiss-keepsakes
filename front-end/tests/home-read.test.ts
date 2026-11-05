@@ -34,6 +34,8 @@ function answerWith(routes: Record<string, () => Response>) {
 
 const json = (body: unknown) => () => new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } })
 
+const DEMO_SLUGS = ['lucerne-the-things-that-remain', 'pilatus-above-the-city', 'rigi-from-lake-to-sky']
+
 describe('[E4.13][AC95] the home read', () => {
   it('reads the public map and the published tours in the page language (AC-5, AC-6)', async () => {
     const calls = answerWith({ '/api/public/map': json({ items: [mapItem] }), '/api/public/map-categories': json({ items: [water] }), '/api/public/tours': json({ items: [tourCard] }), '/api/public/stories': json({ items: [storyCard(1, '2026-10-01T10:00:00.000Z')] }) })
@@ -57,13 +59,14 @@ describe('[E4.13][AC95] the home read', () => {
     expect(timeoutSpy.mock.calls.filter(([ms]) => ms === 15_000)).toHaveLength(3)
   })
 
-  it('sends no request in the demo build and leaves every block empty, so none shows an error', async () => {
+  it('sends no request in the demo build and leaves every block empty except the demo routes, so none shows an error', async () => {
     mode.on = false
     const calls = answerWith({})
     const read = await loadHomeRead('en')
 
     expect(calls).toEqual([])
-    expect(read).toEqual({ pins: [], categories: [], tiles: [], tours: [], stories: [] })
+    expect({ ...read, tours: [] }).toEqual({ pins: [], categories: [], tiles: [], tours: [], stories: [] })
+    expect(read.tours?.map(tour => tour.slug)).toEqual(DEMO_SLUGS)
   })
 
   it('turns a failed read into null for that block only (AC-6)', async () => {
@@ -92,7 +95,15 @@ describe('[E4.13][AC95] the home read', () => {
 
     expect(read.pins).toBeNull()
     expect(read.tiles).toBeNull()
-    expect(read.tours).toEqual([])
+  })
+
+  it('shows the demo tours, with their photos and in the page language, while the API has no published tour (G-S9-TOURS-DEMO)', async () => {
+    answerWith({ '/api/public/map': json({ items: [] }), '/api/public/map-categories': json({ items: [] }), '/api/public/tours': json({ items: [] }), '/api/public/stories': json({ items: [] }) })
+    const read = await loadHomeRead('de')
+
+    expect(read.tours?.map(tour => tour.slug)).toEqual(DEMO_SLUGS)
+    expect(read.tours?.[1]?.title).toBe('Pilatus: Über der Stadt')
+    expect(read.tours?.every(tour => Boolean(tour.photo))).toBe(true)
   })
 
   it('is the home route loader, with a skeleton page while it runs', () => {

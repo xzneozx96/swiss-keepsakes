@@ -5,8 +5,8 @@ export type HomeSectionKey = 'must-visits' | 'stories' | 'routes' | 'food-map' |
 /** The movable sections in their default order, and the interest each one answers. The stories answer none, so they never move up. */
 const SECTIONS: readonly { key: HomeSectionKey, interest: (typeof interestCodes)[number] | null }[] = [
   { key: 'must-visits', interest: 'history-culture' },
-  { key: 'stories', interest: null },
   { key: 'routes', interest: 'lake-mountains' },
+  { key: 'stories', interest: null },
   { key: 'food-map', interest: 'food-drink' },
   { key: 'events', interest: 'local-activities' },
   { key: 'victorinox', interest: 'shopping-keepsakes' },

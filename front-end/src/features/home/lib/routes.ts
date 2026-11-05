@@ -7,6 +7,6 @@ import { rankItems } from '@sk/domain/content'
  * The route cards by stay length: a multi-day stay shows multi-day tours first, a short stay or no answer shows short-stay
  * tours first. A tour tagged `both` fits either, so it stays in server order with the group that comes first. Drops nothing.
  */
-export function routeOrder(tours: readonly PublicTourCard[], stay: Stay | null): PublicTourCard[] {
+export function routeOrder<T extends PublicTourCard>(tours: readonly T[], stay: Stay | null): T[] {
   return rankItems(tours.map(tour => ({ tour, stay: tour.stayTag, interests: [] })), { stay: stay ?? 'short_stay' }).map(entry => entry.tour)
 }

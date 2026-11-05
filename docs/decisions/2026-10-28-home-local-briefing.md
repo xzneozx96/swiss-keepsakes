@@ -92,7 +92,7 @@ Source: owner, chat 05.11.2026. This replaces rule 1, "one fixed page order for 
 The new rule:
 
 - **Fixed head, always first:** the hero, the map invitation and the service tiles. They never depend on the answers.
-- **Movable sections**, in the default order: see these first (history-culture), stories (no interest), routes (lake-mountains), the food map (food-drink), events (local-activities), the Victorinox showcase (shopping-keepsakes).
+- **Movable sections**, in the default order: see these first (history-culture), routes (lake-mountains), stories (no interest), the food map (food-drink), events (local-activities), the Victorinox showcase (shopping-keepsakes).
 - **Fixed tail, always last:** the ending line with its thread and red dot, then the advice banner.
 - **With answers:** the sections whose interest the guest chose come first, in this interest order: history-culture, food-drink, lake-mountains, shopping-keepsakes, local-activities. The other sections follow in the default order. The stories match no interest, so they never move up. The stay answer does not move sections.
 - Nothing is hidden. A section with no data still draws nothing.
@@ -101,3 +101,5 @@ The new rule:
 The server sends the default order, and so does the first client render. The order changes once after load, when the answers are read. The sections are a keyed list, so React moves them and does not remount them (the food map holds a map instance).
 
 The order lives in `front-end/src/features/home/lib/section-order.ts`.
+
+Later the same day the owner moved the routes right after "See these first" and kept the demo tours in them: while the API has no published tour, the route cards are the demo tours the tour page draws, with their photos (G-S9-TOURS-DEMO, until release 2b).
