@@ -728,13 +728,29 @@ describe('[E4.13][AC42][AC90] the map opens filtered through ?category', () => {
     expect(rows[0]).toContain('Baeckerei Weinmarkt')
   })
 
-  it('aC-2 the sheet opened on a sub-category counts its places and does not tick a top-level row', async () => {
+  it('aC-2 the sheet opened on a sub-category counts its places, expands the parent and ticks the child', async () => {
     await loaded('/en/map?category=c4')
     await screen.findByRole('button', { name: en['map.categoriesCount'].replace('{count}', '1') })
     const dialog = await showSheet()
 
     expect(within(dialog).getByRole('button', { name: /^Show 1 place/ })).toBeInTheDocument()
-    expect(within(dialog).getByRole<HTMLInputElement>('checkbox', { name: /Food and drink/ }).checked).toBe(false)
+    expect(within(dialog).getByRole('button', { name: /Sub-categories of Food and drink/ })).toHaveAttribute('aria-expanded', 'true')
+    expect(within(dialog).getByRole<HTMLInputElement>('checkbox', { name: /Bakeries/ }).checked).toBe(true)
+    const parent = within(dialog).getByRole<HTMLInputElement>('checkbox', { name: /Food and drink/ })
+
+    expect(parent.checked).toBe(false)
+    expect(parent.indeterminate).toBe(true)
+    expect(within(dialog).getByRole<HTMLInputElement>('checkbox', { name: /All categories/ }).indeterminate).toBe(true)
+    expect(within(dialog).getByRole('group', { name: 'Food and drink' })).toBeInTheDocument()
+  })
+
+  it('aC-2 a parent slug leaves the sheet collapsed with the parent ticked', async () => {
+    await loaded('/en/map?category=c3')
+    const dialog = await showSheet()
+
+    expect(within(dialog).getByRole('button', { name: /Sub-categories of Food and drink/ })).toHaveAttribute('aria-expanded', 'false')
+    expect(within(dialog).getByRole<HTMLInputElement>('checkbox', { name: /Food and drink/ }).checked).toBe(true)
+    expect(within(dialog).queryByRole('checkbox', { name: /Bakeries/ })).toBeNull()
   })
 
   it('aC-3 a legacy ?dated=1 is not applied: every pin is listed, there is no switch, and the address is cleaned', async () => {

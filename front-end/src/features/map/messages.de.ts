@@ -45,6 +45,7 @@ export const mapDe: Record<keyof typeof mapEn, string> = {
   'map.filter.title': 'Kategorien',
   'map.filter.pickOne': 'Wählen Sie mindestens eine Kategorie.',
   'map.filter.all': 'Alle Kategorien',
+  'map.filter.subcategories': 'Unterkategorien von {name}',
   'map.filter.clear': 'Filter zurücksetzen',
   'map.filter.show.one': '1 Ort anzeigen',
   'map.filter.show.other': '{count} Orte anzeigen',

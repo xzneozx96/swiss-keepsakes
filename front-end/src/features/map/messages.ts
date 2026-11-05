@@ -44,6 +44,7 @@ export const mapEn = {
   'map.filter.title': 'Categories',
   'map.filter.pickOne': 'Pick at least one category.',
   'map.filter.all': 'All categories',
+  'map.filter.subcategories': 'Sub-categories of {name}',
   'map.filter.clear': 'Clear filter',
   'map.filter.show.one': 'Show 1 place',
   'map.filter.show.other': 'Show {count} places',

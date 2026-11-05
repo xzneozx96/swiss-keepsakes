@@ -11,6 +11,13 @@ export function topLevelCategories(categories: readonly PublicCategory[]) {
     .sort((a, b) => a.position - b.position)
 }
 
+/** The sub-categories of a top-level category, in the merchant's order. */
+export function subCategories(categories: readonly PublicCategory[], parentId: string) {
+  return categories
+    .filter(category => category.parentId === parentId)
+    .sort((a, b) => a.position - b.position)
+}
+
 export function categoryName(category: PublicCategory, language: Language) {
   const other = language === 'en' ? 'de' : 'en'
 
