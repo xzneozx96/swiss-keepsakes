@@ -351,10 +351,10 @@ describe('[E4.13][AC95] the demo layer is gone from the home', () => {
       expect({ file, hit: readFileSync(file, 'utf8').match(DEMO)?.[0] }).toEqual({ file, hit: undefined })
   })
 
-  it('only the page order, the postcards and the routes read the onboarding answers; the hero, the invitation, the tiles and the food section (newest first) do not (AC-3)', () => {
+  it('only the page order, the postcards, the routes and the sort notice read the onboarding answers; the hero, the invitation, the tiles and the food section (newest first) do not (AC-3)', () => {
     const readers = homeFiles(join(SRC, 'features/home/components')).filter(file => /onboarding/i.test(readFileSync(file, 'utf8'))).map(file => file.split('/').pop())
 
-    expect(readers.sort()).toEqual(['home-page.tsx', 'must-visits-section.tsx', 'routes-section.tsx'])
+    expect(readers.sort()).toEqual(['home-page.tsx', 'must-visits-section.tsx', 'routes-section.tsx', 'sort-notice.tsx'])
     expect(read('routes/_guest/$lang/index.tsx')).not.toMatch(/onboarding/i)
   })
 

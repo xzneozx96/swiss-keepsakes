@@ -6,12 +6,14 @@ import { useLocale } from '@/contexts/locale-context'
 import { photoUrl } from '@/lib/photos'
 import { aerialView } from '../lib/aerial'
 import { SectionHeading } from './section-heading'
+import { SortNotice } from './sort-notice'
 
 const view = aerialView()
 
 /**
  * "First time in Lucerne?": the heading, one line, and a static aerial of the old town at 3:2 that is one link to the Map tab
- * (a picture, not a live map; no MapLibre on the home). The photos on it come from the shared photo library.
+ * (a picture, not a live map; no MapLibre on the home). The photos on it come from the shared photo library. Under it, the sort
+ * notice: the sections below move with the answers, so the offer to sort sits above them (owner, 05.11.2026).
  */
 export function MapInvitation() {
   const { t, language } = useLocale()
@@ -56,6 +58,7 @@ export function MapInvitation() {
           {t('homePage.map.action')}
         </span>
       </Link>
+      <SortNotice />
     </section>
   )
 }

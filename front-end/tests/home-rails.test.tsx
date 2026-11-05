@@ -12,6 +12,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
 import { MustVisitsSection } from '@/features/home/components/must-visits-section'
 import { RoutesSection } from '@/features/home/components/routes-section'
+import { SortNotice } from '@/features/home/components/sort-notice'
 import { resetAnswersStoreForTests, saveAnswers } from '@/features/onboarding/lib/answers-store'
 import { resetOpenerForTests, useOnboardingRequest } from '@/features/onboarding/lib/opener'
 import { de } from '@/i18n/de'
@@ -89,7 +90,6 @@ describe('[E4.13][AC24][AC54][AC95] the server HTML of the rails', () => {
     expect(at.every(index => index >= 0)).toBe(true)
     expect(at).toEqual([...at].sort((a, b) => a - b))
     expect(html).not.toContain('CHF')
-    expect(textOf(html)).toContain(en['homePage.sort.personalise'])
   })
 
   it('draws the routes short stay first whatever the saved answers (AC-2)', async () => {
@@ -187,16 +187,23 @@ describe('[E4.13][AC95] the postcards in the browser', () => {
   })
 })
 
-describe('[E4.13][AC36] the sort notice', () => {
+describe('[E4.13][AC36] the sort notice (in "First time in Lucerne?" since 05.11.2026)', () => {
+  it('sends the offer in the server HTML whatever the saved answers (AC-4)', async () => {
+    answer('multi_day', ['food-drink'])
+    const html = renderToString(<RouterProvider router={await routerOf(<SortNotice />)} />)
+
+    expect(textOf(html)).toContain(en['homePage.sort.personalise'])
+  })
+
   it('reads "Sort for my trip" with no answers (AC-4)', async () => {
-    render(<RouterProvider router={await routerOf(<MustVisitsSection pins={FOUR} onRetry={() => {}} />)} />)
+    render(<RouterProvider router={await routerOf(<SortNotice />)} />)
 
     expect(await screen.findByRole('button', { name: en['homePage.sort.personalise'] })).toBeInTheDocument()
   })
 
   it('opens the onboarding flow in change mode, and reads the answers once they are saved (AC-4)', async () => {
     answer('short_stay', ['food-drink'])
-    render(<RouterProvider router={await routerOf(<MustVisitsSection pins={FOUR} onRetry={() => {}} />)} />)
+    render(<RouterProvider router={await routerOf(<SortNotice />)} />)
 
     const pill = await screen.findByRole('button', { name: /Sorted for/ })
 
