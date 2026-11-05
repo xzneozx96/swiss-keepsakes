@@ -96,7 +96,9 @@ function RoutesDeck({ tours, label }: { tours: readonly PublicTourCard[], label:
   }
 
   return (
-    <div aria-label={label} aria-roledescription="carousel" className="flex flex-col gap-4" role="region">
+    // Swiper's cards effect turns its own clipping off so the fan shows, and the loop keeps hidden cards off to the side:
+    // the region clips sideways at the screen edges (it spans the gutters), or the page grows wider than the phone.
+    <div aria-label={label} aria-roledescription="carousel" className="-mx-4 flex flex-col gap-4 overflow-x-clip px-4" role="region">
       <Swiper
         cardsEffect={CARDS}
         className="w-[248px] [&_.swiper-slide]:[transition-property:transform,opacity] [&.swiper-initialized_.swiper-slide:not(.swiper-slide-active,.swiper-slide-prev,.swiper-slide-next)]:opacity-0"
