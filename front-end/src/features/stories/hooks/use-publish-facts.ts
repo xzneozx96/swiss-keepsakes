@@ -7,8 +7,8 @@ import { storyBodyPinIds } from '@sk/domain/content'
 
 import { useLocale } from '@/contexts/locale-context'
 import { useKeepsakes } from '@/features/keepsakes/api/queries'
-import { usePlaces } from '@/features/places/api/queries'
-import { useStories } from '../api/queries'
+import { useAllPlaces } from '@/features/places/api/queries'
+import { useAllStories } from '../api/queries'
 
 /**
  * What the publish checks need from other lists: whether the related stories have this language, whether the linked
@@ -23,9 +23,9 @@ export function useStoryPublishFacts({ storeId, group, language, body }: {
 }): PublishFacts {
   const { t } = useLocale()
   const pinIds = storyBodyPinIds(body as Parameters<typeof storyBodyPinIds>[0])
-  const stories = useStories(group.relatedGroupIds.length > 0 ? storeId : undefined)
+  const stories = useAllStories(group.relatedGroupIds.length > 0 ? storeId : undefined)
   const keepsakes = useKeepsakes(group.keepsakeProductIds.length > 0 ? storeId : undefined)
-  const places = usePlaces(pinIds.length > 0 ? storeId : undefined)
+  const places = useAllPlaces(pinIds.length > 0 ? storeId : undefined)
   const other = language === 'en' ? 'de' : 'en'
 
   return {

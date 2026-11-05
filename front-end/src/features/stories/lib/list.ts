@@ -25,23 +25,3 @@ export function storyTitle(item: StoryListItem): string {
 export function isPublishedStory(item: StoryListItem): boolean {
   return languageState(item.languages.en) === 'published' || languageState(item.languages.de) === 'published'
 }
-
-function matches(item: StoryListItem, query: string) {
-  return query === '' || [item.title.en, item.title.de].some(title => title?.toLowerCase().includes(query))
-}
-
-function inTab(item: StoryListItem, tab: StoryTab) {
-  return tab === 'all' || isPublishedStory(item) === (tab === 'published')
-}
-
-/** The tab's stories whose title, in either language, holds the search (trimmed, any case). */
-export function filterStories(items: StoryListItem[], tab: StoryTab, query: string): StoryListItem[] {
-  const needle = query.trim().toLowerCase()
-
-  return items.filter(item => inTab(item, tab) && matches(item, needle))
-}
-
-/** The count on each tab follows the search, not the tab. */
-export function tabCounts(items: StoryListItem[], query: string): Record<StoryTab, number> {
-  return { all: filterStories(items, 'all', query).length, published: filterStories(items, 'published', query).length, drafts: filterStories(items, 'drafts', query).length }
-}

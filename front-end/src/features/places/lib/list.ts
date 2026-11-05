@@ -37,22 +37,6 @@ export function kindOf(item: Pick<PinListItem, 'hasDates' | 'nextDate'>): 'place
   return item.nextDate ? 'event' : 'ended'
 }
 
-const matches = (selected: string[], test: (id: string) => boolean) => selected.length === 0 || selected.some(test)
-
-/** Each filter group is an OR among its options; the groups and the search narrow together. */
-export function filterItems(items: PinListItem[], filters: ListFilters): PinListItem[] {
-  const query = filters.query.trim().toLowerCase()
-
-  return items.filter(item =>
-    matches(filters.status, id => item.status === id)
-    && matches(filters.category, id => (id === NO_CATEGORY ? item.categoryIds.length === 0 : item.categoryIds.includes(id)))
-    && matches(filters.stay, id => item.stayTag === id)
-    && matches(filters.type, id => (id === 'event') === item.hasDates)
-    && (query === ''
-      || [item.title.en, item.title.de, item.slug?.en, item.slug?.de].some(text => text?.toLowerCase().includes(query))),
-  )
-}
-
 export function isFiltered(filters: ListFilters) {
   return filters.query.trim() !== '' || filters.status.length + filters.category.length + filters.stay.length + filters.type.length > 0
 }

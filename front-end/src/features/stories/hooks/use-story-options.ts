@@ -1,7 +1,7 @@
 import type { StoryLanguage } from '../lib/search-params'
 
 import { useLocale } from '@/contexts/locale-context'
-import { useStories } from '../api/queries'
+import { useAllStories } from '../api/queries'
 import { storyOptionOf } from '../lib/linked-lists'
 
 /**
@@ -10,7 +10,7 @@ import { storyOptionOf } from '../lib/linked-lists'
  */
 export function useStoryOptions(storeId: string, language: StoryLanguage, enabled = true) {
   const { t } = useLocale()
-  const stories = useStories(enabled ? storeId : undefined)
+  const stories = useAllStories(enabled ? storeId : undefined)
   const untitled = t('merchantStories.untitled')
 
   return {

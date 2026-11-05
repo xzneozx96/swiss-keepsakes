@@ -7,12 +7,12 @@ const withVersion = (idempotencyKey: string, ifMatch: number) => ({ ...keyed(ide
 
 export function createPlacesClient(): PlacesClient {
   return {
-    list: async ({ storeId }) =>
-      answer((await loadClient()).GET('/api/store/{storeId}/pins', { ...timeout(), params: { path: { storeId } } })),
+    list: async ({ storeId, query }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/pins', { ...timeout(), params: { path: { storeId }, query } })),
     get: async ({ storeId, id }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/pins/{pinId}', { ...timeout(), params: { path: { storeId, pinId: id } } })),
-    storyOptions: async ({ storeId }) =>
-      answer((await loadClient()).GET('/api/store/{storeId}/pins/story-options', { ...timeout(), params: { path: { storeId } } })),
+    storyOptions: async ({ storeId, query }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/pins/story-options', { ...timeout(), params: { path: { storeId }, query } })),
     storyVersion: async ({ storeId, groupId, language }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/story-groups/{groupId}/versions/{language}', { ...timeout(), params: { path: { storeId, groupId, language } } })),
     create: async ({ storeId, idempotencyKey, ...body }) =>

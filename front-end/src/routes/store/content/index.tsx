@@ -1,10 +1,13 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import type { StoriesSearch } from '@/features/stories/lib/list-search'
+
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 
 import { SectionFrame } from '@/components/layout/section-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { StoriesScreen } from '@/features/stories/components/stories-screen'
+import { parseStoriesSearch } from '@/features/stories/lib/list-search'
 
-interface ContentSearch {
+interface ContentSearch extends StoriesSearch {
   /** The old tab link; it redirects to the page of that name. */
   tab?: 'comments' | 'reviews'
 }
@@ -13,6 +16,7 @@ interface ContentSearch {
 // `?tab=` links still land on them. The story editor is /store/content/articles/$articleId.
 export const Route = createFileRoute('/store/content/')({
   validateSearch: (search: Record<string, unknown>): ContentSearch => ({
+    ...parseStoriesSearch(search),
     tab:
       search.tab === 'comments' || search.tab === 'reviews'
         ? search.tab
@@ -28,6 +32,8 @@ export const Route = createFileRoute('/store/content/')({
 
 function ContentRoute() {
   const { t } = useLocale()
+  const search = Route.useSearch()
+  const navigate = useNavigate({ from: '/store/content/' })
 
   return (
     <SectionFrame
@@ -36,7 +42,10 @@ function ContentRoute() {
       section="content"
       title={t('nav.content')}
     >
-      <StoriesScreen />
+      <StoriesScreen
+        search={search}
+        onSearch={patch => void navigate({ search: previous => ({ ...previous, ...patch }), replace: true, resetScroll: false })}
+      />
     </SectionFrame>
   )
 }

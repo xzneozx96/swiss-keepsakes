@@ -1,5 +1,14 @@
 import type { StoryDeleted, StoryGroup, StoryGroupDetail, StoryGroupSaveBody, StoryLinks, StoryList, StoryVersion, StoryVersionCreateBody, StoryVersionSaveBody } from '@sk/api-contract'
 
+/** What one page of the stories table is asked for (ADR-033). */
+export interface StoryListQuery {
+  status?: 'published' | 'drafts' | undefined
+  q?: string | undefined
+  sort?: 'created' | 'updated' | undefined
+  page: number
+  pageSize: number
+}
+
 /** A command carries the `Idempotency-Key` of the user's intent, so a retry of it is the same request to the API. */
 export type Keyed<T> = T & { idempotencyKey: string }
 
@@ -8,8 +17,8 @@ export type Keyed<T> = T & { idempotencyKey: string }
  * as an `ApiProblem`. A story is a group with up to two language versions; a version carries its own row version.
  */
 export interface StoriesClient {
-  /** The story groups that have a version, newest update first. */
-  list: (input: { storeId: string }) => Promise<StoryList>
+  /** One page of the story groups that have a version, with the total and the tab counts. */
+  list: (input: { storeId: string, query: StoryListQuery }) => Promise<StoryList>
   /** One group with both language versions. */
   group: (input: { storeId: string, groupId: string }) => Promise<StoryGroupDetail>
   /** Creates the group, then its English draft. A failure of either is an ApiProblem of type 'story-not-created' (same status and request id). */

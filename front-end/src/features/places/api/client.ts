@@ -1,5 +1,23 @@
 import type { Address, MapsLinkPosition, Pin, PinList, PinPublishBody, PinStoryOptionList, PinWriteBody, StoryVersionText } from '@sk/api-contract'
 
+/** What one page of the pins table is asked for (ADR-033). The filter groups are comma separated lists. */
+export interface PinListQuery {
+  status?: string | undefined
+  category?: string | undefined
+  stay?: string | undefined
+  type?: string | undefined
+  q?: string | undefined
+  page: number
+  pageSize: number
+}
+
+/** What the story picker asks: the search, the story already chosen (always answered) and how many matches. */
+export interface StoryOptionsQuery {
+  q?: string | undefined
+  groupId?: string | undefined
+  limit?: number | undefined
+}
+
 /** A command carries the `Idempotency-Key` of the user's intent (`useIdempotencyKey`), so a retry of it is the same request to the API. */
 export type Keyed<T> = T & { idempotencyKey: string }
 
@@ -8,9 +26,11 @@ export type Keyed<T> = T & { idempotencyKey: string }
  * arrives as an `ApiProblem`. `ifMatch` is the `rowVersion` of the pin as it was opened.
  */
 export interface PlacesClient {
-  list: (input: { storeId: string }) => Promise<PinList>
+  /** One page of the pins, with the total and the facet counts. */
+  list: (input: { storeId: string, query: PinListQuery }) => Promise<PinList>
   get: (input: { storeId: string, id: string }) => Promise<Pin>
-  storyOptions: (input: { storeId: string }) => Promise<PinStoryOptionList>
+  /** The first matches of the story picker's search, and the chosen story. Not paged. */
+  storyOptions: (input: { storeId: string, query: StoryOptionsQuery }) => Promise<PinStoryOptionList>
   /** The text of one language version of a story as the editor last left it (the draft, else the published text). 404 when the story has no version in that language. */
   storyVersion: (input: { storeId: string, groupId: string, language: 'en' | 'de' }) => Promise<StoryVersionText>
   create: (input: Keyed<{ storeId: string } & PinWriteBody>) => Promise<Pin>

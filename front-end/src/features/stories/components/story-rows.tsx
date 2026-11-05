@@ -2,6 +2,7 @@ import type { StoryListItem } from '@sk/api-contract'
 import type { LanguageState } from '../lib/list'
 import type { DataTableColumn } from '@/components/data-table'
 import type { EmptyStateProps } from '@/components/empty-state'
+import type { PagerState } from '@/components/list-pagination'
 import type { IconComponent } from '@/components/icons'
 import type { MessageKey } from '@/i18n/en'
 
@@ -113,12 +114,13 @@ function CardSkeletons() {
 }
 
 /** From 1024 px a table, below it the cards. */
-export function StoryRows({ items, isLoading, label, empty, resetKey, onDelete }: {
+export function StoryRows({ items, isLoading, label, empty, paging, onDelete }: {
+  /** The rows of the page the server sent. */
   items: StoryListItem[]
+  paging: PagerState
   isLoading: boolean
   label: string
   empty: EmptyStateProps
-  resetKey: string
   onDelete: (item: StoryListItem) => void
 }) {
   const { t, title, updated } = useRowText()
@@ -150,7 +152,7 @@ export function StoryRows({ items, isLoading, label, empty, resetKey, onDelete }
       getRowId={item => item.groupId}
       isLoading={isLoading}
       label={label}
-      resetKey={resetKey}
+      paging={paging}
       rowActions={{ render: item => <RowMenu item={item} onDelete={onDelete} /> }}
       rows={items}
     />

@@ -3,6 +3,7 @@ import type { Key } from '@heroui/react'
 import { Autocomplete, Description, EmptyState, FieldError, Label, ListBox, SearchField, useFilter } from '@heroui/react'
 
 import { useLocale } from '@/contexts/locale-context'
+import { useSearchBox } from '@/hooks/use-search-box'
 
 export interface SearchableSelectOption {
   id: string
@@ -11,6 +12,8 @@ export interface SearchableSelectOption {
 
 /** The key of the "none" row. An option id is a uuid or a slug, so it never equals this. */
 const NONE = '__none__'
+const noop = () => {}
+const everything = () => true
 
 /**
  * A field that picks one value from a long list: a tap opens a list with a search field above it and a tick on the
@@ -18,8 +21,11 @@ const NONE = '__none__'
  * and keys (Enter, Space or the arrow down opens the list, the arrows move, Enter picks, Escape closes). Pass
  * `noneLabel` to add a first row that clears the choice: it calls `onChange(null)` and shows while nothing is chosen.
  * Label, input, then the help line, like every field.
+ *
+ * With `serverSearch` the list is not filtered here: the typing goes to `serverSearch.onChange` a moment after the last key
+ * (`serverSearch.value` is what `options` was last read for), and `options` is what the server answered (search as you type).
  */
-export function SearchableSelect({ label, hideLabel, options, value, onChange, noneLabel, description, placeholder, isDisabled, error }: {
+export function SearchableSelect({ label, hideLabel, options, value, onChange, noneLabel, description, placeholder, isDisabled, error, serverSearch }: {
   label: string
   /** The label is only for screen readers, because a title next to the field already says it. */
   hideLabel?: boolean
@@ -34,9 +40,11 @@ export function SearchableSelect({ label, hideLabel, options, value, onChange, n
   isDisabled?: boolean
   /** The words under the field when it is invalid. */
   error?: string
+  serverSearch?: { value: string, onChange: (text: string) => void }
 }) {
   const { t } = useLocale()
   const { contains } = useFilter({ sensitivity: 'base' })
+  const [text, setText] = useSearchBox(serverSearch?.value ?? '', serverSearch?.onChange ?? noop)
   const rows = noneLabel === undefined ? options : [{ id: NONE, label: noneLabel }, ...options]
   const key: Key | null = value ?? (noneLabel === undefined ? null : NONE)
   const chosen = rows.find(row => row.id === key)
@@ -61,10 +69,10 @@ export function SearchableSelect({ label, hideLabel, options, value, onChange, n
       {description && !error && <Description>{description}</Description>}
       {error && <FieldError>{error}</FieldError>}
       <Autocomplete.Popover>
-        <Autocomplete.Filter filter={contains}>
+        <Autocomplete.Filter filter={serverSearch ? everything : contains}>
           {/* The list opens on the search: typing narrows it at once. */}
           {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
-          <SearchField autoFocus aria-label={t('multiSelect.search', { label })}>
+          <SearchField autoFocus aria-label={t('multiSelect.search', { label })} {...(serverSearch ? { value: text, onChange: setText } : {})}>
             <SearchField.Group>
               <SearchField.SearchIcon />
               <SearchField.Input placeholder={t('multiSelect.search', { label })} />

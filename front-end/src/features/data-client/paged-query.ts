@@ -46,3 +46,31 @@ export async function readAllPages<P extends CursorPage>(read: (cursor: string |
 
   return items
 }
+
+/** A page of a numbered list (ADR-033, per-store merchant tables). */
+export interface NumberedPage {
+  items: readonly unknown[]
+  total: number
+}
+
+/** The page size `readAllNumberedPages` asks for: the most the API allows. */
+export const WHOLE_LIST_PAGE_SIZE = 20
+
+/**
+ * Every item of a numbered list, page after page, for a screen that looks rows up by id (the story editor's pickers, preview
+ * and publish checks) and cannot work from one page. It stops once it has `total` rows, on an empty page, and after `MAX_PAGES`
+ * pages with an error log. This is debt until those screens look their rows up by id (ADR-033, slice 4).
+ */
+export async function readAllNumberedPages<P extends NumberedPage>(read: (page: number) => Promise<P>, label: string): Promise<P['items'][number][]> {
+  const items: P['items'][number][] = []
+
+  for (let page = 1; page <= MAX_PAGES; page += 1) {
+    const answer = await read(page)
+    items.push(...answer.items)
+    if (answer.items.length === 0 || items.length >= answer.total)
+      return items
+  }
+  console.error(`${label}: stopped after ${MAX_PAGES} pages; the list is cut`)
+
+  return items
+}

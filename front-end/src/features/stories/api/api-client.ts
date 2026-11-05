@@ -13,8 +13,8 @@ const emptyBody = { type: 'doc' as const, content: [{ type: 'paragraph' as const
 
 export function createStoriesClient(): StoriesClient {
   return {
-    list: async ({ storeId }) =>
-      answer((await loadClient()).GET('/api/store/{storeId}/story-groups', { ...timeout(), params: { path: { storeId } } })),
+    list: async ({ storeId, query }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/story-groups', { ...timeout(), params: { path: { storeId }, query } })),
     group: async ({ storeId, groupId }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/story-groups/{groupId}', { ...timeout(), params: { path: { storeId, groupId } } })) as Promise<StoryGroupDetail>,
     links: async ({ storeId, groupId }) =>

@@ -58,7 +58,8 @@ function usePhotoSrcs(storeId: string, ids: string[]) {
 /** The guest map the way a guest sees this place: its pin selected and its card open, drawn by the guest map's own parts. */
 function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: string, language: Language }) {
   const { t } = useLocale()
-  const stories = useStoryOptions(storeId)
+  // Only the chosen story is wanted here: the answer always holds it.
+  const stories = useStoryOptions(storeId, { groupId: form.mainStoryGroupId ?? undefined, limit: 1 })
   const cover = useCoverSrc(storeId, photoIds(form)[0])
   const categories = useCategories(storeId, 'map')
   const [now] = useState(() => new Date())
