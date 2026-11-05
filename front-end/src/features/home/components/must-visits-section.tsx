@@ -1,5 +1,4 @@
 import type { PublicMapItem } from '@sk/api-contract'
-import type { CSSProperties } from 'react'
 
 import { Skeleton } from '@heroui/react'
 import { zurichTime } from '@sk/domain/dates'
@@ -20,23 +19,6 @@ import { mustVisitOrder, mustVisitsOf } from '../lib/must-visits'
 import { SectionHeading } from './section-heading'
 
 const POSTCARD_PHOTO_WIDTH = 640
-
-/**
- * The progressive blur under the postcard's text: four stacked backdrop-blur layers, each faded in by a linear mask a little lower
- * than the one before and blurring more, so the photo turns into a blur of itself toward the bottom with no dark band.
- */
-const BLUR_STEPS = [
-  { blur: 2, from: 0, to: 25 },
-  { blur: 6, from: 15, to: 45 },
-  { blur: 14, from: 35, to: 70 },
-  { blur: 28, from: 55, to: 95 },
-] as const
-
-function blurStep({ blur, from, to }: (typeof BLUR_STEPS)[number]): CSSProperties {
-  const mask = `linear-gradient(to bottom, transparent ${from}%, #000 ${to}%)`
-
-  return { backdropFilter: `blur(${blur}px)`, WebkitBackdropFilter: `blur(${blur}px)`, maskImage: mask, WebkitMaskImage: mask }
-}
 
 /** The pill and the round button: one height (48 px), one press. */
 const TAP = 'pointer-events-auto flex min-h-12 items-center justify-center rounded-full outline-none focus-visible:focus-ring motion-safe:transition-transform motion-safe:active:scale-[0.97]'
@@ -67,11 +49,10 @@ function useHoursFact() {
 
 /**
  * A postcard, "Immersive" (owner, 05.11.2026, lab option G): a 300 px card with a 10 px white frame and a 32 px radius around a
- * full-bleed photo whose lower part melts into a progressive blur of itself (a very light tint keeps white type legible on a bright
- * sky). On the blur: the name in a bold white sans (it wraps and hyphenates, never cut), the language notice when the place is
+ * full-bleed photo with a dark gradient under the text (owner, 05.11.2026: the frosted blur was tried and dropped). On it: the name in a bold white sans (it wraps and hyphenates, never cut), the language notice when the place is
  * described in the other language, a meta row (pin + street; clock + today's hours where the place has them, drawn after
  * hydration so the server never disagrees with the browser's clock), then the actions: a white pill "Read the story" with the
- * frosted round Google Maps button beside it, or, without a story, the pill is "Directions" to Google Maps alone. The card's map
+ * round Google Maps button beside it, or, without a story, the pill is "Directions" to Google Maps alone. The card's map
  * link is an invisible layer under everything, named by the place, so no link is nested in another. No tip, no price.
  */
 function Postcard({ pin, hours }: { pin: PublicMapItem, hours: string | undefined }) {
@@ -92,11 +73,8 @@ function Postcard({ pin, hours }: { pin: PublicMapItem, hours: string | undefine
           </span>
           <Link aria-label={pin.title} className="absolute inset-0 rounded-[22px] outline-none focus-visible:focus-ring focus-visible:ring-inset" params={{ lang: language }} search={pin.slug ? { place: pin.slug } : {}} to="/$lang/map" />
           <div className="pointer-events-none relative flex flex-col gap-1 p-4 pt-6 text-white">
-            {/* The blur follows the text block: it starts 96 px above it and fades in, so a long name never leaves it. */}
-            <div aria-hidden className="absolute inset-x-0 -top-24 bottom-0">
-              {BLUR_STEPS.map(step => <span key={step.blur} className="absolute inset-0" style={blurStep(step)} />)}
-              <span className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30" />
-            </div>
+            {/* The gradient follows the text block: it starts 96 px above it, so a long name never leaves it. */}
+            <span aria-hidden className="absolute inset-x-0 -top-24 bottom-0 bg-[linear-gradient(to_bottom,transparent,rgb(0_0_0/0.5)_40%,rgb(0_0_0/0.82)_100%)]" />
             <h3 className="relative text-[30px] leading-[33px] font-bold tracking-[-0.025em] text-balance hyphens-auto [overflow-wrap:anywhere]" lang={other}>{pin.title}</h3>
             {other && <span className="relative w-fit rounded-full bg-black/35 px-2 py-0.5 text-[11px] leading-4 font-medium">{t(`map.card.onlyIn.${other}`)}</span>}
             {(street || fact) && (
@@ -122,7 +100,7 @@ function Postcard({ pin, hours }: { pin: PublicMapItem, hours: string | undefine
                       <Link className={`${TAP} flex-1 bg-white px-5 text-[15px] font-semibold text-foreground`} params={{ lang: language, slug: pin.mainStorySlug }} to="/$lang/stories/$slug">
                         {t('homePage.must.story')}
                       </Link>
-                      <a aria-label={t('map.directions')} className={`${TAP} size-12 shrink-0 bg-white/25 text-white ring-1 ring-white/40 backdrop-blur-md ring-inset`} href={maps} rel="noreferrer" target="_blank">
+                      <a aria-label={t('map.directions')} className={`${TAP} size-12 shrink-0 bg-black/30 text-white ring-1 ring-white/50 ring-inset`} href={maps} rel="noreferrer" target="_blank">
                         <OpenInMapsIcon aria-hidden size={20} />
                       </a>
                     </>
