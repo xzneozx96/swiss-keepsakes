@@ -33,8 +33,8 @@ export const homeEn = {
   'homePage.events.comingUp': 'Coming up',
   'homePage.events.seeAll': 'See all on the map',
   'homePage.events.failed': 'The events could not load.',
-  'homePage.ending.seeAll': 'Show all designs',
-  'homePage.ending.line': 'There’s still more of Lucerne to see first.',
+  'homePage.ending.seeAll': 'Choose your keepsake',
+  'homePage.ending.line': 'There’s still more of Lucerne to see',
   'homePage.ending.failed': 'The Victorinox designs could not load.',
   'homePage.meta.description': 'Your first day in Lucerne, sorted: the places we’d show a friend on the map, the practical things to find, and Victorinox keepsakes from the shop.',
 }

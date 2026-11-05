@@ -140,9 +140,9 @@ export const en = {
   'home.victorinox.title': 'Victorinox',
   'home.victorinox.eyebrow': 'Our partner',
   'home.victorinox.seeAll': 'Show all {count} designs',
-  'home.victorinox.subtitle': 'Swiss Army Knives in Luzerne and Alpine designs',
+  'home.victorinox.subtitle': 'Bring a piece of Luzerne home',
   'home.victorinox.intro':
-    'Karl Elsener opened his cutler’s workshop in Ibach in 1884, and Victorinox still makes its knives in Switzerland. Choose a Luzerne or Alpine design in three sizes.',
+    'Take Luzerne home in your pocket: a Swiss Army Knife with a Luzerne or Alpine design, made by Victorinox in Switzerland since 1884. You will use it every day, and every time you do, it brings back the trip.',
   'home.victorinox.fact1': 'Since 1884',
   'home.keepsakes.title': 'More keepsakes',
   'home.keepsakes.subtitle': 'Small things from Luzerne makers',

@@ -34,7 +34,7 @@ export const homeDe: Record<keyof typeof homeEn, string> = {
   'homePage.events.comingUp': 'Demnächst',
   'homePage.events.seeAll': 'Alle auf der Karte ansehen',
   'homePage.events.failed': 'Die Veranstaltungen konnten nicht geladen werden.',
-  'homePage.ending.seeAll': 'Alle Designs anzeigen',
+  'homePage.ending.seeAll': 'Ihr Andenken auswählen',
   'homePage.ending.line': 'Es gibt in Luzern noch mehr zu sehen.',
   'homePage.ending.failed': 'Die Victorinox-Designs konnten nicht geladen werden.',
   'homePage.meta.description': 'Ihr erster Tag in Luzern, erledigt: die Orte, die wir Freunden zeigen, auf der Karte, das Praktische zum Finden und Victorinox-Andenken aus dem Laden.',

@@ -145,9 +145,9 @@ export const de: Record<MessageKey, string> = {
   'home.victorinox.eyebrow': 'Unser Partner',
   'home.victorinox.seeAll': 'Alle {count} Designs anzeigen',
   'home.victorinox.subtitle':
-    'Schweizer Taschenmesser in Luzerner und alpinen Designs',
+    'Ein Stück Luzern für zu Hause',
   'home.victorinox.intro':
-    'Karl Elsener eröffnete 1884 in Ibach seine Messerschmiede, und Victorinox stellt seine Messer noch immer in der Schweiz her. Wählen Sie ein Luzerner oder alpines Design in drei Grössen.',
+    'Nehmen Sie Luzern in der Hosentasche mit nach Hause: ein Schweizer Taschenmesser mit Luzerner oder alpinem Design, seit 1884 von Victorinox in der Schweiz hergestellt. Sie brauchen es jeden Tag, und jedes Mal erinnert es Sie an die Reise.',
   'home.victorinox.fact1': 'Seit 1884',
   'home.keepsakes.title': 'Weitere Andenken',
   'home.keepsakes.subtitle': 'Kleine Dinge von Luzerner Herstellern',
