@@ -1,0 +1,458 @@
+[
+  {
+    "key": "gletschergarten-by-night-2026",
+    "title": {
+      "en": "Gletschergarten by Night",
+      "de": "Gletschergarten by Night"
+    },
+    "tip": {
+      "en": "Evening event in the Glacier Garden museum, open from 4 to 7 November, from 17:00 to 23:00. Live concerts on a small stage, readings, guided tours of the ice exhibition and food and drink in the old garden. Only the evenings of 6 and 7 November are still to come. Check the garden's ticket shop for prices.",
+      "de": "Abendanlass im Gletschergarten Luzern vom 4. bis 7. November, jeweils von 17 bis 23 Uhr. Es gibt Live-Konzerte auf einer kleinen Bühne, Lesungen, Führungen durch die Eisausstellung sowie Essen und Trinken im alten Garten. Nur die Abende des 6. und 7. November stehen noch bevor. Die Preise stehen im Ticketshop des Gletschergartens."
+    },
+    "localTip": {
+      "en": "Buy the ticket online first, since entry is through the museum's own shop.",
+      "de": "Kaufen Sie das Ticket zuerst online, der Zugang läuft über den Shop des Museums."
+    },
+    "latitude": 47.058921,
+    "longitude": 8.310412,
+    "address": "Gletschergarten Luzern, Denkmalstrasse 4, 6006 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.058921,8.310412",
+    "weeklyHours": null,
+    "stayTag": "short_stay",
+    "interests": [
+      "local-activities",
+      "history-culture"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.gletschergarten.ch",
+    "categories": [
+      "events"
+    ],
+    "dates": [
+      {
+        "firstDay": "2026-11-06",
+        "lastDay": "2026-11-06",
+        "startTime": "17:00",
+        "endTime": "23:00"
+      },
+      {
+        "firstDay": "2026-11-07",
+        "lastDay": "2026-11-07",
+        "startTime": "17:00",
+        "endTime": "23:00"
+      }
+    ],
+    "photos": []
+  },
+  {
+    "key": "sennenchilbi-weggis-2026",
+    "title": {
+      "en": "Sennenchilbi Weggis",
+      "de": "Sennenchilbi Weggis"
+    },
+    "tip": {
+      "en": "Traditional farmers' festival of Weggis, held from 13 to 17 November around the village square. The main day is Sunday 15 November, with a church service and a large parade at 13:30. On the other evenings there is music and dancing in the festival hut. Entry to the village events is free.",
+      "de": "Traditionelles Sennenfest in Weggis vom 13. bis 17. November rund um den Dorfplatz. Haupttag ist der Sonntag, 15. November, mit Festgottesdienst und grossem Umzug um 13.30 Uhr. An den anderen Abenden gibt es Musik und Tanz im Festzelt. Die Anlässe im Dorf sind gratis."
+    },
+    "localTip": {
+      "en": "Stand along the parade route in the lower village an hour early to get a place at the front.",
+      "de": "Stehen Sie eine Stunde vorher an der Umzugsroute im Unterdorf, dann haben Sie einen Platz in der ersten Reihe."
+    },
+    "latitude": 47.032267,
+    "longitude": 8.435496,
+    "address": "Dorfplatz, 6353 Weggis",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.032267,8.435496",
+    "weeklyHours": null,
+    "stayTag": "short_stay",
+    "interests": [
+      "local-activities",
+      "history-culture"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://sennenchilbi-weggis.ch/sennenchilbi-2026/",
+    "categories": [
+      "events"
+    ],
+    "dates": [
+      {
+        "firstDay": "2026-11-13",
+        "lastDay": "2026-11-17",
+        "startTime": null,
+        "endTime": null
+      }
+    ],
+    "photos": []
+  },
+  {
+    "key": "beizentratsch-city-tour-2026-11-13",
+    "title": {
+      "en": "Beizentratsch pub history tour",
+      "de": "Beizentratsch: Stadtführung durch Luzerns Beizengeschichte"
+    },
+    "tip": {
+      "en": "Two-hour guided walk through Lucerne's old town about its historic pubs and the stories told in them. It ends with a glass of Lucerne white wine in a vaulted cellar. The tour is in German, booking is required and the price is from CHF 40 per adult.",
+      "de": "Zweistündiger Rundgang durch die Luzerner Altstadt zu alten Wirtshäusern und den Geschichten, die dort erzählt wurden. Zum Schluss gibt es ein Glas Luzerner Weisswein in einem Gewölbekeller. Die Führung findet auf Deutsch statt, eine Anmeldung ist nötig, der Preis beträgt ab 40 Franken pro Erwachsene."
+    },
+    "localTip": {
+      "en": "Check the meeting point in your booking confirmation; it is usually the square in front of the Jesuit Church.",
+      "de": "Prüfen Sie den Treffpunkt in der Buchungsbestätigung; meist ist es der Vorplatz der Jesuitenkirche."
+    },
+    "latitude": 47.050438,
+    "longitude": 8.305149,
+    "address": "Jesuitenkirche, Jesuitenplatz, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050438,8.305149",
+    "weeklyHours": null,
+    "stayTag": "short_stay",
+    "interests": [
+      "food-drink",
+      "history-culture"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.luzern.com/de/package/beizentratsch-luzerns-wilde-wirtshausgeschichten",
+    "categories": [
+      "events"
+    ],
+    "dates": [
+      {
+        "firstDay": "2026-11-13",
+        "lastDay": "2026-11-13",
+        "startTime": "18:00",
+        "endTime": "20:00"
+      }
+    ],
+    "photos": []
+  },
+  {
+    "key": "rudolfs-christmas-2026",
+    "title": {
+      "en": "Rudolf's Christmas",
+      "de": "RUDOLFS Weihnacht"
+    },
+    "tip": {
+      "en": "Christmas market in the Inseli park on the lake, from 20 November to 23 December. About 50 huts sell gifts, food and drinks, and there is a fondue chalet, a music chalet and a children's yurt. The market opens 11:00 to 22:00 Monday to Saturday and 11:00 to 20:00 on Sunday; on weekdays the gift stalls open at 14:00. Entry is free.",
+      "de": "Weihnachtsmarkt im Inseli-Park am See vom 20. November bis 23. Dezember. Rund 50 Hütten verkaufen Geschenke, Essen und Getränke, dazu gibt es ein Fondue-Chalet, ein Musik-Chalet und eine Kinderjurte. Der Markt ist Montag bis Samstag von 11 bis 22 Uhr und am Sonntag von 11 bis 20 Uhr offen; an Wochentagen öffnen die Geschenkstände um 14 Uhr. Der Eintritt ist gratis."
+    },
+    "localTip": {
+      "en": "Come at a weekday dusk: the gift stalls are open, the lights are on and it is quieter than at the weekend.",
+      "de": "Kommen Sie an einem Werktag in der Dämmerung: Die Stände sind offen, die Lichter brennen und es ist ruhiger als am Wochenende."
+    },
+    "latitude": 47.049599,
+    "longitude": 8.314327,
+    "address": "Inseli-Park, Werftsteg, 6005 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.049599,8.314327",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [
+      "local-activities",
+      "food-drink",
+      "shopping-keepsakes"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.rudolfs.ch",
+    "categories": [
+      "events"
+    ],
+    "dates": [
+      {
+        "firstDay": "2026-11-20",
+        "lastDay": "2026-12-23",
+        "startTime": null,
+        "endTime": null
+      }
+    ],
+    "photos": []
+  },
+  {
+    "key": "public-hotel-tour-schweizerhof-2026-11-25",
+    "title": {
+      "en": "Public hotel tour, Hotel Schweizerhof",
+      "de": "Öffentliche Hotelführung im Hotel Schweizerhof"
+    },
+    "tip": {
+      "en": "One-hour tour behind the scenes of Hotel Schweizerhof, a grand hotel on the lake front that has stood for more than 180 years. It starts in the lobby at 18:00 on 25 November. The ticket costs CHF 10 and includes a drink afterwards. Book in advance in the hotel's ticket shop.",
+      "de": "Einstündige Führung hinter den Kulissen des Hotels Schweizerhof, eines Grandhotels am Seeufer, das seit über 180 Jahren besteht. Start ist am 25. November um 18 Uhr in der Lobby. Das Ticket kostet 10 Franken und enthält ein Getränk danach. Bitte vorher im Ticketshop des Hotels buchen."
+    },
+    "localTip": {
+      "en": "The next tour is only in February 2027, so book this one early.",
+      "de": "Die nächste Führung ist erst im Februar 2027, buchen Sie diese also früh."
+    },
+    "latitude": 47.05432,
+    "longitude": 8.310222,
+    "address": "Hotel Schweizerhof Luzern, Schweizerhofquai 3, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.054320,8.310222",
+    "weeklyHours": null,
+    "stayTag": "short_stay",
+    "interests": [
+      "history-culture",
+      "local-activities"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.schweizerhof-luzern.ch/en/events/public-guided-hotel-tour",
+    "categories": [
+      "events"
+    ],
+    "dates": [
+      {
+        "firstDay": "2026-11-25",
+        "lastDay": "2026-11-25",
+        "startTime": "18:00",
+        "endTime": "19:00"
+      }
+    ],
+    "photos": []
+  },
+  {
+    "key": "bruchweihnachten-2026",
+    "title": {
+      "en": "Bruchweihnachten",
+      "de": "Bruchweihnachten"
+    },
+    "tip": {
+      "en": "Small Christmas event in the Bruch quarter, from 26 to 28 November. More than 30 local shops, cafés and groups take part, with handmade gifts, a vintage market and a craft morning for children on Saturday. A small electric tuk-tuk takes visitors between the stops. Entry is free.",
+      "de": "Kleiner Weihnachtsanlass im Bruchquartier vom 26. bis 28. November. Über 30 Geschäfte, Lokale und Vereine machen mit, mit handgemachten Geschenken, einem Trouvaillenmarkt und am Samstag einem Bastelmorgen für Kinder. Ein kleines Elektro-Tuktuk fährt zwischen den Stationen. Der Eintritt ist gratis."
+    },
+    "localTip": {
+      "en": "The quarter lies just west of the old town; the E-tuk-tuk saves tired legs between stops.",
+      "de": "Das Quartier liegt knapp westlich der Altstadt; das E-Tuktuk schont müde Beine zwischen den Stationen."
+    },
+    "latitude": 47.047948,
+    "longitude": 8.302019,
+    "address": "Bruchquartier (Bruchstrasse), 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.047948,8.302019",
+    "weeklyHours": null,
+    "stayTag": "short_stay",
+    "interests": [
+      "local-activities",
+      "shopping-keepsakes"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://bruchweihnachten.ch",
+    "categories": [
+      "events"
+    ],
+    "dates": [
+      {
+        "firstDay": "2026-11-26",
+        "lastDay": "2026-11-26",
+        "startTime": "16:00",
+        "endTime": "21:00"
+      },
+      {
+        "firstDay": "2026-11-27",
+        "lastDay": "2026-11-27",
+        "startTime": "16:00",
+        "endTime": "19:00"
+      },
+      {
+        "firstDay": "2026-11-28",
+        "lastDay": "2026-11-28",
+        "startTime": "10:00",
+        "endTime": "17:00"
+      }
+    ],
+    "photos": []
+  },
+  {
+    "key": "designschenken-luzerner-designtage-2026",
+    "title": {
+      "en": "DesignSchenken design market",
+      "de": "DesignSchenken, Luzerner Designtage"
+    },
+    "tip": {
+      "en": "Design and gift market in the former spinning mill in Viscosistadt, Emmenbrücke, from 27 to 29 November. Around 2,300 square metres hold stalls with Swiss design, from fashion and jewellery to ceramics and furniture. The venue is a short train or bus ride from Lucerne station. Opening hours and ticket prices are on the organiser's site.",
+      "de": "Design- und Geschenkmarkt in der ehemaligen Spinnerei in der Viscosistadt in Emmenbrücke vom 27. bis 29. November. Auf rund 2300 Quadratmetern zeigen Stände Schweizer Design, von Mode und Schmuck bis zu Keramik und Möbeln. Der Ort ist mit Zug oder Bus kurz vom Bahnhof Luzern entfernt. Öffnungszeiten und Eintrittspreise stehen auf der Seite des Veranstalters."
+    },
+    "localTip": {
+      "en": "Go by train to Emmenbrücke station and walk the last few minutes to the old mill.",
+      "de": "Fahren Sie mit dem Zug bis Emmenbrücke und gehen Sie die letzten Minuten zu Fuss zur alten Spinnerei."
+    },
+    "latitude": 47.070104,
+    "longitude": 8.279983,
+    "address": "Spinnereistrasse 3, 6020 Emmenbrücke",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.070104,8.279983",
+    "weeklyHours": null,
+    "stayTag": "short_stay",
+    "interests": [
+      "local-activities",
+      "shopping-keepsakes"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.designschenken.ch",
+    "categories": [
+      "events"
+    ],
+    "dates": [
+      {
+        "firstDay": "2026-11-27",
+        "lastDay": "2026-11-29",
+        "startTime": null,
+        "endTime": null
+      }
+    ],
+    "photos": []
+  },
+  {
+    "key": "lucerne-christmas-market-franziskanerplatz-2026",
+    "title": {
+      "en": "Lucerne Christmas Market",
+      "de": "Lozärner Wiehnachtsmärt auf dem Franziskanerplatz"
+    },
+    "tip": {
+      "en": "Christmas market on Franziskanerplatz in the old town, from 3 to 21 December. About 70 stalls sell gifts, crafts and hot drinks around the fountain. It is open daily from 11:00 to 20:00, food stalls until 21:00, and on 21 December it closes at 19:00. Entry is free.",
+      "de": "Weihnachtsmarkt auf dem Franziskanerplatz in der Altstadt vom 3. bis 21. Dezember. Rund 70 Stände bieten rund um den Brunnen Geschenke, Handwerk und warme Getränke an. Der Markt ist täglich von 11 bis 20 Uhr offen, die Essensstände bis 21 Uhr, am 21. Dezember schliesst er um 19 Uhr. Der Eintritt ist gratis."
+    },
+    "localTip": {
+      "en": "Go on a weekday afternoon; the square is small and gets crowded on Saturday evenings.",
+      "de": "Gehen Sie an einem Werktagnachmittag; der Platz ist klein und am Samstagabend sehr voll."
+    },
+    "latitude": 47.049886,
+    "longitude": 8.303193,
+    "address": "Franziskanerplatz, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.049886,8.303193",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [
+      "local-activities",
+      "shopping-keepsakes",
+      "food-drink"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.weihnachtsmarkt-luzern.com/datum-und-zeit/",
+    "categories": [
+      "events"
+    ],
+    "dates": [
+      {
+        "firstDay": "2026-12-03",
+        "lastDay": "2026-12-20",
+        "startTime": null,
+        "endTime": null
+      },
+      {
+        "firstDay": "2026-12-21",
+        "lastDay": "2026-12-21",
+        "startTime": "11:00",
+        "endTime": "19:00"
+      }
+    ],
+    "photos": []
+  },
+  {
+    "key": "klausjagen-weggis-2026",
+    "title": {
+      "en": "Klausjagen Weggis",
+      "de": "Klausjagen Weggis"
+    },
+    "tip": {
+      "en": "Old Advent custom in Weggis on Saturday 5 December. After dark a noisy parade with carriages, lit bishop's hats, music, whip-cracking and Saint Nicholas with his helpers moves through the village to the village square. It starts at 20:15. Entry is free.",
+      "de": "Alter Adventsbrauch in Weggis am Samstag, 5. Dezember. Nach Einbruch der Dunkelheit zieht ein lauter Umzug mit Wagen, beleuchteten Iffelen, Musik, Geisselchlöpfen und dem Samichlaus mit seinen Helfern durchs Dorf zum Dorfplatz. Beginn ist um 20.15 Uhr. Der Eintritt ist gratis."
+    },
+    "localTip": {
+      "en": "Weggis is reached by boat or bus from Lucerne; check the last trip home before you go.",
+      "de": "Weggis erreichen Sie ab Luzern mit Schiff oder Bus; prüfen Sie vorher die letzte Rückfahrt."
+    },
+    "latitude": 47.032267,
+    "longitude": 8.435496,
+    "address": "Dorfplatz, 6353 Weggis",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.032267,8.435496",
+    "weeklyHours": null,
+    "stayTag": "short_stay",
+    "interests": [
+      "history-culture",
+      "local-activities",
+      "lake-mountains"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://sng-weggis.ch",
+    "categories": [
+      "events"
+    ],
+    "dates": [
+      {
+        "firstDay": "2026-12-05",
+        "lastDay": "2026-12-05",
+        "startTime": "20:15",
+        "endTime": null
+      }
+    ],
+    "photos": []
+  },
+  {
+    "key": "lilu-light-festival-lucerne-2027",
+    "title": {
+      "en": "Lilu Light Festival Lucerne",
+      "de": "Lilu Lichtfestival Luzern"
+    },
+    "tip": {
+      "en": "Light festival from 14 to 24 January 2027, open daily from 18:00 to 22:00. About 30 light installations by artists light up squares and sights in the old town and around the lake basin, and the Jesuit Church hosts a ticketed light show. The installation walk is free; a festival wristband costs CHF 8 to 10 and show tickets are sold online.",
+      "de": "Lichtfestival vom 14. bis 24. Januar 2027, täglich von 18 bis 22 Uhr. Rund 30 Lichtinstallationen von Künstlern beleuchten Plätze und Sehenswürdigkeiten in der Altstadt und rund ums Seebecken, in der Jesuitenkirche gibt es eine Lichtshow mit Ticket. Der Rundgang ist gratis, das Festivalbändeli kostet 8 bis 10 Franken, die Tickets für die Show gibt es online."
+    },
+    "localTip": {
+      "en": "Wear warm shoes and start at the lake basin at 18:00 while the paths are still empty.",
+      "de": "Tragen Sie warme Schuhe und beginnen Sie um 18 Uhr am Seebecken, solange es noch leer ist."
+    },
+    "latitude": 47.050438,
+    "longitude": 8.305149,
+    "address": "Jesuitenkirche, Jesuitenplatz, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050438,8.305149",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [
+      "local-activities",
+      "history-culture"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.lichtfestivalluzern.ch",
+    "categories": [
+      "events"
+    ],
+    "dates": [
+      {
+        "firstDay": "2027-01-14",
+        "lastDay": "2027-01-24",
+        "startTime": null,
+        "endTime": null
+      }
+    ],
+    "photos": []
+  },
+  {
+    "key": "stoosler-bathtub-race-2027",
+    "title": {
+      "en": "Stoos Bathtub Race",
+      "de": "Stööslerrennen Badewannenrennen"
+    },
+    "tip": {
+      "en": "Fun race on Stoos, above Lake Lucerne, on Saturday 23 January 2027. Teams of at least three people slide down a specially built track in bathtubs to the Balmberg inn, while others watch. Advance ticket sales started on 23 October 2026; registration and tickets are on the Stoosbahnen site.",
+      "de": "Spassrennen auf dem Stoos oberhalb des Vierwaldstättersees am Samstag, 23. Januar 2027. Teams mit mindestens drei Personen rutschen in Badewannen eine eigens gebaute Strecke bis zum Gasthaus Balmberg hinunter, die anderen schauen zu. Der Vorverkauf hat am 23. Oktober 2026 begonnen; Anmeldung und Tickets gibt es bei den Stoosbahnen."
+    },
+    "localTip": {
+      "en": "The funicular from Schwyz is the way up, and it is the steepest in the world.",
+      "de": "Hinauf geht es mit der Standseilbahn ab Schwyz, der steilsten der Welt."
+    },
+    "latitude": 46.978145,
+    "longitude": 8.667709,
+    "address": "Stoosplatz 1, 6433 Stoos",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=46.978145,8.667709",
+    "weeklyHours": null,
+    "stayTag": "short_stay",
+    "interests": [
+      "local-activities",
+      "lake-mountains"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.stoos.ch/bathtub-race",
+    "categories": [
+      "events"
+    ],
+    "dates": [
+      {
+        "firstDay": "2027-01-23",
+        "lastDay": "2027-01-23",
+        "startTime": null,
+        "endTime": null
+      }
+    ],
+    "photos": []
+  }
+]

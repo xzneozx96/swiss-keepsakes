@@ -111,6 +111,7 @@ export const categorySpecs: CategorySpec[] = [
   { slug: 'holidays', name: { en: 'Public holidays', de: 'Feiertage' }, parent: 'useful-info', icon: 'holiday', showOnHome: false },
   { slug: 'emergency', name: { en: 'Emergency', de: 'Notfall' }, parent: 'useful-info', icon: 'emergency', showOnHome: false },
   { slug: 'boats-and-mountains', name: { en: 'Boats and mountains', de: 'Schiff und Berge' }, parent: 'useful-info', icon: 'boat', showOnHome: false },
+  { slug: 'events', name: { en: 'Events', de: 'Veranstaltungen' }, parent: null, icon: 'event', showOnHome: false },
 ]
 
 export interface Snapshot {
@@ -197,7 +198,7 @@ function readJson<T>(file: string): T {
 }
 
 export function loadData(): Data {
-  const groups = [['places-sights.json', 'sights'], ['places-shops-toilets.json', 'shops-toilets'], ['places-useful-info.json', 'useful-info']] as const
+  const groups = [['places-sights.json', 'sights'], ['places-shops-toilets.json', 'shops-toilets'], ['places-useful-info.json', 'useful-info'], ['places-events.json', 'events']] as const
   return {
     places: groups.flatMap(([file, group]) => readJson<PlaceRecord[]>(file).map(record => ({ group, record }))),
     keepsakes: readJson<KeepsakeRecord[]>('keepsakes.json'),
@@ -296,13 +297,16 @@ function printPlan(plan: Plan, snapshot: Snapshot, photos: Map<string, Uint8Arra
 
 // `--stock-only` runs the opening-stock step alone: no category, place or keepsake is planned or created (owner, 2026-11-03).
 // `--stories-only` does the same for the stories step.
+// `--events-only` adds only the events of `places-events.json` and their category: no other category, place or keepsake,
+// and no icon, stock or story step (owner, 2026-11-05).
 // A flag that is not known stops the run, so a typo cannot start the full seed.
-const knownFlags = ['--dry-run', '--stock-only', '--stories-only']
+const knownFlags = ['--dry-run', '--stock-only', '--stories-only', '--events-only']
 export function parseFlags(argv: readonly string[]) {
   return {
     dry: argv.includes('--dry-run'),
     stockOnly: argv.includes('--stock-only'),
     storiesOnly: argv.includes('--stories-only'),
+    eventsOnly: argv.includes('--events-only'),
     unknown: argv.filter(arg => !knownFlags.includes(arg)),
   }
 }
@@ -334,7 +338,7 @@ export async function stockOnly(pool: Pool, storeId: string, dry: boolean): Prom
 }
 
 async function main(): Promise<number> {
-  const { dry, stockOnly: onlyStock, storiesOnly, unknown } = parseFlags(process.argv.slice(2))
+  const { dry, stockOnly: onlyStock, storiesOnly, eventsOnly, unknown } = parseFlags(process.argv.slice(2))
   if (unknown.length > 0) {
     process.stderr.write(`Unknown flag: ${unknown.join(' ')}. Known: ${knownFlags.join(', ')}. Nothing was written.\n`)
     return 2
@@ -357,6 +361,8 @@ async function main(): Promise<number> {
       return await stockOnly(pool, storeId, dry)
     if (storiesOnly)
       return await placeStoriesStep(pool, storeId, { dry })
+    if (eventsOnly)
+      return await eventsStep(pool, storeId, dry)
     const data = loadData()
     const snapshot = await readSnapshot(pool, storeId)
     const plan = buildPlan(data, snapshot)
@@ -407,6 +413,31 @@ async function main(): Promise<number> {
   finally {
     await pool.end()
   }
+}
+
+// The events plan: the events group and the categories its records use, nothing else.
+export function eventsPlan(data: Data, snapshot: Snapshot): { data: Data, plan: Plan } {
+  const events: Data = { places: data.places.filter(entry => entry.group === 'events'), keepsakes: [] }
+  const used = new Set(events.places.flatMap(entry => entry.record.categories))
+  const plan = buildPlan(events, snapshot)
+  return { data: events, plan: { ...plan, categoriesToCreate: plan.categoriesToCreate.filter(spec => used.has(spec.slug)) } }
+}
+
+async function eventsStep(pool: Pool, storeId: string, dry: boolean): Promise<number> {
+  const snapshot = await readSnapshot(pool, storeId)
+  const { data, plan } = eventsPlan(loadData(), snapshot)
+  printPlan(plan, snapshot, new Map(), dry)
+  if (dry)
+    return 0
+  if (!await hasIconColumns(pool)) {
+    process.stderr.write('Migration 0026 is not applied to this database. Nothing was written.\n')
+    return 3
+  }
+  if (plan.categoriesToCreate.length + plan.placesToCreate.length === 0) {
+    process.stdout.write('Nothing to create.\n')
+    return 0
+  }
+  return await run(pool, storeId, data, plan, snapshot, new Map())
 }
 
 // Runs after the keepsakes exist, also on a second run. The plan is read again from the database, so a row that a person
