@@ -34,27 +34,26 @@ function todaySpans(pin: PublicMapItem, day: number, locale: Parameters<typeof h
   return group && !group.closed ? group.value : undefined
 }
 
-/** The concave fillet that lets the corner block flow into the card's edge: the frosted tint with a quarter circle cut away. */
-const FILLET = 'absolute size-4 bg-[radial-gradient(circle_at_0_100%,transparent_16px,rgb(0_0_0/0.6)_16.5px)]'
-
 /**
  * The card's status corner: a frosted block that hugs the top-right corner (the card's own radius clips its outer corner, a soft
- * radius rounds the inner one and two concave fillets run it into the edges, like a tab cut from the photo). A tiny uppercase word
- * over one big tabular figure: "Open until 19:00" with a live dot, "Opens 14:00", "Tomorrow 09:00" or "Back Sat". Screen readers
+ * radius rounds the inner one; no fillets or edge highlight, which drew as dark wedges on 05.11.2026). A tiny uppercase word
+ * The state is the big word with a dot ("Open" green and live, "Closed" red) and the small line says until when or when it
+ * opens again: "until 19:00", "Opens 14:00", "Opens tomorrow 09:00", "Opens Sat 07:00". Screen readers
  * hear one sentence instead of the pieces. Absolute, so it takes no room and nothing shifts when it appears after hydration.
  */
 function StatusCorner({ status }: { status: HoursStatus }) {
   const { t, intlLocale } = useLocale()
+  // The state is the big word; the small line says until when, or when it opens again (owner, 05.11.2026).
   const view = status.state === 'open'
-    ? { live: true, label: t('homePage.food.status.openUntil'), figure: status.until, say: t('homePage.food.status.sayOpen', { time: status.until }) }
+    ? { live: true, state: t('homePage.food.status.open'), detail: t('homePage.food.status.until', { time: status.until }), say: t('homePage.food.status.sayOpen', { time: status.until }) }
     : status.state === 'opens-later'
-      ? { live: false, label: t('homePage.food.status.opens'), figure: status.opensAt, say: t('homePage.food.status.sayOpens', { time: status.opensAt }) }
+      ? { live: false, state: t('homePage.food.status.closed'), detail: t('homePage.food.status.opensAt', { time: status.opensAt }), say: t('homePage.food.status.sayOpens', { time: status.opensAt }) }
       : status.inDays === 1
-        ? { live: false, label: t('homePage.food.status.tomorrow'), figure: status.opensAt, say: t('homePage.food.status.sayTomorrow', { time: status.opensAt }) }
+        ? { live: false, state: t('homePage.food.status.closed'), detail: t('homePage.food.status.opensTomorrow', { time: status.opensAt }), say: t('homePage.food.status.sayTomorrow', { time: status.opensAt }) }
         : {
             live: false,
-            label: t('homePage.food.status.back'),
-            figure: weekdayName(status.nextDay, intlLocale),
+            state: t('homePage.food.status.closed'),
+            detail: t('homePage.food.status.opensOn', { day: weekdayName(status.nextDay, intlLocale), time: status.opensAt }),
             say: t('homePage.food.status.sayBack', { day: weekdayName(status.nextDay, intlLocale, 'long'), time: status.opensAt }),
           }
 
@@ -63,16 +62,14 @@ function StatusCorner({ status }: { status: HoursStatus }) {
       <span className="sr-only">{view.say}</span>
       <span
         aria-hidden
-        className="absolute top-0 right-0 flex flex-col items-end gap-1 rounded-bl-[22px] bg-black/60 py-3 ps-4 pe-[18px] text-white shadow-[inset_1px_-1px_0_rgb(255_255_255/0.14)] backdrop-blur-md"
+        className="absolute top-0 right-0 flex flex-col items-end gap-1 rounded-bl-[22px] bg-black/55 py-3 ps-4 pe-[18px] text-white backdrop-blur-md"
         data-status={status.state}
       >
-        <span className={`${FILLET} top-0 right-full`} />
-        <span className={`${FILLET} top-full right-0`} />
-        <span className="flex items-center gap-1.5 text-[10px] leading-3 font-semibold tracking-[0.14em] text-white/90 uppercase">
-          {view.live && <span className="size-1.5 rounded-full bg-[#4ade80] shadow-[0_0_0_3px_rgb(74_222_128/0.25)] motion-safe:animate-pulse" />}
-          {view.label}
+        <span className="flex items-center gap-1.5 text-[19px] leading-6 font-extrabold tracking-[-0.01em]">
+          <span className={`size-2 rounded-full ${view.live ? 'bg-[#4ade80] shadow-[0_0_0_3px_rgb(74_222_128/0.25)] motion-safe:animate-pulse' : 'bg-[#f87171]'}`} />
+          {view.state}
         </span>
-        <span className="text-[26px] leading-7 font-extrabold tracking-[-0.02em] tabular-nums">{view.figure}</span>
+        <span className="text-[12px] leading-4 font-semibold text-white/90 tabular-nums">{view.detail}</span>
       </span>
     </>
   )

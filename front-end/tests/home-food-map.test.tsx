@@ -131,15 +131,15 @@ describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
     expect(card('Café Mamie')).not.toHaveTextContent(/\d{2}:\d{2}/)
   })
 
-  it('puts “Open until” and the closing time in the top corner while open, with one sentence for screen readers', async () => {
+  it('puts “Open” and “until” the closing time in the top corner while open, with one sentence for screen readers', async () => {
     renderSection()
     await section()
 
     expect(corner('SiP Café')).toHaveAttribute('aria-hidden', 'true')
     expect(corner('SiP Café')).toHaveAttribute('data-status', 'open')
-    expect(corner('SiP Café')).toHaveTextContent('Open until19:00')
-    expect(within(card('SiP Café')).getByText('Open until 19:00')).toHaveClass('sr-only')
-    expect(corner('Reussbad')).toHaveTextContent('Open until14:00')
+    expect(corner('SiP Café')).toHaveTextContent('Openuntil 19:00')
+    expect(within(card('SiP Café')).getByText('Open now, until 19:00')).toHaveClass('sr-only')
+    expect(corner('Reussbad')).toHaveTextContent('Openuntil 14:00')
   })
 
   it('says when it opens later today, between two spans', async () => {
@@ -147,8 +147,8 @@ describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
     renderSection()
     await section()
 
-    expect(corner('Reussbad')).toHaveTextContent('Opens18:00')
-    expect(within(card('Reussbad')).getByText('Opens at 18:00')).toBeInTheDocument()
+    expect(corner('Reussbad')).toHaveTextContent('ClosedOpens 18:00')
+    expect(within(card('Reussbad')).getByText('Closed now, opens at 18:00')).toBeInTheDocument()
   })
 
   it('after closing says Tomorrow and the time, and on a day off the weekday it is back', async () => {
@@ -156,12 +156,12 @@ describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
     renderSection()
     await section()
 
-    expect(corner('SiP Café')).toHaveTextContent('Tomorrow09:00')
-    expect(within(card('SiP Café')).getByText('Opens tomorrow at 09:00')).toBeInTheDocument()
+    expect(corner('SiP Café')).toHaveTextContent('ClosedOpens tomorrow 09:00')
+    expect(within(card('SiP Café')).getByText('Closed now, opens tomorrow at 09:00')).toBeInTheDocument()
     // Storchen opens on Tuesdays only.
     expect(corner('Storchen')).toHaveAttribute('data-status', 'closed-today')
-    expect(corner('Storchen')).toHaveTextContent('BackTue')
-    expect(within(card('Storchen')).getByText('Opens Tuesday at 14:00')).toBeInTheDocument()
+    expect(corner('Storchen')).toHaveTextContent('ClosedOpens Tue')
+    expect(within(card('Storchen')).getByText('Closed now, opens Tuesday at 14:00')).toBeInTheDocument()
   })
 
   it('counts a span that closes after midnight as open until then, also on the next morning', async () => {
@@ -171,13 +171,13 @@ describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
     renderSection({ pins: [late], categories })
     await section()
 
-    expect(corner('Bar & Lounge')).toHaveTextContent('Open until01:30')
+    expect(corner('Bar & Lounge')).toHaveTextContent('Openuntil 01:30')
     cleanup()
     at('2026-11-04T23:30:00Z') // Thursday 00:30, Wednesday's span still runs
     renderSection({ pins: [late], categories })
     await section()
 
-    expect(corner('Bar & Lounge')).toHaveTextContent('Open until02:00')
+    expect(corner('Bar & Lounge')).toHaveTextContent('Openuntil 02:00')
   })
 
   it('draws no corner for a place without hours', async () => {
@@ -201,7 +201,7 @@ describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
 
     expect(html).toContain('09:00–19:00')
     expect(html).not.toContain('data-status')
-    expect(html).not.toContain('Open until')
+    expect(html).not.toContain('until 19:00')
   })
 
   it('shows the street before the postcode, and no address line without an address', async () => {
