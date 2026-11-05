@@ -157,8 +157,8 @@ describe('[E4.4][AC30] blog category filter', { timeout: 60_000 }, () => {
   const tip = storyCard({ title: 'Tip story', categories: [ref(tips)] })
   const stories = [castle, legend1, legend2, legend3, tip]
 
-  const chips = () => screen.getByRole('grid', { name: /Story categories|Kategorien der Geschichten/ })
-  const chipNames = () => within(chips()).getAllByRole('row').map(r => r.textContent)
+  const chips = () => screen.getByRole('group', { name: /Story categories|Kategorien der Geschichten/ })
+  const chipNames = () => within(chips()).getAllByRole('button').map(r => r.textContent)
 
   /** The real route: its loader reads the stubbed API, its component reads the address and navigates. */
   async function realRouter(url: string, over: { stories?: typeof stories, categories?: typeof categories | null } = {}) {
@@ -200,7 +200,7 @@ describe('[E4.4][AC30] blog category filter', { timeout: 60_000 }, () => {
   it('[E4.4][AC30] AC-2 a parent keeps its sub-category stories and the count follows the filter', async () => {
     await renderFiltered('/en/stories')
 
-    await userEvent.click(within(chips()).getByRole('row', { name: 'Swiss history' }))
+    await userEvent.click(within(chips()).getByRole('button', { name: 'Swiss history' }))
 
     await waitFor(() => expect(titles()).toEqual(['Castle story']))
     expect(screen.getByText('1 story')).toBeInTheDocument()
@@ -215,20 +215,20 @@ describe('[E4.4][AC30] blog category filter', { timeout: 60_000 }, () => {
   it('[E4.4][AC61] AC-3 a choice pushes ?category= and Back returns to All', async () => {
     const router = await renderFiltered('/en/stories')
 
-    await userEvent.click(within(chips()).getByRole('row', { name: 'Legends' }))
+    await userEvent.click(within(chips()).getByRole('button', { name: 'Legends' }))
     await waitFor(() => expect(router.state.location.search).toEqual({ category: 'legends' }))
     expect(titles()).toHaveLength(3)
 
     act(() => router.history.back())
     await waitFor(() => expect(router.state.location.search).toEqual({}))
     await waitFor(() => expect(titles()).toHaveLength(5))
-    expect(within(chips()).getByRole('row', { name: 'All' })).toHaveAttribute('aria-selected', 'true')
+    expect(within(chips()).getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('[E4.4][AC61] AC-3 choosing All removes the parameter', async () => {
     const router = await renderFiltered('/en/stories?category=legends')
 
-    await userEvent.click(within(chips()).getByRole('row', { name: 'All' }))
+    await userEvent.click(within(chips()).getByRole('button', { name: 'All' }))
 
     await waitFor(() => expect(router.state.location.search).toEqual({}))
   })
@@ -245,7 +245,7 @@ describe('[E4.4][AC30] blog category filter', { timeout: 60_000 }, () => {
     const router = await renderFiltered('/en/stories?category=no-such-topic', { stories: [legend1, tip] })
 
     expect(titles()).toHaveLength(2)
-    expect(within(chips()).getByRole('row', { name: 'All' })).toHaveAttribute('aria-selected', 'true')
+    expect(within(chips()).getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true')
     expect(router.state.location.search).toEqual({ category: 'no-such-topic' })
   })
 
@@ -256,7 +256,7 @@ describe('[E4.4][AC30] blog category filter', { timeout: 60_000 }, () => {
 
     expect(html).toContain('Legend one')
     expect(html).toContain('Tip story')
-    expect(html).toMatch(/aria-selected="true"[^>]*>(?:(?!<\/div>).)*All/s)
+    expect(html).toMatch(/aria-pressed="true"[^>]*>(?:(?!<\/button>).)*All/s)
     expect(router.state.location.search).toEqual({ category: 'swiss-history' })
   })
 
@@ -285,14 +285,14 @@ describe('[E4.4][AC30] blog category filter', { timeout: 60_000 }, () => {
     await renderFiltered('/en/stories?category=legends', { categories: null })
 
     expect(titles()).toHaveLength(5)
-    expect(screen.queryByRole('grid', { name: en['stories.filter'] })).toBeNull()
+    expect(screen.queryByRole('group', { name: en['stories.filter'] })).toBeNull()
     expect(screen.queryByRole('alert')).toBeNull()
   })
 
   it('[E4.4][AC61] a selected chip is marked selected and draws no extra check (the app-wide tag style draws the one check)', async () => {
     await renderFiltered('/en/stories?category=legends')
 
-    expect(within(chips()).getByRole('row', { name: 'Legends' })).toHaveAttribute('aria-selected', 'true')
+    expect(within(chips()).getByRole('button', { name: 'Legends' })).toHaveAttribute('aria-pressed', 'true')
     expect(chips().querySelectorAll('svg')).toHaveLength(0)
   })
 })
