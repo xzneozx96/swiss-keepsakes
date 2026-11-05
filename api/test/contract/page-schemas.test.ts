@@ -1,4 +1,4 @@
-import { MAX_PAGE_LIMIT, pageOf, pageQuery, publicCategorySchema } from '@sk/api-contract'
+import { MAX_OFFSET, MAX_PAGE_LIMIT, numberedPageOf, numberedPageQuery, pageOf, pageQuery, publicCategorySchema } from '@sk/api-contract'
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
@@ -55,6 +55,42 @@ describe('[ADR-033] pageOf', () => {
   })
 })
 
+describe('[ADR-033] numberedPageQuery', () => {
+  const query = numberedPageQuery({ q: z.string().optional() })
+
+  it('page 1 and 10 rows by default, coerced from the query string, with the table\'s own filters beside them', () => {
+    expect(query.parse({})).toEqual({ page: 1, pageSize: 10 })
+    expect(query.parse({ page: '3', pageSize: '20', q: 'x' })).toEqual({ page: 3, pageSize: 20, q: 'x' })
+  })
+
+  it.each([{ page: '0' }, { page: '1.5' }, { pageSize: '0' }, { pageSize: '21' }, { pageSize: 'x' }])('%j is refused, not lowered', (input) => {
+    expect(query.safeParse(input).success).toBe(false)
+  })
+
+  it('a skip of 10,000 rows is allowed and one more is refused on page', () => {
+    expect(MAX_OFFSET).toBe(10_000)
+    expect(query.safeParse({ page: '1001', pageSize: '10' }).success).toBe(true)
+    const refused = query.safeParse({ page: '1002', pageSize: '10' })
+
+    expect(refused.success).toBe(false)
+    expect(refused.error?.issues[0]?.path).toEqual(['page'])
+    expect(query.safeParse({ page: '501', pageSize: '20' }).success).toBe(true)
+    expect(query.safeParse({ page: '502', pageSize: '20' }).success).toBe(false)
+  })
+})
+
+describe('[ADR-033] numberedPageOf', () => {
+  const schema = numberedPageOf(z.string(), 'ThingPage', { counts: z.object({ all: z.int() }) })
+
+  it('answers items, total, page, pageSize and the facet counts, all required', () => {
+    const body = { items: ['a'], total: 1, page: 1, pageSize: 10, counts: { all: 1 } }
+
+    expect(schema.parse(body)).toEqual(body)
+    expect(schema.safeParse({ ...body, total: undefined }).success).toBe(false)
+    expect(schema.safeParse({ ...body, counts: undefined }).success).toBe(false)
+  })
+})
+
 describe('[ADR-033] a public category carries storyCount', () => {
   const category = { id: '0190a000-0000-7000-8000-000000000001', slug: 'legends', name: { en: 'Legends', de: null }, parentId: null, icon: null, showOnHome: false, position: 1 }
 
@@ -78,15 +114,13 @@ const WHOLE_LISTS: Record<string, WholeList> = {
   'GET /api/public/keepsakes/{slug}/availability': { reason: 'The variants of one keepsake, all shown on its page (not in the ADR table: judged whole)', expectedSize: 'tens' },
   'GET /api/store/{storeId}/categories/{kind}': { reason: 'A drag-ordered list must be whole (cap 200)', expectedSize: 'tens' },
   'GET /api/store/{storeId}/pickup-places': { reason: 'A drag-ordered list must be whole (cap 50)', expectedSize: 'under 20' },
-  'GET /api/store/{storeId}/pins/story-options': { reason: 'Search-as-you-type: q and the first 20 matches, no paging', expectedSize: '20' },
+  'GET /api/store/{storeId}/pins/story-options': { reason: 'Search-as-you-type: q and the first 10 matches (at most 20), no paging', expectedSize: '10' },
 }
 
 /** Lists the ADR makes paged in a later slice. An entry leaves this map when its slice lands (the test below fails when a paged route is still listed). */
 const PENDING_SLICES: Record<string, { slice: number, expectedSize: string }> = {
   'GET /api/public/keepsakes': { slice: 3, expectedSize: 'tens to low hundreds' },
   'GET /api/public/tours': { slice: 3, expectedSize: '11 now, more later' },
-  'GET /api/store/{storeId}/story-groups': { slice: 4, expectedSize: 'hundreds' },
-  'GET /api/store/{storeId}/pins': { slice: 4, expectedSize: 'hundreds' },
   'GET /api/store/{storeId}/products': { slice: 5, expectedSize: 'tens to low hundreds' },
   'GET /api/store/{storeId}/inventory': { slice: 5, expectedSize: 'hundreds of SKUs' },
 }
@@ -124,6 +158,8 @@ describe('[ADR-033] every list route pages or is named as a whole list', () => {
   it('finds the list routes', () => {
     expect(routes.get('GET /api/public/stories')).toBe('cursor')
     expect(routes.get('GET /api/store/{storeId}/media')).toBe('numbered')
+    expect(routes.get('GET /api/store/{storeId}/story-groups')).toBe('numbered')
+    expect(routes.get('GET /api/store/{storeId}/pins')).toBe('numbered')
   })
 
   it('a list that neither pages nor is in WHOLE_LISTS or PENDING_SLICES fails', () => {

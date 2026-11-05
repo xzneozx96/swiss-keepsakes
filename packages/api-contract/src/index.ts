@@ -1,5 +1,5 @@
 export { createApiClient } from './client.ts'
-export { MAX_PAGE_LIMIT, pageOf, pageQuery } from './page.ts'
+export { MAX_OFFSET, MAX_PAGE_LIMIT, numberedPageOf, numberedPageQuery, pageOf, pageQuery } from './page.ts'
 export {
   MAX_COMMISSION,
   MAX_OPTIONS,
