@@ -3,7 +3,7 @@ import type { PublicMapItem, PublicTourCard } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 
 import { mustVisitOrder, mustVisitsOf } from '@/features/home/lib/must-visits'
-import { routeOrder } from '@/features/home/lib/routes'
+import { loopSlides, routeOrder, splitTitle } from '@/features/home/lib/routes'
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 
@@ -74,5 +74,19 @@ describe('[E4.13][AC95] the routes', () => {
 
   it('shows multi-day tours first for a multi-day stay and drops none (AC-2)', () => {
     expect(names(routeOrder(tours, 'multi_day'))).toEqual(['Tour 1', 'Tour 3', 'Tour 4', 'Tour 2'])
+  })
+})
+
+describe('the route deck helpers', () => {
+  it('splits the title at the colon into the place and the line under it', () => {
+    expect(splitTitle('Rigi: From Lake to Sky')).toEqual({ place: 'Rigi', line: 'From Lake to Sky' })
+    expect(splitTitle('Lucerne')).toEqual({ place: 'Lucerne', line: undefined })
+  })
+
+  it('repeats the tours in order until the loop has nine slides', () => {
+    expect(loopSlides(['a', 'b', 'c'])).toEqual(['a', 'b', 'c', 'a', 'b', 'c', 'a', 'b', 'c'])
+    expect(loopSlides(['a', 'b'])).toHaveLength(10)
+    expect(loopSlides(Array.from({ length: 10 }, (_, i) => i))).toHaveLength(10)
+    expect(loopSlides([])).toEqual([])
   })
 })

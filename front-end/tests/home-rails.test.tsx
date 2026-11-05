@@ -7,7 +7,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { act } from 'react'
 import { renderToString } from 'react-dom/server'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
 import { MustVisitsSection } from '@/features/home/components/must-visits-section'
@@ -108,7 +108,19 @@ describe('[E4.13][AC24][AC54][AC95] the server HTML of the rails', () => {
     const html = renderToString(<RouterProvider router={await routerOf(<RoutesSection tours={[tour(1, 'both', { cover }), tour(2, 'both')]} onRetry={() => {}} />)} />)
 
     expect(html).toContain('src="https://media.test/k/w640.webp"')
-    expect(html.match(/<img/g)).toHaveLength(1)
+    // The two tours are laid out five times for the loop (ten slides), only the first has a photo.
+    expect(html.match(/<img/g)).toHaveLength(5)
+  })
+
+  it('draws the first card readable and reachable in the server HTML, before Swiper starts', async () => {
+    const html = renderToString(<RouterProvider router={await routerOf(<RoutesSection tours={[tour(1, 'both', { title: 'Rigi: From Lake to Sky' }), tour(2, 'both')]} onRetry={() => {}} />)} />)
+    const doc = new DOMParser().parseFromString(html, 'text/html')
+    const live = [...doc.querySelectorAll('a[href^="/en/tours/"]')].filter(link => !link.hasAttribute('inert'))
+
+    expect(live).toHaveLength(1)
+    expect(live[0]?.querySelector('h3')?.textContent).toBe('Rigi')
+    expect(live[0]?.innerHTML).not.toContain('opacity-0')
+    expect(live[0]?.innerHTML).toContain('opacity-100')
   })
 
   it('links a route to the address of its own language (ADR-002)', async () => {
@@ -131,6 +143,8 @@ describe('[E4.13][AC24][AC54][AC95] the server HTML of the rails', () => {
 
     expect(html).toContain('data-skeleton="must-visits"')
     expect(html).toContain('data-skeleton="routes"')
+    // One card with two tilted boxes behind it, and the two round buttons and the counter line.
+    expect(html.match(/class="skeleton /g)?.length).toBeGreaterThanOrEqual(6)
   })
 })
 
@@ -259,27 +273,109 @@ describe('[E4.13][AC36] the sort notice (in "First time in Lucerne?" since 05.11
 })
 
 describe('[E4.13][AC95] the routes in the browser', () => {
+  const original = window.matchMedia
+
+  /** jsdom never ends a Swiper transition; with reduced motion the speed is 0 and a change ends at once. */
+  const reduceMotion = () => {
+    window.matchMedia = ((query: string) => ({ matches: true, media: query, addEventListener: () => {}, removeEventListener: () => {} })) as unknown as typeof window.matchMedia
+  }
+
+  afterEach(() => {
+    window.matchMedia = original
+  })
+
   it('shows multi-day tours first after a multi-day answer and drops none (AC-2)', async () => {
     answer('multi_day', [])
     render(<RouterProvider router={await routerOf(<RoutesSection tours={TOURS} onRetry={() => {}} />)} />)
 
-    const names = (await screen.findAllByRole('heading', { level: 3 })).map(heading => heading.textContent)
+    const counter = await screen.findByText('1 of 2')
 
-    expect(names).toEqual(['Tour 1', 'Tour 2'])
+    // Multi-day first: the front card is Tour 1, and nothing is dropped.
+    expect(counter.parentElement).toHaveTextContent('Tour 1')
+    expect(document.querySelectorAll('.swiper-slide a:not([inert])')[0]).toHaveAttribute('href', '/en/tours/tour-1')
   })
 
-  it('opens the existing tour page and prints a duration, no price (AC-5)', async () => {
-    render(<RouterProvider router={await routerOf(<RoutesSection tours={TOURS} onRetry={() => {}} />)} />)
+  it('draws the deck with the place as masthead and the sub-title, stops and hours at the foot (AC-5)', async () => {
+    const tours = [tour(1, 'both', { title: 'Rigi: From Lake to Sky', durationMinutes: 390, stopCount: 4 })]
+    render(<RouterProvider router={await routerOf(<RoutesSection tours={tours} onRetry={() => {}} />)} />)
 
-    expect(await screen.findByRole('link', { name: /Tour 1/ })).toHaveAttribute('href', '/en/tours/tour-1')
-    expect(screen.getAllByText(/start to finish/i).length).toBe(2)
+    const front = (await screen.findAllByRole('link', { name: /Rigi/ })).find(link => !link.hasAttribute('inert')) as HTMLElement
+
+    expect(front).toHaveAttribute('href', '/en/tours/tour-1')
+    expect(within(front).getByText('Rigi')).toBeInTheDocument()
+    expect(within(front).getByText('From Lake to Sky')).toBeInTheDocument()
+    expect(within(front).getByText('4 stops')).toBeInTheDocument()
+    expect(within(front).getByText('6.5 hours')).toBeInTheDocument()
     expect(document.body.textContent).not.toContain('CHF')
   })
 
-  it('tags a tour that is not in the guest language (AC64)', async () => {
+  it('has no sub-title line for a title without a colon, and no hours without a duration', async () => {
+    render(<RouterProvider router={await routerOf(<RoutesSection tours={[tour(1, 'both', { title: 'Lucerne', durationMinutes: null })]} onRetry={() => {}} />)} />)
+
+    const front = (await screen.findAllByRole('link', { name: /Lucerne/ })).find(link => !link.hasAttribute('inert')) as HTMLElement
+
+    expect(front.textContent).toBe('Lucerne4 stops')
+  })
+
+  it('draws one route as a single card, with no deck, arrows or counter', async () => {
+    render(<RouterProvider router={await routerOf(<RoutesSection tours={[tour(1, 'both', { title: 'Rigi: From Lake to Sky' })]} onRetry={() => {}} />)} />)
+
+    expect(await screen.findByRole('link', { name: /Rigi/ })).toHaveAttribute('href', '/en/tours/tour-1')
+    expect(screen.getAllByRole('link', { name: /Rigi/ })).toHaveLength(1)
+    expect(document.querySelector('.swiper')).toBeNull()
+    expect(screen.queryByRole('button', { name: /route/i })).toBeNull()
+    expect(document.body.textContent).not.toContain('1 of 1')
+  })
+
+  it('makes only the front card focusable and opens the tour in its own language', async () => {
+    render(<RouterProvider router={await routerOf(<RoutesSection tours={[tour(1, 'both', { language: 'de', fallback: true }), tour(2, 'both')]} onRetry={() => {}} />)} />)
+
+    await screen.findAllByRole('link', { name: /Tour/ })
+    const live = document.querySelectorAll('.swiper-slide a:not([inert])')
+
+    expect(live).toHaveLength(1)
+    expect(live[0]).toHaveAttribute('href', '/de/tours/tour-1')
+  })
+
+  it('counts the routes and wraps after the last one, on the buttons (reduced motion, so a change ends at once in jsdom)', async () => {
+    reduceMotion()
+    render(<RouterProvider router={await routerOf(<RoutesSection tours={TOURS} onRetry={() => {}} />)} />)
+
+    const counter = await screen.findByText('1 of 2')
+    const next = screen.getByRole('button', { name: en['homePage.routes.next'] })
+
+    expect(counter.parentElement).toHaveAttribute('aria-live', 'polite')
+    expect(counter.parentElement).toHaveTextContent('1 of 2: Tour 2 · swipe the cards')
+    await userEvent.click(next)
+    expect(await screen.findByText('2 of 2')).toBeInTheDocument()
+    expect(screen.getByText('2 of 2').parentElement).toHaveTextContent('Tour 1')
+    await userEvent.click(next)
+    expect(await screen.findByText('1 of 2')).toBeInTheDocument()
+  })
+
+  it('lays four routes out as twelve slides and counts them out of four', async () => {
+    reduceMotion()
+    const four = [1, 2, 3, 4].map(n => tour(n, 'both'))
+    render(<RouterProvider router={await routerOf(<RoutesSection tours={four} onRetry={() => {}} />)} />)
+
+    expect(await screen.findByText('1 of 4')).toBeInTheDocument()
+    expect(document.querySelectorAll('.swiper-slide:not(.swiper-slide-duplicate)')).toHaveLength(12)
+    await userEvent.click(screen.getByRole('button', { name: en['homePage.routes.next'] }))
+    expect(await screen.findByText('2 of 4')).toBeInTheDocument()
+  })
+
+  it('tags a route that is not in the guest language, as the map card does (AC64)', async () => {
     render(<RouterProvider router={await routerOf(<RoutesSection tours={[tour(1, 'both', { language: 'de', fallback: true })]} onRetry={() => {}} />)} />)
 
-    expect(await screen.findByText(en['map.card.onlyIn.de'])).toBeInTheDocument()
+    expect((await screen.findAllByText(en['map.card.onlyIn.de'])).length).toBeGreaterThan(0)
+  })
+
+  it('speaks German on the German page', async () => {
+    render(<RouterProvider router={await routerOf(<RoutesSection tours={TOURS} onRetry={() => {}} />, 'de')} />)
+
+    expect(await screen.findByRole('button', { name: de['homePage.routes.next'] })).toBeInTheDocument()
+    expect(screen.getByText('1 von 2')).toBeInTheDocument()
+    expect(screen.getAllByText('4 Stopps').length).toBeGreaterThan(0)
   })
 
   it('is not drawn with no tour, and shows an error with retry when the read failed (AC-6)', async () => {

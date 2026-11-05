@@ -158,7 +158,8 @@ describe('[E4.13][AC24][AC54] the server HTML of the home', () => {
     expect(at.every(index => index >= 0)).toBe(true)
     expect(at).toEqual([...at].sort((a, b) => a - b))
     expect(html).not.toContain('CHF')
-    expect(text).not.toMatch(/\b[0-4]\b/)
+    // The route deck's own numbers ("1 of 3", "4 stops", "6.5 hours") are not social-proof counts.
+    expect(text.replace(/\b\d+ of \d+\b/g, '').replace(/[\d.]+ (stops|hours)/g, '')).not.toMatch(/\b[0-4]\b/)
     expect(text).not.toMatch(/review|comment/i)
   })
 

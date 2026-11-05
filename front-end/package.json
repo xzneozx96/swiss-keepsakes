@@ -46,6 +46,7 @@
     "react-is": "19.3.0",
     "recharts": "3.10.1",
     "reicon-react": "1.2.6",
+    "swiper": "14.3.0",
     "temporal-polyfill": "^1.0.6",
     "use-stick-to-bottom": "^1.1.6"
   },

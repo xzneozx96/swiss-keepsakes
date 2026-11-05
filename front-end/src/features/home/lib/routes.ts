@@ -13,3 +13,18 @@ export const HOME_TOUR_COUNT = 10
 export function routeOrder(tours: readonly PublicTourCard[], stay: Stay | null): PublicTourCard[] {
   return rankItems(tours.map(tour => ({ tour, stay: tour.stayTag, interests: [] })), { stay: stay ?? 'short_stay' }).map(entry => entry.tour)
 }
+
+/** "Rigi: From Lake to Sky" reads as the place ("Rigi") and the line under it ("From Lake to Sky"). A title without a colon is all place. */
+export function splitTitle(title: string): { place: string, line: string | undefined } {
+  const at = title.indexOf(': ')
+
+  return at > 0 ? { place: title.slice(0, at), line: title.slice(at + 2) } : { place: title, line: undefined }
+}
+
+/** Swiper's loop with the cards effect wants at least this many slides (it warns and stalls with fewer). */
+const MIN_SLIDES = 9
+
+/** The tours repeated until there are enough slides for the loop, in order: three tours become nine slides. */
+export function loopSlides<T>(tours: readonly T[]): T[] {
+  return tours.length === 0 ? [] : Array.from({ length: Math.ceil(MIN_SLIDES / tours.length) }, () => tours).flat()
+}
