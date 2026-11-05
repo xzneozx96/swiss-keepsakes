@@ -8,7 +8,7 @@ import { FileThumb } from './file-thumb'
 import { TileMark, TileOutline } from './tile-mark'
 import { TILE_GAPS } from './tile-style'
 
-const GRID = `grid grid-cols-3 ${TILE_GAPS} sm:grid-cols-4 lg:grid-cols-6`
+const GRID = `grid grid-cols-3 ${TILE_GAPS} sm:grid-cols-4 lg:grid-cols-5`
 
 function Tile({ item, busy, found, selecting, selected, onPress }: { item: MediaItem, busy: boolean, found: boolean, selecting: boolean, selected: boolean, onPress: () => void }) {
   const { t } = useLocale()
