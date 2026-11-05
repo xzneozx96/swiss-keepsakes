@@ -4,7 +4,6 @@ import type { SearchKind } from '@/features/search/lib/search'
 
 import { Button, SearchField } from '@heroui/react'
 import { useRouter } from '@tanstack/react-router'
-import { useState } from 'react'
 
 import { ChipRow } from '@/components/chip-row'
 import { CloseIcon } from '@/components/icons'
@@ -62,20 +61,22 @@ function KindFilter({ items, active, onChange }: {
  * (`?q=`, `?kind=`) and in the query key, so Back and a shared link reproduce the view and a change starts again at page 1. A tapped
  * interest tile is sent as `interest`; the saved onboarding answers never are (ADR-006).
  */
-export function SearchScreen({ lang, urlQuery, urlKind, onQueryCommit, onKindChange }: {
+export function SearchScreen({ lang, urlQuery, urlKind, urlInterest, onQueryCommit, onKindChange, onInterestChange }: {
   lang: PublicLanguage
   urlQuery: string
   urlKind: SearchKind | undefined
+  /** The tapped tile, from the address so Back and a shared link keep it. */
+  urlInterest: InterestCode | undefined
   onQueryCommit: (query: string) => void
   onKindChange: (kind: SearchKind | undefined) => void
+  onInterestChange: (interest: InterestCode | undefined) => void
 }) {
   const { t, intlLocale } = useLocale()
   const router = useRouter()
   const { value, setValue } = useUrlInput(urlQuery, onQueryCommit)
-  const [chosen, setChosen] = useState<InterestCode>()
   // The URL follows the field after a pause (useUrlInput), so this is the debounced text: no request per keystroke.
   const query = urlQuery.trim()
-  const interest = query ? undefined : chosen
+  const interest = query ? undefined : urlInterest
   const showing = Boolean(query || interest)
   const search = useSearchPages(lang, { q: query, interest, kind: urlKind })
   const pages = search.data?.pages
@@ -96,10 +97,7 @@ export function SearchScreen({ lang, urlQuery, urlKind, onQueryCommit, onKindCha
     : interest
       ? t(isOne(total) ? 'searchScreen.interestCount.one' : 'searchScreen.interestCount.other', { count: total, interest: t(`searchScreen.interest.${interest}`) })
       : t(isOne(total) ? 'searchScreen.resultCount.one' : 'searchScreen.resultCount.other', { count: total, query })
-  const pick = (next: InterestCode) => {
-    setChosen(next)
-    onKindChange(undefined)
-  }
+  const pick = (next: InterestCode) => onInterestChange(next)
 
   return (
     <div className="flex flex-col">
@@ -114,7 +112,9 @@ export function SearchScreen({ lang, urlQuery, urlKind, onQueryCommit, onKindCha
           value={value}
           onChange={(next) => {
             setValue(next)
-            setChosen(undefined)
+            // Typing replaces a tapped tile (the address drops it when the text commits).
+            if (urlInterest)
+              onInterestChange(undefined)
           }}
         >
           {/* The group clips its content; the clear button's 44 px hit area reaches past the 36 px field, so it must not. */}
@@ -128,7 +128,7 @@ export function SearchScreen({ lang, urlQuery, urlKind, onQueryCommit, onKindCha
 
       <div className="flex flex-col gap-5 px-4 pt-2 pb-4">
         {!showing && <InterestTiles onPick={pick} />}
-        {interest && <InterestChip interest={interest} onClear={() => setChosen(undefined)} />}
+        {interest && <InterestChip interest={interest} onClear={() => onInterestChange(undefined)} />}
         {showing && search.isLoading && <SearchRowsSkeleton label={t('searchScreen.searching')} />}
         {failed && (
           <div className="flex flex-col items-start gap-2" role="alert">

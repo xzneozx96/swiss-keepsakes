@@ -268,6 +268,23 @@ describe('[E4.14][AC94] a tile asks the server for its interest and the chip cle
     expect(tiles()).toHaveLength(5)
   })
 
+  it('the tile is in the address, so a shared link opens it, and a long ?q= is cut to the 100 characters the API takes', async () => {
+    api(lion)
+    const { router } = await renderAt('/en/search?interest=history-culture')
+    await screen.findByText('Lion Monument')
+
+    expect(router.state.location.search).toMatchObject({ interest: 'history-culture' })
+    expect(asked[0]!.searchParams.get('interest')).toBe('history-culture')
+  })
+
+  it('a ?q= of 150 characters asks the API for 100', async () => {
+    api(lion)
+    await renderAt(`/en/search?q=${'a'.repeat(150)}`)
+
+    await waitFor(() => expect(asked).toHaveLength(1))
+    expect(asked[0]!.searchParams.get('q')).toHaveLength(100)
+  })
+
   it('ac-4 de: the count line in German', async () => {
     api(lion)
     const { user } = await renderAt('/de/search')

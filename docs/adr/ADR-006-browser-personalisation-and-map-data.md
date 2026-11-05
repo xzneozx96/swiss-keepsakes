@@ -71,6 +71,7 @@ A fourth path is a paid tile provider or tiles self-hosted on object storage. It
 
 ## Amendments
 - 2026-11-05 (owner, chat 05.11.2026, ADR-033): the stories list and the other guest lists are paged, 10 a page, newest first. The browser ranks by the saved answers **within each loaded page**: `rankByTags` reorders a page when it arrives, and rows already on screen do not move. A well-fitting older story no longer rises above newer pages. "Feeds order by stay tag and interests and hide nothing" now holds per page. The privacy rule is unchanged: the answers stay in the browser, and no query, header or body carries them. The pins list stays one whole list. It never drops a pin, and from 80 % of its cap (800 pins) the server logs a warning, so the map moves to a viewport query before the size matters.
+- 2026-11-05: owner allows `interest=<code>` on GET /api/public/search only, sent when a visitor taps an interest tile, never from the saved answers; enforced by onboarding-contract.test.ts.
 
 ## History
 - 2026-10-26 proposed
@@ -81,3 +82,4 @@ A fourth path is a paid tile provider or tiles self-hosted on object storage. It
 - 2026-11-02 amended (owner, pin card E4.7): `photoUrl` replaces `photoKey` on the map item; the pin read carries photos with addresses, the outbound link and the stories
 - 2026-11-04 amended (owner, gate G-S9-D-HOMEDATA, T-E4.13b): the map item also carries `mustVisit`, `tip` and `photoVariants`
 - 2026-11-05 amended (owner, ADR-033): guest lists are paged and the answers rank within each loaded page; the pins list never drops a pin and warns from 800
+- 2026-11-05 amended (owner): `interest=<code>` allowed on GET /api/public/search only (tapped tile, never the saved answers)

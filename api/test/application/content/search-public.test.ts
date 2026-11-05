@@ -1,4 +1,4 @@
-import type { ContentSearchQuery, PublicPinRow, PublicReadRepository, PublicStoryRow, PublicTourRow, SearchHit } from '../../../src/modules/content/read-ports.ts'
+import type { ContentSearchQuery, PublicPinRow, PublicReadRepository, PublicStoryRow, PublicTourRow, SearchHit, SearchKey } from '../../../src/modules/content/read-ports.ts'
 import { publicSearchListSchema } from '@sk/api-contract'
 import { describe, expect, it, vi } from 'vitest'
 import { makeSearchPublic } from '../../../src/modules/content/application/search-public.ts'
@@ -68,13 +68,21 @@ function hit(kind: SearchHit['kind'], n: number, score: string): SearchHit {
   return { kind, id: uuid({ story: 100, place: 200, tour: 300, keepsake: 400 }[kind] + n), score }
 }
 
+// The hits strictly after a cursor key in (rank, id, kind) descending order, as the repositories' row comparison does.
+function afterKey(hits: SearchHit[], after: SearchKey | undefined): SearchHit[] {
+  const sorted = [...hits].sort((a, b) => Number(b.score) - Number(a.score) || (a.id < b.id ? 1 : -1))
+  return after === undefined ? sorted : sorted.filter(h => Number(h.score) < Number(after[0]) || (Number(h.score) === Number(after[0]) && (h.id < after[1] || (h.id === after[1] && h.kind < after[2]))))
+}
+
 function setup(content: SearchHit[], keepsake: SearchHit[], counts = { story: 2, place: 1, tour: 1 }, keepsakeCount = 1, pinOf = (n: number) => pin(n)) {
   const contentAsks: ContentSearchQuery[] = []
   const rowAsks: Record<string, string[]> = {}
   const reads: Pick<PublicReadRepository<null>, 'searchPublished' | 'listPublishedStoriesByIds' | 'listVisiblePinsByIds' | 'listPublishedToursByIds'> = {
     searchPublished: async (_tx, query) => {
       contentAsks.push(query)
-      return { hits: content.filter(h => query.kinds.includes(h.kind as 'story')), counts }
+      const kept = query.kinds.length === 0 ? [] : content.filter(h => query.kinds.includes(h.kind as 'story'))
+      // Like the SQL: best first, strictly after the cursor, `limit + 1` rows.
+      return { hits: afterKey(kept, query.after).slice(0, query.limit + 1), counts }
     },
     listPublishedStoriesByIds: async (_tx, ids) => {
       rowAsks.story = ids
@@ -89,7 +97,7 @@ function setup(content: SearchHit[], keepsake: SearchHit[], counts = { story: 2,
       return ids.map(id => tour(Number(id.slice(-3)) - 300))
     },
   }
-  const keepsakeHits = vi.fn(async (query: { limit: number }) => ({ hits: query.limit === 0 ? [] : keepsake, count: keepsakeCount }))
+  const keepsakeHits = vi.fn(async (query: { limit: number, after?: SearchKey | undefined }) => ({ hits: query.limit === 0 ? [] : afterKey(keepsake, query.after).slice(0, query.limit + 1), count: keepsakeCount }))
   const cards = vi.fn(async (ids: string[]) => ids.map(id => keepsakeCard(Number(id.slice(-3)) - 400)))
   const search = makeSearchPublic({
     uow: { run: work => work(null) },
@@ -168,6 +176,19 @@ describe('[ADR-033][slice 6] the guest search merges the ranked hits of every mo
 
     expect(page.items.map(i => i.kind)).toEqual(['story'])
     expect(page.next).toEqual(['0.8', uuid(101), 'story'])
+  })
+
+  it('an interest-only search ties every hit at rank 0: a two-hit walk across both sources skips and repeats nothing', async () => {
+    const s = setup([hit('story', 1, '0'), hit('story', 2, '0'), hit('tour', 1, '0')], [hit('keepsake', 1, '0'), hit('keepsake', 2, '0')], { story: 2, place: 0, tour: 1 }, 2)
+    const seen: string[] = []
+    let after: SearchKey | undefined
+    do {
+      const page = await s.search({ language: 'en', q: null, interest: 'shopping-keepsakes', limit: 2, after })
+      seen.push(...page.items.map(i => i.card.id))
+      after = page.next ?? undefined
+    } while (after)
+
+    expect(seen).toEqual([uuid(402), uuid(401), uuid(301), uuid(102), uuid(101)])
   })
 
   it('no hit at all is an empty page with no cursor', async () => {

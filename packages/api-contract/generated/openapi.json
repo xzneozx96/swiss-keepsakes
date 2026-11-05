@@ -19899,12 +19899,12 @@
             }
           },
           {
-            "description": "An interest tile the guest tapped on the search screen. Without `q`, the newest titles with that interest come first. It is never the saved onboarding answers (ADR-006): the app sends it only for a tapped tile",
+            "description": "An interest tile the guest tapped on the search screen. Without `q`, the hits come in creation order, newest id first (a `uuidv7`). It is never the saved onboarding answers (ADR-006): the app sends it only for a tapped tile",
             "in": "query",
             "name": "interest",
             "required": false,
             "schema": {
-              "description": "An interest tile the guest tapped on the search screen. Without `q`, the newest titles with that interest come first. It is never the saved onboarding answers (ADR-006): the app sends it only for a tapped tile",
+              "description": "An interest tile the guest tapped on the search screen. Without `q`, the hits come in creation order, newest id first (a `uuidv7`). It is never the saved onboarding answers (ADR-006): the app sends it only for a tapped tile",
               "enum": [
                 "history-culture",
                 "food-drink",

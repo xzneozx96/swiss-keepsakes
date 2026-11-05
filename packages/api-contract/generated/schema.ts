@@ -884,7 +884,7 @@ export interface paths {
                 query: {
                     /** @description The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page */
                     cursor?: string;
-                    /** @description An interest tile the guest tapped on the search screen. Without `q`, the newest titles with that interest come first. It is never the saved onboarding answers (ADR-006): the app sends it only for a tapped tile */
+                    /** @description An interest tile the guest tapped on the search screen. Without `q`, the hits come in creation order, newest id first (a `uuidv7`). It is never the saved onboarding answers (ADR-006): the app sends it only for a tapped tile */
                     interest?: "history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes" | "local-activities";
                     /** @description Only this kind of hit. The counts still cover every kind */
                     kind?: "story" | "place" | "tour" | "keepsake";

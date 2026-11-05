@@ -110,7 +110,7 @@ const tourRoute = publicGet('/api/public/tours/{slug}', 'One published tour guid
 const searchQuery = query.extend({
   ...pageQuery({ defaultLimit: 10 }).shape,
   q: z.string().trim().min(1).max(MAX_SEARCH_QUERY_LENGTH).optional().meta({ description: `The typed text, 1 to ${MAX_SEARCH_QUERY_LENGTH} characters. Accents and Swiss spellings are folded (Loewendenkmal finds Löwendenkmal), and a typo or a part of a word still matches` }),
-  interest: z.enum(interestCodes).optional().meta({ description: 'An interest tile the guest tapped on the search screen. Without `q`, the newest titles with that interest come first. It is never the saved onboarding answers (ADR-006): the app sends it only for a tapped tile' }),
+  interest: z.enum(interestCodes).optional().meta({ description: 'An interest tile the guest tapped on the search screen. Without `q`, the hits come in creation order, newest id first (a `uuidv7`). It is never the saved onboarding answers (ADR-006): the app sends it only for a tapped tile' }),
   kind: searchKindSchema.optional().meta({ description: 'Only this kind of hit. The counts still cover every kind' }),
 }).refine(value => value.q !== undefined || value.interest !== undefined, { message: 'Send `q` or `interest`', path: ['q'] })
 const searchRoute = createRoute({

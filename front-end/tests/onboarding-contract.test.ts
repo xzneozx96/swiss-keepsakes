@@ -91,3 +91,33 @@ describe('[E4.5][AC37] the guest answers never reach the API', () => {
     expect(offenders).toEqual([])
   })
 })
+
+/**
+ * `interest` (singular) is a tapped interest tile, allowed on one route only (owner, 05.11.2026, ADR-006 amendment). It is never
+ * built from the saved answers, which `interests` and `segment` above guard on every route.
+ */
+const TILE_ROUTE = 'get /api/public/search'
+
+describe('[ADR-006] interest is allowed on the search route only, and never from the saved answers', () => {
+  const carriers = () => Object.entries(document.paths).flatMap(([path, methods]) => Object.entries(methods).flatMap(([method, operation]) => [
+    ...(operation.parameters ?? []).filter(p => p.name.toLowerCase() === 'interest').map(p => `${method} ${path} (${p.in})`),
+    ...Object.values(operation.requestBody?.content ?? {}).flatMap(media => bodyNames(media.schema).filter(({ name }) => name === 'interest').map(() => `${method} ${path} (body)`)),
+  ]))
+
+  it('no other route takes interest in a query, header, cookie or body', () => {
+    expect(carriers().filter(carrier => !carrier.startsWith(TILE_ROUTE))).toEqual([])
+  })
+
+  it('the exemption is not stale: the search route takes it as a query parameter', () => {
+    expect(carriers()).toEqual([`${TILE_ROUTE} (query)`])
+  })
+
+  it('the search feature never reads the onboarding store, so the saved answers cannot reach the request', () => {
+    const root = join(FRONT_END, 'src/features/search/')
+    const files = (readdirSync(root, { recursive: true }) as string[]).filter(file => /\.tsx?$/.test(file))
+    const offenders = files.filter(file => /features\/onboarding|sk\.onboarding|useOnboarding/.test(readFileSync(root + file, 'utf8')))
+
+    expect(files.length).toBeGreaterThan(3)
+    expect(offenders).toEqual([])
+  })
+})
