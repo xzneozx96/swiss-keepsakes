@@ -1,9 +1,8 @@
 import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
 
-import { Button, Checkbox, CheckboxGroup } from '@heroui/react'
+import { Button, Checkbox, CheckboxGroup, Disclosure } from '@heroui/react'
 import { useState } from 'react'
 
-import { ChevronDownIcon } from '@/components/icons'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { categoryName, countHighlighted, keepHighlighted, subCategories, topLevelCategories } from '@/features/map/lib/categories'
@@ -90,39 +89,53 @@ export function CategoriesSheet({
             const isOpen = open.has(category.id)
             const name = categoryName(category, language)
 
+            const parent = (
+              <Checkbox
+                className="min-h-12 flex-1 justify-center py-2"
+                isIndeterminate={!draft.includes(category.id) && ticked.length > 0}
+                isSelected={draft.includes(category.id)}
+                onChange={() => setDraft(toggleParent(draft, category.id, categories))}
+              >
+                <Checkbox.Content className="w-full flex-row items-center gap-3">
+                  <Checkbox.Control className="size-5 shrink-0 rounded-md">
+                    <Checkbox.Indicator />
+                  </Checkbox.Control>
+                  <span className="flex-1">{name}</span>
+                  <span className="text-sm text-muted tabular-nums">{countHighlighted(pins, category.id, categories)}</span>
+                </Checkbox.Content>
+              </Checkbox>
+            )
+
+            if (children.length === 0) {
+              return (
+                <div key={category.id} className="flex items-center gap-1 border-b border-separator last:border-b-0">
+                  {parent}
+                  {ARROW_SLOT}
+                </div>
+              )
+            }
+
             return (
-              <div key={category.id} className="border-b border-separator last:border-b-0">
+              // HeroUI's Disclosure animates the sub-category rows open and shut (height and fade, off with reduced motion).
+              <Disclosure
+                key={category.id}
+                className="border-b border-separator last:border-b-0"
+                isExpanded={isOpen}
+                onExpandedChange={expanded => setOpen(current => expanded ? new Set(current).add(category.id) : new Set([...current].filter(id => id !== category.id)))}
+              >
                 <div className="flex items-center gap-1">
-                  <Checkbox
-                    className="min-h-12 flex-1 justify-center py-2"
-                    isIndeterminate={!draft.includes(category.id) && ticked.length > 0}
-                    isSelected={draft.includes(category.id)}
-                    onChange={() => setDraft(toggleParent(draft, category.id, categories))}
-                  >
-                    <Checkbox.Content className="w-full flex-row items-center gap-3">
-                      <Checkbox.Control className="size-5 shrink-0 rounded-md">
-                        <Checkbox.Indicator />
-                      </Checkbox.Control>
-                      <span className="flex-1">{name}</span>
-                      <span className="text-sm text-muted tabular-nums">{countHighlighted(pins, category.id, categories)}</span>
-                    </Checkbox.Content>
-                  </Checkbox>
-                  {children.length === 0
-                    ? ARROW_SLOT
-                    : (
-                        <button
-                          aria-expanded={isOpen}
-                          aria-label={t('map.filter.subcategories', { name })}
-                          className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted outline-none focus-visible:focus-ring"
-                          type="button"
-                          onClick={() => setOpen(current => isOpen ? new Set([...current].filter(id => id !== category.id)) : new Set(current).add(category.id))}
-                        >
-                          <ChevronDownIcon aria-hidden className={`transition-transform duration-200 ease-out ${isOpen ? 'rotate-180' : ''}`} size={16} />
-                        </button>
-                      )}
+                  {parent}
+                  <Disclosure.Heading>
+                    <Disclosure.Trigger
+                      aria-label={t('map.filter.subcategories', { name })}
+                      className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted"
+                    >
+                      <Disclosure.Indicator />
+                    </Disclosure.Trigger>
+                  </Disclosure.Heading>
                 </div>
                 {/* Each sub-category row has mt-0: the HeroUI group puts 16 px between its checkboxes. The rows are 40 px, tighter than the 48 px categories (owner, 05.11.2026). */}
-                {children.length > 0 && isOpen && (
+                <Disclosure.Content>
                   <CheckboxGroup
                     aria-label={name}
                     className="flex flex-col gap-0 ps-8"
@@ -144,8 +157,8 @@ export function CategoriesSheet({
                       </div>
                     ))}
                   </CheckboxGroup>
-                )}
-              </div>
+                </Disclosure.Content>
+              </Disclosure>
             )
           })}
         </div>
