@@ -100,7 +100,7 @@ function Postcard({ pin, hours }: { pin: PublicMapItem, hours: string | undefine
                       <Link className={`${TAP} flex-1 bg-white px-5 text-[15px] font-semibold text-foreground`} params={{ lang: language, slug: pin.mainStorySlug }} to="/$lang/stories/$slug">
                         {t('homePage.must.story')}
                       </Link>
-                      <a aria-label={t('map.directions')} className={`${TAP} size-12 shrink-0 bg-black/30 text-white ring-1 ring-white/50 ring-inset`} href={maps} rel="noreferrer" target="_blank">
+                      <a aria-label={t('map.directions')} className={`${TAP} size-12 shrink-0 bg-accent text-accent-foreground shadow-overlay`} href={maps} rel="noreferrer" target="_blank">
                         <OpenInMapsIcon aria-hidden size={20} />
                       </a>
                     </>
