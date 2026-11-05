@@ -3,7 +3,7 @@ import type { ProductAction } from './product-rows'
 import type { MutationFeedback } from '@/features/data-client'
 import type { ProductTab } from '@/features/merchant/products/lib/search-params'
 
-import { buttonVariants } from '@heroui/react'
+import { Alert, buttonVariants } from '@heroui/react'
 import { pickText } from '@sk/domain/shared'
 import { Link, useNavigate } from '@tanstack/react-router'
 
@@ -241,6 +241,16 @@ export function MerchantProducts({ tab }: { tab: ProductsTab }) {
         trailing={groups && <FilterButtons groups={groups} />}
       />
       {groups && <FilterChips groups={groups} />}
+      {/* The Tours tab is still the prototype on demo data; the real tour editor comes with release 2b (owner, 05.11.2026). */}
+      {tab === 'tours' && (
+        <Alert status="warning">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>{t('products.tours.demoTitle')}</Alert.Title>
+            <Alert.Description>{t('products.tours.demoBody')}</Alert.Description>
+          </Alert.Content>
+        </Alert>
+      )}
       {panel(tab)}
       {dialog}
     </div>

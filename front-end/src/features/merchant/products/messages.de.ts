@@ -27,6 +27,8 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   'products.empty.archived': 'Nichts archiviert.',
   'products.tab.gifts': 'Andenken',
   'products.tab.tours': 'Touren',
+  'products.tours.demoTitle': 'Beispieltouren',
+  'products.tours.demoBody': 'Diese Touren, Preise und Termine sind Demodaten und ändern nichts an dem, was Gäste sehen. Der Tour-Editor kommt in einem späteren Release.',
   'products.tab.pickup': 'Abholstellen',
   'products.empty.gifts': 'Noch keine Andenken.',
   'products.empty.tours': 'Noch keine Touren.',

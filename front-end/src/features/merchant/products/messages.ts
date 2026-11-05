@@ -26,6 +26,8 @@ export const productsEn = {
   'products.empty.archived': 'Nothing archived.',
   'products.tab.gifts': 'Keepsakes',
   'products.tab.tours': 'Tours',
+  'products.tours.demoTitle': 'Sample tours',
+  'products.tours.demoBody': 'These tours, prices and departures are demo data and do not change what guests see. The tour editor comes in a later release.',
   'products.tab.pickup': 'Pickup points',
   'products.empty.gifts': 'No keepsakes yet.',
   'products.empty.tours': 'No tours yet.',
