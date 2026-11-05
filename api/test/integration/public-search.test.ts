@@ -94,20 +94,24 @@ describe('the public search over the database', () => {
     const store = randomUUID()
     const tag = word()
     const id = await story(store, `${tag} Kapellbrücke`)
+    // The other tests' rows share the database, so these look for this test's id among the hits, and search the word alone:
+    // the shared tag would add trigram similarity to every title that has it.
+    const found = async (q: string) => (await idsOf({ language: 'en', q, interest: null, limit: 20 })).includes(id)
 
-    expect(await idsOf({ language: 'en', q: `${tag} Kapellbr`, interest: null, limit: 20 })).toEqual([id])
-    expect(await idsOf({ language: 'en', q: `${tag} Kapelbrucke`, interest: null, limit: 20 })).toEqual([id])
-    expect(await idsOf({ language: 'en', q: `${tag} Rathaus`, interest: null, limit: 20 })).toEqual([])
+    expect(await found('Kapellbr')).toBe(true)
+    expect(await found('Kapelbrucke')).toBe(true)
+    expect(await found('Rathaus')).toBe(false)
   })
 
-  it('[ADR-033] English and German words are stemmed: "bridges" finds "bridge", "Brücken" finds "Brücke"', async () => {
+  it('[ADR-033] English and German words are stemmed: "bridges" finds "bridge", "Brücken" finds "Brücke", and not the other language\'s title', async () => {
     const store = randomUUID()
-    const tag = word()
-    const en = await story(store, `${tag} old bridge`)
-    const de = await story(store, `${tag} alte Brücke`, { language: 'de' })
+    const en = await story(store, `${word()} old bridge`)
+    const de = await story(store, `${word()} alte Brücke`, { language: 'de' })
+    const hits = async (q: string, language: 'en' | 'de') => await idsOf({ language, q, interest: null, limit: 20 })
 
-    expect(await idsOf({ language: 'en', q: `${tag} bridges`, interest: null, limit: 20 })).toEqual([en])
-    expect(await idsOf({ language: 'de', q: `${tag} Brücken`, interest: null, limit: 20 })).toEqual([de])
+    expect(await hits('bridges', 'en')).toContain(en)
+    expect(await hits('Brücken', 'de')).toContain(de)
+    expect(await hits('Brücken', 'de')).not.toContain(en)
   })
 
   it('[ADR-033] a draft story and an unpublished tour or keepsake are never found, and a count does not include them', async () => {
