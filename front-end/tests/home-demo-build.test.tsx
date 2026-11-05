@@ -9,7 +9,7 @@ import { VictorinoxSection } from '@/features/home/components/victorinox-section
 import { en } from '@/i18n/en'
 
 vi.mock('@/lib/api-mode', () => ({ apiEnabled: false }))
-vi.mock('@/features/catalog/api/keepsakes', async importOriginal => ({ ...await importOriginal<typeof import('@/features/catalog/api/keepsakes')>(), loadKeepsakesPage: vi.fn(), loadAllKeepsakes: vi.fn() }))
+vi.mock('@/features/catalog/api/keepsakes', async importOriginal => ({ ...await importOriginal<typeof import('@/features/catalog/api/keepsakes')>(), loadKeepsakesPage: vi.fn() }))
 
 describe('[E4.13][AC95] the demo build of the home', () => {
   it('sends no keepsake request and shows no error block in the showcase (no API in the demo)', async () => {

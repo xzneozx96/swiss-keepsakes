@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { loadAllKeepsakes, loadKeepsakesPage } from '@/features/catalog/api/keepsakes'
+import { loadKeepsakesPage } from '@/features/catalog/api/keepsakes'
 
 const item = {
   id: '0b1f3c1e-0a53-4d5e-8f0d-2f0f4d3b8a11',
@@ -56,22 +56,5 @@ describe('[E6.4][AC61][ADR-033] loadKeepsakesPage reads one page of the public l
     // The old whole-list shape has no total and no nextCursor.
     vi.stubGlobal('fetch', async () => Response.json({ items: [item] }))
     await expect(loadKeepsakesPage('en', { limit: 10 })).rejects.toThrow()
-  })
-})
-
-describe('[ADR-033] loadAllKeepsakes loops the pages for the search', () => {
-  it('reads 20 a page until nextCursor is null, and joins the items', async () => {
-    const asked: URL[] = []
-    vi.stubGlobal('fetch', async (input: Request) => {
-      const url = new URL(input.url)
-      asked.push(url)
-      const page = Number(url.searchParams.get('cursor') ?? 0)
-      return Response.json({ items: [{ ...item, id: crypto.randomUUID(), slug: `k-${page}` }], total: 2, nextCursor: page === 0 ? '1' : null })
-    })
-
-    const all = await loadAllKeepsakes('en')
-
-    expect(all.map(i => i.slug)).toEqual(['k-0', 'k-1'])
-    expect(asked.map(u => u.searchParams.get('limit'))).toEqual(['20', '20'])
   })
 })

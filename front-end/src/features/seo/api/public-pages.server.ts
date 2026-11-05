@@ -34,7 +34,7 @@ async function readCards(
   lang: PublicLanguage,
 ): Promise<PublicCard[]> {
   try {
-    // The lists are paged (ADR-033): read every page, 20 at a time, until the search moves to the server.
+    // The lists are paged (ADR-033). The sitemap needs every published slug and the search cannot give it, so it reads every page, 20 at a time.
     const path = kind === 'stories' ? '/api/public/stories' : '/api/public/tours'
     const items: unknown = await readAllPages(cursor => answer(client.GET(path, { params: { query: { lang, limit: MAX_PAGE_LIMIT, ...(cursor ? { cursor } : {}) } }, ...timeout(PAGE_READ_TIMEOUT_MS) })), `Sitemap ${kind} in ${lang}`)
     const parsed = (kind === 'stories' ? storyCards : tourCards).parse(items)

@@ -301,7 +301,7 @@ Each slice is one story and one PR. Each leaves every screen working.
 - Merchants keep page numbers and a jump to page N. The cost is the offset rules of § 6 and a row that can shift during an edit.
 - Ranking by answers works within a page only. A well-fitting older story no longer rises above newer pages (§ 9).
 - The category chips and "N stories" need two small server answers (`storyCount`, `total`). Today the client derives them from the full list.
-- Two consumers (sitemap, search) loop over pages for a while. That is debt until slice 6.
+- The sitemap loops over pages (it needs every slug). Search no longer does: it runs on the server (slice 6).
 - Infinite scroll needs care for keyboard and screen reader users (§ 8). The fallback button and the live region are part of the shared component, not of each screen.
 - Whole lists get a visible warning before they grow too large. The map never hides a pin, so its size limit is a warning that starts the viewport decision.
 
@@ -344,6 +344,13 @@ The owner did not answer the remaining three questions. The coordinator's defaul
 - 2026-11-05 (owner, chat 05.11.2026), two decisions after acceptance. The body above is updated to match.
   - **Page size.** Every paged list, cursor and numbered alike, returns 10 rows by default and at most 20 per request. This replaces the earlier maximum of 100 (§ 1, § 6). Admin stores move from default 50 to default 10. The sitemap and search loops use `limit=20`. The media library's photo wall (24 a page today) moves to 20 in slice 5: the owner chose 20 for consistency (05.11.2026). The page size is not the cap of a whole list (see the Decision).
   - **Tours are paged.** `GET /api/public/tours` moves from "whole, cap 200" to the cursor, 10 a load with infinite scroll, like the other guest lists, because "there might be more in the future". It lands in slice 3 with guest keepsakes. The home routes rail asks for the first page. Search reads tours through its page loop until the search slice (6).
+
+- 2026-11-05 (slice 6 built, branch `adr033-slice6`; the interest decision and the migration wait for the owner).
+  - **Route.** `GET /api/public/search?lang&q&interest&kind&limit&cursor` is a cursor list over published stories, visible places, tours and keepsakes (10 a load, at most 20). Each hit is the card its own list shows, so the screen reuses them. `total` and `counts` (per kind) come with every page.
+  - **Ranking and cursor.** Rank is `ts_rank` plus trigram word similarity. The cursor key is `(rank, id, kind)`, descending, with the rank as the text of a double (it round-trips exactly), so no hit repeats or is skipped at a page edge. Each module ranks its own titles and the content module merges them; the keepsakes come through a port wired in `main.ts` (ADR-013).
+  - **Matching.** Full text with the English and German dictionaries, `ILIKE` for partial words, `pg_trgm` for typos. Titles are stored folded, with the `ae/oe/ue` form beside it, so "Loewendenkmal" finds "Löwendenkmal". It matches the titles in both languages, whatever `lang` says; `lang` only picks the language of the card. Migration `0028` is in `docs/proposed-migrations/` until the owner approves it.
+  - **Interest filter (decision 4, proposed).** An `interest=` parameter is allowed for a tile the guest taps on the search screen. The screen never fills it from the saved onboarding answers, so ADR-006 stands. The parameter is `interest`, not `interests`, and the contract test of ADR-006 (`onboarding-contract.test.ts`) still passes. Waits for the owner to confirm.
+  - **Sitemap.** It keeps its page loop (20 a page, `readAllPages`), because it needs every published slug and the search cannot give that. A slug-only whole list would be a new route and needs its own decision.
 
 ## History
 - 2026-11-05 proposed (owner question on pagination; research and audit of every list route)

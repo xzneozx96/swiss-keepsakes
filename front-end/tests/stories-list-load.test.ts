@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { loadBlogCategories, loadPublicStories, loadPublicStoriesPage } from '@/features/content/api/public-stories'
+import { loadBlogCategories, loadPublicStoriesPage } from '@/features/content/api/public-stories'
 import { storiesHead } from '@/features/content/lib/stories-head'
 import { contentEn } from '@/features/content/messages'
 import { contentDe as de } from '@/features/content/messages.de'
@@ -40,26 +40,10 @@ describe('[E4.4] public stories read', () => {
     expect(Object.fromEntries(new URL(urls[0]!).searchParams)).toEqual({ lang: 'en', limit: '10' })
   })
 
-  it('[ADR-033] loadPublicStories (search) reads every page at 20 until nextCursor is null', async () => {
-    const urls: string[] = []
-    vi.stubGlobal('fetch', async (input: Request | string) => {
-      const url = new URL(typeof input === 'string' ? input : input.url)
-      urls.push(`${url.searchParams.get('limit')}:${url.searchParams.get('cursor')}`)
-      return url.searchParams.get('cursor') === null
-        ? Response.json({ items: [storyCard({ title: 'One' })], total: 2, nextCursor: 'p2' })
-        : Response.json({ items: [storyCard({ title: 'Two' })], total: 2, nextCursor: null })
-    })
-
-    const items = await loadPublicStories('en')
-
-    expect(items.map(s => s.title)).toEqual(['One', 'Two'])
-    expect(urls).toEqual(['20:null', '20:p2'])
-  })
-
   it('[E4.4][AC54] a failed read throws, so the page shows the error and never a demo story', async () => {
     vi.stubGlobal('fetch', async () => new Response('{}', { status: 500 }))
 
-    await expect(loadPublicStories('en')).rejects.toThrow()
+    await expect(loadPublicStoriesPage('en', { limit: 10 })).rejects.toThrow()
   })
 })
 

@@ -1,21 +1,22 @@
+import type { PublicLanguage } from '@sk/api-contract'
 import type { InterestCode } from './interest-codes'
-import type { SearchKind, SearchSources } from '@/features/search/lib/search'
+import type { SearchKind } from '@/features/search/lib/search'
 
-import { SearchField } from '@heroui/react'
+import { Button, SearchField } from '@heroui/react'
 import { useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { ChipRow } from '@/components/chip-row'
 import { CloseIcon } from '@/components/icons'
+import { InfiniteList } from '@/components/infinite-list'
 import { BackButton } from '@/components/layout/cart-button'
 import { useLocale } from '@/contexts/locale-context'
 import { AdviceBanner } from '@/features/discovery/components/advice-banner'
-import { interestResults, kindFilter, searchAll, suggestNames } from '@/features/search/lib/search'
+import { SEARCH_QUERY_MAX, useSearchPages } from '@/features/search/api/search-reads'
+import { kindFilter, toResult } from '@/features/search/lib/search'
 import { useUrlInput } from '@/hooks/use-url-input'
 import { InterestTiles } from './interest-tiles'
 import { SearchRow, SearchRowsSkeleton } from './search-row'
-
-const KINDS: readonly SearchKind[] = ['place', 'story', 'tour', 'keepsake']
 
 /** The chosen interest as a chip; its clear button has a 44 px hit area. */
 function InterestChip({ interest, onClear }: { interest: InterestCode, onClear: () => void }) {
@@ -56,39 +57,49 @@ function KindFilter({ items, active, onChange }: {
 }
 
 /**
- * C24 Search, "One list" (docs/ux/search-design.md). The lists come in as props: the route reads them from the API and this
- * screen only matches (T-E4.14a), so tests pass fake lists. `failed` names the kinds whose read failed; the rest still show.
- * `urlQuery` and `onQueryCommit` bind the field to `?q=`.
+ * C24 Search, "One list" (docs/ux/search-design.md). The server matches and ranks (ADR-033, slice 6): the field's text goes to
+ * `GET /api/public/search` once the typing pauses, ten hits a page with infinite scroll. The text and the kind are in the address
+ * (`?q=`, `?kind=`) and in the query key, so Back and a shared link reproduce the view and a change starts again at page 1. A tapped
+ * interest tile is sent as `interest`; the saved onboarding answers never are (ADR-006).
  */
-export function SearchScreen({ sources, failed, isLoading, urlQuery, onQueryCommit }: {
-  sources: SearchSources
-  failed: readonly SearchKind[]
-  isLoading: boolean
+export function SearchScreen({ lang, urlQuery, urlKind, onQueryCommit, onKindChange }: {
+  lang: PublicLanguage
   urlQuery: string
+  urlKind: SearchKind | undefined
   onQueryCommit: (query: string) => void
+  onKindChange: (kind: SearchKind | undefined) => void
 }) {
-  const { t } = useLocale()
+  const { t, intlLocale } = useLocale()
   const router = useRouter()
-  const { value, setValue, deferred } = useUrlInput(urlQuery, onQueryCommit)
+  const { value, setValue } = useUrlInput(urlQuery, onQueryCommit)
   const [chosen, setChosen] = useState<InterestCode>()
-  const [kind, setKind] = useState<'all' | SearchKind>('all')
-  const query = deferred.trim()
+  // The URL follows the field after a pause (useUrlInput), so this is the debounced text: no request per keystroke.
+  const query = urlQuery.trim()
   const interest = query ? undefined : chosen
   const showing = Boolean(query || interest)
-  const results = interest ? interestResults(sources, interest) : searchAll(sources, query)
-  const filter = kindFilter(results)
-  // A filter the new results have nothing for falls back to All.
-  const active = filter?.some(item => item.kind === kind) ? kind : 'all'
-  const shown = active === 'all' ? results : results.filter(r => r.kind === active)
-  const missing = KINDS.filter(k => failed.includes(k)).map(k => t(`searchScreen.group.${k}`)).join(', ')
-  const noMatch = showing && !isLoading && results.length === 0
-  const names = noMatch ? suggestNames(sources) : []
-  const hasResults = showing && !isLoading && results.length > 0
-  const countLine = !hasResults
+  const search = useSearchPages(lang, { q: query, interest, kind: urlKind })
+  const pages = search.data?.pages
+  const last = pages?.at(-1)
+  // A hit that moved onto a later page while the guest scrolled shows once.
+  const results = [...new Map((pages?.flatMap(page => page.items) ?? []).flatMap((item) => {
+    const row = toResult(item)
+    return row ? [[row.key, row] as const] : []
+  })).values()]
+  const total = last?.total ?? 0
+  const filter = last ? kindFilter(last.counts) : null
+  const isOne = (count: number) => new Intl.PluralRules(intlLocale).select(count) === 'one'
+  const failed = showing && search.isError && !pages
+  const noMatch = showing && !search.isLoading && !failed && Boolean(pages) && total === 0
+  const hasResults = showing && results.length > 0
+  const countLine = !showing || !last || total === 0
     ? ''
     : interest
-      ? t(shown.length === 1 ? 'searchScreen.interestCount.one' : 'searchScreen.interestCount.other', { count: shown.length, interest: t(`searchScreen.interest.${interest}`) })
-      : t(shown.length === 1 ? 'searchScreen.resultCount.one' : 'searchScreen.resultCount.other', { count: shown.length, query })
+      ? t(isOne(total) ? 'searchScreen.interestCount.one' : 'searchScreen.interestCount.other', { count: total, interest: t(`searchScreen.interest.${interest}`) })
+      : t(isOne(total) ? 'searchScreen.resultCount.one' : 'searchScreen.resultCount.other', { count: total, query })
+  const pick = (next: InterestCode) => {
+    setChosen(next)
+    onKindChange(undefined)
+  }
 
   return (
     <div className="flex flex-col">
@@ -109,30 +120,30 @@ export function SearchScreen({ sources, failed, isLoading, urlQuery, onQueryComm
           {/* The group clips its content; the clear button's 44 px hit area reaches past the 36 px field, so it must not. */}
           <SearchField.Group className="overflow-visible">
             <SearchField.SearchIcon />
-            <SearchField.Input className="w-full" placeholder={t('searchScreen.placeholder')} />
+            <SearchField.Input className="w-full" maxLength={SEARCH_QUERY_MAX} placeholder={t('searchScreen.placeholder')} />
             <SearchField.ClearButton className="relative after:absolute after:-inset-3 after:content-['']" />
           </SearchField.Group>
         </SearchField>
       </div>
 
       <div className="flex flex-col gap-5 px-4 pt-2 pb-4">
-        {!showing && <InterestTiles onPick={setChosen} />}
+        {!showing && <InterestTiles onPick={pick} />}
         {interest && <InterestChip interest={interest} onClear={() => setChosen(undefined)} />}
-        {showing && failed.length > 0 && <p className="text-label text-muted">{t('searchScreen.failed', { kinds: missing })}</p>}
-        {showing && isLoading && <SearchRowsSkeleton label={t('searchScreen.searching')} />}
+        {showing && search.isLoading && <SearchRowsSkeleton label={t('searchScreen.searching')} />}
+        {failed && (
+          <div className="flex flex-col items-start gap-2" role="alert">
+            <p className="text-label text-danger">{t('searchScreen.error')}</p>
+            <Button size="sm" variant="secondary" onPress={() => void search.refetch()}>{t('routeError.retry')}</Button>
+          </div>
+        )}
         {/* One live region, always mounted, so a screen reader announces its text change (the count, or the no-match line). */}
         <div className={noMatch ? 'flex flex-col gap-1 pt-2' : undefined} role="status">
-          {noMatch && (
-            <>
-              <p className="font-serif text-card-title">{t('searchScreen.noResults', { query })}</p>
-              {names.length > 0 && <p className="text-sm text-muted">{t('searchScreen.noResultsHint', { names: names.join(', ') })}</p>}
-            </>
-          )}
+          {noMatch && <p className="font-serif text-card-title">{t('searchScreen.noResults', { query })}</p>}
           {countLine && <p className="text-label text-muted">{countLine}</p>}
         </div>
         {noMatch && (
           <>
-            <InterestTiles onPick={setChosen} />
+            <InterestTiles onPick={pick} />
             <AdviceBanner
               action={t('home.advice.action')}
               body={t('home.advice.body')}
@@ -141,17 +152,25 @@ export function SearchScreen({ sources, failed, isLoading, urlQuery, onQueryComm
             />
           </>
         )}
+        {showing && filter && <KindFilter active={urlKind ?? 'all'} items={filter} onChange={kind => onKindChange(kind === 'all' ? undefined : kind)} />}
         {hasResults && (
-          <>
-            {filter && <KindFilter active={active} items={filter} onChange={setKind} />}
+          <InfiniteList
+            announce={added => t(isOne(added) ? 'searchScreen.more.one' : 'searchScreen.more.other', { count: added })}
+            count={results.length}
+            endText={t(isOne(total) ? 'searchScreen.end.one' : 'searchScreen.end.other', { count: total })}
+            hasMore={search.hasNextPage}
+            isFailed={search.isFetchNextPageError}
+            isLoading={search.isFetchingNextPage}
+            onLoadMore={() => void search.fetchNextPage()}
+          >
             <ul aria-label={t('searchScreen.results')} className="-mt-3 flex flex-col divide-y divide-separator">
-              {shown.map(result => (
+              {results.map(result => (
                 <li key={result.key}>
                   <SearchRow result={result} />
                 </li>
               ))}
             </ul>
-          </>
+          </InfiniteList>
         )}
       </div>
     </div>

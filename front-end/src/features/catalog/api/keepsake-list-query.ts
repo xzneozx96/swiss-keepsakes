@@ -3,7 +3,7 @@ import { queryOptions } from '@tanstack/react-query'
 import { fromApi } from '@/features/data-client/api-transport'
 import { pagedQueryOptions } from '@/features/data-client/paged-query'
 import { queryKeys } from '@/features/data-client/query-keys'
-import { KEEPSAKES_PAGE_SIZE, loadAllKeepsakes, loadKeepsakesPage } from './keepsakes'
+import { KEEPSAKES_PAGE_SIZE, loadKeepsakesPage } from './keepsakes'
 
 // The keys are not under the merchant prefix, so a merchant change never refetches the guest lists.
 
@@ -24,9 +24,4 @@ export function publicKeepsakesQuery(lang: PublicLanguage, category: string | nu
  */
 export function firstKeepsakes(lang: PublicLanguage, limit: number = KEEPSAKES_PAGE_SIZE) {
   return queryOptions({ ...fromApi, queryKey: [...queryKeys.keepsakes.publicList, 'first', lang, limit], queryFn: () => loadKeepsakesPage(lang, { limit }) })
-}
-
-/** Every published keepsake, for the search until it moves to the server (ADR-033, slice 6). */
-export function allKeepsakes(lang: PublicLanguage) {
-  return queryOptions({ ...fromApi, queryKey: [...queryKeys.keepsakes.publicList, 'all', lang], queryFn: () => loadAllKeepsakes(lang) })
 }

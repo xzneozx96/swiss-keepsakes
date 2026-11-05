@@ -27,7 +27,7 @@ import { Route as HomeRoute } from '@/routes/_guest/$lang/index'
 
 vi.mock('@/lib/api-mode', () => ({ apiEnabled: true }))
 vi.mock('@/features/home/api/home-reads', () => ({ loadHomeRead: vi.fn() }))
-vi.mock('@/features/catalog/api/keepsakes', async importOriginal => ({ ...await importOriginal<typeof import('@/features/catalog/api/keepsakes')>(), loadKeepsakesPage: vi.fn(), loadAllKeepsakes: vi.fn() }))
+vi.mock('@/features/catalog/api/keepsakes', async importOriginal => ({ ...await importOriginal<typeof import('@/features/catalog/api/keepsakes')>(), loadKeepsakesPage: vi.fn() }))
 vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: vi.fn(), fetchMapCategories: vi.fn(), fetchMapPin: vi.fn() }))
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`

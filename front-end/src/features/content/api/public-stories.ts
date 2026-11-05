@@ -1,6 +1,5 @@
 import type { PublicCategory, PublicLanguage, PublicStoryList } from '@sk/api-contract'
 import { answer, PAGE_READ_TIMEOUT_MS, timeout } from '@/features/data-client/api-transport'
-import { readAllPages } from '@/features/data-client/paged-query'
 import { apiOrigin } from '@/lib/api-origin'
 
 /** Stories a page of the guest list holds (owner, 05.11.2026). The API allows 20 at most. */
@@ -24,13 +23,6 @@ export async function loadPublicStoriesPage(lang: PublicLanguage, { category, cu
   const list = await answer(createApiClient(apiOrigin()).GET('/api/public/stories', { ...timeout(PAGE_READ_TIMEOUT_MS), params: { query: { lang, limit, ...(cursor ? { cursor } : {}), ...(category ? { category } : {}) } } }))
 
   return publicStoryListSchema.parse(list)
-}
-
-/** Every published story in one language, newest first, read page by page. Search needs the whole list until it moves to the server (ADR-033, slice 6). */
-export async function loadPublicStories(lang: PublicLanguage) {
-  // The contract package loads on the first read, so the constant comes from it and not from a static import.
-  const { MAX_PAGE_LIMIT } = await import('@sk/api-contract')
-  return readAllPages(cursor => loadPublicStoriesPage(lang, { cursor, limit: MAX_PAGE_LIMIT }), `Stories in ${lang}`)
 }
 
 /** Every blog category, parents first, with both names, as `GET /api/public/blog-categories` sends them. Throws when the read fails; the list then shows without a filter. */

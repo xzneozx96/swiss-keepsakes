@@ -28,8 +28,11 @@ export const searchScreenDe: Record<keyof typeof searchScreenEn, string> = {
   'searchScreen.group.tour': 'Touren',
   'searchScreen.group.keepsake': 'Andenken',
   'searchScreen.noResults': 'Noch nichts zu «{query}»',
-  'searchScreen.noResultsHint': 'Versuchen Sie {names}, oder schauen Sie auf der Karte.',
   'searchScreen.opensMap': 'Öffnet die Karte',
   'searchScreen.searching': 'Suche läuft …',
-  'searchScreen.failed': '{kinds} konnten nicht geladen werden. Der Rest wird angezeigt.',
+  'searchScreen.error': 'Die Suche ist gerade nicht erreichbar.',
+  'searchScreen.more.one': '{count} weiterer Treffer',
+  'searchScreen.more.other': '{count} weitere Treffer',
+  'searchScreen.end.one': 'Das ist der einzige Treffer',
+  'searchScreen.end.other': 'Das sind alle {count} Treffer',
 }

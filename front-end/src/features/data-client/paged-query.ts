@@ -28,7 +28,8 @@ export function pagedQueryOptions<P extends CursorPage>({ queryKey, read }: { qu
 export const MAX_PAGES = 100
 
 /**
- * Every item of a cursor list, page after page. Search and the sitemap use it until the search moves to the server (ADR-033, slice 6).
+ * Every item of a cursor list, page after page. Only the sitemap uses it: it needs every published slug, which the search cannot give
+ * (ADR-033 names no whole-list read for it, so it keeps its loop at 20 a page).
  * It stops after `MAX_PAGES` pages and logs an error, so a list that never ends cannot loop forever.
  */
 export async function readAllPages<P extends CursorPage>(read: (cursor: string | undefined) => Promise<P>, label: string): Promise<P['items'][number][]> {

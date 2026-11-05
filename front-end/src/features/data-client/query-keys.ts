@@ -31,9 +31,9 @@ export const queryKeys = {
   /** The guest stories list (`GET /api/public/stories`), one entry per language and category. */
   guestStories: ['guest-stories'],
   guestTours: ['guest-tours'],
+  /** The guest search (`GET /api/public/search`), one entry per language, text, interest and kind. */
   search: {
-    stories: ['search', 'stories'],
-    tours: ['search', 'tours'],
+    list: ['search', 'list'],
   },
   media: {
     list: ['media', 'list'],

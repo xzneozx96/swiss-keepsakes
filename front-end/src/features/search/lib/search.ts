@@ -1,18 +1,9 @@
-import type { PublicKeepsakeCard, PublicLanguage, PublicMapItem, PublicStoryCard, PublicTourCard } from '@sk/api-contract'
+import type { PublicLanguage, PublicSearchItem, PublicSearchList, SearchKind } from '@sk/api-contract'
 
-import { fold, foldDigraphs } from './fold'
+// The server matches and ranks (GET /api/public/search, ADR-033 slice 6). This maps a hit to the row the screen draws, and the
+// counts the server sends to the filter. A hit holds no price (AC54): the keepsake card has a sold-out flag only.
 
-// Search runs in the browser over the lists the app already has (no server search). The lists omit what a guest must
-// not see (hidden, draft and expired pins, unpublished and archived keepsakes), and no price is read here (AC54).
-
-export type SearchKind = 'place' | 'story' | 'tour' | 'keepsake'
-
-export interface SearchSources {
-  stories: readonly PublicStoryCard[]
-  pins: readonly PublicMapItem[]
-  tours: readonly PublicTourCard[]
-  keepsakes: readonly PublicKeepsakeCard[]
-}
+export type { SearchKind }
 
 export type SearchLink
   = | { to: '/$lang/map', params: { lang: PublicLanguage }, search: { place: string } }
@@ -22,148 +13,44 @@ export interface SearchResult {
   key: string
   kind: SearchKind
   title: string
-  /** An address, when the list carries one (stories, places, keepsakes). */
+  /** An address, when the card carries one (stories, places, keepsakes). */
   photoUrl: string | null
-  /** A media key, when the list carries one (tours). */
+  /** A media key, when the card carries one (stories and tours without a ready cover). */
   photoKey: string | null
   link: SearchLink
-  interests: readonly string[]
 }
 
-const isLetter = /[\p{L}\p{N}]/u
-
-/**
- * How well a title matches a query; both are folded here. 4 = the title equals the query; 3 = the title starts with the
- * query as a whole word; 2 = the title starts with the query; 1 = a word of the title starts with it; 0 = the query is
- * inside a word; -1 = no match.
- */
-export function scoreTitle(title: string, query: string): number {
-  const q = fold(query).trim()
-
-  // A title is read both ways (ö as o, and as oe), so "lowen" and "loewen" both find Löwendenkmal.
-  return Math.max(scoreFolded(fold(title), q), scoreFolded(foldDigraphs(title), q))
-}
-
-function scoreFolded(t: string, q: string): number {
-  const at = t.indexOf(q)
-
-  if (!q || at < 0) {
-    return -1
-  }
-  if (t === q) {
-    return 4
-  }
-  if (at === 0) {
-    return isLetter.test(t.charAt(q.length)) ? 2 : 3
-  }
-  for (let i = at; i >= 0; i = t.indexOf(q, i + 1)) {
-    if (!isLetter.test(t.charAt(i - 1))) {
-      return 1
+/** The row of a hit, or null for a place that has no page on the map (the server leaves those out; this keeps the type honest). */
+export function toResult(item: PublicSearchItem): SearchResult | null {
+  switch (item.kind) {
+    case 'place': {
+      const { card } = item
+      return card.slug === null
+        ? null
+        : { key: `place:${card.id}`, kind: 'place', title: card.title, photoUrl: card.photoUrl, photoKey: null, link: { to: '/$lang/map', params: { lang: card.language }, search: { place: card.slug } } }
+    }
+    case 'story': {
+      const { card } = item
+      return { key: `story:${card.id}`, kind: 'story', title: card.title, photoUrl: card.cover?.variants[0]?.url ?? card.cover?.url ?? null, photoKey: card.cover ? null : card.coverKey, link: { to: '/$lang/stories/$slug', params: { lang: card.language, slug: card.slug } } }
+    }
+    case 'tour': {
+      const { card } = item
+      return { key: `tour:${card.id}`, kind: 'tour', title: card.title, photoUrl: card.cover?.variants[0]?.url ?? card.cover?.url ?? null, photoKey: card.cover ? null : card.coverKey, link: { to: '/$lang/tours/$slug', params: { lang: card.language, slug: card.slug } } }
+    }
+    case 'keepsake': {
+      const { card } = item
+      return { key: `keepsake:${card.id}`, kind: 'keepsake', title: card.name, photoUrl: card.cover?.variants[0]?.url ?? card.cover?.url ?? null, photoKey: null, link: { to: '/$lang/gifts/$slug', params: { lang: card.language, slug: card.slug } } }
     }
   }
-
-  return 0
-}
-
-function place(p: PublicMapItem): SearchResult | null {
-  if (p.slug === null) {
-    return null
-  }
-
-  return {
-    key: `place:${p.id}`,
-    kind: 'place',
-    title: p.title,
-    photoUrl: p.photoUrl,
-    photoKey: null,
-    link: { to: '/$lang/map', params: { lang: p.language }, search: { place: p.slug } },
-    interests: p.interests,
-  }
-}
-
-function story(s: PublicStoryCard): SearchResult {
-  return {
-    key: `story:${s.id}`,
-    kind: 'story',
-    title: s.title,
-    photoUrl: s.cover?.variants[0]?.url ?? s.cover?.url ?? null,
-    photoKey: s.cover ? null : s.coverKey,
-    link: { to: '/$lang/stories/$slug', params: { lang: s.language, slug: s.slug } },
-    interests: s.interests,
-  }
-}
-
-function tour(t: PublicTourCard): SearchResult {
-  return {
-    key: `tour:${t.id}`,
-    kind: 'tour',
-    title: t.title,
-    photoUrl: t.cover?.variants[0]?.url ?? t.cover?.url ?? null,
-    photoKey: t.cover ? null : t.coverKey,
-    link: { to: '/$lang/tours/$slug', params: { lang: t.language, slug: t.slug } },
-    interests: t.interests,
-  }
-}
-
-function keepsake(k: PublicKeepsakeCard): SearchResult {
-  return {
-    key: `keepsake:${k.id}`,
-    kind: 'keepsake',
-    title: k.name,
-    photoUrl: k.cover?.variants[0]?.url ?? k.cover?.url ?? null,
-    photoKey: null,
-    link: { to: '/$lang/gifts/$slug', params: { lang: k.language, slug: k.slug } },
-    interests: [],
-  }
-}
-
-const present = <T>(row: T | null): row is T => row !== null
-
-/** Every row a guest can open, in source order: stories, places, tours, keepsakes, each in server order. */
-function everything(s: SearchSources): SearchResult[] {
-  return [...s.stories.map(story), ...s.pins.map(place).filter(present), ...s.tours.map(tour), ...s.keepsakes.map(keepsake)]
-}
-
-/** The rows whose title matches, best match first; equal scores keep the source order. */
-export function searchAll(sources: SearchSources, query: string): SearchResult[] {
-  return everything(sources)
-    .map(row => ({ row, score: scoreTitle(row.title, query) }))
-    .filter(({ score }) => score >= 0)
-    .sort((a, b) => b.score - a.score)
-    .map(({ row }) => row)
 }
 
 const kindOrder: readonly SearchKind[] = ['place', 'story', 'tour', 'keepsake']
 
 export interface KindFilterItem { kind: 'all' | SearchKind, count: number }
 
-/** All plus each kind present with its count; null when one kind or none is present, as a filter would do nothing. */
-export function kindFilter(results: readonly SearchResult[]): KindFilterItem[] | null {
-  const counts = kindOrder.map(kind => ({ kind, count: results.filter(r => r.kind === kind).length })).filter(i => i.count > 0)
+/** All plus each kind that has hits, with the server's counts; null when one kind or none has hits, as a filter would do nothing. */
+export function kindFilter(counts: PublicSearchList['counts']): KindFilterItem[] | null {
+  const present = kindOrder.map(kind => ({ kind, count: counts[kind] })).filter(item => item.count > 0)
 
-  return counts.length > 1 ? [{ kind: 'all', count: results.length }, ...counts] : null
-}
-
-/** What an interest tile lists: its stories, places and tours; "shopping-keepsakes" also lists every keepsake. */
-export function interestResults(sources: SearchSources, interest: string): SearchResult[] {
-  return everything(sources).filter(row => row.kind === 'keepsake' ? interest === 'shopping-keepsakes' : row.interests.includes(interest))
-}
-
-/** Names that exist in the data, for a query with no match: the first of each kind in turn (places, tours, stories, keepsakes). */
-export function suggestNames(sources: SearchSources, limit = 3): string[] {
-  const rows = everything(sources)
-  const lanes = (['place', 'tour', 'story', 'keepsake'] as const).map(kind => rows.filter(r => r.kind === kind).map(r => r.title))
-  const names: string[] = []
-
-  for (let i = 0; names.length < limit && lanes.some(l => i < l.length); i++) {
-    for (const lane of lanes) {
-      const name = lane[i]
-
-      if (name !== undefined && !names.includes(name) && names.length < limit) {
-        names.push(name)
-      }
-    }
-  }
-
-  return names
+  return present.length > 1 ? [{ kind: 'all', count: present.reduce((sum, item) => sum + item.count, 0) }, ...present] : null
 }

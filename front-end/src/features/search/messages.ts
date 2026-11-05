@@ -26,8 +26,11 @@ export const searchScreenEn = {
   'searchScreen.group.tour': 'Tours',
   'searchScreen.group.keepsake': 'Keepsakes',
   'searchScreen.noResults': 'Nothing for “{query}” yet',
-  'searchScreen.noResultsHint': 'Try {names}, or look around the map.',
   'searchScreen.opensMap': 'Opens on the map',
   'searchScreen.searching': 'Searching…',
-  'searchScreen.failed': '{kinds} could not be loaded. Showing the rest.',
+  'searchScreen.error': 'Search is not available right now.',
+  'searchScreen.more.one': '{count} more result',
+  'searchScreen.more.other': '{count} more results',
+  'searchScreen.end.one': 'That’s the only result',
+  'searchScreen.end.other': 'That’s all {count} results',
 } as const
