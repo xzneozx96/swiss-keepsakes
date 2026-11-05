@@ -490,14 +490,18 @@ async function run(pool: Pool, storeId: string, data: Data, plan: Plan, snapshot
   const publishProduct = makePublishProduct(catalogDeps)
 
   // Categories: each create takes the list lock and numbers itself after its siblings, so they go one at a time,
-  // parents first (the spec table is in that order). The ids of the categories that exist are read once.
+  // parents first (the spec table is in that order). The ids of the categories that exist are read once. Only the
+  // plan's categories are created: a narrowed plan (--events-only) must not add the others (bug found 05.11.2026).
   const ids = new Map(snapshot.categories.map(row => [row.slug, row.id]))
+  const toCreate = new Set(plan.categoriesToCreate.map(spec => spec.slug))
   for (const spec of categorySpecs) {
     const existing = snapshot.categories.find(row => row.slug === spec.slug || row.nameEn === spec.name.en)
     if (existing) {
       ids.set(spec.slug, existing.id)
       continue
     }
+    if (!toCreate.has(spec.slug))
+      continue
     const created = await createCategory(actor, storeId, 'map', { name: spec.name, parentId: spec.parent ? ids.get(spec.parent) ?? null : null, icon: spec.icon, showOnHome: spec.showOnHome }, null)
     if (!created.ok)
       throw new SeedError(`Category ${spec.slug} was refused: ${created.reason}`)
