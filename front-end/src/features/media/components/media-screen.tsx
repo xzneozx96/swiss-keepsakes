@@ -1,19 +1,20 @@
 import type { MediaItem } from '@sk/api-contract'
 import type { MediaSearch, StatusFilter, UseFilter } from '../lib/search-params'
-import type { PagerState } from '@/components/list-pagination'
 
 import { Skeleton, toast } from '@heroui/react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { ActionBar } from '@/components/action-bar'
 import { EmptyState } from '@/components/empty-state'
 import { FilterChips, filterGroup } from '@/components/filter-bar'
 import { PhotoAddIcon, SearchIcon, TrashIcon, UploadIcon } from '@/components/icons'
 import { ListAction, ListHeader, ListToolbar } from '@/components/layout/list-toolbar'
-import { Pager } from '@/components/list-pagination'
+import { Pager, serverPager } from '@/components/list-pagination'
 import { useLocale } from '@/contexts/locale-context'
 import { useIsWide } from '@/hooks/use-is-wide'
+import { useLastPageFallback } from '@/hooks/use-last-page-fallback'
 import { useListLoading } from '@/hooks/use-list-loading'
+import { useSearchBox } from '@/hooks/use-search-box'
 import { useMediaList } from '../api/queries'
 import { useDuplicateCheck } from '../hooks/use-duplicate-check'
 import { useMediaActions } from '../hooks/use-media-actions'
@@ -25,7 +26,6 @@ import { MediaSheet } from './media-sheet'
 import { MediaToolbar } from './media-toolbar'
 import { PhotoWall, WallSkeleton } from './photo-wall'
 
-const SEARCH_DELAY_MS = 250
 // How long the files a pick already had stay pointed out.
 const FOUND_MS = 5000
 
@@ -84,9 +84,18 @@ function Library({ storeId, search, onSearch }: { storeId: string, search: Media
   const status = search.status ?? []
   const page = search.page ?? 1
   const pageSize = pageSizeOf(kind)
-  const [text, setText] = useState(search.q ?? '')
+  const commitSearch = useCallback((next: string) => onSearch({ q: next.trim() ? next : undefined, page: undefined }), [onSearch])
+  const [text, setText] = useSearchBox(search.q ?? '', commitSearch)
   const [selecting, setSelecting] = useState(false)
   const [selected, setSelected] = useState<string[]>([])
+  // A tick belongs to the page it was made on: a new page, tab, filter or search starts with none.
+  const viewKey = [kind, search.q ?? '', use.join(','), status.join(','), page].join('|')
+  const [seenView, setSeenView] = useState(viewKey)
+
+  if (seenView !== viewKey) {
+    setSeenView(viewKey)
+    setSelected([])
+  }
   const [open, setOpen] = useState<MediaItem | null>(null)
   const [refusedId, setRefusedId] = useState<string | null>(null)
   const actions = useMediaActions(storeId)
@@ -98,14 +107,9 @@ function Library({ storeId, search, onSearch }: { storeId: string, search: Media
   // A new filter, tab, search or page keeps the last rows on screen until the answer is late, then the skeleton takes over.
   const isLoading = useListLoading(list)
 
-  // The URL follows the search box a moment after the last key, so each letter does not read the list.
-  useEffect(() => {
-    if (text === (search.q ?? ''))
-      return
-    const timer = setTimeout(() => onSearch({ q: text.trim() ? text : undefined, page: undefined }), SEARCH_DELAY_MS)
+  const goToPage = useCallback((next: number) => onSearch({ page: next > 1 ? next : undefined }), [onSearch])
 
-    return () => clearTimeout(timer)
-  }, [text, search.q, onSearch])
+  useLastPageFallback(list.data && !list.isPlaceholderData ? { rows: items.length, total: list.data.total } : undefined, page, pageSize, goToPage)
 
   const foundShown = items.some(item => found.includes(item.id))
 
@@ -173,15 +177,7 @@ function Library({ storeId, search, onSearch }: { storeId: string, search: Media
       onChange: next => onSearch({ status: next.length ? next : undefined, page: undefined }),
     }),
   ]
-  const total = list.data?.total ?? 0
-  const pager: PagerState = {
-    page,
-    pages: Math.max(1, Math.ceil(total / pageSize)),
-    total,
-    from: (page - 1) * pageSize + 1,
-    to: Math.min(page * pageSize, total),
-    go: next => onSearch({ page: next > 1 ? next : undefined }),
-  }
+  const pager = serverPager({ page, pageSize, total: list.data?.total ?? 0, go: goToPage })
   const chosen = items.filter(item => selected.includes(item.id))
   const retirable = chosen.filter(item => retireCheck(item).ok)
   const kept = chosen.length - retirable.length

@@ -1,4 +1,4 @@
-import { pinListSchema, storyListSchema } from '@sk/api-contract'
+import { mediaListSchema, pinListSchema, productListSchema, productLookupSchema, stockListSchema, storyListSchema } from '@sk/api-contract'
 
 /** The answer of the pins list for `items`, as one page. A test that checks paging passes `over`. */
 export function pinPage(items: unknown[], over: Record<string, unknown> = {}) {
@@ -117,4 +117,87 @@ export function storiesAnswer(items: StoryLike[], path: string, base: string) {
   const ids = (url.searchParams.get('ids') ?? '').split(',').filter(Boolean)
 
   return { items: items.filter(item => ids.includes((item as unknown as { groupId: string }).groupId)) }
+}
+
+/** The answer of the keepsake list for `items`, as one page. A test that checks paging passes `over`. */
+export function productPage(items: unknown[], over: Record<string, unknown> = {}) {
+  const count = (status: string) => items.filter(item => (item as { status?: string }).status === status).length
+
+  return productListSchema.parse({
+    items,
+    total: items.length,
+    page: 1,
+    pageSize: 10,
+    statuses: { draft: count('draft'), published: count('published'), editsNotLive: 0, archived: count('archived') },
+    ...over,
+  })
+}
+
+/** The answer of the keepsake lookup for `items`. */
+export function productLookup(items: unknown[]) {
+  return productLookupSchema.parse({ items })
+}
+
+interface ProductLike { id: string, status: string, hasUnpublishedEdits: boolean, name: { en?: string, de?: string } }
+
+const productStatus = (item: ProductLike) => (item.status === 'published' && item.hasUnpublishedEdits ? 'editsNotLive' : item.status)
+
+/**
+ * What the keepsake list route answers for `url` over `items`: the status ticks (none leaves the archived out), the search, the
+ * page and the status counts under the search, the way the API does.
+ */
+export function serverProductPage(items: ProductLike[], url: URL) {
+  const pageSize = Number(url.searchParams.get('pageSize') ?? 10)
+  const page = Number(url.searchParams.get('page') ?? 1)
+  const q = (url.searchParams.get('q') ?? '').trim().toLowerCase()
+  const ticked = list(url, 'status')
+  const found = items.filter(item => q === '' || [item.name.en, item.name.de].some(text => text?.toLowerCase().includes(q)))
+  const shown = found.filter(item => (ticked.length === 0 ? item.status !== 'archived' : ticked.includes(productStatus(item))))
+
+  return productListSchema.parse({
+    items: shown.slice((page - 1) * pageSize, page * pageSize),
+    total: shown.length,
+    page,
+    pageSize,
+    statuses: Object.fromEntries(['draft', 'published', 'editsNotLive', 'archived'].map(status => [status, found.filter(item => productStatus(item) === status).length])),
+  })
+}
+
+interface StockLike { available: number, code: string | null, variantTitle: { en?: string, de?: string }, keepsakeName: { en?: string, de?: string } }
+
+/**
+ * What the inventory route answers for `url` over `rows`: the tab (`filter`), the search over the code, the variant title and the
+ * keepsake name, the page, and the counts of the whole store.
+ */
+export function serverStockPage(rows: StockLike[], url: URL) {
+  const pageSize = Number(url.searchParams.get('pageSize') ?? 10)
+  const page = Number(url.searchParams.get('page') ?? 1)
+  const q = (url.searchParams.get('q') ?? '').trim().toLowerCase()
+  const filter = url.searchParams.get('filter') ?? 'all'
+  const shown = rows
+    .filter(row => filter === 'all' || (filter === 'in-stock') === (row.available > 0))
+    .filter(row => q === '' || [row.code, row.variantTitle.en, row.variantTitle.de, row.keepsakeName.en, row.keepsakeName.de].some(text => text?.toLowerCase().includes(q)))
+  const soldOut = rows.filter(row => row.available <= 0).length
+
+  return stockListSchema.parse({
+    items: shown.slice((page - 1) * pageSize, page * pageSize),
+    total: shown.length,
+    page,
+    pageSize,
+    counts: { all: rows.length, inStock: rows.length - soldOut, soldOut },
+  })
+}
+
+/** The answer of the media list for `items`, as one page. */
+export function mediaPage(items: unknown[], over: Record<string, unknown> = {}) {
+  return mediaListSchema.parse({
+    items,
+    total: items.length,
+    page: 1,
+    pageSize: 20,
+    kinds: { image: items.length, audio: 0, pdf: 0 },
+    uses: { unused: items.length, drafts: 0, published: 0 },
+    statuses: { processing: 0, ready: items.length, retired: 0 },
+    ...over,
+  })
 }

@@ -110,7 +110,7 @@ export interface Product {
 export interface ProductListRow {
   id: string
   name: Localized
-  // The names of the keepsake's options, in order. The editor suggests the names the shop already uses.
+  // Deprecated: the names of this keepsake's options. The option-names read replaces it; kept one release (ADR-033 section 12).
   optionNames: Localized[]
   status: ProductStatus
   hasUnpublishedEdits: boolean
@@ -273,8 +273,32 @@ export interface WrittenProduct {
   createdSkuIds: string[]
 }
 
+// One numbered page of the keepsake table (ADR-033 section 6). `status` is the list status, derived the way the screen reads it:
+// `editsNotLive` is a published keepsake with a draft, `published` one without. No status asks for every keepsake but the archived
+// ones. `created` is `created_at desc, id desc`, `edited` is `updated_at desc, id desc`.
+export type ProductListStatus = 'draft' | 'published' | 'editsNotLive' | 'archived'
+
+export interface ProductListQuery {
+  status: ProductListStatus[]
+  q?: string | undefined
+  sort: 'created' | 'edited'
+  page: number
+  pageSize: number
+}
+
+// Each count is what ticking the status would show: the search applies, the status ticks do not.
+export interface ProductListPage {
+  rows: ProductListRow[]
+  total: number
+  statuses: Record<ProductListStatus, number>
+}
+
 export interface ProductRepository<T> {
-  list: (tx: T, storeId: string) => Promise<ProductListRow[]>
+  list: (tx: T, storeId: string, query: ProductListQuery) => Promise<ProductListPage>
+  // The keepsakes named by `ids`, in that order, whatever their status. An id of another store has no row.
+  byIds: (tx: T, storeId: string, ids: string[]) => Promise<ProductListRow[]>
+  // The option names of the store's keepsakes (but `exceptId`'s own), each once ignoring case (the newest keepsake's spelling), newest keepsake first as the list read them before, at most `limit`.
+  optionNames: (tx: T, storeId: string, limit: number, exceptId?: string) => Promise<Localized[]>
   // An id of another store has no row.
   find: (tx: T, storeId: string, productId: string) => Promise<Product | undefined>
   // Locks the row. An id of another store has no row.

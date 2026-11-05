@@ -181,7 +181,7 @@ describe('[E4.3][AC30][AC45] the publish checks on Review', () => {
   it('[E4.3] a keepsake that is not published warns by name', async () => {
     const keepsake = uuid(601)
 
-    servePublish(storyGroupDetail({ en: ready(), de: storyVersion('de') }, { ...category, keepsakeProductIds: [keepsake] }), call => (call.method === 'GET' && call.path === `${storeBase}/products`
+    servePublish(storyGroupDetail({ en: ready(), de: storyVersion('de') }, { ...category, keepsakeProductIds: [keepsake] }), call => (call.method === 'GET' && call.path.split('?')[0] === `${storeBase}/products/lookup`
       ? Response.json({ items: [{ id: keepsake, name: { en: 'Pocket knife' }, optionNames: [], status: 'draft', hasUnpublishedEdits: false, hasOrders: false, rowVersion: 1, cover: null, variantCount: 1, soldOutCount: 0, updatedAt: '2026-11-03T08:00:00.000Z' }] })
       : undefined))
     await openReview()
@@ -206,7 +206,7 @@ describe('[E4.3][AC30][AC45] the publish checks on Review', () => {
     await openReview()
     await screen.findByText('Ready to publish', undefined, SLOW)
 
-    expect(state.calls.filter(call => call.method === 'GET' && (call.path.split('?')[0] === `${storeBase}/story-groups/lookup` || call.path === `${storeBase}/products` || call.path.split('?')[0] === `${storeBase}/pins/lookup`))).toEqual([])
+    expect(state.calls.filter(call => call.method === 'GET' && (call.path.split('?')[0] === `${storeBase}/story-groups/lookup` || call.path.split('?')[0].startsWith(`${storeBase}/products`) || call.path.split('?')[0] === `${storeBase}/pins/lookup`))).toEqual([])
   }, 20000)
 })
 

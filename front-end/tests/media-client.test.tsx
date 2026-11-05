@@ -27,18 +27,18 @@ const base = `/api/store/${storeId}/media`
 describe('[E4.11][AC51] the media queries', () => {
   it('[E4.11][AC51] reads one page with its filters and the pages that use a file', async () => {
     state.answer = call => call.path.startsWith(`${base}?`) ? Response.json(page([item()])) : call.path === `${base}/${photoId}/uses` ? Response.json(uses()) : undefined
-    const { result } = renderHook(() => ({ list: useMediaList(storeId, { kind: 'image', q: 'sun', use: 'unused', status: 'ready', page: 2, pageSize: 24 }), found: useMediaUses(storeId, photoId) }), { wrapper })
+    const { result } = renderHook(() => ({ list: useMediaList(storeId, { kind: 'image', q: 'sun', use: 'unused', status: 'ready', page: 2, pageSize: 20 }), found: useMediaUses(storeId, photoId) }), { wrapper })
 
     await waitFor(() => expect(result.current.list.data?.items).toHaveLength(1))
     await waitFor(() => expect(result.current.found.data?.drafts).toHaveLength(1))
     const read = state.calls.find(call => call.path.startsWith(`${base}?`))!
 
-    expect(new URL(read.path, 'http://x').searchParams.toString()).toBe('kind=image&q=sun&use=unused&status=ready&page=2&pageSize=24')
+    expect(new URL(read.path, 'http://x').searchParams.toString()).toBe('kind=image&q=sun&use=unused&status=ready&page=2&pageSize=20')
   })
 
   it('[E4.11][AC51] reads a refusal as an ApiProblem and does not retry it', async () => {
     state.answer = call => call.path.startsWith(`${base}?`) ? problem(403, 'forbidden') : undefined
-    const { result } = renderHook(() => useMediaList(storeId, { kind: 'image', page: 1, pageSize: 24 }), { wrapper })
+    const { result } = renderHook(() => useMediaList(storeId, { kind: 'image', page: 1, pageSize: 20 }), { wrapper })
 
     await waitFor(() => expect(result.current.error).toBeInstanceOf(ApiProblem))
     expect(state.calls.filter(call => call.path.startsWith(`${base}?`))).toHaveLength(1)
@@ -53,7 +53,7 @@ describe('[E4.11][AC51] the media queries', () => {
 
       return Response.json(page([item({ status: reads < 3 ? 'processing' : 'ready' })]))
     }
-    const { result } = renderHook(() => useMediaList(storeId, { kind: 'image', page: 1, pageSize: 24 }), { wrapper })
+    const { result } = renderHook(() => useMediaList(storeId, { kind: 'image', page: 1, pageSize: 20 }), { wrapper })
 
     await waitFor(() => expect(result.current.data?.items[0]?.status).toBe('ready'), { timeout: 8000 })
     const settled = reads

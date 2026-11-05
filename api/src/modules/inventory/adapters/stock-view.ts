@@ -15,6 +15,6 @@ export function stockItemView(entry: StockItemEntry): StockItem {
   }
 }
 
-export function stockListView({ items, counts }: StockListEntry): StockList {
-  return { items: items.map(stockRowView), counts }
+export function stockListView({ items, total, page, pageSize, counts }: StockListEntry): StockList {
+  return { items: items.map(stockRowView), total, page, pageSize, counts }
 }

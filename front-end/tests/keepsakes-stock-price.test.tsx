@@ -22,7 +22,7 @@ function serve() {
   state.answer = (call) => {
     if (call.method === 'GET' && call.path === detail)
       return Response.json(current)
-    if (call.method === 'GET' && call.path === base)
+    if (call.method === 'GET' && call.path.split('?')[0] === base)
       return Response.json(list([listItem()]))
     if (call.method === 'PUT' && call.path === `${stock}/${variantId}`) {
       const { onHand } = call.body as { onHand: number }
@@ -128,7 +128,7 @@ describe(`${tag} the Quantity field of the Price block`, () => {
   })
 
   it(`${tag} AC-5 a new keepsake sends the quantity with its variant on create`, async () => {
-    state.answer = call => (call.method === 'POST' && call.path === base ? Response.json(product(), { status: 201 }) : call.method === 'GET' && call.path === detail ? Response.json(product()) : call.method === 'GET' && call.path === base ? Response.json(list([listItem()])) : undefined)
+    state.answer = call => (call.method === 'POST' && call.path === base ? Response.json(product(), { status: 201 }) : call.method === 'GET' && call.path === detail ? Response.json(product()) : call.method === 'GET' && call.path.split('?')[0] === base ? Response.json(list([listItem()])) : undefined)
     renderKeepsakes('/store/products/new')
     await userEvent.type(await screen.findByLabelText('Name (English)', undefined, SLOW), 'Knife')
     await userEvent.click(screen.getByRole('button', { name: 'Next' }))
@@ -146,7 +146,7 @@ describe(`${tag} the Quantity field of the Price block`, () => {
   })
 
   it(`${tag} AC-5 a new keepsake with an empty Quantity shows no error and sends no quantity (0)`, async () => {
-    state.answer = call => (call.method === 'POST' && call.path === base ? Response.json(product(), { status: 201 }) : call.method === 'GET' && call.path === detail ? Response.json(product()) : call.method === 'GET' && call.path === base ? Response.json(list([listItem()])) : undefined)
+    state.answer = call => (call.method === 'POST' && call.path === base ? Response.json(product(), { status: 201 }) : call.method === 'GET' && call.path === detail ? Response.json(product()) : call.method === 'GET' && call.path.split('?')[0] === base ? Response.json(list([listItem()])) : undefined)
     renderKeepsakes('/store/products/new')
     await userEvent.type(await screen.findByLabelText('Name (English)', undefined, SLOW), 'Knife')
     await userEvent.click(screen.getByRole('button', { name: 'Next' }))

@@ -15,8 +15,12 @@ async function answer<T>(call: Promise<{ data?: T, error?: unknown, response: Re
 
 export function createKeepsakesClient(): KeepsakesClient {
   return {
-    list: async storeId =>
-      answer((await loadClient()).GET('/api/store/{storeId}/products', { ...timeout(), params: { path: { storeId } } })),
+    list: async ({ storeId, query }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/products', { ...timeout(), params: { path: { storeId }, query } })),
+    lookup: async ({ storeId, ids }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/products/lookup', { ...timeout(), params: { path: { storeId }, query: { ids: ids.join(',') } } })),
+    optionNames: async ({ storeId, exceptId }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/products/option-names', { ...timeout(), params: { path: { storeId }, query: { except: exceptId } } })),
     get: async ({ storeId, id }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/products/{productId}', { ...timeout(), params: { path: { storeId, productId: id } } })),
     create: async ({ storeId, idempotencyKey, ...body }) =>

@@ -1,24 +1,29 @@
-import type { ProductListItem } from '@sk/api-contract'
-import type { KeepsakeFilters, StatusFilter } from '../lib/list'
+import type { ProductList, ProductListItem } from '@sk/api-contract'
+import type { KeepsakesSearch, StatusFilter } from '../lib/list'
 import type { DataTableColumn } from '@/components/data-table'
+import type { PagerState } from '@/components/list-pagination'
 import type { MessageKey } from '@/i18n/en'
 
 import { Button, Skeleton } from '@heroui/react'
 import { dateTimeFormat } from '@sk/domain/shared'
 import { Link } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useCallback } from 'react'
 
 import { DataTable } from '@/components/data-table'
 import { FilterButtons, FilterChips, filterGroup } from '@/components/filter-bar'
 import { EditIcon, GiftIcon, PlusIcon, TrashIcon } from '@/components/icons'
 import { ListAction, ListHeader, ListSearch, ListToolbar } from '@/components/layout/list-toolbar'
+import { serverPager } from '@/components/list-pagination'
 import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
+import { useLastPageFallback } from '@/hooks/use-last-page-fallback'
+import { useListLoading } from '@/hooks/use-list-loading'
+import { useSearchBox } from '@/hooks/use-search-box'
 import { useKeepsakes } from '../api/queries'
 import { useRemoveKeepsake } from '../hooks/use-remove-keepsake'
 import { nameIn, statusOf, variantSummary } from '../lib/keepsake-rules'
-import { filterKeepsakes, isFiltered, noFilters, STATUS_FILTERS } from '../lib/list'
+import { isFiltered, KEEPSAKES_PAGE_SIZE, STATUS_FILTERS } from '../lib/list'
 import { NEW_KEEPSAKE_PATH } from '../lib/search-params'
 import { KeepsakeGate } from './keepsake-gate'
 import { KeepsakeNotice } from './keepsake-notice'
@@ -114,7 +119,7 @@ function CardSkeletons() {
 }
 
 /** From 1024 px a table, below it the cards. */
-function KeepsakeRows({ items, isLoading, label, empty, resetKey, onRemove }: { items: ProductListItem[], isLoading: boolean, label: string, empty: string, resetKey: string, onRemove?: OnRemove }) {
+function KeepsakeRows({ items, isLoading, label, empty, paging, onRemove }: { items: ProductListItem[], isLoading: boolean, label: string, empty: string, paging: PagerState, onRemove?: OnRemove }) {
   const { t, name, summary, edited } = useRowText()
   const columns: DataTableColumn<ProductListItem>[] = [
     {
@@ -144,47 +149,53 @@ function KeepsakeRows({ items, isLoading, label, empty, resetKey, onRemove }: { 
       getRowId={item => item.id}
       isLoading={isLoading}
       label={label}
-      resetKey={resetKey}
+      paging={paging}
       rowActions={{ render: item => <RowMenu item={item} onRemove={onRemove} /> }}
       rows={items}
     />
   )
 }
 
-/** Each count is what ticking the option shows: the search applies, this group's own ticks do not. */
-function useStatusGroup(items: ProductListItem[], filters: KeepsakeFilters, onChange: (patch: Partial<KeepsakeFilters>) => void) {
+const NO_COUNTS = { draft: 0, published: 0, editsNotLive: 0, archived: 0 }
+
+/** Each count comes from the API: what ticking the option shows, the search applied, this group's own ticks not. */
+function useStatusGroup(counts: Record<StatusFilter, number>, search: KeepsakesSearch, onChange: (patch: Partial<KeepsakesSearch>) => void) {
   const { t } = useLocale()
   const labels: Record<StatusFilter, MessageKey> = { draft: 'keepsakes.status.draft', published: 'keepsakes.status.published', editsNotLive: 'keepsakes.status.editsNotLive', archived: 'keepsakes.status.archived' }
 
   return filterGroup({
     id: 'status',
     label: t('keepsakes.filter.status'),
-    options: STATUS_FILTERS.map(id => ({ id, label: t(labels[id]), count: filterKeepsakes(items, { ...filters, status: [id] }).length })),
-    selected: filters.status,
-    onChange: status => onChange({ status }),
+    options: STATUS_FILTERS.map(id => ({ id, label: t(labels[id]), count: counts[id] })),
+    selected: search.status ?? [],
+    onChange: status => onChange({ status: status.length > 0 ? status : undefined, page: undefined }),
   })
 }
 
 /** The search, the Status filter and the applied chips, then the table and, when a search or filter hides every row, a way back. */
-function KeepsakeBody({ items, isLoading, filters, onChange, failure, onRemove }: { items: ProductListItem[], isLoading: boolean, filters: KeepsakeFilters, onChange: (patch: Partial<KeepsakeFilters>) => void, failure?: React.ReactNode, onRemove?: OnRemove }) {
+function KeepsakeBody({ list, loading, search, onSearch, failure, onRemove }: { list?: ProductList, loading: boolean, search: KeepsakesSearch, onSearch: (patch: Partial<KeepsakesSearch>) => void, failure?: React.ReactNode, onRemove?: OnRemove }) {
   const { t } = useLocale()
-  const group = useStatusGroup(items, filters, onChange)
-  const shown = filterKeepsakes(items, filters)
-  const noMatch = items.length > 0 && shown.length === 0 && isFiltered(filters)
+  const page = search.page ?? 1
+  const group = useStatusGroup(list?.statuses ?? NO_COUNTS, search, onSearch)
+  const shown = list?.items ?? []
+  const noMatch = list !== undefined && shown.length === 0 && isFiltered(search)
+  const commitSearch = useCallback((text: string) => onSearch({ q: text.trim() ? text : undefined, page: undefined }), [onSearch])
+  const [text, setText] = useSearchBox(search.q ?? '', commitSearch)
+  const goToPage = useCallback((next: number) => onSearch({ page: next > 1 ? next : undefined }), [onSearch])
 
   return (
     <>
       <ListToolbar
-        search={<ListSearch isDisabled={isLoading} label={t('keepsakes.list.search')} value={filters.query} onChange={query => onChange({ query })} />}
+        search={<ListSearch isDisabled={list === undefined && loading} label={t('keepsakes.list.search')} value={text} onChange={setText} />}
         filters={<FilterButtons groups={[group]} />}
       />
       <FilterChips groups={[group]} />
       {failure
         ?? (
           <>
-            <KeepsakeRows empty={t(noMatch ? 'keepsakes.list.emptyFiltered' : 'keepsakes.list.empty')} isLoading={isLoading} items={shown} label={t('keepsakes.title')} resetKey={JSON.stringify(filters)} onRemove={onRemove} />
+            <KeepsakeRows empty={t(noMatch ? 'keepsakes.list.emptyFiltered' : 'keepsakes.list.empty')} isLoading={loading} items={shown} label={t('keepsakes.title')} paging={serverPager({ page, pageSize: KEEPSAKES_PAGE_SIZE, total: list?.total ?? 0, go: goToPage })} onRemove={onRemove} />
             {noMatch && (
-              <Button className="min-h-11 self-center" variant="secondary" onPress={() => onChange(noFilters)}>{t('keepsakes.list.clear')}</Button>
+              <Button className="min-h-11 self-center" variant="secondary" onPress={() => onSearch({ status: undefined, q: undefined, page: undefined })}>{t('keepsakes.list.clear')}</Button>
             )}
           </>
         )}
@@ -192,31 +203,35 @@ function KeepsakeBody({ items, isLoading, filters, onChange, failure, onRemove }
   )
 }
 
-function KeepsakeTable({ storeId, filters, onChange }: { storeId: string, filters: KeepsakeFilters, onChange: (patch: Partial<KeepsakeFilters>) => void }) {
-  const list = useKeepsakes(storeId)
+function KeepsakeTable({ storeId, search, onSearch }: { storeId: string, search: KeepsakesSearch, onSearch: (patch: Partial<KeepsakesSearch>) => void }) {
+  const page = search.page ?? 1
+  const list = useKeepsakes(storeId, { status: search.status?.join(','), q: search.q?.trim() || undefined, page, pageSize: KEEPSAKES_PAGE_SIZE })
+  // A new filter, search or page keeps the last rows on screen until the answer is late, then the skeleton takes over.
+  const loading = useListLoading(list)
   const { t, language } = useLocale()
   const remove = useRemoveKeepsake(storeId)
+  const goToPage = useCallback((next: number) => onSearch({ page: next > 1 ? next : undefined }), [onSearch])
+
+  useLastPageFallback(list.data && !list.isPlaceholderData ? { rows: list.data.items.length, total: list.data.total } : undefined, page, KEEPSAKES_PAGE_SIZE, goToPage)
 
   return (
     <>
       <KeepsakeBody
-        filters={filters}
         failure={list.isError ? <KeepsakeNotice error={list.error} onRetry={() => void list.refetch()} /> : undefined}
-        isLoading={list.isPending}
-        items={list.data?.items ?? []}
-        onChange={onChange}
+        list={list.data}
+        loading={loading}
+        search={search}
         onRemove={item => remove.ask({ id: item.id, name: nameIn(item.name, language) || t('keepsakes.untitled'), rowVersion: item.rowVersion, hasOrders: item.hasOrders })}
+        onSearch={onSearch}
       />
       {remove.dialog}
     </>
   )
 }
 
-/** M11: the store's keepsakes (no tours, no category filter) with a search and a Status filter. Create starts the create flow. */
-export function KeepsakeList() {
+/** M11: the store's keepsakes (no tours, no category filter) with a search and a Status filter, paged by the server. The filter, the search and the page are in the URL. Create starts the create flow. */
+export function KeepsakeList({ search, onSearch }: { search: KeepsakesSearch, onSearch: (patch: Partial<KeepsakesSearch>) => void }) {
   const { t } = useLocale()
-  const [filters, setFilters] = useState(noFilters)
-  const change = (patch: Partial<KeepsakeFilters>) => setFilters(current => ({ ...current, ...patch }))
 
   return (
     <div className="flex flex-col gap-4" data-testid="keepsake-list">
@@ -225,8 +240,8 @@ export function KeepsakeList() {
         description={t('keepsakes.list.description')}
         title={t('keepsakes.title')}
       />
-      <KeepsakeGate fallback={<KeepsakeBody isLoading filters={filters} items={[]} onChange={change} />}>
-        {storeId => <KeepsakeTable filters={filters} storeId={storeId} onChange={change} />}
+      <KeepsakeGate fallback={<KeepsakeBody loading search={search} onSearch={onSearch} />}>
+        {storeId => <KeepsakeTable search={search} storeId={storeId} onSearch={onSearch} />}
       </KeepsakeGate>
     </div>
   )

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { mediaSchema } from './media.ts'
+import { numberedPageOf, numberedPageQuery } from './page.ts'
 
 // Stock per variant (E6.3, DM-6, ADR-016). A row is one live variant of the store. `reserved` is the units open orders
 // hold, `available` is `onHand - reserved` and never below 0. A set writes `onHand` only: the reserved units belong to
@@ -50,19 +51,19 @@ export const stockItemSchema = stockRowSchema.extend({
 
 export const stockFilterSchema = z.enum(['all', 'in-stock', 'sold-out']).meta({ id: 'StockFilter', description: '`in-stock`: at least one unit available. `sold-out`: none available' })
 
-export const stockListQuerySchema = z.object({
+export const stockListQuerySchema = numberedPageQuery({
   filter: stockFilterSchema.optional(),
   q: z.string().trim().max(200).optional().meta({ description: 'Matches the code, the variant title or the keepsake name, in any case' }),
+  sort: z.enum(['name', 'newest']).default('name').meta({ description: '`name`: keepsake name, variant title, code, then variant id descending. `newest`: variant id descending (a `uuidv7`, so newest first)' }),
 })
 
-export const stockListSchema = z.object({
-  items: z.array(stockRowSchema),
+export const stockListSchema = numberedPageOf(stockRowSchema, 'StockList', {
   counts: z.object({
     all: z.int(),
     inStock: z.int(),
     soldOut: z.int(),
   }).meta({ description: 'The tab figures of the whole store, counted before the filter and the search' }),
-}).meta({ id: 'StockList', description: 'The live variants of the store with their stock' })
+}).meta({ id: 'StockList', description: 'One page of the live variants of the store with their stock' })
 
 export const stockManySchema = z.object({
   items: z.array(stockRowSchema),

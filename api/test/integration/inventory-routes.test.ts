@@ -53,7 +53,7 @@ interface Variant { id: string, skuCode: string | null }
 interface Product { id: string, variants: Variant[] }
 interface Row { skuId: string, productId: string, code: string | null, keepsakeName: { en?: string }, variantTitle: { en?: string, de?: string }, photo: { id: string } | null, onHand: number, reserved: number, available: number }
 interface Item extends Row { reservations: { orderId: string, orderRef: string | null, guestName: string | null, acceptedAt: string, quantity: number }[] }
-interface List { items: Row[], counts: { all: number, inStock: number, soldOut: number } }
+interface List { items: Row[], total: number, page: number, pageSize: number, counts: { all: number, inStock: number, soldOut: number } }
 interface Problem { type: string, status: number, reserved?: number, skuId?: string }
 
 let sharedStore: ReturnType<typeof env.storeWithStaff> | undefined
@@ -293,7 +293,7 @@ describe('[E6.3][AC05][AC53] the stock list', () => {
   })
 
   it('[E6.3][AC05][AC53][AC-6] a variant whose units are all reserved is sold out', async () => {
-    const s = await setup()
+    const s = await setup({ fresh: true })
     const skuId = await s.plain()
     await s.stock(skuId, 2)
     await s.hold(skuId, 2)
@@ -301,5 +301,27 @@ describe('[E6.3][AC05][AC53] the stock list', () => {
     const sold = await s.list('?filter=sold-out')
 
     expect(sold.items.find(row => row.skuId === skuId)).toMatchObject({ onHand: 2, reserved: 2, available: 0 })
+  })
+
+  it('[ADR-033] the list pages by number: 12 variants, 5 a page, the total and the counts on every page, a page past the end empty, a skip over 10,000 refused', async () => {
+    const s = await setup({ fresh: true })
+    const skus = await Promise.all(Array.from({ length: 12 }, () => s.plain()))
+    await Promise.all(skus.slice(0, 7).map(skuId => s.stock(skuId, 3)))
+
+    const pages = [await s.list('?pageSize=5&page=1'), await s.list('?pageSize=5&page=2'), await s.list('?pageSize=5&page=3'), await s.list('?pageSize=5&page=4')]
+    const walked = pages.flatMap(page => page.items.map(row => row.skuId))
+
+    expect(pages.map(page => page.items.length)).toEqual([5, 5, 2, 0])
+    expect(pages.every(page => page.total === 12 && page.counts.all === 12 && page.counts.inStock === 7 && page.counts.soldOut === 5)).toBe(true)
+    expect(new Set(walked).size).toBe(12)
+    expect([...walked].sort()).toEqual([...skus].sort())
+    // ADR-033 section 12, one release: no page is the whole list.
+    const whole = await s.list()
+    expect([whole.items.length, whole.pageSize]).toEqual([12, 500])
+    // A filter narrows the total, not the counts.
+    const sold = await s.list('?filter=sold-out&pageSize=2&page=3')
+    expect([sold.total, sold.items.length, sold.counts.all]).toEqual([5, 1, 12])
+    expect((await s.call(`${s.inventory}?page=1002`, { headers: s.owner.headers })).status).toBe(400)
+    expect((await s.call(`${s.inventory}?pageSize=21`, { headers: s.owner.headers })).status).toBe(400)
   })
 })

@@ -38,7 +38,9 @@ function serve(extra: (call: Call) => Response | undefined = () => undefined) {
       return custom
     if (call.method === 'GET' && call.path === detail)
       return Response.json(current)
-    if (call.method === 'GET' && call.path === base)
+    if (call.method === 'GET' && call.path.split('?')[0] === `${base}/option-names`)
+      return Response.json({ items: [] })
+    if (call.method === 'GET' && call.path.split('?')[0] === base)
       return Response.json(list([listItem()]))
     if (call.method === 'PUT' && call.path === `${detail}/options`) {
       const body = call.body as OptionsPut
@@ -308,8 +310,9 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
   })
 
   it('[T-010][AC4] the name offers the names that the shop\'s other keepsakes use, each once, and not this keepsake\'s own', async () => {
-    serve(call => (call.method === 'GET' && call.path === base
-      ? Response.json(list([listItem({ optionNames: [{ en: 'Own' }] }), listItem({ id: id(0x77), optionNames: [{ en: 'Size', de: 'Grösse' }, { en: 'Theme' }] }), listItem({ id: id(0x78), optionNames: [{ en: 'size' }, { en: 'Material' }] })]))
+    // The server answers each name once and leaves the keepsake being edited out (`except`); the screen shows what it is given.
+    serve(call => (call.method === 'GET' && call.path.split('?')[0] === `${base}/option-names`
+      ? Response.json({ items: [{ en: 'Size', de: 'Grösse' }, { en: 'Theme' }, { en: 'Material' }] })
       : undefined))
     await openStep()
     await userEvent.click(screen.getByRole('button', { name: 'Add option' }))
@@ -317,6 +320,7 @@ describe('[T-008][AC3] a first option on a keepsake with no option', () => {
 
     // The shop has names of its own: the starters are gone.
     expect((await screen.findAllByRole('option')).map(option => option.textContent)).toEqual(['Size', 'Theme', 'Material'])
+    expect(state.calls.some(call => call.path.startsWith(`${base}/option-names?except=${productId}`))).toBe(true)
     await userEvent.click(screen.getByRole('option', { name: 'Theme' }))
     expect(screen.getByLabelText('Option name in English', { selector: 'input' })).toHaveValue('Theme')
   })

@@ -556,10 +556,17 @@ describe('[E4.3][AC30] the story reads', () => {
 
     it('defaults to page 1 of 10, every tab, last updated first', async () => {
       seen.length = 0
-      const response = await send(app(), 'GET', groups)
+      const response = await send(app(), 'GET', `${groups}?page=1`)
 
       expect(response.status).toBe(200)
       expect(seen).toEqual([{ status: 'all', sort: 'updated', page: 1, pageSize: 10 }])
+    })
+
+    it('[ADR-033 section 12] a request without page answers the whole list (up to 500) for one release', async () => {
+      seen.length = 0
+      await send(app(), 'GET', groups)
+
+      expect(seen).toEqual([{ status: 'all', sort: 'updated', page: 1, pageSize: 500 }])
     })
 
     it('passes the page, the page size, the status tab, the trimmed search and the sort to the use case', async () => {

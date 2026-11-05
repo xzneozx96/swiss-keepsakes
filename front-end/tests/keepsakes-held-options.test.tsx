@@ -32,7 +32,9 @@ function serve(extra: (call: Call) => Response | undefined = () => undefined) {
       return custom
     if (call.method === 'GET' && call.path === detail)
       return Response.json(current)
-    if (call.method === 'GET' && call.path === base)
+    if (call.method === 'GET' && call.path.split('?')[0] === `${base}/option-names`)
+      return Response.json({ items: [] })
+    if (call.method === 'GET' && call.path.split('?')[0] === base)
       return Response.json(list([listItem()]))
     if (call.method === 'PUT' && call.path === `${detail}/options`) {
       const body = call.body as OptionsPut

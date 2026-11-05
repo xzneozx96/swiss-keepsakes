@@ -1,6 +1,7 @@
 import { z } from 'zod'
-import { BODY_LIST_LEVELS, bodyHardBreakSchema, boldMarkSchema, firstCapFault, italicMarkSchema, linkMarkSchema, listItemSchema } from './content.ts'
+import { BODY_LIST_LEVELS, bodyHardBreakSchema, boldMarkSchema, firstCapFault, italicMarkSchema, linkMarkSchema, listItemSchema, listOf, lookupIds, MAX_LOOKUP_IDS } from './content.ts'
 import { mediaSchema } from './media.ts'
+import { numberedPageOf, numberedPageQuery } from './page.ts'
 import { noNul } from './text.ts'
 
 // The merchant keepsake catalog (M11, M12). A keepsake is a product with a name and a text per language, photos, a
@@ -237,7 +238,7 @@ export const productSchema = z.object({
 export const productListItemSchema = z.object({
   id: z.uuid(),
   name: localizedView,
-  optionNames: z.array(localizedView).meta({ description: 'The names of the keepsake’s options, in order. The editor suggests the names the shop already uses' }),
+  optionNames: z.array(localizedView).meta({ description: 'Deprecated: read `GET .../products/option-names`. Kept for one release (ADR-033 section 12) for pages loaded before the deploy; it is only the names of this keepsake' }),
   status: z.enum(['draft', 'published', 'archived']),
   hasUnpublishedEdits: z.boolean(),
   hasOrders: z.boolean().meta({ description: 'Removing the keepsake archives it instead of deleting it' }),
@@ -253,9 +254,31 @@ export const productRemovalSchema = z.object({
   outcome: z.enum(['deleted', 'archived']).meta({ description: 'deleted: the keepsake is gone. archived: it had orders and stays, final' }),
 }).meta({ id: 'ProductRemoval', description: 'What removing a keepsake did' })
 
-export const productListSchema = z.object({
-  items: z.array(productListItemSchema),
-}).meta({ id: 'ProductList', description: 'The keepsakes of the store, newest first' })
+const PRODUCT_STATUS_FILTERS = ['draft', 'published', 'editsNotLive', 'archived'] as const
+
+export const productListQuerySchema = numberedPageQuery({
+  status: listOf(z.enum(PRODUCT_STATUS_FILTERS)).meta({ description: 'Comma separated: draft, published, editsNotLive, archived. A keepsake matches any of them. `published` is live with no pending edit, `editsNotLive` is live with a draft that differs. Empty: every keepsake but the archived ones' }),
+  q: z.string().trim().max(200).optional().meta({ description: 'Matches the name in either language, in any case' }),
+  sort: z.enum(['created', 'edited']).default('created').meta({ description: '`created`: newest first (`created_at desc, id desc`). `edited`: last edit first (`updated_at desc, id desc`)' }),
+})
+
+export const productListSchema = numberedPageOf(productListItemSchema, 'ProductList', {
+  statuses: z.object({ draft: z.int(), published: z.int(), editsNotLive: z.int(), archived: z.int() }).meta({ description: 'The keepsakes of each status that match the search, not the status filter' }),
+}).meta({ id: 'ProductList', description: 'One page of the keepsakes of the store, newest first' })
+
+export const productLookupQuerySchema = z.object({
+  ids: lookupIds.meta({ description: `Comma separated keepsake ids, at most ${MAX_LOOKUP_IDS}. An id of another store is left out` }),
+})
+
+export const productLookupSchema = z.object({ items: z.array(productListItemSchema) }).meta({ id: 'ProductLookup', description: 'The keepsakes named by `ids`, whatever their status, at most 50. Not paged' })
+
+export const productOptionNamesQuerySchema = z.object({
+  except: z.uuid().optional().meta({ description: 'A keepsake whose own option names are left out: the one being edited' }),
+})
+
+export const productOptionNamesSchema = z.object({
+  items: z.array(localizedView),
+}).meta({ id: 'ProductOptionNames', description: 'The option names the store’s keepsakes already use, each once ignoring case, at most 50, newest keepsake first. Not paged' })
 
 export type ProductCreateBody = z.infer<typeof productCreateBodySchema>
 export type OptionsSaveBody = z.infer<typeof optionsSaveBodySchema>
@@ -271,3 +294,6 @@ export type Product = z.infer<typeof productSchema>
 export type ProductListItem = z.infer<typeof productListItemSchema>
 export type ProductRemoval = z.infer<typeof productRemovalSchema>
 export type ProductList = z.infer<typeof productListSchema>
+export type ProductListQuery = z.input<typeof productListQuerySchema>
+export type ProductLookup = z.infer<typeof productLookupSchema>
+export type ProductOptionNames = z.infer<typeof productOptionNamesSchema>

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { numberedPageOf, numberedPageQuery } from './page.ts'
 
 // Files the merchant uploads: a browser PUTs the bytes straight to object storage with a one-time grant, then
 // confirms them. Mirrors packages/domain/src/content/media.ts (the contract imports only zod).
@@ -91,23 +92,17 @@ const splitList = (value: string | undefined) => (value === undefined || value =
 const useList = z.string().max(60).optional().transform(splitList).pipe(z.array(useFilter).max(3))
 const statusList = z.string().max(60).optional().transform(splitList).pipe(z.array(statusFilter).max(3))
 
-export const mediaListQuerySchema = z.object({
+export const mediaListQuerySchema = numberedPageQuery({
   kind: mediaKind.default('image'),
   q: z.string().trim().max(200).optional().meta({ description: 'Matches the name only, in any case' }),
   use: useList.meta({ description: 'Comma separated: unused, drafts, published. A file matches any of them' }),
   status: statusList.meta({ description: 'Comma separated: processing, ready, retired. Empty means all three' }),
-  page: z.coerce.number().int().min(1).max(10_000).default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).default(10),
-})
+}, { maxPageSize: 24 })
 
 const countByUse = z.object({ unused: z.int(), drafts: z.int(), published: z.int() })
 const countByStatus = z.object({ processing: z.int(), ready: z.int(), retired: z.int() })
 
-export const mediaListSchema = z.object({
-  items: z.array(mediaItemSchema),
-  total: z.int().meta({ description: 'The files that match, before paging' }),
-  page: z.int(),
-  pageSize: z.int(),
+export const mediaListSchema = numberedPageOf(mediaItemSchema, 'MediaList', {
   kinds: z.object({ image: z.int(), audio: z.int(), pdf: z.int() }).meta({ description: 'Every file of each kind, retired ones too. Search and filters do not change them' }),
   uses: countByUse.meta({ description: 'The files of this kind that match the search and the status filter, by use' }),
   statuses: countByStatus.meta({ description: 'The files of this kind that match the search and the use filter, by status' }),

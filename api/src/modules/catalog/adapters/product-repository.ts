@@ -1,6 +1,7 @@
 import type { Tx } from '../../../platform/db/client.ts'
-import type { Localized, LocalizedDoc, OptionValue, Product, ProductChanges, ProductDoc, ProductListRow, ProductOption, ProductRepository, ProductVariant } from '../ports.ts'
+import type { Localized, LocalizedDoc, OptionValue, Product, ProductChanges, ProductDoc, ProductListPage, ProductListQuery, ProductListRow, ProductListStatus, ProductOption, ProductRepository, ProductVariant } from '../ports.ts'
 import { sql } from 'drizzle-orm'
+import { offsetOf } from '../../../platform/db/offset.ts'
 import { writeOptions, writeSkuValues, writeVariants } from './option-writes.ts'
 
 interface ProductRow {
@@ -121,30 +122,83 @@ function reload(tx: Tx, product: Pick<Product, 'storeId' | 'id'>): Promise<Produ
   return load(tx, product.storeId, product.id, false).then(found => found!)
 }
 
+// The rows of one page, or of the ids asked for: the options, the first photo and the live variants are aggregated per keepsake,
+// so a page is one round trip. The order is the order of `ids`.
+async function listRows(tx: Tx, storeId: string, ids: string[]): Promise<ProductListRow[]> {
+  const result = await tx.execute<ListRow & Record<string, unknown>>(sql`
+    select p.id, p.status, p.draft, p.published, p.row_version, p.updated_at,
+           (select coalesce(jsonb_agg(o.name order by o.position), '[]'::jsonb) from catalog.product_options o where o.product_id = p.id) as option_names,
+           (select media_id from catalog.product_media m where m.product_id = p.id order by m.position limit 1) as published_cover,
+           (select count(*) from catalog.skus s where s.product_id = p.id and s.status <> 'archived')::int as variant_count,
+           (select coalesce(array_agg(s.id::text order by s.id), '{}') from catalog.skus s where s.product_id = p.id and s.status <> 'archived') as live_sku_ids
+      from catalog.products p
+     where p.store_id = ${storeId} and p.id = any(${sql.param(ids)}::uuid[])`)
+  const rank = new Map(ids.map((id, index) => [id.toLowerCase(), index]))
+  return result.rows.sort((a, b) => rank.get(a.id)! - rank.get(b.id)!).map((row): ProductListRow => ({
+    id: row.id,
+    name: (row.draft ?? row.published)?.name ?? {},
+    optionNames: row.option_names,
+    status: row.status,
+    hasUnpublishedEdits: row.status === 'published' && row.draft !== null,
+    coverMediaId: row.draft ? row.draft.media?.[0] ?? null : row.published_cover,
+    variantCount: row.variant_count,
+    liveSkuIds: row.live_sku_ids,
+    rowVersion: row.row_version,
+    updatedAt: new Date(row.updated_at),
+  }))
+}
+
+const STATUS_KEYS: ProductListStatus[] = ['draft', 'published', 'editsNotLive', 'archived']
+
+// One numbered page (ADR-033 section 6). The list status is derived (`editsNotLive`: published with a draft). With no status ticked the
+// archived keepsakes are left out. The search is position(), not ILIKE, so a % or _ in it is a plain character, over the name the
+// list shows (the draft's, else the live one) in either language. The facets count with the search, not the ticks, so the
+// archived count is there too. A page past the end returns no rows and the real total (the count is its own query).
+async function listPage(tx: Tx, storeId: string, query: ProductListQuery): Promise<ProductListPage> {
+  const products = sql`
+    products as (
+      select p.id, p.created_at, p.updated_at,
+             case when p.status::text = 'published' and p.draft is not null then 'editsNotLive' else p.status::text end as lstatus,
+             coalesce(p.draft, p.published)->'name'->>'en' as name_en,
+             coalesce(p.draft, p.published)->'name'->>'de' as name_de
+        from catalog.products p
+       where p.store_id = ${storeId}
+    )`
+  const search = query.q ? sql`(position(lower(${query.q}) in lower(coalesce(name_en, ''))) > 0 or position(lower(${query.q}) in lower(coalesce(name_de, ''))) > 0)` : sql`true`
+  const shown = query.status.length > 0 ? sql`lstatus = any(${sql.param(query.status)}::text[])` : sql`lstatus <> 'archived'`
+  const order = query.sort === 'edited' ? sql`updated_at desc, id desc` : sql`created_at desc, id desc`
+  // One after the other: a transaction holds one connection, and node-postgres deprecates overlapping queries on it.
+  const ids = await tx.execute<{ id: string, total: number }>(sql`
+    with ${products} select id, (count(*) over ())::int as total from products where ${search} and ${shown} order by ${order} limit ${query.pageSize} offset ${offsetOf(query.page, query.pageSize)}`)
+  const counted = await tx.execute<{ lstatus: ProductListStatus, count: number }>(sql`
+    with ${products} select lstatus, count(*)::int as count from products where ${search} group by lstatus`)
+  const statuses = Object.fromEntries(STATUS_KEYS.map(key => [key, counted.rows.find(row => row.lstatus === key)?.count ?? 0])) as Record<ProductListStatus, number>
+  // A page past the end has no row to carry the total, so it comes from the status counts (which hold the same search).
+  const fromCounts = query.status.length > 0 ? query.status.reduce((sum, key) => sum + statuses[key], 0) : statuses.draft + statuses.published + statuses.editsNotLive
+  const total = ids.rows[0]?.total ?? fromCounts
+  const rows = ids.rows.length === 0 ? [] : await listRows(tx, storeId, ids.rows.map(row => row.id))
+
+  return { rows, total, statuses }
+}
+
 export function createProductRepository(): ProductRepository<Tx> {
   return {
-    async list(tx, storeId) {
-      const result = await tx.execute<ListRow & Record<string, unknown>>(sql`
-        select p.id, p.status, p.draft, p.published, p.row_version, p.updated_at,
-               (select coalesce(jsonb_agg(o.name order by o.position), '[]'::jsonb) from catalog.product_options o where o.product_id = p.id) as option_names,
-               (select media_id from catalog.product_media m where m.product_id = p.id order by m.position limit 1) as published_cover,
-               (select count(*) from catalog.skus s where s.product_id = p.id and s.status <> 'archived')::int as variant_count,
-               (select coalesce(array_agg(s.id::text order by s.id), '{}') from catalog.skus s where s.product_id = p.id and s.status <> 'archived') as live_sku_ids
-          from catalog.products p
-         where p.store_id = ${storeId}
-         order by p.created_at desc, p.id desc`)
-      return result.rows.map((row): ProductListRow => ({
-        id: row.id,
-        name: (row.draft ?? row.published)?.name ?? {},
-        optionNames: row.option_names,
-        status: row.status,
-        hasUnpublishedEdits: row.status === 'published' && row.draft !== null,
-        coverMediaId: row.draft ? row.draft.media?.[0] ?? null : row.published_cover,
-        variantCount: row.variant_count,
-        liveSkuIds: row.live_sku_ids,
-        rowVersion: row.row_version,
-        updatedAt: new Date(row.updated_at),
-      }))
+    list: (tx, storeId, query) => listPage(tx, storeId, query),
+
+    byIds: (tx, storeId, ids) => (ids.length === 0 ? Promise.resolve([]) : listRows(tx, storeId, ids)),
+
+    async optionNames(tx, storeId, limit, exceptId) {
+      const found = await tx.execute<{ name: Localized }>(sql`
+        select name from (
+          select distinct on (lower(btrim(coalesce(o.name->>'en', o.name->>'de', '')))) o.name, p.created_at, o.position
+            from catalog.product_options o
+            join catalog.products p on p.id = o.product_id
+           where p.store_id = ${storeId}${exceptId ? sql` and p.id <> ${exceptId}` : sql``} and btrim(coalesce(o.name->>'en', o.name->>'de', '')) <> ''
+           order by lower(btrim(coalesce(o.name->>'en', o.name->>'de', ''))), p.created_at desc, o.position
+        ) names
+         order by created_at desc, position
+         limit ${limit}`)
+      return found.rows.map(row => row.name)
     },
 
     find: (tx, storeId, productId) => load(tx, storeId, productId, false),

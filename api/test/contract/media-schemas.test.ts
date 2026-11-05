@@ -27,11 +27,13 @@ describe('[E4.11][AC51] media library schemas', () => {
 
   it('[E4.11][AC51] the list query has defaults, splits the filters and refuses unknown values', () => {
     expect(mediaListQuerySchema.parse({})).toEqual({ kind: 'image', use: [], status: [], page: 1, pageSize: 10 })
-    expect(mediaListQuerySchema.parse({ kind: 'pdf', use: 'unused,drafts', status: 'ready', page: '2', pageSize: '24', q: ' sun ' }))
-      .toEqual({ kind: 'pdf', q: 'sun', use: ['unused', 'drafts'], status: ['ready'], page: 2, pageSize: 24 })
+    expect(mediaListQuerySchema.parse({ kind: 'pdf', use: 'unused,drafts', status: 'ready', page: '2', pageSize: '20', q: ' sun ' }))
+      .toEqual({ kind: 'pdf', q: 'sun', use: ['unused', 'drafts'], status: ['ready'], page: 2, pageSize: 20 })
     expect(ok(mediaListQuerySchema, { kind: 'video' })).toBe(false)
     expect(ok(mediaListQuerySchema, { use: 'unused,never' })).toBe(false)
-    expect(ok(mediaListQuerySchema, { pageSize: '101' })).toBe(false)
+    expect(ok(mediaListQuerySchema, { pageSize: '24' })).toBe(true)
+    expect(ok(mediaListQuerySchema, { pageSize: '25' })).toBe(false)
+    expect(ok(mediaListQuerySchema, { page: '1002' })).toBe(false)
     expect(ok(mediaListQuerySchema, { page: '0' })).toBe(false)
   })
 

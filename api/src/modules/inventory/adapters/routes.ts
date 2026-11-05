@@ -3,11 +3,12 @@ import type { Actor } from '@sk/domain/identity'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
 import type { StockItemEntry } from '../application/get-stock-item.ts'
-import type { StockFilter, StockListEntry } from '../application/list-stock.ts'
+import type { StockListEntry, StockListQuery } from '../application/list-stock.ts'
 import type { StockEntry } from '../application/stock-entry.ts'
 import { createRoute } from '@hono/zod-openapi'
 import { stockItemSchema, stockListQuerySchema, stockListSchema, stockManySchema, stockManySetBodySchema, stockRowSchema, stockSetBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
+import { wholeIfNoPage } from '../../../platform/http/whole-list.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { failureProblem } from './problems.ts'
 import { itemParams, json, storeParams } from './route-parts.ts'
@@ -15,7 +16,7 @@ import { stockItemView, stockListView, stockRowView } from './stock-view.ts'
 
 // What the inventory routes call. main.ts builds each from the module's use cases, wrapped by guardUseCases.
 export interface InventoryUseCases {
-  listStock: (actor: Actor, storeId: string, query: { filter?: StockFilter, q?: string }) => Promise<Result<StockListEntry>>
+  listStock: (actor: Actor, storeId: string, query: StockListQuery) => Promise<Result<StockListEntry>>
   getStockItem: (actor: Actor, storeId: string, skuId: string) => Promise<Result<StockItemEntry>>
   setStock: (actor: Actor, storeId: string, skuId: string, onHand: number, requestId: string | null) => Promise<Result<StockEntry>>
   setManyStock: (actor: Actor, storeId: string, items: { skuId: string, onHand: number }[], requestId: string | null) => Promise<Result<StockEntry[]>>
@@ -28,7 +29,7 @@ const listRoute = createRoute({
   path: inventoryPath,
   request: { params: storeParams, query: stockListQuerySchema },
   responses: {
-    200: { description: 'The live variants of the store with their stock, and the tab counts of the whole store', headers: requestIdHeader, content: json(stockListSchema) },
+    200: { description: 'One page of the live variants of the store with their stock, the total of the filter and the search, and the tab counts of the whole store. Deprecated for one release (ADR-033 section 12): a request without `page` answers the whole list (up to 500)', headers: requestIdHeader, content: json(stockListSchema) },
     ...problemResponses,
   },
 })
@@ -67,8 +68,8 @@ const setRoute = createRoute({
 // verified store from `c.get('store')`, never from the path.
 export function registerInventoryRoutes(app: OpenAPIHono<AppEnv>, useCases: InventoryUseCases): void {
   app.openapi(listRoute, async (c) => {
-    const { filter, q } = c.req.valid('query')
-    const result = await useCases.listStock(c.get('actor'), c.get('store').storeId, { ...(filter && { filter }), ...(q && { q }) })
+    const { filter, q, sort, page, pageSize } = wholeIfNoPage(c, c.req.valid('query'))
+    const result = await useCases.listStock(c.get('actor'), c.get('store').storeId, { ...(filter && { filter }), ...(q && { q }), sort, page, pageSize })
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(stockListView(result.value), 200)

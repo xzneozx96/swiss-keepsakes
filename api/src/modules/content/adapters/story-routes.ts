@@ -12,6 +12,7 @@ import type { StoryGroupChanges, StoryLinkCounts, StoryListQuery, StoryVersionCh
 import { createRoute, z } from '@hono/zod-openapi'
 import { storyDeletedSchema, storyGroupCreateBodySchema, storyGroupDetailSchema, storyGroupSaveBodySchema, storyGroupSchema, storyLinksSchema, storyListQuerySchema, storyListSchema, storyLookupQuerySchema, storyLookupSchema, storyVersionCreateBodySchema, storyVersionMoveBodySchema, storyVersionSaveBodySchema, storyVersionSchema, storyVersionTextSchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
+import { wholeIfNoPage } from '../../../platform/http/whole-list.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
 import { failureProblem } from './problems.ts'
@@ -216,7 +217,7 @@ export function registerStoryRoutes(app: OpenAPIHono<AppEnv>, useCases: StoryUse
   })
 
   app.openapi(listGroupsRoute, async (c) => {
-    const result = await useCases.listStoryGroups(c.get('actor'), c.get('store').storeId, c.req.valid('query'))
+    const result = await useCases.listStoryGroups(c.get('actor'), c.get('store').storeId, wholeIfNoPage(c, c.req.valid('query')))
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(storyListView(result.value, useCases.publicUrl), 200)

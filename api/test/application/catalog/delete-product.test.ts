@@ -39,7 +39,7 @@ function setup(found: Product | undefined, sold: string[] = []) {
     findForUpdate: vi.fn(async () => found),
     remove: vi.fn(async () => {}),
     archive: vi.fn(async (_tx: null, p: Product) => ({ ...p, status: 'archived' as const, rowVersion: p.rowVersion + 1 })),
-    list: vi.fn(async () => [{ id: 'p1', name: {}, status: 'published' as const, hasUnpublishedEdits: false, coverMediaId: null, variantCount: 1, soldOutCount: 0, rowVersion: 4, updatedAt: new Date() }]),
+    list: vi.fn(async () => ({ rows: [{ id: 'p1', name: {}, optionNames: [], status: 'published' as const, hasUnpublishedEdits: false, coverMediaId: null, variantCount: 1, liveSkuIds: [], rowVersion: 4, updatedAt: new Date() }], total: 1, statuses: { draft: 0, published: 1, editsNotLive: 0, archived: 0 } })),
     save: vi.fn(),
     publish: vi.fn(),
     unpublish: vi.fn(),
@@ -140,7 +140,14 @@ describe('[E6.1] the list says which keepsakes have orders', () => {
   it('[E6.1] marks a sold keepsake, and none when no sales directory is wired', async () => {
     const { deps } = setup(undefined, ['p1'])
 
-    expect((await makeListProducts(deps)(owner, storeId) as { value: { hasOrders: boolean }[] }).value[0]!.hasOrders).toBe(true)
-    expect((await makeListProducts({ ...deps, sales: undefined })(owner, storeId) as { value: { hasOrders: boolean }[] }).value[0]!.hasOrders).toBe(false)
+    const query = { status: [], sort: 'created' as const, page: 1, pageSize: 10 }
+    const entries = async (over: Partial<typeof deps> = {}) => {
+      const result = await makeListProducts({ ...deps, ...over })(owner, storeId, query)
+
+      return result.ok ? result.value.entries : []
+    }
+
+    expect((await entries())[0]!.hasOrders).toBe(true)
+    expect((await entries({ sales: undefined }))[0]!.hasOrders).toBe(false)
   })
 })

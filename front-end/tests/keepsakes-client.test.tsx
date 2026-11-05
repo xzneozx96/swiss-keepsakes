@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DataClientProvider, useCommand } from '@/features/data-client'
 import { ApiProblem } from '@/features/data-client/errors'
-import { useKeepsake, useKeepsakes } from '@/features/keepsakes/api/queries'
+import { useKeepsake, useKeepsakeLookup, useKeepsakes } from '@/features/keepsakes/api/queries'
 import { list, listItem, problem, product, productId, setUpHarness, state, storeId, variantId } from './keepsakes-harness'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
@@ -20,24 +20,54 @@ function wrapper({ children }: { children: React.ReactNode }) {
 }
 
 const base = `/api/store/${storeId}/products`
+const query = { page: 1, pageSize: 10 }
 
 describe('[E6.1][list] the keepsake queries', () => {
   it('[E6.1][list] reads the list and one keepsake of the store from the API', async () => {
-    state.answer = call => call.path === base ? Response.json(list([listItem()])) : call.path === `${base}/${productId}` ? Response.json(product()) : undefined
-    const { result } = renderHook(() => ({ all: useKeepsakes(storeId), one: useKeepsake(storeId, productId) }), { wrapper })
+    state.answer = call => call.path.split('?')[0] === base ? Response.json(list([listItem()])) : call.path === `${base}/${productId}` ? Response.json(product()) : undefined
+    const { result } = renderHook(() => ({ all: useKeepsakes(storeId, query), one: useKeepsake(storeId, productId) }), { wrapper })
 
     await waitFor(() => expect(result.current.all.data?.items).toHaveLength(1))
     await waitFor(() => expect(result.current.one.data?.rowVersion).toBe(1))
-    expect(state.calls.filter(call => call.method === 'GET' && call.path.startsWith(base)).map(call => call.path).sort()).toEqual([base, `${base}/${productId}`])
+    expect(state.calls.filter(call => call.method === 'GET' && call.path.startsWith(base)).map(call => call.path).sort()).toEqual([`${base}/${productId}`, `${base}?page=1&pageSize=10`])
   })
 
   it('[E6.1][list] does not retry a refusal and reads it as an ApiProblem', async () => {
-    state.answer = call => call.path === base ? problem(403, 'forbidden') : undefined
-    const { result } = renderHook(() => useKeepsakes(storeId), { wrapper })
+    state.answer = call => call.path.split('?')[0] === base ? problem(403, 'forbidden') : undefined
+    const { result } = renderHook(() => useKeepsakes(storeId, query), { wrapper })
 
     await waitFor(() => expect(result.current.error).toBeInstanceOf(ApiProblem))
-    expect(state.calls.filter(call => call.path === base)).toHaveLength(1)
+    expect(state.calls.filter(call => call.path.split('?')[0] === base)).toHaveLength(1)
     expect((result.current.error as ApiProblem).type).toBe('forbidden')
+  })
+})
+
+describe('[ADR-033] the keepsake lookup', () => {
+  const a = '0198a000-0000-7000-8000-0000000000a1'
+  const b = '0198a000-0000-7000-8000-0000000000a2'
+
+  it('holds the last answer only while it has every id asked for: a new id shows loading, not the old answer', async () => {
+    let release = () => {}
+    const held = new Promise<void>((resolve) => { release = resolve })
+
+    state.answer = (call) => {
+      if (!call.path.startsWith(`${base}/lookup`))
+        return undefined
+      const ids = new URL(call.path, 'http://x').searchParams.get('ids')!.split(',')
+      const body = () => Response.json({ items: ids.map(id => listItem({ id })) })
+
+      return ids.length === 2 ? held.then(body) as never : body()
+    }
+    const { result, rerender } = renderHook(({ ids }) => useKeepsakeLookup(storeId, ids), { wrapper, initialProps: { ids: [a] } })
+
+    await waitFor(() => expect(result.current.data?.items).toHaveLength(1))
+    rerender({ ids: [a, b] })
+    expect(result.current.data).toBeUndefined()
+    release()
+    await waitFor(() => expect(result.current.data?.items).toHaveLength(2))
+    // Back to one id: that read is cached, and the answer holds that id.
+    rerender({ ids: [a] })
+    expect(result.current.data?.items.map(item => item.id)).toEqual([a])
   })
 })
 
@@ -82,7 +112,7 @@ describe('[E6.1][412] the keepsake commands', () => {
     let lists = 0
 
     state.answer = (call) => {
-      if (call.path === base && call.method === 'GET') {
+      if (call.path.split('?')[0] === base && call.method === 'GET') {
         lists++
 
         return Response.json(list([listItem()]))
@@ -91,7 +121,7 @@ describe('[E6.1][412] the keepsake commands', () => {
       return call.method === 'GET' ? undefined : Response.json(product({ rowVersion: 2 }))
     }
     const { result } = renderHook(() => ({
-      all: useKeepsakes(storeId),
+      all: useKeepsakes(storeId, query),
       save: useCommand('keepsakes', 'save'),
       publish: useCommand('keepsakes', 'publish'),
     }), { wrapper })
@@ -147,7 +177,7 @@ describe('[E6.2][AC52] the options and variant commands', () => {
     let lists = 0
 
     state.answer = (call) => {
-      if (call.path === base && call.method === 'GET') {
+      if (call.path.split('?')[0] === base && call.method === 'GET') {
         lists++
 
         return Response.json(list([listItem()]))
@@ -155,7 +185,7 @@ describe('[E6.2][AC52] the options and variant commands', () => {
 
       return call.method === 'GET' ? undefined : Response.json(product({ rowVersion: 2 }))
     }
-    const { result } = renderHook(() => ({ all: useKeepsakes(storeId), saveOptions: useCommand('keepsakes', 'saveOptions'), createVariant: useCommand('keepsakes', 'createVariant') }), { wrapper })
+    const { result } = renderHook(() => ({ all: useKeepsakes(storeId, query), saveOptions: useCommand('keepsakes', 'saveOptions'), createVariant: useCommand('keepsakes', 'createVariant') }), { wrapper })
 
     await waitFor(() => expect(lists).toBe(1))
     await act(async () => {

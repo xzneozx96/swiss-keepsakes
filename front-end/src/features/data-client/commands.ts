@@ -20,7 +20,7 @@ interface ReadsWithInput {
   stores: 'onboarding' | 'members' | 'previewInvitation'
   categories: 'list'
   inventory: 'list' | 'get'
-  keepsakes: 'list' | 'get'
+  keepsakes: 'list' | 'get' | 'lookup' | 'optionNames'
   media: 'list' | 'uses' | 'get' | 'lookup'
   pickup: 'list'
   places: 'list' | 'lookup' | 'get' | 'storyOptions' | 'storyVersion'

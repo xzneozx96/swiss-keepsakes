@@ -24,11 +24,11 @@ export function stockRow(over: Record<string, unknown> = {}) {
 }
 
 /** A list answer; the counts are those of the rows unless a test sets them. */
-export function stockList(rows: Record<string, unknown>[], counts?: { all: number, inStock: number, soldOut: number }) {
+export function stockList(rows: Record<string, unknown>[], counts?: { all: number, inStock: number, soldOut: number }, over: Record<string, unknown> = {}) {
   const items = rows.map(row => stockRow(row))
   const soldOut = items.filter(row => row.available === 0).length
 
-  return stockListSchema.parse({ items, counts: counts ?? { all: items.length, inStock: items.length - soldOut, soldOut } })
+  return stockListSchema.parse({ items, total: items.length, page: 1, pageSize: 10, counts: counts ?? { all: items.length, inStock: items.length - soldOut, soldOut }, ...over })
 }
 
 export const stockProblem = (reserved: number) => Response.json({ type: 'stock-below-reserved', status: 422, title: 'refused', instance: '/x', requestId: 'req-2', reserved }, { status: 422 })

@@ -44,7 +44,7 @@ export function page(items: Record<string, unknown>[], over: Record<string, unkn
     items,
     total: items.length,
     page: 1,
-    pageSize: 24,
+    pageSize: 20,
     kinds: { image: items.length, audio: 2, pdf: 1 },
     uses: { unused: 1, drafts: 1, published: 1 },
     statuses: { processing: 0, ready: items.length, retired: 0 },

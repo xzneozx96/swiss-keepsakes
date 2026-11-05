@@ -3,6 +3,7 @@ import type { Tx } from '../../../platform/db/client.ts'
 import type { KeepsakeUse, MediaLibrary, MediaListQuery, MediaUseRow } from '../ports.ts'
 import type { Columns } from './media-repository.ts'
 import { sql } from 'drizzle-orm'
+import { offsetOf } from '../../../platform/db/offset.ts'
 import { record } from './media-repository.ts'
 
 const uuidPattern = '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
@@ -128,7 +129,7 @@ export function createMediaLibrary(): MediaLibrary<Tx> {
       const search = searchCondition(query.q)
       const use = useCondition(query.use)
       const status = statusCondition(query.status)
-      const offset = (query.page - 1) * query.pageSize
+      const offset = offsetOf(query.page, query.pageSize)
       const items = await tx.execute<Columns & { pages: number, published_pages: number, total: string | number }>(sql`
         with ${base}
         select lib.*, count(*) over () as total from lib

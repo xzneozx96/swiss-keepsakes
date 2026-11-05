@@ -10,7 +10,7 @@ import { createPickupRepository } from '../../src/modules/catalog/adapters/picku
 import { registerPickupRoutes } from '../../src/modules/catalog/adapters/pickup-routes.ts'
 import { createProductRepository } from '../../src/modules/catalog/adapters/product-repository.ts'
 import { registerCatalogRoutes } from '../../src/modules/catalog/adapters/routes.ts'
-import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeletePickupPlace, makeDeleteProduct, makeGetPickupPlace, makeGetProduct, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
+import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeletePickupPlace, makeDeleteProduct, makeGetPickupPlace, makeGetProduct, makeListOptionNames, makeListPickupPlaces, makeListProducts, makeLookupProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
 import { createKeepsakeLinks } from '../../src/modules/content/adapters/keepsake-links.ts'
 import { createMapsLinks } from '../../src/modules/content/adapters/maps-link-fetch.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
@@ -75,6 +75,8 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
   }
   const useCases = guardUseCases({
     listProducts: makeListProducts(deps),
+    lookupProducts: makeLookupProducts(deps),
+    listOptionNames: makeListOptionNames(deps),
     getProduct: makeGetProduct(deps),
     createProduct: makeCreateProduct(deps),
     saveProduct: makeSaveProduct(deps),

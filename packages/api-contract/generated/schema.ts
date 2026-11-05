@@ -1588,8 +1588,14 @@ export interface paths {
                 query?: {
                     /** @description `in-stock`: at least one unit available. `sold-out`: none available */
                     filter?: components["schemas"]["StockFilter"];
+                    /** @description The page, from 1. A page past the end answers no items and the real total */
+                    page?: number;
+                    /** @description Rows a page, 1 to 20 */
+                    pageSize?: number;
                     /** @description Matches the code, the variant title or the keepsake name, in any case */
                     q?: string;
+                    /** @description `name`: keepsake name, variant title, code, then variant id descending. `newest`: variant id descending (a `uuidv7`, so newest first) */
+                    sort?: "name" | "newest";
                 };
                 header?: never;
                 path: {
@@ -1599,7 +1605,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description The live variants of the store with their stock, and the tab counts of the whole store */
+                /** @description One page of the live variants of the store with their stock, the total of the filter and the search, and the tab counts of the whole store. Deprecated for one release (ADR-033 section 12): a request without `page` answers the whole list (up to 500) */
                 200: {
                     headers: {
                         "X-Request-Id": components["headers"]["RequestId"];
@@ -1813,7 +1819,9 @@ export interface paths {
             parameters: {
                 query?: {
                     kind?: "image" | "audio" | "pdf";
+                    /** @description The page, from 1. A page past the end answers no items and the real total */
                     page?: number;
+                    /** @description Rows a page, 1 to 24. Deprecated above 20: the most is 20 from the next release (ADR-033 section 12) */
                     pageSize?: number;
                     /** @description Matches the name only, in any case */
                     q?: string;
@@ -3435,7 +3443,18 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description The page, from 1. A page past the end answers no items and the real total */
+                    page?: number;
+                    /** @description Rows a page, 1 to 20 */
+                    pageSize?: number;
+                    /** @description Matches the name in either language, in any case */
+                    q?: string;
+                    /** @description `created`: newest first (`created_at desc, id desc`). `edited`: last edit first (`updated_at desc, id desc`) */
+                    sort?: "created" | "edited";
+                    /** @description Comma separated: draft, published, editsNotLive, archived. A keepsake matches any of them. `published` is live with no pending edit, `editsNotLive` is live with a draft that differs. Empty: every keepsake but the archived ones */
+                    status?: string;
+                };
                 header?: never;
                 path: {
                     storeId: string;
@@ -3444,7 +3463,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description The keepsakes of the store, newest first */
+                /** @description One page of the keepsakes of the store, newest first, with the total and the status counts. Deprecated for one release (ADR-033 section 12): a request without `page` answers the whole list (up to 500) */
                 200: {
                     headers: {
                         "X-Request-Id": components["headers"]["RequestId"];
@@ -3955,6 +3974,108 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/store/{storeId}/products/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Comma separated keepsake ids, at most 50. An id of another store is left out */
+                    ids?: string;
+                };
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The keepsakes named by `ids` (at most 50), whatever their status. Not paged */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProductLookup"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/products/option-names": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    /** @description A keepsake whose own option names are left out: the one being edited */
+                    except?: string;
+                };
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The option names the shop already uses, each once, at most 50. Whole: the name field suggests them */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProductOptionNames"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/store/{storeId}/story-groups": {
@@ -6052,7 +6173,7 @@ export interface components {
                 ready: number;
                 retired: number;
             };
-            /** @description The files that match, before paging */
+            /** @description The rows that match the filters, before paging */
             total: number;
             /** @description The files of this kind that match the search and the status filter, by use */
             uses: {
@@ -6746,9 +6867,20 @@ export interface components {
             text?: components["schemas"]["KeepsakeText"];
             variants: components["schemas"]["KeepsakeVariantWrite"][];
         };
-        /** @description The keepsakes of the store, newest first */
+        /** @description One page of the keepsakes of the store, newest first */
         ProductList: {
             items: components["schemas"]["ProductListItem"][];
+            page: number;
+            pageSize: number;
+            /** @description The keepsakes of each status that match the search, not the status filter */
+            statuses: {
+                archived: number;
+                draft: number;
+                editsNotLive: number;
+                published: number;
+            };
+            /** @description The rows that match the filters, before paging */
+            total: number;
         };
         /** @description One row of the keepsake list */
         ProductListItem: {
@@ -6783,7 +6915,7 @@ export interface components {
                 de?: string;
                 en?: string;
             };
-            /** @description The names of the keepsake’s options, in order. The editor suggests the names the shop already uses */
+            /** @description Deprecated: read `GET .../products/option-names`. Kept for one release (ADR-033 section 12) for pages loaded before the deploy; it is only the names of this keepsake */
             optionNames: {
                 de?: string;
                 en?: string;
@@ -6798,6 +6930,10 @@ export interface components {
             updatedAt: string;
             /** @description Variants that are not archived */
             variantCount: number;
+        };
+        /** @description The keepsakes named by `ids`, whatever their status, at most 50. Not paged */
+        ProductLookup: {
+            items: components["schemas"]["ProductListItem"][];
         };
         /** @description An option of one keepsake, such as Size or Theme */
         ProductOption: {
@@ -6815,6 +6951,13 @@ export interface components {
                     de?: string;
                     en?: string;
                 };
+            }[];
+        };
+        /** @description The option names the store’s keepsakes already use, each once ignoring case, at most 50, newest keepsake first. Not paged */
+        ProductOptionNames: {
+            items: {
+                de?: string;
+                en?: string;
             }[];
         };
         /** @description What removing a keepsake did */
@@ -8091,7 +8234,7 @@ export interface components {
                 en?: string;
             };
         };
-        /** @description The live variants of the store with their stock */
+        /** @description One page of the live variants of the store with their stock */
         StockList: {
             /** @description The tab figures of the whole store, counted before the filter and the search */
             counts: {
@@ -8100,6 +8243,10 @@ export interface components {
                 soldOut: number;
             };
             items: components["schemas"]["StockRow"][];
+            page: number;
+            pageSize: number;
+            /** @description The rows that match the filters, before paging */
+            total: number;
         };
         /** @description The rows that were set, in the order of the request */
         StockMany: {

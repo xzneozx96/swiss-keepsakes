@@ -8,11 +8,10 @@ import { vi } from 'vitest'
 import { useStoryGroup } from '@/features/stories/api/queries'
 import { DetailsPanel, useDetailsPanel } from '@/features/stories/components/story-details-panel'
 import { useStoryGroupEditor } from '@/features/stories/hooks/use-story-group-editor'
-import { list as keepsakeList } from './keepsakes-harness'
 import { serveDetails } from './stories-details-harness'
 import { groupId, storeId } from './stories-harness'
 import { renderWithStore } from './stories-media-harness'
-import { pinsAnswer, storiesAnswer } from './support/pages'
+import { pinsAnswer, productLookup, serverProductPage, storiesAnswer } from './support/pages'
 
 type Detail = Parameters<typeof serveDetails>[0]
 type Rows = Record<string, unknown>[]
@@ -42,8 +41,14 @@ export function serveLists(initial: Detail, rows: { pins?: Rows, keepsakes?: Row
 
     if (pins)
       return answer('pins', () => pins)
-    if (call.path === `${base}/products`)
-      return answer('products', () => keepsakeList(lists.keepsakes))
+    // The keepsakes a story links come by id (the lookup), the picker's choices from the paged list (its first matches).
+    if (call.path.startsWith(`${base}/products/lookup`)) {
+      const ids = (new URL(call.path, 'http://x').searchParams.get('ids') ?? '').split(',')
+
+      return answer('products', () => productLookup(ids.flatMap(id => (lists.keepsakes as { id: string }[]).filter(item => item.id === id))))
+    }
+    if (call.path.split('?')[0] === `${base}/products`)
+      return answer('products', () => serverProductPage(lists.keepsakes as never, new URL(call.path, 'http://x')))
     const stories = storiesAnswer(lists.stories as never, call.path, base)
 
     if (stories)

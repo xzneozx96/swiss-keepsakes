@@ -298,11 +298,18 @@ describe('[ADR-033] GET pins pages', () => {
 
   it('defaults to page 1 of 10 with no filter, last edit first, and answers the page, the total and the counts', async () => {
     seen.length = 0
-    const response = await send(app(), 'GET', pins)
+    const response = await send(app(), 'GET', `${pins}?page=1`)
 
     expect(response.status).toBe(200)
     expect(seen).toEqual([{ status: [], category: [], stay: [], type: [], sort: 'edited', page: 1, pageSize: 10 }])
     expect(await response.json()).toMatchObject({ items: [], total: 0, page: 1, pageSize: 10, statuses: { ended: 0 }, categories: { none: 0 } })
+  })
+
+  it('[ADR-033 section 12] a request without page answers the whole list (up to 500) for one release', async () => {
+    seen.length = 0
+    await send(app(), 'GET', `${pins}?status=draft`)
+
+    expect(seen).toEqual([{ status: ['draft'], category: [], stay: [], type: [], sort: 'edited', page: 1, pageSize: 500 }])
   })
 
   it('splits the comma lists and passes the page, the search and the sort', async () => {

@@ -22,7 +22,9 @@ export const fakeProduct: Product = {
 export function createFakeCatalogUseCases(): CatalogUseCases {
   const detail = (storeId: string, productId = fakeProduct.id, rowVersion = 1) => ({ product: { ...fakeProduct, storeId, id: productId, rowVersion }, photos: [], variantPhotos: new Map<string, never>(), hasOrders: false, soldSkuIds: new Set<string>(), stock: new Map<string, { onHand: number, reserved: number }>() })
   return {
-    listProducts: async () => ({ ok: true, value: [] }),
+    listProducts: async (_actor, _storeId, query) => ({ ok: true, value: { entries: [], total: 0, page: query.page, pageSize: query.pageSize, statuses: { draft: 0, published: 0, editsNotLive: 0, archived: 0 } } }),
+    lookupProducts: async () => ({ ok: true, value: [] }),
+    listOptionNames: async () => ({ ok: true, value: [] }),
     getProduct: async (_actor, storeId, productId) => ({ ok: true, value: detail(storeId, productId) }),
     createProduct: async (_actor, storeId) => ({ ok: true, value: detail(storeId) }),
     saveProduct: async (_actor, storeId, productId, ifMatch) => ({ ok: true, value: detail(storeId, productId, ifMatch + 1) }),

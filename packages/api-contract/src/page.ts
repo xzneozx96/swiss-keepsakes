@@ -43,8 +43,11 @@ const pageSizeSchema = z.coerce.number().int().min(1).max(MAX_PAGE_LIMIT).defaul
  * The query of a numbered list: `page`, `pageSize` and the table's own filters (`filters`, a zod shape). The skip limit is
  * checked here, so every route answers the same `validation-failed` on `page`.
  */
-export function numberedPageQuery<F extends z.ZodRawShape = Record<never, never>>(filters: F = {} as F) {
-  return z.object({ ...filters, page: pageNumberSchema, pageSize: pageSizeSchema }).refine(
+export function numberedPageQuery<F extends z.ZodRawShape = Record<never, never>>(filters: F = {} as F, options: { maxPageSize?: number } = {}) {
+  const pageSize = options.maxPageSize === undefined
+    ? pageSizeSchema
+    : z.coerce.number().int().min(1).max(options.maxPageSize).default(10).meta({ description: `Rows a page, 1 to ${options.maxPageSize}. Deprecated above ${MAX_PAGE_LIMIT}: the most is ${MAX_PAGE_LIMIT} from the next release (ADR-033 section 12)` })
+  return z.object({ ...filters, page: pageNumberSchema, pageSize }).refine(
     (query) => {
       const { page, pageSize } = query as { page: number, pageSize: number }
       return (page - 1) * pageSize <= MAX_OFFSET

@@ -15,8 +15,8 @@ async function answer<T>(call: Promise<{ data?: T, error?: unknown, response: Re
 
 export function createInventoryClient(): InventoryClient {
   return {
-    list: async storeId =>
-      answer((await loadClient()).GET('/api/store/{storeId}/inventory', { ...timeout(), params: { path: { storeId }, query: {} } })),
+    list: async ({ storeId, query }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/inventory', { ...timeout(), params: { path: { storeId }, query } })),
     get: async ({ storeId, skuId }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/inventory/{skuId}', { ...timeout(), params: { path: { storeId, skuId } } })),
     set: async ({ storeId, skuId, onHand, idempotencyKey }) =>

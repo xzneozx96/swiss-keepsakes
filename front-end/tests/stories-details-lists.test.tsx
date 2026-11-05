@@ -6,7 +6,7 @@ import { listItem as keepsakeItem } from './keepsakes-harness'
 import { groupPatches } from './stories-details-harness'
 import { coverId, groupId, renderStoryEditor, storyDoc, storyGroupDetail, listItem as storyItem, storyVersion, uuid } from './stories-harness'
 import { serveLists } from './stories-lists-harness'
-import { pinItem, setUpStoryMedia } from './stories-media-harness'
+import { pinItem, setUpStoryMedia, state } from './stories-media-harness'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -148,4 +148,47 @@ describe('[E4.3][AC30][AC33][AC54] the linked cards on the Review screen', () =>
     await userEvent.click(await screen.findByRole('button', { name: 'Back to Stories' }, SLOW))
     expect(await screen.findByText('Leave without saving?', undefined, SLOW)).toBeInTheDocument()
   }, 40000)
+})
+
+describe('[ADR-033] the keepsake picker searches on the server', () => {
+  const productReads = () => state.calls.filter(call => call.method === 'GET' && call.path.includes('/products')).map(call => ({ path: call.path.split('?')[0]!, query: new URL(call.path, 'http://x').searchParams }))
+
+  it('[ADR-033] asks for the first 20 published keepsakes that match, never the whole list, and keeps the chosen ones by id', async () => {
+    serve({ keepsakeProductIds: [uuid(2)] })
+    await openReview()
+    await open(/^Keepsakes/)
+    await userEvent.click(await screen.findByRole('button', { name: /^Choose keepsakes/ }, SLOW))
+    await screen.findByRole('button', { name: 'Classic 1' }, SLOW)
+
+    await userEvent.type(await screen.findByRole('searchbox', { name: 'Search keepsakes' }), 'Classic 1')
+
+    await waitFor(() => expect(productReads().some(read => read.query.get('q') === 'Classic 1')).toBe(true), SLOW)
+    const searches = productReads().filter(read => !read.path.endsWith('/lookup'))
+
+    expect(searches.every(read => read.query.get('pageSize') === '20' && read.query.get('page') === '1' && read.query.get('status') === 'published,editsNotLive')).toBe(true)
+    // The linked keepsake is read by id, so it stays on the sheet although the search does not match it.
+    expect(productReads().filter(read => read.path.endsWith('/lookup')).every(read => read.query.get('ids') === uuid(2))).toBe(true)
+    expect(await screen.findByRole('button', { name: 'Classic 2' }, SLOW)).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Classic 1' })).toHaveAttribute('aria-pressed', 'false')
+  }, 30000)
+
+  it('[ADR-033] a keepsake picked from one search stays on the sheet after the search changes, can be unticked, and is not called unpublished', async () => {
+    serve()
+    await openReview()
+    await open(/^Keepsakes/)
+    await userEvent.click(await screen.findByRole('button', { name: /^Choose keepsakes/ }, SLOW))
+    await userEvent.click(await screen.findByRole('button', { name: 'Classic 1' }, SLOW))
+
+    await userEvent.type(await screen.findByRole('searchbox', { name: 'Search keepsakes' }), 'Classic 2')
+    await waitFor(() => expect(productReads().some(read => read.query.get('q') === 'Classic 2')).toBe(true), SLOW)
+
+    const picked = await screen.findByRole('button', { name: 'Classic 1' }, SLOW)
+
+    expect(picked).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.queryByText(/chosen keepsake is not published/)).not.toBeInTheDocument()
+    await userEvent.click(picked)
+    // Unticked and not in this search: it leaves the sheet.
+    expect(screen.queryByRole('button', { name: 'Classic 1' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save 0 of 6' })).toBeInTheDocument()
+  }, 30000)
 })

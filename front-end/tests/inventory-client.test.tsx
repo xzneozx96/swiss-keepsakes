@@ -12,6 +12,8 @@ vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
 beforeEach(setUpHarness)
 
+const query = { page: 1, pageSize: 10 }
+
 function wrapper({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={state.demo.queryClient}>
@@ -22,8 +24,8 @@ function wrapper({ children }: { children: React.ReactNode }) {
 
 describe('[E6.3][AC05][AC53] the inventory queries and the set command', () => {
   it('[E6.3][AC05][AC53] AC-1 reads the stock of the store from the API', async () => {
-    state.answer = call => call.method === 'GET' && call.path === base ? Response.json(stockList([{}])) : undefined
-    const { result } = renderHook(() => useInventory(storeId), { wrapper })
+    state.answer = call => call.method === 'GET' && call.path.split('?')[0] === base ? Response.json(stockList([{}])) : undefined
+    const { result } = renderHook(() => useInventory(storeId, query), { wrapper })
 
     await waitFor(() => expect(result.current.data?.items).toHaveLength(1))
     expect(result.current.data?.counts).toEqual({ all: 1, inStock: 1, soldOut: 0 })
@@ -33,9 +35,9 @@ describe('[E6.3][AC05][AC53] the inventory queries and the set command', () => {
     state.answer = (call) => {
       if (call.method === 'PUT')
         return Response.json(stockRow({ onHand: 7, available: 5 }))
-      return call.path === base ? Response.json(stockList([{}])) : undefined
+      return call.path.split('?')[0] === base ? Response.json(stockList([{}])) : undefined
     }
-    const { result } = renderHook(() => ({ list: useInventory(storeId), set: useCommand('inventory', 'set') }), { wrapper })
+    const { result } = renderHook(() => ({ list: useInventory(storeId, query), set: useCommand('inventory', 'set') }), { wrapper })
 
     await waitFor(() => expect(result.current.list.data).toBeDefined())
     await act(async () => {
@@ -44,7 +46,7 @@ describe('[E6.3][AC05][AC53] the inventory queries and the set command', () => {
     const put = state.calls.find(call => call.method === 'PUT')
 
     expect(put).toMatchObject({ path: `${base}/${skuOf(1)}`, key: 'k1', body: { onHand: 7 } })
-    await waitFor(() => expect(state.calls.filter(call => call.method === 'GET' && call.path === base).length).toBeGreaterThan(1))
+    await waitFor(() => expect(state.calls.filter(call => call.method === 'GET' && call.path.split('?')[0] === base).length).toBeGreaterThan(1))
   })
 
   it('[E6.3][AC05][AC53] AC-2 a refusal below the reserved units is an InventoryProblem that carries the reserved figure', async () => {

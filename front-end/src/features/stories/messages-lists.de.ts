@@ -23,6 +23,8 @@ export const storiesListsDe: Record<keyof typeof storiesListsEn, string> = {
   'storyLists.keepsakes.save': '{count} von 6 speichern',
   'storyLists.keepsakes.notPublished': 'Nicht veröffentlicht: in der Geschichte verborgen',
   'storyLists.keepsakes.none': 'Noch keine veröffentlichten Andenken.',
+  'storyLists.keepsakes.search': 'Andenken suchen',
+  'storyLists.keepsakes.empty': 'Kein veröffentlichtes Andenken passt zu „{query}“.',
   'storyLists.keepsakes.hiddenChosen.one': '{count} gewähltes Andenken ist nicht veröffentlicht. Es bleibt in der Liste; entfernen Sie es auf der Karte.',
   'storyLists.keepsakes.hiddenChosen.other': '{count} gewählte Andenken sind nicht veröffentlicht. Sie bleiben in der Liste; entfernen Sie sie auf der Karte.',
   'storyLists.keepsakes.unknown': 'Unbekanntes Andenken',

@@ -1,38 +1,37 @@
-import type { Product } from '@sk/api-contract'
-
 /** The states the status chip shows, so a filter option and a chip say the same thing. Archived keepsakes show only when this one is ticked. */
 export const STATUS_FILTERS = ['draft', 'published', 'editsNotLive', 'archived'] as const
 
 export type StatusFilter = (typeof STATUS_FILTERS)[number]
 
-export interface KeepsakeFilters {
-  status: StatusFilter[]
-  query: string
+export const KEEPSAKES_PAGE_SIZE = 10
+
+/** The most rows the API skips (its `MAX_OFFSET`). */
+const MAX_OFFSET = 10_000
+
+/** The last page the API serves at this page size: it refuses a skip over 10,000 rows. A link past it opens here, and the screen moves to the last real page. */
+const MAX_PAGE = Math.floor(MAX_OFFSET / KEEPSAKES_PAGE_SIZE) + 1
+
+/**
+ * The keepsake table's place in the URL: the ticked statuses, the search and the page (ADR-033). Nothing ticked is no `status`
+ * (every keepsake but the archived ones), page 1 is no `page`. The server filters, counts and pages.
+ */
+export interface KeepsakesSearch {
+  status?: StatusFilter[]
+  q?: string
+  page?: number
 }
 
-export const noFilters: KeepsakeFilters = { status: [], query: '' }
+/** The route's `validateSearch`: anything it does not know is dropped, so a hand-edited link still opens the page. */
+export function parseKeepsakesSearch(search: Record<string, unknown>): KeepsakesSearch {
+  const page = Number(search.page)
+  const items = typeof search.status === 'string' ? search.status.split(',') : Array.isArray(search.status) ? search.status : []
+  const status = STATUS_FILTERS.filter(id => items.includes(id))
 
-type Filterable = Pick<Product, 'status' | 'hasUnpublishedEdits'> & { name: { en?: string, de?: string } }
-
-export function statusFilterOf(keepsake: Pick<Product, 'status' | 'hasUnpublishedEdits'>): StatusFilter {
-  if (keepsake.status === 'draft')
-    return 'draft'
-  if (keepsake.status === 'archived')
-    return 'archived'
-
-  return keepsake.hasUnpublishedEdits ? 'editsNotLive' : 'published'
+  return {
+    status: status.length > 0 ? status : undefined,
+    q: typeof search.q === 'string' && search.q.trim() ? search.q : undefined,
+    page: Number.isInteger(page) && page > 1 ? Math.min(page, MAX_PAGE) : undefined,
+  }
 }
 
-/** The status options are an OR among themselves; the search (the name in either language) narrows together with them. With no status ticked an archived keepsake is left out. */
-export function filterKeepsakes<T extends Filterable>(items: T[], filters: KeepsakeFilters): T[] {
-  const query = filters.query.trim().toLowerCase()
-
-  return items.filter(item =>
-    (filters.status.length === 0 ? item.status !== 'archived' : filters.status.includes(statusFilterOf(item)))
-    && (query === '' || [item.name.en, item.name.de].some(name => name?.toLowerCase().includes(query))),
-  )
-}
-
-export function isFiltered(filters: KeepsakeFilters) {
-  return filters.query.trim() !== '' || filters.status.length > 0
-}
+export const isFiltered = (search: KeepsakesSearch) => (search.q?.trim() ?? '') !== '' || (search.status?.length ?? 0) > 0

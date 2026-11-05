@@ -22,6 +22,8 @@ export const storiesListsEn = {
   'storyLists.keepsakes.save': 'Save {count} of 6',
   'storyLists.keepsakes.notPublished': 'Not published: hidden on the story',
   'storyLists.keepsakes.none': 'No published keepsakes yet.',
+  'storyLists.keepsakes.search': 'Search keepsakes',
+  'storyLists.keepsakes.empty': 'No published keepsake matches “{query}”.',
   'storyLists.keepsakes.hiddenChosen.one': '{count} chosen keepsake is not published. It stays in the list; remove it on the card.',
   'storyLists.keepsakes.hiddenChosen.other': '{count} chosen keepsakes are not published. They stay in the list; remove them on the card.',
   'storyLists.keepsakes.unknown': 'Unknown keepsake',

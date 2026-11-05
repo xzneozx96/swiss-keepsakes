@@ -1,6 +1,6 @@
 import type { Actor } from '@sk/domain/identity'
 import type { CatalogDeps } from '../../../src/modules/catalog/application/deps.ts'
-import type { Product, ProductListRow, ProductRepository, ProductVariant, WrittenProduct } from '../../../src/modules/catalog/ports.ts'
+import type { Product, ProductListPage, ProductListRow, ProductRepository, ProductVariant, WrittenProduct } from '../../../src/modules/catalog/ports.ts'
 import { describe, expect, it, vi } from 'vitest'
 import { makeCreateProduct } from '../../../src/modules/catalog/application/create-product.ts'
 import { makeCreateVariant } from '../../../src/modules/catalog/application/create-variant.ts'
@@ -31,6 +31,9 @@ function product(variants: ProductVariant[]): Product {
   }
 }
 
+const query = { status: [], sort: 'created' as const, page: 1, pageSize: 10 }
+const page = (rows: ProductListRow[]): ProductListPage => ({ rows, total: rows.length, statuses: { draft: rows.length, published: 0, editsNotLive: 0, archived: 0 } })
+
 // A transactional fake: `skus` and `stock` roll back together when the work throws, as the database does.
 function setup(before: Product, after: Product, levels: Record<string, [onHand: number, reserved: number]> = {}) {
   const state = { skus: before.variants.map(v => v.id), stock: new Map<string, number>(Object.entries(levels).map(([id, [onHand]]) => [id, onHand])) }
@@ -48,7 +51,7 @@ function setup(before: Product, after: Product, levels: Record<string, [onHand: 
     findForUpdate: vi.fn(async () => before),
     takenSkuCodes: vi.fn(async () => new Set<string>()),
     find: vi.fn(async () => after),
-    list: vi.fn(async (): Promise<ProductListRow[]> => []),
+    list: vi.fn(async (): Promise<ProductListPage> => ({ rows: [], total: 0, statuses: { draft: 0, published: 0, editsNotLive: 0, archived: 0 } })),
   } as unknown as ProductRepository<null>
   const seed = vi.fn(async (_tx: null, store: string, items: { skuId: string, quantity: number }[], actorUserId: string) => {
     seeds.push({ storeId: store, items, actorUserId })
@@ -203,22 +206,22 @@ describe('[E6.3][AC05][AC53] stock figures from inventory', () => {
   it('[E6.3][AC05][AC53][AC-4] A set to 0, B shows 4 available, the list counts 1 sold out', async () => {
     const { deps, repo } = setup(abTwo, abTwo, { a: [0, 0], b: [4, 0], c: [0, 0] })
 
-    vi.mocked(repo.list).mockResolvedValue([{ id: 'p1', name: {}, optionNames: [], status: 'draft', hasUnpublishedEdits: false, coverMediaId: null, variantCount: 2, liveSkuIds: ['a', 'b'], rowVersion: 1, updatedAt: new Date() }])
+    vi.mocked(repo.list).mockResolvedValue(page([{ id: 'p1', name: {}, optionNames: [], status: 'draft', hasUnpublishedEdits: false, coverMediaId: null, variantCount: 2, liveSkuIds: ['a', 'b'], rowVersion: 1, updatedAt: new Date() }]))
     const detail = await makeGetProduct(deps)(owner, storeId, 'p1')
-    const list = await makeListProducts(deps)(owner, storeId)
+    const list = await makeListProducts(deps)(owner, storeId, query)
 
     expect(detail.ok && detail.value.stock.get('b')).toEqual({ onHand: 4, reserved: 0 })
     expect(detail.ok && detail.value.stock.get('a')).toEqual({ onHand: 0, reserved: 0 })
-    expect(list.ok && list.value.map(entry => entry.soldOutCount)).toEqual([1])
+    expect(list.ok && list.value.entries.map(entry => entry.soldOutCount)).toEqual([1])
   })
 
   it('[E6.3][AC05][AC53][AC-4] a variant with no row, or with everything reserved, counts as sold out; an archived one does not', async () => {
     const { deps, repo } = setup(abTwo, abTwo, { a: [3, 3] })
 
-    vi.mocked(repo.list).mockResolvedValue([{ id: 'p1', name: {}, optionNames: [], status: 'draft', hasUnpublishedEdits: false, coverMediaId: null, variantCount: 2, liveSkuIds: ['a', 'b'], rowVersion: 1, updatedAt: new Date() }])
-    const list = await makeListProducts(deps)(owner, storeId)
+    vi.mocked(repo.list).mockResolvedValue(page([{ id: 'p1', name: {}, optionNames: [], status: 'draft', hasUnpublishedEdits: false, coverMediaId: null, variantCount: 2, liveSkuIds: ['a', 'b'], rowVersion: 1, updatedAt: new Date() }]))
+    const list = await makeListProducts(deps)(owner, storeId, query)
 
-    expect(list.ok && list.value[0]!.soldOutCount).toBe(2)
+    expect(list.ok && list.value.entries[0]!.soldOutCount).toBe(2)
   })
 
   it('[E6.3][AC05][AC53] a keepsake with no variant is not sold out, and no stock read is made for it', async () => {
@@ -226,10 +229,10 @@ describe('[E6.3][AC05][AC53] stock figures from inventory', () => {
     const levels = vi.fn(deps.stockLevels!.levels)
 
     deps.stockLevels = { levels }
-    vi.mocked(repo.list).mockResolvedValue([{ id: 'p1', name: {}, optionNames: [], status: 'draft', hasUnpublishedEdits: false, coverMediaId: null, variantCount: 0, liveSkuIds: [], rowVersion: 1, updatedAt: new Date() }])
-    const list = await makeListProducts(deps)(owner, storeId)
+    vi.mocked(repo.list).mockResolvedValue(page([{ id: 'p1', name: {}, optionNames: [], status: 'draft', hasUnpublishedEdits: false, coverMediaId: null, variantCount: 0, liveSkuIds: [], rowVersion: 1, updatedAt: new Date() }]))
+    const list = await makeListProducts(deps)(owner, storeId, query)
 
-    expect(list.ok && list.value[0]!.soldOutCount).toBe(0)
+    expect(list.ok && list.value.entries[0]!.soldOutCount).toBe(0)
     expect(levels).not.toHaveBeenCalled()
   })
 })

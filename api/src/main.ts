@@ -11,7 +11,7 @@ import { createPublicKeepsakeReads } from './modules/catalog/adapters/public-rep
 import { registerPublicKeepsakeRoutes } from './modules/catalog/adapters/public-routes.ts'
 import { registerCatalogRoutes } from './modules/catalog/adapters/routes.ts'
 import { createSkuDirectory } from './modules/catalog/adapters/sku-directory.ts'
-import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeletePickupPlace, makeDeleteProduct, makeGetAvailability, makeGetKeepsake, makeGetPickupPlace, makeGetPickupPoints, makeGetProduct, makeListKeepsakes, makeListKeepsakesByIds, makeListPickupPlaces, makeListProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeSearchKeepsakeHits, makeUnpublishProduct } from './modules/catalog/index.ts'
+import { makeArchivePickupPlace, makeCreatePickupPlace, makeCreateProduct, makeCreateVariant, makeDeletePickupPlace, makeDeleteProduct, makeGetAvailability, makeGetKeepsake, makeGetPickupPlace, makeGetPickupPoints, makeGetProduct, makeListKeepsakes, makeListKeepsakesByIds, makeListOptionNames, makeListPickupPlaces, makeListProducts, makeLookupProducts, makePublishProduct, makeReorderPickupPlaces, makeRestorePickupPlace, makeSaveOptions, makeSavePickupPlace, makeSaveProduct, makeSaveVariant, makeSaveVariants, makeSearchKeepsakeHits, makeUnpublishProduct } from './modules/catalog/index.ts'
 import { createAddressRegister } from './modules/content/adapters/address-register-fetch.ts'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
@@ -262,6 +262,8 @@ async function main() {
     }
     const catalogUseCases = guardCatalogUseCases({
       listProducts: makeListProducts(catalogDeps),
+      lookupProducts: makeLookupProducts(catalogDeps),
+      listOptionNames: makeListOptionNames(catalogDeps),
       getProduct: makeGetProduct(catalogDeps),
       createProduct: makeCreateProduct(catalogDeps),
       saveProduct: makeSaveProduct(catalogDeps),

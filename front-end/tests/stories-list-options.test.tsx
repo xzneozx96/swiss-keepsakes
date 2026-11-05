@@ -14,8 +14,8 @@ beforeEach(setUpStoryMedia)
 
 const detail = () => storyGroupDetail({})
 
-function KeepsakeProbe({ language = 'en' }: { language?: 'en' | 'de' }) {
-  const out = useKeepsakeOptions(storeId, language)
+function KeepsakeProbe({ language = 'en', ids = [uuid(1), uuid(2)] }: { language?: 'en' | 'de', ids?: string[] }) {
+  const out = useKeepsakeOptions(storeId, language, ids)
 
   return <p data-testid="out">{JSON.stringify({ keepsakes: out.keepsakes, isLoading: out.isLoading, isError: out.isError })}</p>
 }
@@ -29,7 +29,7 @@ function StoryProbe() {
 const out = <T,>() => JSON.parse(screen.getByTestId('out').textContent!) as T
 
 describe('[E4.3][AC33][AC54] keepsake and story options', () => {
-  it('[E4.3][AC54] keepsake options carry the open language\'s name and a published flag', async () => {
+  it('[E4.3][AC54][ADR-033] keepsake options are read by id and carry the open language\'s name and a published flag', async () => {
     serveLists(detail(), { keepsakes: [
       keepsakeItem({ id: uuid(1), status: 'published', name: { en: 'Classic' } }),
       keepsakeItem({ id: uuid(2), status: 'draft', name: { de: 'Klassik' } }),
@@ -38,6 +38,17 @@ describe('[E4.3][AC33][AC54] keepsake and story options', () => {
 
     await waitFor(() => expect(out<{ keepsakes: unknown[] }>().keepsakes).toHaveLength(2))
     expect(out<{ keepsakes: { name: string, published: boolean }[] }>().keepsakes).toMatchObject([{ name: 'Classic', published: true }, { name: 'Klassik', published: false }])
+    // Never the whole list: one lookup of the named ids.
+    expect(state.calls.filter(call => call.path.includes('/products')).map(call => call.path)).toEqual([`/api/store/${storeId}/products/lookup?ids=${uuid(1)}%2C${uuid(2)}`])
+  })
+
+  it('[ADR-033] no id, no read', async () => {
+    serveLists(detail(), { keepsakes: [keepsakeItem({ id: uuid(1), status: 'published' })] })
+    renderWithStore(<KeepsakeProbe ids={[]} />)
+
+    await new Promise(resolve => setTimeout(resolve, 50))
+    expect(out<{ keepsakes: unknown[] }>().keepsakes).toEqual([])
+    expect(state.calls.some(call => call.path.includes('/products'))).toBe(false)
   })
 
   it('[E4.3][AC33] story options carry both languages\' states', async () => {
@@ -65,6 +76,6 @@ describe('[E4.3][AC33][AC54] keepsake and story options', () => {
     renderWithStore(<KeepsakeProbe />)
 
     expect(out<{ isLoading: boolean }>().isLoading).toBe(true)
-    await waitFor(() => expect(state.calls.some(call => call.path === `/api/store/${storeId}/products`)).toBe(true))
+    await waitFor(() => expect(state.calls.some(call => call.path.startsWith(`/api/store/${storeId}/products/lookup`))).toBe(true))
   })
 })

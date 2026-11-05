@@ -4,12 +4,13 @@ import type { AppEnv } from '../../../platform/http/app.ts'
 import type { CreateProductInput } from '../application/create-product.ts'
 import type { ProductRemoval } from '../application/delete-product.ts'
 import type { Result } from '../application/failure.ts'
-import type { ProductListEntry } from '../application/list-products.ts'
+import type { ProductListEntry, ProductListResult } from '../application/list-products.ts'
 import type { ProductDetail } from '../application/product-detail.ts'
-import type { OptionInput, OptionsSave, ProductChanges, VariantBatchRequest, VariantChangeRequest, VariantInput } from '../ports.ts'
+import type { Localized, OptionInput, OptionsSave, ProductChanges, ProductListQuery, VariantBatchRequest, VariantChangeRequest, VariantInput } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { optionsSaveBodySchema, productCreateBodySchema, productListSchema, productRemovalSchema, productSaveBodySchema, productSchema, variantCreateBodySchema, variantSaveBodySchema, variantsSaveBodySchema } from '@sk/api-contract'
+import { optionsSaveBodySchema, productCreateBodySchema, productListQuerySchema, productListSchema, productLookupQuerySchema, productLookupSchema, productOptionNamesQuerySchema, productOptionNamesSchema, productRemovalSchema, productSaveBodySchema, productSchema, variantCreateBodySchema, variantSaveBodySchema, variantsSaveBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
+import { wholeIfNoPage } from '../../../platform/http/whole-list.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
 import { failureProblem } from './problems.ts'
@@ -18,7 +19,9 @@ import { etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts
 
 // What the catalog routes call. main.ts builds each from the module's use cases, wrapped by guardUseCases.
 export interface CatalogUseCases {
-  listProducts: (actor: Actor, storeId: string) => Promise<Result<ProductListEntry[]>>
+  listProducts: (actor: Actor, storeId: string, query: ProductListQuery) => Promise<Result<ProductListResult>>
+  lookupProducts: (actor: Actor, storeId: string, ids: string[]) => Promise<Result<ProductListEntry[]>>
+  listOptionNames: (actor: Actor, storeId: string, exceptId?: string) => Promise<Result<Localized[]>>
   getProduct: (actor: Actor, storeId: string, productId: string) => Promise<Result<ProductDetail>>
   createProduct: (actor: Actor, storeId: string, input: CreateProductInput, requestId: string | null) => Promise<Result<ProductDetail>>
   saveProduct: (actor: Actor, storeId: string, productId: string, ifMatch: number, changes: ProductChanges, requestId: string | null) => Promise<Result<ProductDetail>>
@@ -39,9 +42,30 @@ const productsPath = '/api/store/{storeId}/products'
 const listRoute = createRoute({
   method: 'get',
   path: productsPath,
-  request: { params: storeParams },
+  request: { params: storeParams, query: productListQuerySchema },
   responses: {
-    200: { description: 'The keepsakes of the store, newest first', headers: requestIdHeader, content: json(productListSchema) },
+    200: { description: 'One page of the keepsakes of the store, newest first, with the total and the status counts. Deprecated for one release (ADR-033 section 12): a request without `page` answers the whole list (up to 500)', headers: requestIdHeader, content: json(productListSchema) },
+    ...problemResponses,
+  },
+})
+
+// Registered before the {productId} routes, so `lookup` and `option-names` are never read as a keepsake id.
+const lookupRoute = createRoute({
+  method: 'get',
+  path: `${productsPath}/lookup`,
+  request: { params: storeParams, query: productLookupQuerySchema },
+  responses: {
+    200: { description: 'The keepsakes named by `ids` (at most 50), whatever their status. Not paged', headers: requestIdHeader, content: json(productLookupSchema) },
+    ...problemResponses,
+  },
+})
+
+const optionNamesRoute = createRoute({
+  method: 'get',
+  path: `${productsPath}/option-names`,
+  request: { params: storeParams, query: productOptionNamesQuerySchema },
+  responses: {
+    200: { description: 'The option names the shop already uses, each once, at most 50. Whole: the name field suggests them', headers: requestIdHeader, content: json(productOptionNamesSchema) },
     ...problemResponses,
   },
 })
@@ -160,10 +184,25 @@ function optionInput(option: OptionBody): OptionInput {
 // verified store from `c.get('store')`, never from the path.
 export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: CatalogUseCases): void {
   app.openapi(listRoute, async (c) => {
-    const result = await useCases.listProducts(c.get('actor'), c.get('store').storeId)
+    const result = await useCases.listProducts(c.get('actor'), c.get('store').storeId, wholeIfNoPage(c, c.req.valid('query')))
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    const { entries, ...page } = result.value
+    return c.json({ ...page, items: entries.map(productListItemView) }, 200)
+  })
+
+  app.openapi(lookupRoute, async (c) => {
+    const result = await useCases.lookupProducts(c.get('actor'), c.get('store').storeId, c.req.valid('query').ids)
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json({ items: result.value.map(productListItemView) }, 200)
+  })
+
+  app.openapi(optionNamesRoute, async (c) => {
+    const result = await useCases.listOptionNames(c.get('actor'), c.get('store').storeId, c.req.valid('query').except)
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json({ items: result.value }, 200)
   })
 
   app.openapi(createRoutePart, async (c) => {

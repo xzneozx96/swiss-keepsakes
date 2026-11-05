@@ -1,5 +1,6 @@
 import type { StockRow } from '@sk/api-contract'
 import type { DataTableColumn } from '@/components/data-table'
+import type { PagerState } from '@/components/list-pagination'
 
 import { Skeleton } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
@@ -103,7 +104,7 @@ function CardSkeletons() {
 }
 
 /** From 1024 px the table, below it the list. Widths are the content plus the cell's 16px padding each side: the longest code is 118px, the box 160px, "Reserved" and "Sold out" about 56px. */
-export function StockRows({ rows, isLoading, storeId, empty, resetKey }: { rows: StockRow[], isLoading: boolean, storeId: string, empty: string, resetKey: string }) {
+export function StockRows({ rows, isLoading, storeId, empty, paging }: { rows: StockRow[], isLoading: boolean, storeId: string, empty: string, paging: PagerState }) {
   const { t } = useRowText()
   const label = t('inventory.title')
   const columns: DataTableColumn<StockRow>[] = [
@@ -123,7 +124,7 @@ export function StockRows({ rows, isLoading, storeId, empty, resetKey }: { rows:
       getRowId={row => row.skuId}
       isLoading={isLoading}
       label={label}
-      resetKey={resetKey}
+      paging={paging}
       rows={rows}
     />
   )

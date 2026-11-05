@@ -43,7 +43,7 @@ function serve() {
   state.answer = (call) => {
     if (call.method === 'GET' && call.path === detail)
       return Response.json(current)
-    if (call.method === 'GET' && call.path === base)
+    if (call.method === 'GET' && call.path.split('?')[0] === base)
       return Response.json(list([listItem()]))
     if (call.method === 'PUT' && call.path.startsWith(`${stock}/`)) {
       const skuId = call.path.split('/').at(-1)
@@ -231,7 +231,7 @@ describe(`${tag} stock of a new keepsake`, () => {
     await typeInto(boxOf('Small'), '3')
     await typeInto(boxOf('Medium'), '4')
     await typeInto(boxOf('Large'), '5')
-    state.answer = call => (call.method === 'POST' && call.path === base ? Response.json(product(), { status: 201 }) : call.method === 'GET' && call.path === detail ? Response.json(product()) : call.method === 'GET' && call.path === base ? Response.json(list([listItem()])) : undefined)
+    state.answer = call => (call.method === 'POST' && call.path === base ? Response.json(product(), { status: 201 }) : call.method === 'GET' && call.path === detail ? Response.json(product()) : call.method === 'GET' && call.path.split('?')[0] === base ? Response.json(list([listItem()])) : undefined)
     await next()
     await screen.findByTestId('review-screen', undefined, SLOW)
     await userEvent.click(screen.getByRole('button', { name: 'Save as draft' }))

@@ -130,7 +130,7 @@ async function wall() {
 describe('[E4.11][AC51] the media library list over HTTP', () => {
   it('[E4.11][AC51] counts every kind of page, keepsakes included, and splits published from draft-only', async () => {
     const w = await wall()
-    const { status, body } = await list(w.staff, 'kind=image&pageSize=24')
+    const { status, body } = await list(w.staff, 'kind=image&pageSize=20')
     expect(status).toBe(200)
     const byName = Object.fromEntries(body.items.map(item => [item.name, item]))
     // story EN published, story DE draft, place draft, tour published, keepsake draft, keepsake published
@@ -155,7 +155,7 @@ describe('[E4.11][AC51] the media library list over HTTP', () => {
 
   it('[E4.11][AC51] the Use filter, the Status filter and their counts', async () => {
     const w = await wall()
-    const names = async (query: string) => (await list(w.staff, `kind=image&pageSize=24&${query}`)).body.items.map(item => item.name).sort()
+    const names = async (query: string) => (await list(w.staff, `kind=image&pageSize=20&${query}`)).body.items.map(item => item.name).sort()
     expect(await names('use=unused')).toEqual(['Just-uploaded.jpg', 'Pilatus-clouds.jpg'])
     expect(await names('use=unused&status=retired')).toEqual(['Old-banner.jpg'])
     expect(await names('use=drafts')).toEqual(['Fondue-set.jpg'])
@@ -256,7 +256,7 @@ describe('[E4.11][AC51] where a file is used', () => {
     const draft = await pin(w.s, 'draft', 'Water Tower', null)
     await pool.query('insert into content.place_photos (place_id, store_id, position, media_id) values ($1, $2, 1, $3)', [draft, w.s, second])
     expect((await call<MediaUses>(w.staff, `/${second}/uses`)).body).toMatchObject({ published: [], drafts: [{ pageKind: 'place', pageId: draft, role: 'photo' }] })
-    const library = await list(w.staff, 'kind=image&use=unused&pageSize=24')
+    const library = await list(w.staff, 'kind=image&use=unused&pageSize=20')
     expect(library.body.items.map(item => item.id)).not.toContain(photo)
   })
 })

@@ -8,17 +8,29 @@ import { LocaleProvider } from '@/contexts/locale-context'
 import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { InventoryList } from '@/features/inventory/components/inventory-list'
+import { parseInventorySearch } from '@/features/inventory/lib/list'
 import { base, setUpHarness, skuOf, state, stockList, stockProblem, stockRow } from './inventory-harness'
 import { expectListChrome } from './list-screens-helper'
+import { serverStockPage } from './support/pages'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
 beforeEach(setUpHarness)
 
-function renderInventory() {
+function renderInventory(initial = '/store/products/inventory') {
   const root = createRootRoute({ component: Outlet })
-  const index = createRoute({ getParentRoute: () => root, path: '/store/products/inventory', component: InventoryList })
-  const router = createRouter({ routeTree: root.addChildren([index]), history: createMemoryHistory({ initialEntries: ['/store/products/inventory'] }), disableGlobalCatchBoundary: true })
+  const index = createRoute({
+    getParentRoute: () => root,
+    path: '/store/products/inventory',
+    validateSearch: (search: Record<string, unknown>) => parseInventorySearch(search),
+    component: function Index() {
+      const search = index.useSearch()
+      const navigate = index.useNavigate()
+
+      return <InventoryList search={search} onSearch={patch => void navigate({ to: '/store/products/inventory', search: (previous: Record<string, unknown>) => ({ ...previous, ...patch }), replace: true } as never)} />
+    },
+  })
+  const router = createRouter({ routeTree: root.addChildren([index]), history: createMemoryHistory({ initialEntries: [initial] }), disableGlobalCatchBoundary: true })
 
   render(
     <QueryClientProvider client={state.demo.queryClient}>
@@ -32,6 +44,8 @@ function renderInventory() {
       </DataClientProvider>
     </QueryClientProvider>,
   )
+
+  return router
 }
 
 const puts = () => state.calls.filter(call => call.method === 'PUT')
@@ -44,7 +58,7 @@ const three = [
 ]
 
 function answerWith(rows: Record<string, unknown>[]) {
-  state.answer = call => (call.method === 'GET' && call.path === base ? Response.json(stockList(rows)) : undefined)
+  state.answer = call => (call.method === 'GET' && call.path.split('?')[0] === base ? Response.json(serverStockPage(rows.map(row => stockRow(row)), new URL(call.path, 'http://x'))) : undefined)
 }
 
 /** The grid once the rows are on screen: the loading rows are another element, so wait for a row first. */
@@ -122,7 +136,7 @@ describe('[E6.3][AC05][AC53] AC-1 the inventory list', () => {
   })
 
   it('[E6.3][AC05][AC53] AC-1 shows loading rows shaped like the table while the stock is on its way', async () => {
-    state.answer = call => (call.method === 'GET' && call.path === base ? new Promise<Response>(() => undefined) as unknown as Response : undefined)
+    state.answer = call => (call.method === 'GET' && call.path.split('?')[0] === base ? new Promise<Response>(() => undefined) as unknown as Response : undefined)
     renderInventory()
 
     const grid = await screen.findByRole('grid', { name: 'Inventory' })
@@ -171,7 +185,7 @@ describe('[E6.3][AC05][AC53] AC-2 editing a quantity in the list', () => {
   }
 
   it('[E6.3][AC05][AC53] AC-2 shows the refusal under the box in the danger colour and keeps the old figure when 1 is typed while 2 are reserved', async () => {
-    state.answer = call => (call.method === 'PUT' ? stockProblem(2) : call.method === 'GET' && call.path === base ? Response.json(stockList(rows)) : undefined)
+    state.answer = call => (call.method === 'PUT' ? stockProblem(2) : call.method === 'GET' && call.path.split('?')[0] === base ? Response.json(stockList(rows)) : undefined)
     renderInventory()
     const { grid } = await loaded('VX-S-SWAN')
     const user = userEvent.setup()
@@ -198,7 +212,7 @@ describe('[E6.3][AC05][AC53] AC-2 editing a quantity in the list', () => {
         return Response.json(stockRow({ skuId: skuOf(1), onHand, available: onHand - 2 }))
       }
 
-      return call.method === 'GET' && call.path === base ? Response.json(stockList([{ ...rows[0], onHand, available: onHand - 2 }])) : undefined
+      return call.method === 'GET' && call.path.split('?')[0] === base ? Response.json(stockList([{ ...rows[0], onHand, available: onHand - 2 }])) : undefined
     }
     renderInventory()
     const { grid } = await loaded('VX-S-SWAN')
@@ -214,7 +228,7 @@ describe('[E6.3][AC05][AC53] AC-2 editing a quantity in the list', () => {
   })
 
   it('[E6.3][AC05][AC53] AC-2 saves a step of the box', async () => {
-    state.answer = call => (call.method === 'PUT' ? Response.json(stockRow({ skuId: skuOf(1), onHand: 6, available: 4 })) : call.method === 'GET' && call.path === base ? Response.json(stockList(rows)) : undefined)
+    state.answer = call => (call.method === 'PUT' ? Response.json(stockRow({ skuId: skuOf(1), onHand: 6, available: 4 })) : call.method === 'GET' && call.path.split('?')[0] === base ? Response.json(stockList(rows)) : undefined)
     renderInventory()
     const { grid } = await loaded('VX-S-SWAN')
 
@@ -238,7 +252,7 @@ describe('[E6.3][AC05][AC53] AC-2 editing a quantity in the list', () => {
         }) as unknown as Response
       }
 
-      return call.method === 'GET' && call.path === base ? Response.json(stockList([{ ...rows[0], onHand, available: onHand - 2 }])) : undefined
+      return call.method === 'GET' && call.path.split('?')[0] === base ? Response.json(stockList([{ ...rows[0], onHand, available: onHand - 2 }])) : undefined
     }
     renderInventory()
     const { grid } = await loaded('VX-S-SWAN')
@@ -258,7 +272,7 @@ describe('[E6.3][AC05][AC53] AC-2 editing a quantity in the list', () => {
   })
 
   it('[E6.3][AC05][AC53] AC-2 Enter on a refused figure keeps the focus in the box, with the old figure and the refusal', async () => {
-    state.answer = call => (call.method === 'PUT' ? stockProblem(2) : call.method === 'GET' && call.path === base ? Response.json(stockList(rows)) : undefined)
+    state.answer = call => (call.method === 'PUT' ? stockProblem(2) : call.method === 'GET' && call.path.split('?')[0] === base ? Response.json(stockList(rows)) : undefined)
     renderInventory()
     const { grid } = await loaded('VX-S-SWAN')
     const user = userEvent.setup()
@@ -272,7 +286,7 @@ describe('[E6.3][AC05][AC53] AC-2 editing a quantity in the list', () => {
   })
 
   it('[E6.3][AC05][AC53] AC-2 a refusal that names no reserved figure uses the one of the row', async () => {
-    state.answer = call => (call.method === 'PUT' ? Response.json({ type: 'stock-below-reserved', status: 422, title: 'refused', instance: '/x', requestId: 'req-3' }, { status: 422 }) : call.method === 'GET' && call.path === base ? Response.json(stockList(rows)) : undefined)
+    state.answer = call => (call.method === 'PUT' ? Response.json({ type: 'stock-below-reserved', status: 422, title: 'refused', instance: '/x', requestId: 'req-3' }, { status: 422 }) : call.method === 'GET' && call.path.split('?')[0] === base ? Response.json(stockList(rows)) : undefined)
     renderInventory()
     const { grid } = await loaded('VX-S-SWAN')
     const user = userEvent.setup()
@@ -356,5 +370,73 @@ describe('[S8-UI-01] the inventory list uses the shared toolbar', () => {
     expect(cell).toHaveClass('whitespace-nowrap')
     expect(code).toHaveClass('whitespace-nowrap')
     expect(header).toHaveClass('w-px', 'whitespace-nowrap')
+  })
+})
+
+describe('[ADR-033] the stock table reads numbered pages from the server', () => {
+  // 25 variants: every third sold out (9), 16 in stock.
+  const many = () => Array.from({ length: 25 }, (_, index) => ({ skuId: skuOf(index), code: `VX-${String(index + 1).padStart(2, '0')}`, variantTitle: { en: `Size ${index + 1}` }, onHand: index % 3 === 0 ? 0 : 4, reserved: 0, available: index % 3 === 0 ? 0 : 4 }))
+  const reads = () => state.calls.filter(call => call.method === 'GET' && call.path.split('?')[0] === base).map(call => new URL(call.path, 'http://x').searchParams)
+  const here = (router: { state: { location: { search: unknown } } }) => router.state.location.search
+
+  it('[ADR-033] asks for page 1 of 10, shows that page, the whole-store tab counts and the pager from the server total', async () => {
+    answerWith(many())
+    renderInventory()
+
+    await loaded('VX-01')
+
+    expect(within(screen.getByRole('grid', { name: 'Inventory' })).getAllByRole('row')).toHaveLength(11)
+    expect(Object.fromEntries(reads().at(-1)!)).toEqual({ page: '1', pageSize: '10' })
+    expect(screen.getAllByText('1–10 of 25').length).toBeGreaterThan(0)
+    const tabs = within(screen.getByRole('tablist', { name: 'Stock' }))
+
+    expect(tabs.getByRole('tab', { name: /^All · 25$/ })).toBeInTheDocument()
+    expect(tabs.getByRole('tab', { name: /^Sold out · 9$/ })).toBeInTheDocument()
+  })
+
+  it('[ADR-033] a page link reads that page and puts it in the URL; a tab starts again at page 1 and keeps its counts', async () => {
+    answerWith(many())
+    const router = renderInventory()
+    await loaded('VX-01')
+
+    await userEvent.click(screen.getAllByLabelText('Page 3')[0]!)
+    await waitFor(() => expect(screen.getAllByText('VX-21').length).toBeGreaterThan(0))
+    expect(reads().at(-1)!.get('page')).toBe('3')
+    expect(here(router)).toEqual({ page: 3 })
+
+    await userEvent.click(screen.getByRole('tab', { name: /Sold out/ }))
+    await waitFor(() => expect(here(router)).toEqual({ tab: 'soldOut' }))
+    await waitFor(() => expect(Object.fromEntries(reads().at(-1)!)).toEqual({ filter: 'sold-out', page: '1', pageSize: '10' }))
+    expect(screen.getByRole('tab', { name: /^All · 25$/ })).toBeInTheDocument()
+  })
+
+  it('[ADR-033] the tab, the search and the page open from the URL', async () => {
+    answerWith(many())
+    renderInventory('/store/products/inventory?tab=inStock&q=size&page=2')
+
+    await screen.findAllByText('VX-17', undefined, { timeout: 8000 })
+
+    expect(Object.fromEntries(reads().at(-1)!)).toEqual({ filter: 'in-stock', q: 'size', page: '2', pageSize: '10' })
+    expect(screen.getByRole('searchbox', { name: 'Search by code or name' })).toHaveValue('size')
+  })
+
+  it('[ADR-033] the search is sent once, a moment after the last key, and starts again at page 1', async () => {
+    answerWith(many())
+    const router = renderInventory('/store/products/inventory?page=2')
+    await screen.findAllByText('VX-11', undefined, { timeout: 8000 })
+
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search by code or name' }), 'vx-07')
+
+    await waitFor(() => expect(here(router)).toEqual({ q: 'vx-07' }))
+    expect(Object.fromEntries(reads().at(-1)!)).toEqual({ q: 'vx-07', page: '1', pageSize: '10' })
+    expect(reads().filter(read => read.has('q'))).toHaveLength(1)
+  })
+
+  it('[ADR-033] a page past the end moves to the last page that exists', async () => {
+    answerWith(many())
+    const router = renderInventory('/store/products/inventory?page=9')
+
+    await waitFor(() => expect(here(router)).toEqual({ page: 3 }), { timeout: 8000 })
+    await screen.findAllByText('VX-21', undefined, { timeout: 8000 })
   })
 })

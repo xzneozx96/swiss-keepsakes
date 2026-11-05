@@ -8,6 +8,7 @@ import type { MerchantPinEntry, PinChanges, PinListQuery, PinStoryOptionsQuery }
 import { createRoute, z } from '@hono/zod-openapi'
 import { pinListQuerySchema, pinListSchema, pinLookupQuerySchema, pinLookupSchema, pinPublishBodySchema, pinSchema, pinStoryOptionListSchema, pinStoryOptionsQuerySchema, pinWriteBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
+import { wholeIfNoPage } from '../../../platform/http/whole-list.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
 import { pinChanges, pinListItemView, pinView } from './pin-view.ts'
@@ -115,7 +116,7 @@ const deletePinRoute = createRoute({
 // verified store from `c.get('store')`, never from the path.
 export function registerPinRoutes(app: OpenAPIHono<AppEnv>, useCases: PinUseCases): void {
   app.openapi(listPinsRoute, async (c) => {
-    const result = await useCases.listMerchantPins(c.get('actor'), c.get('store').storeId, c.req.valid('query'))
+    const result = await useCases.listMerchantPins(c.get('actor'), c.get('store').storeId, wholeIfNoPage(c, c.req.valid('query')))
     if (!result.ok)
       return problem(c, failureProblem(result))
     const { entries, ...page } = result.value

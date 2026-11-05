@@ -5,8 +5,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { writeStored } from '@/lib/storage'
 
-import { list, listItem, problem, productId, renderKeepsakes, setUpHarness, state, storeId } from './keepsakes-harness'
+import { listItem, problem, productId, renderKeepsakes, setUpHarness, state, storeId } from './keepsakes-harness'
 import { expectListChrome } from './list-screens-helper'
+import { serverProductPage } from './support/pages'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 vi.mock('@/hooks/use-is-wide', () => ({ useIsWide: () => true }))
@@ -25,7 +26,7 @@ async function loaded(text: string, label = 'Keepsakes', wait?: { timeout: numbe
 }
 
 function answerWith(items: Record<string, unknown>[]) {
-  state.answer = call => (call.method === 'GET' && call.path === base ? Response.json(list(items)) : undefined)
+  state.answer = call => (call.method === 'GET' && call.path.split('?')[0] === base ? Response.json(serverProductPage(items as never, new URL(call.path, 'http://x'))) : undefined)
 }
 
 describe('[E6.1][list] M11 the keepsake list in English', () => {
@@ -72,7 +73,7 @@ describe('[E6.1][list] M11 the keepsake list in English', () => {
   })
 
   it('[E6.1][list] shows loading rows shaped like the table while the list is on its way', async () => {
-    state.answer = call => (call.method === 'GET' && call.path === base ? new Promise<Response>(() => undefined) as unknown as Response : undefined)
+    state.answer = call => (call.method === 'GET' && call.path.split('?')[0] === base ? new Promise<Response>(() => undefined) as unknown as Response : undefined)
     renderKeepsakes('/store/products')
 
     const grid = await screen.findByRole('grid', { name: 'Keepsakes' })
@@ -88,7 +89,7 @@ describe('[E6.1][list] M11 the keepsake list in English', () => {
   })
 
   it('[E6.1][list] shows a refusal with a retry that reads again', async () => {
-    state.answer = call => (call.path === base ? problem(500, 'internal-error') : undefined)
+    state.answer = call => (call.path.split('?')[0] === base ? problem(500, 'internal-error') : undefined)
     renderKeepsakes('/store/products')
 
     const alert = await screen.findByRole('alert')
@@ -96,7 +97,7 @@ describe('[E6.1][list] M11 the keepsake list in English', () => {
     expect(alert).toHaveTextContent('Something went wrong. Try again in a moment.')
     expect(alert).toHaveTextContent('Reference: req-1')
     await userEvent.click(within(alert).getByRole('button', { name: 'Try again' }))
-    await waitFor(() => expect(state.calls.filter(call => call.path === base)).toHaveLength(2))
+    await waitFor(() => expect(state.calls.filter(call => call.path.split('?')[0] === base)).toHaveLength(2))
   })
 
   it('[E6.1][list] names the row menu after the keepsake and offers Edit', async () => {
@@ -201,7 +202,7 @@ describe('[T-006][list] the keepsake list matches the Places list', () => {
   })
 
   it('[T-006][AC-6] the loading cards have the chip row and the update line of a real card', async () => {
-    state.answer = call => (call.method === 'GET' && call.path === base ? new Promise<Response>(() => undefined) as unknown as Response : undefined)
+    state.answer = call => (call.method === 'GET' && call.path.split('?')[0] === base ? new Promise<Response>(() => undefined) as unknown as Response : undefined)
     renderKeepsakes('/store/products')
 
     await screen.findByRole('grid', { name: 'Keepsakes' })

@@ -5351,9 +5351,11 @@
             "type": "object"
           },
           "page": {
+            "minimum": 1,
             "type": "integer"
           },
           "pageSize": {
+            "minimum": 1,
             "type": "integer"
           },
           "statuses": {
@@ -5377,7 +5379,8 @@
             "type": "object"
           },
           "total": {
-            "description": "The files that match, before paging",
+            "description": "The rows that match the filters, before paging",
+            "minimum": 0,
             "type": "integer"
           },
           "uses": {
@@ -7873,17 +7876,58 @@
         "type": "object"
       },
       "ProductList": {
-        "description": "The keepsakes of the store, newest first",
+        "description": "One page of the keepsakes of the store, newest first",
         "properties": {
           "items": {
             "items": {
               "$ref": "#/components/schemas/ProductListItem"
             },
             "type": "array"
+          },
+          "page": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "pageSize": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "statuses": {
+            "description": "The keepsakes of each status that match the search, not the status filter",
+            "properties": {
+              "archived": {
+                "type": "integer"
+              },
+              "draft": {
+                "type": "integer"
+              },
+              "editsNotLive": {
+                "type": "integer"
+              },
+              "published": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "draft",
+              "published",
+              "editsNotLive",
+              "archived"
+            ],
+            "type": "object"
+          },
+          "total": {
+            "description": "The rows that match the filters, before paging",
+            "minimum": 0,
+            "type": "integer"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total",
+          "page",
+          "pageSize",
+          "statuses"
         ],
         "type": "object"
       },
@@ -8002,7 +8046,7 @@
             "type": "object"
           },
           "optionNames": {
-            "description": "The names of the keepsake’s options, in order. The editor suggests the names the shop already uses",
+            "description": "Deprecated: read `GET .../products/option-names`. Kept for one release (ADR-033 section 12) for pages loaded before the deploy; it is only the names of this keepsake",
             "items": {
               "properties": {
                 "de": {
@@ -8053,6 +8097,21 @@
           "variantCount",
           "soldOutCount",
           "updatedAt"
+        ],
+        "type": "object"
+      },
+      "ProductLookup": {
+        "description": "The keepsakes named by `ids`, whatever their status, at most 50. Not paged",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProductListItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
         ],
         "type": "object"
       },
@@ -8107,6 +8166,29 @@
           "id",
           "name",
           "values"
+        ],
+        "type": "object"
+      },
+      "ProductOptionNames": {
+        "description": "The option names the store’s keepsakes already use, each once ignoring case, at most 50, newest keepsake first. Not paged",
+        "properties": {
+          "items": {
+            "items": {
+              "properties": {
+                "de": {
+                  "type": "string"
+                },
+                "en": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
         ],
         "type": "object"
       },
@@ -13592,7 +13674,7 @@
         "type": "object"
       },
       "StockList": {
-        "description": "The live variants of the store with their stock",
+        "description": "One page of the live variants of the store with their stock",
         "properties": {
           "counts": {
             "description": "The tab figures of the whole store, counted before the filter and the search",
@@ -13619,10 +13701,26 @@
               "$ref": "#/components/schemas/StockRow"
             },
             "type": "array"
+          },
+          "page": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "pageSize": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "total": {
+            "description": "The rows that match the filters, before paging",
+            "minimum": 0,
+            "type": "integer"
           }
         },
         "required": [
           "items",
+          "total",
+          "page",
+          "pageSize",
           "counts"
         ],
         "type": "object"
@@ -21075,6 +21173,46 @@
               "maxLength": 200,
               "type": "string"
             }
+          },
+          {
+            "description": "`name`: keepsake name, variant title, code, then variant id descending. `newest`: variant id descending (a `uuidv7`, so newest first)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "name",
+              "description": "`name`: keepsake name, variant title, code, then variant id descending. `newest`: variant id descending (a `uuidv7`, so newest first)",
+              "enum": [
+                "name",
+                "newest"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page, from 1. A page past the end answers no items and the real total",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "description": "The page, from 1. A page past the end answers no items and the real total",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Rows a page, 1 to 20",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "description": "Rows a page, 1 to 20",
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -21086,7 +21224,7 @@
                 }
               }
             },
-            "description": "The live variants of the store with their stock, and the tab counts of the whole store",
+            "description": "One page of the live variants of the store with their stock, the total of the filter and the search, and the tab counts of the whole store. Deprecated for one release (ADR-033 section 12): a request without `page` answers the whole list (up to 500)",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -21405,23 +21543,26 @@
             }
           },
           {
+            "description": "The page, from 1. A page past the end answers no items and the real total",
             "in": "query",
             "name": "page",
             "required": false,
             "schema": {
               "default": 1,
-              "maximum": 10000,
+              "description": "The page, from 1. A page past the end answers no items and the real total",
               "minimum": 1,
               "type": "integer"
             }
           },
           {
+            "description": "Rows a page, 1 to 24. Deprecated above 20: the most is 20 from the next release (ADR-033 section 12)",
             "in": "query",
             "name": "pageSize",
             "required": false,
             "schema": {
               "default": 10,
-              "maximum": 100,
+              "description": "Rows a page, 1 to 24. Deprecated above 20: the most is 20 from the next release (ADR-033 section 12)",
+              "maximum": 24,
               "minimum": 1,
               "type": "integer"
             }
@@ -23546,6 +23687,68 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "description": "Comma separated: draft, published, editsNotLive, archived. A keepsake matches any of them. `published` is live with no pending edit, `editsNotLive` is live with a draft that differs. Empty: every keepsake but the archived ones",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "description": "Comma separated: draft, published, editsNotLive, archived. A keepsake matches any of them. `published` is live with no pending edit, `editsNotLive` is live with a draft that differs. Empty: every keepsake but the archived ones",
+              "maxLength": 1500,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Matches the name in either language, in any case",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "description": "Matches the name in either language, in any case",
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "`created`: newest first (`created_at desc, id desc`). `edited`: last edit first (`updated_at desc, id desc`)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "created",
+              "description": "`created`: newest first (`created_at desc, id desc`). `edited`: last edit first (`updated_at desc, id desc`)",
+              "enum": [
+                "created",
+                "edited"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page, from 1. A page past the end answers no items and the real total",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "description": "The page, from 1. A page past the end answers no items and the real total",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Rows a page, 1 to 20",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "description": "Rows a page, 1 to 20",
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -23557,7 +23760,7 @@
                 }
               }
             },
-            "description": "The keepsakes of the store, newest first",
+            "description": "One page of the keepsakes of the store, newest first, with the total and the status counts. Deprecated for one release (ADR-033 section 12): a request without `page` answers the whole list (up to 500)",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -23620,6 +23823,122 @@
                   "type": "string"
                 }
               },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/products/lookup": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated keepsake ids, at most 50. An id of another store is left out",
+            "in": "query",
+            "name": "ids",
+            "required": false,
+            "schema": {
+              "description": "Comma separated keepsake ids, at most 50. An id of another store is left out",
+              "maxLength": 1850,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductLookup"
+                }
+              }
+            },
+            "description": "The keepsakes named by `ids` (at most 50), whatever their status. Not paged",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/products/option-names": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A keepsake whose own option names are left out: the one being edited",
+            "in": "query",
+            "name": "except",
+            "required": false,
+            "schema": {
+              "description": "A keepsake whose own option names are left out: the one being edited",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductOptionNames"
+                }
+              }
+            },
+            "description": "The option names the shop already uses, each once, at most 50. Whole: the name field suggests them",
+            "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }

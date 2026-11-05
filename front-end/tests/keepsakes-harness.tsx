@@ -1,4 +1,4 @@
-import { mediaSchema, problemSchema, productListSchema, productSchema } from '@sk/api-contract'
+import { mediaSchema, problemSchema, productSchema } from '@sk/api-contract'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
 import { render } from '@testing-library/react'
@@ -11,7 +11,10 @@ import { startDemo } from '@/features/demo/data-client'
 import { KeepsakeEditorScreen } from '@/features/keepsakes/components/keepsake-editor'
 import { KeepsakeList } from '@/features/keepsakes/components/keepsake-list'
 import { NewKeepsake } from '@/features/keepsakes/components/new-keepsake-editor'
+import { parseKeepsakesSearch } from '@/features/keepsakes/lib/list'
 import { keepsakeSearch } from '@/features/keepsakes/lib/search-params'
+
+import { productPage } from './support/pages'
 
 // jsdom has no CSS.supports, which a module of the prototype gift editor (the CommissionCard's file) calls on load.
 vi.hoisted(() => {
@@ -87,7 +90,8 @@ export function listItem(over: Record<string, unknown> = {}) {
   }
 }
 
-export const list = (items: Record<string, unknown>[]) => productListSchema.parse({ items })
+/** The keepsake list answer for `items`, as one page (`over` sets the total, the counts and so on for a paging test). */
+export const list = (items: Record<string, unknown>[], over: Record<string, unknown> = {}) => productPage(items, over)
 export const problem = (status: number, type: string) => Response.json(problemSchema.parse({ type, status, title: type, instance: '/x', requestId: 'req-1' }), { status })
 
 export interface Harness {
@@ -152,7 +156,17 @@ export async function setUpHarness() {
 
 export function renderKeepsakes(initial: string, history = createMemoryHistory({ initialEntries: [initial] })) {
   const root = createRootRoute({ component: Outlet })
-  const index = createRoute({ getParentRoute: () => root, path: '/store/products', component: KeepsakeList })
+  const index = createRoute({
+    getParentRoute: () => root,
+    path: '/store/products',
+    validateSearch: (search: Record<string, unknown>) => parseKeepsakesSearch(search),
+    component: function Index() {
+      const search = index.useSearch()
+      const navigate = index.useNavigate()
+
+      return <KeepsakeList search={search} onSearch={patch => void navigate({ to: '/store/products', search: (previous: Record<string, unknown>) => ({ ...previous, ...patch }), replace: true } as never)} />
+    },
+  })
   const create = createRoute({ getParentRoute: () => root, path: '/store/products/new', component: NewKeepsake })
   const edit = createRoute({
     getParentRoute: () => root,

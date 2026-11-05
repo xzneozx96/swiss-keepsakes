@@ -61,10 +61,16 @@ describe('[E4.11][AC51] library rules', () => {
     expect(thumbOf({ variants: [], publicUrl: 'o' })).toBe('o')
   })
 
-  it('[E4.11][AC51] the address keeps only what it knows, and a page is 24 on the wall and 10 in the lists', () => {
+  it('[E4.11][AC51] the address keeps only what it knows, and a page is 20 on the wall and in the lists', () => {
     expect(parseMediaSearch({ kind: 'pdf', q: ' sun ', use: 'unused,never', status: ['ready', 'x'], page: '3' })).toEqual({ kind: 'pdf', q: ' sun ', use: ['unused'], status: ['ready'], page: 3 })
     expect(parseMediaSearch({ kind: 'video', q: '  ', page: '0' })).toEqual({ kind: undefined, q: undefined, use: undefined, status: undefined, page: undefined })
-    expect(pageSizeOf('image')).toBe(24)
-    expect(pageSizeOf('audio')).toBe(10)
+    expect(pageSizeOf('image')).toBe(20)
+    expect(pageSizeOf('audio')).toBe(20)
+  })
+
+  it('[ADR-033] a link past the last page the API serves opens on it: 501 at 20 a page', () => {
+    expect(parseMediaSearch({ page: '9999' }).page).toBe(501)
+    expect(parseMediaSearch({ kind: 'audio', page: '9999' }).page).toBe(501)
+    expect(parseMediaSearch({ page: '501' }).page).toBe(501)
   })
 })

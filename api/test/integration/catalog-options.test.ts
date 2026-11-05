@@ -1039,14 +1039,15 @@ describe('[T-010] variants with no SKU code', () => {
     expect(((await refused.json()) as Problem).errors).toEqual([expect.objectContaining({ code: 'combination-taken', params: { code: 'Small / Swan', archived: 0 } })])
   })
 
-  it('[T-010] the list names the options of every keepsake, for the editor\'s name suggestions', async () => {
+  it('[T-010][ADR-033] the option names route answers each name the shop uses once, ignoring case, and leaves the keepsake being edited out', async () => {
     const env2 = await setup({ fresh: true })
 
-    expect((await env2.create({ options: [sizeOption, themeOption], variants: [{ priceRappen: 100, values: { size: 's', theme: 'swan' } }] })).status).toBe(201)
+    const own = await (await env2.create({ options: [sizeOption, themeOption], variants: [{ priceRappen: 100, values: { size: 's', theme: 'swan' } }] })).json() as { id: string }
     expect((await env2.create({ variants: [{ priceRappen: 100 }] })).status).toBe(201)
-    const list = await (await env2.call(env2.products, { headers: env2.owner.headers })).json() as { items: { optionNames: { en?: string, de?: string }[] }[] }
+    const names = async (query = '') => (await (await env2.call(`${env2.products}/option-names${query}`, { headers: env2.owner.headers })).json() as { items: { en?: string, de?: string }[] }).items
 
-    expect(list.items.map(item => item.optionNames)).toEqual([[], [{ en: 'Size', de: 'Grösse' }, { en: 'Theme' }]])
+    expect(await names()).toEqual([{ en: 'Size', de: 'Grösse' }, { en: 'Theme' }])
+    expect(await names(`?except=${own.id}`)).toEqual([])
   })
 })
 

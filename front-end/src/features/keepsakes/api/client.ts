@@ -1,4 +1,13 @@
-import type { OptionsSaveBody, Product, ProductCreateBody, ProductList, ProductRemoval, ProductSaveBody, VariantCreateBody, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
+import type { OptionsSaveBody, Product, ProductCreateBody, ProductList, ProductLookup, ProductOptionNames, ProductRemoval, ProductSaveBody, VariantCreateBody, VariantSaveBody, VariantsSaveBody } from '@sk/api-contract'
+
+/** What one page of the keepsake table is asked for (ADR-033). `status` is a comma separated list. */
+export interface KeepsakeListQuery {
+  status?: string | undefined
+  q?: string | undefined
+  sort?: 'created' | 'edited' | undefined
+  page: number
+  pageSize: number
+}
 
 /** A command carries the `Idempotency-Key` of the user's intent, so a retry of it is the same request to the API. */
 export type Keyed<T> = T & { idempotencyKey: string }
@@ -8,8 +17,12 @@ export type Keyed<T> = T & { idempotencyKey: string }
  * as an `ApiProblem`. A save and a publish carry the row version they opened (`If-Match`), and an old one is a 412.
  */
 export interface KeepsakesClient {
-  /** The store's keepsakes, newest first. */
-  list: (storeId: string) => Promise<ProductList>
+  /** One page of the store's keepsakes, newest first, with the total and the status counts. */
+  list: (input: { storeId: string, query: KeepsakeListQuery }) => Promise<ProductList>
+  /** The keepsakes named by `ids` (at most 50), whatever their status. Never the whole list. */
+  lookup: (input: { storeId: string, ids: string[] }) => Promise<ProductLookup>
+  /** The option names the shop already uses (at most 50), leaving `exceptId`'s own out. */
+  optionNames: (input: { storeId: string, exceptId?: string | undefined }) => Promise<ProductOptionNames>
   get: (input: { storeId: string, id: string }) => Promise<Product>
   /** A draft with its options and a variant for each combination that is sold. */
   create: (input: Keyed<{ storeId: string } & ProductCreateBody>) => Promise<Product>

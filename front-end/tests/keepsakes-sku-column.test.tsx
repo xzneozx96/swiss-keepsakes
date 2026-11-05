@@ -18,7 +18,7 @@ async function openWith(codes: (string | null)[]) {
   const current = product({ options: [option], variants: variantsOf(codes) })
 
   await setUpHarness()
-  state.answer = call => (call.method === 'GET' && call.path === `${base}/${productId}` ? Response.json(current) : call.method === 'GET' && call.path === base ? Response.json(list([listItem()])) : undefined)
+  state.answer = call => (call.method === 'GET' && call.path === `${base}/${productId}` ? Response.json(current) : call.method === 'GET' && call.path.split('?')[0] === base ? Response.json(list([listItem()])) : undefined)
   renderKeepsakes(`/store/products/${productId}?step=options`)
   await screen.findByRole('region', { name: 'Variants' }, { timeout: 8000 })
 

@@ -1,41 +1,28 @@
 import { describe, expect, it } from 'vitest'
 
-import { filterKeepsakes, isFiltered, noFilters, statusFilterOf } from '@/features/keepsakes/lib/list'
+import { isFiltered, KEEPSAKES_PAGE_SIZE, parseKeepsakesSearch } from '@/features/keepsakes/lib/list'
 
-const item = (name: { en?: string, de?: string }, status: 'draft' | 'published' = 'draft', hasUnpublishedEdits = false) => ({ name, status, hasUnpublishedEdits })
-const names = (items: ReturnType<typeof item>[]) => items.map(i => i.name.en ?? i.name.de)
-
-const items = [
-  item({ en: 'Victorinox Classic' }),
-  item({ en: 'SwissCard Lite' }, 'published'),
-  item({ de: 'Taschenmesser' }, 'published', true),
-]
-
-describe('[T-006][list] filtering the keepsakes', () => {
-  it('[T-006] names the three states of the status chip', () => {
-    expect(items.map(statusFilterOf)).toEqual(['draft', 'published', 'editsNotLive'])
+// ADR-033: the server filters, counts and searches; the address holds the ticks, the search and the page.
+describe('[T-006][ADR-033] the keepsake table in the address', () => {
+  it('reads the ticked statuses in the order of the chips, the search and the page', () => {
+    expect(parseKeepsakesSearch({ status: 'editsNotLive,draft', q: 'knife', page: '3' })).toEqual({ status: ['draft', 'editsNotLive'], q: 'knife', page: 3 })
+    expect(parseKeepsakesSearch({ status: ['published', 'archived'] })).toMatchObject({ status: ['published', 'archived'] })
   })
 
-  it('[T-006] shows everything without a filter and without a search', () => {
-    expect(filterKeepsakes(items, noFilters)).toHaveLength(3)
-    expect(isFiltered(noFilters)).toBe(false)
+  it('drops what it does not know, so a hand-edited link still opens the page', () => {
+    expect(parseKeepsakesSearch({ status: 'gone', q: '   ', page: 'x' })).toEqual({ status: undefined, q: undefined, page: undefined })
+    expect(parseKeepsakesSearch({ page: '1' }).page).toBeUndefined()
+    expect(parseKeepsakesSearch({ page: '1.5' }).page).toBeUndefined()
   })
 
-  it('[T-006] searches the English and the German name, ignoring case and outer spaces', () => {
-    expect(names(filterKeepsakes(items, { ...noFilters, query: ' SWISS ' }))).toEqual(['SwissCard Lite'])
-    expect(names(filterKeepsakes(items, { ...noFilters, query: 'taschen' }))).toEqual(['Taschenmesser'])
-    expect(filterKeepsakes(items, { ...noFilters, query: 'nothing' })).toEqual([])
+  it('opens a page past the last one the API serves on that page', () => {
+    expect(parseKeepsakesSearch({ page: '5000' }).page).toBe(Math.floor(10_000 / KEEPSAKES_PAGE_SIZE) + 1)
   })
 
-  it('[T-006] a status filter is an OR among its options and narrows together with the search', () => {
-    expect(names(filterKeepsakes(items, { ...noFilters, status: ['draft'] }))).toEqual(['Victorinox Classic'])
-    expect(filterKeepsakes(items, { ...noFilters, status: ['published', 'editsNotLive'] })).toHaveLength(2)
-    expect(names(filterKeepsakes(items, { query: 'lite', status: ['published', 'editsNotLive'] }))).toEqual(['SwissCard Lite'])
-  })
-
-  it('[T-006] counts a blank search as no filter', () => {
-    expect(isFiltered({ ...noFilters, query: '   ' })).toBe(false)
-    expect(isFiltered({ ...noFilters, query: 'a' })).toBe(true)
-    expect(isFiltered({ ...noFilters, status: ['draft'] })).toBe(true)
+  it('counts a blank search as no filter', () => {
+    expect(isFiltered({})).toBe(false)
+    expect(isFiltered({ q: '   ' })).toBe(false)
+    expect(isFiltered({ q: 'a' })).toBe(true)
+    expect(isFiltered({ status: ['draft'] })).toBe(true)
   })
 })

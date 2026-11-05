@@ -18,8 +18,8 @@ import { KeepsakesSheet } from './story-keepsakes-sheet'
 
 /**
  * Up to 6 published keepsakes the story shows, in the merchant's order (shared by both languages). The rows are the shared
- * `PhotoOrder` (grip, arrow keys, Escape, live region). A keepsake that is no longer published, or that the list does not
- * have, stays in the list with a note and can be removed; it still counts toward the 6.
+ * `PhotoOrder` (grip, arrow keys, Escape, live region). A keepsake that is no longer published, or that the lookup does not
+ * find, stays in the list with a note and can be removed; it still counts toward the 6.
  */
 export function KeepsakesCard({ storeId, group, language, onChange }: {
   storeId: string
@@ -28,7 +28,7 @@ export function KeepsakesCard({ storeId, group, language, onChange }: {
   onChange: (patch: Partial<GroupFields>) => void
 }) {
   const { t } = useLocale()
-  const { keepsakes, isLoading, isError, refetch } = useKeepsakeOptions(storeId, language, group.keepsakeProductIds.length > 0)
+  const { keepsakes, isLoading, isError, refetch } = useKeepsakeOptions(storeId, language, group.keepsakeProductIds)
   const [sheetOpen, setSheetOpen] = useState(false)
   const byId = new Map(keepsakes.map(option => [option.id, option]))
   const ids = group.keepsakeProductIds

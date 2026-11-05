@@ -8,7 +8,7 @@ import { useQueries, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { useDataClient } from '@/features/data-client'
-import { useKeepsakes } from '@/features/keepsakes/api/queries'
+import { useKeepsakeLookup } from '@/features/keepsakes/api/queries'
 import { mediaQueries } from '@/features/media/api/queries'
 import { thumbOf } from '@/features/media/lib/rules'
 import { usePinLookup } from '@/features/places/api/queries'
@@ -40,7 +40,7 @@ export function useStoryPreview({ group, language, fields }: { group: StoryGroup
     combine: results => results.flatMap(result => (result.data?.status === 'ready' ? [result.data] : NO_FILES)),
   })
   const pins = usePinLookup(storeId, [...pinIds, ...group.placeIds])
-  const keepsakes = useKeepsakes(group.keepsakeProductIds.length > 0 ? storeId : undefined)
+  const keepsakes = useKeepsakeLookup(storeId, group.keepsakeProductIds)
   const stories = useStoryLookup(storeId, group.relatedGroupIds)
   const session = useQuery(sessionUserQuery)
   const [today] = useState(() => new Date().toISOString().slice(0, 10))

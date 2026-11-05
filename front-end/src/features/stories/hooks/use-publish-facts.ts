@@ -6,7 +6,7 @@ import type { StoryLanguage } from '../lib/search-params'
 import { storyBodyPinIds } from '@sk/domain/content'
 
 import { useLocale } from '@/contexts/locale-context'
-import { useKeepsakes } from '@/features/keepsakes/api/queries'
+import { useKeepsakeLookup } from '@/features/keepsakes/api/queries'
 import { usePinLookup } from '@/features/places/api/queries'
 import { useStoryLookup } from '../api/queries'
 
@@ -24,7 +24,7 @@ export function useStoryPublishFacts({ storeId, group, language, body }: {
   const { t } = useLocale()
   const pinIds = storyBodyPinIds(body as Parameters<typeof storyBodyPinIds>[0])
   const stories = useStoryLookup(storeId, group.relatedGroupIds)
-  const keepsakes = useKeepsakes(group.keepsakeProductIds.length > 0 ? storeId : undefined)
+  const keepsakes = useKeepsakeLookup(storeId, group.keepsakeProductIds)
   const places = usePinLookup(storeId, pinIds)
   const other = language === 'en' ? 'de' : 'en'
 

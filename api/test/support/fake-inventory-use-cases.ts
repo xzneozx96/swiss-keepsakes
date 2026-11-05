@@ -15,7 +15,7 @@ function entry(skuId: string): StockEntry {
 // existed and the caller could do the thing, so a request that gets past the guard is not a 404 or a 403.
 export function createFakeInventoryUseCases(): InventoryUseCases {
   return {
-    listStock: async () => ({ ok: true, value: { items: [], counts: { all: 0, inStock: 0, soldOut: 0 } } }),
+    listStock: async (_actor, _storeId, query) => ({ ok: true, value: { items: [], total: 0, page: query.page, pageSize: query.pageSize, counts: { all: 0, inStock: 0, soldOut: 0 } } }),
     getStockItem: async (_actor, _storeId, skuId) => ({ ok: true, value: { ...entry(skuId), reservations: [] } }),
     setStock: async (_actor, _storeId, skuId) => ({ ok: true, value: entry(skuId) }),
     setManyStock: async (_actor, _storeId, items) => ({ ok: true, value: items.map(item => entry(item.skuId)) }),

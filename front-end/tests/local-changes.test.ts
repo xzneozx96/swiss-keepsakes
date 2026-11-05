@@ -73,16 +73,28 @@ describe('keepsakes.remove', () => {
   const input = { storeId: 's', id: 'b', ifMatch: 1, idempotencyKey: 'k' }
   const items = { items: [{ id: 'a', status: 'draft' }, { id: 'b', status: 'published' }] }
 
-  it('drops a deleted keepsake from the list of its store only', () => {
+  const page = (status?: string) => [...queryKeys.keepsakes.list, 's', { status, page: 1, pageSize: 10 }]
+  const counted = { items: [{ id: 'a', status: 'draft' }, { id: 'b', status: 'published' }], total: 2 }
+
+  it('drops a deleted keepsake from the list of its store only, and the total goes down by one', () => {
     const [change] = commandChanges.keepsakes!.remove!(input, { id: 'b', outcome: 'deleted' })
 
     expect(change!.key).toEqual([...queryKeys.keepsakes.list, 's'])
-    expect(apply(change!, items, change!.key)).toEqual({ items: [{ id: 'a', status: 'draft' }] })
+    expect(apply(change!, counted, page())).toEqual({ items: [{ id: 'a', status: 'draft' }], total: 1 })
   })
 
-  it('keeps an archived keepsake in the list, as archived', () => {
+  it('an archived keepsake leaves a page whose status filter does not name archived, and stays, as archived, on one that does', () => {
     const [change] = commandChanges.keepsakes!.remove!(input, { id: 'b', outcome: 'archived' })
 
-    expect(apply(change!, items, change!.key)).toEqual({ items: [{ id: 'a', status: 'draft' }, { id: 'b', status: 'archived' }] })
+    expect(apply(change!, counted, page())).toEqual({ items: [{ id: 'a', status: 'draft' }], total: 1 })
+    expect(apply(change!, counted, page('draft,published'))).toEqual({ items: [{ id: 'a', status: 'draft' }], total: 1 })
+    expect(apply(change!, counted, page('archived,draft'))).toEqual({ items: [{ id: 'a', status: 'draft' }, { id: 'b', status: 'archived' }], total: 2 })
+  })
+
+  it('an archived keepsake stays, as archived, in a lookup by id (a story still names it)', () => {
+    const [change] = commandChanges.keepsakes!.remove!(input, { id: 'b', outcome: 'archived' })
+    const lookup = [...queryKeys.keepsakes.list, 's', 'lookup', { ids: ['a', 'b'] }]
+
+    expect(apply(change!, items, lookup)).toEqual({ items: [{ id: 'a', status: 'draft' }, { id: 'b', status: 'archived' }] })
   })
 })

@@ -6,15 +6,16 @@ import { useRef, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 import { MusicIcon, UploadIcon } from '@/components/icons'
-import { Pager } from '@/components/list-pagination'
+import { Pager, serverPager } from '@/components/list-pagination'
 import { useLocale } from '@/contexts/locale-context'
 import { useMediaList } from '@/features/media/api/queries'
 import { FileThumb } from '@/features/media/components/file-thumb'
+import { useLastPageFallback } from '@/hooks/use-last-page-fallback'
 import { useRecordingUpload } from '../hooks/use-recording-upload'
 import { CHOICE_ROW } from './choice-row'
 import { ChosenMark } from './chosen-mark'
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 20
 const ACCEPT = 'audio/mpeg,audio/mp4,audio/wav,audio/ogg,audio/webm,.m4a'
 
 export type RecordingChoice = Pick<MediaItem, 'id' | 'name' | 'alt'>
@@ -52,6 +53,8 @@ export function InsertRecording({ storeId, language, selected, onSelect }: {
   const uploadRecording = useRecordingUpload(storeId)
   const items = list.data?.items ?? []
   const total = list.data?.total ?? 0
+
+  useLastPageFallback(list.data && !list.isPlaceholderData ? { rows: items.length, total } : undefined, page, PAGE_SIZE, setPage)
   const other = language === 'en' ? 'de' : 'en'
 
   return (
@@ -102,7 +105,7 @@ export function InsertRecording({ storeId, language, selected, onSelect }: {
           ))}
         </ul>
       )}
-      <Pager compact pager={{ page, pages: Math.max(1, Math.ceil(total / PAGE_SIZE)), total, from: (page - 1) * PAGE_SIZE + 1, to: Math.min(page * PAGE_SIZE, total), go: setPage }} />
+      <Pager compact pager={serverPager({ page, pageSize: PAGE_SIZE, total, go: setPage })} />
     </div>
   )
 }

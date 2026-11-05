@@ -3,9 +3,10 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { list as keepsakeList, listItem as keepsakeRow, media } from './keepsakes-harness'
+import { listItem as keepsakeRow, media } from './keepsakes-harness'
 import { listItem, listVersion, publishedVersion, storyList } from './stories-harness'
 import { coverId, groupId, renderStoryEditor, servePublish, setUpHarness, state, storeId, storyDoc, storyGroupDetail, storyVersion, uuid } from './stories-publish-harness'
+import { productLookup } from './support/pages'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -31,8 +32,8 @@ function lists(rows: Lists) {
   return (call: (typeof state.calls)[number]) => {
     if (call.method !== 'GET')
       return undefined
-    if (call.path === `${api}/products`)
-      return Response.json(keepsakeList(rows.keepsakes ?? []))
+    if (call.path.split('?')[0] === `${api}/products/lookup`)
+      return Response.json(productLookup(rows.keepsakes ?? []))
     if (call.path.split('?')[0] === `${api}/story-groups/lookup`)
       return Response.json(storyList(rows.stories ?? []))
     if (call.path.split('?')[0] === `${api}/pins/lookup`)

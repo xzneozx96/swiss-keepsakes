@@ -187,12 +187,12 @@ export const pinListItemSchema = z.object({
 
 const PIN_STATUSES = ['draft', 'published', 'hidden', 'ended'] as const
 const PIN_TYPES = ['place', 'event'] as const
-const splitList = (value: string | undefined) => (value === undefined || value === '' ? [] : value.split(','))
-const listOf = <T extends string>(item: z.ZodType<T, T>) => z.string().max(1500).optional().transform(splitList).pipe(z.array(item).max(40))
+export const splitList = (value: string | undefined) => (value === undefined || value === '' ? [] : value.split(','))
+export const listOf = <T extends string>(item: z.ZodType<T, T>) => z.string().max(1500).optional().transform(splitList).pipe(z.array(item).max(40))
 
 /** The most ids one lookup takes. */
 export const MAX_LOOKUP_IDS = 50
-const lookupIds = z.string().max(MAX_LOOKUP_IDS * 37).optional().transform(splitList).pipe(z.array(z.uuid()).max(MAX_LOOKUP_IDS))
+export const lookupIds = z.string().max(MAX_LOOKUP_IDS * 37).optional().transform(splitList).pipe(z.array(z.uuid()).max(MAX_LOOKUP_IDS))
 
 export const pinLookupQuerySchema = z.object({
   ids: lookupIds.meta({ description: `Comma separated pin ids, at most ${MAX_LOOKUP_IDS}. An id of another store is left out` }),

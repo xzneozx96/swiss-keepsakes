@@ -49,6 +49,15 @@ export function withoutCounted(field: string, id: string): LocalChange['apply'] 
   }
 }
 
+/** A page of the keepsake table whose status filter leaves archived keepsakes out (it names none, or names others). A lookup (its key ends in `{ ids }`) is not a page and keeps the row. */
+function pagesWithoutArchived(queryKey: QueryKey): boolean {
+  const query = queryKey.at(-1) as { page?: number, status?: string } | undefined
+  if (typeof query?.page !== 'number')
+    return false
+
+  return !(query.status ?? '').split(',').includes('archived')
+}
+
 type Changes = {
   [F in Feature]?: { [C in CommandName<F>]?: (input: Command<F, C>['input'], result: Command<F, C>['result']) => readonly LocalChange[] }
 }
@@ -84,10 +93,12 @@ export const commandChanges: Changes = {
     }],
   },
   keepsakes: {
-    // A deleted keepsake leaves the list; an archived one becomes `archived`, which the default list hides.
+    // A deleted keepsake leaves the list; an archived one becomes `archived`, which a page leaves out unless its status filter asks for archived ones.
     remove: (input, result) => [{
       key: [...queryKeys.keepsakes.list, input.storeId],
-      apply: result.outcome === 'deleted' ? without('items', input.id) : patching('items', input.id, { status: 'archived' }),
+      apply: (data, queryKey) => result.outcome === 'archived' && !pagesWithoutArchived(queryKey)
+        ? patching('items', input.id, { status: 'archived' })(data, queryKey)
+        : withoutCounted('items', input.id)(data, queryKey),
     }],
     // Unpublishing makes the keepsake a draft in the list at once.
     unpublish: (input, result) => [{

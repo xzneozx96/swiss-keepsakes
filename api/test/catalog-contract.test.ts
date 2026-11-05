@@ -14,6 +14,8 @@ describe('[E6.1][AC55] the catalog contract', () => {
   it('[E6.1][AC55] has the keepsake routes and nothing else under products', () => {
     expect(catalogPaths.sort()).toEqual([
       '/api/store/{storeId}/products',
+      '/api/store/{storeId}/products/lookup',
+      '/api/store/{storeId}/products/option-names',
       '/api/store/{storeId}/products/{productId}',
       '/api/store/{storeId}/products/{productId}/options',
       '/api/store/{storeId}/products/{productId}/publish',

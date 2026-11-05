@@ -351,10 +351,14 @@ The owner did not answer the remaining three questions. The coordinator's defaul
   - **Matching.** Full text with the English and German dictionaries, `ILIKE` for partial words, `pg_trgm` for typos. Titles are stored folded, with the `ae/oe/ue` form beside it, so "Loewendenkmal" finds "Löwendenkmal". It matches the titles in both languages, whatever `lang` says; `lang` only picks the language of the card. Migration `0028_public_search.sql` was approved by the owner.
   - **Interest filter (decision 4, decided by the owner, 05.11.2026).** An `interest=` parameter is allowed for a tile the guest taps on the search screen. The screen never fills it from the saved onboarding answers, so ADR-006 stands. The parameter is `interest`, not `interests`, and the contract test of ADR-006 (`onboarding-contract.test.ts`) still passes. The owner approved it for this route only; the guard in `onboarding-contract.test.ts` enforces that.
   - **Sitemap.** It keeps its page loop (20 a page, `readAllPages`), because it needs every published slug and the search cannot give that. A slug-only whole list would be a new route and needs its own decision.
+- 2026-11-05 (slice 5, owner rule: paging must not change what merchants see): the inventory table's default order is keepsake name, variant title, code, then variant id descending (today's order), not `sku_id` as § 4 lists. `sort=newest` gives the id order.
+- 2026-11-05 (slice 5, § 12 grace, one release): a request WITHOUT `page` to the merchant products, inventory, pins and story-groups lists answers the whole list (up to 500), as before paging; with `page` it is paged. The media library accepts `pageSize` up to 24 (deprecated; the most is 20). Both fallbacks are removed in the next release, when `page` defaults to 1 again and the media maximum is 20. The front end always sends `page` and a page size of 20 or less.
 - 2026-11-05: Merchant stories table default order is last updated first (`updated_at desc, id desc`), not created; owner decision, to keep the order merchants saw before and match the Updated column.
 
 ## History
 - 2026-11-05 proposed (owner question on pagination; research and audit of every list route)
 - 2026-11-05 accepted (owner, chat 05.11.2026): rank within each page; numbered pages for per-store merchant tables; 10 a page with infinite scroll for guest stories; the map never cuts pins. Coordinator defaults for search interest filter (deferred), story order (shown version's date) and "N stories" (kept)
 - 2026-11-05 amended (owner, chat 05.11.2026): page size 10 by default and 20 at most on every paged list; tours paged like the other guest lists (slice 3)
+- 2026-11-05 amended (owner): inventory default order stays by name (see Amendments)
+- 2026-11-05 amended: § 12 fallback for numbered lists, removed next release (see Amendments)
 - 2026-11-05 amended (owner): merchant stories table opens with the last updated story first (see Amendments)

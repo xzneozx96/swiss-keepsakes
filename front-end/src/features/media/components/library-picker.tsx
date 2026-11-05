@@ -2,15 +2,17 @@ import type { MediaItem } from '@sk/api-contract'
 import type { PendingPhoto } from '../hooks/use-pending-photos'
 
 import { Button, SearchField, Skeleton, Spinner, toast } from '@heroui/react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 import { LibraryIcon, SearchIcon, UploadIcon } from '@/components/icons'
-import { Pager } from '@/components/list-pagination'
+import { Pager, serverPager } from '@/components/list-pagination'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
+import { useLastPageFallback } from '@/hooks/use-last-page-fallback'
 import { useLatest } from '@/hooks/use-latest'
 import { useListLoading } from '@/hooks/use-list-loading'
+import { useSearchBox } from '@/hooks/use-search-box'
 import { useMediaList, useMediaNames, useReadyIds } from '../api/queries'
 import { useDuplicateCheck } from '../hooks/use-duplicate-check'
 import { usePendingPhotos } from '../hooks/use-pending-photos'
@@ -21,7 +23,6 @@ import { ACCEPT } from './photo-parts'
 import { TileMark, TileOutline } from './tile-mark'
 import { TILE_GAPS } from './tile-style'
 
-const SEARCH_DELAY_MS = 250
 const GRID = `grid grid-cols-3 ${TILE_GAPS} sm:grid-cols-4`
 
 /** Twelve square tiles in the picker's own grid, so nothing jumps when the photos arrive. */
@@ -126,9 +127,14 @@ function PickerBody({ storeId, used, selected, room, single, readyOnly, uploads,
 }) {
   const { t } = useLocale()
   const inputRef = useRef<HTMLInputElement>(null)
-  const [text, setText] = useState('')
   const [q, setQ] = useState<string | undefined>()
   const [page, setPage] = useState(1)
+  const commitSearch = useCallback((next: string) => {
+    setQ(next.trim() || undefined)
+    setPage(1)
+  }, [])
+  // The list reads a moment after the last key, so each letter does not.
+  const [text, setText] = useSearchBox(q ?? '', commitSearch)
   // A photo still being made shows too, so one uploaded here is in the grid at once.
   const list = useMediaList(storeId, { kind: 'image', q, status: 'processing,ready', page, pageSize: WALL_PAGE_SIZE })
   const items = list.data?.items ?? []
@@ -136,17 +142,7 @@ function PickerBody({ storeId, used, selected, room, single, readyOnly, uploads,
   const total = list.data?.total ?? 0
   const free = single ? 1 : room - selected.length - uploads.pending.length
 
-  // The list reads a moment after the last key, so each letter does not.
-  useEffect(() => {
-    if (text.trim() === (q ?? ''))
-      return
-    const timer = setTimeout(() => {
-      setQ(text.trim() || undefined)
-      setPage(1)
-    }, SEARCH_DELAY_MS)
-
-    return () => clearTimeout(timer)
-  }, [text, q])
+  useLastPageFallback(list.data && !list.isPlaceholderData ? { rows: items.length, total } : undefined, page, WALL_PAGE_SIZE, setPage)
 
   return (
     <div className="flex flex-col gap-4">
@@ -194,7 +190,7 @@ function PickerBody({ storeId, used, selected, room, single, readyOnly, uploads,
           })}
         </ul>
       )}
-      {!isLoading && <Pager compact pager={{ page, pages: Math.max(1, Math.ceil(total / WALL_PAGE_SIZE)), total, from: (page - 1) * WALL_PAGE_SIZE + 1, to: Math.min(page * WALL_PAGE_SIZE, total), go: setPage }} />}
+      {!isLoading && <Pager compact pager={serverPager({ page, pageSize: WALL_PAGE_SIZE, total, go: setPage })} />}
     </div>
   )
 }

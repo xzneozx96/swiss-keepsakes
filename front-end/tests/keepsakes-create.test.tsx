@@ -18,7 +18,7 @@ beforeEach(async () => {
       return Response.json(product({ name: (call.body as { name: object }).name }), { status: 201 })
     if (call.method === 'GET' && call.path === `${base}/${productId}`)
       return Response.json(product())
-    if (call.method === 'GET' && call.path === base)
+    if (call.method === 'GET' && call.path.split('?')[0] === base)
       return Response.json(list([listItem()]))
 
     return undefined

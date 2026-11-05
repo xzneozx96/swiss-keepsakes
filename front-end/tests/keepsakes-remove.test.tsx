@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { filterKeepsakes, noFilters } from '@/features/keepsakes/lib/list'
-import { list, listItem, problem, product, productId, renderKeepsakes, setUpHarness, state, storeId, writes } from './keepsakes-harness'
+import { listItem, problem, product, productId, renderKeepsakes, setUpHarness, state, storeId, writes } from './keepsakes-harness'
+import { serverProductPage } from './support/pages'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 vi.mock('@/hooks/use-is-wide', () => ({ useIsWide: () => true }))
@@ -14,14 +14,17 @@ const second = '0198a000-0000-7000-8000-0000000000a2'
 
 beforeEach(setUpHarness)
 
-function serve(items: Record<string, unknown>[], remove: (call: { method: string, path: string }) => Response | undefined) {
+type Item = Record<string, unknown>
+
+// The server pages, filters and counts (serverProductPage). A removal changes what it serves next: `after` says how (default: the row is gone).
+function serve(items: Item[], remove: (call: { method: string, path: string }) => Response | undefined, after?: (item: Item) => Item) {
   let current = items
   state.answer = (call) => {
-    if (call.method === 'GET' && call.path === base)
-      return Response.json(list(current))
+    if (call.method === 'GET' && call.path.split('?')[0] === base)
+      return Response.json(serverProductPage(current as never, new URL(call.path, 'http://x')))
     const answered = remove(call)
     if (answered?.ok && call.method === 'DELETE')
-      current = current.filter(item => item.id !== call.path.split('/').at(-1))
+      current = current.flatMap(item => (item.id === call.path.split('/').at(-1) ? (after ? [after(item)] : []) : [item]))
 
     return answered
   }
@@ -56,7 +59,7 @@ describe('[E6.1][remove] the list row menu', () => {
 
   it('[E6.1][remove] a keepsake with orders: the dialog says it is archived; after the answer the row leaves the default list and shows under Archived', async () => {
     serve([listItem({ name: { en: 'Sold' }, status: 'published', hasOrders: true })], call =>
-      call.method === 'DELETE' ? Response.json({ id: productId, outcome: 'archived' }) : undefined)
+      call.method === 'DELETE' ? Response.json({ id: productId, outcome: 'archived' }) : undefined, item => ({ ...item, status: 'archived' }))
     renderKeepsakes('/store/products')
     await screen.findAllByText('Sold')
 
@@ -107,8 +110,8 @@ describe('[E6.1][remove] the editor', () => {
     state.answer = (call) => {
       if (call.method === 'GET' && call.path === detail)
         return Response.json(product({ rowVersion: 5 }))
-      if (call.method === 'GET' && call.path === base)
-        return Response.json(list([]))
+      if (call.method === 'GET' && call.path.split('?')[0] === base)
+        return Response.json(serverProductPage([], new URL(call.path, 'http://x')))
       if (call.method === 'DELETE' && call.path === detail)
         return Response.json({ id: productId, outcome: 'deleted' })
 
@@ -132,18 +135,5 @@ describe('[E6.1][remove] the editor', () => {
 
     expect(await screen.findByText(/This keepsake is archived/)).toBeInTheDocument()
     expect(screen.queryByTestId('keepsake-editor')).not.toBeInTheDocument()
-  })
-})
-
-describe('[E6.1][remove] the list filter', () => {
-  const items = [
-    { name: { en: 'a' }, status: 'draft' as const, hasUnpublishedEdits: false },
-    { name: { en: 'b' }, status: 'archived' as const, hasUnpublishedEdits: false },
-  ]
-
-  it('[E6.1][remove] leaves archived keepsakes out unless the Archived status is ticked', () => {
-    expect(filterKeepsakes(items, noFilters).map(item => item.name.en)).toEqual(['a'])
-    expect(filterKeepsakes(items, { ...noFilters, status: ['archived'] }).map(item => item.name.en)).toEqual(['b'])
-    expect(filterKeepsakes(items, { ...noFilters, status: ['draft', 'archived'] }).map(item => item.name.en)).toEqual(['a', 'b'])
   })
 })

@@ -35,14 +35,14 @@ describe('[E4.11][AC51] GET /media', () => {
       return { ok: true, value: { rows: [{ ...fakeMedia, status: 'ready', width: 1500, height: 1000, usage: { pages: 3, published: 2, drafts: 1 } }], total: 31, kinds: { image: 31, audio: 2, pdf: 1 }, uses: { unused: 4, drafts: 5, published: 22 }, statuses: { processing: 0, ready: 30, retired: 1 } } }
     } })
 
-    const response = await send(app, 'GET', '?kind=image&q=sunrise&use=unused,drafts&status=ready&page=2&pageSize=24')
+    const response = await send(app, 'GET', '?kind=image&q=sunrise&use=unused,drafts&status=ready&page=2&pageSize=20')
 
     expect(response.status).toBe(200)
-    expect(seen).toEqual([{ kind: 'image', q: 'sunrise', use: ['unused', 'drafts'], status: ['ready'], page: 2, pageSize: 24 }])
+    expect(seen).toEqual([{ kind: 'image', q: 'sunrise', use: ['unused', 'drafts'], status: ['ready'], page: 2, pageSize: 20 }])
     expect(await response.json()).toMatchObject({
       total: 31,
       page: 2,
-      pageSize: 24,
+      pageSize: 20,
       kinds: { image: 31, audio: 2, pdf: 1 },
       uses: { unused: 4, drafts: 5, published: 22 },
       statuses: { ready: 30, retired: 1 },
@@ -60,8 +60,21 @@ describe('[E4.11][AC51] GET /media', () => {
     expect(seen).toEqual([{ kind: 'image', use: [], status: [], page: 1, pageSize: 10 }])
   })
 
-  it.each(['?kind=video', '?use=never', '?status=gone', '?pageSize=500', '?page=0'])('[E4.11][AC51] %s is 400', async (query) => {
+  it.each(['?kind=video', '?use=never', '?status=gone', '?pageSize=25', '?pageSize=500', '?page=0', '?page=1002', '?page=502&pageSize=20'])('[E4.11][AC51] %s is 400', async (query) => {
     expect((await send(setup(), 'GET', query)).status).toBe(400)
+  })
+
+  it('[ADR-033 section 12] a page size up to 24 is still accepted for one release', async () => {
+    expect((await send(setup(), 'GET', '?pageSize=24')).status).toBe(200)
+  })
+
+  it('[ADR-033] a skip of 10,000 rows is allowed and one more is a 400 on page', async () => {
+    const app = setup()
+    const refused = await send(app, 'GET', '?page=1002')
+
+    expect((await send(app, 'GET', '?page=1001')).status).toBe(200)
+    expect(refused.status).toBe(400)
+    expect(JSON.stringify(await refused.json())).toContain('page')
   })
 
   it('[E4.11][AC51] a guest is 401 and staff of another store 403', async () => {

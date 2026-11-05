@@ -72,18 +72,18 @@ describe('[E4.11][AC51] the media library in English', () => {
     expect(screen.getByRole('heading', { name: 'Media' })).toBeInTheDocument()
   })
 
-  it('[E4.11][AC51] asks for 24 photos a page, newest first from the server, and 10 on the Audio tab', async () => {
+  it('[E4.11][AC51] asks for 20 photos a page, newest first from the server, and on the Audio tab', async () => {
     answerWith({ list: path => Response.json(page(path.includes('kind=audio') ? [item({ id: other, kind: 'audio', name: 'Alphorn.mp3', contentType: 'audio/mpeg', width: null, height: null, variants: [], durationSeconds: 13 })] : [item()])) })
     renderMedia()
 
     await screen.findByRole('list', { name: 'Photos' })
     expect(listCalls().at(-1)!.path).toContain('kind=image')
-    expect(listCalls().at(-1)!.path).toContain('pageSize=24')
+    expect(listCalls().at(-1)!.path).toContain('pageSize=20')
     await userEvent.click(screen.getByRole('tab', { name: /Audio/ }))
 
     await screen.findByRole('list', { name: 'Audio' })
     expect(listCalls().at(-1)!.path).toContain('kind=audio')
-    expect(listCalls().at(-1)!.path).toContain('pageSize=10')
+    expect(listCalls().at(-1)!.path).toContain('pageSize=20')
   })
 
   it('[E4.11][AC51] an audio list row shows the name, the description or "No description", and the usage line', async () => {
@@ -330,6 +330,20 @@ describe('[E4.11][AC51] retiring', () => {
     expect(toasts.success).not.toHaveBeenCalled()
     // The sheet says it; a refusal of a retire shows in the confirm dialog or the sheet, never as a toast too.
     expect(toasts.danger).not.toHaveBeenCalled()
+  })
+
+  it('[ADR-033] a tick belongs to its page: a new page starts with none ticked, and a page past the end moves to the last one', async () => {
+    answerWith({ list: path => Response.json(page([item({ name: 'One.jpg' })], { total: 45, page: Number(new URL(path, 'http://x').searchParams.get('page')) })) })
+    renderMedia()
+
+    await screen.findByRole('list', { name: 'Photos' })
+    await userEvent.click(screen.getByRole('button', { name: 'Select' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Select One.jpg' }))
+    expect(screen.getByText('1 selected')).toBeInTheDocument()
+    await userEvent.click(screen.getAllByLabelText('Page 2')[0]!)
+
+    await waitFor(() => expect(listCalls().at(-1)!.path).toContain('page=2'))
+    await waitFor(() => expect(screen.queryByText('1 selected')).not.toBeInTheDocument())
   })
 
   it('[E4.11][AC51] Select mode retires only the unused files and keeps the used ones', async () => {
