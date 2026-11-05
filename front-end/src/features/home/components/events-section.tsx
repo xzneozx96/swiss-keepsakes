@@ -77,7 +77,7 @@ function ComingUp({ events, seeAll, today }: { events: EventPin[], seeAll: boole
   const headingId = useId()
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-2 rounded-2xl bg-surface p-4 shadow-surface">
+    <section aria-labelledby={headingId} className="flex flex-col gap-2 rounded-2xl p-4">
       <h3 className="text-[15px] leading-5 font-semibold" id={headingId}>{t('homePage.events.comingUp')}</h3>
       <ol className="relative flex flex-col ps-5">
         <span aria-hidden className="absolute start-[5px] top-2 bottom-2 w-px bg-separator" />
@@ -127,7 +127,7 @@ function EventsSkeleton() {
         <Skeleton className="h-16 w-20 rounded-lg" />
         <Skeleton className="h-7 w-3/4 rounded-md" />
       </div>
-      <div className="flex flex-col gap-3 rounded-2xl bg-surface p-4 shadow-surface">
+      <div className="flex flex-col gap-3 rounded-2xl p-4">
         <Skeleton className="h-5 w-24 rounded-md" />
         {Array.from({ length: 3 }, (_, index) => (
           <div key={index} className="flex items-start gap-3">
