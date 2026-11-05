@@ -159,7 +159,7 @@ export function VictorinoxShowcase({
                         : <img alt={item.name} className="size-full rounded-xl object-contain" decoding="async" loading="lazy" src={item.photo} />}
                     </span>
                     <span className="flex flex-1 flex-col gap-0.5 px-1">
-                      <span className="line-clamp-2 text-sm leading-tight font-semibold">
+                      <span className="line-clamp-2 text-center text-sm leading-tight font-semibold text-balance">
                         {item.name.replace(VICTORINOX_NAME_PREFIX, '')}
                       </span>
                       {!hidePrice && (
