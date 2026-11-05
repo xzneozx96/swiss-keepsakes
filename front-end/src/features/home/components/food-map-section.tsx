@@ -178,7 +178,7 @@ function FoodPlaces({ selection, categories }: { selection: FoodSelection, categ
         ))}
       </Rail>
       <Link
-        className={`${buttonVariants({ variant: 'secondary', size: 'lg', fullWidth: true })} transition-transform active:scale-[0.98]`}
+        className={`${buttonVariants({ variant: 'tertiary', size: 'lg', fullWidth: true })} transition-transform active:scale-[0.98]`}
         params={{ lang: language }}
         search={{ category: selection.category.slug }}
         to="/$lang/map"

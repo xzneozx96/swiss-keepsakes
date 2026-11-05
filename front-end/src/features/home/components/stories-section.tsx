@@ -68,7 +68,7 @@ export function StoriesSection({ stories, onRetry }: { stories: readonly PublicS
                   ))}
                 </ul>
                 <Link
-                  className={`${buttonVariants({ variant: 'secondary', size: 'lg', fullWidth: true })} transition-transform active:scale-[0.98]`}
+                  className={`${buttonVariants({ variant: 'tertiary', size: 'lg', fullWidth: true })} transition-transform active:scale-[0.98]`}
                   params={{ lang: language }}
                   to="/$lang/stories"
                 >

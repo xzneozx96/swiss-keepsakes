@@ -1,6 +1,6 @@
 import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
 import type { EventPin } from '../lib/events'
-import { Skeleton } from '@heroui/react'
+import { buttonVariants, Skeleton } from '@heroui/react'
 
 import { zurichDate } from '@sk/domain/dates'
 import { Link } from '@tanstack/react-router'
@@ -111,7 +111,7 @@ function ComingUp({ events, seeAll, today }: { events: EventPin[], seeAll: boole
         })}
       </ol>
       {seeAll && (
-        <Link className={`flex min-h-11 items-center justify-center rounded-full bg-default px-4 text-sm font-medium ${PRESS}`} params={{ lang: language }} search={{ category: EVENTS_CATEGORY_SLUG }} to="/$lang/map">
+        <Link className={`${buttonVariants({ variant: 'tertiary', size: 'lg', fullWidth: true })} transition-transform active:scale-[0.98]`} params={{ lang: language }} search={{ category: EVENTS_CATEGORY_SLUG }} to="/$lang/map">
           {t('homePage.events.seeAll')}
         </Link>
       )}

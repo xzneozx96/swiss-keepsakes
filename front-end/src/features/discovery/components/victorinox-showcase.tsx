@@ -181,7 +181,7 @@ export function VictorinoxShowcase({
       <div className="mt-5 flex flex-col gap-4 px-4">
         {/* Same treatment as the home's "Show all {count} stories" and "Show all {count} reviews". */}
         <Link
-          className={`${buttonVariants({ variant: 'secondary', size: 'lg', fullWidth: true })} transition-transform focus-visible:ring-offset-[#173f52] active:scale-[0.98]`}
+          className={`${buttonVariants({ variant: 'tertiary', size: 'lg', fullWidth: true })} text-foreground transition-transform focus-visible:ring-offset-[#173f52] active:scale-[0.98]`}
           search={{ subcategory: 'victorinox' }}
           to="/$lang/gifts"
           params={{ lang: language }}
