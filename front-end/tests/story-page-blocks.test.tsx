@@ -132,15 +132,13 @@ describe('[E4.4][AC33] related stories', () => {
 })
 
 describe('[E4.4][AC90] place tags', () => {
-  it('[AC-4] a tagged place links to the map with its card; a place without a slug is a plain tag', async () => {
+  it('[AC-4] tagged places draw the heading and the map frame, not chips (the map list is read in the browser)', async () => {
     const out = await html('/en/stories/lake-day', publicStory({ places: [
       { id: '0190a000-0000-7000-8000-00000000aaaa', slug: 'chapel-bridge', name: 'Chapel Bridge' },
-      { id: '0190a000-0000-7000-8000-00000000bbbb', slug: null, name: 'Hidden Cove' },
     ] }))
 
-    expect(out).toMatch(/<a[^>]*href="\/en\/map\?place=chapel-bridge"[^>]*>[^<]*Chapel Bridge/)
-    expect(out).toContain('Hidden Cove')
-    expect(out).not.toMatch(/<a[^>]*>[^<]*Hidden Cove/)
+    expect(out).toContain('Places in this story')
+    expect(out).toContain('data-skeleton="story-map"')
   })
 
   it('[AC-4] no places draws no heading', async () => {
