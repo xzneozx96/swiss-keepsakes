@@ -45,9 +45,9 @@ async function version(store: string, groupId: string, language: 'en' | 'de', st
   return s
 }
 
-async function blogCategory(store: string, name: object): Promise<{ id: string, slug: string }> {
+async function blogCategory(store: string, name: object, parentId: string | null = null): Promise<{ id: string, slug: string }> {
   const s = slug()
-  const { rows } = await pool.query<{ id: string }>(`insert into content.blog_categories (store_id, name, slug) values ($1, $2, $3) returning id`, [store, JSON.stringify(name), s])
+  const { rows } = await pool.query<{ id: string }>(`insert into content.blog_categories (store_id, name, slug, parent_id) values ($1, $2, $3, $4) returning id`, [store, JSON.stringify(name), s, parentId])
   return { id: rows[0]!.id, slug: s }
 }
 
@@ -64,7 +64,7 @@ describe('public story reads over the database', () => {
     const g = rows[0]!.id
     const s = await version(store, g, 'en', 'published', 'Chapel Bridge review')
 
-    const listed = (await list('en')).items.find(i => i.id === g)
+    const listed = (await list({ language: 'en' })).items.find(i => i.id === g)
 
     expect(listed).toMatchObject({ slug: s, title: 'Chapel Bridge review' })
   })
@@ -77,7 +77,7 @@ describe('public story reads over the database', () => {
     const before = await get(s, 'en')
     await pool.query(`update content.story_versions set published = $3 where group_id = $1 and language = $2`, [g, 'en', JSON.stringify(doc('Second text'))])
     const after = await get(s, 'en')
-    const listed = (await list('en')).items.find(i => i.id === g)
+    const listed = (await list({ language: 'en' })).items.find(i => i.id === g)
 
     expect(before.ok && before.value.title).toBe('First text')
     expect(after.ok && after.value.title).toBe('Second text')
@@ -100,7 +100,7 @@ describe('public story reads over the database', () => {
     await tag(storeA, a, catA.id)
     await tag(storeB, b, catB.id)
 
-    const { items } = await list('en')
+    const { items } = await list({ language: 'en' })
     const byId = new Map(items.map(i => [i.id, i]))
 
     expect(byId.get(a)?.categories).toEqual([{ id: catA.id, slug: catA.slug, name: 'Food' }])
@@ -224,7 +224,7 @@ describe('public story reads over the database', () => {
     const s = await version(store, g, 'en', 'published', 'Odd shape', { published: odd })
 
     const detail = await get(s, 'en')
-    const listed = (await list('en')).items.find(i => i.id === g)
+    const listed = (await list({ language: 'en' })).items.find(i => i.id === g)
 
     expect(listed?.title).toBe('Odd shape')
     expect(detail.ok && detail.value.body.content).toEqual([{ type: 'image', attrs: { key: null, url: null, variants: [], alt: '', caption: 'no id' } }, { type: 'audio', attrs: { key: null, url: null, title: 't', caption: '' } }])
@@ -316,5 +316,137 @@ describe('public story reads over the database', () => {
     expect(keepsakeAsks).toEqual([[...ids].reverse()])
     expect(found.ok && found.value.keepsakes.map(k => k.id)).toEqual([...ids].reverse())
     expect(none.ok && none.value.keepsakes).toEqual([])
+  })
+})
+
+// ADR-033: the list pages with a keyset over the version carried. Every test tags its stories with a category of its own and
+// filters by it, because test files share one database and the list is global.
+describe('the public story list pages by keyset', () => {
+  const at = (n: number, micros = 0) => `2091-01-01T00:00:${String(n).padStart(2, '0')}.${String(micros).padStart(6, '0')}Z`
+
+  async function publishedAt(store: string, groupId: string, language: 'en' | 'de', when: string): Promise<void> {
+    await pool.query(
+      `insert into content.story_versions (store_id, group_id, language, status, slug, published, published_at) values ($1, $2, $3, 'published', $4, $5, $6)`,
+      [store, groupId, language, slug(), JSON.stringify(doc(`${language} ${when}`)), when],
+    )
+  }
+
+  async function tagged(count: number, when: (index: number) => string) {
+    const store = randomUUID()
+    const category = await blogCategory(store, { en: 'Paged' })
+    const ids: string[] = []
+    for (let index = 0; index < count; index += 1) {
+      const g = await group(store)
+      await publishedAt(store, g, 'en', when(index))
+      await tag(store, g, category.id)
+      ids.push(g)
+    }
+    return { store, category, ids }
+  }
+
+  async function walk(category: string, limit: number | undefined, language: 'en' | 'de' = 'en') {
+    const pages: Awaited<ReturnType<typeof list>>[] = []
+    let after: Awaited<ReturnType<typeof list>>['next'] = null
+    do {
+      const found = await list({ language, category, limit, after: after ?? undefined })
+      pages.push(found)
+      after = found.next
+    } while (after)
+    return pages
+  }
+
+  it('[ADR-033] rows with equal dates are walked once each, newest date first and the id breaking the tie', async () => {
+    const { category, ids } = await tagged(7, () => at(1))
+
+    const pages = await walk(category.slug, 3)
+
+    const seen = pages.flatMap(p => p.items.map(i => i.id))
+    expect(pages.map(p => p.items.length)).toEqual([3, 3, 1])
+    expect(seen).toEqual([...ids].sort().reverse())
+    expect(pages.every(p => p.total === 7)).toBe(true)
+  })
+
+  it('[ADR-033] dates less than a millisecond apart are walked once each, in order', async () => {
+    const { category, ids } = await tagged(6, index => at(1, 123_000 + index * 100))
+
+    const pages = await walk(category.slug, 2)
+
+    expect(pages.flatMap(p => p.items.map(i => i.id))).toEqual([...ids].reverse())
+  })
+
+  it('[ADR-033] exactly limit rows give no next page and no empty page after it', async () => {
+    const { category } = await tagged(3, index => at(index))
+
+    const pages = await walk(category.slug, 3)
+
+    expect(pages).toHaveLength(1)
+    expect(pages[0]).toMatchObject({ next: null, total: 3 })
+  })
+
+  it('[ADR-033] a row inserted or deleted between two pages never repeats a row already passed', async () => {
+    const { store, category, ids } = await tagged(6, index => at(index + 10))
+    const first = await list({ language: 'en', category: category.slug, limit: 2 })
+    const passed = first.items.map(i => i.id)
+    expect(passed).toEqual([ids[5], ids[4]])
+
+    const newer = await group(store)
+    await publishedAt(store, newer, 'en', at(50))
+    await tag(store, newer, category.id)
+    await pool.query('delete from content.story_versions where group_id = $1', [ids[3]])
+    const rest: string[] = []
+    let after = first.next
+    while (after) {
+      const found = await list({ language: 'en', category: category.slug, limit: 2, after })
+      rest.push(...found.items.map(i => i.id))
+      after = found.next
+    }
+
+    expect(rest).toEqual([ids[2], ids[1], ids[0]])
+    expect(rest.some(id => passed.includes(id))).toBe(false)
+  })
+
+  it('[ADR-033] a card is ordered by the date of the language version it shows, and the other language fills in', async () => {
+    const store = randomUUID()
+    const category = await blogCategory(store, { en: 'Dates' })
+    const both = await group(store)
+    const deOnly = await group(store)
+    const enOnly = await group(store)
+    await publishedAt(store, both, 'en', at(10))
+    await publishedAt(store, both, 'de', at(40))
+    await publishedAt(store, deOnly, 'de', at(30))
+    await publishedAt(store, enOnly, 'en', at(20))
+    for (const g of [both, deOnly, enOnly])
+      await tag(store, g, category.id)
+
+    const asEn = await walk(category.slug, undefined, 'en')
+    const asDe = await walk(category.slug, undefined, 'de')
+
+    expect(asEn[0]!.items.map(i => i.id)).toEqual([deOnly, enOnly, both])
+    expect(asEn[0]!.items.map(i => i.language)).toEqual(['de', 'en', 'en'])
+    expect(asDe[0]!.items.map(i => i.id)).toEqual([both, deOnly, enOnly])
+    expect(asDe[0]!.total).toBe(3)
+  })
+
+  it('[ADR-033] a parent category includes its sub-categories, a sub-category only its own, and an unknown slug is an empty list', async () => {
+    const store = randomUUID()
+    const parent = await blogCategory(store, { en: 'Parent' })
+    const sub = await blogCategory(store, { en: 'Sub' }, parent.id)
+    const other = await blogCategory(store, { en: 'Other' })
+    const inParent = await group(store)
+    const inSub = await group(store)
+    const inOther = await group(store)
+    for (const [g, c] of [[inParent, parent], [inSub, sub], [inOther, other]] as const) {
+      await publishedAt(store, g, 'en', at(1))
+      await tag(store, g, c.id)
+    }
+
+    const underParent = await list({ language: 'en', category: parent.slug })
+    const underSub = await list({ language: 'en', category: sub.slug })
+    const unknown = await list({ language: 'en', category: slug() })
+
+    expect(underParent.items.map(i => i.id).sort()).toEqual([inParent, inSub].sort())
+    expect(underParent.total).toBe(2)
+    expect(underSub.items.map(i => i.id)).toEqual([inSub])
+    expect(unknown).toMatchObject({ items: [], total: 0, next: null })
   })
 })

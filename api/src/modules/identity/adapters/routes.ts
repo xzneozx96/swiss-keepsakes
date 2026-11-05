@@ -17,6 +17,7 @@ import type { RevokeInvitationResult } from '../application/revoke-invitation.ts
 import type { UpdateStoreInformationResult } from '../application/update-store-information.ts'
 import { createRoute, z } from '@hono/zod-openapi'
 import { acceptedInvitationSchema, acceptInvitationBodySchema, adminStoreListQuerySchema, adminStoreListSchema, adminStoreSchema, createStoreBodySchema, invitationPreviewSchema, inviteManagerBodySchema, memberInvitationSchema, membersSchema, onboardingSchema, previewInvitationBodySchema, resendManagerInvitationBodySchema, resendOwnerInvitationBodySchema, storeInformationBodySchema, storeSchema } from '@sk/api-contract'
+import { cursorProblem, decodeCursor, encodeCursor } from '../../../platform/http/cursor.ts'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 
@@ -48,6 +49,10 @@ const createStoreRoute = createRoute({
     ...problemResponses,
   },
 })
+
+// A store's cursor holds its id, which is a uuidv7, so the id alone gives the newest-first order.
+const storesScope = { route: 'admin-stores' }
+const storeKey = z.tuple([z.uuid()])
 
 const listStoresRoute = createRoute({
   method: 'get',
@@ -223,7 +228,13 @@ export function registerIdentityRoutes(app: OpenAPIHono<AppEnv>, useCases: Ident
   })
 
   app.openapi(listStoresRoute, async (c) => {
-    return c.json(await useCases.listStores(c.req.valid('query')), 200)
+    const { limit, cursor } = c.req.valid('query')
+    // The use case sees the decoded key (the id of the last store), never the cursor (ADR-033).
+    const decoded = cursor === undefined ? undefined : decodeCursor(cursor, storesScope, storeKey)
+    if (decoded && !decoded.ok)
+      return cursorProblem(c)
+    const page = await useCases.listStores({ limit, cursor: decoded?.key[0] })
+    return c.json({ items: page.items, nextCursor: page.nextCursor === null ? null : encodeCursor([page.nextCursor], storesScope) }, 200)
   })
 
   app.openapi(resendRoute, async (c) => {

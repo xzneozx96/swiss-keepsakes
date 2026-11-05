@@ -254,7 +254,7 @@ describe('[E4.5][AC38] closing the flow re-ranks the stories list', () => {
   it('[E4.5][AC38] short stay and food and drink put the matching story first and keep every story', async () => {
     markDismissed()
     await renderApp('/en/stories', {
-      stories: () => <StoriesPage stories={[newest, hike, food]} onRetry={() => {}} />,
+      stories: () => <StoriesPage first={{ items: [newest, hike, food], total: 3, nextCursor: null }} lang="en" onRetry={() => {}} />,
     })
     const user = userEvent.setup()
 

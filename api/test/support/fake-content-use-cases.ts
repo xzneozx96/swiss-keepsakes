@@ -153,7 +153,7 @@ export function createFakeContentUseCases(): ContentUseCases {
     saveCategory: async (_actor, storeId, _kind, id) => ({ ok: true, value: { ...fakeCategory, storeId, id } }),
     reorderCategories: async (_actor, storeId) => ({ ok: true, value: [{ ...fakeCategory, storeId }] }),
     deleteCategory: async (_actor, _storeId, _kind, id) => ({ ok: true, value: { id } }),
-    listStories: async () => ({ items: [] }),
+    listStories: async () => ({ items: [], total: 0, next: null }),
     getStory: async () => ({ ok: false, reason: 'not-found' }),
     getPin: async () => ({ ok: false, reason: 'not-found' }),
     listTours: async () => ({ items: [] }),

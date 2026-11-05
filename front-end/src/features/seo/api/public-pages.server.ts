@@ -1,8 +1,9 @@
 import type { PublicLanguage } from '@sk/api-contract'
 import type { PublicCard, PublishedPages } from '../lib/sitemap'
-import { createApiClient, publicStoryCardSchema, publicTourCardSchema } from '@sk/api-contract'
+import { createApiClient, MAX_PAGE_LIMIT, publicStoryCardSchema, publicTourCardSchema } from '@sk/api-contract'
 import { answer, PAGE_READ_TIMEOUT_MS, timeout } from '@/features/data-client/api-transport'
 import { ApiProblem } from '@/features/data-client/errors'
+import { readAllPages } from '@/features/data-client/paged-query'
 import { apiOrigin } from '@/lib/api-origin'
 
 const LANGUAGES: readonly PublicLanguage[] = ['en', 'de']
@@ -33,11 +34,10 @@ async function readCards(
   lang: PublicLanguage,
 ): Promise<PublicCard[]> {
   try {
-    const options = { params: { query: { lang } }, ...timeout(PAGE_READ_TIMEOUT_MS) }
-    const list = kind === 'stories'
-      ? await answer(client.GET('/api/public/stories', options))
-      : await answer(client.GET('/api/public/tours', options))
-    const items: unknown = list.items
+    // The stories list is paged (ADR-033): read every page, 20 at a time, until the search moves to the server.
+    const items: unknown = kind === 'stories'
+      ? await readAllPages(cursor => answer(client.GET('/api/public/stories', { params: { query: { lang, limit: MAX_PAGE_LIMIT, ...(cursor ? { cursor } : {}) } }, ...timeout(PAGE_READ_TIMEOUT_MS) })), `Sitemap stories in ${lang}`)
+      : (await answer(client.GET('/api/public/tours', { params: { query: { lang } }, ...timeout(PAGE_READ_TIMEOUT_MS) }))).items
     const parsed = (kind === 'stories' ? storyCards : tourCards).parse(items)
     return parsed.filter(card => !card.fallback && card.language === lang)
   }

@@ -22,7 +22,13 @@ function installFetch() {
       return custom
     const kind = url.pathname.endsWith('/stories') ? 'stories' : 'tours'
     const lang = url.searchParams.get('lang') as Lang
-    return Response.json({ items: data[kind][lang] })
+    const items = data[kind][lang]
+    if (kind === 'tours')
+      return Response.json({ items })
+    // The stories list is paged: the cursor is the offset, two cards a page.
+    const start = Number(url.searchParams.get('cursor') ?? 0)
+    const limit = Number(url.searchParams.get('limit'))
+    return Response.json({ items: items.slice(start, start + 2), total: items.length, nextCursor: start + 2 < items.length ? String(start + 2) : null, limit })
   })
 }
 
@@ -70,6 +76,30 @@ describe('[E3.6][AC61] published pages reader', () => {
     const fresh = await loadPublishedPages(now)
     expect(fresh.stories.en.map(c => c.slug)).toEqual(['x', 'y'])
     expect(urls).toHaveLength(8)
+  })
+
+  it('reads every page of the stories at 20 a page, and the tours once', async () => {
+    data.stories.en = [card('a', 'en'), card('b', 'en'), card('c', 'en')]
+    const pages = await loadPublishedPages()
+
+    expect(pages.stories.en.map(c => c.slug)).toEqual(['a', 'b', 'c'])
+    const enStories = urls.map(u => new URL(u)).filter(u => u.pathname.endsWith('/stories') && u.searchParams.get('lang') === 'en')
+    expect(enStories.map(u => [u.searchParams.get('limit'), u.searchParams.get('cursor')])).toEqual([['20', null], ['20', '2']])
+    expect(urls.filter(u => new URL(u).pathname.endsWith('/tours'))).toHaveLength(2)
+  })
+
+  it('stops a list that never ends after 100 pages and logs an error', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    override = url => (url.pathname.endsWith('/stories') && url.searchParams.get('lang') === 'en')
+      ? Response.json({ items: [card('same', 'en')], total: 9999, nextCursor: 'again' })
+      : undefined
+
+    const pages = await loadPublishedPages()
+
+    expect(urls.filter(u => new URL(u).pathname.endsWith('/stories') && new URL(u).searchParams.get('lang') === 'en')).toHaveLength(100)
+    expect(pages.stories.en).toHaveLength(100)
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('stopped after 100 pages'))
+    error.mockRestore()
   })
 
   it('drops fallback items and items in another language', async () => {

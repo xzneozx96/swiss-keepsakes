@@ -1,12 +1,12 @@
 import type { CategoryIcon, ContentLanguage, LanguageNotice, Localized, PinDate, StayTag } from '@sk/domain/content'
-import type { PublicCategoryListRow, PublicPinDetailRow, PublicPinRow, PublicStoryDetailRow, PublicStoryKeepsakeCard, PublicStoryRow, PublicStoryVersionRow, PublicTourRow } from '../read-ports.ts'
+import type { PublicCategoryListRow, PublicPinDetailRow, PublicPinRow, PublicStoryDetailRow, PublicStoryKeepsakeCard, PublicStoryRow, PublicStoryVersionRow, PublicTourRow, StoryPageKey } from '../read-ports.ts'
 import { isSafeLinkHref, languageNotice, languagesOf, pickLanguage, STORY_BODY_LIMITS, storyBodyReadMinutes, variantKey, variantWidthsFor } from '@sk/domain/content'
 import { nextDate, withParents } from './pin-dates.ts'
 
 // Rows to the public response shapes. Nothing here reads a store or a price. The application layer may not import
 // the API contract, so the shapes are written here; the tests parse every output with the contract schemas.
 
-export interface PublicCategory { id: string, slug: string, name: { en: string | null, de: string | null }, parentId: string | null, icon: CategoryIcon | null, showOnHome: boolean, position: number }
+export interface PublicCategory { id: string, slug: string, name: { en: string | null, de: string | null }, parentId: string | null, icon: CategoryIcon | null, showOnHome: boolean, position: number, storyCount: number }
 export interface PublicCategoryList { items: PublicCategory[] }
 
 // A cover as the public sees it: the address of the original and of each webp copy.
@@ -61,7 +61,8 @@ export interface PublicStory extends PublicStoryCard {
   keepsakes: PublicStoryKeepsakeCard[]
 }
 
-export interface PublicStoryList { items: PublicStoryCard[] }
+// A page of the story list. The route encodes `next` into the opaque `nextCursor` of the contract.
+export interface PublicStoryPage { items: PublicStoryCard[], total: number, next: StoryPageKey | null }
 
 // The stored document is not trusted: a media id that is missing or not a string gives no key.
 const keyOf = (version: PublicStoryVersionRow, mediaId: unknown) => (typeof mediaId === 'string' ? version.mediaKeys[mediaId.toLowerCase()] ?? null : null)
@@ -172,7 +173,7 @@ function publicBody(version: PublicStoryVersionRow, publicUrl: (key: string) => 
 }
 
 export function toPublicCategory(row: PublicCategoryListRow): PublicCategory {
-  return { id: row.id, slug: row.slug, name: { en: row.name.en ?? null, de: row.name.de ?? null }, parentId: row.parentId, icon: row.icon, showOnHome: row.showOnHome, position: row.position }
+  return { id: row.id, slug: row.slug, name: { en: row.name.en ?? null, de: row.name.de ?? null }, parentId: row.parentId, icon: row.icon, showOnHome: row.showOnHome, position: row.position, storyCount: row.storyCount }
 }
 
 // The version carried and the notice about it, or null when the story has no published version.

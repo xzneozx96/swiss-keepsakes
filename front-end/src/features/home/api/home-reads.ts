@@ -1,10 +1,11 @@
 import type { PublicCategory, PublicLanguage, PublicMapItem, PublicStoryCard, PublicTourCard } from '@sk/api-contract'
 import type { ServiceTile } from '../lib/service-tiles'
 
-import { loadPublicStories } from '@/features/content/api/public-stories'
+import { loadPublicStoriesPage } from '@/features/content/api/public-stories'
 import { answer, timeout } from '@/features/data-client/api-transport'
 import { apiEnabled } from '@/lib/api-mode'
 import { apiOrigin } from '@/lib/api-origin'
+import { HOME_STORY_COUNT } from '../lib/newest-stories'
 import { serviceTiles } from '../lib/service-tiles'
 
 /** What the home's loader read. A read that failed is `null`, so its block shows its own error and the rest of the page stays. */
@@ -16,7 +17,7 @@ export interface HomeRead {
   /** The service tiles, made from the map categories and the pins; null when either read failed. */
   tiles: ServiceTile[] | null
   tours: PublicTourCard[] | null
-  /** The published stories, newest first (the stories block shows the first three). */
+  /** The newest three published stories. */
   stories: PublicStoryCard[] | null
 }
 
@@ -42,7 +43,8 @@ export async function loadHomeRead(lang: PublicLanguage): Promise<HomeRead> {
     read(client.GET('/api/public/map', options())),
     read(client.GET('/api/public/map-categories', options())),
     read(client.GET('/api/public/tours', options())),
-    loadPublicStories(lang).catch(() => null),
+    // The block shows three, so it asks for three (ADR-033).
+    loadPublicStoriesPage(lang, { limit: HOME_STORY_COUNT }).then(page => page.items).catch(() => null),
   ])
   const pins = publicMapSchema.safeParse(map)
   const mapCategories = publicCategoryListSchema.safeParse(categories)

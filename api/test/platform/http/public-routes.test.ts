@@ -2,6 +2,7 @@ import type { ContentUseCases } from '../../../src/modules/content/adapters/rout
 import { describe, expect, it } from 'vitest'
 import { contractApp, openApiDocument } from '../../../scripts/contract.ts'
 import { registerContentRoutes } from '../../../src/modules/content/adapters/routes.ts'
+import { encodeCursor } from '../../../src/platform/http/cursor.ts'
 import { createFakeContentUseCases } from '../../support/fake-content-use-cases.ts'
 import { createGuardedApp, guardedCommands, noAccess, signedInAs } from '../../support/guarded-app.ts'
 
@@ -75,6 +76,87 @@ describe('[E2.12] the public routes: input checks and the ETag', () => {
 
     expect(anonymous.status).toBe(200)
     expect(signedIn.status).toBe(200)
+  })
+})
+
+describe('[ADR-033] the public stories list pages with an opaque cursor', () => {
+  const lastId = '0190f0c2-0000-7000-8000-0000000000e1'
+  const lastKey = ['2026-11-05T10:00:00.123456Z', lastId] as const
+
+  function paged() {
+    const asked: unknown[] = []
+    const app = setup({ listStories: async (query) => {
+      asked.push(query)
+      return { items: [], total: 42, next: query.limit === undefined ? null : lastKey }
+    } })
+    return { app, asked }
+  }
+
+  it('without limit the use case gets no limit, so the whole list comes for one release', async () => {
+    const { app, asked } = paged()
+
+    const response = await app.request('/api/public/stories?lang=en')
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ items: [], total: 42, nextCursor: null })
+    expect(asked).toEqual([{ language: 'en', category: undefined, limit: undefined, after: undefined }])
+  })
+
+  it('passes limit and category on, and answers a nextCursor that holds the key but is not it', async () => {
+    const { app, asked } = paged()
+
+    const response = await app.request('/api/public/stories?lang=de&limit=10&category=food')
+    const body = await response.json() as { nextCursor: string, total: number }
+
+    expect(asked).toEqual([{ language: 'de', category: 'food', limit: 10, after: undefined }])
+    expect(body.total).toBe(42)
+    expect(body.nextCursor).toMatch(/^[\w-]+$/)
+    expect(body.nextCursor).not.toContain(lastId)
+  })
+
+  it('the cursor of one page starts the next, and the use case gets the decoded key', async () => {
+    const { app, asked } = paged()
+    const first = await (await app.request('/api/public/stories?lang=en&limit=10&category=food')).json() as { nextCursor: string }
+
+    const second = await app.request(`/api/public/stories?lang=en&limit=10&category=food&cursor=${first.nextCursor}`)
+
+    expect(second.status).toBe(200)
+    expect(asked[1]).toEqual({ language: 'en', category: 'food', limit: 10, after: [...lastKey] })
+  })
+
+  it('limit 21 and limit 0 are 400, not lowered', async () => {
+    const { app } = paged()
+
+    for (const limit of ['21', '0'])
+      expect((await app.request(`/api/public/stories?lang=en&limit=${limit}`)).status).toBe(400)
+  })
+
+  it('a cursor that is garbage, another list\'s, or made for another filter or language is 400 validation-failed on cursor', async () => {
+    const { app, asked } = paged()
+    const first = await (await app.request('/api/public/stories?lang=en&limit=10&category=food')).json() as { nextCursor: string }
+    const wrongType = encodeCursor(['not a date', lastId], { route: 'public-stories', lang: 'en', category: null })
+
+    for (const url of [
+      '/api/public/stories?lang=en&limit=10&cursor=garbage',
+      `/api/public/stories?lang=en&limit=10&cursor=${first.nextCursor}`,
+      `/api/public/stories?lang=de&limit=10&category=food&cursor=${first.nextCursor}`,
+      `/api/public/stories?lang=en&limit=10&cursor=${wrongType}`,
+    ]) {
+      const response = await app.request(url)
+
+      expect(response.status, url).toBe(400)
+      expect(await response.json(), url).toMatchObject({ type: 'validation-failed', errors: [{ in: 'query', path: 'cursor' }] })
+    }
+    expect(asked).toHaveLength(1)
+  })
+
+  it('the contract names limit, cursor and category, and keeps limit optional while the route moves to paging', () => {
+    const document = openApiDocument(contractApp())
+    const parameters = (document.paths as Record<string, { get: { parameters: { name: string, required?: boolean }[] } }>)['/api/public/stories']!.get.parameters
+
+    expect(parameters.map(p => p.name).sort()).toEqual(['category', 'cursor', 'lang', 'limit'])
+    expect(parameters.find(p => p.name === 'limit')?.required).toBeFalsy()
+    expect(parameters.find(p => p.name === 'lang')?.required).toBe(true)
   })
 })
 

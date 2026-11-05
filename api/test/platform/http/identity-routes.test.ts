@@ -3,6 +3,7 @@ import type { IdentityUseCases } from '../../../src/modules/identity/adapters/ro
 import { serve } from '@hono/node-server'
 import { describe, expect, it } from 'vitest'
 import { registerIdentityRoutes } from '../../../src/modules/identity/adapters/routes.ts'
+import { encodeCursor } from '../../../src/platform/http/cursor.ts'
 import { createGuardedApp, guardedCommands, noAccess, shopOrigin, signedInAs, strictCommands } from '../../support/guarded-app.ts'
 import { createFakeIdentityUseCases } from '../../support/identity-use-cases.ts'
 
@@ -124,19 +125,39 @@ describe('[E2.3] the Super Admin\'s routes', () => {
     expect(await response.json()).toMatchObject({ type: 'store-slug-taken', status: 409 })
   })
 
-  it('[E2.3] the list passes its page and cursor on, and rejects a limit outside 1 to 100', async () => {
+  it('[E2.3][ADR-033] the list decodes the opaque cursor for the use case, encodes the next one, and rejects a limit outside 1 to 20', async () => {
     const seen: unknown[] = []
+    const lastId = '0190f0c2-0000-7000-8000-0000000000ee'
     const app = setup({ listStores: async (page) => {
       seen.push(page)
-      return { items: [], nextCursor: null }
+      return { items: [], nextCursor: lastId }
     } })
-    const cursor = '0190f0c2-0000-7000-8000-0000000000ee'
+    const headers = { headers: signedInAs('superAdmin') }
 
-    expect((await app.request(`/api/admin/stores?limit=5&cursor=${cursor}`, { headers: signedInAs('superAdmin') })).status).toBe(200)
-    expect((await app.request('/api/admin/stores', { headers: signedInAs('superAdmin') })).status).toBe(200)
-    expect((await app.request('/api/admin/stores?limit=0', { headers: signedInAs('superAdmin') })).status).toBe(400)
-    expect((await app.request('/api/admin/stores?limit=101', { headers: signedInAs('superAdmin') })).status).toBe(400)
-    expect(seen).toEqual([{ limit: 5, cursor }, { limit: 50 }])
+    const first = await app.request('/api/admin/stores?limit=5', headers)
+    const { nextCursor } = await first.json() as { nextCursor: string }
+    const second = await app.request(`/api/admin/stores?limit=5&cursor=${nextCursor}`, headers)
+
+    expect(first.status).toBe(200)
+    expect(nextCursor).not.toBe(lastId)
+    expect(nextCursor).toMatch(/^[\w-]+$/)
+    expect(second.status).toBe(200)
+    expect((await app.request('/api/admin/stores', headers)).status).toBe(200)
+    expect((await app.request('/api/admin/stores?limit=0', headers)).status).toBe(400)
+    expect((await app.request('/api/admin/stores?limit=21', headers)).status).toBe(400)
+    expect(seen).toEqual([{ limit: 5 }, { limit: 5, cursor: lastId }, { limit: 10 }])
+  })
+
+  it('[ADR-033] a raw uuid, garbage and a cursor of another list are 400 validation-failed on cursor', async () => {
+    const app = setup({ listStores: async () => ({ items: [], nextCursor: null }) })
+    const headers = { headers: signedInAs('superAdmin') }
+
+    for (const cursor of ['0190f0c2-0000-7000-8000-0000000000ee', 'garbage', encodeCursor(['0190f0c2-0000-7000-8000-0000000000ee'], { route: 'public-stories' })]) {
+      const response = await app.request(`/api/admin/stores?cursor=${cursor}`, headers)
+
+      expect(response.status, cursor).toBe(400)
+      expect(await response.json()).toMatchObject({ type: 'validation-failed', errors: [{ in: 'query', path: 'cursor' }] })
+    }
   })
 
   it.each([

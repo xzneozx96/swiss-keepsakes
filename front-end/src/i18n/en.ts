@@ -1,5 +1,6 @@
 import { mailEn } from '@sk/i18n/en'
 import { actionBarEn } from '@/components/action-bar-messages'
+import { infiniteListEn } from '@/components/infinite-list-messages'
 import { mapKitEn } from '@/components/map/map-messages'
 import { multiSelectEn } from '@/components/multi-select-messages'
 import { stepsEn } from '@/components/step-messages'
@@ -63,6 +64,7 @@ export const en = {
   ...storiesMediaEn,
   ...storiesListsEn,
   ...actionBarEn,
+  ...infiniteListEn,
   ...multiSelectEn,
   ...stepsEn,
   ...mapEn,

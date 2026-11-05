@@ -1,21 +1,27 @@
 import type { ContentLanguage } from '@sk/domain/content'
-import type { ReadDeps, StoryReadDeps } from '../read-ports.ts'
+import type { ReadDeps, StoryPageKey, StoryReadDeps } from '../read-ports.ts'
 import type { Result } from './failure.ts'
-import type { PublicStory, PublicStoryCard, PublicStoryList } from './public-view.ts'
+import type { PublicStory, PublicStoryPage } from './public-view.ts'
 import { fail, ok } from './failure.ts'
 import { storyLanguage, toPublicStory, toStoryCard } from './public-view.ts'
 
-// Newest first by the date of the version carried; the id breaks a tie. No cache: a republished story reads at once.
-const newestFirst = (a: PublicStoryCard, b: PublicStoryCard) => (a.publishedAt < b.publishedAt ? 1 : a.publishedAt > b.publishedAt ? -1 : a.id < b.id ? 1 : -1)
+export interface ListStoriesQuery {
+  language: ContentLanguage
+  category?: string | undefined
+  limit?: number | undefined
+  after?: StoryPageKey | undefined
+}
 
+// Newest first by the date of the version carried, the id breaking a tie: the repository orders and pages it (ADR-033).
+// No cache: a republished story reads at once.
 export function makeListStories<T>({ uow, reads, publicUrl }: ReadDeps<T>) {
-  return async (language: ContentLanguage): Promise<PublicStoryList> => {
-    const rows = await uow.run(tx => reads.listPublishedStories(tx))
-    const items = rows.flatMap((row) => {
+  return async ({ language, category, limit, after }: ListStoriesQuery): Promise<PublicStoryPage> => {
+    const found = await uow.run(tx => reads.pagePublishedStories(tx, { language, category: category ?? null, limit, after }))
+    const items = found.rows.flatMap((row) => {
       const card = toStoryCard(row, language, publicUrl)
       return card ? [card] : []
     })
-    return { items: items.sort(newestFirst) }
+    return { items, total: found.total, next: found.next }
   }
 }
 

@@ -1,4 +1,4 @@
-import type { PublicCategoryListRow, PublicPinRow, PublicReadRepository, PublicStoryDetailRow, PublicStoryKeepsakeCard, PublicStoryRow, PublicStoryVersionRow, StoredStoryDoc } from '../../../src/modules/content/read-ports.ts'
+import type { PublicCategoryListRow, PublicPinRow, PublicReadRepository, PublicStoryDetailRow, PublicStoryKeepsakeCard, PublicStoryRow, PublicStoryVersionRow, StoredStoryDoc, StoryPageKey, StoryPageQuery } from '../../../src/modules/content/read-ports.ts'
 import { publicCategoryListSchema, publicStoryListSchema, publicStorySchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 import { makeListCategories } from '../../../src/modules/content/application/read-categories.ts'
@@ -17,10 +17,14 @@ function story(id: string, versions: PublicStoryVersionRow[], over: Partial<Publ
 
 type StoryFixture = PublicStoryRow & Partial<Pick<PublicStoryDetailRow, 'places' | 'related' | 'keepsakeProductIds'>>
 
-function setup(stories: StoryFixture[], categories: PublicCategoryListRow[] = [], keepsakeCards: PublicStoryKeepsakeCard[] = []) {
+function setup(stories: StoryFixture[], categories: PublicCategoryListRow[] = [], keepsakeCards: PublicStoryKeepsakeCard[] = [], next: StoryPageKey | null = null) {
   const asked: { ids: string[], language: string }[] = []
+  const pageAsks: StoryPageQuery[] = []
   const reads: PublicReadRepository<null> = {
-    listPublishedStories: async () => stories,
+    pagePublishedStories: async (_tx, query) => {
+      pageAsks.push(query)
+      return { rows: stories, next, total: stories.length + 5 }
+    },
     findPublishedStoryBySlug: async (_tx, slug) => {
       const found = stories.find(s => s.versions.some(v => v.slug === slug))
       return found && { places: [], related: [], keepsakeProductIds: [], ...found }
@@ -40,7 +44,14 @@ function setup(stories: StoryFixture[], categories: PublicCategoryListRow[] = []
   const listCategories = makeListCategories(deps)
   // Every output must satisfy the public contract schemas (the application layer cannot import them).
   return {
-    list: async (...args: Parameters<typeof listStories>) => publicStoryListSchema.parse(await listStories(...args)),
+    list: async (language: 'en' | 'de') => {
+      const page = await listStories({ language })
+      // The route turns `next` into the opaque cursor; the schema check here uses a stand-in.
+      publicStoryListSchema.parse({ items: page.items, total: page.total, nextCursor: page.next && 'x' })
+      return page
+    },
+    page: listStories,
+    pageAsks,
     get: async (...args: Parameters<typeof getStory>) => {
       const result = await getStory(...args)
       if (result.ok)
@@ -168,34 +179,53 @@ describe('public stories', () => {
     expect(detail.ok && detail.value.categories).toEqual([{ id: id2, slug: 'cafes', name: null }])
   })
 
-  it('[E2.12][AC45] stories come newest first by the date of the version carried, as ISO text', async () => {
+  it('[ADR-033] the list keeps the order the repository gives, passes the query on, and returns total and next', async () => {
+    const next = ['2090-01-01T00:00:00.000000Z', id1] as const
     const s = setup([
-      story(id1, [version('en', 'old', 'Old', '2090-01-01T00:00:00Z')]),
       story(id2, [version('en', 'new', 'New', '2090-02-01T00:00:00Z')]),
-    ])
+      story(id1, [version('en', 'old', 'Old', '2090-01-01T00:00:00Z')]),
+    ], [], [], next)
 
-    const { items } = await s.list('en')
+    const page = await s.page({ language: 'en', category: 'food', limit: 2, after: ['2091-01-01T00:00:00.000000Z', id2] })
 
-    expect(items.map(i => i.slug)).toEqual(['new', 'old'])
-    expect(items[0]!.publishedAt).toBe('2090-02-01T00:00:00.000Z')
+    expect(page.items.map(i => i.slug)).toEqual(['new', 'old'])
+    expect(page.items[0]!.publishedAt).toBe('2090-02-01T00:00:00.000Z')
+    expect(page).toMatchObject({ total: 7, next })
+    expect(s.pageAsks).toEqual([{ language: 'en', category: 'food', limit: 2, after: ['2091-01-01T00:00:00.000000Z', id2] }])
+  })
+
+  it('[ADR-033] no category and no limit asks for the whole unfiltered list', async () => {
+    const s = setup([story(id1, [version('en', 'old', 'Old')])])
+
+    await s.page({ language: 'de' })
+
+    expect(s.pageAsks).toEqual([{ language: 'de', category: null, limit: undefined, after: undefined }])
   })
 
   it('[E2.12][AC45] categories keep the order given, show the names that exist with no fill, and carry the icon and home switch', async () => {
-    const s = setup([], [{ id: id1, slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, icon: null, showOnHome: false, position: 1 }, { id: id2, slug: 'cafes', name: { en: 'Cafes' }, parentId: id1, icon: 'cafe', showOnHome: true, position: 1 }])
+    const s = setup([], [{ id: id1, slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, icon: null, showOnHome: false, position: 1, storyCount: 0 }, { id: id2, slug: 'cafes', name: { en: 'Cafes' }, parentId: id1, icon: 'cafe', showOnHome: true, position: 1, storyCount: 0 }])
 
     const { items } = await s.categories('map')
 
     expect(items).toEqual([
-      { id: id1, slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, icon: null, showOnHome: false, position: 1 },
-      { id: id2, slug: 'cafes', name: { en: 'Cafes', de: null }, parentId: id1, icon: 'cafe', showOnHome: true, position: 1 },
+      { id: id1, slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, icon: null, showOnHome: false, position: 1, storyCount: 0 },
+      { id: id2, slug: 'cafes', name: { en: 'Cafes', de: null }, parentId: id1, icon: 'cafe', showOnHome: true, position: 1, storyCount: 0 },
     ])
+  })
+
+  it('[ADR-033] a blog category carries its storyCount as the read gives it, and the contract accepts it', async () => {
+    const s = setup([], [{ id: id1, slug: 'history', name: { en: 'History' }, parentId: null, icon: null, showOnHome: false, position: 1, storyCount: 3 }, { id: id2, slug: 'castles', name: { en: 'Castles' }, parentId: id1, icon: null, showOnHome: false, position: 1, storyCount: 0 }])
+
+    const { items } = await s.categories('blog')
+
+    expect(items.map(i => [i.slug, i.storyCount])).toEqual([['history', 3], ['castles', 0]])
   })
 
   it('[E2.13][AC54] the reading time comes from the words of the body, 200 a minute, at least 1', async () => {
     const words = (n: number) => ({ type: 'paragraph', content: [{ type: 'text', text: Array.from<string>({ length: n }).fill('w').join(' ') }] })
     const s = setup([
-      story(id1, [version('en', 'short', 'Short', undefined, { published: doc('Short', { body: { type: 'doc', content: [] } }) })]),
       story(id2, [version('en', 'long', 'Long', '2090-02-01T00:00:00Z', { published: doc('Long', { body: { type: 'doc', content: [words(401)] } }) })]),
+      story(id1, [version('en', 'short', 'Short', undefined, { published: doc('Short', { body: { type: 'doc', content: [] } }) })]),
     ])
 
     const { items } = await s.list('en')

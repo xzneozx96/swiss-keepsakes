@@ -114,6 +114,9 @@ export function createApiQueryClient(
         const meta = query.meta
         if (meta?.silent || toastedQueryHashes.has(query.queryHash))
           return
+        // A failed next page of a list shows its own "Try again" in the list (InfiniteList), so no toast for it.
+        if (query.state.fetchMeta?.fetchMore?.direction === 'forward')
+          return
         toastedQueryHashes.add(query.queryHash)
         feedback.toast.danger(feedback.t(genericFeedbackKey(error)))
       },

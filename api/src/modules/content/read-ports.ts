@@ -17,6 +17,8 @@ export interface PublicCategoryRow {
 export interface PublicCategoryListRow extends PublicCategoryRow {
   icon: CategoryIcon | null
   showOnHome: boolean
+  // Blog categories: the published stories with the category, those of its direct sub-categories included for a parent. Map categories: 0.
+  storyCount: number
 }
 
 // The published story document as stored. Stored JSON is read as written and not re-validated, so every field is
@@ -128,9 +130,23 @@ export interface PublicTourRow {
   stops: PublicTourStopRow[]
 }
 
+// Where a page of stories starts: the date of the version carried (as text at full precision, UTC) and the group id.
+export type StoryPageKey = readonly [publishedAt: string, id: string]
+
+export interface StoryPageQuery {
+  language: ContentLanguage
+  // A blog category slug; a parent includes its direct sub-categories. Null: no filter. An unknown slug matches nothing.
+  category: string | null
+  // Without a limit the page is the whole filtered set (ADR-033 section 12, one release).
+  limit?: number | undefined
+  after?: StoryPageKey | undefined
+}
+
 export interface PublicReadRepository<T> {
-  // One row per story group that has a published version.
-  listPublishedStories: (tx: T) => Promise<PublicStoryRow[]>
+  // One row per story group that has a published version, newest first by the date of the version carried in `language`
+  // (the other language when it has none), the group id breaking a tie. `total` counts the whole filtered set. `next`
+  // is the key of the last row when more follow, else null.
+  pagePublishedStories: (tx: T, query: StoryPageQuery) => Promise<{ rows: PublicStoryRow[], next: StoryPageKey | null, total: number }>
   // The group whose published version has this slug in `language`, else in the other language.
   findPublishedStoryBySlug: (tx: T, slug: string, language: ContentLanguage) => Promise<PublicStoryDetailRow | undefined>
   // Every category of the kind, in all stores, parents first, then by position.

@@ -1,17 +1,36 @@
-import type { PublicCategory, PublicLanguage, PublicStoryCard } from '@sk/api-contract'
+import type { PublicCategory, PublicLanguage, PublicStoryList } from '@sk/api-contract'
 import { answer, PAGE_READ_TIMEOUT_MS, timeout } from '@/features/data-client/api-transport'
+import { readAllPages } from '@/features/data-client/paged-query'
 import { apiOrigin } from '@/lib/api-origin'
 
+/** Stories a page of the guest list holds (owner, 05.11.2026). The API allows 20 at most. */
+export const STORIES_PAGE_SIZE = 10
+
+export interface StoriesPageRequest {
+  /** A blog category slug, filtered on the server. */
+  category?: string | undefined
+  /** The `nextCursor` of the page before. Absent for the first page. */
+  cursor?: string | undefined
+  limit: number
+}
+
 /**
- * The published stories in one language, newest first, as `GET /api/public/stories` sends them. Throws when the read
- * fails: the route turns that into the error state and never falls back to demo stories.
+ * One page of `GET /api/public/stories`, newest first, with `total` for the filtered set. Throws when the read fails: the route
+ * turns that into the error state and never falls back to demo stories.
  */
-export async function loadPublicStories(lang: PublicLanguage): Promise<PublicStoryCard[]> {
+export async function loadPublicStoriesPage(lang: PublicLanguage, { category, cursor, limit }: StoriesPageRequest): Promise<PublicStoryList> {
   // The contract package carries Zod, so it loads with the first read and not with the first paint.
   const { createApiClient, publicStoryListSchema } = await import('@sk/api-contract')
-  const list = await answer(createApiClient(apiOrigin()).GET('/api/public/stories', { ...timeout(PAGE_READ_TIMEOUT_MS), params: { query: { lang } } }))
+  const list = await answer(createApiClient(apiOrigin()).GET('/api/public/stories', { ...timeout(PAGE_READ_TIMEOUT_MS), params: { query: { lang, limit, ...(cursor ? { cursor } : {}), ...(category ? { category } : {}) } } }))
 
-  return publicStoryListSchema.parse(list).items
+  return publicStoryListSchema.parse(list)
+}
+
+/** Every published story in one language, newest first, read page by page. Search needs the whole list until it moves to the server (ADR-033, slice 6). */
+export async function loadPublicStories(lang: PublicLanguage) {
+  // The contract package loads on the first read, so the constant comes from it and not from a static import.
+  const { MAX_PAGE_LIMIT } = await import('@sk/api-contract')
+  return readAllPages(cursor => loadPublicStoriesPage(lang, { cursor, limit: MAX_PAGE_LIMIT }), `Stories in ${lang}`)
 }
 
 /** Every blog category, parents first, with both names, as `GET /api/public/blog-categories` sends them. Throws when the read fails; the list then shows without a filter. */

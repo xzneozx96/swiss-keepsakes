@@ -257,6 +257,31 @@ describe('createApiQueryClient queries', () => {
     expect(danger).toHaveBeenCalledExactlyOnceWith('apiFeedback.error.network')
   })
 
+  it('[ADR-033] a failed next page of a list does not toast, but a failed refetch of the same list does', async () => {
+    const { InfiniteQueryObserver } = await import('@tanstack/react-query')
+    const { queryClient, danger } = setup()
+    let failing = false
+    const observer = new InfiniteQueryObserver(queryClient, {
+      queryKey: ['paged'],
+      queryFn: async ({ pageParam }: { pageParam: number }) => {
+        if (failing)
+          throw new Error('boom')
+        return { items: [pageParam], nextCursor: pageParam + 1 }
+      },
+      initialPageParam: 0,
+      getNextPageParam: (page: { nextCursor: number }) => page.nextCursor,
+      retry: false,
+    })
+    await observer.fetchNextPage()
+    failing = true
+
+    await observer.fetchNextPage()
+    expect(danger).not.toHaveBeenCalled()
+
+    await observer.refetch()
+    expect(danger).toHaveBeenCalledExactlyOnceWith('apiFeedback.error.network')
+  })
+
   it('never toasts a 401 on a background refetch: sign-in owns it', async () => {
     const { queryClient, danger } = setup()
 

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { pageOf, pageQuery } from './page.ts'
 
 const language = z.enum(['en', 'de'])
 
@@ -34,15 +35,9 @@ export const adminStoreSchema = storeSchema.extend({
   }).meta({ description: 'The four opening conditions, from the rule that decides open-for-sale' }),
 }).meta({ id: 'AdminStore', description: 'A store as A01 lists it: its Owner invitation and its four opening conditions' })
 
-export const adminStoreListSchema = z.object({
-  items: z.array(adminStoreSchema),
-  nextCursor: z.uuid().nullable().meta({ description: 'Pass it as `cursor` for the next page. Null on the last page' }),
-}).meta({ id: 'AdminStoreList' })
+export const adminStoreListSchema = pageOf(adminStoreSchema, 'AdminStoreList')
 
-export const adminStoreListQuerySchema = z.object({
-  limit: z.coerce.number().int().min(1).max(100).default(50),
-  cursor: z.uuid().optional(),
-})
+export const adminStoreListQuerySchema = pageQuery({ defaultLimit: 10 })
 
 export const createStoreBodySchema = z.object({
   slug: z.string().min(2).max(60).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Lower-case letters and digits, separated by single dashes'),

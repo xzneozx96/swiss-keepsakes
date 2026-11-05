@@ -12,7 +12,9 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    /** @description The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page */
                     cursor?: string;
+                    /** @description How many items to return, 1 to 20 */
                     limit?: number;
                 };
                 header?: never;
@@ -874,8 +876,14 @@ export interface paths {
         get: {
             parameters: {
                 query: {
+                    /** @description A blog category slug. A parent includes its direct sub-categories. An unknown slug gives an empty list */
+                    category?: string;
+                    /** @description The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page */
+                    cursor?: string;
                     /** @description The language asked for. An item that has no version in it comes back in the other language, marked `fallback` */
                     lang: "en" | "de";
+                    /** @description How many items to return, 1 to 20 */
+                    limit?: number;
                 };
                 header?: never;
                 path?: never;
@@ -883,7 +891,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description The published stories, newest first */
+                /** @description A page of the published stories, newest first by the date of the version shown */
                 200: {
                     headers: {
                         /** @description `max-age=30` */
@@ -4763,10 +4771,7 @@ export interface components {
         };
         AdminStoreList: {
             items: components["schemas"]["AdminStore"][];
-            /**
-             * Format: uuid
-             * @description Pass it as `cursor` for the next page. Null on the last page
-             */
+            /** @description Pass it as `cursor` for the next page. Null on the last page, and only there */
             nextCursor: string | null;
         };
         /**
@@ -6646,6 +6651,8 @@ export interface components {
             /** @description Whether a map category is listed on the home (always false for a blog category) */
             showOnHome: boolean;
             slug: string;
+            /** @description A blog category: the published stories with it, those of its direct sub-categories included for a parent. A map category: always 0 */
+            storyCount: number;
         };
         PublicCategoryList: {
             items: components["schemas"]["PublicCategory"][];
@@ -7622,6 +7629,10 @@ export interface components {
         };
         PublicStoryList: {
             items: components["schemas"]["PublicStoryCard"][];
+            /** @description Pass it as `cursor` for the next page. Null on the last page, and only there */
+            nextCursor: string | null;
+            /** @description How many published stories match the filters, on every page */
+            total: number;
         };
         PublicTour: {
             availableLanguages: components["schemas"]["PublicLanguage"][];

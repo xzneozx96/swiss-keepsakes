@@ -12,6 +12,7 @@ export function blogCategory(over: Partial<PublicCategory> & { slug: string }): 
     icon: null,
     showOnHome: false,
     position: n,
+    storyCount: 1,
     ...over,
   }
 }

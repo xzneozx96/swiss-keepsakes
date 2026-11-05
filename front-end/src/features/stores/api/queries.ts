@@ -1,8 +1,8 @@
 import type { DataClient } from '@/features/data-client'
 
-import { infiniteQueryOptions, queryOptions, useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { queryOptions, useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { authFetchOptions, loadAuthClient } from '@/features/auth/lib/auth-api'
-import { queryKeys, useDataClient } from '@/features/data-client'
+import { pagedQueryOptions, queryKeys, useDataClient } from '@/features/data-client'
 import { fromApi } from '@/features/data-client/api-transport'
 
 /** The signed-in user from the session cookie, or null. The demo store's signed-in flag follows it only after the first paint, so it cannot say that a visitor is signed out. */
@@ -19,13 +19,7 @@ export const sessionUserQuery = queryOptions({
 
 export const storesQueries = {
   adminStores: (client: DataClient) =>
-    infiniteQueryOptions({
-      ...fromApi,
-      queryKey: queryKeys.stores.adminStores,
-      queryFn: ({ pageParam }) => client.stores.adminStores(pageParam),
-      initialPageParam: undefined as string | undefined,
-      getNextPageParam: page => page.nextCursor ?? undefined,
-    }),
+    pagedQueryOptions({ queryKey: queryKeys.stores.adminStores, read: cursor => client.stores.adminStores(cursor) }),
   me: (client: DataClient) =>
     queryOptions({
       ...fromApi,

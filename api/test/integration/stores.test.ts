@@ -429,7 +429,7 @@ describe('[E2.3][S8] the Super Admin invites the Owner, the Owner accepts, and t
     const { body } = await env.createStore(admin, `owner-${randomUUID().slice(0, 8)}@example.ch`)
     await pool.query(`update identity.store_invitations set revoked_at = now() where store_id = $1`, [body.id])
 
-    const page = await (await env.call('/api/admin/stores?limit=100', { headers: admin.headers })).json() as { items: { id: string, invitation: { state: string } }[] }
+    const page = await (await env.call('/api/admin/stores?limit=20', { headers: admin.headers })).json() as { items: { id: string, invitation: { state: string } }[] }
 
     expect(page.items.find(item => item.id === body.id)?.invitation.state).toBe('revoked')
   })
@@ -665,7 +665,7 @@ describe('[E2.3] the Super Admin\'s routes over real sessions', () => {
     const second = await (await env.call(`/api/admin/stores?limit=2&cursor=${first.nextCursor}`, { headers: admin.headers })).json() as Page
     const everything: Page['items'] = []
     for (let cursor: string | null = null, guard = 0; guard < 50; guard++) {
-      const page = await (await env.call(`/api/admin/stores?limit=100${cursor ? `&cursor=${cursor}` : ''}`, { headers: admin.headers })).json() as Page
+      const page = await (await env.call(`/api/admin/stores?limit=20${cursor ? `&cursor=${cursor}` : ''}`, { headers: admin.headers })).json() as Page
       everything.push(...page.items)
       cursor = page.nextCursor
       if (!cursor)
@@ -673,7 +673,8 @@ describe('[E2.3] the Super Admin\'s routes over real sessions', () => {
     }
 
     expect(first.items).toHaveLength(2)
-    expect(first.nextCursor).toBe(first.items[1]!.id)
+    expect(first.nextCursor).toMatch(/^[\w-]+$/)
+    expect(first.nextCursor).not.toBe(first.items[1]!.id)
     expect(second.items.map(item => item.id)).not.toContain(first.items[0]!.id)
     const ids = everything.map(item => item.id)
     expect(new Set(ids).size).toBe(ids.length)
@@ -698,7 +699,7 @@ describe('[E2.3][AC03] the Owner\'s onboarding routes on a real store', () => {
     const { env, admin, owner, storeId } = await onboardingStore({ conditions: { laterConditions: async () => ({ ...laterMet, catalogue: 'unmet' }) } })
     interface Page { items: { id: string, conditions: Record<string, string> }[], nextCursor: string | null }
 
-    const page = await (await env.call('/api/admin/stores?limit=100', { headers: admin.headers })).json() as Page
+    const page = await (await env.call('/api/admin/stores?limit=20', { headers: admin.headers })).json() as Page
     const checklist = await (await env.call(`/api/store/${storeId}/onboarding`, { headers: owner.headers })).json() as { conditions: { key: string, state: string }[] }
 
     const listed = page.items.find(item => item.id === storeId)!.conditions

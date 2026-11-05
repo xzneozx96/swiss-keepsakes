@@ -28,6 +28,8 @@ export const queryKeys = {
     publicList: ['keepsakes', 'public'],
     tourBlock: ['keepsakes', 'list', 'tour-block'],
   },
+  /** The guest stories list (`GET /api/public/stories`), one entry per language and category. */
+  guestStories: ['guest-stories'],
   search: {
     stories: ['search', 'stories'],
     tours: ['search', 'tours'],

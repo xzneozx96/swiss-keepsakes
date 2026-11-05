@@ -167,8 +167,7 @@
             "type": "array"
           },
           "nextCursor": {
-            "description": "Pass it as `cursor` for the next page. Null on the last page",
-            "format": "uuid",
+            "description": "Pass it as `cursor` for the next page. Null on the last page, and only there",
             "type": [
               "string",
               "null"
@@ -8348,6 +8347,11 @@
           },
           "slug": {
             "type": "string"
+          },
+          "storyCount": {
+            "description": "A blog category: the published stories with it, those of its direct sub-categories included for a parent. A map category: always 0",
+            "minimum": 0,
+            "type": "integer"
           }
         },
         "required": [
@@ -8357,7 +8361,8 @@
           "parentId",
           "icon",
           "showOnHome",
-          "position"
+          "position",
+          "storyCount"
         ],
         "type": "object"
       },
@@ -12704,10 +12709,24 @@
               "$ref": "#/components/schemas/PublicStoryCard"
             },
             "type": "array"
+          },
+          "nextCursor": {
+            "description": "Pass it as `cursor` for the next page. Null on the last page, and only there",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "How many published stories match the filters, on every page",
+            "minimum": 0,
+            "type": "integer"
           }
         },
         "required": [
-          "items"
+          "items",
+          "nextCursor",
+          "total"
         ],
         "type": "object"
       },
@@ -18539,22 +18558,27 @@
       "get": {
         "parameters": [
           {
+            "description": "How many items to return, 1 to 20",
             "in": "query",
             "name": "limit",
             "required": false,
             "schema": {
-              "default": 50,
-              "maximum": 100,
+              "default": 10,
+              "description": "How many items to return, 1 to 20",
+              "maximum": 20,
               "minimum": 1,
               "type": "integer"
             }
           },
           {
+            "description": "The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page",
             "in": "query",
             "name": "cursor",
             "required": false,
             "schema": {
-              "format": "uuid",
+              "description": "The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page",
+              "maxLength": 512,
+              "pattern": "^[\\w-]+$",
               "type": "string"
             }
           }
@@ -19627,6 +19651,42 @@
               ],
               "type": "string"
             }
+          },
+          {
+            "description": "How many items to return, 1 to 20",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "description": "How many items to return, 1 to 20",
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "description": "The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page",
+              "maxLength": 512,
+              "pattern": "^[\\w-]+$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A blog category slug. A parent includes its direct sub-categories. An unknown slug gives an empty list",
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "description": "A blog category slug. A parent includes its direct sub-categories. An unknown slug gives an empty list",
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -19638,7 +19698,7 @@
                 }
               }
             },
-            "description": "The published stories, newest first",
+            "description": "A page of the published stories, newest first by the date of the version shown",
             "headers": {
               "Cache-Control": {
                 "description": "`max-age=30`",

@@ -77,7 +77,7 @@ function setup(state: { pins: PublicPinDetailRow[], tours?: PublicTourRow[] }, s
   let loads = 0
   const tours = () => state.tours ?? []
   const reads: PublicReadRepository<null> = {
-    listPublishedStories: async () => [],
+    pagePublishedStories: async () => ({ rows: [], next: null, total: 0 }),
     findPublishedStoryBySlug: async () => undefined,
     listCategories: async () => [],
     listVisiblePins: async () => {

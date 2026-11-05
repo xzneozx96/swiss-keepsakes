@@ -1,8 +1,12 @@
 import type { CategoryIcon, ContentLanguage, Localized, PinDate, StayTag, TourGuideDoc } from '@sk/domain/content'
 import type { Tx } from '../../../platform/db/client.ts'
-import type { PublicCategoryRow, PublicPinDetailRow, PublicPinRow, PublicReadRepository, PublicStoryDetailRow, PublicStoryRow, PublicTourRow, StoredStoryDoc } from '../read-ports.ts'
+import type { PublicCategoryRow, PublicPinDetailRow, PublicPinRow, PublicReadRepository, PublicStoryDetailRow, PublicStoryRow, PublicTourRow, StoredStoryDoc, StoryPageKey } from '../read-ports.ts'
 import { sql } from 'drizzle-orm'
+import { after as keysAfter, page } from '../../../platform/db/keyset.ts'
 import { publishedStoryMediaIds } from './story-media-ids.ts'
+
+// The order of the story list: the date of the version carried, then the group id, both newest first.
+const storyKey = [{ column: sql`published_at`, cast: 'timestamptz' as const }, { column: sql`id`, cast: 'uuid' as const }]
 
 interface VersionJoinRow {
   id: string
@@ -24,15 +28,15 @@ interface CategoryJoinRow {
   position: number
 }
 
-// Published versions of the groups (all of them, or the ones named), with the blog categories and the ready media keys.
-async function loadStories(tx: Tx, groupIds: string[] | null): Promise<PublicStoryRow[]> {
-  if (groupIds?.length === 0)
+// Published versions of the groups named, with the blog categories and the ready media keys.
+async function loadStories(tx: Tx, groupIds: string[]): Promise<PublicStoryRow[]> {
+  if (groupIds.length === 0)
     return []
   const versions = await tx.execute<VersionJoinRow & Record<string, unknown>>(sql`
     select g.id, g.store_id, g.stay_tag, g.interests, v.language, v.slug, v.published, v.published_at
       from content.story_versions v
       join content.story_groups g on g.store_id = v.store_id and g.id = v.group_id
-     where v.status = 'published' and v.published is not null${groupIds ? sql` and g.id = any(${sql.param(groupIds)}::uuid[])` : sql``}
+     where v.status = 'published' and v.published is not null and g.id = any(${sql.param(groupIds)}::uuid[])
      order by v.published_at desc, g.id desc, v.language`)
   if (versions.rows.length === 0)
     return []
@@ -316,7 +320,32 @@ async function loadTours(tx: Tx, tourId: string | null, withStops: boolean): Pro
 
 export function createPublicReadRepository(): PublicReadRepository<Tx> {
   return {
-    listPublishedStories: tx => loadStories(tx, null),
+    async pagePublishedStories(tx, { language, category, limit, after }) {
+      // The version a card shows: the asked language, else the other. Both the page and the count run over this set.
+      const picked = sql`picked as (
+        select distinct on (g.id) g.id, v.published_at
+          from content.story_versions v
+          join content.story_groups g on g.store_id = v.store_id and g.id = v.group_id
+         where v.status = 'published' and v.published is not null${category === null
+            ? sql``
+            : sql` and exists (
+               select 1 from content.story_categories sc
+                 join content.blog_categories c on c.store_id = sc.store_id and c.id = sc.category_id
+                 left join content.blog_categories parent on parent.store_id = c.store_id and parent.id = c.parent_id
+                where sc.group_id = g.id and (c.slug = ${category} or parent.slug = ${category}))`}
+         order by g.id, (v.language = ${language}) desc, v.language)`
+      const keys = await tx.execute<{ id: string, published_key: string } & Record<string, unknown>>(sql`
+        with ${picked}
+        select id, to_char(published_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as published_key
+          from picked
+         ${after ? sql`where ${keysAfter(storyKey, after)}` : sql``}
+         order by published_at desc, id desc${limit === undefined ? sql`` : sql` limit ${limit + 1}`}`)
+      const counted = await tx.execute<{ total: number } & Record<string, unknown>>(sql`with ${picked} select count(*)::int as total from picked`)
+      const { items, next } = page(keys.rows, limit, (row): StoryPageKey => [row.published_key, row.id])
+      // loadStories reads in no order: put the groups back in the page's order.
+      const stories = new Map((await loadStories(tx, items.map(row => row.id))).map(story => [story.id, story]))
+      return { rows: items.flatMap(row => stories.get(row.id) ?? []), next, total: counted.rows[0]?.total ?? 0 }
+    },
 
     async findPublishedStoryBySlug(tx, slug, language) {
       // Slugs are per language, so each language has at most one match; the asked language wins.
@@ -331,13 +360,20 @@ export function createPublicReadRepository(): PublicReadRepository<Tx> {
 
     async listCategories(tx, kind) {
       // Only map categories have an icon and a home switch (the blog table has no such columns).
-      const [table, icon, show] = kind === 'map'
-        ? [sql`content.map_categories`, sql`icon`, sql`show_on_home`]
-        : [sql`content.blog_categories`, sql`null::text`, sql`false`]
-      const result = await tx.execute<{ id: string, slug: string, name: PublicCategoryRow['name'], parent_id: string | null, icon: CategoryIcon | null, show_on_home: boolean, position: number }>(sql`
-        select id, slug, name, parent_id, ${icon} as icon, ${show} as show_on_home, position from ${table}
-         order by parent_id nulls first, position, id`)
-      return result.rows.map(r => ({ id: r.id, slug: r.slug, name: r.name, parentId: r.parent_id, icon: r.icon, showOnHome: r.show_on_home, position: r.position }))
+      // The story count of a blog category comes in the same query: the groups with a published version that have the category or, for a parent, one of its direct sub-categories (the set the stories filter matches).
+      const [table, icon, show, count] = kind === 'map'
+        ? [sql`content.map_categories`, sql`icon`, sql`show_on_home`, sql`0`]
+        : [sql`content.blog_categories`, sql`null::text`, sql`false`, sql`(
+            select count(distinct sc.group_id)::int
+              from content.story_categories sc
+              join content.blog_categories sub on sub.store_id = sc.store_id and sub.id = sc.category_id
+             where sub.store_id = c.store_id and (sub.id = c.id or sub.parent_id = c.id)
+               and exists (select 1 from content.story_versions v
+                            where v.store_id = sc.store_id and v.group_id = sc.group_id and v.status = 'published' and v.published is not null))`]
+      const result = await tx.execute<{ id: string, slug: string, name: PublicCategoryRow['name'], parent_id: string | null, icon: CategoryIcon | null, show_on_home: boolean, position: number, story_count: number }>(sql`
+        select c.id, c.slug, c.name, c.parent_id, ${icon} as icon, ${show} as show_on_home, c.position, ${count} as story_count from ${table} c
+         order by c.parent_id nulls first, c.position, c.id`)
+      return result.rows.map(r => ({ id: r.id, slug: r.slug, name: r.name, parentId: r.parent_id, icon: r.icon, showOnHome: r.show_on_home, position: r.position, storyCount: r.story_count }))
     },
 
     listVisiblePins: tx => loadPins(tx, null),

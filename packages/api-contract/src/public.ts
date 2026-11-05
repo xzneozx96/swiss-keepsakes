@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { categoryIconSchema } from './categories.ts'
 import { BODY_LIST_LEVELS, listItemSchema } from './content.ts'
+import { pageOf } from './page.ts'
 
 // What the public reads return: published text in one language, media as a storage key, and no price anywhere.
 // Responses are plain objects, not strict ones, like the editor views in content.ts.
@@ -98,9 +99,9 @@ export const publicStoryCardSchema = z.object({
   ...languageNoticeSchema.shape,
 }).meta({ id: 'PublicStoryCard' })
 
-export const publicStoryListSchema = z.object({
-  items: z.array(publicStoryCardSchema),
-}).meta({ id: 'PublicStoryList' })
+export const publicStoryListSchema = pageOf(publicStoryCardSchema, 'PublicStoryList', {
+  total: z.int().min(0).meta({ description: 'How many published stories match the filters, on every page' }),
+})
 
 export const publicStoryKeepsakeSchema = z.object({
   id: z.uuid(),
@@ -221,6 +222,7 @@ export const publicCategorySchema = z.object({
   icon: categoryIconSchema.nullable().meta({ description: 'The icon of a map category (always null for a blog category)' }),
   showOnHome: z.boolean().meta({ description: 'Whether a map category is listed on the home (always false for a blog category)' }),
   position: z.int(),
+  storyCount: z.int().nonnegative().meta({ description: 'A blog category: the published stories with it, those of its direct sub-categories included for a parent. A map category: always 0' }),
 }).meta({ id: 'PublicCategory' })
 
 export const publicCategoryListSchema = z.object({

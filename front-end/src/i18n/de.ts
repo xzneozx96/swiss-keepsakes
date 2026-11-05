@@ -2,6 +2,7 @@ import type { MessageKey } from './en'
 
 import { mailDe } from '@sk/i18n/de'
 import { actionBarDe } from '@/components/action-bar-messages.de'
+import { infiniteListDe } from '@/components/infinite-list-messages.de'
 import { mapKitDe } from '@/components/map/map-messages.de'
 import { multiSelectDe } from '@/components/multi-select-messages.de'
 import { stepsDe } from '@/components/step-messages.de'
@@ -65,6 +66,7 @@ export const de: Record<MessageKey, string> = {
   ...storiesMediaDe,
   ...storiesListsDe,
   ...actionBarDe,
+  ...infiniteListDe,
   ...multiSelectDe,
   ...stepsDe,
   ...mapDe,
