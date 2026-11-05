@@ -20,10 +20,13 @@ export function canShowOnboarding({ pathname, audience }: { pathname: string, au
 
 /**
  * Whether a requested flow may show. Like `canShowOnboarding`, and also on the Account tab (a private path), where the
- * "Your trip" row opens it. Nothing opens by itself there: `flowTrigger` only fires on the home.
+ * "Your trip" row opens it. Nothing opens by itself there: `flowTrigger` only fires on the home. Staff never get the flow by
+ * itself (AC92), but a tap on a public page opens it, so a merchant can preview it (owner, 05.11.2026).
  */
 export function canOpenOnboarding({ pathname, audience }: { pathname: string, audience: OnboardingAudience }): boolean {
-  return canShowOnboarding({ pathname, audience }) || (audience === 'guest' && pathname.replace(TRAILING_SLASHES, '') === '/account')
+  return canShowOnboarding({ pathname, audience })
+    || (audience === 'staff' && !isPrivatePath(pathname))
+    || (audience === 'guest' && pathname.replace(TRAILING_SLASHES, '') === '/account')
 }
 
 /**

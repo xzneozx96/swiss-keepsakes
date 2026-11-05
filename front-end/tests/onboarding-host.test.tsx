@@ -158,14 +158,24 @@ describe('[E4.5][AC24][AC91] entry matrix', () => {
 })
 
 describe('[E4.5][AC92] who sees the flow', () => {
-  it.each(['staff', 'unknown'] as const)('[E4.5][AC92] a %s audience never gets the flow, by itself or by a manual open', async (who) => {
-    audience.value = who
+  it('[E4.5][AC92] an unknown audience never gets the flow, by itself or by a manual open', async () => {
+    audience.value = 'unknown'
     await renderApp('/en')
 
     expect(flow()).toBeNull()
     act(() => openOnboarding('change'))
     await settle()
     expect(flow()).toBeNull()
+  })
+
+  it('[E4.5][AC92] staff never get the flow by itself, but a tap opens it on a public page (owner, 05.11.2026)', async () => {
+    audience.value = 'staff'
+    await renderApp('/en')
+
+    await settle()
+    expect(flow()).toBeNull()
+    act(() => openOnboarding('change'))
+    await waitFor(() => expect(flow()).not.toBeNull())
   })
 
   it('[E4.5][AC92] a private path never shows it, not even for a manual open', async () => {
