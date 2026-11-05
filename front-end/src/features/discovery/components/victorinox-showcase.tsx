@@ -32,8 +32,8 @@ const ground = 'bg-[#173f52]'
 
 /** The shop's own Swiss Native edition, back and front (owner photos, 05.11.2026; they replace the five drawn concept knives). */
 const fan = [
-  { key: 'swiss-native-back', rotate: -6 },
-  { key: 'swiss-native-front', rotate: 6 },
+  { key: 'swiss-native-back', top: 28, shift: -26, rotate: -5 },
+  { key: 'swiss-native-front', top: 118, shift: 26, rotate: 3 },
 ]
 
 /** "victorinox-swan" is the product slug; the art is keyed by "swan". */
@@ -41,7 +41,8 @@ const artKey = (slug: string) => slug.replace(VICTORINOX_SLUG_PREFIX, '')
 
 /**
  * The Victorinox section on C01: the shop's partner as the page's one full-bleed showpiece.
- * An oversized wordmark with a fan of the shop's Swiss Native knife (back and front) rising over it, the brand line, then all
+ * An oversized wordmark with the shop's Swiss Native knife, back and front, lying flat one above the other and rising in,
+ * the brand line, then all
  * twelve designs on cream tiles of one height, a link to the full list and the brand story.
  */
 export function VictorinoxShowcase({
@@ -94,11 +95,11 @@ export function VictorinoxShowcase({
           aria-hidden
           className="absolute inset-x-0 top-[70px] h-[260px]"
         >
-          {fan.map(({ key, rotate }, i) => (
+          {fan.map(({ key, top, shift, rotate }, i) => (
             <img
               key={key}
               alt=""
-              className={`absolute top-0 left-1/2 h-[230px] origin-[50%_150%] drop-shadow-[0_10px_14px_rgba(0,20,30,0.5)] ${
+              className={`absolute left-1/2 w-[82%] max-w-[330px] drop-shadow-[0_12px_16px_rgba(0,20,30,0.5)] ${
                 fanSeen
                   ? 'motion-safe:animate-[vx-rise_700ms_cubic-bezier(0.2,0.8,0.2,1)_both]'
                   : 'motion-safe:opacity-0'
@@ -107,8 +108,9 @@ export function VictorinoxShowcase({
               loading="lazy"
               src={knifeArt[key]}
               style={{
-                transform: `translateX(-50%) rotate(${rotate}deg)`,
-                animationDelay: `${i * 70}ms`,
+                top,
+                transform: `translateX(calc(-50% + ${shift}px)) rotate(${rotate}deg)`,
+                animationDelay: `${i * 90}ms`,
                 zIndex: i + 1,
               }}
             />
@@ -132,29 +134,29 @@ export function VictorinoxShowcase({
             ? [0, 1, 2].map(i => (
                 <li
                   key={i}
-                  className="h-[17.5rem] w-36 shrink-0 animate-pulse rounded-2xl bg-white/10"
+                  className="h-[15rem] w-52 shrink-0 animate-pulse rounded-2xl bg-white/10"
                 />
               ))
             : items.map(item => (
-                <li key={item.slug} className="flex w-36 shrink-0 snap-start">
+                <li key={item.slug} className="flex w-52 shrink-0 snap-start">
                   <Link
                     className="flex w-full flex-col gap-2 rounded-2xl bg-white p-2 pb-3 text-foreground outline-none select-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#173f52] active:opacity-85"
                     params={{ lang: item.lang ?? language, slug: item.slug }}
                     to="/$lang/gifts/$slug"
                   >
-                    <span className="flex h-44 items-center justify-center rounded-xl">
+                    <span className="flex h-36 items-center justify-center rounded-xl">
                       {knifeArt[artKey(item.slug)] || !item.photo
                         ? (
                             <img
                               alt=""
-                              className="h-40 -rotate-6 drop-shadow-[0_8px_10px_rgba(0,0,0,0.25)]"
+                              className="h-32 -rotate-6 drop-shadow-[0_8px_10px_rgba(0,0,0,0.25)]"
                               decoding="async"
                               loading="lazy"
                               src={knifeArt[artKey(item.slug)]}
                             />
                           )
                         // No knife art for this keepsake: its cover photo takes the slot.
-                        : <img alt={item.name} className="h-40 w-full rounded-xl object-contain" decoding="async" loading="lazy" src={item.photo} />}
+                        : <img alt={item.name} className="h-32 w-full rounded-xl object-contain" decoding="async" loading="lazy" src={item.photo} />}
                     </span>
                     <span className="flex flex-1 flex-col gap-0.5 px-1">
                       <span className="line-clamp-2 min-h-[2.5em] text-sm leading-tight font-semibold">
