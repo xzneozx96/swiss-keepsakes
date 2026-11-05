@@ -30,12 +30,10 @@ export interface VictorinoxShowcaseProps {
 /** The ground of the section: a deep lake blue, so the cream tiles stand out without a harsh edge. */
 const ground = 'bg-[#173f52]'
 
+/** The shop's own Swiss Native edition, back and front (owner photos, 05.11.2026; they replace the five drawn concept knives). */
 const fan = [
-  { key: 'steamboat', rotate: -26 },
-  { key: 'furka', rotate: -13 },
-  { key: 'chapel-bridge', rotate: 0 },
-  { key: 'finsterwald', rotate: 13 },
-  { key: 'pilatus', rotate: 26 },
+  { key: 'swiss-native-back', rotate: -6 },
+  { key: 'swiss-native-front', rotate: 6 },
 ]
 
 /** "victorinox-swan" is the product slug; the art is keyed by "swan". */
@@ -43,7 +41,7 @@ const artKey = (slug: string) => slug.replace(VICTORINOX_SLUG_PREFIX, '')
 
 /**
  * The Victorinox section on C01: the shop's partner as the page's one full-bleed showpiece.
- * An oversized wordmark with a fan of five knives rising over it, the brand line, then all
+ * An oversized wordmark with a fan of the shop's Swiss Native knife (back and front) rising over it, the brand line, then all
  * twelve designs on cream tiles of one height, a link to the full list and the brand story.
  */
 export function VictorinoxShowcase({
@@ -111,7 +109,7 @@ export function VictorinoxShowcase({
               style={{
                 transform: `translateX(-50%) rotate(${rotate}deg)`,
                 animationDelay: `${i * 70}ms`,
-                zIndex: 10 - Math.abs(i - 2),
+                zIndex: i + 1,
               }}
             />
           ))}
