@@ -114,6 +114,10 @@ export const categorySpecs: CategorySpec[] = [
   { slug: 'holidays', name: { en: 'Public holidays', de: 'Feiertage' }, parent: 'useful-info', icon: 'holiday', showOnHome: false },
   { slug: 'emergency', name: { en: 'Emergency', de: 'Notfall' }, parent: 'useful-info', icon: 'emergency', showOnHome: false },
   { slug: 'boats-and-mountains', name: { en: 'Boats and mountains', de: 'Schiff und Berge' }, parent: 'useful-info', icon: 'boat', showOnHome: false },
+  { slug: 'sim-wifi', name: { en: 'SIM and Wi-Fi', de: 'SIM und WLAN' }, parent: 'useful-info', icon: 'wifi', showOnHome: true },
+  { slug: 'transport', name: { en: 'Trains, buses and boats', de: 'Zug, Bus und Schiff' }, parent: 'useful-info', icon: 'transport', showOnHome: true },
+  { slug: 'luggage-lockers', name: { en: 'Luggage lockers', de: 'Gepäckschliessfächer' }, parent: 'useful-info', icon: 'locker', showOnHome: true },
+  { slug: 'cash', name: { en: 'Cash and cards', de: 'Bargeld und Karten' }, parent: 'useful-info', icon: 'cash', showOnHome: true },
   { slug: 'events', name: { en: 'Events', de: 'Veranstaltungen' }, parent: null, icon: 'event', showOnHome: false },
 ]
 
@@ -201,7 +205,7 @@ function readJson<T>(file: string): T {
 }
 
 export function loadData(): Data {
-  const groups = [['places-sights.json', 'sights'], ['places-shops-toilets.json', 'shops-toilets'], ['places-useful-info.json', 'useful-info'], ['places-events.json', 'events'], ['places-food.json', 'food']] as const
+  const groups = [['places-sights.json', 'sights'], ['places-shops-toilets.json', 'shops-toilets'], ['places-useful-info.json', 'useful-info'], ['places-events.json', 'events'], ['places-food.json', 'food'], ['places-services.json', 'services']] as const
   return {
     places: groups.flatMap(([file, group]) => readJson<PlaceRecord[]>(file).map(record => ({ group, record }))),
     keepsakes: readJson<KeepsakeRecord[]>('keepsakes.json'),

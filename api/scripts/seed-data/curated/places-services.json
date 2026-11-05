@@ -1,0 +1,1510 @@
+[
+  {
+    "key": "water-jesuitenbrunnen",
+    "title": {
+      "en": "Jesuitenbrunnen drinking fountain",
+      "de": "Trinkwasserbrunnen Jesuitenbrunnen"
+    },
+    "tip": {
+      "en": "A public fountain next to the Jesuit Church on the Reuss side of the old town. Water runs from two spouts on the wall and is marked as drinking water on OpenStreetMap. It is free and open all day.",
+      "de": "Ein öffentlicher Brunnen neben der Jesuitenkirche am Reussufer der Altstadt. Das Wasser läuft aus zwei Rohren an der Wand und ist in OpenStreetMap als Trinkwasser eingetragen. Er ist gratis und rund um die Uhr zugänglich."
+    },
+    "localTip": {
+      "en": "Fill your bottle here before you walk over the Reuss bridges.",
+      "de": "Füllen Sie hier Ihre Flasche, bevor Sie über die Reussbrücken gehen."
+    },
+    "latitude": 47.0504854,
+    "longitude": 8.3040238,
+    "address": "Bahnhofstrasse, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0504854,8.3040238",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.openstreetmap.org/node/5101409127",
+    "categories": [
+      "water"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "water-jesuitenbrunnen.jpg",
+        "alt": {
+          "en": "Two bronze spouts on a wall by the Jesuit Church, with the old town street behind",
+          "de": "Zwei Bronzerohre an einer Wand bei der Jesuitenkirche, dahinter die Altstadtgasse"
+        },
+        "author": "Caahlo",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Jesuitenbrunnen_Nah.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.openstreetmap.org/node/5101409127",
+      "https://www.stadtluzern.ch/dienstleistungen/3528",
+      "https://lucernewater.ch"
+    ]
+  },
+  {
+    "key": "water-voegeligaertli",
+    "title": {
+      "en": "Vögeligärtli fountain",
+      "de": "Vögeligärtli-Brunnen"
+    },
+    "tip": {
+      "en": "A wide stone bowl fountain on the paved square of the small Vögeligärtli park, a few minutes from the station. It is tagged as drinking water on OpenStreetMap. Benches and shade trees make it a good place to stop and refill.",
+      "de": "Ein breiter Steinschalenbrunnen auf dem Platz des kleinen Vögeligärtli, wenige Minuten vom Bahnhof. In OpenStreetMap ist er als Trinkwasser eingetragen. Bänke und schattige Bäume laden zum Verweilen und Nachfüllen ein."
+    },
+    "localTip": {
+      "en": "If the bowl has no running spout, use one of the other fountains on this list.",
+      "de": "Läuft hier kein Strahl, nehmen Sie einen der anderen Brunnen auf dieser Liste."
+    },
+    "latitude": 47.0486177,
+    "longitude": 8.3077431,
+    "address": "Vögeligärtli, Frankenstrasse, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0486177,8.3077431",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.openstreetmap.org/node/4097156494",
+    "categories": [
+      "water"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "water-voegeligaertli.jpg",
+        "alt": {
+          "en": "A wide round stone bowl fountain in the Vögeligärtli park with benches behind",
+          "de": "Ein breiter, runder Steinschalenbrunnen im Vögeligärtli, dahinter Bänke"
+        },
+        "author": "Caahlo",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:V%C3%B6gelig%C3%A4rtlibrunnen_Nah.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.openstreetmap.org/node/4097156494",
+      "https://www.stadtluzern.ch/dienstleistungen/3528",
+      "https://lucernewater.ch"
+    ]
+  },
+  {
+    "key": "water-inselipark",
+    "title": {
+      "en": "Inseli park fountain by the lake",
+      "de": "Inseli-Park-Brunnen am See"
+    },
+    "tip": {
+      "en": "A round fountain with a small central spout in the Inseli park, right on the lake promenade east of the station. OpenStreetMap lists it as free drinking water. A good refill point before a lakeside walk or a boat trip.",
+      "de": "Ein runder Brunnen mit kleinem Strahl in der Mitte, im Inseli-Park an der Seepromenade östlich vom Bahnhof. OpenStreetMap führt ihn als kostenloses Trinkwasser. Praktisch zum Auffüllen vor einem Spaziergang am See oder einer Schifffahrt."
+    },
+    "localTip": {
+      "en": "The park is quiet in the morning, so the fountain is easy to reach.",
+      "de": "Der Park ist am Morgen ruhig, der Brunnen ist dann leicht zu erreichen."
+    },
+    "latitude": 47.0494791,
+    "longitude": 8.3141237,
+    "address": "Inseliquai, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0494791,8.3141237",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.openstreetmap.org/node/4328500400",
+    "categories": [
+      "water"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "water-inselipark.jpg",
+        "alt": {
+          "en": "A round stone basin with a small central spout under trees in the Inseli park",
+          "de": "Ein rundes Steinbecken mit kleinem Strahl in der Mitte, unter Bäumen im Inseli-Park"
+        },
+        "author": "Caahlo",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Inseliparkbrunnen_Nah.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.openstreetmap.org/node/4328500400",
+      "https://www.stadtluzern.ch/dienstleistungen/3528",
+      "https://lucernewater.ch"
+    ]
+  },
+  {
+    "key": "water-musegg",
+    "title": {
+      "en": "Museggbrunnen at the town wall",
+      "de": "Museggbrunnen an der Stadtmauer"
+    },
+    "tip": {
+      "en": "A stone trough with a single spout under a tall stone post, on Museggstrasse below the medieval town wall. It is marked as drinking water on OpenStreetMap. Handy if you are about to walk the wall or the towers.",
+      "de": "Ein Steintrog mit einem Rohr unter einem hohen Steinpfeiler an der Museggstrasse, unterhalb der mittelalterlichen Stadtmauer. In OpenStreetMap ist er als Trinkwasser eingetragen. Praktisch vor einem Gang auf die Mauer oder zu den Türmen."
+    },
+    "localTip": {
+      "en": "Fill up here before the uphill walk to the Musegg towers.",
+      "de": "Füllen Sie hier auf, bevor es zu den Museggtürmen bergauf geht."
+    },
+    "latitude": 47.0536734,
+    "longitude": 8.3037724,
+    "address": "Museggstrasse, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0536734,8.3037724",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.openstreetmap.org/node/2710885484",
+    "categories": [
+      "water"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "water-musegg.jpg",
+        "alt": {
+          "en": "A stone trough with a spout under a stone post on Museggstrasse",
+          "de": "Ein Steintrog mit Rohr unter einem Steinpfeiler an der Museggstrasse"
+        },
+        "author": "Caahlo",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Museggbrunnen_Nah.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.openstreetmap.org/node/2710885484",
+      "https://www.stadtluzern.ch/dienstleistungen/3528",
+      "https://lucernewater.ch"
+    ]
+  },
+  {
+    "key": "water-muehlenplatz",
+    "title": {
+      "en": "Mühlenplatz fountain on the Reuss",
+      "de": "Mühlenplatz-Brunnen an der Reuss"
+    },
+    "tip": {
+      "en": "A tall stone fountain on Mühlenplatz, a small square on the Reuss in the old town, near the Spreuer Bridge. A drinking-water point is mapped here on OpenStreetMap and tagged as open around the clock.",
+      "de": "Ein hoher Steinbrunnen am Mühlenplatz, einem kleinen Platz an der Reuss in der Altstadt, nahe der Spreuerbrücke. In OpenStreetMap ist hier ein Trinkwasserbrunnen eingetragen, rund um die Uhr zugänglich."
+    },
+    "localTip": {
+      "en": "The old mill square is quietest before 10 am.",
+      "de": "Der alte Mühlenplatz ist vor zehn Uhr am ruhigsten."
+    },
+    "latitude": 47.0520896,
+    "longitude": 8.3037728,
+    "address": "Mühlenplatz, 6000 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0520896,8.3037728",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.openstreetmap.org/node/1316866644",
+    "categories": [
+      "water"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "water-muehlenplatz.jpg",
+        "alt": {
+          "en": "A tall stone fountain with a column in front of old town houses on the Reuss",
+          "de": "Ein hoher Steinbrunnen mit Säule vor Altstadthäusern an der Reuss"
+        },
+        "author": "WES1947",
+        "licence": "CC BY-SA 3.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:M%C3%BChlenplatzbrunnen_P9180016_01.JPG"
+      }
+    ],
+    "sources": [
+      "https://www.openstreetmap.org/node/1316866644",
+      "https://www.stadtluzern.ch/dienstleistungen/3528",
+      "https://lucernewater.ch"
+    ]
+  },
+  {
+    "key": "water-baigneuse",
+    "title": {
+      "en": "Baigneuse fountain on Seidenhofstrasse",
+      "de": "Baigneuse-Brunnen an der Seidenhofstrasse"
+    },
+    "tip": {
+      "en": "A plain stone fountain with one low spout, set in a curved wall near Bahnhofstrasse. It is named Baigneuse-Brunnen on OpenStreetMap and tagged as drinking water. It is one minute from the station forecourt.",
+      "de": "Ein schlichter Steinbrunnen mit einem tiefen Rohr in einer geschwungenen Wand nahe der Bahnhofstrasse. In OpenStreetMap heisst er Baigneuse-Brunnen und ist als Trinkwasser eingetragen. Vom Bahnhofplatz ist er eine Minute entfernt."
+    },
+    "localTip": {
+      "en": "A quick stop on the way from the station into town.",
+      "de": "Ein kurzer Halt auf dem Weg vom Bahnhof in die Stadt."
+    },
+    "latitude": 47.0498983,
+    "longitude": 8.307481,
+    "address": "Seidenhofstrasse, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0498983,8.307481",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.openstreetmap.org/node/1329927413",
+    "categories": [
+      "water"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "water-baigneuse.jpg",
+        "alt": {
+          "en": "A grey stone fountain with a single spout in a curved wall",
+          "de": "Ein grauer Steinbrunnen mit einem Rohr in einer geschwungenen Wand"
+        },
+        "author": "Caahlo",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Baigneuse-Brunnen_Nah.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.openstreetmap.org/node/1329927413",
+      "https://www.stadtluzern.ch/dienstleistungen/3528",
+      "https://lucernewater.ch"
+    ]
+  },
+  {
+    "key": "water-sempacher",
+    "title": {
+      "en": "Sempacherbrunnen on Sempacherstrasse",
+      "de": "Sempacherbrunnen an der Sempacherstrasse"
+    },
+    "tip": {
+      "en": "A slim stone fountain with a small bowl under a big tree on Sempacherstrasse, south of the station and close to the lake. OpenStreetMap names it Sempacherbrunnen and marks it as drinking water. The spot is quiet and leafy.",
+      "de": "Ein schlanker Steinbrunnen mit kleiner Schale unter einem grossen Baum an der Sempacherstrasse, südlich vom Bahnhof und nahe beim See. OpenStreetMap nennt ihn Sempacherbrunnen und führt ihn als Trinkwasser. Der Ort ist ruhig und grün."
+    },
+    "localTip": {
+      "en": "Useful if you walk along the lake to the Verkehrshaus side.",
+      "de": "Praktisch, wenn Sie am See Richtung Verkehrshaus spazieren."
+    },
+    "latitude": 47.0464879,
+    "longitude": 8.3094225,
+    "address": "Sempacherstrasse, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0464879,8.3094225",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.openstreetmap.org/node/4403448369",
+    "categories": [
+      "water"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "water-sempacher.jpg",
+        "alt": {
+          "en": "A slim stone fountain with a small bowl standing under a large tree",
+          "de": "Ein schlanker Steinbrunnen mit kleiner Schale unter einem grossen Baum"
+        },
+        "author": "Caahlo",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Sempacherbrunnen.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.openstreetmap.org/node/4403448369",
+      "https://www.stadtluzern.ch/dienstleistungen/3528",
+      "https://lucernewater.ch"
+    ]
+  },
+  {
+    "key": "water-viehmarkt",
+    "title": {
+      "en": "Viehmarktbrunnen on Klosterstrasse",
+      "de": "Viehmarktbrunnen an der Klosterstrasse"
+    },
+    "tip": {
+      "en": "A small stone fountain with a square trough next to a bus stop on Klosterstrasse, on the west side of the old town. OpenStreetMap lists it as Viehmarktbrunnen with drinking water. It is a good stop on the walk between the station and Neustadt.",
+      "de": "Ein kleiner Steinbrunnen mit viereckigem Trog neben einer Bushaltestelle an der Klosterstrasse, auf der Westseite der Altstadt. OpenStreetMap führt ihn als Viehmarktbrunnen mit Trinkwasser. Ein guter Halt zwischen Bahnhof und Neustadt."
+    },
+    "localTip": {
+      "en": "Bring a bottle: tap water in Lucerne is safe to drink.",
+      "de": "Flasche mitnehmen: Das Luzerner Leitungswasser ist Trinkwasser."
+    },
+    "latitude": 47.0491617,
+    "longitude": 8.3000073,
+    "address": "Klosterstrasse, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0491617,8.3000073",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.openstreetmap.org/node/1315017855",
+    "categories": [
+      "water"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "water-viehmarkt.jpg",
+        "alt": {
+          "en": "A small stone fountain with a square trough beside a bus shelter",
+          "de": "Ein kleiner Steinbrunnen mit viereckigem Trog neben einem Buswartehäuschen"
+        },
+        "author": "Caahlo",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Viehmarktbrunnen.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.openstreetmap.org/node/1315017855",
+      "https://www.stadtluzern.ch/dienstleistungen/3528",
+      "https://lucernewater.ch"
+    ]
+  },
+  {
+    "key": "sim-salt-bahnhof",
+    "title": {
+      "en": "Salt Store at Luzern station",
+      "de": "Salt Store im Bahnhof Luzern"
+    },
+    "tip": {
+      "en": "A mobile shop in the station basement, east side, that sells prepaid SIM cards and plans and gives advice at the counter. It is open late on weekdays and also on Sunday. Take your passport or ID card with you.",
+      "de": "Ein Mobilfunkgeschäft im Untergeschoss des Bahnhofs, Ostseite, das Prepaid-SIM-Karten und Abos verkauft und am Schalter berät. Es ist unter der Woche lange und auch am Sonntag offen. Nehmen Sie Pass oder ID mit."
+    },
+    "localTip": {
+      "en": "Enter from the Bahnhofplatz side and take the stairs down.",
+      "de": "Betreten Sie den Bahnhof vom Bahnhofplatz her und gehen Sie die Treppe hinunter."
+    },
+    "latitude": 47.0499,
+    "longitude": 8.3108,
+    "address": "Bahnhof Luzern, Untergeschoss Ost, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0499,8.3108",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "09:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 2,
+        "opens": "09:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 3,
+        "opens": "09:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 4,
+        "opens": "09:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 5,
+        "opens": "09:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 6,
+        "opens": "09:00",
+        "closes": "20:00"
+      },
+      {
+        "day": 7,
+        "opens": "10:00",
+        "closes": "20:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.salt.ch",
+    "categories": [
+      "sim-wifi"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "sim-salt-bahnhof.jpg",
+        "alt": {
+          "en": "The glass front of Luzern station on Bahnhofplatz with the stairs down to the lower level",
+          "de": "Die Glasfront des Bahnhofs Luzern am Bahnhofplatz mit dem Abgang ins Untergeschoss"
+        },
+        "author": "Suburbansky",
+        "licence": "CC BY-SA 3.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Bahnhof_luzern_front.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.sbb.ch/en/travel-information/stations/find-station/luzern-station/shops/shop-detail.html/geo-salt-848c"
+    ]
+  },
+  {
+    "key": "sim-swisscom-hertensteinstrasse",
+    "title": {
+      "en": "Swisscom Shop on Hertensteinstrasse",
+      "de": "Swisscom Shop an der Hertensteinstrasse"
+    },
+    "tip": {
+      "en": "Swisscom shop in the pedestrian zone of the city centre, a short walk from the Kapellbrücke. Staff set up prepaid SIM cards and eSIMs at a service bar. It is closed on Sunday.",
+      "de": "Swisscom-Shop in der Fussgängerzone der Innenstadt, wenige Gehminuten von der Kapellbrücke. Das Personal richtet Prepaid-SIM-Karten und eSIMs an einer Servicebar ein. Am Sonntag ist geschlossen."
+    },
+    "localTip": {
+      "en": "Quieter than the station shops in the late morning.",
+      "de": "Am späten Vormittag ruhiger als die Shops beim Bahnhof."
+    },
+    "latitude": 47.054199,
+    "longitude": 8.308461,
+    "address": "Hertensteinstrasse 23, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.054199,8.308461",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "10:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 2,
+        "opens": "10:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 3,
+        "opens": "10:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 4,
+        "opens": "10:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 5,
+        "opens": "10:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 6,
+        "opens": "10:00",
+        "closes": "17:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://swisscomshops.swisscom.ch/en/luzern/luzern/swisscom-shop-luzern-hertensteinstrasse-59",
+    "categories": [
+      "sim-wifi"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "sim-swisscom-hertensteinstrasse.jpg",
+        "alt": {
+          "en": "Weinmarkt, an old town square a short walk from the shop, with its carved stone fountain and painted houses",
+          "de": "Der Weinmarkt, ein Altstadtplatz in der Nähe des Shops, mit dem geschnitzten Steinbrunnen und bemalten Häusern"
+        },
+        "author": "Paebi",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_Brunnen_Weinmarkt.jpg"
+      }
+    ],
+    "sources": [
+      "https://swisscomshops.swisscom.ch/en/luzern/luzern",
+      "https://www.swisscom.ch/de/about/news/2021/12/10-neuer-swisscom-shop-im-zentrum-von-luzern.html"
+    ]
+  },
+  {
+    "key": "sim-swisscom-bahnhofstrasse",
+    "title": {
+      "en": "Swisscom Shop on Bahnhofstrasse",
+      "de": "Swisscom Shop an der Bahnhofstrasse"
+    },
+    "tip": {
+      "en": "The older Swisscom shop, on Bahnhofstrasse between the station and the old town. It sells prepaid SIM cards and eSIMs and opens an hour earlier than the shop on Hertensteinstrasse. It is closed on Sunday.",
+      "de": "Der ältere Swisscom-Shop an der Bahnhofstrasse, zwischen Bahnhof und Altstadt. Er verkauft Prepaid-SIM-Karten und eSIMs und öffnet eine Stunde früher als der Shop an der Hertensteinstrasse. Am Sonntag ist geschlossen."
+    },
+    "localTip": {
+      "en": "A good first stop on foot from the station.",
+      "de": "Ein guter erster Halt zu Fuss ab Bahnhof."
+    },
+    "latitude": 47.050766,
+    "longitude": 8.308089,
+    "address": "Bahnhofstrasse 5, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050766,8.308089",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "09:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 2,
+        "opens": "09:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 3,
+        "opens": "09:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 4,
+        "opens": "09:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 5,
+        "opens": "09:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 6,
+        "opens": "09:00",
+        "closes": "17:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://swisscomshops.swisscom.ch/en/luzern/luzern/swisscom-shop-luzern-bahnhofstrasse-33",
+    "categories": [
+      "sim-wifi"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "sim-swisscom-bahnhofstrasse.jpg",
+        "alt": {
+          "en": "Bahnhofstrasse at the corner of Seidenhofstrasse, the street between the station and the old town",
+          "de": "Die Bahnhofstrasse an der Ecke Seidenhofstrasse, die Strasse zwischen Bahnhof und Altstadt"
+        },
+        "author": "Andrew Bossi",
+        "licence": "CC BY-SA 2.5",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:7136_-_Luzern_-_Bahnhofstrasse_at_Seidenhofstrasse.JPG"
+      }
+    ],
+    "sources": [
+      "https://swisscomshops.swisscom.ch/en/luzern/luzern",
+      "https://www.swisscom.ch/de/about/news/2021/12/10-neuer-swisscom-shop-im-zentrum-von-luzern.html"
+    ]
+  },
+  {
+    "key": "wifi-sbb-bahnhof",
+    "title": {
+      "en": "Free station Wi-Fi at Luzern (SBB-FREE)",
+      "de": "Gratis-WLAN im Bahnhof Luzern (SBB-FREE)"
+    },
+    "tip": {
+      "en": "Luzern is one of the SBB stations with free Wi-Fi. Pick the network SBB-FREE on your phone and register once; after that you can browse free at every equipped SBB station. Use it for maps and tickets before you buy a SIM.",
+      "de": "Luzern gehört zu den SBB-Bahnhöfen mit Gratis-WLAN. Wählen Sie auf dem Handy das Netz SBB-FREE und registrieren Sie sich einmal; danach surfen Sie an allen ausgerüsteten SBB-Bahnhöfen gratis. Praktisch für Karten und Tickets, bevor Sie eine SIM kaufen."
+    },
+    "localTip": {
+      "en": "Register on the first day, while you are still on the platform.",
+      "de": "Registrieren Sie sich gleich am Ankunftstag, noch auf dem Perron."
+    },
+    "latitude": 47.05,
+    "longitude": 8.3103,
+    "address": "Bahnhof Luzern, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.05,8.3103",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.sbb.ch/de/reiseinformationen/bahnhoefe/services-bahnhof/free-wifi.html",
+    "categories": [
+      "sim-wifi"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "wifi-sbb-bahnhof.jpg",
+        "alt": {
+          "en": "Travellers walking along a platform under the arched roof of Luzern station",
+          "de": "Reisende auf einem Perron unter dem gewölbten Dach des Bahnhofs Luzern"
+        },
+        "author": "Smiley.toerist",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_train_station_2014_1.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.sbb.ch/de/reiseinformationen/bahnhoefe/services-bahnhof/free-wifi.html"
+    ]
+  },
+  {
+    "key": "wifi-tourist-information",
+    "title": {
+      "en": "Tourist Information and guest Wi-Fi",
+      "de": "Tourist Information und Gäste-WLAN"
+    },
+    "tip": {
+      "en": "The Tourist Information sits in the station on the city level, west side. Guests who stay overnight and hold a Gästekarte get the network Free WiFi - LUZERN.COM at selected spots in the city. Staff can show where the hotspots are and give a city map.",
+      "de": "Die Tourist Information liegt im Bahnhof auf der Stadtebene, Westseite. Übernachtungsgäste mit Gästekarte nutzen das Netz Free WiFi - LUZERN.COM an ausgewählten Orten der Stadt. Das Team zeigt Ihnen die Hotspots und gibt einen Stadtplan ab."
+    },
+    "localTip": {
+      "en": "Ask for the Gästekarte at your hotel before you arrive; it works as the login.",
+      "de": "Fragen Sie im Hotel nach der Gästekarte; sie dient als Zugang."
+    },
+    "latitude": 47.0501,
+    "longitude": 8.31,
+    "address": "Bahnhof Luzern, Stadtebene West, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0501,8.31",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "08:30",
+        "closes": "17:00"
+      },
+      {
+        "day": 2,
+        "opens": "08:30",
+        "closes": "17:00"
+      },
+      {
+        "day": 3,
+        "opens": "08:30",
+        "closes": "17:00"
+      },
+      {
+        "day": 4,
+        "opens": "08:30",
+        "closes": "17:00"
+      },
+      {
+        "day": 5,
+        "opens": "08:30",
+        "closes": "17:00"
+      },
+      {
+        "day": 6,
+        "opens": "09:00",
+        "closes": "16:00"
+      },
+      {
+        "day": 7,
+        "opens": "09:00",
+        "closes": "13:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.luzern.com/de/informieren/vor-ort/gaestekarte-luzern",
+    "categories": [
+      "sim-wifi"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "wifi-tourist-information.jpg",
+        "alt": {
+          "en": "Luzern station and the Bahnhofplatz seen from the water, with the old station gate to the left",
+          "de": "Der Bahnhof Luzern und der Bahnhofplatz vom Wasser aus, links das alte Bahnhofstor"
+        },
+        "author": "Andrew Bossi",
+        "licence": "CC BY-SA 2.5",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:6227_-_Luzern_-_Bahnhof.JPG"
+      }
+    ],
+    "sources": [
+      "https://www.sbb.ch/de/reiseinformationen/bahnhoefe/bahnhof-finden/bahnhof-luzern/geschaefte/shop-detail.html/geo-tourist-information-luzern-cf39",
+      "https://www.luzern.com/de/informieren/vor-ort/gaestekarte-luzern"
+    ]
+  },
+  {
+    "key": "transport-sbb-reisezentrum",
+    "title": {
+      "en": "SBB Travel Centre at Luzern station",
+      "de": "SBB Reisezentrum im Bahnhof Luzern"
+    },
+    "tip": {
+      "en": "The staffed SBB ticket office on the gallery level, first floor, of the station. Buy train tickets, Swiss Travel Pass products and day passes, or book an appointment. It is open daily until the evening.",
+      "de": "Das bediente SBB-Reisezentrum auf der Galerie im ersten Obergeschoss des Bahnhofs. Hier kaufen Sie Zugtickets, Swiss-Travel-Pass-Produkte und Tageskarten oder buchen einen Termin. Es ist täglich bis abends offen."
+    },
+    "localTip": {
+      "en": "Take a number early on Saturday mornings in summer.",
+      "de": "Am Samstagmorgen im Sommer früh eine Nummer ziehen."
+    },
+    "latitude": 47.0501,
+    "longitude": 8.3104,
+    "address": "Bahnhof Luzern, Galerie 1. OG, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0501,8.3104",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "07:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 2,
+        "opens": "07:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 3,
+        "opens": "07:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 4,
+        "opens": "07:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 5,
+        "opens": "07:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 6,
+        "opens": "07:00",
+        "closes": "20:00"
+      },
+      {
+        "day": 7,
+        "opens": "07:00",
+        "closes": "20:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.sbb.ch/de/reiseinformationen/bahnhoefe/bahnhof-finden/bahnhof-luzern/geschaefte/shop-detail.html/geo-billettschalter-9617",
+    "categories": [
+      "transport"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "transport-sbb-reisezentrum.jpg",
+        "alt": {
+          "en": "The arched platform hall of Luzern station with trains, seen from the platform",
+          "de": "Die gewölbte Perronhalle des Bahnhofs Luzern mit Zügen, vom Perron aus gesehen"
+        },
+        "author": "Ddayzzz",
+        "licence": "CC BY 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_railway_station_platform_hall_with_trains,_2026.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.sbb.ch/de/reiseinformationen/bahnhoefe/bahnhof-finden/bahnhof-luzern/geschaefte/shop-detail.html/geo-billettschalter-9617"
+    ]
+  },
+  {
+    "key": "transport-vbl-kundencenter-bahnhof",
+    "title": {
+      "en": "VBL bus customer centre at the station",
+      "de": "VBL Kundencenter im Bahnhof Luzern"
+    },
+    "tip": {
+      "en": "The VBL ticket counters are in the basement of the station. They sell city bus tickets, multi-trip cards and Swiss-wide public transport tickets, and you can pay by card or Twint. They are closed on Sunday.",
+      "de": "Die VBL-Schalter liegen im Untergeschoss des Bahnhofs. Sie verkaufen Stadtbus-Billette, Mehrfahrtenkarten und öV-Billette für die ganze Schweiz; bezahlt wird mit Karte oder Twint. Am Sonntag sind sie geschlossen."
+    },
+    "localTip": {
+      "en": "On Sundays buy your ticket from the machine at the bus stop.",
+      "de": "Am Sonntag lösen Sie das Billett am Automaten an der Haltestelle."
+    },
+    "latitude": 47.0498,
+    "longitude": 8.3093,
+    "address": "Bahnhof Luzern, Untergeschoss, Bahnhofplatz, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0498,8.3093",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "06:45",
+        "closes": "19:00"
+      },
+      {
+        "day": 2,
+        "opens": "06:45",
+        "closes": "19:00"
+      },
+      {
+        "day": 3,
+        "opens": "06:45",
+        "closes": "19:00"
+      },
+      {
+        "day": 4,
+        "opens": "06:45",
+        "closes": "19:00"
+      },
+      {
+        "day": 5,
+        "opens": "06:45",
+        "closes": "19:00"
+      },
+      {
+        "day": 6,
+        "opens": "08:00",
+        "closes": "17:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.vbl.ch/billette-abos/kundencenter/",
+    "categories": [
+      "transport"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "transport-vbl-kundencenter-bahnhof.jpg",
+        "alt": {
+          "en": "A yellow postbus and a white bus at their numbered stops on the Bahnhofplatz, under the station roof",
+          "de": "Ein gelbes Postauto und ein weisser Bus an ihren nummerierten Haltestellen auf dem Bahnhofplatz, unter dem Bahnhofsdach"
+        },
+        "author": "JoachimKohler-HB",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Bushaltestelle_am_Bahnhof_Luzern_(2014).jpg"
+      }
+    ],
+    "sources": [
+      "https://www.vbl.ch/billette-abos/kundencenter/",
+      "https://www.vbl.ch/billette-abos/verkaufsstellen/"
+    ]
+  },
+  {
+    "key": "transport-vbl-schwanenplatz",
+    "title": {
+      "en": "VBL ticket counter at Schwanenplatz",
+      "de": "VBL Schalter am Schwanenplatz"
+    },
+    "tip": {
+      "en": "A VBL sales counter at the Schwanenplatz bus stop, at the end of the old town by the lake. It sells city bus tickets and travel passes and is closed on Sunday. Many city bus lines stop here on the way to and from the station.",
+      "de": "Ein VBL-Verkaufsschalter an der Haltestelle Schwanenplatz, am Altstadtende beim See. Er verkauft Stadtbus-Billette und Reisepässe und ist am Sonntag geschlossen. Hier halten viele Stadtbuslinien auf dem Weg zum und vom Bahnhof."
+    },
+    "localTip": {
+      "en": "From here the station is a ten-minute walk along the lake.",
+      "de": "Von hier ist der Bahnhof zu Fuss zehn Minuten entfernt, dem See entlang."
+    },
+    "latitude": 47.0535,
+    "longitude": 8.3087,
+    "address": "Schwanenplatz, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0535,8.3087",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "09:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 2,
+        "opens": "09:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 3,
+        "opens": "09:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 4,
+        "opens": "09:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 5,
+        "opens": "09:00",
+        "closes": "18:00"
+      },
+      {
+        "day": 6,
+        "opens": "09:00",
+        "closes": "16:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.vbl.ch/billette-abos/kundencenter/",
+    "categories": [
+      "transport"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "transport-vbl-schwanenplatz.jpg",
+        "alt": {
+          "en": "The Schwanenplatz bus stop with a departure board and timetable, and people waiting",
+          "de": "Die Haltestelle Schwanenplatz mit Abfahrtsanzeige und Fahrplan, wartende Leute"
+        },
+        "author": "Heights",
+        "licence": "CC BY-SA 3.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Schwanenplatz_bus_stop_in_Luzern.JPG"
+      }
+    ],
+    "sources": [
+      "https://www.vbl.ch/billette-abos/kundencenter/"
+    ]
+  },
+  {
+    "key": "transport-sgv-ticket-bahnhofquai",
+    "title": {
+      "en": "Lake boat tickets at Bahnhofquai (SGV)",
+      "de": "Schiffstickets am Bahnhofquai (SGV)"
+    },
+    "tip": {
+      "en": "The Lake Lucerne boat company sells tickets at its Luzern station office next to the piers on Bahnhofquai. You can also buy them on board. The hours shown are the winter hours until 16 April 2027; summer hours are longer.",
+      "de": "Die Schifffahrtsgesellschaft des Vierwaldstättersees verkauft Tickets in ihrem Büro beim Bahnhof Luzern, bei den Stegen am Bahnhofquai. Sie können sie auch an Bord kaufen. Die angegebenen Zeiten gelten im Winter bis 16. April 2027, im Sommer ist länger offen."
+    },
+    "localTip": {
+      "en": "Your Swiss Travel Pass already covers most boat trips.",
+      "de": "Mit dem Swiss Travel Pass sind die meisten Schiffsfahrten schon inbegriffen."
+    },
+    "latitude": 47.051,
+    "longitude": 8.3101,
+    "address": "Bahnhofquai, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.051,8.3101",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "08:30",
+        "closes": "12:00"
+      },
+      {
+        "day": 2,
+        "opens": "08:30",
+        "closes": "12:00"
+      },
+      {
+        "day": 3,
+        "opens": "08:30",
+        "closes": "12:00"
+      },
+      {
+        "day": 4,
+        "opens": "08:30",
+        "closes": "12:00"
+      },
+      {
+        "day": 5,
+        "opens": "08:30",
+        "closes": "12:00"
+      },
+      {
+        "day": 1,
+        "opens": "12:50",
+        "closes": "17:00"
+      },
+      {
+        "day": 2,
+        "opens": "12:50",
+        "closes": "17:00"
+      },
+      {
+        "day": 3,
+        "opens": "12:50",
+        "closes": "17:00"
+      },
+      {
+        "day": 4,
+        "opens": "12:50",
+        "closes": "17:00"
+      },
+      {
+        "day": 5,
+        "opens": "12:50",
+        "closes": "17:00"
+      },
+      {
+        "day": 6,
+        "opens": "08:30",
+        "closes": "12:00"
+      },
+      {
+        "day": 6,
+        "opens": "12:50",
+        "closes": "16:00"
+      },
+      {
+        "day": 7,
+        "opens": "08:30",
+        "closes": "12:00"
+      },
+      {
+        "day": 7,
+        "opens": "12:50",
+        "closes": "15:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.lakelucerne.ch/en/information/opening-hours-ticket-offices/",
+    "categories": [
+      "transport"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "transport-sgv-ticket-bahnhofquai.jpg",
+        "alt": {
+          "en": "The Landungsbrücke 1 pier hall on the lake at Bahnhofquai with a lake boat alongside",
+          "de": "Die Halle der Landungsbrücke 1 am See beim Bahnhofquai mit einem Kursschiff daneben"
+        },
+        "author": "Jag9889",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Landungsbr%C3%BCcke_Meilihalle_Luzern_LU_20170319-jag9889_(cropped).jpg"
+      }
+    ],
+    "sources": [
+      "https://www.lakelucerne.ch/en/information/opening-hours-ticket-offices/"
+    ]
+  },
+  {
+    "key": "luggage-sbb-schliessfaecher",
+    "title": {
+      "en": "SBB luggage lockers at Luzern station",
+      "de": "SBB-Schliessfächer im Bahnhof Luzern"
+    },
+    "tip": {
+      "en": "Self-service lockers inside the station, in several sizes. They take coins, cards and Twint. The standard rental is six hours and the longest stay is 96 hours.",
+      "de": "Schliessfächer zum Selbstbedienen im Bahnhof, in mehreren Grössen. Bezahlt wird mit Münzen, Karte oder Twint. Die normale Mietdauer beträgt sechs Stunden, die längste Dauer 96 Stunden."
+    },
+    "localTip": {
+      "en": "Lockers fill up on summer weekends, so use the staffed counter as a back-up.",
+      "de": "An Sommerwochenenden sind die Fächer rasch belegt, dann hilft der bediente Schalter."
+    },
+    "latitude": 47.0496083,
+    "longitude": 8.3110847,
+    "address": "Bahnhof Luzern, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0496083,8.3110847",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.sbb.ch/de/bahnhof-services/am-bahnhof/services-am-bahnhof/gepaeckaufbewahrung/schliessfaecher.html",
+    "categories": [
+      "luggage-lockers"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "luggage-sbb-schliessfaecher.jpg",
+        "alt": {
+          "en": "A platform in the hall of Luzern station with a regional train and an arched roof",
+          "de": "Ein Perron in der Halle des Bahnhofs Luzern mit Regionalzug und gewölbtem Dach"
+        },
+        "author": "Ymblanter",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Lucerne_station_platforms.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.sbb.ch/de/bahnhof-services/am-bahnhof/services-am-bahnhof/gepaeckaufbewahrung/schliessfaecher.html",
+      "https://www.openstreetmap.org/node/6580136234"
+    ]
+  },
+  {
+    "key": "luggage-sbb-gepaeck",
+    "title": {
+      "en": "SBB luggage counter at Luzern station",
+      "de": "SBB Gepäckschalter im Bahnhof Luzern"
+    },
+    "tip": {
+      "en": "A staffed luggage service on the gallery level, first floor, of the station. Staff take your bags for the day, which helps when the lockers are full or your bag is large. It is open every day from morning to evening.",
+      "de": "Ein bedienter Gepäckservice auf der Galerie im ersten Obergeschoss des Bahnhofs. Das Personal nimmt Ihr Gepäck für den Tag entgegen, praktisch bei vollen Fächern oder grossem Gepäck. Er ist täglich von morgens bis abends offen."
+    },
+    "localTip": {
+      "en": "Ask for the price when you hand in the bags, as it depends on the item.",
+      "de": "Fragen Sie bei der Abgabe nach dem Preis, er hängt vom Gepäckstück ab."
+    },
+    "latitude": 47.05,
+    "longitude": 8.3103,
+    "address": "Bahnhof Luzern, Galerie 1. OG, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.05,8.3103",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "08:00",
+        "closes": "19:00"
+      },
+      {
+        "day": 2,
+        "opens": "08:00",
+        "closes": "19:00"
+      },
+      {
+        "day": 3,
+        "opens": "08:00",
+        "closes": "19:00"
+      },
+      {
+        "day": 4,
+        "opens": "08:00",
+        "closes": "19:00"
+      },
+      {
+        "day": 5,
+        "opens": "08:00",
+        "closes": "19:00"
+      },
+      {
+        "day": 6,
+        "opens": "08:00",
+        "closes": "19:00"
+      },
+      {
+        "day": 7,
+        "opens": "08:00",
+        "closes": "19:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.sbb.ch/de/reiseinformationen/bahnhoefe/bahnhof-finden/bahnhof-luzern/geschaefte/shop-detail.html/geo-gepaeckaufgabe-ea8e",
+    "categories": [
+      "luggage-lockers"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "luggage-sbb-gepaeck.jpg",
+        "alt": {
+          "en": "The long station building of Luzern seen across the lake, with the old gate at the left end",
+          "de": "Das lange Bahnhofsgebäude von Luzern über den See gesehen, am linken Ende das alte Tor"
+        },
+        "author": "Ymblanter",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Lucerne_station_building.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.sbb.ch/de/reiseinformationen/bahnhoefe/bahnhof-finden/bahnhof-luzern/geschaefte/shop-detail.html/geo-gepaeckaufgabe-ea8e"
+    ]
+  },
+  {
+    "key": "luggage-bounce-pilatusstrasse",
+    "title": {
+      "en": "Bounce luggage storage near the station",
+      "de": "Bounce Gepäckaufbewahrung beim Bahnhof"
+    },
+    "tip": {
+      "en": "A luggage storage point at Pilatusstrasse 1, across the road from the station. You book it online or in the Bounce app. It starts at CHF 6 per bag per day, with no size limit on the bag.",
+      "de": "Eine Gepäckaufbewahrung an der Pilatusstrasse 1, gegenüber vom Bahnhof. Sie buchen online oder in der Bounce-App. Der Preis beginnt bei CHF 6 pro Gepäckstück und Tag, ohne Grössenlimit."
+    },
+    "localTip": {
+      "en": "Check the opening hours in the app before you book.",
+      "de": "Prüfen Sie die Öffnungszeiten in der App, bevor Sie buchen."
+    },
+    "latitude": 47.04972,
+    "longitude": 8.30845,
+    "address": "Pilatusstrasse 1, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.04972,8.30845",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.luzern.com/de/package/bounce-gepaeckaufbewahrung",
+    "categories": [
+      "luggage-lockers"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "luggage-bounce-pilatusstrasse.jpg",
+        "alt": {
+          "en": "The wide Bahnhofplatz in front of the station on a grey day, with tram wires overhead",
+          "de": "Der weite Bahnhofplatz vor dem Bahnhof an einem grauen Tag, mit Fahrleitungen darüber"
+        },
+        "author": "Leonhard Lenz",
+        "licence": "CC0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Bahnhofplatz_Luzern_2022-10-01_01.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.luzern.com/de/package/bounce-gepaeckaufbewahrung"
+    ]
+  },
+  {
+    "key": "luggage-verkehrshaus-lockers",
+    "title": {
+      "en": "Verkehrshaus lockers for museum visitors",
+      "de": "Verkehrshaus-Schliessfächer für Museumsgäste"
+    },
+    "tip": {
+      "en": "Coin lockers in the entrance area of the Swiss Museum of Transport, on the lake east of the old town. They work with a CHF 2 deposit or a token from the ticket desk. They are for visitors of the museum.",
+      "de": "Münzschliessfächer im Eingangsbereich des Verkehrshauses der Schweiz, am See östlich der Altstadt. Sie funktionieren mit CHF 2 Depot oder einem Jeton von der Kasse. Sie sind für Gäste des Museums."
+    },
+    "localTip": {
+      "en": "A boat stops at the Verkehrshaus-Lido pier, so you can arrive by water.",
+      "de": "Beim Steg Verkehrshaus-Lido hält ein Schiff, Sie können also übers Wasser anreisen."
+    },
+    "latitude": 47.0528,
+    "longitude": 8.3358,
+    "address": "Haldenstrasse 44, 6006 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0528,8.3358",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "10:00",
+        "closes": "17:00"
+      },
+      {
+        "day": 2,
+        "opens": "10:00",
+        "closes": "17:00"
+      },
+      {
+        "day": 3,
+        "opens": "10:00",
+        "closes": "17:00"
+      },
+      {
+        "day": 4,
+        "opens": "10:00",
+        "closes": "17:00"
+      },
+      {
+        "day": 5,
+        "opens": "10:00",
+        "closes": "17:00"
+      },
+      {
+        "day": 6,
+        "opens": "10:00",
+        "closes": "17:00"
+      },
+      {
+        "day": 7,
+        "opens": "10:00",
+        "closes": "17:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.verkehrshaus.ch/besuchen/fuer-ihren-besuch/gut-zu-wissen.html",
+    "categories": [
+      "luggage-lockers"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "luggage-verkehrshaus-lockers.jpg",
+        "alt": {
+          "en": "The dark round building of the Verkehrshaus der Schweiz with an old blue tram on the rails in front",
+          "de": "Das dunkle Rundgebäude des Verkehrshauses der Schweiz mit einem alten blauen Tram auf den Schienen davor"
+        },
+        "author": "Bybbisch94",
+        "licence": "CC BY 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:20240906.Luzern.Verkehrshaus_der_Schweiz.-011.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.verkehrshaus.ch/besuchen/fuer-ihren-besuch/gut-zu-wissen.html",
+      "https://www.verkehrshaus.ch/en/your-visit/plan-a-visit/opening-times"
+    ]
+  },
+  {
+    "key": "cash-sbb-geldwechsel",
+    "title": {
+      "en": "SBB currency exchange at Luzern station",
+      "de": "SBB Geldwechsel im Bahnhof Luzern"
+    },
+    "tip": {
+      "en": "A currency exchange counter on the gallery level, first floor, of the station, in the same area as the SBB Travel Centre. It has long hours, from early morning to evening. Cards are accepted almost everywhere in Lucerne, so change only a small amount for cash.",
+      "de": "Ein Geldwechselschalter auf der Galerie im ersten Obergeschoss des Bahnhofs, im Bereich des SBB Reisezentrums. Er hat lange Öffnungszeiten, von früh bis abends. In Luzern wird fast überall mit Karte bezahlt, wechseln Sie also nur wenig Bargeld."
+    },
+    "localTip": {
+      "en": "For small purchases, a card or Twint works nearly everywhere.",
+      "de": "Für kleine Einkäufe genügt fast überall Karte oder Twint."
+    },
+    "latitude": 47.0501,
+    "longitude": 8.3104,
+    "address": "Bahnhof Luzern, Galerie 1. OG, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0501,8.3104",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "07:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 2,
+        "opens": "07:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 3,
+        "opens": "07:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 4,
+        "opens": "07:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 5,
+        "opens": "07:00",
+        "closes": "21:00"
+      },
+      {
+        "day": 6,
+        "opens": "07:00",
+        "closes": "20:00"
+      },
+      {
+        "day": 7,
+        "opens": "07:00",
+        "closes": "20:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.sbb.ch/de/reiseinformationen/bahnhoefe/bahnhof-finden/bahnhof-luzern/geschaefte/shop-detail.html/geo-geldwechsel-16cb",
+    "categories": [
+      "cash"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "cash-sbb-geldwechsel.jpg",
+        "alt": {
+          "en": "The old stone station gate of Luzern on Bahnhofplatz, a landmark next to the station entrance",
+          "de": "Das alte Bahnhofstor aus Stein in Luzern am Bahnhofplatz, ein Wahrzeichen neben dem Bahnhofseingang"
+        },
+        "author": "Karlunun",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_Bahnhofplatz_Bahnhof_175_20080706.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.sbb.ch/de/reiseinformationen/bahnhoefe/bahnhof-finden/bahnhof-luzern/geschaefte/shop-detail.html/geo-geldwechsel-16cb"
+    ]
+  },
+  {
+    "key": "cash-postomat-bahnhof",
+    "title": {
+      "en": "Postomat at Luzern station",
+      "de": "Postomat beim Bahnhof Luzern"
+    },
+    "tip": {
+      "en": "A Swiss Post cash machine at Bahnhofplatz 3, next to the station, open day and night. It pays out Swiss francs. Cards are accepted almost everywhere in Lucerne, so you need little cash.",
+      "de": "Ein Geldautomat der Post am Bahnhofplatz 3, neben dem Bahnhof, Tag und Nacht zugänglich. Er gibt Schweizer Franken aus. In Luzern wird fast überall mit Karte bezahlt, Sie brauchen kaum Bargeld."
+    },
+    "localTip": {
+      "en": "Check your bank fee for foreign cards before you withdraw.",
+      "de": "Prüfen Sie vorher die Gebühr Ihrer Bank für Auslandbezüge."
+    },
+    "latitude": 47.0501276,
+    "longitude": 8.3097433,
+    "address": "Bahnhofplatz 3, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0501276,8.3097433",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://places.post.ch/en/004PSTMAT_00428557403/postomat-luzern-bahnhof-sbb",
+    "categories": [
+      "cash"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "cash-postomat-bahnhof.jpg",
+        "alt": {
+          "en": "The Hauptpost building on Bahnhofplatz, a stone building with flags, near the Postomat",
+          "de": "Das Gebäude der Hauptpost am Bahnhofplatz, ein Steinbau mit Fahnen, in der Nähe des Postomaten"
+        },
+        "author": "Ida Berger",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Lucerna_07.jpg"
+      }
+    ],
+    "sources": [
+      "https://places.post.ch/en/004PSTMAT_00428557403/postomat-luzern-bahnhof-sbb"
+    ]
+  },
+  {
+    "key": "cash-ubs-bahnhofplatz",
+    "title": {
+      "en": "UBS cash machines on Bahnhofplatz",
+      "de": "UBS-Bancomaten am Bahnhofplatz"
+    },
+    "tip": {
+      "en": "UBS machines at Bahnhofplatz 2, across from the station, open day and night. They include a machine for euro withdrawals and one that is easy to reach from a wheelchair. The counters are open on weekdays only.",
+      "de": "UBS-Bancomaten am Bahnhofplatz 2, gegenüber vom Bahnhof, Tag und Nacht zugänglich. Dazu gehören ein Automat für Euro-Bezüge und einer, der auch im Rollstuhl gut erreichbar ist. Die Schalter sind nur werktags offen."
+    },
+    "localTip": {
+      "en": "Counters are open Monday to Friday, 9 am to 5 pm.",
+      "de": "Die Schalter sind Montag bis Freitag von 9 bis 17 Uhr offen."
+    },
+    "latitude": 47.050308,
+    "longitude": 8.3090757,
+    "address": "Bahnhofplatz 2, 6002 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050308,8.3090757",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.ubs.com/standorte/schweiz/luzern/bahnhofplatz-2/ubs-geschaeftsstelle-173.html",
+    "categories": [
+      "cash"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "cash-ubs-bahnhofplatz.jpg",
+        "alt": {
+          "en": "The Bahnhofplatz with a trolleybus, buses and the old station gate on a sunny day",
+          "de": "Der Bahnhofplatz mit Trolleybus, Bussen und dem alten Bahnhofstor an einem sonnigen Tag"
+        },
+        "author": "Re 460",
+        "licence": "CC BY-SA 3.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:VBL_NAW_NT_und_GT_Bahnhof_Luzern.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.ubs.com/standorte/schweiz/luzern/bahnhofplatz-2/ubs-geschaeftsstelle-173.html"
+    ]
+  },
+  {
+    "key": "cash-ubs-schwanenplatz",
+    "title": {
+      "en": "UBS cash machine at Schwanenplatz",
+      "de": "UBS-Bancomat am Schwanenplatz"
+    },
+    "tip": {
+      "en": "A UBS machine at Schwanenplatz 3, on the old-town side of the lake, open day and night. It can pay out Swiss francs and euros. Cards are accepted almost everywhere in the old town, from cafés to souvenir shops.",
+      "de": "Ein UBS-Bancomat am Schwanenplatz 3, auf der Altstadtseite am See, Tag und Nacht zugänglich. Er gibt Schweizer Franken und Euro aus. In der Altstadt wird fast überall mit Karte bezahlt, vom Café bis zum Souvenirladen."
+    },
+    "localTip": {
+      "en": "Cash is handy only for a few market stalls and tips.",
+      "de": "Bargeld braucht es nur für wenige Marktstände und Trinkgeld."
+    },
+    "latitude": 47.0537682,
+    "longitude": 8.3088665,
+    "address": "Schwanenplatz 3, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.0537682,8.3088665",
+    "weeklyHours": null,
+    "stayTag": "both",
+    "interests": [],
+    "mustVisit": false,
+    "outboundUrl": "https://www.ubs.com/standorte/schweiz/luzern/schwanenplatz-3/ubs-bancomat-175.html",
+    "categories": [
+      "cash"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "cash-ubs-schwanenplatz.jpg",
+        "alt": {
+          "en": "Pedal boats moored on the lake at Schwanenplatz with the Lucerne waterfront behind",
+          "de": "Tretboote am See beim Schwanenplatz, dahinter das Luzerner Seeufer"
+        },
+        "author": "Karlheinz Klingbeil from Germany",
+        "licence": "CC BY 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_30.9.2024_(54769856872).jpg"
+      }
+    ],
+    "sources": [
+      "https://www.ubs.com/standorte/schweiz/luzern/schwanenplatz-3/ubs-bancomat-175.html"
+    ]
+  }
+]

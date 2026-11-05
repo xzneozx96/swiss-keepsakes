@@ -6,10 +6,11 @@ const data = loadData()
 const empty = { categories: [], placeTitles: new Set<string>(), keepsakeNames: new Set<string>(), hashes: new Set<string>() }
 
 describe('[seed-curated] the curated data maps to writes', () => {
-  it('has the 33 places of the review, the 11 events and 13 food places of 05.11.2026 and 5 keepsakes', () => {
-    expect(data.places).toHaveLength(57)
+  it('has the 33 places of the review, the 11 events, 13 food places and 25 service places of 05.11.2026 and 5 keepsakes', () => {
+    expect(data.places).toHaveLength(82)
     expect(data.places.filter(place => place.group === 'events')).toHaveLength(11)
     expect(data.places.filter(place => place.group === 'food')).toHaveLength(13)
+    expect(data.places.filter(place => place.group === 'services')).toHaveLength(25)
     expect(data.keepsakes).toHaveLength(5)
   })
 
@@ -65,7 +66,7 @@ describe('[seed-curated] the curated data maps to writes', () => {
 
   it('plans everything on an empty store and nothing again once it exists', () => {
     const first = buildPlan(data, empty)
-    expect(first.placesToCreate).toHaveLength(57)
+    expect(first.placesToCreate).toHaveLength(82)
     expect(first.keepsakesToCreate).toHaveLength(5)
     const again = buildPlan(data, {
       categories: categorySpecs.map((c, i) => ({ id: String(i), slug: c.slug, nameEn: c.name.en })),
@@ -155,5 +156,15 @@ describe('[seed-curated] --group=food', () => {
     expect(plan.placesToCreate).toHaveLength(13)
     expect(plan.categoriesToCreate.map(spec => spec.slug).sort()).toEqual(['bars', 'cafes', 'chocolate', 'food-and-drink', 'markets', 'restaurants'])
     expect(data.places.filter(p => p.group === 'food').every(p => p.record.photos.length > 0)).toBe(true)
+  })
+})
+
+describe('[seed-curated] --group=services', () => {
+  it('plans the 25 service places with a photo each, and the four new home tiles switched on', () => {
+    const { plan } = groupPlan(data, empty, 'services')
+    expect(plan.placesToCreate).toHaveLength(25)
+    expect(plan.placesToCreate.every(p => p.record.photos.length > 0)).toBe(true)
+    const tiles = categorySpecs.filter(spec => ['sim-wifi', 'transport', 'luggage-lockers', 'cash'].includes(spec.slug))
+    expect(tiles.map(spec => [spec.slug, spec.showOnHome, spec.parent])).toEqual([['sim-wifi', true, 'useful-info'], ['transport', true, 'useful-info'], ['luggage-lockers', true, 'useful-info'], ['cash', true, 'useful-info']])
   })
 })
