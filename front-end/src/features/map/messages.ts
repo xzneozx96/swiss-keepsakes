@@ -45,12 +45,10 @@ export const mapEn = {
   'map.filter.hint': 'The other places stay on the map, dimmed.',
   'map.filter.pickOne': 'Pick at least one category.',
   'map.filter.all': 'All categories',
-  'map.filter.dated': 'Only places with a date',
   'map.filter.clear': 'Clear filter',
   'map.filter.show.one': 'Show 1 place',
   'map.filter.show.other': 'Show {count} places',
   'map.announce.all.one': 'The 1 place on the map',
   'map.announce.all.other': 'All {count} places',
   'map.announce.some': '{categories}: {count} of {total} places highlighted',
-  'map.announce.dated': 'Places with a date: {count} of {total} highlighted',
 }

@@ -94,6 +94,7 @@ The new rule:
 - **Fixed head, always first:** the hero, the map invitation and the service tiles. They never depend on the answers.
 - **Movable sections**, in the default order: see these first (history-culture), routes (lake-mountains), stories (no interest), the food section (food-drink), events (local-activities), the Victorinox showcase (shopping-keepsakes).
 - **Fixed tail, always last:** the ending line with its thread and red dot, then the advice banner.
+- **Events link (owner, 05.11.2026):** "See all on the map" in the events section opens the map with the Events category (`?category=events`). The map's "places with a date" filter (`?dated=1`) and its switch are removed; an old `?dated=1` link still opens the map and is cleaned from the address.
 - **With answers:** the sections whose interest the guest chose come first, in this interest order: history-culture, food-drink, lake-mountains, shopping-keepsakes, local-activities. The other sections follow in the default order. The stories match no interest, so they never move up. The stay answer does not move sections.
 - Nothing is hidden. A section with no data still draws nothing.
 - The thread of the tail starts from the Victorinox lake blue only when the showcase stands right above it. Otherwise it starts from the separator colour.

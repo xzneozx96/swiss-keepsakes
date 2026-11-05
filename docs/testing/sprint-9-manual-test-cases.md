@@ -493,7 +493,7 @@ Eight groups, 78 keys. Each key is drawn with one `reicon-react` drawing (key = 
 | # | Step | Expected result |
 |---|---|---|
 | 1 | Reload `/en`. | "See all on the map" shows after the three. |
-| 2 | Press it. | The map opens at `/en/map?dated=1` and lists dated pins only. |
+| 2 | Press it. | The map opens at `/en/map?category=events` with Events ticked in the Categories sheet (changed 05.11.2026: the date filter is gone). |
 
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
 
@@ -601,7 +601,7 @@ Eight groups, 78 keys. Each key is drawn with one `reicon-react` drawing (key = 
 
 | # | Step | Expected result |
 |---|---|---|
-| 1 | Open `/en/map?dated=1`. | The list and the card row hold only pins with a next date. |
+| 1 | Open an old link `/en/map?dated=1`. | The map opens unfiltered and the address becomes `/en/map` (the date filter was removed 05.11.2026). |
 | 2 | Read the screen-reader line (or the status text). | It says the map shows dated places. |
 
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
@@ -655,7 +655,7 @@ Eight groups, 78 keys. Each key is drawn with one `reicon-react` drawing (key = 
 
 | # | Step | Expected result |
 |---|---|---|
-| 1 | Open `/en/map?category=<slug>&dated=1`. | Only dated pins of that category are listed. |
+| 1 | Open `/en/map?category=<slug>&dated=1`. | The category filter applies; `dated` is dropped from the address. |
 
 - **Result:** ☐ Pass ☐ Fail ☐ Blocked. Actual result, if failed:
 

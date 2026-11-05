@@ -692,7 +692,7 @@ describe('[E4.7][AC90] the deep link /map?place=<slug>', () => {
   })
 })
 
-describe('[E4.13][AC42][AC90] the map opens filtered through ?category and ?dated', () => {
+describe('[E4.13][AC42][AC90] the map opens filtered through ?category', () => {
   const inList = async (label = en['map.view.list']) => {
     await userEvent.click(await screen.findByRole('button', { name: label }))
 
@@ -737,23 +737,22 @@ describe('[E4.13][AC42][AC90] the map opens filtered through ?category and ?date
     expect(within(dialog).getByRole<HTMLInputElement>('checkbox', { name: /Food and drink/ }).checked).toBe(false)
   })
 
-  it('aC-3 dated lists only the pins with a next date and dims the rest', async () => {
+  it('aC-3 a legacy ?dated=1 is not applied: every pin is listed, there is no switch, and the address is cleaned', async () => {
     await loaded('/en/map?dated=1')
-    const rows = await inList()
+    await waitFor(() => expect(search()).toEqual({}))
 
-    expect(rows).toHaveLength(1)
-    expect(rows[0]).toContain('Organ Concert')
-    await userEvent.click(screen.getByRole('button', { name: en['map.view.map'] }))
-    expect(pinButton('Chapel Bridge')).toHaveAccessibleName(/dimmed/)
+    expect(await inList()).toHaveLength(5)
+    expect(screen.queryAllByRole('button', { name: /dimmed/ })).toHaveLength(0)
+    const dialog = await showSheet()
+
+    expect(within(dialog).queryByRole('switch')).toBeNull()
   })
 
-  it('aC-3 category and dated together list the pins that are in both', async () => {
-    vi.mocked(fetchMapPins).mockResolvedValue([pinA, pinB, pinC, { ...pinD, nextDate: pinE.nextDate }, pinE])
+  it('aC-3 a legacy dated beside a category keeps the category and cleans dated', async () => {
     await loaded('/en/map?category=c3&dated=1')
-    const rows = await inList()
+    await waitFor(() => expect(search()).toEqual({ category: 'c3' }))
 
-    expect(rows).toHaveLength(1)
-    expect(rows[0]).toContain('Wine Market')
+    expect(await inList()).toHaveLength(2)
   })
 
   it('aC-4 an unknown slug opens an unfiltered map with a notice that closes, and the address loses it', async () => {

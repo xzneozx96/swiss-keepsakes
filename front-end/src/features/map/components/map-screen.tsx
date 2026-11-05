@@ -1,6 +1,6 @@
 import type { PublicMapItem } from '@sk/api-contract'
 
-import type { MapSearch } from '@/features/map/lib/search-params'
+import type { MapAddress, MapSearch } from '@/features/map/lib/search-params'
 import { Button } from '@heroui/react'
 
 import { zurichDate } from '@sk/domain/dates'
@@ -41,17 +41,16 @@ const MAP_VIEW = { center: LUCERNE, zoom: 15.2, minZoom: 12, maxZoom: 18.5 }
  * map and never removes one, while the card row and the list hold only the chosen places. `place` is the slug of
  * `?place=<slug>`: its card opens once the places have loaded, and a slug the map does not hold shows a notice (AC90).
  * Show more on a card opens the details sheet of the open pin (N03, E4.7).
- * `category` and `dated` are the address's filters (E4.13): they open the map filtered, a `place` clears them, and a
+ * `category` is the address's filter (E4.13): it opens the map filtered, a `place` clears it, an old `dated` is cleaned away, and a
  * choice in the sheet is written back through `onSearchChange` (the route replaces the address, never pushes).
  */
-export function MapScreen({ place, category, dated, onSearchChange }: MapSearch & { onSearchChange?: (search: MapSearch) => void }) {
+export function MapScreen({ place, category, dated, onSearchChange }: MapAddress & { onSearchChange?: (search: MapSearch) => void }) {
   const { t, language, intlLocale } = useLocale()
   const data = useMapData(language)
   const headingId = useId()
   const [today] = useState(() => zurichDate(new Date()))
   // Empty means All.
   const [chosen, setChosen] = useState<string[]>([])
-  const [datedOnly, setDatedOnly] = useState(false)
   // The address's filter is read once per value, when the categories have arrived: the raw address and the cleaned one both count as read.
   const [handledFilter, setHandledFilter] = useState<string[]>([])
   const [badCategory, setBadCategory] = useState(false)
@@ -72,17 +71,15 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
   const rankedPins = useRankedPins(data.pins)
   const ranked = dataReady ? rankedPins : NO_PINS
   const located = useMemo(() => ranked.map(pin => ({ ...pin, coordinates: [pin.longitude, pin.latitude] as [number, number] })), [ranked])
-  const filter = { chosen, datedOnly }
+  const filter = { chosen }
   const kept = keepFiltered(ranked, filter, data.categories)
   const litIds = new Set(kept.map(pin => pin.id))
-  const dimmedIds = useMemo(() => new Set(ranked.filter(pin => !isLit(pin, { chosen, datedOnly }, data.categories)).map(pin => pin.id)), [ranked, chosen, datedOnly, data.categories])
+  const dimmedIds = useMemo(() => new Set(ranked.filter(pin => !isLit(pin, { chosen }, data.categories)).map(pin => pin.id)), [ranked, chosen, data.categories])
   const resolved = useMemo(() => dataReady ? resolveMapFilter({ place, category, dated }, data.categories) : undefined, [dataReady, place, category, dated, data.categories])
   const addressKey = JSON.stringify({ place, category, dated })
   const filterHandled = handledFilter.includes(addressKey)
-  const isFiltered = chosen.length > 0 || datedOnly
+  const isFiltered = chosen.length > 0
   const openId = view === 'map' && selectedId !== undefined && litIds.has(selectedId) ? selectedId : undefined
-  // The pill counts every active filter, so `?dated=1` alone still shows the map as filtered.
-  const chosenCount = chosen.length + (datedOnly ? 1 : 0)
   const openPin = openId ? ranked.find(pin => pin.id === openId) : undefined
   const detail = useQuery({ ...mapQueries.pin(openId ?? '', language), enabled: apiEnabled && openId !== undefined })
   const index = openPin ? kept.findIndex(pin => pin.id === openPin.id) : -1
@@ -91,7 +88,6 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
   if (resolved && !filterHandled) {
     setHandledFilter([addressKey, JSON.stringify(resolved.address)])
     setChosen(resolved.chosen)
-    setDatedOnly(resolved.datedOnly)
     setBadCategory(resolved.unknownCategory)
   }
   if (dataReady && place !== undefined && handledPlace !== place) {
@@ -166,20 +162,19 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-pin-return="${id}"]`)?.focus())
   }
 
-  function applyFilter(next: string[], nextDated: boolean) {
-    const first = keepFiltered(ranked, { chosen: next, datedOnly: nextDated }, data.categories)[0]
+  function applyFilter(next: string[]) {
+    const first = keepFiltered(ranked, { chosen: next }, data.categories)[0]
 
-    // The sheet's choice is the whole filter (the categories and the dated switch), and it moves the address off any place
+    // The sheet's choice is the whole filter and it moves the address off any place
     // link, so a copied address reproduces the view and the sheet opens on what the address says.
     setChosen(next)
-    setDatedOnly(nextDated)
     setFirstOpened(true)
-    onSearchChange?.(filterAddress(next, data.categories, nextDated))
+    onSearchChange?.(filterAddress(next, data.categories))
     setFilterOpen(false)
     setMoreOpen(false)
     setView('map')
     // A filter that keeps nothing opens no card and drops the one that was open.
-    if ((next.length > 0 || nextDated) && first)
+    if (next.length > 0 && first)
       openCard(first.id)
     else setSelectedId(undefined)
   }
@@ -189,13 +184,11 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
   const places = t(kept.length === 1 ? 'map.places.one' : 'map.places.other', { count: kept.length })
   const announce = !isFiltered
     ? t(ranked.length === 1 ? 'map.announce.all.one' : 'map.announce.all.other', { count: ranked.length })
-    : chosen.length === 0
-      ? t('map.announce.dated', { count: kept.length, total: ranked.length })
-      : t('map.announce.some', {
-          categories: data.categories.filter(category => chosen.includes(category.id)).map(category => categoryName(category, language)).join(', '),
-          count: kept.length,
-          total: ranked.length,
-        })
+    : t('map.announce.some', {
+        categories: data.categories.filter(category => chosen.includes(category.id)).map(category => categoryName(category, language)).join(', '),
+        count: kept.length,
+        total: ranked.length,
+      })
 
   return (
     <section aria-labelledby={headingId} className="relative min-h-[28rem] flex-1 overflow-hidden">
@@ -210,7 +203,7 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
         overlay={(
           <>
             <MapPills
-              chosenCount={chosenCount}
+              chosenCount={chosen.length}
               dataPending={data.isPending}
               hasPins={dataReady && data.pins.length > 0}
               view={view}
@@ -272,7 +265,7 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
         <div className="pointer-events-none absolute inset-x-3 top-[70px] z-[9] flex justify-center">
           <div className="pointer-events-auto flex w-full flex-col items-center gap-2 rounded-3xl bg-surface p-5 text-center shadow-overlay" role="status">
             <p className="font-serif text-card-title text-balance">{t('map.none.title')}</p>
-            <Button className="min-h-11" variant="secondary" onPress={() => applyFilter([], false)}>{t('map.filter.clear')}</Button>
+            <Button className="min-h-11" variant="secondary" onPress={() => applyFilter([])}>{t('map.filter.clear')}</Button>
           </div>
         </div>
       )}
@@ -309,7 +302,6 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
         <CategoriesSheet
           categories={data.categories}
           chosen={chosen}
-          datedOnly={datedOnly}
           pins={ranked}
           onApply={applyFilter}
           onClose={() => setFilterOpen(false)}

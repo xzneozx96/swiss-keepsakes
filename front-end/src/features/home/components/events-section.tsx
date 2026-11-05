@@ -10,7 +10,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { Rail } from '@/features/discovery/components/section'
 import { pinIcon } from '@/features/map/lib/categories'
 
-import { dayParts, eventsSplit, shownDay, whenLine } from '../lib/events'
+import { dayParts, EVENTS_CATEGORY_SLUG, eventsSplit, shownDay, whenLine } from '../lib/events'
 import { PhotoPoster, POSTER_TITLE } from './photo-poster'
 import { SectionHeading } from './section-heading'
 
@@ -111,7 +111,7 @@ function ComingUp({ events, seeAll, today }: { events: EventPin[], seeAll: boole
         })}
       </ol>
       {seeAll && (
-        <Link className={`flex min-h-11 items-center justify-center rounded-full bg-default px-4 text-sm font-medium ${PRESS}`} params={{ lang: language }} search={{ dated: 1 }} to="/$lang/map">
+        <Link className={`flex min-h-11 items-center justify-center rounded-full bg-default px-4 text-sm font-medium ${PRESS}`} params={{ lang: language }} search={{ category: EVENTS_CATEGORY_SLUG }} to="/$lang/map">
           {t('homePage.events.seeAll')}
         </Link>
       )}

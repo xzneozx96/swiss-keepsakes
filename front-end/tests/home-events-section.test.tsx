@@ -114,14 +114,14 @@ describe('[E4.13][AC54][AC95] the events section', () => {
     expect(screen.queryByRole('link', { name: en['homePage.events.seeAll'] })).toBeNull()
   })
 
-  it('links See all on the map to ?dated=1 only when more than three are later (AC-2, AC-6)', async () => {
+  it('links See all on the map to the Events category only when more than three are later (AC-2, AC-6)', async () => {
     read = { pins: ['A', 'B', 'C', 'D'].map((name, i) => event(name, { firstDay: `2026-12-0${i + 1}` })), categories: [] }
     renderAt('/en')
 
     const coming = await screen.findByRole('region', { name: en['homePage.events.comingUp'] })
 
     expect(within(coming).getAllByRole('listitem')).toHaveLength(3)
-    expect(within(coming).getByRole('link', { name: en['homePage.events.seeAll'] })).toHaveAttribute('href', '/en/map?dated=1')
+    expect(within(coming).getByRole('link', { name: en['homePage.events.seeAll'] })).toHaveAttribute('href', '/en/map?category=events')
     expect(within(coming).getByText('December')).toBeInTheDocument()
   })
 

@@ -7,6 +7,12 @@ import { dateTimeFormat } from '@sk/domain/shared'
 
 import { nextDateLine } from '@/features/map/lib/next-date'
 
+/**
+ * The map category that holds every event; "See all on the map" opens it. Like the food slug, it is made once from the category's first
+ * name and never changes on a rename.
+ */
+export const EVENTS_CATEGORY_SLUG = 'events'
+
 /** An event whose first day is no more than this many days after today is "This week". */
 const WEEK_DAYS = 7
 /** "Coming up" lists at most this many later events. */

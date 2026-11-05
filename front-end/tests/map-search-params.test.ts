@@ -45,7 +45,7 @@ const pins = [bakery, restaurant, walk, concert]
 const titles = (list: PublicMapItem[]) => list.map(item => item.title)
 
 describe('[E4.13][AC42][AC90] validateMapSearch', () => {
-  it('aC-4 keeps place, category and dated=1 and drops every other value', () => {
+  it('aC-4 keeps place and category, still reads an old dated=1 (to be cleaned) and drops every other value', () => {
     expect(validateMapSearch({ place: 'a', category: 'food-and-drink', dated: 1 })).toEqual({ place: 'a', category: 'food-and-drink', dated: 1 })
     expect(validateMapSearch({ dated: '1' })).toEqual({ dated: 1 })
     expect(validateMapSearch({ dated: 2, place: '' })).toEqual({})
@@ -63,7 +63,7 @@ describe('[E4.13][AC42][AC90] resolveMapFilter', () => {
   it('aC-1 a parent slug chooses the parent, which covers its sub-categories', () => {
     const filter = resolveMapFilter({ category: 'food-and-drink' }, categories)
 
-    expect(filter).toMatchObject({ chosen: [food.id], datedOnly: false, unknownCategory: false, addressChanged: false })
+    expect(filter).toMatchObject({ chosen: [food.id], unknownCategory: false, addressChanged: false })
     expect(titles(keepFiltered(pins, filter, categories))).toEqual(['Pin 1', 'Pin 2'])
   })
 
@@ -78,15 +78,18 @@ describe('[E4.13][AC42][AC90] resolveMapFilter', () => {
     expect(resolveMapFilter({ category: 'bakeries,walks' }, categories).chosen).toEqual([bakeries.id, walks.id])
   })
 
-  it('aC-3 dated keeps the pins with a next date', () => {
+  it('aC-3 a legacy dated is not applied: it is cleaned from the address and every pin stays', () => {
     const filter = resolveMapFilter({ dated: 1 }, categories)
 
-    expect(filter).toMatchObject({ chosen: [], datedOnly: true })
-    expect(titles(keepFiltered(pins, filter, categories))).toEqual(['Pin 2', 'Pin 4'])
+    expect(filter).toMatchObject({ chosen: [], address: {}, addressChanged: true })
+    expect(titles(keepFiltered(pins, filter, categories))).toHaveLength(4)
   })
 
-  it('aC-3 category and dated together intersect', () => {
-    expect(titles(keepFiltered(pins, resolveMapFilter({ category: 'food-and-drink', dated: 1 }, categories), categories))).toEqual(['Pin 2'])
+  it('aC-3 a legacy dated beside a category keeps the category and cleans dated', () => {
+    const filter = resolveMapFilter({ category: 'food-and-drink', dated: 1 }, categories)
+
+    expect(filter).toMatchObject({ chosen: [food.id], address: { category: 'food-and-drink' }, addressChanged: true })
+    expect(titles(keepFiltered(pins, filter, categories))).toEqual(['Pin 1', 'Pin 2'])
   })
 
   it('aC-4 an unknown or empty slug opens unfiltered, flags the problem and drops the parameter', () => {
@@ -105,7 +108,7 @@ describe('[E4.13][AC42][AC90] resolveMapFilter', () => {
   it('aC-6 a place clears category and dated, and the address loses them', () => {
     const filter = resolveMapFilter({ place: 'pin-3', category: 'food-and-drink', dated: 1 }, categories)
 
-    expect(filter).toMatchObject({ chosen: [], datedOnly: false, unknownCategory: false, address: { place: 'pin-3' }, addressChanged: true })
+    expect(filter).toMatchObject({ chosen: [], unknownCategory: false, address: { place: 'pin-3' }, addressChanged: true })
     expect(keepFiltered(pins, filter, categories)).toHaveLength(4)
   })
 
@@ -116,9 +119,8 @@ describe('[E4.13][AC42][AC90] resolveMapFilter', () => {
 
 describe('[E4.13][AC42][AC93] filterAddress', () => {
   it('aC-5 writes the chosen ids as slugs, and nothing when nothing is chosen', () => {
-    expect(filterAddress([food.id], categories, false)).toEqual({ category: 'food-and-drink' })
-    expect(filterAddress([bakeries.id, walks.id], categories, false)).toEqual({ category: 'bakeries,walks' })
-    expect(filterAddress([], categories, false)).toEqual({})
-    expect(filterAddress([], categories, true)).toEqual({ dated: 1 })
+    expect(filterAddress([food.id], categories)).toEqual({ category: 'food-and-drink' })
+    expect(filterAddress([bakeries.id, walks.id], categories)).toEqual({ category: 'bakeries,walks' })
+    expect(filterAddress([], categories)).toEqual({})
   })
 })

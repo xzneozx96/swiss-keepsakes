@@ -46,12 +46,10 @@ export const mapDe: Record<keyof typeof mapEn, string> = {
   'map.filter.hint': 'Die anderen Orte bleiben gedimmt auf der Karte.',
   'map.filter.pickOne': 'Wählen Sie mindestens eine Kategorie.',
   'map.filter.all': 'Alle Kategorien',
-  'map.filter.dated': 'Nur Orte mit Datum',
   'map.filter.clear': 'Filter zurücksetzen',
   'map.filter.show.one': '1 Ort anzeigen',
   'map.filter.show.other': '{count} Orte anzeigen',
   'map.announce.all.one': 'Der 1 Ort auf der Karte',
   'map.announce.all.other': 'Alle {count} Orte',
   'map.announce.some': '{categories}: {count} von {total} Orten hervorgehoben',
-  'map.announce.dated': 'Orte mit Datum: {count} von {total} hervorgehoben',
 }
