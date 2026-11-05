@@ -235,7 +235,7 @@ describe('[E4.13][AC95] the order follows the guest\'s interests below the tiles
     answerWith(['local-activities', 'history-culture'])
     const { names } = await headings()
 
-    expect(names).toEqual([...head, title('must'), title('events'), title('routes'), en['homePage.stories.title'], title('food'), en['home.victorinox.title'], en['home.advice.title']])
+    expect(names).toEqual([...head, title('must'), title('routes'), title('events'), en['homePage.stories.title'], title('food'), en['home.victorinox.title'], en['home.advice.title']])
   })
 
   it('puts the Victorinox showcase first for shopping-keepsakes, and the thread no longer starts from lake blue (AC-4)', async () => {
