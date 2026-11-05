@@ -1,10 +1,27 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { DemoStore } from '@/features/demo/store'
 
-import { clearGuestData } from '@/features/demo/store'
+import { clearGuestData, updateCollection } from '@/features/demo/store'
 import { demoGuest } from '@/features/orders/seed'
 import { forgetStoresSession, refreshStoresSession } from '@/features/stores/lib/forget-session'
 import { loadAuthClient } from './auth-api'
+
+/**
+ * The account screens show who is signed in (owner, 05.11.2026): the session's name, email and photo replace the demo
+ * guest's, so a real sign-in never shows "Anna Keller". Without a photo the avatar falls back to one picked from the name.
+ * The store is written only when something differs, so a session refresh does not re-render the screen.
+ */
+export function syncIdentity(store: DemoStore, user: { name?: string | null, email: string, image?: string | null }) {
+  const guest = store.getState().data.guests.find(g => g.id === demoGuest.id)
+  // A session may carry no name (an email sign-up without one): the email stands in.
+  const name = user.name?.trim() || user.email
+  const avatar = user.image ?? undefined
+
+  if (!guest || (guest.name === name && guest.email === user.email && guest.avatar === avatar))
+    return
+  updateCollection(store, 'guests', guests =>
+    guests.map(g => (g.id === demoGuest.id ? { ...g, name, email: user.email, avatar } : g)))
+}
 
 /**
  * Keeps the store's signed-in guest in step with the API's session cookie. It never blocks anything: the
@@ -44,6 +61,7 @@ export function followSession(store: DemoStore, queryClient: QueryClient) {
               data: { ...s.data, signedInGuestId: demoGuest.id },
             }))
           }
+          syncIdentity(store, data.user)
 
           return
         }
