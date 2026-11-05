@@ -28,8 +28,8 @@ const spreuer = {
     'Bilder, die an die Zeit erinnern',
   ),
   body: lt(
-    'The Spreuer Bridge is a covered wooden footbridge over the Reuss. Under its roof hangs a Dance of Death, a cycle of paintings from the 17th century that the official tourist listing dates to 1625–1635. In each picture Death comes for a person from a different walk of life. It is a very old way of asking what matters when time is limited. Not every mood suits these pictures, so your guide introduces them gently and with the age of the group in mind. Cross slowly, keep the walkway clear for others, and give one picture more time than you planned.',
-    'Die Spreuerbrücke ist eine gedeckte Holzbrücke über die Reuss. Unter ihrem Dach hängt ein Totentanz, ein Bilderzyklus aus dem 17. Jahrhundert, den der offizielle Tourismuseintrag auf 1625–1635 datiert. In jedem Bild holt der Tod einen Menschen aus einem anderen Stand. Es ist eine sehr alte Art zu fragen, was zählt, wenn die Zeit begrenzt ist. Nicht jede Stimmung passt zu diesen Bildern, deshalb ordnet Ihre Führung sie behutsam und altersgerecht ein. Gehen Sie langsam, halten Sie den Durchgang für andere frei und geben Sie einem Bild mehr Zeit, als Sie geplant hatten.',
+    'The Spreuer Bridge is a covered wooden footbridge over the Reuss. Under its roof hangs a Dance of Death, a cycle of paintings from the 17th century that the official tourist listing dates to 1625–1635. In each picture Death comes for a person from a different walk of life. It is a very old way of asking what matters when time is limited. The pictures are about death, so they may not suit every mood or very young children. Cross slowly, keep the walkway clear for others, and give one picture more time than you planned.',
+    'Die Spreuerbrücke ist eine gedeckte Holzbrücke über die Reuss. Unter ihrem Dach hängt ein Totentanz, ein Bilderzyklus aus dem 17. Jahrhundert, den der offizielle Tourismuseintrag auf 1625–1635 datiert. In jedem Bild holt der Tod einen Menschen aus einem anderen Stand. Es ist eine sehr alte Art zu fragen, was zählt, wenn die Zeit begrenzt ist. Die Bilder handeln vom Tod und passen nicht zu jeder Stimmung oder zu sehr kleinen Kindern. Gehen Sie langsam, halten Sie den Durchgang für andere frei und geben Sie einem Bild mehr Zeit, als Sie geplant hatten.',
   ),
   description: lt(
     'Cross the covered bridge from north to south and look up at the Dance of Death paintings, keeping the walkway clear.',
@@ -49,12 +49,12 @@ const needleDam = {
     'Wie eine Stadt ihren Fluss behütet',
   ),
   body: lt(
-    'The Needle Dam crosses the Reuss just below the Old Town. It works with wooden needles, upright timbers set in the river to hold back or release water, and it was renovated between 2009 and 2011. The idea is simple and old: manage the flow with parts that people can see and understand. From the bank you see the needles and the rushing water, and your guide explains how a city manages a river it lives beside. Staff moving needles is not a scheduled part of the tour, and the walk stays on public ground.',
-    'Das Nadelwehr quert die Reuss unterhalb der Altstadt. Es arbeitet mit hölzernen Nadeln, aufrechten Balken, die im Fluss gesetzt werden, um Wasser zurückzuhalten oder freizugeben, und wurde 2009–2011 erneuert. Die Idee ist einfach und alt: den Abfluss mit Teilen regeln, die man sehen und verstehen kann. Vom Ufer aus sehen Sie die Nadeln und das strömende Wasser, und Ihre Führung erklärt, wie eine Stadt mit dem Fluss umgeht, an dem sie lebt. Arbeiten am Wehr sind kein geplanter Teil der Tour, und der Rundgang bleibt auf öffentlichem Grund.',
+    'The Needle Dam crosses the Reuss just below the Old Town. It works with wooden needles, upright timbers set in the river to hold back or release water, and it was renovated between 2009 and 2011. The idea is simple and old: manage the flow with parts that people can see and understand. From the bank you see the needles and the rushing water, which shows how a city manages a river it lives beside. Staff moving needles is not scheduled, and the viewpoint is on public ground.',
+    'Das Nadelwehr quert die Reuss unterhalb der Altstadt. Es arbeitet mit hölzernen Nadeln, aufrechten Balken, die im Fluss gesetzt werden, um Wasser zurückzuhalten oder freizugeben, und wurde 2009–2011 erneuert. Die Idee ist einfach und alt: den Abfluss mit Teilen regeln, die man sehen und verstehen kann. Vom Ufer aus sehen Sie die Nadeln und das strömende Wasser, woran man sieht, wie eine Stadt mit dem Fluss umgeht, an dem sie lebt. Arbeiten am Wehr sind nicht geplant, und der Aussichtspunkt liegt auf öffentlichem Grund.',
   ),
   description: lt(
-    'See the wooden needles of the dam from the public viewpoint on the south bank and hear how the river is managed.',
-    'Sehen Sie die Holznadeln des Wehrs vom öffentlichen Aussichtspunkt am Südufer und erfahren Sie, wie der Fluss reguliert wird.',
+    'See the wooden needles of the dam from the public viewpoint on the south bank and see how the river is managed.',
+    'Sehen Sie die Holznadeln des Wehrs vom öffentlichen Aussichtspunkt am Südufer und sehen Sie, wie der Fluss reguliert wird.',
   ),
   note: lt(
     'A public viewpoint: there is no demonstration schedule, and the working structure cannot be entered.',
@@ -81,8 +81,8 @@ const itinerary: TourStop[] = [
     id: 'station',
     name: lt('Bahnhofplatz, Luzerne', 'Bahnhofplatz Luzern'),
     description: lt(
-      'Meet by the historic station arch. Your guide confirms the exact meeting pin before the day, so please arrive by 08:50.',
-      'Treffpunkt beim historischen Bahnhofportal. Ihre Führung bestätigt den genauen Standort vor dem Tag, bitte seien Sie bis 08:50 Uhr da.',
+      'Start at Bahnhofplatz, by the historic station arch.',
+      'Start auf dem Bahnhofplatz, beim historischen Bahnhofportal.',
     ),
     minutesFromStart: 0,
     coordinates: [8.3093, 47.0511],
@@ -117,28 +117,23 @@ const sections: TourSection[] = [
     layout: 'text',
     title: lt('Who this walk is for', 'Für wen ist dieser Rundgang gedacht?'),
     body: lt(
-      'First-time visitors who want context as well as the famous views. Returning travellers who want to notice more than they did before. Couples and friends who enjoy conversation, architecture and small discoveries. Families with curious older children who like finding details and asking why.\n\nThe guide can adapt the language and emphasis to the group. The paintings at Spreuer Bridge include imagery of death and are introduced sensitively.',
-      'Erstbesucher, die berühmte Ansichten verstehen möchten. Wiederkehrende, die neue Einzelheiten entdecken wollen. Paare und Freunde, die Architektur, Geschichten und Gespräche schätzen. Familien mit neugierigen älteren Kindern, die gerne suchen und nachfragen.\n\nSprache und Schwerpunkte lassen sich an die Gruppe anpassen. Die Todesdarstellungen auf der Spreuerbrücke werden altersgerecht und behutsam eingeordnet.',
+      'First-time visitors who want context as well as the famous views. Returning travellers who want to notice more than they did before. Couples and friends who enjoy conversation, architecture and small discoveries. Families with curious older children who like finding details and asking why.\n\nThe paintings at Spreuer Bridge show imagery of death; keep that in mind with younger children.',
+      'Erstbesucher, die berühmte Ansichten verstehen möchten. Wiederkehrende, die neue Einzelheiten entdecken wollen. Paare und Freunde, die Architektur, Geschichten und Gespräche schätzen. Familien mit neugierigen älteren Kindern, die gerne suchen und nachfragen.\n\nDie Bilder auf der Spreuerbrücke zeigen Todesdarstellungen; das bei jüngeren Kindern bedenken.',
     ),
   },
   {
     id: 'glance',
     layout: 'facts',
-    title: lt('The experience at a glance', 'Das Erlebnis auf einen Blick'),
+    title: lt('At a glance', 'Auf einen Blick'),
     items: [
       row(
-        'g-group',
-        lt('Group', 'Gruppe'),
-        lt('About 2–8 guests (proposed)', 'Etwa 2–8 Gäste (vorgeschlagen)'),
-      ),
-      row(
         'g-time',
-        lt('Guided walk', 'Führung'),
-        lt('09:00 to 12:00', '09:00 bis 12:00 Uhr'),
+        lt('Time needed', 'Zeitbedarf'),
+        lt('About 3 hours, plus lunch if you stop', 'Etwa 3 Stunden, plus Mittagessen bei einem Halt'),
         {
           detail: lt(
-            'Optional reserved lunch until 13:00; back at the station about 13:15.',
-            'Auf Wunsch reserviertes Mittagessen bis 13:00; Bahnhof gegen 13:15.',
+            'Lunch is optional; the walk back to the station takes 10–15 minutes.',
+            'Das Mittagessen ist optional; der Rückweg zum Bahnhof dauert 10–15 Minuten.',
           ),
         },
       ),
@@ -175,8 +170,8 @@ const sections: TourSection[] = [
         's-postcard',
         lt('Look beyond the postcard', 'Mehr sehen als das Postkartenmotiv'),
         lt(
-          'At Chapel Bridge the guide draws attention to timber, paintings and the city around them. The story of rebuilding asks a simple question: why do certain places matter so much to the people who live beside them? The Water Tower is viewed from outside.',
-          'An der Kapellbrücke lenkt die Führung den Blick auf das Zusammenspiel von Holz, Bildern und Stadt. Die Geschichte des Wiederaufbaus stellt eine einfache Frage: Warum bedeuten bestimmte Orte ihren Bewohnern so viel? Der Wasserturm wird von aussen betrachtet.',
+          'At Chapel Bridge, look at the timber, the paintings and the city around them. The story of the rebuilding raises a simple question: why do certain places matter so much to the people who live beside them? The Water Tower is viewed from outside.',
+          'An der Kapellbrücke lohnt der Blick auf das Zusammenspiel von Holz, Bildern und Stadt. Die Geschichte des Wiederaufbaus wirft eine einfache Frage auf: Warum bedeuten bestimmte Orte ihren Bewohnern so viel? Der Wasserturm wird von aussen betrachtet.',
         ),
       ),
       row(
@@ -186,8 +181,8 @@ const sections: TourSection[] = [
           'Die Stadt in ihren Einzelheiten lesen',
         ),
         lt(
-          'In Kornmarkt and Weinmarkt the focus shifts to individual façades, the fountain and the shape of the squares. Choose a detail that catches your eye and hear what public places say about a trading city.',
-          'Am Kornmarkt und Weinmarkt treten einzelne Fassaden, der Brunnen und die Form der Plätze in den Vordergrund. Wählen Sie ein Detail, das Sie anspricht, und erfahren Sie, was öffentliche Räume über eine Handelsstadt erzählen.',
+          'In Kornmarkt and Weinmarkt the focus shifts to individual façades, the fountain and the shape of the squares. Pick a detail that catches your eye and ask what public places say about a trading city.',
+          'Am Kornmarkt und Weinmarkt treten einzelne Fassaden, der Brunnen und die Form der Plätze in den Vordergrund. Wählen Sie ein Detail, das Sie anspricht, und fragen Sie, was öffentliche Räume über eine Handelsstadt erzählen.',
         ),
       ),
       row(
@@ -205,7 +200,7 @@ const sections: TourSection[] = [
           'Mit Geschmack und einer eigenen Erinnerung abschliessen',
         ),
         lt(
-          'Guests might share the detail they will remember most. An optional lunch gives the morning an unhurried ending.',
+          'Which detail will you remember most? An optional lunch gives the morning an unhurried ending.',
           'Welches Detail wird Ihnen besonders in Erinnerung bleiben? Ein optionales Mittagessen lässt den Vormittag in Ruhe ausklingen.',
         ),
       ),
@@ -216,17 +211,17 @@ const sections: TourSection[] = [
     layout: 'timeline',
     title: lt('A morning with room to linger', 'Zeit zum Entdecken'),
     body: lt(
-      'A proposed timetable for a small group. It is a designed schedule, not a booked departure. This is a leisurely three-hour experience, not three hours of continuous walking.',
-      'Vorgeschlagener Ablauf für eine kleine Gruppe, noch keine gebuchte Abfahrt. Die dreistündige Führung enthält viele Stopps, nicht drei Stunden reine Gehzeit.',
+      'Rough timings for a leisurely three hours, not three hours of continuous walking.',
+      'Ungefähre Zeiten für den dreistündigen Rundgang mit vielen Stopps, nicht drei Stunden reine Gehzeit.',
     ),
     items: timeline([
       [
         '09:00–09:10',
         't1',
-        lt('Meet at the station forecourt', 'Treffpunkt am Bahnhofplatz'),
+        lt('Start at the station forecourt', 'Start am Bahnhofplatz'),
         lt(
-          'By the historic station arch. Arrive by 08:45–08:50.',
-          'Beim historischen Bahnhofportal. Ankunft 08:45–08:50.',
+          'By the historic station arch.',
+          'Beim historischen Bahnhofportal.',
         ),
       ],
       [
@@ -321,8 +316,8 @@ const sections: TourSection[] = [
         't12',
         lt('Needle Dam', 'Nadelwehr'),
         lt(
-          'Understand how the water is regulated. No guaranteed demonstration.',
-          'Wasserregulierung verstehen; keine garantierte Vorführung.',
+          'See how the water is regulated. There is no scheduled demonstration.',
+          'Sehen, wie das Wasser reguliert wird; keine geplante Vorführung.',
         ),
       ],
       [
@@ -330,17 +325,17 @@ const sections: TourSection[] = [
         't13',
         lt('Close of the walk', 'Abschluss'),
         lt(
-          'A short personal reflection on the morning. Lunch is an optional extension.',
-          'Persönliche Rückschau auf den Vormittag. Das Mittagessen ist eine optionale Verlängerung.',
+          'A last look back at the morning. Lunch is an optional extension.',
+          'Ein letzter Rückblick auf den Vormittag. Das Mittagessen ist eine optionale Verlängerung.',
         ),
       ],
       [
         '12:00–13:00',
         't14',
-        lt('Optional reserved indoor lunch', 'Optionales Mittagessen'),
+        lt('Optional lunch', 'Optionales Mittagessen'),
         lt(
-          'Wirtshaus Taube is recommended for the route. Allow longer for larger groups.',
-          'Reservierter Innenplatz in der Taube; grössere Gruppen benötigen mehr Zeit.',
+          'Wirtshaus Taube is recommended for the route. Ask for an indoor table.',
+          'Wirtshaus Taube passt gut zur Route; einen Innenplatz reservieren.',
         ),
       ],
       [
@@ -383,8 +378,8 @@ const sections: TourSection[] = [
         lt('Exterior viewing only', 'Nur Aussenbesichtigung'),
         {
           detail: lt(
-            'No regular interior hours are confirmed; an interior visit needs separate confirmation.',
-            'Keine regulären Innenbesuchszeiten bestätigt; Innenzugang nur nach gesonderter Bestätigung.',
+            'No regular interior hours are published.',
+            'Keine regulären Innenbesuchszeiten veröffentlicht.',
           ),
         },
       ),
@@ -435,8 +430,8 @@ const sections: TourSection[] = [
         'r-rail',
         lt('By rail', 'Mit der Bahn'),
         lt(
-          'Search for Luzern in the SBB journey planner and meet outside the main station at Bahnhofplatz.',
-          'Im SBB-Fahrplan nach Luzern suchen. Treffpunkt auf dem Bahnhofplatz.',
+          'Search for Luzern in the SBB journey planner; the walk starts outside the main station at Bahnhofplatz.',
+          'Im SBB-Fahrplan nach Luzern suchen. Der Rundgang beginnt auf dem Bahnhofplatz.',
         ),
         {
           detail: lt(
@@ -473,32 +468,24 @@ const sections: TourSection[] = [
     id: 'comfort',
     layout: 'list',
     title: lt(
-      'Comfort, weather and group size',
-      'Komfort, Wetter und Gruppengrösse',
+      'Comfort and weather',
+      'Komfort und Wetter',
     ),
     items: [
       row(
         'c-surface',
         lt('Surfaces', 'Wege'),
         lt(
-          'Expect uneven paving, wooden surfaces and busy narrow sections. Tell us about wheelchair or mobility needs before you book; the whole route is not guaranteed to be step-free.',
-          'Mit unebenem Pflaster, Holzbelägen und engen, belebten Abschnitten rechnen. Für Rollstuhl oder eingeschränkte Mobilität den Zugang vorab klären; eine durchgehend stufenfreie Route ist nicht zugesichert.',
+          'Expect uneven paving, wooden surfaces and busy narrow sections. The whole route is not guaranteed to be step-free, so check access first if you use a wheelchair or have limited mobility.',
+          'Mit unebenem Pflaster, Holzbelägen und engen, belebten Abschnitten rechnen. Eine durchgehend stufenfreie Route ist nicht zugesichert; bei Rollstuhl oder eingeschränkter Mobilität den Zugang vorab prüfen.',
         ),
       ),
       row(
         'c-weather',
         lt('Weather', 'Wetter'),
         lt(
-          'In light rain the outdoor explanations are shortened. In severe weather or a bridge closure the route is changed after a local check.',
-          'Bei leichtem Regen werden Erklärungen im Freien verkürzt; bei Unwetter oder Sperrungen wird die Route nach lokaler Prüfung angepasst.',
-        ),
-      ),
-      row(
-        'c-group',
-        lt('Group size', 'Gruppengrösse'),
-        lt(
-          'For more than about eight guests, extra time or separate guiding groups keep the bridge traffic clear. The group size is a service choice, not an official limit.',
-          'Für mehr als etwa acht Gäste sind zusätzliche Zeit oder getrennte Führungsgruppen vorgesehen. Diese Gruppengrösse ist ein Gestaltungsvorschlag, keine behördliche Grenze.',
+          'In severe weather or when a bridge is closed, check locally and change the route.',
+          'Bei Unwetter oder gesperrter Brücke vor Ort prüfen und die Route anpassen.',
         ),
       ),
     ],
@@ -508,8 +495,8 @@ const sections: TourSection[] = [
     layout: 'list',
     title: lt('Optional lunch', 'Optionales Mittagessen'),
     body: lt(
-      'Two venues fit the route. Lunch is optional, is paid separately and is not booked for you. Opening hours are published schedules and do not guarantee a free table.',
-      'Zwei Restaurants passen zur Route. Das Mittagessen ist optional, wird separat bezahlt und nicht für Sie gebucht. Öffnungszeiten sind veröffentlichte Zeiten und keine Garantie für einen freien Tisch.',
+      'Two venues fit the route. Lunch is optional and paid separately. Opening hours are published schedules and do not guarantee a free table.',
+      'Zwei Restaurants passen zur Route. Das Mittagessen ist optional und wird separat bezahlt. Öffnungszeiten sind veröffentlichte Zeiten und keine Garantie für einen freien Tisch.',
     ),
     items: [
       row(
@@ -542,8 +529,8 @@ const sections: TourSection[] = [
         {
           optional: true,
           detail: lt(
-            'Indoor tables can be reserved, outdoor tables cannot. Email for five or more guests and wait for confirmation. Return across Rathaussteg after the dam and allow about 10 extra minutes; book lunch around 12:10. The operator lists special holiday hours and an Ash Wednesday closure.',
-            'Innen reservierbar, Terrasse ohne Reservation. Ab fünf Personen per E-Mail anfragen und Bestätigung abwarten. Nach dem Nadelwehr über den Rathaussteg zurückgehen: ungefähr zehn zusätzliche Minuten einplanen und Mittagessen gegen 12:10 reservieren. Sonderöffnungszeiten beachten; am Aschermittwoch ist eine Reinigungsschliessung vermerkt.',
+            'Indoor tables can be reserved, outdoor tables cannot. Email for five or more guests and wait for confirmation. Return across Rathaussteg after the dam and allow about 10 extra minutes; reserve a table for around 12:10. The operator lists special holiday hours and an Ash Wednesday closure.',
+            'Innen reservierbar, Terrasse ohne Reservation. Ab fünf Personen per E-Mail anfragen und Bestätigung abwarten. Nach dem Nadelwehr über den Rathaussteg zurückgehen: ungefähr zehn zusätzliche Minuten einplanen und Tisch gegen 12:10 reservieren. Sonderöffnungszeiten beachten; am Aschermittwoch ist eine Reinigungsschliessung vermerkt.',
           ),
           contact: {
             address: 'Unter der Egg 2, 6004 Luzern',
@@ -580,18 +567,6 @@ const sections: TourSection[] = [
       ),
     ],
   },
-  {
-    id: 'expectations',
-    layout: 'text',
-    title: lt(
-      'A good match, with honest expectations',
-      'Für die passende Erwartung',
-    ),
-    body: lt(
-      'The value lies in attentive guiding, interpretation and time to notice. This route does not include mountain scenery, private interiors or a workshop visit. A shorter 90–120 minute version is possible on request.\n\nWeather, access, restaurant availability and the group\'s needs shape the final confirmed programme.',
-      'Der Mehrwert liegt in persönlicher Begleitung, verständlichen Zusammenhängen und Zeit zum Entdecken. Bergtouren, private Innenräume und Werkstattbesuche sind nicht enthalten. Eine kürzere Variante von 90–120 Minuten ist auf Anfrage möglich.\n\nWetter, Zugänglichkeit, Tischverfügbarkeit und Bedürfnisse der Gruppe bestimmen das endgültig bestätigte Programm.',
-    ),
-  },
 ]
 
 export const thingsThatRemain: Tour = {
@@ -603,8 +578,8 @@ export const thingsThatRemain: Tour = {
     'Ein dreistündiger Kulturspaziergang: Brücken, bemalte Plätze und der Fluss als Lebensader',
   ),
   description: lt(
-    'At first, Luzerne is a postcard: a wooden bridge, painted houses and water catching the light. Then someone helps you notice a small detail. A painting becomes a question about life, a river becomes a story of human ingenuity, and a familiar view becomes your own memory. This walk invites you to discover the city through the things its people have built, protected, used and rebuilt.',
-    'Zuerst wirkt Luzern wie eine Postkarte: eine Holzbrücke, bemalte Häuser und Licht auf dem Wasser. Dann macht Sie jemand auf ein kleines Detail aufmerksam. Ein Bild wird zur Frage nach dem Leben, der Fluss erzählt von menschlichem Erfindergeist, und aus einer schönen Aussicht wird eine persönliche Erinnerung. Dieser Spaziergang erschliesst die Stadt über das, was ihre Menschen gebaut, bewahrt, genutzt und wieder aufgebaut haben.',
+    'At first, Luzerne is a postcard: a wooden bridge, painted houses and water catching the light. Then you notice a small detail. A painting becomes a question about life, a river becomes a story of human ingenuity, and a familiar view becomes your own memory. This walk invites you to discover the city through the things its people have built, protected, used and rebuilt.',
+    'Zuerst wirkt Luzern wie eine Postkarte: eine Holzbrücke, bemalte Häuser und Licht auf dem Wasser. Dann fällt Ihnen ein kleines Detail auf. Ein Bild wird zur Frage nach dem Leben, der Fluss erzählt von menschlichem Erfindergeist, und aus einer schönen Aussicht wird eine persönliche Erinnerung. Dieser Spaziergang erschliesst die Stadt über das, was ihre Menschen gebaut, bewahrt, genutzt und wieder aufgebaut haben.',
   ),
   longStory: storyFromChapters({
     title: lt('Five places, one story', 'Fünf Orte, eine Geschichte'),
@@ -652,25 +627,25 @@ export const thingsThatRemain: Tour = {
   ),
   included: [
     lt(
-      'Personal guiding on the 09:00–12:00 cultural walk, in a small group',
-      'Persönliche Kulturführung von 09:00 bis 12:00 Uhr in kleiner Gruppe',
+      'A city walk of about 2 km, with time to look and photograph',
+      'Ein Stadtspaziergang von etwa 2 km, mit Zeit zum Hinschauen und Fotografieren',
     ),
     lt(
-      'Stories and interpretation at five stops, with time to look, ask and photograph',
-      'Geschichten und Einordnung an fünf Stationen, mit Zeit zum Hinschauen, Fragen und Fotografieren',
+      'Five stops with their stories: Chapel Bridge, Kornmarkt, Weinmarkt, Spreuer Bridge and the Needle Dam',
+      'Fünf Stationen mit ihren Geschichten: Kapellbrücke, Kornmarkt, Weinmarkt, Spreuerbrücke und Nadelwehr',
     ),
   ],
   excluded: lt(
-    'Lunch, drinks, keepsakes and your journey to Luzerne are optional or separate extras, and there is no compulsory shopping stop. Mountain scenery, private interiors and workshop visits are not part of this walk.',
-    'Mittagessen, Getränke, Andenken und Ihre Anreise nach Luzern sind optionale oder separate Leistungen, einen Einkaufsstopp gibt es nicht. Bergtouren, private Innenräume und Werkstattbesuche gehören nicht zu diesem Rundgang.',
+    'Lunch, drinks, keepsakes and your journey to Luzerne are paid separately, and there is no shopping stop. Mountain scenery, private interiors and workshop visits are not part of this walk.',
+    'Mittagessen, Getränke, Andenken und Ihre Anreise nach Luzern werden separat bezahlt, einen Einkaufsstopp gibt es nicht. Bergtouren, private Innenräume und Werkstattbesuche gehören nicht zu diesem Rundgang.',
   ),
   conditions: lt(
-    'A city walk of about 2 km with uneven paving and wooden bridge surfaces, not a hike. Please discuss mobility needs before booking, as step-free access is not guaranteed along the whole route. The Water Tower is seen from outside. Small groups of about 2–8 guests. Children must be accompanied by an adult.',
-    'Ein Stadtspaziergang von etwa 2 km mit unebenem Pflaster und Holzbelägen, keine Wanderung. Bitte klären Sie Mobilitätsbedürfnisse vor der Buchung, eine durchgehend stufenfreie Route ist nicht zugesichert. Der Wasserturm wird von aussen betrachtet. Kleine Gruppen mit etwa 2–8 Gästen. Kinder müssen von einer erwachsenen Person begleitet werden.',
+    'A city walk of about 2 km with uneven paving and wooden bridge surfaces, not a hike. Check mobility needs first, as step-free access is not guaranteed along the whole route. The Water Tower is seen from outside.',
+    'Ein Stadtspaziergang von etwa 2 km mit unebenem Pflaster und Holzbelägen, keine Wanderung. Mobilitätsbedürfnisse vorab prüfen, eine durchgehend stufenfreie Route ist nicht zugesichert. Der Wasserturm wird von aussen betrachtet.',
   ),
   cancellationPolicy: lt(
-    'Sample policy: contact the organiser at least 48 hours before departure. In severe weather the route is changed after a local check, or another date is offered.',
-    'Beispielregel: mindestens 48 Stunden vor Beginn den Veranstalter kontaktieren. Bei Unwetter wird die Route nach lokaler Prüfung angepasst oder ein anderes Datum angeboten.',
+    'In severe weather or when a bridge is closed, check locally and change the route.',
+    'Bei Unwetter oder gesperrter Brücke vor Ort prüfen und die Route anpassen.',
   ),
   published: true,
   commissionRate: 0.1,

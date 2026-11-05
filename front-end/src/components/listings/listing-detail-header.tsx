@@ -1,15 +1,9 @@
 import { ToggleButton } from '@heroui/react'
 
 import { FavouriteIcon } from '@/components/icons'
-import { Laurel, Stars } from '@/components/rating'
 
-export interface ListingDetailStats {
-  primary: { value: string, label: string }
-  rating: { value: string, label: string }
-  ratingValue: number
-  hasRating: boolean
-  reviews: { value: string, label: string }
-}
+/** One figure of the stats row: the value over its label. */
+export interface ListingDetailStat { value: string, label: string }
 
 export function ListingDetailHeader({
   name,
@@ -18,8 +12,8 @@ export function ListingDetailHeader({
 }: {
   name: string
   subtitle?: string
-  /** The stats row (tours); the keepsake page has none. */
-  stats?: ListingDetailStats
+  /** The stats row (tours), equal columns; the keepsake page has none. */
+  stats?: ListingDetailStat[]
 }) {
   return (
     <>
@@ -28,42 +22,17 @@ export function ListingDetailHeader({
         {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
       </header>
 
-      {/* 2. Stats row: the laurel rating in a wider middle column, equal sides */}
-      {stats && (
-        <dl className="grid grid-cols-[1fr_1.5fr_1fr] items-center border-y border-separator py-4 text-center">
-          <div className="flex flex-col items-center gap-0.5 px-1">
-            <dd className="text-sm leading-6 font-semibold">
-              {stats.primary.value}
-            </dd>
-            <dt className="text-xs text-muted">{stats.primary.label}</dt>
-          </div>
-          <div className="flex flex-col items-center gap-0.5 border-x border-separator px-1">
-            <dt className="sr-only">{stats.rating.label}</dt>
-            <dd className="flex items-center gap-1">
-              {stats.hasRating && (
-                <Laurel className="h-12 w-[22px]" side="start" />
-              )}
-              <span className="text-[34px] leading-10 font-semibold tracking-tight tabular-nums">
-                {stats.rating.value}
-              </span>
-              {stats.hasRating && <Laurel className="h-12 w-[22px]" side="end" />}
-            </dd>
-            {stats.hasRating && (
-              <dd aria-hidden>
-                <Stars
-                  label={stats.rating.label}
-                  rating={stats.ratingValue}
-                  size={14}
-                />
-              </dd>
-            )}
-          </div>
-          <div className="flex flex-col items-center gap-0.5 px-1">
-            <dd className="text-lg leading-6 font-semibold tabular-nums">
-              {stats.reviews.value}
-            </dd>
-            <dt className="text-xs text-muted">{stats.reviews.label}</dt>
-          </div>
+      {stats && stats.length > 0 && (
+        <dl
+          className="grid items-center divide-x divide-separator border-y border-separator py-4 text-center rtl:divide-x-reverse"
+          style={{ gridTemplateColumns: `repeat(${stats.length}, minmax(0, 1fr))` }}
+        >
+          {stats.map(stat => (
+            <div key={stat.label} className="flex flex-col-reverse items-center gap-0.5 px-1">
+              <dt className="text-xs text-muted">{stat.label}</dt>
+              <dd className="text-lg leading-6 font-semibold tabular-nums">{stat.value}</dd>
+            </div>
+          ))}
         </dl>
       )}
     </>
@@ -89,8 +58,10 @@ export function ListingFavouriteButton({
       isSelected={favourite.isSaved}
       onChange={favourite.onToggle}
     >
+      {/* HeroUI sizes a toggle button's svg (20px, 16px from sm); the heart is 24px at every width because its shape is shorter than the 22px globe next to it. */}
       <FavouriteIcon
-        size={22}
+        className="size-6! sm:size-6!"
+        size={24}
         weight={favourite.isSaved ? 'Filled' : 'Outline'}
       />
     </ToggleButton>

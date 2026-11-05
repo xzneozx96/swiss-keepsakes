@@ -66,8 +66,8 @@ async function renderTour() {
     </QueryClientProvider>,
   )
   await screen.findByRole('heading', { level: 1 })
-  // The itinerary loads in the browser only; the page is whole when it has.
-  await vi.waitFor(() => expect(container.querySelector('.tour-itinerary')).not.toBeNull(), { timeout: 10_000 })
+  // The itinerary map loads only when its sheet opens; the page is whole when the stepper is there.
+  await screen.findByRole('button', { name: 'Open the itinerary map' })
 
   return container
 }

@@ -1,14 +1,12 @@
 import type { Tour } from '@sk/domain/bookings'
 
-import { Accordion, Button } from '@heroui/react'
+import { Button } from '@heroui/react'
 import { firstPhoto, openingText, pickDoc, pickText } from '@sk/domain/shared'
-import { ClientOnly, useNavigate } from '@tanstack/react-router'
-import { lazy, Suspense, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
 import { EmptyState } from '@/components/empty-state'
 import {
-  ClockIcon,
   InfoIcon,
-  PickupIcon,
   TourIcon,
 } from '@/components/icons'
 import { BackButton, CompactBar } from '@/components/layout/cart-button'
@@ -20,23 +18,15 @@ import {
 import { Media } from '@/components/media'
 import { PhotoGallery } from '@/components/photo-gallery'
 import { useLocale } from '@/contexts/locale-context'
-import { ListingReviews } from '@/features/catalog/components/listing-reviews'
 import { StorySheet } from '@/features/catalog/components/story-sheet'
 import { useFavourite } from '@/features/catalog/hooks/use-favourites'
-import { useProductReviews } from '@/features/catalog/hooks/use-product-reviews'
+import { TourComments } from '@/features/tours/discovery/tour-comments'
+import { TourItinerarySheet } from '@/features/tours/discovery/tour-itinerary-sheet'
 import { TourKeepsakes } from '@/features/tours/discovery/tour-keepsakes'
-import { TourSections } from '@/features/tours/discovery/tour-sections'
+import { useTourComments } from '@/features/tours/hooks/use-tour-comments'
 import { useTours } from '@/features/tours/hooks/use-tours'
 import { useBack } from '@/hooks/use-back'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
-
-// The map needs the browser (WebGL) and a large library: its chunk loads on the client only (AGENTS rule 9).
-const TourItineraryMap = lazy(() =>
-  import('@/features/tours/map/tour-itinerary-map').then(m => ({ default: m.TourItineraryMap })),
-)
-
-/** Stands in for the map in the server HTML and while its chunk loads. It only reserves the map frame's height; the map's heading and notes appear when it loads. */
-const mapPlaceholder = <div aria-hidden className="h-[min(72svh,640px)] min-h-[460px] rounded-3xl bg-surface-secondary" />
 
 export function TourDetailPage({ slug }: { slug: string }) {
   const { tours } = useTours()
@@ -69,7 +59,7 @@ export function TourDetail({
 }) {
   const { t, language, intlLocale } = useLocale()
   const navigate = useNavigate()
-  const reviews = useProductReviews(`tour:${tour.id}`, { kind: 'tour' })
+  const { comments, lang: commentsLang } = useTourComments(tour.id)
   const { saved, toggle } = useFavourite(`tour:${tour.id}`)
   const favourite = {
     isSaved: saved,
@@ -81,10 +71,9 @@ export function TourDetail({
       name: pickText(tour.name, language).text,
     }),
   }
-  const plural
-    = new Intl.PluralRules(intlLocale).select(reviews.count) === 'one'
-      ? 'one'
-      : 'other'
+  const plural = (count: number) =>
+    new Intl.PluralRules(intlLocale).select(count) === 'one' ? 'one' : 'other'
+  const hoursText = new Intl.NumberFormat(intlLocale).format(tour.durationMinutes / 60)
   const [photoEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
   const name = pickText(tour.name, language)
   const text = (value: Tour['name']) => pickText(value, language).text
@@ -102,18 +91,6 @@ export function TourDetail({
     if (!preview)
       goBack()
   }
-  const sections = [
-    {
-      id: 'meeting',
-      title: t('tourDiscovery.meeting'),
-      body: text(tour.meetingPoint),
-    },
-    {
-      id: 'conditions',
-      title: t('tourDiscovery.conditions'),
-      body: text(tour.conditions),
-    },
-  ]
   const fallback = [
     tour.name,
     tour.summary,
@@ -123,8 +100,6 @@ export function TourDetail({
     ...(storyBody ? [{ [storyBody.language]: 'story' }] : []),
     tour.meetingPoint,
     tour.conditions,
-    tour.excluded,
-    ...tour.included,
     ...tour.itinerary.flatMap(stop => [stop.name, stop.description]),
     ...(tour.sections ?? []).flatMap(section => [
       section.title,
@@ -174,52 +149,26 @@ export function TourDetail({
       <div className="relative -mt-6 flex flex-1 flex-col rounded-t-3xl bg-background px-6 pt-7 pb-5">
         <ListingDetailHeader
           name={name.text}
-          stats={{
-            primary: {
-              value: t('tourDiscovery.duration', {
-                hours: tour.durationMinutes / 60,
-              }),
+          stats={[
+            ...(tour.itinerary.length > 0
+              ? [{
+                  value: String(tour.itinerary.length),
+                  label: t(`tourDetail.stops.${plural(tour.itinerary.length)}`),
+                }]
+              : []),
+            {
+              value: t('tourDiscovery.duration', { hours: hoursText }),
               label: t('tourDiscovery.durationLabel'),
             },
-            rating: reviews.count
-              ? { value: reviews.averageText, label: reviews.averageLabel }
-              : {
-                  value: t('detail.stats.new'),
-                  label: t('detail.reviews.none'),
-                },
-            hasRating: reviews.count > 0,
-            ratingValue: reviews.average,
-            reviews: {
-              value: String(reviews.count),
-              label: t(`detail.stats.reviews.${plural}`),
-            },
-          }}
+            ...(comments.length > 0
+              ? [{
+                  value: String(comments.length),
+                  label: t(`tourDetail.commentsLabel.${plural(comments.length)}`),
+                }]
+              : []),
+          ]}
           subtitle={text(tour.summary)}
         />
-        <ul className="flex flex-col gap-5 border-t border-separator py-7">
-          {[
-            {
-              icon: ClockIcon,
-              title: t('tourDiscovery.duration', {
-                hours: tour.durationMinutes / 60,
-              }),
-              body: t('tourDiscovery.ownPace'),
-            },
-            {
-              icon: PickupIcon,
-              title: t('tourDiscovery.meeting'),
-              body: text(tour.meetingPoint),
-            },
-          ].map(({ icon: Icon, title, body }) => (
-            <li key={title} className="flex gap-4">
-              <Icon aria-hidden className="mt-0.5 shrink-0" size={26} />
-              <div className="flex flex-col gap-0.5">
-                <span className="font-semibold">{title}</span>
-                <span className="text-sm text-muted">{body}</span>
-              </div>
-            </li>
-          ))}
-        </ul>
         {fallback && (
           <p className="flex items-start gap-2 border-t border-separator pt-7 text-sm">
             <InfoIcon aria-hidden className="mt-0.5 shrink-0" size={16} />
@@ -275,78 +224,9 @@ export function TourDetail({
             </>
           )}
         </section>
-        <ListingReviews
-          id="tour-reviews"
-          reviews={{
-            ...reviews,
-            title: t('detail.reviews.title'),
-            favourite: reviews.isFavourite
-              ? {
-                  title: t('detail.favourite.title'),
-                  body: t('tourDetail.favouriteBody', {
-                    rating: reviews.averageText,
-                  }),
-                }
-              : undefined,
-            showAllLabel: t(`detail.reviews.showAll.${plural}`, {
-              count: reviews.count,
-            }),
-            showMoreLabel: t('detail.reviews.showMore'),
-            overallLabel: t('detail.reviews.overall'),
-            sheetTitle: t('detail.reviews.listTitle', { name: name.text }),
-            closeLabel: t('detail.sheet.close'),
-            rule: t('tourDetail.reviewsRule'),
-            empty: t('tourDiscovery.noReviews'),
-          }}
-        />
         {/* A tour added in M13 has no stops yet (no map positions): no itinerary section. */}
-        {tour.itinerary.length > 0 && (
-          <section className="flex flex-col gap-4 border-t border-separator py-7">
-            {/* `data-client-only` marks what the server does not render, so the e2e specs can leave it out when they compare text. */}
-            <div data-client-only>
-              <ClientOnly fallback={mapPlaceholder}>
-                <Suspense fallback={mapPlaceholder}>
-                  <TourItineraryMap key={tour.id} tour={tour} />
-                </Suspense>
-              </ClientOnly>
-            </div>
-          </section>
-        )}
-        <TourSections checkedOn={tour.checkedOn} sections={tour.sections} />
-        <section className="flex flex-col gap-3 border-t border-separator py-7">
-          <h2 className="font-serif text-title">
-            {t('tourDiscovery.included')}
-          </h2>
-          <ul className="list-disc space-y-2 ps-5 text-body">
-            {tour.included.map((item, index) => (
-              <li key={index}>{text(item)}</li>
-            ))}
-          </ul>
-          <h3 className="pt-2 font-semibold">{t('tourDiscovery.excluded')}</h3>
-          <p className="text-sm text-muted">{text(tour.excluded)}</p>
-        </section>
-        <Accordion
-          allowsMultipleExpanded
-          className="border-t border-separator [&_.accordion\_\_body-inner]:px-0 [&_.accordion\_\_trigger]:px-0 [&_.accordion\_\_trigger]:py-5"
-        >
-          {sections.map(section => (
-            <Accordion.Item key={section.id} id={section.id}>
-              <Accordion.Heading>
-                <Accordion.Trigger>
-                  <span className="flex-1 text-start font-serif text-card-title">
-                    {section.title}
-                  </span>
-                  <Accordion.Indicator />
-                </Accordion.Trigger>
-              </Accordion.Heading>
-              <Accordion.Panel>
-                <Accordion.Body className="text-sm">
-                  {section.body}
-                </Accordion.Body>
-              </Accordion.Panel>
-            </Accordion.Item>
-          ))}
-        </Accordion>
+        {tour.itinerary.length > 0 && <TourItinerarySheet tour={tour} />}
+        <TourComments comments={comments} lang={commentsLang} tourName={name.text} />
         <TourKeepsakes />
       </div>
     </div>

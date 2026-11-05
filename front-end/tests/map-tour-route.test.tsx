@@ -50,10 +50,10 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-function renderRoute() {
+function renderRoute(showHeading = true) {
   return render(
     <LocaleProvider>
-      <TourItineraryMap tour={tour} />
+      <TourItineraryMap showHeading={showHeading} tour={tour} />
     </LocaleProvider>,
   )
 }
@@ -129,6 +129,19 @@ describe('[E4.6][shared-map] the tour route map draws through the shared map com
 
     await waitFor(() => expect(FakeMap.instances).toHaveLength(2))
     expect(FakeMap.instances[0]!.remove).toHaveBeenCalled()
+  })
+
+  it('puts focus on the subtitle when the card closes in a sheet, where the heading is left out', async () => {
+    renderRoute(false)
+    await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
+    act(() => FakeMap.instances[0]!.emit('load'))
+    await screen.findByRole('heading', { level: 3, name: 'Stop 0' })
+    expect(screen.queryByRole('heading', { level: 2 })).toBeNull()
+    // No pin to return to: focus must still stay on the route, not drop to the page.
+    document.querySelectorAll('[data-pin-return]').forEach(pin => pin.removeAttribute('data-pin-return'))
+    await userEvent.click(screen.getByRole('button', { name: en['map.card.close'] }))
+
+    await waitFor(() => expect(screen.getByText(en['tourMap.subtitle'])).toHaveFocus())
   })
 
   it('lifts the credits clear of the stop card and its ✕, at the bottom right', async () => {

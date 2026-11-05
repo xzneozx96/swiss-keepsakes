@@ -52,7 +52,7 @@ export const TourCard = memo(function TourCard({
       }
       layout={layout}
       metadata={t('tourDiscovery.duration', {
-        hours: tour.durationMinutes / 60,
+        hours: new Intl.NumberFormat(intlLocale).format(tour.durationMinutes / 60),
       })}
       name={name.text}
       photo={tour.photos[0]}

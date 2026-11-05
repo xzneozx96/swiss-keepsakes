@@ -22,8 +22,8 @@ const itinerary: TourStop[] = [
     id: 'station',
     name: lt('Luzerne railway station', 'Bahnhof Luzern'),
     description: lt(
-      'Meet at the station. Your guide agrees the exact meeting pin with you before the day. Bus 1 towards Kriens/Obernau leaves from here.',
-      'Treffpunkt am Bahnhof. Ihre Führung vereinbart den genauen Treffpunkt vorab mit Ihnen. Von hier fährt Bus 1 Richtung Kriens/Obernau.',
+      'Start at Luzerne railway station. Bus 1 towards Kriens/Obernau leaves from here.',
+      'Start am Bahnhof Luzern. Von hier fährt Bus 1 Richtung Kriens/Obernau.',
     ),
     minutesFromStart: 0,
     coordinates: [8.3093, 47.0511],
@@ -33,15 +33,15 @@ const itinerary: TourStop[] = [
     id: 'kriens',
     name: lt('Kriens, Zentrum Pilatus', 'Kriens, Zentrum Pilatus'),
     description: lt(
-      'About 15 minutes by bus, then a 5–10 minute walk to the valley station, plus a buffer. Tickets and boarding follow here.',
-      'Etwa 15 Minuten mit dem Bus, danach 5–10 Minuten zu Fuss zur Talstation, plus Puffer. Hier folgen Tickets und Einstieg.',
+      'About 15 minutes by bus, then a 5–10 minute walk to the valley station, plus time to spare. Buy your tickets at the valley station.',
+      'Etwa 15 Minuten mit dem Bus, danach 5–10 Minuten zu Fuss zur Talstation, plus genügend Zeit. Tickets kaufen Sie bei der Talstation.',
     ),
     minutesFromStart: 25,
     coordinates: [8.27962, 47.03361],
     photo: photos.kriens,
     note: lt(
-      'The Kriens lifts are closed from 19 October to 27 November 2026; in those weeks the day runs via Alpnachstad.',
-      'Die Kriens-Seilbahnen sind vom 19. Oktober bis 27. November 2026 geschlossen; in dieser Zeit führt der Tag über Alpnachstad.',
+      'The Kriens lifts are closed from 19 October to 27 November 2026; in those weeks the route runs via Alpnachstad.',
+      'Die Kriens-Seilbahnen sind vom 19. Oktober bis 27. November 2026 geschlossen; in dieser Zeit führt die Route über Alpnachstad.',
     ),
   },
   {
@@ -59,15 +59,15 @@ const itinerary: TourStop[] = [
     id: 'kulm',
     name: lt('Pilatus Kulm', 'Pilatus Kulm'),
     description: lt(
-      'Time for views, photographs and a guided look at how town and mountain relate. No hike and no compulsory stair climb. Lunch at the Bellevue self-service restaurant.',
-      'Zeit für Aussicht, Fotos und eine Führung zum Verhältnis von Stadt und Berg. Keine Wanderung und kein obligatorischer Treppenaufstieg. Mittagessen im Selbstbedienungsrestaurant Bellevue.',
+      'Time for views and photographs, and to see how town and mountain relate. No hike and no compulsory stair climb. Lunch at the Bellevue self-service restaurant.',
+      'Zeit für Aussicht, Fotos und einen Blick auf das Verhältnis von Stadt und Berg. Keine Wanderung und kein obligatorischer Treppenaufstieg. Mittagessen im Selbstbedienungsrestaurant Bellevue.',
     ),
     minutesFromStart: 105,
     coordinates: [8.25564, 46.97926],
     photo: photos.kulm,
     note: lt(
-      'Distant peaks depend on visibility. In cloud, the guide focuses on the engineering and the changing landscape.',
-      'Fernsicht hängt von der Sicht ab. Bei Wolken liegt der Schwerpunkt auf Technik und Landschaftswahrnehmung.',
+      'Distant peaks depend on visibility. In cloud, look to the engineering and the changing landscape.',
+      'Fernsicht hängt von der Sicht ab. Bei Wolken lohnt der Blick auf Technik und Landschaft.',
     ),
   },
 ]
@@ -78,28 +78,23 @@ const sections: TourSection[] = [
     layout: 'text',
     title: lt('Who is this day for?', 'Für wen ist dieser Tag gedacht?'),
     body: lt(
-      'For couples, friends and families who want a mountain experience without planning a hike. For curious travellers interested in engineering, and photographers who value time to observe.\n\nGuests who are uncomfortable with heights or aerial cableways should discuss this before booking.',
-      'Für Paare, Freunde und Familien, die Berglandschaft erleben möchten, ohne eine Wanderung zu planen. Für neugierige Gäste, die sich für Technik interessieren, und für Fotografierende, die Zeit zum Beobachten schätzen.\n\nWer grosse Höhen oder Seilbahnen unangenehm findet, sollte dies vor der Buchung ansprechen.',
+      'For couples, friends and families who want a mountain experience without planning a hike. For curious travellers interested in engineering, and photographers who value time to observe.\n\nIf heights or aerial cableways make you uneasy, keep in mind that the route uses both.',
+      'Für Paare, Freunde und Familien, die Berglandschaft erleben möchten, ohne eine Wanderung zu planen. Für neugierige Gäste, die sich für Technik interessieren, und für Fotografierende, die Zeit zum Beobachten schätzen.\n\nWer grosse Höhen oder Seilbahnen unangenehm findet, sollte bedenken, dass die Route beides nutzt.',
     ),
   },
   {
     id: 'glance',
     layout: 'facts',
-    title: lt('The day at a glance', 'Der Tag auf einen Blick'),
+    title: lt('At a glance', 'Auf einen Blick'),
     items: [
       row(
-        'g-group',
-        lt('Group', 'Gruppe'),
-        lt('About 2–8 guests (proposed)', 'Etwa 2–8 Gäste (vorgeschlagen)'),
-      ),
-      row(
         'g-time',
-        lt('Programme', 'Programm'),
-        lt('08:30 to about 15:00', '08:30 bis etwa 15:00 Uhr'),
+        lt('Time needed', 'Zeitbedarf'),
+        lt('About 6½ hours', 'Etwa 6½ Stunden'),
         {
           detail: lt(
-            'Planning times, not reserved departures. After 15:30 onward travel is possible, with an extra buffer and no guaranteed connection.',
-            'Planungszeiten, keine gebuchten Abfahrten. Ab 15:30 ist eine Weiterreise möglich, mit zusätzlichem Puffer und ohne garantierte Anschlussverbindung.',
+            'Rough times. After 15:30 onward travel is possible; leave extra time, as no connection is guaranteed.',
+            'Ungefähre Zeiten. Ab 15:30 ist eine Weiterreise möglich; zusätzliche Zeit einplanen, da keine Anschlussverbindung garantiert ist.',
           ),
         },
       ),
@@ -112,8 +107,8 @@ const sections: TourSection[] = [
         ),
         {
           detail: lt(
-            'No mountain hike and no compulsory stair climb to a summit viewpoint. Mobility arrangements need checking.',
-            'Keine Bergwanderung und kein obligatorischer Treppenaufstieg zu einem Gipfel-Aussichtspunkt. Mobilität vorab klären.',
+            'No mountain hike and no compulsory stair climb to a summit viewpoint. Check access for your own mobility needs.',
+            'Keine Bergwanderung und kein obligatorischer Treppenaufstieg zu einem Gipfel-Aussichtspunkt. Zugang für die eigene Mobilität vorab prüfen.',
           ),
         },
       ),
@@ -121,8 +116,8 @@ const sections: TourSection[] = [
         'g-format',
         lt('Format', 'Format'),
         lt(
-          'A stand-alone day, or an addition to Tour 01',
-          'Ein eigener Tag oder eine Ergänzung zu Tour 01',
+          'A day of its own, or an addition to the Luzerne walk',
+          'Ein eigener Tag oder eine Ergänzung zum Luzerner Rundgang',
         ),
       ),
     ],
@@ -135,8 +130,8 @@ const sections: TourSection[] = [
       'Revision der Kriens-Seilbahnen',
     ),
     body: lt(
-      'From 19 October to 27 November 2026 the Kriens lifts are closed. In that period the day uses rail to Alpnachstad and the cogwheel railway both ways. The cogwheel season ends on 29 November 2026. Route and tickets are reconfirmed for your date.',
-      'Vom 19. Oktober bis 27. November 2026 sind die Kriens-Seilbahnen geschlossen. In dieser Zeit fahren wir mit der Bahn nach Alpnachstad und mit der Zahnradbahn hin und zurück. Deren Saison endet am 29. November 2026. Route und Tickets werden für Ihr Datum neu bestätigt.',
+      'From 19 October to 27 November 2026 the Kriens lifts are closed. In that period, take the rail to Alpnachstad and the cogwheel railway both ways. The cogwheel season ends on 29 November 2026. Check the route and tickets for your date.',
+      'Vom 19. Oktober bis 27. November 2026 sind die Kriens-Seilbahnen geschlossen. In dieser Zeit fahren Sie mit der Bahn nach Alpnachstad und mit der Zahnradbahn hin und zurück. Deren Saison endet am 29. November 2026. Route und Tickets für Ihr Datum prüfen.',
     ),
   },
   {
@@ -148,8 +143,8 @@ const sections: TourSection[] = [
         's-transition',
         lt('The transition is part of it', 'Der Wechsel gehört dazu'),
         lt(
-          'Bus, gondola, a change at Fräkmüntegg and the Dragon Ride aerial cableway. The guide connects these stages with conversations about landscape and access to the mountains.',
-          'Bus, Gondel, Umstieg auf der Fräkmüntegg und die Luftseilbahn Dragon Ride. Die Führung verbindet diese Etappen mit Gesprächen über Landschaft und Zugang zum Gebirge.',
+          'Bus, gondola, a change at Fräkmüntegg and the Dragon Ride aerial cableway.',
+          'Bus, Gondel, Umstieg auf der Fräkmüntegg und die Luftseilbahn Dragon Ride.',
         ),
       ),
       row(
@@ -162,10 +157,10 @@ const sections: TourSection[] = [
       ),
       row(
         's-weather',
-        lt('Honest about the weather', 'Ehrlich beim Wetter'),
+        lt('Weather', 'Wetter'),
         lt(
-          'Distant peaks depend on visibility; clear skies are not promised.',
-          'Sicht auf ferne Gipfel ist wetterabhängig; ein klarer Himmel wird nicht versprochen.',
+          'Distant peaks depend on visibility; a clear sky is not guaranteed.',
+          'Sicht auf ferne Gipfel ist wetterabhängig; ein klarer Himmel ist nicht garantiert.',
         ),
       ),
     ],
@@ -173,18 +168,18 @@ const sections: TourSection[] = [
   {
     id: 'timetable',
     layout: 'timeline',
-    title: lt('A day with room to look', 'Der geplante Tagesablauf'),
+    title: lt('A day with room to look', 'Der Tagesablauf'),
     body: lt(
-      'Planning times, not reserved departures. This applies only when the Kriens lifts operate.',
-      'Planungszeiten, keine gebuchten Abfahrten. Nur bei Betrieb der Kriens-Seilbahnen.',
+      'Rough times. They apply only when the Kriens lifts operate.',
+      'Ungefähre Zeiten. Nur bei Betrieb der Kriens-Seilbahnen.',
     ),
     items: timeline([
       [
         '08:30–09:10',
         't1',
         lt(
-          'Meet at Luzerne station and take bus 1 to Kriens',
-          'Treffen am Bahnhof Luzern, Bus 1 nach Kriens',
+          'Luzerne station, bus 1 to Kriens',
+          'Bahnhof Luzern, Bus 1 nach Kriens',
         ),
         lt(
           'Bus 1 towards Kriens/Obernau to Kriens, Zentrum Pilatus. About 15 minutes on the bus, then 5–10 minutes walking plus a buffer.',
@@ -207,12 +202,12 @@ const sections: TourSection[] = [
         '10:15–11:30',
         't3',
         lt(
-          'Views and guided interpretation',
-          'Aussicht und erzählerische Führung',
+          'Views from the summit',
+          'Aussicht vom Gipfel',
         ),
         lt(
-          'Near the facilities; no hike is needed. In cloud, the focus is on engineering and the changing landscape.',
-          'Nahe den Anlagen; keine Wanderung erforderlich. Bei Wolken liegt der Schwerpunkt auf Technik und Landschaftswahrnehmung.',
+          'Near the facilities; no hike is needed. In cloud, look to the engineering and the changing landscape.',
+          'Nahe den Anlagen; keine Wanderung erforderlich. Bei Wolken lohnt der Blick auf Technik und Landschaft.',
         ),
       ],
       [
@@ -258,8 +253,8 @@ const sections: TourSection[] = [
     layout: 'text',
     title: lt('Why this rhythm?', 'Warum dieser Rhythmus?'),
     body: lt(
-      'An early lunch fits the kitchen opening time. The descent begins well before closing, and the remaining margin supports a relaxed group pace rather than a promise of extra activities.',
-      'Ein frühes Mittagessen passt zur Küchenöffnung. Die Rückfahrt beginnt deutlich vor Betriebsschluss; der verbleibende Puffer dient der Gruppe und ist kein Versprechen zusätzlicher Aktivitäten.',
+      'An early lunch fits the kitchen opening time. The descent begins well before closing, and which leaves a relaxed margin.',
+      'Ein frühes Mittagessen passt zur Küchenöffnung. Die Rückfahrt beginnt deutlich vor Betriebsschluss; das lässt einen entspannten Puffer.',
     ),
   },
   {
@@ -285,8 +280,8 @@ const sections: TourSection[] = [
         'r-alt',
         lt('During maintenance', 'Bei Revision'),
         lt(
-          'Rail to Alpnachstad and the cogwheel railway both ways, only when railway operation is confirmed.',
-          'Bahn nach Alpnachstad und Zahnradbahn hin und zurück, nur bei bestätigtem Bahnbetrieb.',
+          'Rail to Alpnachstad and the cogwheel railway both ways, only when the railway is running.',
+          'Bahn nach Alpnachstad und Zahnradbahn hin und zurück, nur wenn die Bahn in Betrieb ist.',
         ),
       ),
     ],
@@ -336,8 +331,8 @@ const sections: TourSection[] = [
         {
           optional: true,
           detail: lt(
-            'Lunch is paid separately and is not booked for you.',
-            'Das Mittagessen wird separat bezahlt und nicht für Sie gebucht.',
+            'Lunch is paid separately.',
+            'Das Mittagessen wird separat bezahlt.',
           ),
           contact: { phone: '+41 41 329 12 12', email: 'hotels@pilatus.ch' },
         },
@@ -378,7 +373,7 @@ const sections: TourSection[] = [
   {
     id: 'weather',
     layout: 'list',
-    title: lt('Weather and flexibility', 'Wetter und Flexibilität'),
+    title: lt('Weather and tickets', 'Wetter und Tickets'),
     items: [
       row(
         'w-wind',
@@ -387,16 +382,16 @@ const sections: TourSection[] = [
           'Starker Wind oder schlechtes Wetter',
         ),
         lt(
-          'The day is rescheduled, or a separately agreed city alternative is offered.',
-          'Wir verschieben den Tag oder bieten eine separat vereinbarte Stadtalternative an.',
+          'The lifts may not run. Choose another day, or keep to the city.',
+          'Die Bahnen fahren möglicherweise nicht. Wählen Sie einen anderen Tag oder bleiben Sie in der Stadt.',
         ),
       ),
       row(
         'w-tickets',
         lt('Tickets and concessions', 'Tickets und Ermässigungen'),
         lt(
-          'Tickets and concessions are calculated individually. Transport, food and gifts are included only if the confirmed offer lists them.',
-          'Fahrkarten und Ermässigungen werden individuell berechnet. Fahrten, Essen und Geschenke sind erst eingeschlossen, wenn das Angebot sie ausdrücklich aufführt.',
+          'Fares and concessions depend on who is travelling. Food and keepsakes are paid separately.',
+          'Fahrpreise und Ermässigungen hängen von den Reisenden ab. Essen und Andenken werden separat bezahlt.',
         ),
       ),
     ],
@@ -412,8 +407,8 @@ export const pilatus: Tour = {
     'Ein Tag ab Luzern: Bus, Gondel und Dragon Ride zum Gipfel, ohne Wanderung',
   ),
   description: lt(
-    'In the morning, you are still among the buildings of Luzerne. Soon, forest passes beneath the gondola and the city becomes a small part of a much larger landscape. This journey explores the relationship between town and mountain: our desire for open horizons, and the engineering that makes such heights accessible.',
-    'Am Morgen stehen Sie noch zwischen den Häusern von Luzern. Wenig später ziehen unter der Gondel Wälder vorbei, und die Stadt wird zu einem kleinen Teil einer viel grösseren Landschaft. Dieser Ausflug erzählt von der Beziehung zwischen Stadt und Berg: von unserer Sehnsucht nach Weite und den technischen Ideen, die diese Höhe erreichbar machen.',
+    'A day trip from Luzerne to the summit of Pilatus by bus, gondola and the Dragon Ride aerial cableway, with no hike and no compulsory stair climb. Lunch is at the Bellevue self-service restaurant.',
+    'Ein Tagesausflug von Luzern auf den Pilatus mit Bus, Gondel und der Luftseilbahn Dragon Ride, ohne Wanderung und ohne obligatorischen Treppenaufstieg. Mittagessen im Selbstbedienungsrestaurant Bellevue.',
   ),
   longStory: storyFromChapters({
     title: lt('From the city to the mountain', 'Von der Stadt zum Berg'),
@@ -422,8 +417,8 @@ export const pilatus: Tour = {
         photo: photos.kriens,
         title: lt('A change of perspective', 'Eine andere Perspektive'),
         body: lt(
-          'In the morning, you are still among the buildings of Luzerne. Soon, forest passes beneath the gondola and the city becomes a small part of a much larger landscape. This journey explores the relationship between town and mountain: our desire for open horizons, and the engineering that makes such heights accessible.',
-          'Am Morgen stehen Sie noch zwischen den Häusern von Luzern. Wenig später ziehen unter der Gondel Wälder vorbei, und die Stadt wird zu einem kleinen Teil einer viel grösseren Landschaft. Dieser Ausflug erzählt von der Beziehung zwischen Stadt und Berg: von unserer Sehnsucht nach Weite und den technischen Ideen, die diese Höhe erreichbar machen.',
+          'In the morning, you are still among the buildings of Luzerne. Soon, forest passes beneath the gondola and the city becomes a small part of a much larger landscape. This journey explores the relationship between town and mountain: the desire for open horizons, and the engineering that makes such heights accessible.',
+          'Am Morgen stehen Sie noch zwischen den Häusern von Luzern. Wenig später ziehen unter der Gondel Wälder vorbei, und die Stadt wird zu einem kleinen Teil einer viel grösseren Landschaft. Dieser Ausflug erzählt von der Beziehung zwischen Stadt und Berg: von der Sehnsucht nach Weite und den technischen Ideen, die diese Höhe erreichbar machen.',
         ),
       },
       {
@@ -433,16 +428,16 @@ export const pilatus: Tour = {
           'Der Wechsel ist Teil des Erlebnisses',
         ),
         body: lt(
-          'Bus, gondola, a change at Fräkmüntegg and the Dragon Ride aerial cableway. Guiding connects these stages with conversations about landscape and access to the mountains.',
-          'Bus, Gondel, Umstieg auf der Fräkmüntegg und die Luftseilbahn Dragon Ride. Die Führung verbindet diese Etappen mit Gesprächen über Landschaft und Zugang zum Gebirge.',
+          'Bus, gondola, a change at Fräkmüntegg and the Dragon Ride aerial cableway.',
+          'Bus, Gondel, Umstieg auf der Fräkmüntegg und die Luftseilbahn Dragon Ride.',
         ),
       },
       {
         photo: photos.kulm,
         title: lt('A day with room to look', 'Ein Tag mit Raum zum Schauen'),
         body: lt(
-          'At the top, there is time for views, photography and an uncomplicated lunch. Distant peaks depend on visibility; clear skies are not promised. In cloud, the guide turns to the engineering and the changing landscape.',
-          'Oben bleibt Zeit für Aussicht, Fotografie und ein einfaches Mittagessen. Sicht auf ferne Gipfel ist wetterabhängig; ein klarer Himmel wird nicht versprochen. Bei Wolken richtet die Führung den Blick auf Technik und Landschaft.',
+          'At the top, there is time for views, photography and an uncomplicated lunch. Distant peaks depend on visibility; a clear sky is not guaranteed. In cloud, look to the engineering and the changing landscape.',
+          'Oben bleibt Zeit für Aussicht, Fotografie und ein einfaches Mittagessen. Sicht auf ferne Gipfel ist wetterabhängig; ein klarer Himmel wird nicht versprochen. Bei Wolken lohnt der Blick auf Technik und Landschaft.',
         ),
       },
     ],
@@ -453,30 +448,30 @@ export const pilatus: Tour = {
   childPrice: 6500,
   infantPrice: 0,
   meetingPoint: lt(
-    'Luzerne railway station (exact meeting point agreed before the day)',
-    'Bahnhof Luzern (genauer Treffpunkt wird vorab vereinbart)',
+    'Luzerne railway station',
+    'Bahnhof Luzern',
   ),
   included: [
     lt(
-      'Guiding from Luzerne to Pilatus Kulm and back, in a small group',
-      'Führung von Luzern auf den Pilatus Kulm und zurück, in kleiner Gruppe',
+      'Bus 1 from Luzerne station to Kriens, then the gondola and the Dragon Ride to Pilatus Kulm and back',
+      'Bus 1 vom Bahnhof Luzern nach Kriens, dann Gondel und Dragon Ride nach Pilatus Kulm und zurück',
     ),
     lt(
-      'Stories and conversation about landscape and access to the mountains',
-      'Geschichten und Gespräche über Landschaft und Zugang zum Gebirge',
+      'Time at the summit for views, photographs and lunch',
+      'Zeit auf dem Gipfel für Aussicht, Fotos und Mittagessen',
     ),
   ],
   excluded: lt(
-    'Bus, gondola and Dragon Ride tickets, lunch and gifts are included only if the confirmed offer lists them. A lake cruise is not part of the programme.',
-    'Bus-, Gondel- und Dragon-Ride-Tickets, Mittagessen und Geschenke sind nur enthalten, wenn das bestätigte Angebot sie ausdrücklich aufführt. Eine Schifffahrt gehört nicht zum Programm.',
+    'Bus, gondola and Dragon Ride tickets, lunch and keepsakes are paid separately. A lake cruise is not part of the route.',
+    'Bus-, Gondel- und Dragon-Ride-Tickets, Mittagessen und Andenken werden separat bezahlt. Eine Schifffahrt gehört nicht zur Route.',
   ),
   conditions: lt(
-    'No mountain hike and no compulsory stair climb; short walks around stations and viewing areas. Please discuss a fear of heights or aerial cableways, and any mobility needs, before booking. Small groups of about 2–8 guests. Children must be accompanied by an adult.',
-    'Keine Bergwanderung und kein obligatorischer Treppenaufstieg; kurze Wege bei Stationen und Aussichtspunkten. Bitte sprechen Sie Höhenangst oder Unbehagen bei Seilbahnen sowie Mobilitätsbedürfnisse vor der Buchung an. Kleine Gruppen mit etwa 2–8 Gästen. Kinder müssen von einer erwachsenen Person begleitet werden.',
+    'No mountain hike and no compulsory stair climb; short walks around stations and viewing areas. If you have a fear of heights or aerial cableways, or any mobility needs, bear in mind that the route uses gondolas and a cableway.',
+    'Keine Bergwanderung und kein obligatorischer Treppenaufstieg; kurze Wege bei Stationen und Aussichtspunkten. Bei Höhenangst, Unbehagen bei Seilbahnen oder besonderen Mobilitätsbedürfnissen bedenken Sie, dass die Route Gondeln und eine Luftseilbahn nutzt.',
   ),
   cancellationPolicy: lt(
-    'Sample policy: contact the organiser at least 48 hours before departure. In strong wind or unsuitable mountain weather the day is rescheduled, or a city alternative is agreed.',
-    'Beispielregel: mindestens 48 Stunden vor Beginn den Veranstalter kontaktieren. Bei starkem Wind oder unpassendem Bergwetter wird der Tag verschoben oder eine Stadtalternative vereinbart.',
+    'In strong wind or unsuitable mountain weather the lifts may not run: choose another day, or keep to the city.',
+    'Bei starkem Wind oder unpassendem Bergwetter fahren die Bahnen möglicherweise nicht: einen anderen Tag wählen oder in der Stadt bleiben.',
   ),
   published: true,
   commissionRate: 0.1,

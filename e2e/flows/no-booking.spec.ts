@@ -17,6 +17,12 @@ const bookingText: Record<Language, string[]> = {
   de: ["Preise für Ihre Gruppe", "Je nach Termin", "kein Platz nötig", "0–5 Jahre", "CHF 89.00", "CHF 45.00", "CHF 0.00", "getrennt von Ihrer Buchung"],
 };
 
+const comments: Record<Language, string> = { en: "Comments", de: "Kommentare" };
+const removedText: Record<Language, string[]> = {
+  en: ["What the route covers", "You pay on the way", "Reviews", "Guest favourite", "out of 5"],
+  de: ["Was die Route umfasst", "Unterwegs bezahlen Sie selbst", "Bewertungen", "Gästeliebling", "von 5 Sternen"],
+};
+
 const hrefs = (page: Page, selector: string) =>
   page.locator(selector).evaluateAll(anchors => anchors.map(a => a.getAttribute("href") ?? ""));
 
@@ -133,4 +139,7 @@ test("[E3.1][AC50] old booking addresses render no booking", async ({ seedDemo, 
   const text = await page.locator("body").innerText();
 
   for (const needle of bookingText[language]) expect(text, needle).not.toContain(needle);
+  // A tour is a route to follow alone: no included list, no reviews or rating, and comments instead.
+  for (const needle of removedText[language]) expect(text, needle).not.toContain(needle);
+  await expect(page.getByRole("heading", { name: comments[language], level: 2 })).toBeVisible();
 });

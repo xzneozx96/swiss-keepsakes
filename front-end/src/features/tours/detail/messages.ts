@@ -1,5 +1,18 @@
 export const tourDetailEn = {
-  'tourDetail.reviewsRule': 'Reviews from guests who followed this route.',
-  'tourDetail.favouriteBody':
-    'Rated {rating} out of 5 by guests who followed this route.',
+  'tourDetail.itinerary.open': 'Open the itinerary map',
+  'tourDetail.itinerary.start': 'Start',
+  'tourDetail.itinerary.min': '+{minutes} min',
+  'tourDetail.itinerary.hour': '+{hours} h',
+  'tourDetail.itinerary.hourMin': '+{hours} h {minutes} min',
+  'tourDetail.stops.one': 'Stop',
+  'tourDetail.stops.other': 'Stops',
+  'tourDetail.commentsLabel.one': 'Comment',
+  'tourDetail.commentsLabel.other': 'Comments',
+  'tourDetail.comments.onlyInEnglish': 'These comments are only available in English.',
+  'tourDetail.comments.onlyInGerman': 'These comments are only available in German.',
+  'tourDetail.comments.title': 'Comments',
+  'tourDetail.comments.showAll.one': 'Show {count} comment',
+  'tourDetail.comments.showAll.other': 'Show all {count} comments',
+  'tourDetail.comments.sheetTitle': 'Comments on {name}',
+  'tourDetail.comments.replyFrom': 'Reply from {name}',
 }

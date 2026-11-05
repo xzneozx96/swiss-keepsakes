@@ -23,8 +23,8 @@ const itinerary: TourStop[] = [
     id: 'piers',
     name: lt('Luzerne landing stages', 'Luzerner Landungsbrücken'),
     description: lt(
-      'Meet near the landing stages. SGV normally lists Pier 1 for Vitznau; your guide checks the pier and the service before the day.',
-      'Treffpunkt bei den Landungsbrücken. Für Vitznau nennt SGV normalerweise Steg 1; Ihre Führung prüft Steg und Kurs vor dem Tag.',
+      'Start at the landing stages. SGV normally lists Pier 1 for Vitznau; check the pier and the sailing on the day.',
+      'Start bei den Landungsbrücken. Für Vitznau nennt SGV normalerweise Steg 1; Steg und Kurs am Tag selbst prüfen.',
     ),
     minutesFromStart: 0,
     coordinates: [8.3112, 47.051],
@@ -34,8 +34,8 @@ const itinerary: TourStop[] = [
     id: 'vitznau',
     name: lt('Vitznau', 'Vitznau'),
     description: lt(
-      'The boat takes about an hour across the lake. At Vitznau you walk to the railway boarding point and change to the cogwheel train, with a deliberate buffer.',
-      'Die Schifffahrt über den See dauert ungefähr eine Stunde. In Vitznau gehen Sie zu Fuss zum Bahneinstieg und steigen mit bewusstem Puffer in die Zahnradbahn um.',
+      'The boat takes about an hour across the lake. At Vitznau, walk to the railway boarding point and change to the cogwheel train; leave time to spare.',
+      'Die Schifffahrt über den See dauert ungefähr eine Stunde. In Vitznau gehen Sie zu Fuss zum Bahneinstieg und steigen mit genügend Zeit in die Zahnradbahn um.',
     ),
     minutesFromStart: 75,
     coordinates: [8.48466, 47.00912],
@@ -49,23 +49,23 @@ const itinerary: TourStop[] = [
     id: 'kulm',
     name: lt('Rigi Kulm', 'Rigi Kulm'),
     description: lt(
-      'Short walks to suitable viewpoints with guided interpretation, then lunch in the self-service restaurant of the Rigi Kulm-Hotel.',
-      'Kurze Wege zu geeigneten Aussichtspunkten mit erzählerischer Führung, dann Mittagessen im Selbstbedienungsrestaurant des Rigi Kulm-Hotels.',
+      'Short walks to suitable viewpoints, then lunch in the self-service restaurant of the Rigi Kulm-Hotel.',
+      'Kurze Wege zu geeigneten Aussichtspunkten, dann Mittagessen im Selbstbedienungsrestaurant des Rigi Kulm-Hotels.',
     ),
     minutesFromStart: 135,
     coordinates: [8.4847, 47.05569],
     photo: photos.kulm,
     note: lt(
-      'Views depend on the weather. In poor visibility the mountain section is shortened or rescheduled.',
-      'Die Aussicht hängt vom Wetter ab. Bei schlechter Sicht wird der Bergteil verkürzt oder verschoben.',
+      'Views depend on the weather. In poor visibility, shorten your time on the summit or pick another day.',
+      'Die Aussicht hängt vom Wetter ab. Bei schlechter Sicht die Zeit auf dem Gipfel verkürzen oder einen anderen Tag wählen.',
     ),
   },
   {
     id: 'kaltbad',
     name: lt('Rigi Kaltbad', 'Rigi Kaltbad'),
     description: lt(
-      'A short stay near the station on the way down. The section from Kulm to Kaltbad is by train, not on foot. No spa booking is included.',
-      'Ein kurzer Aufenthalt nahe dem Bahnhof auf dem Rückweg. Der Abschnitt von Kulm nach Kaltbad wird mit der Bahn gefahren, nicht zu Fuss. Es ist keine Spa-Buchung enthalten.',
+      'A short stay near the station on the way down. The section from Kulm to Kaltbad is by train, not on foot. Spa admission is not part of the route.',
+      'Ein kurzer Aufenthalt nahe dem Bahnhof auf dem Rückweg. Der Abschnitt von Kulm nach Kaltbad wird mit der Bahn gefahren, nicht zu Fuss. Der Spa-Eintritt gehört nicht zur Route.',
     ),
     minutesFromStart: 270,
     coordinates: [8.46618, 47.0447],
@@ -78,28 +78,23 @@ const sections: TourSection[] = [
     id: 'for-whom',
     layout: 'text',
     title: lt(
-      'Who will enjoy this tour?',
+      'Who will enjoy this route?',
       'Für wen eignet sich dieser Ausflug?',
     ),
     body: lt(
-      'For travellers who enjoy a slower pace and changing landscapes. For couples, friends and families who like boats and trains, and for returning visitors ready to spend a full day beyond the Old Town.\n\nIt can suit a multigenerational group when boarding arrangements, short walks and individual mobility needs are checked in advance.',
-      'Für Gäste, die ruhiger reisen und verschiedene Landschaftseindrücke verbinden möchten. Für Paare, Freunde und Familien, die Schiffe und Züge mögen, und für Wiederkehrende, die nach der Altstadt einen ganzen Tag in der Region verbringen wollen.\n\nAuch für Generationenreisen denkbar, wenn Einstiege, kurze Wege und individuelle Mobilität vorab geklärt werden.',
+      'For travellers who enjoy a slower pace and changing landscapes. For couples, friends and families who like boats and trains, and for returning visitors ready to spend a full day beyond the Old Town.\n\nIt can also suit several generations travelling together; check boarding, short walks and mobility needs beforehand.',
+      'Für Gäste, die ruhiger reisen und verschiedene Landschaftseindrücke verbinden möchten. Für Paare, Freunde und Familien, die Schiffe und Züge mögen, und für Wiederkehrende, die nach der Altstadt einen ganzen Tag in der Region verbringen wollen.\n\nAuch für Generationenreisen denkbar; Einstiege, kurze Wege und die Mobilität vorab prüfen.',
     ),
   },
   {
     id: 'glance',
     layout: 'facts',
-    title: lt('The day at a glance', 'Der Tag auf einen Blick'),
+    title: lt('At a glance', 'Auf einen Blick'),
     items: [
       row(
-        'g-group',
-        lt('Group', 'Gruppe'),
-        lt('About 2–8 guests (proposed)', 'Etwa 2–8 Gäste (vorgeschlagen)'),
-      ),
-      row(
         'g-day',
-        lt('Programme', 'Programm'),
-        lt('A full day, from about 08:45', 'Ein ganzer Tag, ab etwa 08:45 Uhr'),
+        lt('Time needed', 'Zeitbedarf'),
+        lt('A full day, about 8 hours', 'Ein ganzer Tag, etwa 8 Stunden'),
         {
           detail: lt(
             'Return to Luzerne around 16:00–17:00, depending on the connection.',
@@ -119,13 +114,13 @@ const sections: TourSection[] = [
         'g-format',
         lt('Format', 'Format'),
         lt(
-          'A stand-alone day, or after Tour 01 and Pilatus',
-          'Ein eigener Tag oder nach Tour 01 und Pilatus',
+          'A day of its own, or after the Luzerne walk and Pilatus',
+          'Ein eigener Tag oder nach dem Luzerner Rundgang und Pilatus',
         ),
       ),
       row(
         'g-not',
-        lt('Not automatically included', 'Nicht automatisch enthalten'),
+        lt('Not part of the route', 'Nicht Teil der Route'),
         lt(
           'Spa admission, a paddle steamer, a heritage steam train and farm visits',
           'Spa, Dampfschiff, historische Dampfbahn und Hofbesuche',
@@ -145,8 +140,8 @@ const sections: TourSection[] = [
         's-perspectives',
         lt('A sequence of perspectives', 'Eine Folge von Perspektiven'),
         lt(
-          'Not a single viewpoint: water, hillside, train window, open height and the lakeshore again. The guide makes space for observations and conversation.',
-          'Nicht ein einziger Aussichtspunkt, sondern vom Wasser zum Hang, vom Zugfenster zur Höhe und wieder hinunter an den See. Die Führung lässt Raum für Beobachtungen und Gespräche.',
+          'Not a single viewpoint: water, hillside, train window, open height and the lakeshore again. Take your time to look.',
+          'Nicht ein einziger Aussichtspunkt, sondern vom Wasser zum Hang, vom Zugfenster zur Höhe und wieder hinunter an den See. Nehmen Sie sich Zeit zum Schauen.',
         ),
       ),
       row(
@@ -159,7 +154,7 @@ const sections: TourSection[] = [
       ),
       row(
         's-weather',
-        lt('Honest about the weather', 'Ehrlich beim Wetter'),
+        lt('Weather', 'Wetter'),
         lt('Views depend on the weather.', 'Die Aussicht hängt vom Wetter ab.'),
       ),
     ],
@@ -169,19 +164,19 @@ const sections: TourSection[] = [
     layout: 'timeline',
     title: lt('A day in changing scenes', 'Ein Tag in mehreren Bildern'),
     body: lt(
-      'Planning windows. The actual boat services depend on the date you choose.',
-      'Zeitfenster zur Planung; konkrete Schiffskurse hängen vom Datum ab.',
+      'Rough time windows. The actual boat services depend on the date of your trip.',
+      'Ungefähre Zeitfenster; die konkreten Schiffskurse hängen vom Datum ab.',
     ),
     items: timeline([
       [
         '08:45–09:15',
         't1',
         lt(
-          'Meet near the Luzerne landing stages',
-          'Treffen bei den Luzerner Landungsbrücken',
+          'Start at the Luzerne landing stages',
+          'Start bei den Luzerner Landungsbrücken',
         ),
         lt(
-          'Verify the pier and the service; SGV normally lists Pier 1 for Vitznau.',
+          'Check the pier and the sailing; SGV normally lists Pier 1 for Vitznau.',
           'Steg und Kurs prüfen; für Vitznau nennt SGV normalerweise Steg 1.',
         ),
       ],
@@ -197,7 +192,7 @@ const sections: TourSection[] = [
       [
         'About 10–11',
         't3',
-        lt('Transfer with a deliberate buffer', 'Umstieg mit bewusstem Puffer'),
+        lt('Change with time to spare', 'Umstieg mit genügend Zeit'),
         lt(
           'If needed, take a later train and enjoy the lakeshore. The checked Vitznau to Kulm timetable gives 32 minutes.',
           'Falls nötig ein späterer Zug und ein Aufenthalt am See. Die Bahn Vitznau–Kulm benötigt im geprüften Fahrplan 32 Minuten.',
@@ -208,8 +203,8 @@ const sections: TourSection[] = [
         't4',
         lt('Arrive at Rigi Kulm', 'Ankommen auf Rigi Kulm'),
         lt(
-          'Short walks to suitable viewpoints and guided interpretation.',
-          'Kurze Wege zu geeigneten Aussichtspunkten und erzählerische Führung.',
+          'Short walks to suitable viewpoints.',
+          'Kurze Wege zu geeigneten Aussichtspunkten.',
         ),
       ],
       [
@@ -217,8 +212,8 @@ const sections: TourSection[] = [
         't5',
         lt('Lunch at the Rigi Kulm-Hotel', 'Mittagessen im Rigi Kulm-Hotel'),
         lt(
-          'In the self-service restaurant. Confirm availability.',
-          'Im Selbstbedienungsrestaurant; Verfügbarkeit bestätigen.',
+          'In the self-service restaurant. Check availability.',
+          'Im Selbstbedienungsrestaurant; Verfügbarkeit prüfen.',
         ),
       ],
       [
@@ -226,8 +221,8 @@ const sections: TourSection[] = [
         't6',
         lt('Cogwheel train to Rigi Kaltbad', 'Zahnradbahn nach Rigi Kaltbad'),
         lt(
-          'A short stay near the station; no additional spa booking is included.',
-          'Kurzer Aufenthalt nahe dem Bahnhof, keine zusätzliche Spa-Buchung.',
+          'A short stay near the station. Spa admission is not part of the route.',
+          'Kurzer Aufenthalt nahe dem Bahnhof. Der Spa-Eintritt gehört nicht zur Route.',
         ),
       ],
       [
@@ -247,8 +242,8 @@ const sections: TourSection[] = [
         't8',
         lt('Return to Luzerne', 'Rückkehr nach Luzern'),
         lt(
-          'According to the selected connection. Book onward travel only after confirming the return timetable.',
-          'Je nach Verbindung. Weiterreise erst nach bestätigtem Rückfahrplan buchen.',
+          'Depends on the connection you take. Check the return timetable before planning onward travel.',
+          'Je nach Verbindung. Den Rückfahrplan prüfen, bevor Sie die Weiterreise planen.',
         ),
       ],
     ]),
@@ -261,8 +256,8 @@ const sections: TourSection[] = [
       'Bahnbeispiel für 12.10.–12.12.2026',
     ),
     body: lt(
-      'Match the boats separately. This is not a confirmed end-to-end booking.',
-      'Die Schiffe dazu separat abstimmen; dies ist kein bestätigtes Gesamtpaket.',
+      'Check the boat times separately; the rail times below are only an example.',
+      'Die Schiffszeiten separat prüfen; die Bahnzeiten unten sind nur ein Beispiel.',
     ),
     items: [
       row(
@@ -290,8 +285,8 @@ const sections: TourSection[] = [
       'Fahrpläne wechseln mit der Saison',
     ),
     body: lt(
-      'The checked Rigi rail timetable covers 12 October to 12 December 2026. SGV changes to its winter boat timetable on 19 October, through 16 April 2027. The time windows above are therefore not fixed year-round departures.\n\nSGV asks groups of ten or more to register in advance. That is not a seat reservation.',
-      'Der geprüfte Rigi-Fahrplan gilt 12.10.–12.12.2026. SGV wechselt am 19.10. auf den Winterfahrplan bis 16.04.2027. Deshalb sind die Zeitfenster oben keine ganzjährig festen Abfahrten.\n\nBei Gruppen ab zehn Personen verlangt SGV eine Voranmeldung; diese ist keine Sitzplatzreservation.',
+      'The checked Rigi rail timetable covers 12 October to 12 December 2026. SGV changes to its winter boat timetable on 19 October, through 16 April 2027. The time windows above therefore change over the year.',
+      'Der geprüfte Rigi-Fahrplan gilt 12.10.–12.12.2026. SGV wechselt am 19.10. auf den Winterfahrplan bis 16.04.2027. Die Zeitfenster oben gelten deshalb nicht das ganze Jahr.',
     ),
   },
   {
@@ -307,16 +302,16 @@ const sections: TourSection[] = [
         'r-change',
         lt('Allow time to change', 'Umsteigen mit Zeit'),
         lt(
-          'Boat to Vitznau, a walk to the railway boarding point, then the cogwheel train to Kulm. Kaltbad is on the same line and is visited on the return. When a connection is tight, we plan a later departure rather than pass the pressure on to guests.',
-          'Schiff bis Vitznau, zu Fuss zum Bahneinstieg, Zahnradbahn bis Kulm. Kaltbad liegt auf derselben Bahnstrecke und wird auf dem Rückweg besucht. Bei knappen Anschlüssen planen wir einen späteren Kurs, statt den Zeitdruck weiterzugeben.',
+          'Boat to Vitznau, a walk to the railway boarding point, then the cogwheel train to Kulm. Kaltbad is on the same line and is visited on the way back. If a connection is tight, take the next one rather than rush.',
+          'Schiff bis Vitznau, zu Fuss zum Bahneinstieg, Zahnradbahn bis Kulm. Kaltbad liegt auf derselben Bahnstrecke und wird auf dem Rückweg besucht. Ist ein Anschluss knapp, nehmen Sie lieber den nächsten, statt zu hetzen.',
         ),
       ),
       row(
         'r-return',
         lt('Alternative return', 'Alternative Rückreise'),
         lt(
-          'If the boat timetable does not fit, a land connection from Vitznau or a rail return via Arth-Goldau can be checked. This changes the route and possibly ticket validity, so it is confirmed only after checking your travel day.',
-          'Bei unpassendem Schiffsfahrplan kann eine Landverbindung ab Vitznau oder eine Bahnrückfahrt über Arth-Goldau geprüft werden. Das ändert Route und möglicherweise Ticketgültigkeit; erst nach Prüfung des Reisetags zugesagt.',
+          'If the boat timetable does not fit, you can return by a land connection from Vitznau or by rail via Arth-Goldau. This changes the route and possibly ticket validity, so check it for your travel day.',
+          'Bei unpassendem Schiffsfahrplan ist eine Landverbindung ab Vitznau oder eine Bahnrückfahrt über Arth-Goldau möglich. Das ändert Route und möglicherweise Ticketgültigkeit; für den Reisetag prüfen.',
         ),
       ),
     ],
@@ -326,8 +321,8 @@ const sections: TourSection[] = [
     layout: 'list',
     title: lt('Lunch at Rigi Kulm', 'Mittagessen auf Rigi Kulm'),
     body: lt(
-      'Lunch is optional, is paid separately and is not reserved for you.',
-      'Das Mittagessen ist optional, wird separat bezahlt und nicht für Sie reserviert.',
+      'Lunch is optional and paid separately.',
+      'Das Mittagessen ist optional und wird separat bezahlt.',
     ),
     items: [
       row(
@@ -337,8 +332,8 @@ const sections: TourSection[] = [
           'Rigi Kulm-Hotel, Selbstbedienungsrestaurant',
         ),
         lt(
-          'Swiss dishes; the operator lists hot food until 15:30. Confirm the full opening hours for your date before you book.',
-          'Schweizer Gerichte; die Betreiberseite nennt warme Speisen bis 15:30. Die vollständigen tagesaktuellen Öffnungszeiten vor Buchung bestätigen.',
+          'Swiss dishes; the operator lists hot food until 15:30. Check the full opening hours for your date before you go.',
+          'Schweizer Gerichte; die Betreiberseite nennt warme Speisen bis 15:30. Die vollständigen tagesaktuellen Öffnungszeiten vor der Reise prüfen.',
         ),
         {
           optional: true,
@@ -367,8 +362,8 @@ export const rigi: Tour = {
     'Ein ganzer Tag mit Schiff und Zahnradbahn, mit Zeit zum Verweilen',
   ),
   description: lt(
-    'Luzerne slowly falls behind the boat. Shorelines pass and the water gives the day a different rhythm. At Vitznau, the perspective changes: the cogwheel train climbs towards the Rigi. This day combines travel across the lake, the fascination of a mountain railway and a stay with room for personal discoveries.',
-    'Luzern bleibt langsam hinter dem Schiff zurück. Die Ufer ziehen vorbei, und das Wasser gibt dem Tag einen anderen Rhythmus. In Vitznau wechselt die Perspektive: Die Zahnradbahn führt hinauf zur Rigi. Dieser Ausflug verbindet das Reisen auf dem See mit dem Staunen über eine Bergbahn und einem Aufenthalt, der Raum für persönliche Entdeckungen lässt.',
+    'A full day by lake boat and cogwheel railway: across the lake to Vitznau, up to Rigi Kulm and back down by way of Kaltbad. Views depend on the weather, and there is time to linger.',
+    'Ein ganzer Tag mit Schiff und Zahnradbahn: über den See nach Vitznau, hinauf auf Rigi Kulm und über Kaltbad zurück. Die Aussicht hängt vom Wetter ab, und es bleibt Zeit zum Verweilen.',
   ),
   longStory: storyFromChapters({
     title: lt('From the lake to the sky', 'Vom See zum Himmel'),
@@ -388,16 +383,16 @@ export const rigi: Tour = {
         photo: photos.kulm,
         title: lt('A sequence of perspectives', 'Eine Folge von Perspektiven'),
         body: lt(
-          'It is a sequence of perspectives rather than a single viewpoint: water, hillside, train window, open height and the lakeshore again. The guide makes space for observations and conversation.',
-          'Es ist eine Folge von Perspektiven statt eines einzelnen Aussichtspunkts: Wasser, Hang, Zugfenster, offene Höhe und wieder das Seeufer. Die Führung lässt Raum für Beobachtungen und Gespräche.',
+          'It is a sequence of perspectives rather than a single viewpoint: water, hillside, train window, open height and the lakeshore again. Take your time to look.',
+          'Es ist eine Folge von Perspektiven statt eines einzelnen Aussichtspunkts: Wasser, Hang, Zugfenster, offene Höhe und wieder das Seeufer. Nehmen Sie sich Zeit zum Schauen.',
         ),
       },
       {
         photo: photos.kaltbad,
         title: lt('Time to change', 'Umsteigen mit Zeit'),
         body: lt(
-          'Lunch at Rigi Kulm and a short stop at Kaltbad add different moods without requiring a long hike. When a connection is tight, we plan a later departure rather than pass the pressure on to guests.',
-          'Ein Mittagessen auf Rigi Kulm und ein kurzer Aufenthalt in Kaltbad schaffen unterschiedliche Stimmungen, ohne eine lange Wanderung vorauszusetzen. Bei knappen Anschlüssen planen wir einen späteren Kurs, statt den Zeitdruck weiterzugeben.',
+          'Lunch at Rigi Kulm and a short stop at Kaltbad add different moods without requiring a long hike. If a connection is tight, take the next one rather than rush.',
+          'Ein Mittagessen auf Rigi Kulm und ein kurzer Aufenthalt in Kaltbad schaffen unterschiedliche Stimmungen, ohne eine lange Wanderung vorauszusetzen. Ist ein Anschluss knapp, nehmen Sie lieber den nächsten, statt zu hetzen.',
         ),
       },
     ],
@@ -408,30 +403,30 @@ export const rigi: Tour = {
   childPrice: 7000,
   infantPrice: 0,
   meetingPoint: lt(
-    'Luzerne landing stages (Pier 1 for Vitznau; pier and service confirmed before the day)',
-    'Luzerner Landungsbrücken (Steg 1 nach Vitznau; Steg und Kurs werden vorab bestätigt)',
+    'Luzerne landing stages, Pier 1 for Vitznau',
+    'Luzerner Landungsbrücken, Steg 1 nach Vitznau',
   ),
   included: [
     lt(
-      'Guiding from Luzerne across the lake and up the Rigi and back, in a small group',
-      'Führung ab Luzern über den See auf die Rigi und zurück, in kleiner Gruppe',
+      'A boat trip across the lake from Luzerne to Vitznau and back',
+      'Eine Schifffahrt über den See von Luzern nach Vitznau und zurück',
     ),
     lt(
-      'Stories and conversation along the lake, the cogwheel railway and the summit',
-      'Geschichten und Gespräche am See, auf der Zahnradbahn und auf dem Gipfel',
+      'The cogwheel railway up to Rigi Kulm, with a stop at Kaltbad on the way down',
+      'Die Zahnradbahn hinauf nach Rigi Kulm, mit einem Halt in Kaltbad auf dem Rückweg',
     ),
   ],
   excluded: lt(
-    'Boat and rail tickets, lunch and gifts. Spa admission, a paddle steamer, a heritage steam train and farm visits are not automatically included.',
-    'Schiffs- und Bahntickets, Mittagessen und Geschenke. Spa, Dampfschiff, historische Dampfbahn und Hofbesuche sind nicht automatisch enthalten.',
+    'Boat and rail tickets, lunch and keepsakes are paid separately. Spa admission, a paddle steamer, a heritage steam train and farm visits are not part of the route.',
+    'Schiffs- und Bahntickets, Mittagessen und Andenken werden separat bezahlt. Spa, Dampfschiff, historische Dampfbahn und Hofbesuche gehören nicht zur Route.',
   ),
   conditions: lt(
-    'No compulsory hike: the section from Kulm to Kaltbad is by train. Views depend on the weather. Please check boarding arrangements, short walks and individual mobility needs before booking. Small groups of about 2–8 guests; SGV asks groups of ten or more to register in advance. Children must be accompanied by an adult.',
-    'Kein obligatorischer Wanderweg: Der Abschnitt von Kulm nach Kaltbad wird mit der Bahn gefahren. Die Aussicht hängt vom Wetter ab. Bitte klären Sie Einstiege, kurze Wege und individuelle Mobilität vor der Buchung. Kleine Gruppen mit etwa 2–8 Gästen; SGV verlangt bei Gruppen ab zehn Personen eine Voranmeldung. Kinder müssen von einer erwachsenen Person begleitet werden.',
+    'No compulsory hike: the section from Kulm to Kaltbad is by train. Views depend on the weather. Check boarding, short walks and your own mobility needs before you go. SGV asks groups of ten or more to register in advance.',
+    'Kein obligatorischer Wanderweg: Der Abschnitt von Kulm nach Kaltbad wird mit der Bahn gefahren. Die Aussicht hängt vom Wetter ab. Einstiege, kurze Wege und die eigene Mobilität vorab prüfen. SGV verlangt bei Gruppen ab zehn Personen eine Voranmeldung.',
   ),
   cancellationPolicy: lt(
-    'Sample policy: contact the organiser at least 48 hours before departure. In poor visibility the mountain section is shortened or rescheduled.',
-    'Beispielregel: mindestens 48 Stunden vor Beginn den Veranstalter kontaktieren. Bei schlechter Sicht wird der Bergteil verkürzt oder verschoben.',
+    'In poor visibility, shorten your time on the summit or pick another day.',
+    'Bei schlechter Sicht die Zeit auf dem Gipfel verkürzen oder einen anderen Tag wählen.',
   ),
   published: true,
   commissionRate: 0.1,
