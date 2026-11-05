@@ -8866,6 +8866,12 @@
       "PublicMapItem": {
         "description": "One pin on the map list",
         "properties": {
+          "address": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "categoryIds": {
             "items": {
               "format": "uuid",
@@ -8954,6 +8960,28 @@
           },
           "title": {
             "type": "string"
+          },
+          "weeklyHours": {
+            "items": {
+              "properties": {
+                "closes": {
+                  "type": "string"
+                },
+                "day": {
+                  "type": "integer"
+                },
+                "opens": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "day",
+                "opens",
+                "closes"
+              ],
+              "type": "object"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -8961,6 +8989,8 @@
           "slug",
           "latitude",
           "longitude",
+          "address",
+          "weeklyHours",
           "title",
           "language",
           "categoryIds",

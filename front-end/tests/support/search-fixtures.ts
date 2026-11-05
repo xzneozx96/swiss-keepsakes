@@ -18,6 +18,8 @@ export function mapItem(over: Partial<PublicMapItem> & { title: string }): Publi
     slug: over.title.toLowerCase().replace(nonWord, '-'),
     latitude: 47.05,
     longitude: 8.3,
+    address: null,
+    weeklyHours: [],
     language: 'en',
     categoryIds: [],
     stayTag: 'both',

@@ -65,7 +65,7 @@ describe('[E2.12] public read schemas', () => {
   })
 
   it('[E2.12][AC88] the map item has exactly the ADR-006 fields', () => {
-    const expected = ['id', 'slug', 'latitude', 'longitude', 'title', 'language', 'categoryIds', 'stayTag', 'interests', 'nextDate', 'hasMainStory', 'mainStorySlug', 'photoUrl', 'photoVariants', 'mustVisit', 'tip']
+    const expected = ['id', 'slug', 'latitude', 'longitude', 'address', 'weeklyHours', 'title', 'language', 'categoryIds', 'stayTag', 'interests', 'nextDate', 'hasMainStory', 'mainStorySlug', 'photoUrl', 'photoVariants', 'mustVisit', 'tip']
     expect(Object.keys(publicMapItemSchema.shape).sort()).toEqual([...expected].sort())
   })
 

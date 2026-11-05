@@ -68,6 +68,8 @@ export function previewItem(form: PlaceForm, language: Language, options: { stor
     slug: null,
     latitude: form.latitude ?? 0,
     longitude: form.longitude ?? 0,
+    address: form.address.trim() === '' ? null : form.address.trim(),
+    weeklyHours: form.hours.flatMap(span => (TIME.test(span.opens) && TIME.test(span.closes) ? [{ day: span.day, opens: span.opens, closes: span.closes }] : [])),
     title: title || options.untitled,
     language: shown,
     categoryIds: form.categoryIds,

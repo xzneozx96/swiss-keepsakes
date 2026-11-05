@@ -287,6 +287,8 @@ export interface PublicMapItem {
   slug: string | null
   latitude: number
   longitude: number
+  address: string | null
+  weeklyHours: { day: number, opens: string, closes: string }[]
   title: string
   language: ContentLanguage
   categoryIds: string[]
@@ -404,6 +406,8 @@ export function toMapItem(row: PublicPinRow, requested: ContentLanguage, now: Da
     slug: pin.slug,
     latitude: pin.latitude,
     longitude: pin.longitude,
+    address: pin.address,
+    weeklyHours: pin.weeklyHours,
     title: pin.title,
     language: pin.language,
     categoryIds: withParents(row.categories.map(c => c.id), parentOf),

@@ -208,6 +208,20 @@ describe('public map list', () => {
     expect(publicMapSchema.safeParse({ items: de }).success).toBe(true)
   })
 
+  it('[E4.13] the list item carries the address and the weekly hours exactly as the pin card does, null and empty without them', async () => {
+    const hours = [{ day: 1, opens: '08:00', closes: '18:00' }, { day: 6, opens: '09:00', closes: '14:00' }]
+    const full = pin(1, { address: 'Pilatusstrasse 1, Luzern', weeklyHours: hours })
+    const bare = pin(2)
+    const s = setup({ pins: [full, bare] })
+
+    const { items } = await s.map('en')
+    const card = await s.pin(full.id, 'en')
+
+    expect(items.find(i => i.id === full.id)).toMatchObject({ address: 'Pilatusstrasse 1, Luzern', weeklyHours: hours })
+    expect(card.ok && items.find(i => i.id === full.id)).toMatchObject(card.ok ? { address: card.value.address, weeklyHours: card.value.weeklyHours } : {})
+    expect(items.find(i => i.id === bare.id)).toMatchObject({ address: null, weeklyHours: [] })
+  })
+
   it('[E2.12][AC88][D-5] a pin that falls back to English keeps the English main story slug, not the reader\'s language', async () => {
     const s = setup({ pins: [pin(1, { name: { en: 'Only EN' }, tip: { en: 'Tip EN' }, mainStorySlugs: { en: 'story-en', de: 'geschichte' } })] })
 

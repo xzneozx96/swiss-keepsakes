@@ -159,6 +159,8 @@ export const publicMapItemSchema = z.object({
   slug: z.string().nullable(),
   latitude: z.number(),
   longitude: z.number(),
+  address: z.string().nullable(),
+  weeklyHours: z.array(z.object({ day: z.int(), opens: z.string(), closes: z.string() })),
   title: z.string(),
   language: publicLanguageSchema,
   categoryIds: z.array(z.uuid()),

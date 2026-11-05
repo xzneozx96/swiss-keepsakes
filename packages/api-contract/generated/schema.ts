@@ -6796,6 +6796,7 @@ export interface components {
         };
         /** @description One pin on the map list */
         PublicMapItem: {
+            address: string | null;
             categoryIds: string[];
             hasMainStory: boolean;
             /** Format: uuid */
@@ -6821,6 +6822,11 @@ export interface components {
             /** @description The local tip in the carried language, with the same fallback as the title; empty when the pin has none */
             tip: string;
             title: string;
+            weeklyHours: {
+                closes: string;
+                day: number;
+                opens: string;
+            }[];
         };
         /** @description A photo of a pin, with its public addresses */
         PublicPhoto: {
