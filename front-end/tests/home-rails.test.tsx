@@ -45,7 +45,7 @@ function pin(n: number, over: Partial<PublicMapItem> = {}): PublicMapItem {
 }
 
 function tour(n: number, stayTag: PublicTourCard['stayTag'], over: Partial<PublicTourCard> = {}): PublicTourCard {
-  return { id: id(n), slug: `tour-${n}`, title: `Tour ${n}`, stayTag, interests: [], durationMinutes: 180, coverKey: null, cover: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'], ...over }
+  return { id: id(n), slug: `tour-${n}`, title: `Tour ${n}`, stayTag, interests: [], durationMinutes: 180, stopCount: 4, coverKey: null, cover: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'], ...over }
 }
 
 const FOUR = [pin(1), pin(2), pin(3, { interests: ['food-drink'] }), pin(4)]

@@ -83,8 +83,6 @@ const WHOLE_LISTS: Record<string, WholeList> = {
 
 /** Lists the ADR makes paged in a later slice. An entry leaves this map when its slice lands (the test below fails when a paged route is still listed). */
 const PENDING_SLICES: Record<string, { slice: number, expectedSize: string }> = {
-  'GET /api/public/keepsakes': { slice: 3, expectedSize: 'tens to low hundreds' },
-  'GET /api/public/tours': { slice: 3, expectedSize: '11 now, more later' },
   'GET /api/store/{storeId}/story-groups': { slice: 4, expectedSize: 'hundreds' },
   'GET /api/store/{storeId}/pins': { slice: 4, expectedSize: 'hundreds' },
   'GET /api/store/{storeId}/products': { slice: 5, expectedSize: 'tens to low hundreds' },
@@ -123,6 +121,8 @@ describe('[ADR-033] every list route pages or is named as a whole list', () => {
 
   it('finds the list routes', () => {
     expect(routes.get('GET /api/public/stories')).toBe('cursor')
+    expect(routes.get('GET /api/public/keepsakes')).toBe('cursor')
+    expect(routes.get('GET /api/public/tours')).toBe('cursor')
     expect(routes.get('GET /api/store/{storeId}/media')).toBe('numbered')
   })
 

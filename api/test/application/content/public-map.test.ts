@@ -1,5 +1,5 @@
 import type { PinDate } from '@sk/domain/content'
-import type { PublicCategoryRow, PublicPinDetailRow, PublicReadRepository, PublicStoryRow, PublicTourRow } from '../../../src/modules/content/read-ports.ts'
+import type { PublicCategoryRow, PublicPinDetailRow, PublicReadRepository, PublicStoryRow, PublicTourRow, TourPageKey, TourPageQuery } from '../../../src/modules/content/read-ports.ts'
 import { publicMapItemSchema, publicMapSchema, publicPinSchema, publicTourListSchema, publicTourSchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 import { makeGetMap } from '../../../src/modules/content/application/read-map.ts'
@@ -56,6 +56,7 @@ function pin(n: number, over: Partial<PublicPinDetailRow> = {}): PublicPinDetail
 function tour(n: number, over: Partial<PublicTourRow> = {}): PublicTourRow {
   return {
     id: uuid(500 + n),
+    stopCount: 1,
     slug: { en: `tour-${n}` },
     stayTag: 'both',
     interests: [],
@@ -73,8 +74,9 @@ function tour(n: number, over: Partial<PublicTourRow> = {}): PublicTourRow {
   }
 }
 
-function setup(state: { pins: PublicPinDetailRow[], tours?: PublicTourRow[] }, start = '2090-11-10T12:00:00Z') {
+function setup(state: { pins: PublicPinDetailRow[], tours?: PublicTourRow[], nextTour?: TourPageKey }, start = '2090-11-10T12:00:00Z') {
   let loads = 0
+  const tourAsks: TourPageQuery[] = []
   const tours = () => state.tours ?? []
   const reads: PublicReadRepository<null> = {
     pagePublishedStories: async () => ({ rows: [], next: null, total: 0 }),
@@ -85,7 +87,10 @@ function setup(state: { pins: PublicPinDetailRow[], tours?: PublicTourRow[] }, s
       return state.pins
     },
     findVisiblePin: async (_tx, id) => state.pins.find(p => p.id === id),
-    listPublishedTours: async () => tours(),
+    pagePublishedTours: async (_tx, query) => {
+      tourAsks.push(query)
+      return { rows: tours(), next: state.nextTour ?? null, total: tours().length + 5 }
+    },
     findPublishedTourBySlug: async (_tx, slug) => tours().find(t => Object.values(t.slug).includes(slug)),
   }
   const clock = createManualClock(new Date(start))
@@ -104,7 +109,12 @@ function setup(state: { pins: PublicPinDetailRow[], tours?: PublicTourRow[] }, s
         publicPinSchema.parse(result.value)
       return result
     },
-    tours: async (lang: 'en' | 'de') => publicTourListSchema.parse(await listTours(lang)),
+    tourAsks,
+    tourPage: listTours,
+    tours: async (lang: 'en' | 'de') => {
+      const page = await listTours({ language: lang })
+      return publicTourListSchema.parse({ items: page.items, total: page.total, nextCursor: page.next && 'x' })
+    },
     tour: async (slug: string, lang: 'en' | 'de') => {
       const result = await getTour(slug, lang)
       if (result.ok)
@@ -406,6 +416,45 @@ describe('public pin card', () => {
 
     expect(await s.pin(uuid(2), 'en')).toEqual({ ok: false, reason: 'not-found' })
     expect(await s.pin(ended.id, 'en')).toEqual({ ok: false, reason: 'not-found' })
+  })
+})
+
+describe('[ADR-033] the tour list pages', () => {
+  const next = ['0190a000-0000-7000-8000-000000000001'] as const
+
+  it('asks the repository for the limit and the key, and carries next back', async () => {
+    const s = setup({ pins: [], tours: [tour(1)], nextTour: next })
+
+    const page = await s.tourPage({ language: 'en', limit: 10, after: next })
+
+    expect(s.tourAsks).toEqual([{ limit: 10, after: next }])
+    expect(page.next).toEqual(next)
+    expect(page.total).toBe(6)
+    expect(page.items).toHaveLength(1)
+  })
+
+  it('without a limit the whole list comes and next is null', async () => {
+    const s = setup({ pins: [], tours: [tour(1), tour(2)] })
+
+    const page = await s.tourPage({ language: 'en' })
+
+    expect(s.tourAsks).toEqual([{ limit: undefined, after: undefined }])
+    expect(page).toMatchObject({ next: null })
+    expect(page.items).toHaveLength(2)
+  })
+})
+
+describe('[ADR-033] a tour\'s stopCount', () => {
+  it('equals the length of the stops the detail returns, and the list card carries the same number', async () => {
+    const stop = (position: number) => ({ position, latitude: 47, longitude: 8, title: { en: 'Stop' }, text: { en: 'Text' }, minutesFromStart: null, key: null, placeId: null })
+    const s = setup({ pins: [], tours: [tour(1, { stopCount: 3, stops: [stop(1), stop(2), stop(3)] }), tour(2, { stopCount: 0, stops: [] })] })
+
+    const list = await s.tours('en')
+    const detail = await s.tour('tour-1', 'en')
+
+    expect(detail.ok && detail.value.stops).toHaveLength(3)
+    expect(detail.ok && detail.value.stopCount).toBe(3)
+    expect(list.items.map(i => i.stopCount)).toEqual([3, 0])
   })
 })
 

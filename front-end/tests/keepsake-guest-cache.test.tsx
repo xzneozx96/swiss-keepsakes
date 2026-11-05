@@ -8,10 +8,10 @@ import { useVictorinoxItems } from '@/features/home/hooks/use-victorinox-items'
 import { useSearchSources } from '@/features/search/api/search-reads'
 import { TourKeepsakes } from '@/features/tours/discovery/tour-keepsakes'
 
-const m = vi.hoisted(() => ({ keepsakes: vi.fn() }))
+const m = vi.hoisted(() => ({ keepsakes: vi.fn(), all: vi.fn() }))
 
 vi.mock('@/lib/api-mode', () => ({ apiEnabled: true }))
-vi.mock('@/features/catalog/api/keepsakes', () => ({ fetchKeepsakeList: m.keepsakes }))
+vi.mock('@/features/catalog/api/keepsakes', async importOriginal => ({ ...await importOriginal<typeof import('@/features/catalog/api/keepsakes')>(), loadKeepsakesPage: m.keepsakes, loadAllKeepsakes: m.all }))
 vi.mock('@/features/content/api/public-stories', () => ({ loadPublicStories: vi.fn().mockResolvedValue([]) }))
 vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: vi.fn().mockResolvedValue([]), fetchMapPin: vi.fn(), fetchMapCategories: vi.fn() }))
 vi.mock('@sk/api-contract', async (importOriginal) => {
@@ -41,11 +41,14 @@ function setup() {
 beforeEach(() => {
   localStorage.setItem('sk.language', JSON.stringify('en'))
   m.keepsakes.mockReset()
-  m.keepsakes.mockResolvedValue({ items: [item] })
+  // More follow, yet the blocks never ask for the next page (ADR-033).
+  m.keepsakes.mockResolvedValue({ items: [item], total: 40, nextCursor: 'more' })
+  m.all.mockReset()
+  m.all.mockResolvedValue([item])
 })
 
-describe('[E6.4] the guest keepsake list is one cache entry', () => {
-  it('the home showcase, the tour block and the search share one read', async () => {
+describe('[E6.4] the guest keepsake blocks read the first page only', () => {
+  it('the home showcase asks for 20 and the tour block for 10, each once and never a second page; the search reads the whole list on its own', async () => {
     const { wrapper } = setup()
     const home = renderHook(() => useVictorinoxItems(), { wrapper })
     render(<TourKeepsakes />, { wrapper })
@@ -54,7 +57,9 @@ describe('[E6.4] the guest keepsake list is one cache entry', () => {
     await waitFor(() => expect(home.result.current.isPending).toBe(false))
     await waitFor(() => expect(search.result.current.isLoading).toBe(false))
     await screen.findByText('Keepsake A')
-    expect(m.keepsakes).toHaveBeenCalledTimes(1)
+    expect(m.keepsakes).toHaveBeenCalledTimes(2)
+    expect(m.keepsakes.mock.calls).toEqual(expect.arrayContaining([['en', { limit: 20 }], ['en', { limit: 10 }]]))
+    expect(m.all).toHaveBeenCalledTimes(1)
   })
 
   it('a merchant invalidation of the keepsake list does not refetch the guest list', async () => {

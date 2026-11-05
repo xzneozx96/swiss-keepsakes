@@ -10,6 +10,14 @@ export const tourDiscoveryEn = {
     'Every upcoming departure of this tour is fully booked. Explore our other tours, or ask the organiser about new dates.',
   'tourDiscovery.noDatesBody':
     'This tour has no upcoming departures yet. Explore our other tours, or ask the organiser about new dates.',
+  'tourDiscovery.count.one': '1 tour',
+  'tourDiscovery.count.other': '{count} tours',
+  'tourDiscovery.more.one': '1 more tour',
+  'tourDiscovery.more.other': '{count} more tours',
+  'tourDiscovery.end.one': 'That’s the only tour',
+  'tourDiscovery.end.other': 'That’s all {count} tours',
+  'tourDiscovery.stops': '{count} stops',
+  'tourDiscovery.error': 'The tours did not load. Check your connection and try again.',
   'tourDiscovery.empty':
     'New tours are on their way. Come back soon to discover Luzerne with us.',
   'tourDiscovery.notFound':

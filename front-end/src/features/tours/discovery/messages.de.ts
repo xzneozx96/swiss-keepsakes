@@ -12,6 +12,14 @@ export const tourDiscoveryDe: Record<keyof typeof tourDiscoveryEn, string> = {
     'Alle kommenden Termine dieser Tour sind ausgebucht. Entdecken Sie unsere anderen Touren oder fragen Sie den Veranstalter nach neuen Terminen.',
   'tourDiscovery.noDatesBody':
     'Für diese Tour gibt es noch keine kommenden Termine. Entdecken Sie unsere anderen Touren oder fragen Sie den Veranstalter nach neuen Terminen.',
+  'tourDiscovery.count.one': '1 Tour',
+  'tourDiscovery.count.other': '{count} Touren',
+  'tourDiscovery.more.one': '1 weitere Tour',
+  'tourDiscovery.more.other': '{count} weitere Touren',
+  'tourDiscovery.end.one': 'Das ist die einzige Tour',
+  'tourDiscovery.end.other': 'Das sind alle {count} Touren',
+  'tourDiscovery.stops': '{count} Stationen',
+  'tourDiscovery.error': 'Die Touren konnten nicht geladen werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.',
   'tourDiscovery.empty':
     'Neue Touren folgen bald. Entdecken Sie Luzern bald wieder mit uns.',
   'tourDiscovery.notFound':

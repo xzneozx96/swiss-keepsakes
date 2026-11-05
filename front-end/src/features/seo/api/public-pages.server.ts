@@ -34,10 +34,9 @@ async function readCards(
   lang: PublicLanguage,
 ): Promise<PublicCard[]> {
   try {
-    // The stories list is paged (ADR-033): read every page, 20 at a time, until the search moves to the server.
-    const items: unknown = kind === 'stories'
-      ? await readAllPages(cursor => answer(client.GET('/api/public/stories', { params: { query: { lang, limit: MAX_PAGE_LIMIT, ...(cursor ? { cursor } : {}) } }, ...timeout(PAGE_READ_TIMEOUT_MS) })), `Sitemap stories in ${lang}`)
-      : (await answer(client.GET('/api/public/tours', { params: { query: { lang } }, ...timeout(PAGE_READ_TIMEOUT_MS) }))).items
+    // The lists are paged (ADR-033): read every page, 20 at a time, until the search moves to the server.
+    const path = kind === 'stories' ? '/api/public/stories' : '/api/public/tours'
+    const items: unknown = await readAllPages(cursor => answer(client.GET(path, { params: { query: { lang, limit: MAX_PAGE_LIMIT, ...(cursor ? { cursor } : {}) } }, ...timeout(PAGE_READ_TIMEOUT_MS) })), `Sitemap ${kind} in ${lang}`)
     const parsed = (kind === 'stories' ? storyCards : tourCards).parse(items)
     return parsed.filter(card => !card.fallback && card.language === lang)
   }

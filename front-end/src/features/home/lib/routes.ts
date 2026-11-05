@@ -3,6 +3,9 @@ import type { Stay } from '@/features/onboarding/lib/record'
 
 import { rankItems } from '@sk/domain/content'
 
+/** The rail reads the first page of tours only (ADR-033), so the stay ranking applies inside these. */
+export const HOME_TOUR_COUNT = 10
+
 /**
  * The route cards by stay length: a multi-day stay shows multi-day tours first, a short stay or no answer shows short-stay
  * tours first. A tour tagged `both` fits either, so it stays in server order with the group that comes first. Drops nothing.

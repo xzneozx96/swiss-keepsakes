@@ -30,7 +30,7 @@ function pin(n: number, over: Partial<PublicMapItem> = {}): PublicMapItem {
 }
 
 function tour(n: number, stayTag: PublicTourCard['stayTag']): PublicTourCard {
-  return { id: id(n), slug: `tour-${n}`, title: `Tour ${n}`, stayTag, interests: [], durationMinutes: 120, coverKey: null, cover: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
+  return { id: id(n), slug: `tour-${n}`, title: `Tour ${n}`, stayTag, interests: [], durationMinutes: 120, stopCount: 4, coverKey: null, cover: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
 }
 
 const names = (items: readonly { title: string }[]) => items.map(item => item.title)

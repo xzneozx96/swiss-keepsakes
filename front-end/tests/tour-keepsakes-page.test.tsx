@@ -11,7 +11,7 @@ import { TourDetailPage } from '@/features/tours/discovery'
 import { routeTree } from '@/routeTree.gen'
 
 const read = vi.hoisted(() => ({ fn: vi.fn() }))
-vi.mock('@/features/catalog/api/keepsakes', () => ({ fetchKeepsakeList: read.fn }))
+vi.mock('@/features/catalog/api/keepsakes', async importOriginal => ({ ...await importOriginal<typeof import('@/features/catalog/api/keepsakes')>(), loadKeepsakesPage: read.fn }))
 
 const slug = 'lucerne-the-things-that-remain'
 const BLOCK = '[aria-labelledby="tour-keepsakes-page"]'

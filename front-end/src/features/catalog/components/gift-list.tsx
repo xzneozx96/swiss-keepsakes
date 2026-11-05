@@ -1,9 +1,11 @@
 import type { ProductCardProps } from './product-card'
+import type { InfiniteListProps } from '@/components/infinite-list'
 
 import { Skeleton } from '@heroui/react'
 
 import { EmptyState } from '@/components/empty-state'
 import { GiftIcon, InfoIcon } from '@/components/icons'
+import { InfiniteList } from '@/components/infinite-list'
 import { CartButton, CompactBar } from '@/components/layout/cart-button'
 import { LanguageButton } from '@/components/layout/language-button'
 import { Media } from '@/components/media'
@@ -22,6 +24,8 @@ interface GiftListProps {
   cards: ProductCardProps[]
   state: 'loading' | 'ready' | 'failed'
   onRetry: () => void
+  /** The list loads on scroll (ADR-033, section 8). Left out, the cards are the whole list. `count` is `cards.length`. */
+  paging?: Omit<InfiniteListProps, 'children' | 'count'>
 }
 
 /**
@@ -30,9 +34,18 @@ interface GiftListProps {
  * has three states: a skeleton that mirrors the cards, the cards (or the shared empty state when
  * the shop has none), and an error with a retry. A failed read never falls back to demo data.
  */
-export function GiftList({ banner, cards, state, onRetry }: GiftListProps) {
+export function GiftList({ banner, cards, state, onRetry, paging }: GiftListProps) {
   const { t } = useLocale()
   const [bannerEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
+  const list = (
+    <ul className="flex flex-col gap-7">
+      {cards.map(card => (
+        <li key={card.slug}>
+          <ProductCard {...card} layout="grid" />
+        </li>
+      ))}
+    </ul>
+  )
 
   return (
     <div className="flex flex-col">
@@ -84,15 +97,7 @@ export function GiftList({ banner, cards, state, onRetry }: GiftListProps) {
         {state === 'ready' && cards.length === 0 && (
           <EmptyState icon={GiftIcon} message={t('gifts.empty')} />
         )}
-        {state === 'ready' && cards.length > 0 && (
-          <ul className="flex flex-col gap-7">
-            {cards.map(card => (
-              <li key={card.slug}>
-                <ProductCard {...card} layout="grid" />
-              </li>
-            ))}
-          </ul>
-        )}
+        {state === 'ready' && cards.length > 0 && (paging ? <InfiniteList {...paging} count={cards.length}>{list}</InfiniteList> : list)}
       </div>
     </div>
   )

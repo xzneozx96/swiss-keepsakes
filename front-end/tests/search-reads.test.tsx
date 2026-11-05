@@ -16,7 +16,7 @@ const m = vi.hoisted(() => ({
 vi.mock('@/lib/api-mode', () => ({ get apiEnabled() { return m.api.on } }))
 vi.mock('@/features/content/api/public-stories', () => ({ loadPublicStories: m.stories }))
 vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: m.pins, fetchMapPin: vi.fn(), fetchMapCategories: vi.fn() }))
-vi.mock('@/features/catalog/api/keepsakes', () => ({ fetchKeepsakeList: m.keepsakes }))
+vi.mock('@/features/catalog/api/keepsakes', async importOriginal => ({ ...await importOriginal<typeof import('@/features/catalog/api/keepsakes')>(), loadAllKeepsakes: m.keepsakes }))
 vi.mock('@sk/api-contract', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@sk/api-contract')>()
 
@@ -36,7 +36,7 @@ beforeEach(() => {
   m.stories.mockResolvedValue([])
   m.pins.mockResolvedValue([])
   m.tours.mockResolvedValue({ data: { items: [] }, response: new Response() })
-  m.keepsakes.mockResolvedValue({ items: [] })
+  m.keepsakes.mockResolvedValue([])
 })
 
 describe('[E4.14][AC94] useSearchSources names the kind whose read failed', () => {

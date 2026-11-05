@@ -3,7 +3,8 @@ import type { PublicCategoryList as ContractCategoryList, PublicMap as ContractM
 import type { ContentLanguage } from '@sk/domain/content'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
-import type { PublicCategoryList, PublicMap, PublicPin, PublicStory, PublicStoryPage, PublicTour, PublicTourList } from '../application/public-view.ts'
+import type { PublicCategoryList, PublicMap, PublicPin, PublicStory, PublicStoryPage, PublicTour, PublicTourPage } from '../application/public-view.ts'
+import type { ListToursQuery } from '../application/read-tours.ts'
 import type { ListStoriesQuery } from '../application/read-stories.ts'
 import { createRoute, z } from '@hono/zod-openapi'
 import { pageQuery, publicCategoryListSchema, publicLanguageSchema, publicMapSchema, publicPinSchema, publicStoryListSchema, publicStorySchema, publicTourListSchema, publicTourSchema } from '@sk/api-contract'
@@ -22,7 +23,7 @@ export interface PublicUseCases {
   listStories: (query: ListStoriesQuery) => Promise<PublicStoryPage>
   getStory: (slug: string, language: ContentLanguage) => Promise<Result<PublicStory>>
   getPin: (id: string, language: ContentLanguage) => Promise<Result<PublicPin>>
-  listTours: (language: ContentLanguage) => Promise<PublicTourList>
+  listTours: (query: ListToursQuery) => Promise<PublicTourPage>
   getTour: (slug: string, language: ContentLanguage) => Promise<Result<PublicTour>>
   listCategories: (kind: 'map' | 'blog') => Promise<PublicCategoryList>
   getMap: (language: ContentLanguage) => Promise<PublicMap>
@@ -37,7 +38,7 @@ export type PublicTypesMatchContract = [
   Assert<Same<PublicStory, ContractStory>>,
   Assert<Same<PublicPin, ContractPin>>,
   Assert<Same<PublicMap, ContractMap>>,
-  Assert<Same<PublicTourList, ContractTourList>>,
+  Assert<Same<Omit<PublicTourPage, 'next'>, Omit<ContractTourList, 'nextCursor'>>>,
   Assert<Same<PublicTour, ContractTour>>,
   Assert<Same<PublicCategoryList, ContractCategoryList>>,
 ]
@@ -87,7 +88,19 @@ const storiesRoute = createRoute({
 const storyKey = z.tuple([z.iso.datetime({ precision: 6 }), z.uuid()])
 const storyRoute = publicGet('/api/public/stories/{slug}', 'One published story', publicStorySchema, slugParams, true)
 const pinRoute = publicGet('/api/public/places/{id}', 'The card of one visible pin', publicPinSchema, pinParams, true)
-const toursRoute = publicGet('/api/public/tours', 'The published tour guides', publicTourListSchema)
+// The tours list pages with a cursor too (ADR-033). Same transition rule as the stories: no `limit` still gets the whole list.
+const toursRoute = createRoute({
+  method: 'get',
+  path: '/api/public/tours',
+  request: { query: query.extend(pageQuery().shape) },
+  responses: {
+    200: { description: 'A page of the published tour guides, newest first', headers: cacheHeaders, content: json(publicTourListSchema) },
+    304: notModified,
+    ...problemResponses,
+  },
+})
+// The key of a tour cursor: the tour id.
+const tourKey = z.tuple([z.uuid()])
 const tourRoute = publicGet('/api/public/tours/{slug}', 'One published tour guide', publicTourSchema, slugParams, true)
 const mapCategoriesRoute = publicGet('/api/public/map-categories', 'Every map category, parents first', publicCategoryListSchema)
 const blogCategoriesRoute = publicGet('/api/public/blog-categories', 'Every blog category, parents first', publicCategoryListSchema)
@@ -116,7 +129,15 @@ export function registerPublicRoutes(app: OpenAPIHono<AppEnv>, useCases: PublicU
     return result.ok ? conditionalJson(c, result.value, publicCacheControl) : problem(c, failureProblem(result))
   })
 
-  app.openapi(toursRoute, async c => conditionalJson(c, await useCases.listTours(c.req.valid('query').lang), publicCacheControl))
+  app.openapi(toursRoute, async (c) => {
+    const { lang, limit, cursor } = c.req.valid('query')
+    const scope = { route: 'public-tours', lang }
+    const decoded = cursor === undefined ? undefined : decodeCursor(cursor, scope, tourKey)
+    if (decoded && !decoded.ok)
+      return cursorProblem(c)
+    const found = await useCases.listTours({ language: lang, limit, after: decoded?.key })
+    return conditionalJson(c, { items: found.items, total: found.total, nextCursor: found.next ? encodeCursor(found.next, scope) : null }, publicCacheControl)
+  })
 
   app.openapi(tourRoute, async (c) => {
     const result = await useCases.getTour(c.req.valid('param').slug, c.req.valid('query').lang)

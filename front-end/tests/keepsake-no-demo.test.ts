@@ -6,7 +6,7 @@ const FRONT_END = join(import.meta.dirname, '..')
 const read = (path: string) => readFileSync(join(FRONT_END, path), 'utf8')
 
 // The demo catalog (seed, demo client, query hooks) is read by other screens that later stories move to the API.
-const DEMO_CATALOG = /catalog\/seed|catalog\/victorinox|catalog\/categories|catalog\/api\/(queries|demo-client|client)|\/queries'|use-product-card|use-gift-detail|use-product-reviews|useProducts|useDemoNow|data-client\/(?!api-transport|errors)/
+const DEMO_CATALOG = /catalog\/seed|catalog\/victorinox|catalog\/categories|catalog\/api\/(queries|demo-client|client)|\/queries'|use-product-card|use-gift-detail|use-product-reviews|useProducts|useDemoNow|data-client\/(?!api-transport|errors|paged-query)/
 
 describe('[E6.4][AC52] AC-6 the keepsake list and page read only the API', () => {
   it('their files import nothing from the demo seed, the demo catalog hooks or a mock hook', () => {

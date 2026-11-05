@@ -27,9 +27,21 @@ export interface PublicKeepsakeRow extends PublicKeepsakeSummary {
   variants: { id: string, mediaId: string | null, priceRappen: number, values: Record<string, string> }[]
 }
 
+// Where a page of keepsakes starts: `created_at` (as text at full precision, UTC) and the product id.
+export type KeepsakePageKey = readonly [createdAt: string, id: string]
+
+export interface KeepsakePageQuery {
+  // A product category slug; a parent includes its direct sub-categories. Null: no filter. An unknown slug matches nothing.
+  category: string | null
+  // Without a limit the page is the whole filtered set (ADR-033 section 12, one release).
+  limit?: number | undefined
+  after?: KeepsakePageKey | undefined
+}
+
 export interface PublicKeepsakeReads<T> {
-  // Published keepsakes of every store, newest first.
-  listPublished: (tx: T) => Promise<PublicKeepsakeSummary[]>
+  // Published keepsakes of every store, newest first (`created_at`, then the id). `total` counts the whole filtered set.
+  // `next` is the key of the last row when more follow, else null.
+  pagePublished: (tx: T, query: KeepsakePageQuery) => Promise<{ rows: PublicKeepsakeSummary[], next: KeepsakePageKey | null, total: number }>
   // The published ones among these ids, in no set order; an id that is no published keepsake has no row.
   listPublishedByIds: (tx: T, ids: string[]) => Promise<PublicKeepsakeSummary[]>
   // The published keepsake that holds this slug in either language, the one that holds it in `language` first. A draft
@@ -60,7 +72,18 @@ export interface PublicKeepsakeCard extends LanguageNotice {
   soldOut: boolean
 }
 
+// The cards of the by-ids read (a story's keepsakes): no paging.
 export interface PublicKeepsakeList { items: PublicKeepsakeCard[] }
+
+// A page of the keepsake list. The route encodes `next` into the opaque `nextCursor` of the contract.
+export interface PublicKeepsakePage { items: PublicKeepsakeCard[], total: number, next: KeepsakePageKey | null }
+
+export interface ListKeepsakesQuery {
+  language: ContentLanguage
+  category?: string | undefined
+  limit?: number | undefined
+  after?: KeepsakePageKey | undefined
+}
 
 export interface PublicKeepsake extends PublicKeepsakeCard {
   description: { type: 'doc', content: { type: string, attrs?: Record<string, unknown>, content?: unknown[], text?: string, marks?: unknown[] }[] }
@@ -159,10 +182,14 @@ async function cardsOf<T>(deps: PublicKeepsakeDeps<T>, tx: T, rows: PublicKeepsa
   return shown.map(({ row, language }) => card(row, language, covers.get(row.mediaIds[0]?.toLowerCase() ?? '') ?? null, stock))
 }
 
-// Every published keepsake in the language asked for, or the other one with the fallback notice. Each carries a cover and
-// a sold-out flag and nothing about price or units.
+// A page of the published keepsakes in the language asked for, or the other one with the fallback notice, newest first. Each
+// carries a cover and a sold-out flag and nothing about price or units. The filter, the order and the count run in the
+// repository (ADR-033).
 export function makeListKeepsakes<T>(deps: PublicKeepsakeDeps<T>) {
-  return async (requested: ContentLanguage): Promise<PublicKeepsakeList> => deps.uow.run(async tx => ({ items: await cardsOf(deps, tx, await deps.reads.listPublished(tx), requested) }))
+  return async ({ language, category, limit, after }: ListKeepsakesQuery): Promise<PublicKeepsakePage> => deps.uow.run(async (tx) => {
+    const found = await deps.reads.pagePublished(tx, { category: category ?? null, limit, after })
+    return { items: await cardsOf(deps, tx, found.rows, language), total: found.total, next: found.next }
+  })
 }
 
 // The same cards for the published keepsakes among `ids`, in the order of `ids` (the story's order). An id that is no

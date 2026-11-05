@@ -11,7 +11,7 @@ const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')
 const mapItem = { id: id(1), slug: 'bridge', latitude: 47.05, longitude: 8.3, address: null, weeklyHours: [], title: 'Chapel Bridge', language: 'en', categoryIds: [id(3)], stayTag: 'both', interests: [], nextDate: null, hasMainStory: false, mainStorySlug: null, photoUrl: null, photoVariants: [], mustVisit: true, tip: 'Go at dawn.' }
 const water = { id: id(3), slug: 'drinking-water', name: { en: 'Drinking water', de: 'Trinkwasser' }, parentId: null, icon: 'water', showOnHome: true, position: 1, storyCount: 0 }
 const storyCard = (n: number, publishedAt: string) => ({ id: id(400 + n), slug: `story-${n}`, title: `Story ${n}`, excerpt: 'x', readMinutes: 3, coverKey: null, cover: null, stayTag: 'both', interests: [], categories: [], publishedAt, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] })
-const tourCard = { id: id(2), slug: 'pilatus-above-the-city', title: 'Pilatus: Above the City', stayTag: 'multi_day', interests: [], durationMinutes: 390, coverKey: null, cover: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
+const tourCard = { id: id(2), slug: 'pilatus-above-the-city', title: 'Pilatus: Above the City', stayTag: 'multi_day', interests: [], durationMinutes: 390, stopCount: 4, coverKey: null, cover: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
 
 afterEach(() => {
   mode.on = true
@@ -36,7 +36,7 @@ const json = (body: unknown) => () => new Response(JSON.stringify(body), { statu
 
 describe('[E4.13][AC95] the home read', () => {
   it('reads the public map and the published tours in the page language (AC-5, AC-6)', async () => {
-    const calls = answerWith({ '/api/public/map': json({ items: [mapItem] }), '/api/public/map-categories': json({ items: [water] }), '/api/public/tours': json({ items: [tourCard] }), '/api/public/stories': json({ items: [storyCard(1, '2026-10-01T10:00:00.000Z')], total: 1, nextCursor: null }) })
+    const calls = answerWith({ '/api/public/map': json({ items: [mapItem] }), '/api/public/map-categories': json({ items: [water] }), '/api/public/tours': json({ items: [tourCard], total: 1, nextCursor: 'more' }), '/api/public/stories': json({ items: [storyCard(1, '2026-10-01T10:00:00.000Z')], total: 1, nextCursor: null }) })
     const read = await loadHomeRead('de')
 
     expect(read.pins?.[0]?.title).toBe('Chapel Bridge')
@@ -44,12 +44,13 @@ describe('[E4.13][AC95] the home read', () => {
     expect(read.stories?.map(story => story.slug)).toEqual(['story-1'])
     expect(read.categories).toEqual([water])
     expect(read.tiles?.map(tile => tile.name)).toEqual(['Trinkwasser'])
-    expect(calls.sort()).toEqual(['/api/public/map-categories?lang=de', '/api/public/map?lang=de', '/api/public/stories?lang=de&limit=3', '/api/public/tours?lang=de'])
+    // The rail reads the first page of tours and never follows `nextCursor` (ADR-033).
+    expect(calls.sort()).toEqual(['/api/public/map-categories?lang=de', '/api/public/map?lang=de', '/api/public/stories?lang=de&limit=3', '/api/public/tours?lang=de&limit=10'])
   })
 
   it('gives the map, category and tour reads the standard 15 s of the data client', async () => {
     const timeoutSpy = vi.spyOn(AbortSignal, 'timeout')
-    answerWith({ '/api/public/map': json({ items: [] }), '/api/public/map-categories': json({ items: [] }), '/api/public/tours': json({ items: [] }), '/api/public/stories': json({ items: [], total: 0, nextCursor: null }) })
+    answerWith({ '/api/public/map': json({ items: [] }), '/api/public/map-categories': json({ items: [] }), '/api/public/tours': json({ items: [], total: 1, nextCursor: null }), '/api/public/stories': json({ items: [], total: 0, nextCursor: null }) })
     await loadHomeRead('en')
 
     expect(timeoutSpy).toHaveBeenCalledTimes(4)
@@ -78,7 +79,7 @@ describe('[E4.13][AC95] the home read', () => {
   })
 
   it('a failed stories read leaves the other blocks as they are', async () => {
-    answerWith({ '/api/public/map': json({ items: [mapItem] }), '/api/public/map-categories': json({ items: [water] }), '/api/public/tours': json({ items: [tourCard] }) })
+    answerWith({ '/api/public/map': json({ items: [mapItem] }), '/api/public/map-categories': json({ items: [water] }), '/api/public/tours': json({ items: [tourCard], total: 1, nextCursor: null }) })
     const read = await loadHomeRead('en')
 
     expect(read.stories).toBeNull()
@@ -87,7 +88,7 @@ describe('[E4.13][AC95] the home read', () => {
   })
 
   it('turns an answer that does not match the contract into null', async () => {
-    answerWith({ '/api/public/map': json({ items: [{ nonsense: true }] }), '/api/public/map-categories': json({ items: [water] }), '/api/public/tours': json({ items: [] }) })
+    answerWith({ '/api/public/map': json({ items: [{ nonsense: true }] }), '/api/public/map-categories': json({ items: [water] }), '/api/public/tours': json({ items: [], total: 1, nextCursor: null }) })
     const read = await loadHomeRead('en')
 
     expect(read.pins).toBeNull()

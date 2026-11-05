@@ -1,5 +1,5 @@
 import type { CategoryIcon, ContentLanguage, LanguageNotice, Localized, PinDate, StayTag } from '@sk/domain/content'
-import type { PublicCategoryListRow, PublicPinDetailRow, PublicPinRow, PublicStoryDetailRow, PublicStoryKeepsakeCard, PublicStoryRow, PublicStoryVersionRow, PublicTourRow, StoryPageKey } from '../read-ports.ts'
+import type { PublicCategoryListRow, PublicPinDetailRow, PublicPinRow, PublicStoryDetailRow, PublicStoryKeepsakeCard, PublicStoryRow, PublicStoryVersionRow, PublicTourRow, StoryPageKey, TourPageKey } from '../read-ports.ts'
 import { isSafeLinkHref, languageNotice, languagesOf, pickLanguage, STORY_BODY_LIMITS, storyBodyReadMinutes, variantKey, variantWidthsFor } from '@sk/domain/content'
 import { nextDate, withParents } from './pin-dates.ts'
 
@@ -315,6 +315,7 @@ export interface PublicTourCard extends LanguageNotice {
   stayTag: StayTag
   interests: string[]
   durationMinutes: number | null
+  stopCount: number
   coverKey: string | null
   cover: PublicCover | null
 }
@@ -328,7 +329,8 @@ export interface PublicTour extends PublicTourCard {
   keepsakeProductIds: string[]
 }
 
-export interface PublicTourList { items: PublicTourCard[] }
+// A page of the tour list. The route encodes `next` into the opaque `nextCursor` of the contract.
+export interface PublicTourPage { items: PublicTourCard[], total: number, next: TourPageKey | null }
 
 // Text of the carried language only; a missing value is empty, never the other language.
 const text = (value: Localized | null | undefined, language: ContentLanguage) => value?.[language] ?? ''
@@ -432,6 +434,7 @@ function toTourCard(row: PublicTourRow, info: LanguageNotice, publicUrl: (key: s
     stayTag: row.stayTag,
     interests: row.interests,
     durationMinutes: row.durationMinutes,
+    stopCount: row.stopCount,
     coverKey: row.coverKey,
     cover: row.coverKey === null ? null : { url: publicUrl(row.coverKey), variants: variantsOf(row.coverKey, row.coverWidth, publicUrl) },
     ...info,
@@ -450,6 +453,8 @@ export function toPublicTour(row: PublicTourRow, requested: ContentLanguage, pub
   const { language } = info
   return {
     ...toTourCard(row, info, publicUrl),
+    // The detail's count is its own list, so the two can never disagree.
+    stopCount: row.stops.length,
     summary: text(row.summary, language),
     meetingPoint: text(row.meetingPoint, language),
     sections: (Array.isArray(row.sections) ? row.sections : []).map(s => ({ id: s.id, heading: text(s.heading, language), body: text(s.body, language) })),

@@ -11,7 +11,7 @@ import { MAX_TOUR_KEEPSAKES, TourKeepsakes } from '@/features/tours/discovery/to
 const MONEY = /CHF|Fr\.|\d\.\d{2}/
 
 const read = vi.hoisted(() => ({ fn: vi.fn() }))
-vi.mock('@/features/catalog/api/keepsakes', () => ({ fetchKeepsakeList: read.fn }))
+vi.mock('@/features/catalog/api/keepsakes', async importOriginal => ({ ...await importOriginal<typeof import('@/features/catalog/api/keepsakes')>(), loadKeepsakesPage: read.fn }))
 
 function card(n: number, over: Record<string, unknown> = {}) {
   return {
@@ -66,7 +66,7 @@ describe('[E6.4] the tour keepsake block', () => {
     const links = screen.getAllByRole('link')
     expect(links.map(l => l.getAttribute('href'))).toEqual(['/en/gifts/keepsake-1', '/en/gifts/keepsake-2', '/en/gifts/keepsake-3'])
     expect(screen.queryByText('Keepsake 4')).toBeNull()
-    expect(read.fn).toHaveBeenCalledWith('en')
+    expect(read.fn).toHaveBeenCalledWith('en', { limit: 10 })
   })
 
   it('[AC31][AC54] AC-2 no price or CHF; a sold-out card is marked and still links', async () => {
@@ -114,6 +114,6 @@ describe('[E6.4] the tour keepsake block', () => {
 
     for (const demo of ['useProducts', 'useOrders', 'useProductCard', 'isPublished', 'isSoldOut'])
       expect(source).not.toContain(demo)
-    expect(source).toContain('guestKeepsakeList')
+    expect(source).toContain('firstKeepsakes')
   })
 })

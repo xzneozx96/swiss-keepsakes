@@ -32,7 +32,7 @@ function setup(stories: StoryFixture[], categories: PublicCategoryListRow[] = []
     listCategories: async () => categories,
     listVisiblePins: async () => [],
     findVisiblePin: async () => undefined,
-    listPublishedTours: async () => [],
+    pagePublishedTours: async () => ({ rows: [], next: null, total: 0 }),
     findPublishedTourBySlug: async () => undefined,
   }
   const deps = { uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) }, reads, clock: createManualClock(new Date('2026-10-27T10:00:00Z')), publicUrl: (key: string) => `https://media.test/${key}` }

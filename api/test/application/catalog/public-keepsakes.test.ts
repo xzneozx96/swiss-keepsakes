@@ -1,5 +1,6 @@
-import type { PublicKeepsakeDeps, PublicKeepsakeReads, PublicKeepsakeRow } from '../../../src/modules/catalog/application/public-keepsakes.ts'
+import type { KeepsakePageKey, KeepsakePageQuery, PublicKeepsakeDeps, PublicKeepsakeReads, PublicKeepsakeRow } from '../../../src/modules/catalog/application/public-keepsakes.ts'
 import type { MediaInfo, StockLevel } from '../../../src/modules/catalog/ports.ts'
+import { publicKeepsakeListSchema } from '@sk/api-contract'
 import { describe, expect, it, vi } from 'vitest'
 import { makeGetAvailability, makeGetKeepsake, makeListKeepsakes, makeListKeepsakesByIds } from '../../../src/modules/catalog/application/public-keepsakes.ts'
 
@@ -38,9 +39,13 @@ function row(over: Partial<PublicKeepsakeRow> = {}): PublicKeepsakeRow {
 }
 
 // `levels` is [onHand, reserved] by SKU id; a SKU left out has no stock row.
-function setup(rows: PublicKeepsakeRow[], levels: Record<string, [number, number]> = {}, files: MediaInfo[] = [photo(photoId)]) {
+function setup(rows: PublicKeepsakeRow[], levels: Record<string, [number, number]> = {}, files: MediaInfo[] = [photo(photoId)], nextKey: KeepsakePageKey | null = null) {
+  const pageAsks: KeepsakePageQuery[] = []
   const reads: PublicKeepsakeReads<null> = {
-    listPublished: async () => rows,
+    pagePublished: async (_tx, query) => {
+      pageAsks.push(query)
+      return { rows, next: nextKey, total: rows.length }
+    },
     listPublishedByIds: async (_tx, ids) => rows.filter(r => ids.includes(r.id)),
     findPublishedBySlug: async (_tx, slug, language) => {
       const found = rows.filter(r => r.slug.en === slug || r.slug.de === slug)
@@ -54,7 +59,7 @@ function setup(rows: PublicKeepsakeRow[], levels: Record<string, [number, number
     media: { find: async (_tx, _store, ids) => files.filter(f => ids.includes(f.id)) },
     stockLevels: { levels: stockLevels },
   }
-  return { deps, stockLevels }
+  return { deps, stockLevels, pageAsks }
 }
 
 describe('[E4.4][AC31] the cards of a story by id', () => {
@@ -85,7 +90,7 @@ describe('[E6.4][AC53] the public list: sold out is a flag, never a figure', () 
   it('[E6.4][AC53] AC-3: variant A at 0 and variant B at 4 is not sold out', async () => {
     const { deps } = setup([row()], { [skuA]: [0, 0], [skuB]: [4, 0] })
 
-    const { items } = await makeListKeepsakes(deps)('en')
+    const { items } = await makeListKeepsakes(deps)({ language: 'en' })
 
     expect(items.map(i => i.soldOut)).toEqual([false])
   })
@@ -94,14 +99,14 @@ describe('[E6.4][AC53] the public list: sold out is a flag, never a figure', () 
     const { deps } = setup([row()], { [skuA]: [0, 0], [skuB]: [3, 3] })
     const { deps: noRows } = setup([row()], {})
 
-    expect((await makeListKeepsakes(deps)('en')).items[0]!.soldOut).toBe(true)
-    expect((await makeListKeepsakes(noRows)('en')).items[0]!.soldOut).toBe(true)
+    expect((await makeListKeepsakes(deps)({ language: 'en' })).items[0]!.soldOut).toBe(true)
+    expect((await makeListKeepsakes(noRows)({ language: 'en' })).items[0]!.soldOut).toBe(true)
   })
 
   it('[E6.4][AC54] AC-1: an item carries no price, amount, currency or stock figure, whatever the stock', async () => {
     const { deps } = setup([row()], { [skuA]: [12, 2], [skuB]: [4, 0] })
 
-    const body = JSON.stringify(await makeListKeepsakes(deps)('en'))
+    const body = JSON.stringify(await makeListKeepsakes(deps)({ language: 'en' }))
 
     expect(body).not.toMatch(/price|amount|currency|rappen|onHand|reserved|available"|stock|3900|4500/i)
     expect(JSON.parse(body).items[0]).toMatchObject({ slug: 'swiss-knife', name: 'Swiss knife', soldOut: false, cover: { url: `https://cdn.test/${photoId}.jpg` }, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en', 'de'] })
@@ -110,7 +115,7 @@ describe('[E6.4][AC53] the public list: sold out is a flag, never a figure', () 
   it('[E6.4][AC64] AC-5: a keepsake with an English version only is listed for German with the fallback notice', async () => {
     const { deps } = setup([row({ slug: { en: 'swiss-knife' }, name: { en: 'Swiss knife' }, text: { en: doc('A red knife') } })], { [skuA]: [1, 0] })
 
-    const { items } = await makeListKeepsakes(deps)('de')
+    const { items } = await makeListKeepsakes(deps)({ language: 'de' })
 
     expect(items[0]).toMatchObject({ slug: 'swiss-knife', name: 'Swiss knife', language: 'en', requestedLanguage: 'de', fallback: true, availableLanguages: ['en'] })
   })
@@ -120,7 +125,7 @@ describe('[E6.4][AC53] the public list: sold out is a flag, never a figure', () 
     const third = row({ id: '0190f0c2-0000-7000-8000-0000000000e3', slug: { en: 'cap' }, name: { en: 'Cap' }, skuIds: [] })
     const { deps, stockLevels } = setup([row(), second, third], { [skuC]: [2, 0] })
 
-    const { items } = await makeListKeepsakes(deps)('en')
+    const { items } = await makeListKeepsakes(deps)({ language: 'en' })
 
     expect(stockLevels).toHaveBeenCalledTimes(2)
     expect(items.map(i => i.soldOut)).toEqual([true, false, true])
@@ -137,7 +142,7 @@ describe('[E6.4][AC53] the public list: sold out is a flag, never a figure', () 
     const { deps } = setup(rows, {}, [photo(photoId), photo(second), photo(third)])
     const find = vi.fn(deps.media.find)
 
-    const { items } = await makeListKeepsakes({ ...deps, media: { find } })('en')
+    const { items } = await makeListKeepsakes({ ...deps, media: { find } })({ language: 'en' })
 
     expect(find).toHaveBeenCalledTimes(2)
     expect(find).toHaveBeenCalledWith(null, store, [photoId, second])
@@ -148,13 +153,13 @@ describe('[E6.4][AC53] the public list: sold out is a flag, never a figure', () 
     const { deps } = setup([row()], { [skuA]: [9, 0] })
     delete deps.stockLevels
 
-    expect((await makeListKeepsakes(deps)('en')).items[0]!.soldOut).toBe(true)
+    expect((await makeListKeepsakes(deps)({ language: 'en' })).items[0]!.soldOut).toBe(true)
   })
 
   it('[E6.4][AC31] a photo that is not ready is no cover', async () => {
     const { deps } = setup([row()], { [skuA]: [1, 0] }, [photo(photoId, 'retired')])
 
-    expect((await makeListKeepsakes(deps)('en')).items[0]!.cover).toBeNull()
+    expect((await makeListKeepsakes(deps)({ language: 'en' })).items[0]!.cover).toBeNull()
   })
 })
 
@@ -248,5 +253,36 @@ describe('[E6.4][AC52][AC53] the availability read', () => {
 
     expect((await makeGetAvailability(deps)('swiss-knife', 'en') as { value: { items: { available: number }[] } }).value.items.map(i => i.available)).toEqual([0, 4])
     expect((await makeGetAvailability(odd)('swiss-knife', 'en') as { value: { items: { available: number }[] } }).value.items.map(i => i.available)).toEqual([0, 0])
+  })
+})
+
+describe('[ADR-033] the keepsake list pages', () => {
+  const nextKey = ['2026-11-05T10:00:00.123456Z', '0190f0c2-0000-7000-8000-0000000000e1'] as const
+
+  it('asks the repository for the page, the category and the key, and carries total and next back', async () => {
+    const { deps, pageAsks } = setup([row()], { [skuA]: [1, 0] }, undefined, nextKey)
+
+    const page = await makeListKeepsakes(deps)({ language: 'en', category: 'knives', limit: 10, after: nextKey })
+
+    expect(pageAsks).toEqual([{ category: 'knives', limit: 10, after: nextKey }])
+    expect(page).toMatchObject({ total: 1, next: nextKey })
+    expect(page.items).toHaveLength(1)
+  })
+
+  it('no category and no limit is the whole list: the repository gets a null filter and no limit', async () => {
+    const { deps, pageAsks } = setup([row()])
+
+    const page = await makeListKeepsakes(deps)({ language: 'de' })
+
+    expect(pageAsks).toEqual([{ category: null, limit: undefined, after: undefined }])
+    expect(page.next).toBeNull()
+  })
+
+  it('every page parses with the contract schema', async () => {
+    const { deps } = setup([row()], { [skuA]: [1, 0] }, undefined, nextKey)
+
+    const page = await makeListKeepsakes(deps)({ language: 'en', limit: 1 })
+
+    expect(publicKeepsakeListSchema.parse({ items: page.items, total: page.total, nextCursor: page.next && 'x' }).items).toHaveLength(1)
   })
 })

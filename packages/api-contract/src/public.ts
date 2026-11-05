@@ -187,14 +187,15 @@ export const publicTourCardSchema = z.object({
   stayTag,
   interests: z.array(z.string()),
   durationMinutes: z.int().nullable(),
+  stopCount: z.int().min(0).meta({ description: 'How many stops the published guide has: the length of `stops` on the detail' }),
   coverKey: z.string().nullable(),
   cover: publicCoverSchema.nullable().meta({ description: 'The cover as addresses; null when the guide has no ready cover' }),
   ...languageNoticeSchema.shape,
 }).meta({ id: 'PublicTourCard' })
 
-export const publicTourListSchema = z.object({
-  items: z.array(publicTourCardSchema),
-}).meta({ id: 'PublicTourList' })
+export const publicTourListSchema = pageOf(publicTourCardSchema, 'PublicTourList', {
+  total: z.int().min(0).meta({ description: 'How many published guides there are, on every page' }),
+})
 
 export const publicTourSchema = publicTourCardSchema.extend({
   summary: z.string(),

@@ -1,17 +1,24 @@
 import type { ContentLanguage } from '@sk/domain/content'
-import type { ReadDeps } from '../read-ports.ts'
+import type { ReadDeps, TourPageKey } from '../read-ports.ts'
 import type { Result } from './failure.ts'
-import type { PublicTour, PublicTourList } from './public-view.ts'
+import type { PublicTour, PublicTourPage } from './public-view.ts'
 import { fail, ok } from './failure.ts'
 import { toPublicTour, toTourCardFor } from './public-view.ts'
 
+export interface ListToursQuery {
+  language: ContentLanguage
+  limit?: number | undefined
+  after?: TourPageKey | undefined
+}
+
+// Newest first, the id being the key (ADR-033): the repository orders and pages it.
 export function makeListTours<T>({ uow, reads, publicUrl }: ReadDeps<T>) {
-  return async (language: ContentLanguage): Promise<PublicTourList> => {
-    const rows = await uow.run(tx => reads.listPublishedTours(tx))
-    return { items: rows.flatMap((row) => {
+  return async ({ language, limit, after }: ListToursQuery): Promise<PublicTourPage> => {
+    const found = await uow.run(tx => reads.pagePublishedTours(tx, { limit, after }))
+    return { items: found.rows.flatMap((row) => {
       const card = toTourCardFor(row, language, publicUrl)
       return card ? [card] : []
-    }) }
+    }), total: found.total, next: found.next }
   }
 }
 
