@@ -4,8 +4,9 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DataClientProvider, useCommand } from '@/features/data-client'
 import { commandAffects } from '@/features/data-client/commands'
-import { useStories, useStoryGroup, useStoryLinks } from '@/features/stories/api/queries'
+import { useAllStories, useStories, useStoryGroup, useStoryLinks } from '@/features/stories/api/queries'
 import { problem, setUpHarness, state, storeId } from './keepsakes-harness'
+import { storyPage } from './support/pages'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -29,15 +30,16 @@ const input = { storeId, authorName: 'Anna Keller', idempotencyKey: 'key-group',
 
 describe('[E4.3][AC30] the stories queries and commands', () => {
   it('[E4.3][AC30] reads the list of the store from GET story-groups, and waits for a store id before it reads', async () => {
-    state.answer = call => (call.method === 'GET' && call.path === base ? Response.json({ items: [] }) : undefined)
-    const waiting = renderHook(() => useStories(undefined), { wrapper })
+    const query = { page: 1, pageSize: 10 }
+    state.answer = call => (call.method === 'GET' && call.path.split('?')[0] === base ? Response.json(storyPage([])) : undefined)
+    const waiting = renderHook(() => useStories(undefined, query), { wrapper })
 
-    expect(state.calls.filter(call => call.path === base)).toHaveLength(0)
+    expect(state.calls.filter(call => call.path.startsWith(base))).toHaveLength(0)
     expect(waiting.result.current.fetchStatus).toBe('idle')
-    const list = renderHook(() => useStories(storeId), { wrapper })
+    const list = renderHook(() => useStories(storeId, query), { wrapper })
 
-    await waitFor(() => expect(list.result.current.data).toEqual({ items: [] }))
-    expect(state.calls.filter(call => call.path === base)).toHaveLength(1)
+    await waitFor(() => expect(list.result.current.data).toEqual(storyPage([])))
+    expect(state.calls.filter(call => call.path === `${base}?page=1&pageSize=10`)).toHaveLength(1)
   })
 
   it('[E4.3][AC30] AC-3 createStory posts the group, then the English draft with the empty body and the account name', async () => {
@@ -161,5 +163,22 @@ describe('[E4.3][AC30] the stories queries and commands', () => {
 
   it('[E4.3][AC45] commandAffects.stories.saveVersion is empty', () => {
     expect(commandAffects.stories.saveVersion).toEqual([])
+  })
+})
+
+describe('[ADR-033] the whole-list read of the story lookups', () => {
+  it('reads the pages of 20 one after the other until it holds the total', async () => {
+    const all = Array.from({ length: 45 }, (_, index) => ({ groupId: `0198a000-0000-7000-8000-${String(index + 1).padStart(12, '0')}`, kind: 'story', title: { en: `Story ${index + 1}` }, cover: null, languages: { en: null, de: null }, updatedAt: '2026-11-03T08:00:00.000Z' }))
+    state.answer = (call) => {
+      if (call.method !== 'GET' || call.path.split('?')[0] !== base)
+        return undefined
+      const page = Number(new URL(call.path, 'http://x').searchParams.get('page'))
+
+      return Response.json(storyPage(all.slice((page - 1) * 20, page * 20), { total: 45, page, pageSize: 20 }))
+    }
+    const list = renderHook(() => useAllStories(storeId), { wrapper })
+
+    await waitFor(() => expect(list.result.current.data?.items).toHaveLength(45))
+    expect(state.calls.filter(call => call.path.startsWith(base)).map(call => call.path)).toEqual([`${base}?page=1&pageSize=20`, `${base}?page=2&pageSize=20`, `${base}?page=3&pageSize=20`])
   })
 })

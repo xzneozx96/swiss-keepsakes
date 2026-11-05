@@ -33,9 +33,9 @@ function lists(rows: Lists) {
       return undefined
     if (call.path === `${api}/products`)
       return Response.json(keepsakeList(rows.keepsakes ?? []))
-    if (call.path === `${api}/story-groups`)
+    if (call.path.split('?')[0] === `${api}/story-groups`)
       return Response.json(storyList(rows.stories ?? []))
-    if (call.path === `${api}/pins`)
+    if (call.path.split('?')[0] === `${api}/pins`)
       return Response.json({ items: rows.pins ?? [] })
     if (call.path === `${api}/media/${coverId}`)
       return Response.json(mediaSchema.parse({ ...media, id: coverId }))

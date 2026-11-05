@@ -20,9 +20,11 @@ export interface PlacesSearch {
 
 export const PLACES_PAGE_SIZE = 10
 
+const TOKEN = /^[\w-]{1,40}$/
+
 function listOf(value: unknown, allowed?: readonly string[]): string[] | undefined {
   const items = typeof value === 'string' ? value.split(',') : Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
-  const kept = items.filter((item, index) => item !== '' && items.indexOf(item) === index && (allowed ? allowed.includes(item) : /^[\w-]{1,40}$/.test(item)))
+  const kept = items.filter((item, index) => item !== '' && items.indexOf(item) === index && (allowed ? allowed.includes(item) : TOKEN.test(item)))
 
   return kept.length > 0 ? kept.slice(0, 40) : undefined
 }

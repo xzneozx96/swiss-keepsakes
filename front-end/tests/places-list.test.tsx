@@ -5,12 +5,11 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SECTION_PAGES } from '@/components/layout/section-pages'
-import { PlacesScreen } from '@/features/places/components/places-screen'
 
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
 import { expectListChrome } from './list-screens-helper'
-import { installApi, listItem, pinInUse, problem, renderInRouter, storeId, uuid } from './places-support'
+import { installApi, listItem, pinInUse, PlacesAtRoute, problem, renderInRouter, storeId, uuid } from './places-support'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -33,7 +32,7 @@ afterEach(() => {
 })
 
 const path = '/store/content/places'
-const open = (language: 'en' | 'de' = 'en') => renderInRouter(<PlacesScreen />, { path, language })
+const open = (language: 'en' | 'de' = 'en') => renderInRouter(<PlacesAtRoute />, { path, language })
 // The table and the phone cards are both in the DOM (CSS picks one), so a query looks in the table.
 const table = () => within(screen.getByRole('grid'))
 // While a dialog is open the table is behind it (aria-hidden), so these queries look there too.
@@ -323,6 +322,7 @@ describe('[E4.2][AC68] N16 the list', () => {
 
     // The search narrows the counts too, and Clear all empties the chips.
     await userEvent.type(screen.getByRole('searchbox', { name: 'Search by title or map link' }), 'tap')
+    await waitFor(() => expect(api.calls.at(-1)?.path).toContain('q=tap'))
     await userEvent.click(screen.getByRole('button', { name: 'Status, 1 selected' }))
     popover = await screen.findByRole('dialog', { name: 'Status' })
     expect(within(popover).getAllByRole('checkbox').map(box => box.closest('.checkbox')?.textContent).slice(0, 1)).toEqual(['Published1'])
@@ -393,7 +393,7 @@ describe('[E4.2][AC68] N16 the list', () => {
     await screen.findAllByRole('link', { name: 'Chapel Bridge' })
 
     await userEvent.type(screen.getByRole('searchbox', { name: 'Search by title or map link' }), 'fasn')
-    expect(table().queryByRole('link', { name: 'Chapel Bridge' })).not.toBeInTheDocument()
+    await waitFor(() => expect(table().queryByRole('link', { name: 'Chapel Bridge' })).not.toBeInTheDocument())
     expect(table().getByRole('link', { name: 'Fasnacht' })).toBeInTheDocument()
 
     await userEvent.clear(screen.getByRole('searchbox', { name: 'Search by title or map link' }))
@@ -416,7 +416,7 @@ describe('[E4.2][AC68] N16 the list', () => {
 
     await waitFor(() => expect(writes('POST')).toHaveLength(1))
     expect(writes('POST')[0]).toMatchObject({ path: `/api/store/${storeId}/pins/${uuid(11)}/hide`, ifMatch: '4', key: expect.any(String) })
-    await waitFor(() => expect(api.calls.filter(call => call.method === 'GET' && call.path === `/api/store/${storeId}/pins`).length).toBeGreaterThan(1))
+    await waitFor(() => expect(api.calls.filter(call => call.method === 'GET' && call.path.split('?')[0] === `/api/store/${storeId}/pins`).length).toBeGreaterThan(1))
     expect(success).toHaveBeenCalledExactlyOnceWith('Chapel Bridge is hidden.')
   })
 
@@ -500,7 +500,7 @@ describe('[E4.2][AC68] N16 the list', () => {
     // The server answers the delete only when released; the re-read after it is held for good until the end.
     let releaseDelete = () => {}
     let releaseRead = () => {}
-    const reads = () => api.calls.filter(call => call.method === 'GET' && call.path === `/api/store/${storeId}/pins`).length
+    const reads = () => api.calls.filter(call => call.method === 'GET' && call.path.split('?')[0] === `/api/store/${storeId}/pins`).length
 
     api.hold = new Promise<void>((resolve) => { releaseDelete = resolve })
     api.answer = (call) => {
@@ -583,7 +583,7 @@ describe('[E4.2][AC68] N16 the list', () => {
   })
 
   it('[E4.2][AC68] a failed read shows a message with Try again, and a store with no pins at all invites the first', async () => {
-    api.answer = call => (call.path === `/api/store/${storeId}/pins` ? problem(500, 'internal-error') : undefined)
+    api.answer = call => (call.path.split('?')[0] === `/api/store/${storeId}/pins` ? problem(500, 'internal-error') : undefined)
     await open()
 
     expect(await screen.findByText('The places could not be loaded.')).toBeInTheDocument()
@@ -615,5 +615,72 @@ describe('[S8-UI-01] the places list uses the shared list header and toolbar', (
 
     expectListChrome({ action: addPlace, start: screen.getByRole('button', { name: /^Status/ }), search: screen.getByRole('searchbox') })
     expectListChrome({ action: screen.getByRole('link', { name: 'Add event' }) })
+  })
+})
+
+describe('[ADR-033] the pins table reads numbered pages from the server', () => {
+  const many = (count: number) => Array.from({ length: count }, (_, index) => listItem({ id: uuid(100 + index), title: { en: `Pin ${String(index + 1).padStart(2, '0')}` }, status: index % 4 === 0 ? 'published' : 'draft', stayTag: index % 2 === 0 ? 'short_stay' : 'both' }))
+  const reads = () => api.calls.filter(call => call.method === 'GET' && call.path.split('?')[0] === `/api/store/${storeId}/pins`).map(call => new URL(call.path, 'http://x').searchParams)
+  const here = (router: { state: { location: { search: unknown } } }) => router.state.location.search
+
+  it('[ADR-033] asks for page 1 of 10, shows that page and the pager from the server total', async () => {
+    api.items = many(25)
+    await open()
+
+    await screen.findAllByRole('link', { name: 'Pin 01' })
+
+    expect(within(screen.getByRole('grid')).getAllByRole('row')).toHaveLength(11)
+    expect(Object.fromEntries(reads().at(-1)!)).toEqual({ page: '1', pageSize: '10' })
+    expect(screen.getAllByText('1–10 of 25').length).toBeGreaterThan(0)
+  })
+
+  it('[ADR-033] a page link reads that page and puts it in the URL', async () => {
+    api.items = many(25)
+    const { router } = await open()
+    await screen.findAllByRole('link', { name: 'Pin 01' })
+
+    await userEvent.click(screen.getAllByLabelText('Page 3')[0]!)
+
+    await waitFor(() => expect(table().getByRole('link', { name: 'Pin 21' })).toBeInTheDocument())
+    expect(reads().at(-1)!.get('page')).toBe('3')
+    expect(here(router)).toEqual({ page: 3 })
+  })
+
+  it('[ADR-033] the filters and the page open from the URL, and a new filter starts again at page 1', async () => {
+    api.items = many(25)
+    window.history.pushState({}, '', '/store/content/places?status=draft&page=2')
+    const { router } = await renderInRouter(<PlacesAtRoute />, { path: `${path}?status=draft&page=2` })
+    await screen.findAllByRole('link', { name: 'Pin 17' })
+
+    expect(Object.fromEntries(reads().at(-1)!)).toEqual({ status: 'draft', page: '2', pageSize: '10' })
+    await userEvent.click(screen.getByRole('button', { name: 'Recommended for' }))
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Recommended for' })).getByRole('checkbox', { name: /^Short stay/ }))
+
+    await waitFor(() => expect(here(router)).toEqual({ status: ['draft'], stay: ['short_stay'] }))
+    await waitFor(() => expect(Object.fromEntries(reads().at(-1)!)).toEqual({ status: 'draft', stay: 'short_stay', page: '1', pageSize: '10' }))
+  })
+
+  it('[ADR-033] the counts on the filters come from the API, not from the rows on the page', async () => {
+    api.items = many(25)
+    await open()
+    await screen.findAllByRole('link', { name: 'Pin 01' })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Status' }))
+    const popover = await screen.findByRole('dialog', { name: 'Status' })
+
+    // 25 pins: 7 published (every fourth, from the first), 18 drafts. Only 10 are on the page.
+    expect(within(popover).getAllByRole('checkbox').map(box => box.closest('.checkbox')?.textContent)).toEqual(['Draft18', 'Published7', 'Hidden0', 'Ended0'])
+  })
+
+  it('[ADR-033] the search is sent once, a moment after the last key, and starts again at page 1', async () => {
+    api.items = many(25)
+    const { router } = await renderInRouter(<PlacesAtRoute />, { path: `${path}?page=2` })
+    await screen.findAllByRole('link', { name: 'Pin 11' })
+
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search by title or map link' }), 'Pin 07')
+
+    await waitFor(() => expect(here(router)).toEqual({ q: 'Pin 07' }))
+    expect(Object.fromEntries(reads().at(-1)!)).toEqual({ q: 'Pin 07', page: '1', pageSize: '10' })
+    expect(reads().filter(read => read.has('q'))).toHaveLength(1)
   })
 })

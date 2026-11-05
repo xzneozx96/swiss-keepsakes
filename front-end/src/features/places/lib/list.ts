@@ -9,16 +9,6 @@ export const TYPE_FILTERS = ['place', 'event'] as const
 /** The status chip's colour, the same in the list and in the editor's header. */
 export const STATUS_TONE: Record<PinListItem['status'], StatusTone> = { draft: 'neutral', published: 'success', hidden: 'warning', ended: 'warning' }
 
-export interface ListFilters {
-  status: string[]
-  category: string[]
-  stay: string[]
-  type: string[]
-  query: string
-}
-
-export const noFilters: ListFilters = { status: [], category: [], stay: [], type: [], query: '' }
-
 /** The title in the dashboard's language, else the other one. `undefined` for a pin with no title yet. */
 export function titleOf(item: Pick<PinListItem, 'title'>, language: Lang): string | undefined {
   return item.title[language] ?? item.title[language === 'en' ? 'de' : 'en']
@@ -35,8 +25,4 @@ export function kindOf(item: Pick<PinListItem, 'hasDates' | 'nextDate'>): 'place
     return 'place'
 
   return item.nextDate ? 'event' : 'ended'
-}
-
-export function isFiltered(filters: ListFilters) {
-  return filters.query.trim() !== '' || filters.status.length + filters.category.length + filters.stay.length + filters.type.length > 0
 }

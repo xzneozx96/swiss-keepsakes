@@ -15,7 +15,7 @@ function Probe() {
 }
 
 const out = () => JSON.parse(screen.getByTestId('out').textContent!) as { pins: { id: string, name: string, status: string, website: string | null }[], isLoading: boolean, isError: boolean }
-const listCalls = () => state.calls.filter(call => call.method === 'GET' && call.path === `/api/store/${storeId}/pins`)
+const listCalls = () => state.calls.filter(call => call.method === 'GET' && call.path.split('?')[0] === `/api/store/${storeId}/pins`)
 
 describe('[E4.3][AC45] pin options', () => {
   it('[E4.3][AC45] AC-4 the pin list is read once for the whole store and mapped to options', async () => {
@@ -35,7 +35,7 @@ describe('[E4.3][AC45] pin options', () => {
   })
 
   it('[E4.3][AC45] a failed read reports isError and an empty list', async () => {
-    serveExtra(call => (call.path === `/api/store/${storeId}/pins` ? new Response('{}', { status: 500, headers: { 'content-type': 'application/problem+json' } }) : undefined))
+    serveExtra(call => (call.path.split('?')[0] === `/api/store/${storeId}/pins` ? new Response('{}', { status: 500, headers: { 'content-type': 'application/problem+json' } }) : undefined))
     renderWithStore(<Probe />)
 
     await waitFor(() => expect(out().isError).toBe(true))

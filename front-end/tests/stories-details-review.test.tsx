@@ -1,10 +1,10 @@
-import { pinListSchema } from '@sk/api-contract'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { coverId, groupId, groupPatches, patches, renderStoryEditor, serveDetails, setUpHarness, storyDoc, storyGroupDetail, storyVersion, uuid } from './stories-details-harness'
 import { pinItem } from './stories-media-harness'
+import { pinPage } from './support/pages'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -29,7 +29,7 @@ const version = (language: 'en' | 'de', checkedOn?: string | null) => storyVersi
 const group = (over: Record<string, unknown> = {}, checkedOn?: string | null) => storyGroupDetail({ en: version('en', checkedOn), de: version('de', checkedOn) }, { categoryIds: [uuid(900)], ...over })
 
 /** `serveDetails` plus the pin list the picker and the card read. */
-const serve = (initial: ReturnType<typeof group>) => serveDetails(initial, call => (call.method === 'GET' && call.path.endsWith('/pins') ? Response.json(pinListSchema.parse({ items: [pinItem(1), pinItem(2, { status: 'draft' })] })) : undefined))
+const serve = (initial: ReturnType<typeof group>) => serveDetails(initial, call => (call.method === 'GET' && call.path.split('?')[0].endsWith('/pins') ? Response.json(pinPage([pinItem(1), pinItem(2, { status: 'draft' })])) : undefined))
 
 async function openReview(search = '') {
   renderStoryEditor(`${path}?screen=review${search}`)

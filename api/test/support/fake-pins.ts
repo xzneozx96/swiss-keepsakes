@@ -1,7 +1,7 @@
 import type { Pin, PinDraft, StayTag } from '@sk/domain/content'
 import type { PinChanges, PinListStatus, PinRepository, PinStoryOptionsQuery, PinUsage } from '../../src/modules/content/ports.ts'
-import { pinListStatus } from '@sk/domain/content'
 import { randomUUID } from 'node:crypto'
+import { pinListStatus } from '@sk/domain/content'
 
 // An in-memory pin repository. It copies what the SQL one does with a draft, but none of the database guards.
 const emptyText: PinDraft = { title: {}, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} }
@@ -52,7 +52,7 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
       const own = [...rows.values()].filter(pin => pin.storeId === storeId)
       const statusOf = (pin: Pin) => pinListStatus(pin, now)
       const kindOf = (pin: Pin) => (pin.dates.length > 0 ? 'event' : 'place')
-      const text = (pin: Pin) => { const doc = pin.draft ?? pin.published; return [doc?.title.en, doc?.title.de] }
+      const text = (pin: Pin) => [(pin.draft ?? pin.published)?.title.en, (pin.draft ?? pin.published)?.title.de]
       const matches = (pin: Pin, skip: 'status' | 'category' | 'stay' | 'type' | null) =>
         (needle === undefined || needle === '' || text(pin).some(title => title?.toLowerCase().includes(needle)))
         && (skip === 'status' || query.status.length === 0 || query.status.includes(statusOf(pin)))
@@ -92,7 +92,7 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
         // A category counts its own pins and those of its children; `categoryParents` maps a child to its parent.
         categories: {
           none: count('category', pin => pin.categoryIds.length === 0),
-          ...Object.fromEntries([...categoryIds].map(id => [id, count('category', pin => pin.categoryIds.some(own => own === id || categoryParents.get(own) === id))])),
+          ...Object.fromEntries(Array.from(categoryIds, id => [id, count('category', pin => pin.categoryIds.some(own => own === id || categoryParents.get(own) === id))])),
         },
       }
     },

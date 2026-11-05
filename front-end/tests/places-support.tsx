@@ -1,16 +1,20 @@
+/* eslint-disable react-refresh/only-export-components -- a test helper, not a hot-reloaded module */
 import type { Pin, PinListItem } from '@sk/api-contract'
 import type { ReactNode } from 'react'
 
-import { pinListSchema, pinSchema, problemSchema } from '@sk/api-contract'
+import { pinSchema, problemSchema } from '@sk/api-contract'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
+import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider, useNavigate, useSearch } from '@tanstack/react-router'
 import { render, screen } from '@testing-library/react'
 import { vi } from 'vitest'
 
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
 import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { startDemo } from '@/features/demo/data-client'
+import { PlacesScreen } from '@/features/places/components/places-screen'
+import { parsePlacesSearch } from '@/features/places/lib/search-params'
 import { Stub } from './places-stub'
+import { serverPinPage, serverStoryOptions } from './support/pages'
 
 export const storeId = '0198a000-0000-7000-8000-000000000001'
 export const uuid = (n: number) => `0198a000-0000-7000-8000-${String(n).padStart(12, '0')}`
@@ -109,10 +113,10 @@ async function handle(input: RequestInfo | URL, init?: RequestInit): Promise<Res
     return custom
   if (call.path === '/api/me')
     return Response.json({ guestId: storeId, stores: [{ storeId, role: 'owner', status: 'live' }] })
-  if (call.method === 'GET' && call.path === `/api/store/${storeId}/pins`)
-    return Response.json(pinListSchema.parse({ items: api.items }))
-  if (call.method === 'GET' && call.path === `/api/store/${storeId}/pins/story-options`)
-    return Response.json({ items: api.stories })
+  if (call.method === 'GET' && call.path.split('?')[0] === `/api/store/${storeId}/pins`)
+    return Response.json(serverPinPage(api.items, url, Object.fromEntries((api.categories as { id: string, parentId: string | null }[]).filter(category => category.parentId).map(category => [category.id, category.parentId!]))))
+  if (call.method === 'GET' && call.path.split('?')[0] === `/api/store/${storeId}/pins/story-options`)
+    return Response.json({ items: serverStoryOptions(api.stories as never, url) })
   if (call.method === 'GET' && call.path.includes('/pins/'))
     return api.pin ? Response.json(api.pin) : problem(404, 'not-found')
   if (call.method === 'GET' && call.path.includes('/categories/'))
@@ -130,6 +134,14 @@ export function installApi(): FakeApi {
   return current
 }
 
+/** The Places screen the way the route mounts it: its filters, search and page are in the URL. */
+export function PlacesAtRoute() {
+  const search = parsePlacesSearch(useSearch({ strict: false }))
+  const navigate = useNavigate()
+
+  return <PlacesScreen search={search} onSearch={patch => void navigate({ to: '/store/content/places', search: (previous: Record<string, unknown>) => ({ ...previous, ...patch }), replace: true } as never)} />
+}
+
 export async function renderInRouter(screen_: ReactNode, { path, language = 'en' }: { path: string, language?: 'en' | 'de' }) {
   if (language === 'de') {
     localStorage.setItem('sk.language', JSON.stringify('de'))
@@ -139,7 +151,7 @@ export async function renderInRouter(screen_: ReactNode, { path, language = 'en'
 
   await demo.ready
   const root = createRootRoute({ component: Outlet })
-  const list = createRoute({ getParentRoute: () => root, path: '/store/content/places', component: () => (path === '/store/content/places' ? screen_ : <Stub label="list" />) })
+  const list = createRoute({ getParentRoute: () => root, path: '/store/content/places', validateSearch: parsePlacesSearch, component: () => (path.split('?')[0] === '/store/content/places' ? screen_ : <Stub label="list" />) })
   const editor = createRoute({
     getParentRoute: () => root,
     path: '/store/content/places/$placeId',

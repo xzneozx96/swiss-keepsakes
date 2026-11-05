@@ -1,10 +1,9 @@
-import type { Pin, PinListItem } from '@sk/api-contract'
-import type { ListFilters } from '@/features/places/lib/list'
+import type { Pin } from '@sk/api-contract'
 import { pinWriteBodySchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 
 import { bodyOf, emptyDate, emptyForm, formOf, isDirty, photoIds, publishGaps, validate, withPhotoIds } from '@/features/places/lib/form'
-import { filterItems, isFiltered, kindOf, NO_CATEGORY, noFilters } from '@/features/places/lib/list'
+import { kindOf } from '@/features/places/lib/list'
 import { storableLink } from '@/features/places/lib/maps-link'
 
 const pin: Pin = {
@@ -193,42 +192,13 @@ describe('[E4.2][AC68] form state', () => {
   })
 })
 
-describe('[E4.2][AC86] the list filters', () => {
-  const item = (over: object) => ({ id: 'x', status: 'draft', title: {}, slug: null, located: true, categoryIds: [], hasDates: false, nextDate: null, stayTag: 'both', interests: [], coverMediaId: null, outboundUrl: null, cover: null, mainStory: null, hasPendingChanges: false, rowVersion: 1, updatedAt: '2026-10-30T10:00:00.000Z', ...over }) as PinListItem
-  const items = [
-    item({ id: 'a', status: 'published', title: { en: 'Chapel Bridge' }, slug: { en: 'chapel-bridge' }, categoryIds: ['walks'] }),
-    item({ id: 'b', status: 'ended', title: { de: 'Fasnacht' }, hasDates: true, stayTag: 'short_stay' }),
-    item({ id: 'c', status: 'hidden', title: { en: 'Old tap' } }),
-  ]
-  const ids = (filters: Partial<ListFilters>) => filterItems(items, { ...noFilters, ...filters }).map(found => found.id)
-
-  it('narrows by status, category (including none), stay and type, each group an OR and the groups together an AND', () => {
-    expect(ids({})).toEqual(['a', 'b', 'c'])
-    expect(ids({ status: ['ended'] })).toEqual(['b'])
-    expect(ids({ status: ['ended', 'hidden'] })).toEqual(['b', 'c'])
-    expect(ids({ category: [NO_CATEGORY] })).toEqual(['b', 'c'])
-    expect(ids({ category: ['walks'] })).toEqual(['a'])
-    expect(ids({ stay: ['short_stay'] })).toEqual(['b'])
-    expect(ids({ type: ['event'] })).toEqual(['b'])
-    expect(ids({ type: ['place'] })).toEqual(['a', 'c'])
-    expect(ids({ type: ['place', 'event'] })).toEqual(['a', 'b', 'c'])
-    expect(ids({ status: ['ended'], type: ['place'] })).toEqual([])
-  })
-
+describe('[E4.2][AC86] the list kinds (the server filters, ADR-033)', () => {
   it('derives place or event from the dates and stores neither: no dates is a place, an upcoming or current date an event, all dates past an ended event', () => {
     const upcoming = { hasDates: true, nextDate: { firstDay: '2090-11-07', lastDay: '2090-11-07', startTime: null, endTime: null } }
 
     expect(kindOf({ hasDates: false, nextDate: null })).toBe('place')
     expect(kindOf(upcoming)).toBe('event')
     expect(kindOf({ hasDates: true, nextDate: null })).toBe('ended')
-  })
-
-  it('searches the titles in both languages and the map link, ignoring case and spaces around', () => {
-    expect(ids({ query: ' FASN ' })).toEqual(['b'])
-    expect(ids({ query: 'chapel-bridge' })).toEqual(['a'])
-    expect(ids({ query: 'nothing' })).toEqual([])
-    expect(isFiltered(noFilters)).toBe(false)
-    expect(isFiltered({ ...noFilters, query: 'x' })).toBe(true)
   })
 })
 

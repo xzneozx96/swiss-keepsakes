@@ -2,7 +2,6 @@
 import type { StoryGroupDetail } from '@sk/api-contract'
 import type { ReactNode } from 'react'
 
-import { pinListSchema } from '@sk/api-contract'
 import { fireEvent } from '@testing-library/react'
 import { vi } from 'vitest'
 
@@ -13,6 +12,7 @@ import { list as keepsakeList } from './keepsakes-harness'
 import { serveDetails } from './stories-details-harness'
 import { groupId, storeId, storyList } from './stories-harness'
 import { renderWithStore } from './stories-media-harness'
+import { pinPage } from './support/pages'
 
 type Detail = Parameters<typeof serveDetails>[0]
 type Rows = Record<string, unknown>[]
@@ -38,11 +38,11 @@ export function serveLists(initial: Detail, rows: { pins?: Rows, keepsakes?: Row
   const server = Object.assign(serveDetails(initial, (call) => {
     if (call.method !== 'GET')
       return undefined
-    if (call.path === `${base}/pins`)
-      return answer('pins', () => pinListSchema.parse({ items: lists.pins }))
+    if (call.path.split('?')[0] === `${base}/pins`)
+      return answer('pins', () => pinPage(lists.pins))
     if (call.path === `${base}/products`)
       return answer('products', () => keepsakeList(lists.keepsakes))
-    if (call.path === `${base}/story-groups`)
+    if (call.path.split('?')[0] === `${base}/story-groups`)
       return answer('story-groups', () => storyList(lists.stories))
 
     return undefined

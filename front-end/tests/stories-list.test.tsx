@@ -6,7 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Route as ContentRoute } from '@/routes/store/content/index'
 
 import { expectListChrome } from './list-screens-helper'
-import { answerStories, base, listItem, listVersion, media, problem, publishedVersion, renderStories, setUpHarness, state, storeId, storyList, uuid } from './stories-harness'
+import { answerStories, base, listItem, listVersion, media, problem, publishedVersion, renderStories, setUpHarness, state, storeId, uuid } from './stories-harness'
+import { serverStoryPage } from './support/pages'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 vi.mock('@/hooks/use-is-wide', () => ({ useIsWide: () => true }))
@@ -204,8 +205,8 @@ describe('[E4.3][AC30] deleting a story from the list', () => {
         return answer
       }
 
-      return call.method === 'GET' && call.path === base && deleted
-        ? Response.json(storyList(items.filter(item => `${base}/${item.groupId as string}` !== deleted)))
+      return call.method === 'GET' && call.path.split('?')[0] === base && deleted
+        ? Response.json(serverStoryPage(items.filter(item => `${base}/${item.groupId as string}` !== deleted) as never, new URL(call.path, 'http://x')))
         : undefined
     })
   }
@@ -373,7 +374,7 @@ describe('[E4.3][AC30] deleting a story from the list', () => {
 
 describe('[E4.3][AC30] loading and failure', () => {
   it('[E4.3][AC30] AC-5 while the list loads, the table has its header, aria-busy and a skeleton per cell, and the phone list shows card-shaped skeletons', async () => {
-    answerStories([], call => call.method === 'GET' && call.path === base ? new Promise<Response>(() => undefined) as unknown as Response : undefined)
+    answerStories([], call => call.method === 'GET' && call.path.split('?')[0] === base ? new Promise<Response>(() => undefined) as unknown as Response : undefined)
     renderStories()
 
     const grid = await screen.findByRole('grid', { name: 'Stories' })
@@ -397,7 +398,7 @@ describe('[E4.3][AC30] loading and failure', () => {
   })
 
   it('[E4.3][AC30] a failed list read shows the notice with Try again', async () => {
-    answerStories([], call => call.method === 'GET' && call.path === base ? problem(500, 'internal-error') : undefined)
+    answerStories([], call => call.method === 'GET' && call.path.split('?')[0] === base ? problem(500, 'internal-error') : undefined)
     renderStories()
 
     const alert = await screen.findByRole('alert')
@@ -405,7 +406,7 @@ describe('[E4.3][AC30] loading and failure', () => {
     expect(alert).toHaveTextContent('The stories could not be loaded.')
     expect(alert).toHaveTextContent('Reference: req-1')
     await userEvent.click(within(alert).getByRole('button', { name: 'Try again' }))
-    await waitFor(() => expect(state.calls.filter(call => call.method === 'GET' && call.path === base)).toHaveLength(2))
+    await waitFor(() => expect(state.calls.filter(call => call.method === 'GET' && call.path.split('?')[0] === base)).toHaveLength(2))
   })
 })
 
@@ -433,5 +434,65 @@ describe('[S8-UI-01] the stories list uses the shared list header and toolbar', 
 
     await loaded('The lake')
     expectListChrome({ action: screen.getByRole('button', { name: 'New story' }), start: screen.getByRole('tablist'), search: screen.getByRole('searchbox') })
+  })
+})
+
+describe('[ADR-033] the stories table reads numbered pages from the server', () => {
+  const many = (count: number) => Array.from({ length: count }, (_, index) => listItem(index + 1, { title: { en: `Story ${String(index + 1).padStart(2, '0')}` }, languages: { en: index % 3 === 0 ? publishedVersion() : listVersion(), de: null } }))
+  const reads = () => state.calls.filter(call => call.method === 'GET' && call.path.split('?')[0] === base).map(call => new URL(call.path, 'http://x').searchParams)
+  const here = () => state.router!.state.location.search as Record<string, unknown>
+
+  it('[ADR-033] asks for page 1 of 10 and shows that page, the tab counts and the pager from the server', async () => {
+    answerStories(many(25))
+    renderStories()
+
+    const { grid } = await loaded('Story 01')
+
+    expect(rowsOf(grid)).toHaveLength(10)
+    expect(Object.fromEntries(reads().at(-1)!)).toEqual({ page: '1', pageSize: '10' })
+    // 25 stories, 9 published (every third): the counts are not the length of the page.
+    expect(tab('All', 25)).toBeInTheDocument()
+    expect(tab('Published', 9)).toBeInTheDocument()
+    expect(tab('Drafts', 16)).toBeInTheDocument()
+    expect(screen.getAllByText('1–10 of 25').length).toBeGreaterThan(0)
+  })
+
+  it('[ADR-033] a page link reads that page from the server and puts it in the URL; page 1 leaves the URL', async () => {
+    answerStories(many(25))
+    renderStories()
+    const { grid } = await loaded('Story 01')
+
+    await userEvent.click(screen.getAllByLabelText('Page 3')[0]!)
+
+    await waitFor(() => expect(titles(grid)).toEqual(['Story 21', 'Story 22', 'Story 23', 'Story 24', 'Story 25']))
+    expect(reads().at(-1)!.get('page')).toBe('3')
+    expect(here()).toEqual({ page: 3 })
+  })
+
+  it('[ADR-033] a new tab starts again at page 1, and the tab and the page open from the URL', async () => {
+    answerStories(many(25))
+    renderStories('/store/content?status=drafts&page=2')
+    const { grid } = await loaded('Story 17')
+
+    expect(Object.fromEntries(reads().at(-1)!)).toEqual({ status: 'drafts', page: '2', pageSize: '10' })
+    expect(titles(grid)).toEqual(['Story 17', 'Story 18', 'Story 20', 'Story 21', 'Story 23', 'Story 24'])
+    await userEvent.click(tab('Published', 9))
+
+    await waitFor(() => expect(here()).toEqual({ status: 'published' }))
+    await waitFor(() => expect(titles(grid)).toHaveLength(9))
+    expect(Object.fromEntries(reads().at(-1)!)).toEqual({ status: 'published', page: '1', pageSize: '10' })
+  })
+
+  it('[ADR-033] the search is sent to the server a moment after the last key, and starts again at page 1', async () => {
+    answerStories(many(25))
+    renderStories('/store/content?page=2')
+    await loaded('Story 11')
+
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search by title' }), 'Story 07')
+
+    await waitFor(() => expect(here()).toEqual({ q: 'Story 07' }))
+    expect(Object.fromEntries(reads().at(-1)!)).toEqual({ q: 'Story 07', page: '1', pageSize: '10' })
+    // One read for the whole word, not one for each letter.
+    expect(reads().filter(read => read.has('q'))).toHaveLength(1)
   })
 })

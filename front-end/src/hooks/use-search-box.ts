@@ -13,7 +13,7 @@ export function useSearchBox(committed: string, commit: (text: string) => void, 
   useEffect(() => {
     if (text === committed)
       return
-    const timer = setTimeout(() => commit(text), delayMs)
+    const timer = setTimeout(commit, delayMs, text)
 
     return () => clearTimeout(timer)
   }, [text, committed, commit, delayMs])

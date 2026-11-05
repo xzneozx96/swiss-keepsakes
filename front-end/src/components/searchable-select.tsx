@@ -12,8 +12,10 @@ export interface SearchableSelectOption {
 
 /** The key of the "none" row. An option id is a uuid or a slug, so it never equals this. */
 const NONE = '__none__'
-const noop = () => {}
-const everything = () => true
+function noop() {}
+function everything() {
+  return true
+}
 
 /**
  * A field that picks one value from a long list: a tap opens a list with a search field above it and a tick on the
