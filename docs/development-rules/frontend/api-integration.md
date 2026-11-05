@@ -52,6 +52,7 @@ The rule is in `../shared/lists-and-search.md`: the API answers the filter, the 
 - **Search input is debounced** (about 250 ms) before it becomes `q` in the address and the request. An empty search is no `q`.
 - **Infinite scroll has a fallback and announces new items.** The shared infinite list renders a real "Load more" button as the scroll sentinel (keyboard users and browsers without `IntersectionObserver` can still load more), a polite live region that says how many items were added, an end line, and an inline "Try again" when a page fails. Back navigation keeps the loaded pages and the scroll position.
 - **Counts on tabs and headings come from the response** (`total`, facet counts), never from `items.length` of a loaded page.
+- **A screen that looks rows up by id** (a picker, a preview, a publish check) cannot work from one page. Until it asks the server for the rows by id, it reads every page with `readAllNumberedPages` (page size 20, stops at the total or 100 pages), under its own query key. That is debt, not a pattern for a table. A picker that searches sends `q` to the server and shows the first matches (the story picker of the pin editor).
 - **Don't** filter, count, sort or search a fetched list in a component to answer the user's choice. The only work on a loaded page is display and, where the project's decision allows it, a re-order by data that must stay on the device.
 
 ## Rules that apply today
