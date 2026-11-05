@@ -42,7 +42,7 @@ function pin(n: number, over: Partial<PublicMapItem> = {}): PublicMapItem {
 }
 
 function tour(n: number, stayTag: PublicTourCard['stayTag'], over: Partial<PublicTourCard> = {}): PublicTourCard {
-  return { id: id(n), slug: `tour-${n}`, title: `Tour ${n}`, stayTag, interests: [], durationMinutes: 180, coverKey: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'], ...over }
+  return { id: id(n), slug: `tour-${n}`, title: `Tour ${n}`, stayTag, interests: [], durationMinutes: 180, coverKey: null, cover: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'], ...over }
 }
 
 const FOUR = [pin(1), pin(2), pin(3, { interests: ['food-drink'] }), pin(4)]
@@ -99,6 +99,14 @@ describe('[E4.13][AC24][AC54][AC95] the server HTML of the rails', () => {
     expect(html.indexOf('Tour 2')).toBeGreaterThan(-1)
     expect(html.indexOf('Tour 2')).toBeLessThan(html.indexOf('Tour 1'))
     expect(html).not.toContain('CHF')
+  })
+
+  it('shows the cover photo on a route card when the tour has one, and none without', async () => {
+    const cover = { url: 'https://media.test/k/original.jpg', variants: [{ width: 320, url: 'https://media.test/k/w320.webp' }, { width: 640, url: 'https://media.test/k/w640.webp' }] }
+    const html = renderToString(<RouterProvider router={await routerOf(<RoutesSection tours={[tour(1, 'both', { cover }), tour(2, 'both')]} onRetry={() => {}} />)} />)
+
+    expect(html).toContain('src="https://media.test/k/w640.webp"')
+    expect(html.match(/<img/g)).toHaveLength(1)
   })
 
   it('links a route to the address of its own language (ADR-002)', async () => {
@@ -179,7 +187,7 @@ describe('[E4.13][AC95] the postcards in the browser', () => {
   })
 })
 
-describe('[E4.13][AC36] the sort pill', () => {
+describe('[E4.13][AC36] the sort notice', () => {
   it('reads "Sort for my trip" with no answers (AC-4)', async () => {
     render(<RouterProvider router={await routerOf(<MustVisitsSection pins={FOUR} onRetry={() => {}} />)} />)
 
@@ -192,14 +200,14 @@ describe('[E4.13][AC36] the sort pill', () => {
 
     const pill = await screen.findByRole('button', { name: /Sorted for/ })
 
-    expect(pill).toHaveTextContent(`Sorted for ${en['stories.sort.stay.short_stay']}, ${en['places.interest.food-drink']}`)
+    expect(pill).toHaveAccessibleName(`Sorted for ${en['stories.sort.stay.short_stay']}, ${en['places.interest.food-drink']}, ${en['homePage.sort.change']}`)
     expect(pill).toHaveTextContent(en['homePage.sort.change'])
     await userEvent.click(pill)
     expect(screen.getByTestId('request')).toHaveTextContent('change')
 
     act(() => saveAnswers({ stay: 'multi_day', interests: [] }))
 
-    expect(screen.getByRole('button', { name: /Sorted for/ })).toHaveTextContent(`Sorted for ${en['stories.sort.stay.multi_day']}`)
+    expect(screen.getByRole('button', { name: /Sorted for/ })).toHaveAccessibleName(`Sorted for ${en['stories.sort.stay.multi_day']}, ${en['homePage.sort.change']}`)
   })
 })
 

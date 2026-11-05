@@ -14,6 +14,8 @@ export const homeEn = {
   'homePage.sort.personalise': 'Sort for my trip',
   'homePage.sort.for': 'Sorted for {answers}',
   'homePage.sort.change': 'Change',
+  'homePage.sort.start': 'Start',
+  'homePage.sort.hint': 'Two quick questions, and the places that suit you come first.',
   'homePage.stories.title': 'Stories from Lucerne',
   'homePage.stories.body': 'Short reads on the places and the people behind them.',
   'homePage.stories.seeAll': 'Show all stories',

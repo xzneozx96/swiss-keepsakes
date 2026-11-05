@@ -1,11 +1,11 @@
 import type { PublicMapItem } from '@sk/api-contract'
 
-import { Skeleton } from '@heroui/react'
+import { Alert, Button, Skeleton } from '@heroui/react'
 import { Link, useHydrated } from '@tanstack/react-router'
 import { useId } from 'react'
 
 import { ErrorNotice } from '@/components/error-notice'
-import { ChevronRightIcon, FilterIcon, StoryIcon } from '@/components/icons'
+import { FilterIcon, StoryIcon } from '@/components/icons'
 import { MapThumb } from '@/components/map/map-thumb'
 import { useLocale } from '@/contexts/locale-context'
 import { Rail } from '@/features/discovery/components/section'
@@ -19,26 +19,30 @@ const PRESS = 'outline-none focus-visible:focus-ring motion-safe:transition-tran
 const POSTCARD_PHOTO_WIDTH = 640
 
 /**
- * The sort pill under the heading: what the postcards are sorted for, or the offer to sort them. It opens the onboarding flow
- * in change mode and is the page's only personalisation signal. The text rises in when it changes, only with motion allowed.
+ * The sort notice under the heading, a full-width HeroUI Alert: what the postcards are sorted for, or the offer to sort them,
+ * with a button that opens the onboarding flow in change mode. It is the page's only personalisation signal. The title rises
+ * in when it changes, only with motion allowed.
  */
-function SortPill({ stay, interests }: { stay: string | null | undefined, interests: readonly string[] }) {
+function SortNotice({ stay, interests }: { stay: string | null | undefined, interests: readonly string[] }) {
   const { t } = useLocale()
   const named = [...(stay ? [t(`stories.sort.stay.${stay as 'short_stay' | 'multi_day'}`)] : []), ...interests.map(code => t(`places.interest.${code}` as 'places.interest.food-drink'))]
   const answered = named.length > 0
   const text = answered ? t('homePage.sort.for', { answers: named.join(', ') }) : t('homePage.sort.personalise')
 
   return (
-    <button
-      className="flex min-h-11 w-full items-center gap-2 rounded-full border border-separator bg-surface ps-3 pe-2.5 text-[13px] leading-[18px] font-semibold outline-none sm:w-fit sm:max-w-full focus-visible:focus-ring motion-safe:transition-transform motion-safe:active:scale-[0.98]"
-      type="button"
-      onClick={() => openOnboarding('change')}
-    >
-      <FilterIcon aria-hidden className="shrink-0 text-accent" size={16} />
-      <span key={text} className="min-w-0 flex-1 truncate text-start motion-safe:animate-rise">{text}</span>
-      {answered && <span className="shrink-0 text-accent">{t('homePage.sort.change')}</span>}
-      <ChevronRightIcon aria-hidden className="shrink-0 text-muted" size={16} />
-    </button>
+    <Alert className="w-full items-center" status="accent">
+      <Alert.Indicator>
+        <FilterIcon aria-hidden size={18} />
+      </Alert.Indicator>
+      <Alert.Content>
+        <Alert.Title key={text} className="motion-safe:animate-rise">{text}</Alert.Title>
+        {!answered && <Alert.Description>{t('homePage.sort.hint')}</Alert.Description>}
+      </Alert.Content>
+      {/* The visible word is short; the name says what is sorted, so the button makes sense on its own. */}
+      <Button aria-label={answered ? `${text}, ${t('homePage.sort.change')}` : text} className="shrink-0" size="sm" variant="secondary" onPress={() => openOnboarding('change')}>
+        {answered ? t('homePage.sort.change') : t('homePage.sort.start')}
+      </Button>
+    </Alert>
   )
 }
 
@@ -114,7 +118,7 @@ export function MustVisitsSection({ pins, onRetry }: { pins: readonly PublicMapI
           ? <MustSkeleton />
           : (
               <>
-                <SortPill interests={answers.interests ?? []} stay={answers.stay} />
+                <SortNotice interests={answers.interests ?? []} stay={answers.stay} />
                 <Rail label={t('homePage.must.title')}>
                   {mustVisitOrder(must, answers).map(pin => <Postcard key={pin.id} pin={pin} />)}
                 </Rail>

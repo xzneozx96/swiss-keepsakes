@@ -15,6 +15,8 @@ export const homeDe: Record<keyof typeof homeEn, string> = {
   'homePage.sort.personalise': 'Für meine Reise sortieren',
   'homePage.sort.for': 'Sortiert für {answers}',
   'homePage.sort.change': 'Ändern',
+  'homePage.sort.start': 'Los geht’s',
+  'homePage.sort.hint': 'Zwei kurze Fragen, und was zu Ihnen passt, kommt zuerst.',
   'homePage.stories.title': 'Geschichten aus Luzern',
   'homePage.stories.body': 'Kurze Texte über die Orte und die Menschen dahinter.',
   'homePage.stories.seeAll': 'Alle Geschichten anzeigen',
