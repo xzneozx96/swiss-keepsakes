@@ -31,7 +31,7 @@ vi.mock('@/features/catalog/api/keepsakes', async importOriginal => ({ ...await 
 vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: vi.fn(), fetchMapCategories: vi.fn(), fetchMapPin: vi.fn() }))
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
-const water: PublicCategory = { id: id(1), slug: 'drinking-water', name: { en: 'Drinking water', de: 'Trinkwasser' }, parentId: null, icon: 'water', showOnHome: true, position: 1 }
+const water: PublicCategory = { id: id(1), slug: 'drinking-water', name: { en: 'Drinking water', de: 'Trinkwasser' }, parentId: null, icon: 'water', showOnHome: true, storyCount: 0, position: 1 }
 const pin: PublicMapItem = {
   id: id(100),
   slug: 'fountain',

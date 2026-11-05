@@ -7,7 +7,7 @@ import { FOOD_CATEGORY_SLUG, FOOD_PLACE_COUNT, kindOf, newestFoodPlaces, streetO
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 
 function category(n: number, slug: string, name: string, parentId: string | null = null, position = n): PublicCategory {
-  return { id: id(n), slug, name: { en: name, de: name }, parentId, icon: null, showOnHome: false, position }
+  return { id: id(n), slug, name: { en: name, de: name }, parentId, icon: null, showOnHome: false, storyCount: 0, position }
 }
 
 function pin(n: number, categoryIds: string[], extra: Partial<PublicMapItem> = {}): PublicMapItem {

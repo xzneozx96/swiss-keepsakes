@@ -9,7 +9,7 @@ import { CategoriesSheet } from '@/features/map/components/categories-sheet'
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 
 function category(n: number, parentId: string | null, position: number, name: string): PublicCategory {
-  return { id: id(n), slug: `c${n}`, name: { en: name, de: name }, parentId, icon: null, showOnHome: false, position }
+  return { id: id(n), slug: `c${n}`, name: { en: name, de: name }, parentId, icon: null, showOnHome: false, storyCount: 0, position }
 }
 
 const walks = category(1, null, 0, 'Walks')
@@ -25,6 +25,8 @@ function pin(n: number, categoryIds: string[]): PublicMapItem {
     slug: `pin-${n}`,
     latitude: 47,
     longitude: 8,
+    address: null,
+    weeklyHours: [],
     title: `Pin ${n}`,
     language: 'en',
     categoryIds,

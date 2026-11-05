@@ -1,7 +1,7 @@
 import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
 import type { PlaceDetail } from '@/features/map/lib/place-detail'
 
-import type { MapSearch } from '@/features/map/lib/search-params'
+import type { MapAddress } from '@/features/map/lib/search-params'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider, useNavigate, useSearch } from '@tanstack/react-router'
 import { act, configure, render, screen, waitFor, within } from '@testing-library/react'
@@ -30,7 +30,7 @@ vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: vi.fn(), fetchMa
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 
 function category(n: number, parentId: string | null, position: number, en: string, de: string): PublicCategory {
-  return { id: id(n), slug: `c${n}`, name: { en, de }, parentId, icon: null, showOnHome: false, position }
+  return { id: id(n), slug: `c${n}`, name: { en, de }, parentId, icon: null, showOnHome: false, storyCount: 0, position }
 }
 
 const walks = category(1, null, 0, 'Walks', 'Spaziergänge')
@@ -45,6 +45,8 @@ function pin(n: number, title: string, categoryIds: string[], extra: Partial<Pub
     slug: `pin-${n}`,
     latitude: 47.05 + n * 0.01,
     longitude: 8.3 + n * 0.01,
+    address: null,
+    weeklyHours: [],
     title,
     language: 'en',
     categoryIds,
@@ -105,7 +107,7 @@ function detailOf(item: PublicMapItem): PlaceDetail {
 }
 
 function MapAtRoute() {
-  const { place, category, dated } = useSearch({ strict: false }) as MapSearch
+  const { place, category, dated } = useSearch({ strict: false }) as MapAddress
   const navigate = useNavigate()
 
   return <MapScreen category={category} dated={dated} place={place} onSearchChange={search => void navigate({ to: '.', search, replace: true })} />

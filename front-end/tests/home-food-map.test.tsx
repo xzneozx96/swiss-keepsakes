@@ -13,7 +13,7 @@ import { en } from '@/i18n/en'
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 
 function category(n: number, slug: string, name: string, parentId: string | null = null, icon: PublicCategory['icon'] = null): PublicCategory {
-  return { id: id(n), slug, name: { en: name, de: name }, parentId, icon, showOnHome: false, position: n }
+  return { id: id(n), slug, name: { en: name, de: name }, parentId, icon, showOnHome: false, storyCount: 0, position: n }
 }
 
 function pin(n: number, title: string, categoryIds: string[], extra: Partial<PublicMapItem> = {}): PublicMapItem {

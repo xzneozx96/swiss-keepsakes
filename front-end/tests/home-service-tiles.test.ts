@@ -6,7 +6,7 @@ import { serviceTiles } from '@/features/home/lib/service-tiles'
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 
 function category(n: number, extra: Partial<PublicCategory> = {}): PublicCategory {
-  return { id: id(n), slug: `c${n}`, name: { en: `Name ${n}`, de: `Name ${n} DE` }, parentId: null, icon: null, showOnHome: true, position: n, ...extra }
+  return { id: id(n), slug: `c${n}`, name: { en: `Name ${n}`, de: `Name ${n} DE` }, parentId: null, icon: null, showOnHome: true, storyCount: 0, position: n, ...extra }
 }
 
 function pin(n: number, categoryIds: string[]): PublicMapItem {
@@ -15,6 +15,8 @@ function pin(n: number, categoryIds: string[]): PublicMapItem {
     slug: `pin-${n}`,
     latitude: 47.05,
     longitude: 8.3,
+    address: null,
+    weeklyHours: [],
     title: `Pin ${n}`,
     language: 'en',
     categoryIds,
