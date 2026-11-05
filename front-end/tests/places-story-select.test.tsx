@@ -72,7 +72,8 @@ describe('[E4.2][AC68] the story select of step 5', () => {
 
     expect(offered()).toEqual(['None', 'The bridge', 'Lion Monument'])
     await userEvent.type(screen.getByRole('searchbox', { name: 'Search Story behind this place' }), 'lion')
-    await waitFor(() => expect(offered()).toEqual(['Lion Monument']))
+    // The None row stays: it is not a match, it clears the choice.
+    await waitFor(() => expect(offered()).toEqual(['None', 'Lion Monument']))
   })
 
   it('links the story that is chosen, and None takes the link away', async () => {

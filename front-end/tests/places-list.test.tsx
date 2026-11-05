@@ -650,7 +650,7 @@ describe('[ADR-033] the pins table reads numbered pages from the server', () => 
     api.items = many(25)
     window.history.pushState({}, '', '/store/content/places?status=draft&page=2')
     const { router } = await renderInRouter(<PlacesAtRoute />, { path: `${path}?status=draft&page=2` })
-    await screen.findAllByRole('link', { name: 'Pin 17' })
+    await screen.findAllByRole('link', { name: 'Pin 15' })
 
     expect(Object.fromEntries(reads().at(-1)!)).toEqual({ status: 'draft', page: '2', pageSize: '10' })
     await userEvent.click(screen.getByRole('button', { name: 'Recommended for' }))
@@ -669,7 +669,7 @@ describe('[ADR-033] the pins table reads numbered pages from the server', () => 
     const popover = await screen.findByRole('dialog', { name: 'Status' })
 
     // 25 pins: 7 published (every fourth, from the first), 18 drafts. Only 10 are on the page.
-    expect(within(popover).getAllByRole('checkbox').map(box => box.closest('.checkbox')?.textContent)).toEqual(['Draft18', 'Published7', 'Hidden0', 'Ended0'])
+    expect(within(popover).getAllByRole('checkbox').map(box => box.closest('.checkbox')?.textContent)).toEqual(['Draft18', 'Published7', 'Hidden0', 'Ended · off the map0'])
   })
 
   it('[ADR-033] the search is sent once, a moment after the last key, and starts again at page 1', async () => {

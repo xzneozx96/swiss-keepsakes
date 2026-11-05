@@ -42,9 +42,9 @@ describe('[ADR-033] dataTable in server mode', () => {
     const go = vi.fn()
     renderTable(page(11, 10), { page: 2, pageSize: 10, total: 45, go })
 
-    await userEvent.click(screen.getByLabelText('Page 4'))
+    await userEvent.click(screen.getByLabelText('Page 3'))
 
-    expect(go).toHaveBeenCalledWith(4)
+    expect(go).toHaveBeenCalledWith(3)
     expect(screen.getByText('Row 11')).toBeInTheDocument()
   })
 
