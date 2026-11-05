@@ -3,7 +3,7 @@ import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LocaleProvider } from '@/contexts/locale-context'
 import { FoodMapSection } from '@/features/home/components/food-map-section'
@@ -21,6 +21,8 @@ function pin(n: number, title: string, categoryIds: string[], extra: Partial<Pub
     slug: `pin-${n}`,
     latitude: 47.05,
     longitude: 8.3,
+    address: null,
+    weeklyHours: [],
     title,
     language: 'en',
     categoryIds,
@@ -37,29 +39,35 @@ function pin(n: number, title: string, categoryIds: string[], extra: Partial<Pub
   }
 }
 
-const walks = category(1, 'walks', 'Walks')
-const food = category(2, 'food-and-drink', 'Food and drink', null, 'cafe')
-const bakeries = category(3, 'bakeries', 'Bakeries', food.id)
-const categories = [walks, food, bakeries]
+const food = category(1, 'food-and-drink', 'Food and drink', null, 'restaurant')
+const cafes = category(2, 'cafes', 'Cafés and bakeries', food.id, 'cafe')
+const fondue = category(3, 'fondue', 'Fondue', food.id)
+const restaurants = category(6, 'restaurants', 'Restaurants', food.id)
+const bars = category(7, 'bars', 'Bars', food.id, 'bar')
+const walks = category(9, 'walks', 'Walks')
+const categories = [walks, bars, food, restaurants, fondue, cafes]
 
-const heini = pin(1, 'Café Heini', [food.id], { tip: 'Order the Luzerner Lebkuchen with a café crème by the window.' })
-const bridge = pin(2, 'Chapel Bridge', [walks.id])
-const weinmarkt = pin(3, 'Bäckerei Weinmarkt', [bakeries.id, food.id])
+// Thursday 5 November 2026 (day 4), noon in Lucerne.
+const NOW = new Date('2026-11-05T11:00:00Z')
+const sip = pin(1, 'SiP Café', [food.id, cafes.id], { address: 'Weinmarkt 14, 6004 Luzern', weeklyHours: [{ day: 4, opens: '09:00', closes: '19:00' }, { day: 5, opens: '09:00', closes: '20:00' }] })
+const reussbad = pin(2, 'Restaurant Reussbad', [food.id, restaurants.id], { address: 'Brüggligasse 19, 6004 Luzern', weeklyHours: [{ day: 4, opens: '18:00', closes: '22:00' }, { day: 4, opens: '11:30', closes: '14:00' }] })
+const storchen = pin(3, 'Storchen Restaurant & Weinbar', [food.id, bars.id, restaurants.id], { weeklyHours: [{ day: 2, opens: '14:00', closes: '22:00' }] })
 const market = pin(4, 'Weekly market', [food.id], { nextDate: { firstDay: '2090-11-07', lastDay: '2090-11-07', startTime: null, endTime: null } })
-const pickwick = pin(5, 'Mr. Pickwick Pub', [food.id], { photoUrl: null, photoVariants: [] })
-const galliker = pin(6, 'Wirtshaus Galliker', [food.id])
-const rathaus = pin(7, 'Rathaus Brauerei', [food.id])
-const neubad = pin(8, 'Neubad', [food.id])
-const pins = [heini, bridge, weinmarkt, market, pickwick, galliker, rathaus, neubad]
+const mamie = pin(5, 'Café Mamie', [food.id, cafes.id], { photoUrl: null, photoVariants: [] })
+const bridge = pin(6, 'Chapel Bridge', [walks.id])
+const pins = [sip, reussbad, storchen, market, mamie, bridge]
+const at = (iso: string) => vi.setSystemTime(new Date(iso))
 
 interface Read { pins?: PublicMapItem[] | null, categories?: PublicCategory[] | null }
 
 function renderSection(read: Read = { pins, categories }, onRetry = () => {}) {
-  const root = createRootRoute({ component: () => (
-    <LocaleProvider>
-      <Outlet />
-    </LocaleProvider>
-  ) })
+  const root = createRootRoute({
+    component: () => (
+      <LocaleProvider>
+        <Outlet />
+      </LocaleProvider>
+    ),
+  })
   const home = createRoute({ getParentRoute: () => root, path: '/$lang', component: () => (
     <div data-testid="page">
       <FoodMapSection categories={read.categories} pins={read.pins} onRetry={onRetry} />
@@ -72,57 +80,163 @@ function renderSection(read: Read = { pins, categories }, onRetry = () => {}) {
 }
 
 const section = async () => (await screen.findByRole('heading', { level: 2, name: en['homePage.food.title'] })).closest('section')!
-const rail = () => screen.getByRole('region', { name: en['homePage.food.more'] })
-const railNames = () => within(rail()).getAllByRole('heading', { level: 3 }).map(heading => heading.textContent)
+const filter = () => screen.getByRole('region', { name: en['homePage.food.kinds'] })
+const filterButtons = () => within(filter()).getAllByRole('button')
+const rail = (name = en['homePage.food.places']) => screen.getByRole('region', { name })
+const cardNames = (name?: string) => within(rail(name)).getAllByRole('heading', { level: 3 }).map(heading => heading.textContent)
+const card = (title: string) => screen.getByRole('link', { name: new RegExp(title) })
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(NOW)
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
-  it('shows the newest place as the poster with its tip, the next four undated places in the rail, and no price', async () => {
+  it('shows the undated food places newest first as cards, and no price', async () => {
     renderSection()
     const box = await section()
-    const poster = within(box).getAllByRole('link')[0]!
 
-    expect(poster).toHaveTextContent('Café Heini')
-    expect(poster).toHaveTextContent(heini.tip)
-    expect(poster).toHaveAttribute('href', '/en/map?place=pin-1')
-    expect(poster.querySelector('.line-clamp-2')).toHaveTextContent(heini.tip)
-    // The poster takes the sharp 640 px copy, not the small one.
-    expect(poster.querySelector('img')).toHaveAttribute('src', 'https://img.example/1-640.webp')
-    // The bridge is not food, the market has a date, and the sixth food place is beyond the five.
-    expect(railNames()).toEqual(['Bäckerei Weinmarkt', 'Mr. Pickwick Pub', 'Wirtshaus Galliker', 'Rathaus Brauerei'])
-    expect(box.textContent).not.toMatch(/Chapel Bridge|Weekly market|Neubad|CHF|Fr\./)
-    expect(within(rail()).getByRole('link', { name: /Bäckerei Weinmarkt/ })).toHaveTextContent('Bakeries')
+    expect(cardNames()).toEqual(['SiP Café', 'Restaurant Reussbad', 'Storchen Restaurant & Weinbar', 'Café Mamie'])
+    expect(box.textContent).not.toMatch(/Chapel Bridge|Weekly market|CHF|Fr\./)
+    // The card takes the sharp 640 px copy, not the small one.
+    expect(card('SiP Café').querySelector('img')).toHaveAttribute('src', 'https://img.example/1-640.webp')
   })
 
-  it('opens each place on the map and the button opens the map filtered to food and drink', async () => {
+  it('badges each card with its kind, the first sub-category in position order', async () => {
     renderSection()
     await section()
 
-    expect(within(rail()).getByRole('link', { name: /Mr. Pickwick Pub/ })).toHaveAttribute('href', '/en/map?place=pin-5')
-    expect(screen.getByRole('link', { name: en['homePage.food.seeAll'] })).toHaveAttribute('href', '/en/map?category=food-and-drink')
+    expect(card('SiP Café')).toHaveTextContent('Cafés and bakeries')
+    expect(card('Storchen')).toHaveTextContent('Restaurants')
+    expect(card('Storchen')).not.toHaveTextContent('Bars')
+  })
+
+  it('shows today’s hours with an Open badge while the place is open, and Closed today without a span today', async () => {
+    renderSection()
+    await section()
+
+    expect(card('SiP Café')).toHaveTextContent('09:00–19:00Open')
+    expect(card('SiP Café')).not.toHaveTextContent('Today')
+    // Two spans, joined by a dot, and noon falls in the first one.
+    expect(card('Reussbad')).toHaveTextContent('11:30–14:00 · 18:00–22:00Open')
+    expect(card('Storchen')).toHaveTextContent(en['map.sheet.closedToday'])
+    expect(card('Storchen')).not.toHaveTextContent(/\d{2}:\d{2}/)
+  })
+
+  it('says Closed between two spans and after closing', async () => {
+    at('2026-11-05T14:00:00Z') // 15:00 in Lucerne
+    renderSection()
+    await section()
+
+    expect(card('Reussbad')).toHaveTextContent('11:30–14:00 · 18:00–22:00Closed')
+    cleanup()
+    at('2026-11-05T20:30:00Z') // 21:30
+    renderSection()
+    await section()
+
+    expect(card('SiP Café')).toHaveTextContent('09:00–19:00Closed')
+    expect(card('Reussbad')).toHaveTextContent('Open')
+  })
+
+  it('counts a span that closes after midnight as open until then, also on the next morning', async () => {
+    const late = pin(7, 'Bar & Lounge', [food.id, bars.id], { weeklyHours: [{ day: 3, opens: '20:00', closes: '02:00' }, { day: 4, opens: '18:00', closes: '01:30' }] })
+
+    at('2026-11-05T22:30:00Z') // Thursday 23:30
+    renderSection({ pins: [late], categories })
+    await section()
+
+    expect(card('Bar & Lounge')).toHaveTextContent('18:00–01:30Open')
+    cleanup()
+    at('2026-11-04T23:30:00Z') // Thursday 00:30, Wednesday's span still runs
+    renderSection({ pins: [late], categories })
+    await section()
+
+    expect(card('Bar & Lounge')).toHaveTextContent('Open')
+  })
+
+  it('draws no hours line for a place without hours', async () => {
+    renderSection()
+    await section()
+
+    expect(card('Café Mamie')).not.toHaveTextContent(/Open|Closed|\d{2}:\d{2}/)
+  })
+
+  it('shows the street before the postcode, and no address line without an address', async () => {
+    renderSection()
+    await section()
+
+    expect(card('SiP Café')).toHaveTextContent('Weinmarkt 14')
+    expect(card('SiP Café')).not.toHaveTextContent('6004')
+    expect(card('Café Mamie').querySelectorAll('svg')).toHaveLength(1)
   })
 
   it('shows the category icon for a place without a photo', async () => {
     renderSection()
     await section()
-    const card = within(rail()).getByRole('link', { name: /Mr. Pickwick Pub/ })
 
-    expect(card.querySelector('[data-pin-icon="cafe"]')).not.toBeNull()
-    expect(card.querySelector('img')).toBeNull()
+    expect(card('Café Mamie').querySelector('[data-pin-icon]')).not.toBeNull()
+    expect(card('Café Mamie').querySelector('img')).toBeNull()
   })
 
-  it('shows the kind of place on the poster when the place has no tip', async () => {
-    renderSection({ pins: [weinmarkt], categories })
-    const box = await section()
+  it('offers All and the kinds that hold a listed place, in position order, with All chosen', async () => {
+    renderSection()
+    await section()
 
-    expect(within(box).getAllByRole('link')[0]).toHaveTextContent('Bakeries')
+    // Fondue holds no listed place; Bars holds Storchen.
+    expect(filterButtons().map(button => button.textContent?.trim())).toEqual(['All', 'Cafés and bakeries', 'Restaurants', 'Bars'])
+    expect(filterButtons().map(button => button.getAttribute('aria-pressed'))).toEqual(['true', 'false', 'false', 'false'])
   })
 
-  it('shows the poster alone with one place, then the button', async () => {
-    renderSection({ pins: [heini, bridge], categories })
-    const box = await section()
+  it('gives each kind the topic photo of its icon, never a place photo, and the icon on a tile without one', async () => {
+    renderSection()
+    await section()
+    const [all, cafe, restaurant, bar] = filterButtons()
 
-    expect(screen.queryByRole('region', { name: en['homePage.food.more'] })).toBeNull()
-    expect(within(box).getAllByRole('link').map(link => link.getAttribute('href'))).toEqual(['/en/map?place=pin-1', '/en/map?category=food-and-drink'])
+    expect(all!.querySelector('img')?.getAttribute('src')).toContain('food-topic-all')
+    expect(cafe!.querySelector('img')?.getAttribute('src')).toContain('food-topic-cafe')
+    expect(bar!.querySelector('img')?.getAttribute('src')).toContain('food-topic-bar')
+    // Restaurants has no icon here: a soft tile with the plain pin, no photo.
+    expect(restaurant!.querySelector('img')).toBeNull()
+    expect(restaurant!.querySelector('svg')).not.toBeNull()
+    expect(filterButtons().some(button => button.querySelector('img')?.getAttribute('src')?.startsWith('https://img.example'))).toBe(false)
+  })
+
+  it('filters the cards by the chosen kind in the page, and the button follows the kind', async () => {
+    renderSection()
+    await section()
+    const seeAll = () => screen.getByRole('link', { name: en['homePage.food.seeAll'] })
+
+    expect(seeAll()).toHaveAttribute('href', '/en/map?category=food-and-drink')
+    await userEvent.click(within(filter()).getByRole('button', { name: 'Restaurants' }))
+
+    expect(cardNames('Restaurants')).toEqual(['Restaurant Reussbad', 'Storchen Restaurant & Weinbar'])
+    expect(within(filter()).getByRole('button', { name: 'Restaurants' })).toHaveAttribute('aria-pressed', 'true')
+    expect(seeAll()).toHaveAttribute('href', '/en/map?category=restaurants')
+
+    await userEvent.click(within(filter()).getByRole('button', { name: 'All' }))
+
+    expect(cardNames()).toHaveLength(4)
+    expect(seeAll()).toHaveAttribute('href', '/en/map?category=food-and-drink')
+  })
+
+  it('opens each place on the map', async () => {
+    renderSection()
+    await section()
+
+    expect(card('SiP Café')).toHaveAttribute('href', '/en/map?place=pin-1')
+    expect(card('Café Mamie')).toHaveAttribute('href', '/en/map?place=pin-5')
+  })
+
+  it('shows no filter row when the places hold one kind only', async () => {
+    renderSection({ pins: [sip, mamie], categories })
+    await section()
+
+    expect(screen.queryByRole('region', { name: en['homePage.food.kinds'] })).toBeNull()
+    expect(cardNames()).toEqual(['SiP Café', 'Café Mamie'])
   })
 
   it('is not drawn without the category, without a food place, or with dated food places only', async () => {
@@ -133,7 +247,7 @@ describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
     }
   })
 
-  it('shows a skeleton of the poster and the rail while the map list loads', async () => {
+  it('shows a skeleton of the filter row and the cards while the map list loads', async () => {
     renderSection({})
     await section()
 

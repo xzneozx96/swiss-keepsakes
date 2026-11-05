@@ -45,9 +45,10 @@ export function isOpenAt(spans: readonly HoursSpan[], day: number, time: string)
 
 /**
  * The week in a few lines: days in a row with the same hours share one line ("Mon–Fri"), the line that holds today is
- * marked, and `openToday` says whether the place is open at some point today. No hours at all gives no groups.
+ * marked, and `openToday` says whether the place is open at some point today. No hours at all gives no groups. Two spans
+ * of one day are joined by `separator` (", " in the place sheet).
  */
-export function hoursOfWeek(spans: readonly HoursSpan[], today: number, locale: IntlLocale, closedText: string) {
+export function hoursOfWeek(spans: readonly HoursSpan[], today: number, locale: IntlLocale, closedText: string, separator = ', ') {
   if (spans.length === 0)
     return { groups: [], openToday: false }
 
@@ -55,7 +56,7 @@ export function hoursOfWeek(spans: readonly HoursSpan[], today: number, locale: 
 
   for (const day of DAYS) {
     const own = spans.filter(span => span.day === day).sort((a, b) => a.opens.localeCompare(b.opens))
-    const value = own.length > 0 ? own.map(span => `${hhmm(span.opens)}–${hhmm(span.closes)}`).join(', ') : closedText
+    const value = own.length > 0 ? own.map(span => `${hhmm(span.opens)}–${hhmm(span.closes)}`).join(separator) : closedText
     const previous = groups.at(-1)
 
     if (previous && previous.value === value && previous.last === day - 1) {

@@ -8,7 +8,7 @@ const mode = vi.hoisted(() => ({ on: true }))
 vi.mock('@/lib/api-mode', () => ({ get apiEnabled() { return mode.on } }))
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
-const mapItem = { id: id(1), slug: 'bridge', latitude: 47.05, longitude: 8.3, title: 'Chapel Bridge', language: 'en', categoryIds: [id(3)], stayTag: 'both', interests: [], nextDate: null, hasMainStory: false, mainStorySlug: null, photoUrl: null, photoVariants: [], mustVisit: true, tip: 'Go at dawn.' }
+const mapItem = { id: id(1), slug: 'bridge', latitude: 47.05, longitude: 8.3, address: null, weeklyHours: [], title: 'Chapel Bridge', language: 'en', categoryIds: [id(3)], stayTag: 'both', interests: [], nextDate: null, hasMainStory: false, mainStorySlug: null, photoUrl: null, photoVariants: [], mustVisit: true, tip: 'Go at dawn.' }
 const water = { id: id(3), slug: 'drinking-water', name: { en: 'Drinking water', de: 'Trinkwasser' }, parentId: null, icon: 'water', showOnHome: true, position: 1 }
 const storyCard = (n: number, publishedAt: string) => ({ id: id(400 + n), slug: `story-${n}`, title: `Story ${n}`, excerpt: 'x', readMinutes: 3, coverKey: null, cover: null, stayTag: 'both', interests: [], categories: [], publishedAt, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] })
 const tourCard = { id: id(2), slug: 'pilatus-above-the-city', title: 'Pilatus: Above the City', stayTag: 'multi_day', interests: [], durationMinutes: 390, coverKey: null, cover: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }

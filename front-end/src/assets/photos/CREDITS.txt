@@ -245,3 +245,60 @@ vx-*.jpg (12 files, 1000x750)
 Product covers for the Victorinox designs: the client's concept art of each knife (front of the handle, cut from
 the boards the client supplied on 16.10.2026) on a cream ground. Concept renders, not photos of real knives.
 assets/brand/victorinox/*.webp are the transparent cut-outs, read through lib/victorinox-art.ts.
+
+---- Home food filter topics (05.11.2026; each cropped to 400x400 JPEG from the Commons 500 px thumbnail) ----
+Picked by the category icon in front-end/src/features/home/lib/food-topics.ts.
+
+food-topic-all.jpg
+Cheese fondue with bread (the "All" face of the home food filter).
+Photo by Juliano Mendes, CC BY 2.0, Wikimedia Commons:
+https://commons.wikimedia.org/wiki/File:Fondue_dish.jpg
+Cropped to a 400x400 square.
+
+food-topic-cafe.jpg
+A cappuccino with latte art at a café table.
+Photo by Shixart1985, CC BY 2.0, Wikimedia Commons:
+https://commons.wikimedia.org/wiki/File:A_person_holds_a_cup_of_cappuccino_featuring_intricate_latte_art,_sitting_at_a_caf%C3%A9_table.jpg
+Cropped to a 400x400 square.
+
+food-topic-bakery.jpg
+Artisan loaves of bread in baskets.
+Photo by Drew Coffman drewcoffman, CC0 1.0 (public domain dedication), Wikimedia Commons:
+https://commons.wikimedia.org/wiki/File:Artisan_Loaves_of_Bread_(Unsplash).jpg
+Cropped to a 400x400 square.
+
+food-topic-restaurant.jpg
+Rösti on a blue plate.
+Photo by Poupou l'quourouce, CC BY 4.0, Wikimedia Commons:
+https://commons.wikimedia.org/wiki/File:R%C3%B6sti_auf_blauem_Teller.jpg
+Cropped to a 400x400 square.
+
+food-topic-bar.jpg
+A glass of red wine at a wine bar.
+Photo by Sarah Stierch (Missvain), CC BY 4.0, Wikimedia Commons:
+https://commons.wikimedia.org/wiki/File:Parkside_Wine_Bar_-_November_2023_-_Sarah_Stierch_01.jpg
+Cropped to a 400x400 square.
+
+food-topic-brewery.jpg
+A glass of beer, close up.
+Photo by Public Domain Images, public domain, Wikimedia Commons:
+https://commons.wikimedia.org/wiki/File:Beer_in_glass_close_up.jpg
+Cropped to a 400x400 square.
+
+food-topic-market.jpg
+A fruit and vegetable market stall.
+Photo by Acabashi, CC BY-SA 4.0, Wikimedia Commons:
+https://commons.wikimedia.org/wiki/File:Outdoor_market_fruit_and_vegetable_stall_Market_Place_Romford_London_01.jpg
+Cropped to a 400x400 square.
+
+food-topic-supermarket.jpg
+A grocery aisle.
+Photo by Nick-D, CC BY-SA 4.0, Wikimedia Commons:
+https://commons.wikimedia.org/wiki/File:Aisle_in_Daily_Market_Groceries_Canberra_City_October_2025.jpg
+Cropped to a 400x400 square.
+
+food-topic-dessert.jpg
+A box of chocolate pralines.
+Photo by fimb, CC BY 2.0, Wikimedia Commons:
+https://commons.wikimedia.org/wiki/File:Pralines_Chocolate_Tasting_Club.jpg
+Cropped to a 400x400 square.

@@ -37,6 +37,8 @@ const pin: PublicMapItem = {
   slug: 'fountain',
   latitude: 47.05,
   longitude: 8.3,
+  address: null,
+  weeklyHours: [],
   title: 'Fountain',
   language: 'en',
   categoryIds: [water.id],
