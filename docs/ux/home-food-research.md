@@ -28,3 +28,24 @@ The owner picked G with changes on 05.11.2026. The built section (`front-end/src
 - **H, Contents page:** patterns 5 and 4, one card with a cover photo and the list.
 - **I, Round-up:** patterns 2 and 1, a numbered list with a tagline and a small photo.
 - **J, The shelf:** pattern 6, a compact two-column shelf of what is new.
+
+## See these first card research
+
+Research for the "See these first" card (lab `/lab/home-postcard`, round 2, 05.11.2026), after the owner turned down the dark postcard and options A to C (framed editorial, ticket stub, numbered split card). Web sources only; several are older or second-hand, so a product may look different today.
+
+1. **Photo plate, one floating action (Airbnb).** A listing or experience card is a plain photo plate with a 14 px radius and no shadow. One small badge sits top-left, one round action (the heart) sits top-right, and the text sits under the photo, not on it. Experience cards use a taller 4:5 photo. It works because the photo stays clean and the one action is always in the same corner. [getdesign.md, Airbnb design system (third-party analysis)](https://getdesign.md/design-md/airbnb/preview), [Airbnb 2025 Summer Release](https://news.airbnb.com/?p=436338)
+2. **Photo first, then directions (Google Maps things to do, 2023).** Things-to-do results became photos instead of link lists; a tap opens the detail with directions, for example to a boat tour's departure point. It works because the picture is the choice and the way there is one step away. [Skift](https://skift.com/2023/10/27/google-upgrades-maps-with-photo-first-searches-of-things-to-do)
+3. **A short row of top sights (Google Search and Travel).** A city query often shows about four popular attractions as a row, and Google's destination pages opened with a photo, a little background and the must-see sights. It works because the set is small and the names do the work. [AccuRanker, Things to do](https://accuranker.com/help/serp-features/google-things-to-do), [Fortune on Google Destinations](https://fortune.com/2016/03/09/destination-google-mobile/)
+4. **A cover with a mark (Apple Maps place card).** The place card header pairs a wide cover photo (a 2.5:1 crop) with a logo, shown together whenever a place is selected. It works because the photo sets the mood and a small fixed element gives identity. [Apple Business, place card](https://business.apple.com/docs/onboarding-guide/place-card)
+5. **Curiosity with a place line (Atlas Obscura).** Every place card on the site uses the same thumbnail treatment, and a place page leans on photos and community tips. It works because the consistent card lets the odd title and the tip carry the story. [Atlas Obscura product blog](https://atlasobscura.com/product-blog), [Atlas Obscura app](https://apps.apple.com/us/app/id1563250221)
+6. **The printed city guide (Cereal, Monocle).** See pattern 7 of the food research above: photos take the space and the facts sit in the same place on every page.
+
+Clean and minimal: patterns 1, 2 and 4, a clean photo with one fixed action or mark. Patterns 3 and 5 are clean when the line under the name is short and factual (kind of place, street) rather than ratings.
+
+Used for round 2 of the card lab:
+
+- **D, Floating panel:** patterns 1 and 2. A full-bleed photo with a white panel floating over its lower edge, and Google Maps as the one round action in the photo's corner.
+- **E, Postcard back:** a postcard metaphor (not a researched product). The photo as a perforated stamp, the tip as the written note, the name on the address lines, Google Maps as a postmark.
+- **F, Top sight:** patterns 3 and 5. A photo on top, the name, a short fact line (kind of place and street, no rating), and two equal pill actions.
+
+Outcome, 05.11.2026: after D (floating panel) was liked and D1 to D3 were tried, the owner sent two flight cards as references and chose **G, Immersive** (a white frame around a full-bleed photo that melts into a progressive blur, bold white name, street and hours, a white pill with a round frosted Google Maps button beside it), without the kind-of-place line and with the shorter label "Read the story". It replaced the postcard on the home; the lab `/lab/home-postcard` was deleted.

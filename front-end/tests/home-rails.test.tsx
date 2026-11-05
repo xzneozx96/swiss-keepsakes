@@ -26,6 +26,8 @@ function pin(n: number, over: Partial<PublicMapItem> = {}): PublicMapItem {
     slug: `pin-${n}`,
     latitude: 47.05,
     longitude: 8.3,
+    address: null,
+    weeklyHours: [],
     title: `Pin ${n}`,
     language: 'en',
     categoryIds: [],
@@ -142,14 +144,52 @@ describe('[E4.13][AC95] the postcards in the browser', () => {
     expect(names).toEqual(['Pin 3', 'Pin 1', 'Pin 2', 'Pin 4'])
   })
 
-  it('opens the map card of a place, the story of a pin, and shows the tip (AC-5)', async () => {
+  it('opens the map card of a place from the card, and the story from “Read the story” with Google Maps beside it (AC-5)', async () => {
     render(<RouterProvider router={await routerOf(<MustVisitsSection pins={[pin(1, { hasMainStory: true, mainStorySlug: 'the-bridge' }), pin(2, { slug: null })]} onRetry={() => {}} />)} />)
 
-    expect(await screen.findByRole('link', { name: /Pin 1/ })).toHaveAttribute('href', '/en/map?place=pin-1')
-    expect(screen.getByRole('link', { name: en['homePage.must.story'] })).toHaveAttribute('href', '/en/stories/the-bridge')
-    expect(screen.getByRole('link', { name: /Pin 2/ })).toHaveAttribute('href', '/en/map')
-    expect(screen.getByText('Tip 1')).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Pin 1' })).toHaveAttribute('href', '/en/map?place=pin-1')
+    expect(screen.getByRole('link', { name: 'Pin 2' })).toHaveAttribute('href', '/en/map')
+    const card = screen.getByRole('heading', { level: 3, name: 'Pin 1' }).closest('article')!
+
+    expect(within(card).getByRole('link', { name: 'Read the story' })).toHaveAttribute('href', '/en/stories/the-bridge')
+    expect(within(card).getByRole('link', { name: en['map.directions'] })).toHaveAttribute('href', 'https://www.google.com/maps/search/?api=1&query=47.05,8.3')
+    // No tip and no kind-of-place line on the card (owner, 05.11.2026).
+    expect(screen.queryByText('Tip 1')).toBeNull()
     expect(screen.getAllByRole('link', { name: en['homePage.must.story'] })).toHaveLength(1)
+  })
+
+  it('without a story, the pill is “Directions” to Google Maps and there is no round button', async () => {
+    render(<RouterProvider router={await routerOf(<MustVisitsSection pins={[pin(1)]} onRetry={() => {}} />)} />)
+
+    const card = (await screen.findByRole('heading', { level: 3, name: 'Pin 1' })).closest('article')!
+    const links = within(card).getAllByRole('link')
+
+    expect(links.map(link => link.textContent?.trim() || link.getAttribute('aria-label'))).toEqual(['Pin 1', en['homePage.must.directions']])
+    expect(links[1]).toHaveAttribute('href', 'https://www.google.com/maps/search/?api=1&query=47.05,8.3')
+    expect(within(card).queryByRole('link', { name: en['map.directions'] })).toBeNull()
+  })
+
+  it('shows the street before the postcode, and today’s hours only after hydration', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-05T11:00:00Z')) // Thursday noon in Lucerne
+    const church = pin(1, { title: 'Jesuit Church', address: 'Bahnhofstrasse 11a, 6003 Luzern', weeklyHours: [{ day: 4, opens: '06:30', closes: '18:30' }] })
+    const html = renderToString(<RouterProvider router={await routerOf(<MustVisitsSection pins={[church]} onRetry={() => {}} />)} />)
+
+    expect(textOf(html)).toContain('Bahnhofstrasse 11a')
+    expect(textOf(html)).not.toContain('6003')
+    expect(textOf(html)).not.toContain('18:30')
+    render(<RouterProvider router={await routerOf(<MustVisitsSection pins={[church]} onRetry={() => {}} />)} />)
+
+    expect(await screen.findByText('Open until 18:30')).toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
+  it('draws no street or hours line for a place without them', async () => {
+    render(<RouterProvider router={await routerOf(<MustVisitsSection pins={[pin(1)]} onRetry={() => {}} />)} />)
+
+    const card = (await screen.findByRole('heading', { level: 3, name: 'Pin 1' })).closest('article')!
+
+    expect(card.querySelectorAll('p')).toHaveLength(0)
   })
 
   it('tags a pin that is not in the guest language (AC64)', async () => {
