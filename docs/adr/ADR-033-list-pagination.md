@@ -3,7 +3,7 @@
 Status: accepted
 Date: 2026-11-05
 Source: owner, chat 05.11.2026. The question: "Do we have pagination? There will be hundreds of stories in the future, we can't pull everything and filter on the client. Do we have shared pagination logic across entities?" The owner then answered the open questions of the proposal on the same day (see "Owner decisions").
-Applies to: `packages/api-contract/`, `api/src/platform/http/`, `api/src/platform/db/`, `api/src/modules/content/`, `api/src/modules/catalog/`, `api/src/modules/inventory/`, `api/src/modules/identity/`, `front-end/src/features/content/`, `front-end/src/features/home/`, `front-end/src/features/search/`, `front-end/src/features/seo/`, `front-end/src/components/`, `docs/development-rules/backend/api-contract.md`
+Applies to: `packages/api-contract/`, `api/src/platform/http/`, `api/src/platform/db/`, `api/src/modules/content/`, `api/src/modules/catalog/`, `api/src/modules/inventory/`, `api/src/modules/identity/`, `front-end/src/features/content/`, `front-end/src/features/home/`, `front-end/src/features/search/`, `front-end/src/features/seo/`, `front-end/src/features/tours/`, `front-end/src/components/`, `docs/development-rules/backend/api-contract.md`
 Amends: ADR-006 (the answers rank within each loaded page, see its Amendments). Backend D11 says "Lists use cursor pagination". It gains one exception, the numbered pages of the per-store merchant tables (§ 6). The D11 text and `docs/development-rules/backend/api-contract.md` are updated in slice 1, when the shared code lands.
 
 No new dependency, vendor or paid service. Everything below uses Postgres, Zod, Hono and TanStack Query, which we already run.
@@ -63,11 +63,12 @@ We will use two paging modes and one rule for small lists.
 - **Numbered pages.** The per-store merchant tables keep numbered pages. They page by offset with a total (§ 6). This is the one exception to the cursor rule.
 - **Whole lists.** Every other list stays whole, with a cap written next to it (§ 10).
 
+Two numbers must not be confused. The **page size** is how many rows one request of a paged list returns: 10 by default and at most 20, for every paged list (amended 05.11.2026). The **cap** is a safety limit on the few lists that stay whole (map pins, categories, pickup points, small store lists such as members). It is not a page size: a whole list returns all its rows in one answer, and the cap only says when that list must be reviewed.
+
 ### 1. Cursor request
 
-- `limit`: an integer from 1 to 100.
-  - Each route sets its own default. Guest lists default to 10 (owner, 05.11.2026).
-  - A value above 100 answers 400 `validation-failed`, as `adminStoreListQuerySchema` does today. It is not silently lowered.
+- `limit`: an integer from 1 to 20, default 10, on every cursor list (owner, 05.11.2026). A screen may ask for fewer, as the home does.
+  - A value above 20 answers 400 `validation-failed`, as `adminStoreListQuerySchema` does today with its own bound. It is not silently lowered.
 - `cursor`: optional, an opaque string of at most 512 characters, URL-safe base64. It is absent on the first page.
 - Filters are named query parameters of the route, for example `category=<slug>`. There is no generic filter language.
 - `sort`: only where a screen offers more than one order. It is an enum of named orders, each of which maps to one fixed key list. The default order is the one the screen uses today.
@@ -108,6 +109,7 @@ These rules hold for both modes. An offset page also needs a deterministic order
 |---|---|---|---|---|
 | `GET /api/public/stories` | cursor | carried version `published_at desc`, group `id desc` | `story_versions_published_idx (language, published_at desc) where status = 'published'`; `story_categories_pkey (group_id, category_id)` | None at first. A stored group key and index only if § 11's check fails |
 | `GET /api/public/keepsakes` | cursor | `created_at desc, id desc` (today's order) | `products_store_status_idx (store_id, status)`, no sort key | `catalog.products (created_at desc, id desc) where status = 'published'` |
+| `GET /api/public/tours` | cursor | `id desc` (today's order, a `uuidv7`) | primary key | None while it sorts by id |
 | `GET /api/admin/stores` | cursor | `id desc` (`uuidv7`) | primary key | None |
 | `GET /api/store/{storeId}/story-groups` | offset | `created_at desc, id desc` (today the repository returns `g.id, v.language` and the screen sorts) | none for the order | `content.story_groups (store_id, created_at desc, id desc)` |
 | `GET /api/store/{storeId}/pins` | offset | today `updated_at desc, id` (mixed); becomes `updated_at desc, id desc` | none for the order | `content.places (store_id, updated_at desc, id desc)` |
@@ -128,7 +130,7 @@ These rules hold for both modes. An offset page also needs a deterministic order
 
 The owner keeps numbered pages on the merchant tables (05.11.2026). The media library already pages this way.
 
-- **Request.** `page` (an integer from 1) and `pageSize` (default 10, the owner's rows per page from 15.10.2026; maximum 100), plus the table's named filters (`status`, `q`, tab).
+- **Request.** `page` (an integer from 1) and `pageSize` (default 10, the owner's rows per page from 15.10.2026; maximum 20, amended 05.11.2026), plus the table's named filters (`status`, `q`, tab).
 - **Response.** `{ items, total, page, pageSize }`, plus the table's facet counts. This is the media library's shape.
 - **Query.** `order by <keys>, id desc limit $pageSize offset ($page - 1) * $pageSize`, with `count(*) over ()` or a separate count in the same transaction. A page past the end returns no items and the real `total`, as the media library does.
 - **Where it is allowed.** It is allowed only when all three of these hold:
@@ -136,7 +138,7 @@ The owner keeps numbered pages on the merchant tables (05.11.2026). The media li
   - The set has a known bound: hundreds of rows per store, low thousands at most.
   - The table shows page numbers.
 - **Where it is not allowed.** A list that is unbounded even within one store (orders, audit log, payouts) uses the cursor, even on a merchant screen.
-- **Offset limit.** `(page - 1) * pageSize` may not exceed 10,000. A larger value answers 400 `validation-failed` on `page`. At 10 rows a page that allows page 1,001. It keeps the worst skip to 10,000 index entries of one store, which is a few milliseconds. The media library's existing limit (`page` up to 10,000) stays as built. Tightening it to this rule is a cleanup in slice 5.
+- **Offset limit.** `(page - 1) * pageSize` may not exceed 10,000. A larger value answers 400 `validation-failed` on `page`. At 10 rows a page that allows page 1,001. It keeps the worst skip to 10,000 index entries of one store, which is a few milliseconds. The media library's existing limits (`page` up to 10,000, `pageSize` up to 100) stay as built until slice 5, which aligns them with this rule. Its photo wall shows 24 a page today (`docs/decisions/2026-10-29-media-library-design.md`, item 6). Under the maximum of 20 it shows 20 a page, unless the owner grants the wall 24.
 - **Accepted cost.** An insert or delete while a merchant pages shifts a row onto the next page or off it. With one or two editors per store this is rare and harmless: the next read is correct.
 
 ### 6a. Caching of public pages
@@ -201,11 +203,11 @@ A test seeds the cap's rows and checks the log.
 
 | Route | Called from | Today | Grows to | Decision |
 |---|---|---|---|---|
-| `GET /api/public/stories` | stories route C19 (`routes/_guest/$lang/stories/index.tsx`), home (`home/api/home-reads.ts`), search (`search/api/search-reads.ts`), sitemap (`seo/api/public-pages.server.ts`) | Every published story, newest first. The client filters, counts and ranks | Hundreds, per the owner | **Cursor (slice 1).** Default 10, infinite scroll. `category=<slug>` on the server, where a parent includes its sub-categories. `total` for "N stories". The home asks for `limit=3`. The sitemap and search loop over pages at `limit=100` until slices 2 and 6 |
+| `GET /api/public/stories` | stories route C19 (`routes/_guest/$lang/stories/index.tsx`), home (`home/api/home-reads.ts`), search (`search/api/search-reads.ts`), sitemap (`seo/api/public-pages.server.ts`) | Every published story, newest first. The client filters, counts and ranks | Hundreds, per the owner | **Cursor (slice 1).** Default 10, infinite scroll. `category=<slug>` on the server, where a parent includes its sub-categories. `total` for "N stories". The home asks for `limit=3`. The sitemap and search loop over pages at `limit=20` until slices 2 and 6 |
 | `GET /api/public/blog-categories` | stories route C19 | Every category | Tens | **Whole, cap 200.** Each item gains `storyCount`: the published stories carried in that language, sub-categories included for a parent. The chips no longer need the whole story list (additive) |
 | `GET /api/public/map-categories` | map, home | Every category | Tens | **Whole, cap 200** |
 | `GET /api/public/map` | map, home, search | Every published pin, `ETag`, `max-age=30` | Hundreds | **Whole, never cut, warning from 800 pins** (ADR-006). The map needs every pin in view, and the home and search read the same cached list. ADR-006 names a viewport query or vector tiles above about a thousand pins. The warning starts that decision; it is not part of this one |
-| `GET /api/public/tours` | home, search, sitemap | Every published tour | 11 now, tens later | **Whole, cap 200** |
+| `GET /api/public/tours` | tours list (`routes/_guest/$lang/tours/index.tsx`), home routes rail (`home/api/home-reads.ts`), search, sitemap | Every published tour | 11 now, more later (owner: "there might be more in the future") | **Cursor (slice 3)**, like the other guest lists: 10 a load, infinite scroll on the tours list (amended 05.11.2026). The home routes rail asks for the first page only (`limit=10`), and its stay ranking applies within that page. If the rail has no link to the tours list, slice 3 adds one. The sitemap loops over pages. Search loops over pages until the search slice (6) |
 | `GET /api/public/keepsakes` | keepsake list, search | Every published keepsake | Tens to low hundreds | **Cursor (slice 3)** with infinite scroll and the category filter on the server (four fixed categories plus sub-categories, M26). Until then: whole, cap 300 |
 | `GET /api/public/keepsakes/{slug}/pickup-points` | keepsake page | Active pickup points | Under 20 | **Whole, cap 50** |
 | `GET /api/store/{storeId}/story-groups` | merchant stories table | Every story group. The tabs and the search run on the client | Hundreds | **Numbered pages (slice 4).** `status`, `q`, `total` and the tab counts on the server |
@@ -219,7 +221,7 @@ A test seeds the cap's rows and checks the log.
 | `GET /api/store/{storeId}/pickup-places` | pickup editor (drag order) | Every pickup place | Under 20 | **Whole, cap 50** |
 | `GET /api/store/{storeId}/members` | members tab | Members and open invitations | Under 10 | **Whole, cap 50** |
 | `GET /api/store/{storeId}/story-groups/{groupId}/links` | story editor | Linked pins and stories | Tens | **Whole, cap 100** |
-| `GET /api/admin/stores` | Super Admin A01 | Cursor, raw uuid | Tens | **Cursor (slice 1).** It moves to the opaque cursor. `nextCursor` changes from `uuid` to `string`: a small type change in the generated client |
+| `GET /api/admin/stores` | Super Admin A01 | Cursor, raw uuid, default 50 | Tens | **Cursor (slice 1).** Default 10 and maximum 20, as every cursor list (was 1 to 100, default 50). It moves to the opaque cursor. `nextCursor` changes from `uuid` to `string`: a small type change in the generated client |
 | Orders, bookings, audit log, reviews and comments, partner transactions, advice requests (not built) | — | — | Thousands, unbounded | **Cursor from the first commit**, merchant screens included (AIP-158: adding paging later is breaking). Order by a `uuidv7` id or `(created_at, id)`. No exact `total` |
 
 Detail reads (`/{slug}`, `/{id}`) are not lists and do not change.
@@ -238,7 +240,7 @@ Detail reads (`/{slug}`, `/{id}`) are not lists and do not change.
 - **Count.** `total` counts the same filtered set, so "N stories" stays (owner default, 05.11.2026).
 - **Consumers in the same slice.**
   - The home switches to `limit=3`.
-  - The sitemap and search loop over pages at `limit=100` (with a stop after 50 pages and an error log). They keep today's result until slices 2 and 6.
+  - The sitemap and search loop over pages at `limit=20` (with a stop after 100 pages, 2,000 rows, and an error log). They keep today's result until slices 2 and 6.
 
 ### 12. Contract and deploy order
 
@@ -283,13 +285,13 @@ Each slice is one story and one PR. Each leaves every screen working.
    - Admin stores move to the opaque cursor.
    - D11 and `docs/development-rules/backend/api-contract.md` get the two modes and the § 6 exception.
 2. **Blog category counts.** `storyCount` on `GET /api/public/blog-categories`. The chips stop needing the whole list. This is small and could fold into slice 1.
-3. **Guest keepsakes.** Cursor with infinite scroll and the category filter on the server.
+3. **Guest keepsakes and tours.** Both move to the cursor with infinite scroll, in one slice because they share the shared list component and the stories template. Keepsakes get the category filter on the server. The tours list pages; the home routes rail asks for the first page; the sitemap loops over tour pages; search keeps its page loop until slice 6.
 4. **Merchant content tables, numbered pages.**
    - `page.ts` (numbered part), `offset.ts`, and the server mode of `Pager` and `DataTable`.
    - Story groups and pins with `page`, `pageSize`, `total` and the tab counts.
    - The story picker as search-as-you-type.
-5. **Merchant catalog tables, numbered pages.** Products and inventory. The media library's `page` limit is aligned with § 6.
-6. **Search on the server.** A separate decision: `GET /api/public/search?lang&q&kind`, paged, over published titles. Possibly `pg_trgm`. It decides the interest-tile filter (owner decision 4). It replaces the page loops of slice 1.
+5. **Merchant catalog tables, numbered pages.** Products and inventory. The media library's `page` and `pageSize` limits are aligned with § 6 (maximum 20).
+6. **Search on the server.** A separate decision: `GET /api/public/search?lang&q&kind`, paged (10 a load, at most 20), over published titles. Possibly `pg_trgm`. It decides the interest-tile filter (owner decision 4). It replaces the page loops of slice 1.
 7. **Caps.** The warnings and the cap on every whole list in § 10, and the map's warning at 800 pins.
 
 ## Consequences
@@ -328,7 +330,7 @@ Each slice is one story and one PR. Each leaves every screen working.
 ## Owner decisions (05.11.2026)
 
 1. **Ranking: within each page.** The server sends newest first in pages. The browser reorders each loaded page by the saved answers. The answers never leave the browser, so ADR-006's privacy rule stays. ADR-006 is amended: a well-fitting older story no longer rises above newer pages (§ 9).
-2. **Merchant tables: keep numbered pages.** Per-store tables use offset paging with a total. This is the one exception to the cursor rule, bounded as § 6 says: per-store sets only, page size 10 by default, at most 10,000 rows skipped, and never for an unbounded list. The media library already pages this way.
+2. **Merchant tables: keep numbered pages.** Per-store tables use offset paging with a total. This is the one exception to the cursor rule, bounded as § 6 says: per-store sets only, page size 10 by default and 20 at most (amended 05.11.2026), at most 10,000 rows skipped, and never for an unbounded list. The media library already pages this way.
 3. **Guest stories: 10 a page with infinite scroll**, not a "Load more" button. The server renders the first 10. The sitemap stays the crawl path. A keyboard-reachable fallback button and a live region that announces new items are part of the shared component (§ 8).
 4. **Map: whole list, never cut pins.** A warning is logged from 80 % of the cap (800 pins), so the map moves to a viewport query before the size matters (§ 10).
 
@@ -338,6 +340,12 @@ The owner did not answer the remaining three questions. The coordinator's defaul
 6. **Order of the stories list:** accepted. It sorts by the date of the language version the card shows, as the home does (§ 11).
 7. **"N stories":** kept, through `total` on the stories list. It is bounded per guest list (§ 5, § 11).
 
+## Amendments
+- 2026-11-05 (owner, chat 05.11.2026), two decisions after acceptance. The body above is updated to match.
+  - **Page size.** Every paged list, cursor and numbered alike, returns 10 rows by default and at most 20 per request. This replaces the earlier maximum of 100 (§ 1, § 6). Admin stores move from default 50 to default 10. The sitemap and search loops use `limit=20`. The media library's photo wall (24 a page today) moves to 20 in slice 5 unless the owner grants it 24. The page size is not the cap of a whole list (see the Decision).
+  - **Tours are paged.** `GET /api/public/tours` moves from "whole, cap 200" to the cursor, 10 a load with infinite scroll, like the other guest lists, because "there might be more in the future". It lands in slice 3 with guest keepsakes. The home routes rail asks for the first page. Search reads tours through its page loop until the search slice (6).
+
 ## History
 - 2026-11-05 proposed (owner question on pagination; research and audit of every list route)
 - 2026-11-05 accepted (owner, chat 05.11.2026): rank within each page; numbered pages for per-store merchant tables; 10 a page with infinite scroll for guest stories; the map never cuts pins. Coordinator defaults for search interest filter (deferred), story order (shown version's date) and "N stories" (kept)
+- 2026-11-05 amended (owner, chat 05.11.2026): page size 10 by default and 20 at most on every paged list; tours paged like the other guest lists (slice 3)
