@@ -3,6 +3,7 @@ import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { renderToString } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LocaleProvider } from '@/contexts/locale-context'
@@ -115,31 +116,52 @@ describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
     expect(card('Storchen')).not.toHaveTextContent('Bars')
   })
 
-  it('shows today’s hours with an Open badge while the place is open, and Closed today without a span today', async () => {
+  const corner = (title: string) => card(title).querySelector('[data-status]')
+
+  it('shows today’s actual hours under the name, with no status word in the line', async () => {
     renderSection()
     await section()
 
-    expect(card('SiP Café')).toHaveTextContent('09:00–19:00Open')
-    expect(card('SiP Café')).not.toHaveTextContent('Today')
-    // Two spans, joined by a dot, and noon falls in the first one.
-    expect(card('Reussbad')).toHaveTextContent('11:30–14:00 · 18:00–22:00Open')
-    expect(card('Storchen')).toHaveTextContent(en['map.sheet.closedToday'])
-    expect(card('Storchen')).not.toHaveTextContent(/\d{2}:\d{2}/)
+    expect(card('SiP Café')).toHaveTextContent('09:00–19:00')
+    // Two spans, joined by a dot.
+    expect(card('Reussbad')).toHaveTextContent('11:30–14:00 · 18:00–22:00')
+    expect(card('SiP Café')).not.toHaveTextContent(/Today|Closed today/)
+    // No span today, and no hours at all: no hours line.
+    expect(card('Storchen')).not.toHaveTextContent('14:00–22:00')
+    expect(card('Café Mamie')).not.toHaveTextContent(/\d{2}:\d{2}/)
   })
 
-  it('says Closed between two spans and after closing', async () => {
+  it('puts “Open until” and the closing time in the top corner while open, with one sentence for screen readers', async () => {
+    renderSection()
+    await section()
+
+    expect(corner('SiP Café')).toHaveAttribute('aria-hidden', 'true')
+    expect(corner('SiP Café')).toHaveAttribute('data-status', 'open')
+    expect(corner('SiP Café')).toHaveTextContent('Open until19:00')
+    expect(within(card('SiP Café')).getByText('Open until 19:00')).toHaveClass('sr-only')
+    expect(corner('Reussbad')).toHaveTextContent('Open until14:00')
+  })
+
+  it('says when it opens later today, between two spans', async () => {
     at('2026-11-05T14:00:00Z') // 15:00 in Lucerne
     renderSection()
     await section()
 
-    expect(card('Reussbad')).toHaveTextContent('11:30–14:00 · 18:00–22:00Closed')
-    cleanup()
+    expect(corner('Reussbad')).toHaveTextContent('Opens18:00')
+    expect(within(card('Reussbad')).getByText('Opens at 18:00')).toBeInTheDocument()
+  })
+
+  it('after closing says Tomorrow and the time, and on a day off the weekday it is back', async () => {
     at('2026-11-05T20:30:00Z') // 21:30
     renderSection()
     await section()
 
-    expect(card('SiP Café')).toHaveTextContent('09:00–19:00Closed')
-    expect(card('Reussbad')).toHaveTextContent('Open')
+    expect(corner('SiP Café')).toHaveTextContent('Tomorrow09:00')
+    expect(within(card('SiP Café')).getByText('Opens tomorrow at 09:00')).toBeInTheDocument()
+    // Storchen opens on Tuesdays only.
+    expect(corner('Storchen')).toHaveAttribute('data-status', 'closed-today')
+    expect(corner('Storchen')).toHaveTextContent('BackTue')
+    expect(within(card('Storchen')).getByText('Opens Tuesday at 14:00')).toBeInTheDocument()
   })
 
   it('counts a span that closes after midnight as open until then, also on the next morning', async () => {
@@ -149,20 +171,37 @@ describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
     renderSection({ pins: [late], categories })
     await section()
 
-    expect(card('Bar & Lounge')).toHaveTextContent('18:00–01:30Open')
+    expect(corner('Bar & Lounge')).toHaveTextContent('Open until01:30')
     cleanup()
     at('2026-11-04T23:30:00Z') // Thursday 00:30, Wednesday's span still runs
     renderSection({ pins: [late], categories })
     await section()
 
-    expect(card('Bar & Lounge')).toHaveTextContent('Open')
+    expect(corner('Bar & Lounge')).toHaveTextContent('Open until02:00')
   })
 
-  it('draws no hours line for a place without hours', async () => {
+  it('draws no corner for a place without hours', async () => {
     renderSection()
     await section()
 
-    expect(card('Café Mamie')).not.toHaveTextContent(/Open|Closed|\d{2}:\d{2}/)
+    expect(corner('Café Mamie')).toBeNull()
+  })
+
+  it('sends no corner in the server HTML, only the hours', async () => {
+    const root = createRootRoute({ component: () => (
+      <LocaleProvider>
+        <Outlet />
+      </LocaleProvider>
+    ) })
+    const home = createRoute({ getParentRoute: () => root, path: '/$lang', component: () => <FoodMapSection categories={categories} pins={pins} onRetry={() => {}} /> })
+    const router = createRouter({ routeTree: root.addChildren([home]), history: createMemoryHistory({ initialEntries: ['/en'] }) })
+
+    await router.load()
+    const html = renderToString(<RouterProvider router={router} />)
+
+    expect(html).toContain('09:00–19:00')
+    expect(html).not.toContain('data-status')
+    expect(html).not.toContain('Open until')
   })
 
   it('shows the street before the postcode, and no address line without an address', async () => {
@@ -211,6 +250,7 @@ describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
     const seeAll = () => screen.getByRole('link', { name: en['homePage.food.seeAll'] })
 
     expect(seeAll()).toHaveAttribute('href', '/en/map?category=food-and-drink')
+    expect(seeAll()).toHaveTextContent(/^See all on the map$/)
     await userEvent.click(within(filter()).getByRole('button', { name: 'Restaurants' }))
 
     expect(cardNames('Restaurants')).toEqual(['Restaurant Reussbad', 'Storchen Restaurant & Weinbar'])
@@ -221,6 +261,19 @@ describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
 
     expect(cardNames()).toHaveLength(4)
     expect(seeAll()).toHaveAttribute('href', '/en/map?category=food-and-drink')
+  })
+
+  it('shows at most five cards for All and for a kind; a kind takes its own five newest', async () => {
+    const newCafes = Array.from({ length: 6 }, (_, index) => pin(10 + index, `Café ${index + 1}`, [food.id, cafes.id]))
+    const oldBar = pin(30, 'Old Bar', [food.id, bars.id])
+
+    renderSection({ pins: [...newCafes, oldBar], categories })
+    await section()
+
+    expect(cardNames()).toEqual(['Café 1', 'Café 2', 'Café 3', 'Café 4', 'Café 5'])
+    await userEvent.click(within(filter()).getByRole('button', { name: 'Bars' }))
+
+    expect(cardNames('Bars')).toEqual(['Old Bar'])
   })
 
   it('opens each place on the map', async () => {

@@ -8,35 +8,34 @@ import { keepHighlighted } from '@/features/map/lib/categories'
  */
 export const FOOD_CATEGORY_SLUG = 'food-and-drink'
 
-/** How many places the section shows (raised from 5 to 10 on 05.11.2026, so the kind filter has something to filter). */
-export const FOOD_PLACE_COUNT = 10
+/** How many cards the rail shows for All and for each kind; the rest are behind "See all on the map" (owner, 05.11.2026). */
+export const FOOD_PLACE_COUNT = 5
 
 /**
- * What the section shows (owner, 05.11.2026): the food and drink category and the first ten places of it and its sub-categories
- * in the order the server sends, which is newest first by first publish date (`order by p.first_published_at desc`). No ranking by
- * the guest's answers. A place with a date (a food festival) is left out: it belongs to "While you're in town".
- * `kinds` are the sub-categories that hold at least one of these places, in the merchant's position order, each with its places
- * (newest first, so the first one's photo is the kind's thumbnail). Nothing when the category is not there or holds no place.
+ * What the section shows (owner, 05.11.2026): the undated places of the food and drink category and its sub-categories in the order
+ * the server sends, which is newest first by first publish date (`order by p.first_published_at desc`). No ranking by the guest's
+ * answers. A place with a date (a food festival) is left out: it belongs to "While you're in town". `places` are the five newest
+ * (All); `kinds` are the sub-categories that hold at least one undated place, in the merchant's position order, each with its own
+ * five newest, taken from all the places so a kind is never short for not being among the newest overall. Nothing when the
+ * category is not there or holds no place.
  */
 export function newestFoodPlaces(pins: readonly PublicMapItem[], categories: readonly PublicCategory[]) {
   const category = categories.find(candidate => candidate.slug === FOOD_CATEGORY_SLUG && candidate.parentId === null)
 
   if (!category)
     return undefined
-  const places = keepHighlighted(pins, [category.id], categories)
-    .filter(pin => pin.nextDate === null)
-    .slice(0, FOOD_PLACE_COUNT)
+  const pool = keepHighlighted(pins, [category.id], categories).filter(pin => pin.nextDate === null)
 
-  if (places.length === 0)
+  if (pool.length === 0)
     return undefined
   const subCategories = categories.filter(candidate => candidate.parentId === category.id).sort((a, b) => a.position - b.position)
   const kinds = subCategories.flatMap((sub) => {
-    const own = places.filter(pin => pin.categoryIds.includes(sub.id))
+    const own = pool.filter(pin => pin.categoryIds.includes(sub.id))
 
-    return own.length > 0 ? [{ category: sub, places: own }] : []
+    return own.length > 0 ? [{ category: sub, places: own.slice(0, FOOD_PLACE_COUNT) }] : []
   })
 
-  return { category, places, kinds }
+  return { category, places: pool.slice(0, FOOD_PLACE_COUNT), kinds }
 }
 
 export type FoodSelection = NonNullable<ReturnType<typeof newestFoodPlaces>>

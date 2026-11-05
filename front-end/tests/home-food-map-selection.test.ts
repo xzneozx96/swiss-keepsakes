@@ -60,17 +60,17 @@ describe('[E4.13][AC54][AC95] the food section selection (owner, 05.11.2026)', (
     expect(ids(selection!.places)).toEqual([cafe.id, bakery.id, bakeryOnly.id])
   })
 
-  it('keeps the server order (newest first) and takes the first ten of more, ignoring the guest’s interests', () => {
-    const places = Array.from({ length: 12 }, (_, index) => pin(index + 1, [food.id], index === 11 ? { interests: ['food-drink'], mustVisit: true } : {}))
+  it('keeps the server order (newest first) and takes the first five of more for All, ignoring the guest’s interests', () => {
+    const places = Array.from({ length: 8 }, (_, index) => pin(index + 1, [food.id], index === 7 ? { interests: ['food-drink'], mustVisit: true } : {}))
 
-    expect(FOOD_PLACE_COUNT).toBe(10)
-    expect(ids(newestFoodPlaces(places, categories)!.places)).toEqual(ids(places.slice(0, 10)))
+    expect(FOOD_PLACE_COUNT).toBe(5)
+    expect(ids(newestFoodPlaces(places, categories)!.places)).toEqual(ids(places.slice(0, 5)))
   })
 
   it('leaves out a place with a date (it belongs to the events section) and fills up with the next undated one', () => {
-    const places = [pin(1, [food.id], { nextDate: festival }), ...Array.from({ length: 10 }, (_, index) => pin(index + 2, [food.id]))]
+    const places = [pin(1, [food.id], { nextDate: festival }), ...Array.from({ length: 5 }, (_, index) => pin(index + 2, [food.id]))]
 
-    expect(ids(newestFoodPlaces(places, categories)!.places)).toEqual(ids(places.slice(1, 11)))
+    expect(ids(newestFoodPlaces(places, categories)!.places)).toEqual(ids(places.slice(1, 6)))
   })
 
   it('lists the kinds that hold a listed place, in position order, each with its places newest first', () => {
@@ -86,10 +86,22 @@ describe('[E4.13][AC54][AC95] the food section selection (owner, 05.11.2026)', (
     expect(ids(kinds[1]!.places)).toEqual([bakery.id, barAndBakery.id])
   })
 
-  it('does not offer a kind whose only place is beyond the ten', () => {
-    const places = [...Array.from({ length: 10 }, (_, index) => pin(index + 1, [food.id, bars.id])), pin(11, [food.id, fondue.id])]
+  it('takes each kind’s five newest from all the places, so a kind older than the newest five is offered and full', () => {
+    const newBars = Array.from({ length: 7 }, (_, index) => pin(index + 1, [food.id, bars.id]))
+    const oldFondue = Array.from({ length: 6 }, (_, index) => pin(index + 20, [food.id, fondue.id]))
+    const datedFondue = pin(30, [food.id, fondue.id], { nextDate: festival })
+    const selection = newestFoodPlaces([...newBars, datedFondue, ...oldFondue], categories)!
 
-    expect(newestFoodPlaces(places, categories)!.kinds.map(kind => kind.category.slug)).toEqual(['bars'])
+    expect(ids(selection.places)).toEqual(ids(newBars.slice(0, 5)))
+    expect(selection.kinds.map(kind => kind.category.slug)).toEqual(['bars', 'fondue'])
+    expect(ids(selection.kinds[0]!.places)).toEqual(ids(newBars.slice(0, 5)))
+    expect(ids(selection.kinds[1]!.places)).toEqual(ids(oldFondue.slice(0, 5)))
+  })
+
+  it('does not offer a kind whose only places have a date', () => {
+    const selection = newestFoodPlaces([pin(1, [food.id, bars.id]), pin(2, [food.id, fondue.id], { nextDate: festival })], categories)!
+
+    expect(selection.kinds.map(kind => kind.category.slug)).toEqual(['bars'])
   })
 
   it('badges a card with its first kind in position order, or the food and drink category when it has none', () => {

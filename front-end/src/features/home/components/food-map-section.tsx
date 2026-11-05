@@ -1,5 +1,6 @@
 import type { CategoryIcon, PublicCategory, PublicMapItem } from '@sk/api-contract'
 import type { FoodSelection } from '../lib/food-map'
+import type { HoursStatus } from '@/lib/hours'
 
 import { buttonVariants, Skeleton } from '@heroui/react'
 import { zurichTime } from '@sk/domain/dates'
@@ -13,7 +14,7 @@ import { MapThumb } from '@/components/map/map-thumb'
 import { useLocale } from '@/contexts/locale-context'
 import { Rail } from '@/features/discovery/components/section'
 import { categoryName, pinIcon } from '@/features/map/lib/categories'
-import { hoursOfWeek, isOpenAt, zurichWeekday } from '@/lib/hours'
+import { hoursOfWeek, statusAt, weekdayName, zurichWeekday } from '@/lib/hours'
 import { photoUrl } from '@/lib/photos'
 import { pickVariant, widestVariant } from '@/lib/pick-variant'
 import { kindOf, newestFoodPlaces, streetOf } from '../lib/food-map'
@@ -26,47 +27,54 @@ const ALL = 'all'
 /** A card's photo: the 640 px copy (sharp on a 3x phone), else the widest, else the small `photoUrl`; undefined shows the category icon. */
 const cardPhoto = (pin: PublicMapItem) => (pickVariant(pin.photoVariants, 640) ?? widestVariant(pin.photoVariants))?.url ?? pin.photoUrl ?? undefined
 
-/** What a card says about today: the spans of today ("11:30–14:00 · 18:00–22:00", none on a day off) and whether it is open now. */
-interface TodayHours { spans: string | undefined, open: boolean }
-
-/**
- * Today's hours of a place in Europe/Zurich, with the place sheet's helper (`hoursOfWeek`) and its open test (`isOpenAt`; a span
- * that closes after midnight counts until then). Undefined without hours. One `now` serves the whole section, so the cards agree.
- */
-function todayHours(pin: PublicMapItem, now: Date, locale: Parameters<typeof hoursOfWeek>[2]): TodayHours | undefined {
-  if (pin.weeklyHours.length === 0)
-    return undefined
-  const day = zurichWeekday(now)
+/** Today's spans of a place in Europe/Zurich ("09:00–19:00", "11:30–14:00 · 18:00–22:00"), with the place sheet's helper; none without hours or on a day off. */
+function todaySpans(pin: PublicMapItem, day: number, locale: Parameters<typeof hoursOfWeek>[2]) {
   const group = hoursOfWeek(pin.weeklyHours, day, locale, '', ' · ').groups.find(candidate => candidate.today)
 
-  return { spans: group && !group.closed ? group.value : undefined, open: isOpenAt(pin.weeklyHours, day, zurichTime(now)) }
+  return group && !group.closed ? group.value : undefined
 }
 
+/** The concave fillet that lets the corner block flow into the card's edge: the frosted tint with a quarter circle cut away. */
+const FILLET = 'absolute size-4 bg-[radial-gradient(circle_at_0_100%,transparent_16px,rgb(0_0_0/0.6)_16.5px)]'
+
 /**
- * The hours line under a card's name: today's spans and a small status badge in the card's glass style. "Open" (green dot) or
- * "Closed" (red dot) depends on the minute, so it is drawn only once the page is hydrated and the server HTML never disagrees with
- * the browser's clock; "Closed today" (no span today) is drawn from the start.
+ * The card's status corner: a frosted block that hugs the top-right corner (the card's own radius clips its outer corner, a soft
+ * radius rounds the inner one and two concave fillets run it into the edges, like a tab cut from the photo). A tiny uppercase word
+ * over one big tabular figure: "Open until 19:00" with a live dot, "Opens 14:00", "Tomorrow 09:00" or "Back Sat". Screen readers
+ * hear one sentence instead of the pieces. Absolute, so it takes no room and nothing shifts when it appears after hydration.
  */
-function HoursLine({ hours }: { hours: TodayHours }) {
-  const { t } = useLocale()
-  const hydrated = useHydrated()
-  const status = hours.open
-    ? hydrated && { text: t('homePage.food.open'), dot: 'bg-success' }
-    : hours.spans
-      ? hydrated && { text: t('map.sheet.closed'), dot: 'bg-danger' }
-      : { text: t('map.sheet.closedToday'), dot: 'bg-danger' }
+function StatusCorner({ status }: { status: HoursStatus }) {
+  const { t, intlLocale } = useLocale()
+  const view = status.state === 'open'
+    ? { live: true, label: t('homePage.food.status.openUntil'), figure: status.until, say: t('homePage.food.status.sayOpen', { time: status.until }) }
+    : status.state === 'opens-later'
+      ? { live: false, label: t('homePage.food.status.opens'), figure: status.opensAt, say: t('homePage.food.status.sayOpens', { time: status.opensAt }) }
+      : status.inDays === 1
+        ? { live: false, label: t('homePage.food.status.tomorrow'), figure: status.opensAt, say: t('homePage.food.status.sayTomorrow', { time: status.opensAt }) }
+        : {
+            live: false,
+            label: t('homePage.food.status.back'),
+            figure: weekdayName(status.nextDay, intlLocale),
+            say: t('homePage.food.status.sayBack', { day: weekdayName(status.nextDay, intlLocale, 'long'), time: status.opensAt }),
+          }
 
   return (
-    <span className="flex items-center gap-1.5 tabular-nums">
-      <ClockIcon aria-hidden className="shrink-0" size={14} />
-      {hours.spans}
-      {status && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-px text-[11px] leading-4 font-semibold backdrop-blur-md">
-          <span aria-hidden className={`size-1.5 rounded-full ${status.dot}`} />
-          {status.text}
+    <>
+      <span className="sr-only">{view.say}</span>
+      <span
+        aria-hidden
+        className="absolute top-0 right-0 flex flex-col items-end gap-1 rounded-bl-[22px] bg-black/60 py-3 ps-4 pe-[18px] text-white shadow-[inset_1px_-1px_0_rgb(255_255_255/0.14)] backdrop-blur-md"
+        data-status={status.state}
+      >
+        <span className={`${FILLET} top-0 right-full`} />
+        <span className={`${FILLET} top-full right-0`} />
+        <span className="flex items-center gap-1.5 text-[10px] leading-3 font-semibold tracking-[0.14em] text-white/90 uppercase">
+          {view.live && <span className="size-1.5 rounded-full bg-[#4ade80] shadow-[0_0_0_3px_rgb(74_222_128/0.25)] motion-safe:animate-pulse" />}
+          {view.label}
         </span>
-      )}
-    </span>
+        <span className="text-[26px] leading-7 font-extrabold tracking-[-0.02em] tabular-nums">{view.figure}</span>
+      </span>
+    </>
   )
 }
 
@@ -119,10 +127,11 @@ function KindFilter({ items, chosen, onChoose }: { items: { id: string, label: s
 
 /**
  * A place card in the look of the blog lab's portrait story: the 4:5 photo, the dark gradient, and at the foot the glass badge with
- * the kind of place, the white serif name, today's hours and the street. It opens the place on the map.
+ * the kind of place, the white serif name, today's hours and the street; the status corner at the top right. It opens the place on the map.
  */
-function PlaceCard({ pin, kind, categories, hours }: { pin: PublicMapItem, kind: PublicCategory, categories: readonly PublicCategory[], hours: TodayHours | undefined }) {
+function PlaceCard({ pin, kind, categories, spans, status }: { pin: PublicMapItem, kind: PublicCategory, categories: readonly PublicCategory[], spans: string | undefined, status: HoursStatus | undefined }) {
   const { language } = useLocale()
+  const hydrated = useHydrated()
   const other = pin.language === language ? undefined : pin.language
 
   return (
@@ -136,9 +145,14 @@ function PlaceCard({ pin, kind, categories, hours }: { pin: PublicMapItem, kind:
             {categoryName(kind, language)}
           </span>
           <h3 className="font-serif text-[22px] leading-7 font-medium text-balance hyphens-auto" lang={other}>{pin.title}</h3>
-          {(hours || pin.address) && (
+          {(spans || pin.address) && (
             <span className="flex flex-col gap-1 text-[12px] leading-4 font-medium text-white/85">
-              {hours && <HoursLine hours={hours} />}
+              {spans && (
+                <span className="flex items-center gap-1.5 tabular-nums">
+                  <ClockIcon aria-hidden className="shrink-0" size={14} />
+                  {spans}
+                </span>
+              )}
               {pin.address && (
                 <span className="flex min-w-0 items-center gap-1">
                   <PickupIcon aria-hidden className="shrink-0" size={14} />
@@ -148,6 +162,8 @@ function PlaceCard({ pin, kind, categories, hours }: { pin: PublicMapItem, kind:
             </span>
           )}
         </span>
+        {/* The status depends on the minute: drawn only once hydrated, so the server HTML never disagrees with the browser's clock. */}
+        {hydrated && status && <StatusCorner status={status} />}
       </Link>
     </li>
   )
@@ -185,6 +201,8 @@ function FoodPlaces({ selection, categories }: { selection: FoodSelection, categ
   const [chosen, setChosen] = useState(ALL)
   // One clock for the whole section, read once, so every card says the same about now.
   const [now] = useState(() => new Date())
+  const day = zurichWeekday(now)
+  const time = zurichTime(now)
   // A kind that is gone after a new read falls back to All.
   const kind = selection.kinds.find(candidate => candidate.category.id === chosen)
   const places = kind?.places ?? selection.places
@@ -198,7 +216,16 @@ function FoodPlaces({ selection, categories }: { selection: FoodSelection, categ
       {selection.kinds.length > 1 && <KindFilter chosen={kind ? chosen : ALL} items={filters} onChoose={setChosen} />}
       {/* Keyed by the kind, so a new choice starts the rail at its first card. */}
       <Rail key={kind?.category.id ?? ALL} label={kind ? categoryName(kind.category, language) : t('homePage.food.places')}>
-        {places.map(pin => <PlaceCard key={pin.id} categories={categories} hours={todayHours(pin, now, intlLocale)} kind={kindOf(pin, selection)} pin={pin} />)}
+        {places.map(pin => (
+          <PlaceCard
+            key={pin.id}
+            categories={categories}
+            kind={kindOf(pin, selection)}
+            pin={pin}
+            spans={todaySpans(pin, day, intlLocale)}
+            status={statusAt(pin.weeklyHours, day, time)}
+          />
+        ))}
       </Rail>
       <Link
         className={`${buttonVariants({ variant: 'secondary', size: 'lg', fullWidth: true })} transition-transform active:scale-[0.98]`}
@@ -213,10 +240,10 @@ function FoodPlaces({ selection, categories }: { selection: FoodSelection, categ
 }
 
 /**
- * "Eat and drink like a local" (owner, 05.11.2026; docs/ux/home-design.md section 4): the ten food and drink places added to the
+ * "Eat and drink like a local" (owner, 05.11.2026; docs/ux/home-design.md section 4): the five food and drink places added to the
  * map most recently, newest first in the server's order and not sorted by the guest's answers, as tall photo cards in a rail. A row
- * of kinds over it (All, then each sub-category that holds one of them) filters the rail in the page, and the map button follows the
- * chosen kind. Not drawn when the category is not there or holds no undated place. The pins and categories are the home loader's
+ * of kinds over it (All, then each sub-category that holds an undated place) filters the rail in the page to that kind's five newest,
+ * and "See all on the map" follows the chosen kind. Not drawn when the category is not there or holds no undated place. The pins and categories are the home loader's
  * read of the map list (undefined while it loads, null when it failed). No price anywhere.
  */
 export function FoodMapSection({ pins, categories, onRetry }: { pins: readonly PublicMapItem[] | null | undefined, categories: readonly PublicCategory[] | null | undefined, onRetry: () => void }) {
