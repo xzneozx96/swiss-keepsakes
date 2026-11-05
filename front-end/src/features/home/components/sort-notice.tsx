@@ -28,7 +28,8 @@ export function SortNotice() {
         <FilterIcon aria-hidden size={18} />
       </Alert.Indicator>
       <Alert.Content>
-        <Alert.Title key={text} className="motion-safe:animate-rise">{text}</Alert.Title>
+        {/* The accent stays on the icon; the sentence reads in the body colour (owner, 05.11.2026: all-red text was too loud). */}
+        <Alert.Title key={text} className="font-medium text-foreground motion-safe:animate-rise">{text}</Alert.Title>
         {!answered && <Alert.Description>{t('homePage.sort.hint')}</Alert.Description>}
       </Alert.Content>
       {/* The visible word is short; the name says what is sorted, so the button makes sense on its own. */}
