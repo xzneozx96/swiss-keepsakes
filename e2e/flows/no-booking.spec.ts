@@ -6,7 +6,7 @@ const bookingPath = /\/book|bookings|private-tour|requests\/private|products\/ca
 const bookingButton = /\bbook|\bbuch(en|ung)/i;
 const tour = "lucerne-the-things-that-remain";
 const more: Record<Language, RegExp> = { en: /More/, de: /Mehr/ };
-const about: Record<Language, string> = { en: "About this experience", de: "Über dieses Erlebnis" };
+const about: Record<Language, string> = { en: "About this route", de: "Über diese Route" };
 const notFound: Record<Language, { page: string; tour: string }> = {
   en: { page: "This page does not exist", tour: "This tour is unavailable" },
   de: { page: "Diese Seite gibt es nicht", tour: "Diese Tour ist nicht verfügbar" },
