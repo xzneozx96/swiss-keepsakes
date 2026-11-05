@@ -4,7 +4,7 @@ import { sql } from 'drizzle-orm'
 // The keyset ("seek") half of ADR-033: a row comparison after the last row seen, and the `limit + 1` read.
 
 // The cast of each key value, which arrives as text. A timestamp is cast from text, so no microsecond is lost.
-const CASTS = { timestamptz: 'timestamptz', uuid: 'uuid', text: 'text', bigint: 'bigint', integer: 'integer' } as const
+const CASTS = { timestamptz: 'timestamptz', uuid: 'uuid', text: 'text', bigint: 'bigint', integer: 'integer', float8: 'float8' } as const
 
 export interface KeyColumn {
   /** The column or expression, in `order by` order. Every sort key is NOT NULL, or wrapped in `coalesce` the same way in the `order by`. */

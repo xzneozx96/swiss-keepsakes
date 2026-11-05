@@ -1,13 +1,15 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
-import type { PublicCategoryList as ContractCategoryList, PublicMap as ContractMap, PublicPin as ContractPin, PublicStory as ContractStory, PublicStoryList as ContractStoryList, PublicTour as ContractTour, PublicTourList as ContractTourList } from '@sk/api-contract'
+import type { PublicCategoryList as ContractCategoryList, PublicMap as ContractMap, PublicPin as ContractPin, PublicSearchList as ContractSearchList, PublicStory as ContractStory, PublicStoryList as ContractStoryList, PublicTour as ContractTour, PublicTourList as ContractTourList } from '@sk/api-contract'
 import type { ContentLanguage } from '@sk/domain/content'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
 import type { PublicCategoryList, PublicMap, PublicPin, PublicStory, PublicStoryPage, PublicTour, PublicTourPage } from '../application/public-view.ts'
-import type { ListToursQuery } from '../application/read-tours.ts'
 import type { ListStoriesQuery } from '../application/read-stories.ts'
+import type { ListToursQuery } from '../application/read-tours.ts'
+import type { PublicSearchPage, SearchPublicQuery } from '../application/search-public.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { pageQuery, publicCategoryListSchema, publicLanguageSchema, publicMapSchema, publicPinSchema, publicStoryListSchema, publicStorySchema, publicTourListSchema, publicTourSchema } from '@sk/api-contract'
+import { MAX_SEARCH_QUERY_LENGTH, pageQuery, publicCategoryListSchema, publicLanguageSchema, publicMapSchema, publicPinSchema, publicSearchListSchema, publicStoryListSchema, publicStorySchema, publicTourListSchema, publicTourSchema, searchKindSchema } from '@sk/api-contract'
+import { interestCodes } from '@sk/domain/content'
 import { conditionalJson } from '../../../platform/http/conditional-json.ts'
 import { cursorProblem, decodeCursor, encodeCursor } from '../../../platform/http/cursor.ts'
 import { problem } from '../../../platform/http/problem.ts'
@@ -27,6 +29,7 @@ export interface PublicUseCases {
   getTour: (slug: string, language: ContentLanguage) => Promise<Result<PublicTour>>
   listCategories: (kind: 'map' | 'blog') => Promise<PublicCategoryList>
   getMap: (language: ContentLanguage) => Promise<PublicMap>
+  searchPublic: (query: SearchPublicQuery) => Promise<PublicSearchPage>
 }
 
 // The application types and the contract types must stay the same shape: a field added on one side (a price, say)
@@ -41,6 +44,7 @@ export type PublicTypesMatchContract = [
   Assert<Same<Omit<PublicTourPage, 'next'>, Omit<ContractTourList, 'nextCursor'>>>,
   Assert<Same<PublicTour, ContractTour>>,
   Assert<Same<PublicCategoryList, ContractCategoryList>>,
+  Assert<Same<Omit<PublicSearchPage, 'next'>, Omit<ContractSearchList, 'nextCursor'>>>,
 ]
 
 const query = z.object({ lang: publicLanguageSchema.meta({ description: 'The language asked for. An item that has no version in it comes back in the other language, marked `fallback`' }) })
@@ -102,6 +106,25 @@ const toursRoute = createRoute({
 // The key of a tour cursor: the tour id.
 const tourKey = z.tuple([z.uuid()])
 const tourRoute = publicGet('/api/public/tours/{slug}', 'One published tour guide', publicTourSchema, slugParams, true)
+// The search pages with a cursor, ranked best first (ADR-033 slice 6). It needs `q` or `interest`: a search never lists everything.
+const searchQuery = query.extend({
+  ...pageQuery({ defaultLimit: 10 }).shape,
+  q: z.string().trim().min(1).max(MAX_SEARCH_QUERY_LENGTH).optional().meta({ description: `The typed text, 1 to ${MAX_SEARCH_QUERY_LENGTH} characters. Accents and Swiss spellings are folded (Loewendenkmal finds Löwendenkmal), and a typo or a part of a word still matches` }),
+  interest: z.enum(interestCodes).optional().meta({ description: 'An interest tile the guest tapped on the search screen. Without `q`, the newest titles with that interest come first. It is never the saved onboarding answers (ADR-006): the app sends it only for a tapped tile' }),
+  kind: searchKindSchema.optional().meta({ description: 'Only this kind of hit. The counts still cover every kind' }),
+}).refine(value => value.q !== undefined || value.interest !== undefined, { message: 'Send `q` or `interest`', path: ['q'] })
+const searchRoute = createRoute({
+  method: 'get',
+  path: '/api/public/search',
+  request: { query: searchQuery },
+  responses: {
+    200: { description: 'A page of published titles that match, best first, each as the card its own list shows', headers: cacheHeaders, content: json(publicSearchListSchema) },
+    304: notModified,
+    ...problemResponses,
+  },
+})
+// The key of a search cursor: the rank as text, the id, the kind.
+const searchKey = z.tuple([z.string().regex(/^-?\d+(\.\d+)?(e[+-]?\d+)?$/i), z.uuid(), searchKindSchema])
 const mapCategoriesRoute = publicGet('/api/public/map-categories', 'Every map category, parents first', publicCategoryListSchema)
 const blogCategoriesRoute = publicGet('/api/public/blog-categories', 'Every blog category, parents first', publicCategoryListSchema)
 const mapRoute = publicGet('/api/public/map', 'The visible pins of all stores, newest first. Cached 60 s on the server', publicMapSchema)
@@ -142,6 +165,17 @@ export function registerPublicRoutes(app: OpenAPIHono<AppEnv>, useCases: PublicU
   app.openapi(tourRoute, async (c) => {
     const result = await useCases.getTour(c.req.valid('param').slug, c.req.valid('query').lang)
     return result.ok ? conditionalJson(c, result.value, publicCacheControl) : problem(c, failureProblem(result))
+  })
+
+  app.openapi(searchRoute, async (c) => {
+    const { lang, limit, cursor, q, interest, kind } = c.req.valid('query')
+    // The cursor belongs to this route, language, text, interest and kind.
+    const scope = { route: 'public-search', lang, q: q ?? null, interest: interest ?? null, kind: kind ?? null }
+    const decoded = cursor === undefined ? undefined : decodeCursor(cursor, scope, searchKey)
+    if (decoded && !decoded.ok)
+      return cursorProblem(c)
+    const found = await useCases.searchPublic({ language: lang, q: q ?? null, interest: interest ?? null, kind, limit, after: decoded?.key })
+    return conditionalJson(c, { items: found.items, total: found.total, counts: found.counts, nextCursor: found.next ? encodeCursor(found.next, scope) : null }, publicCacheControl)
   })
 
   app.openapi(mapCategoriesRoute, async c => conditionalJson(c, await useCases.listCategories('map'), publicCacheControl))

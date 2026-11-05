@@ -186,9 +186,9 @@ describe('[E2.12] the generated document for the public routes', () => {
   const document = openApiDocument(contractApp())
   // The keepsake availability read is the one public read with a price (E6.4, AC52), so it is checked apart.
   const priced = '/api/public/keepsakes/{slug}/availability'
-  const paths = ['/api/public/stories', '/api/public/stories/{slug}', '/api/public/places/{id}', '/api/public/tours', '/api/public/tours/{slug}', '/api/public/map-categories', '/api/public/blog-categories', '/api/public/map', '/api/public/keepsakes', '/api/public/keepsakes/{slug}', '/api/public/keepsakes/{slug}/pickup-points']
+  const paths = ['/api/public/stories', '/api/public/stories/{slug}', '/api/public/places/{id}', '/api/public/tours', '/api/public/tours/{slug}', '/api/public/map-categories', '/api/public/blog-categories', '/api/public/map', '/api/public/keepsakes', '/api/public/keepsakes/{slug}', '/api/public/keepsakes/{slug}/pickup-points', '/api/public/search']
 
-  it('[E2.12][E6.4] all 12 public paths are present, hold no store, and declare 200, 304 and a problem default', () => {
+  it('[E2.12][E6.4] all 13 public paths are present, hold no store, and declare 200, 304 and a problem default', () => {
     // /api/public/invitations/preview is an identity POST, not one of these reads.
     const present = Object.entries(document.paths ?? {}).filter(([path, item]) => path.startsWith('/api/public/') && 'get' in item).map(([path]) => path)
 
@@ -309,5 +309,107 @@ describe('[ADR-033] the public tours list pages with an opaque cursor', () => {
       expect(await response.json(), url).toMatchObject({ type: 'validation-failed', errors: [{ in: 'query', path: 'cursor' }] })
     }
     expect(asked).toHaveLength(1)
+  })
+})
+
+describe('[ADR-033][slice 6] the public search pages with an opaque cursor', () => {
+  const key = ['0.75', '0190f0c2-0000-7000-8000-0000000000a1', 'story'] as const
+  const counts = { story: 1, place: 0, tour: 0, keepsake: 0 }
+
+  function searching() {
+    const asked: Parameters<ContentUseCases['searchPublic']>[0][] = []
+    const app = setup({
+      searchPublic: async (query) => {
+        asked.push(query)
+        return { items: [], total: 1, counts, next: query.after ? null : key }
+      },
+    })
+
+    return { app, asked }
+  }
+
+  it('passes q, kind, interest and limit on and answers total, counts and a nextCursor that is not the key', async () => {
+    const { app, asked } = searching()
+
+    const response = await app.request('/api/public/search?lang=de&q=L%C3%B6wen&kind=tour&limit=5')
+    const body = await response.json() as { nextCursor: string, total: number, counts: unknown }
+
+    expect(response.status).toBe(200)
+    expect(asked).toEqual([{ language: 'de', q: 'Löwen', interest: null, kind: 'tour', limit: 5, after: undefined }])
+    expect(body).toMatchObject({ total: 1, counts })
+    expect(body.nextCursor).toMatch(/^[\w-]+$/)
+    expect(body.nextCursor).not.toContain(key[1])
+  })
+
+  it('the limit defaults to 10, q is trimmed, and an interest alone is a search', async () => {
+    const { app, asked } = searching()
+
+    await app.request('/api/public/search?lang=en&q=%20lion%20')
+    await app.request('/api/public/search?lang=en&interest=food-drink')
+
+    expect(asked.map(a => [a.q, a.interest, a.limit])).toEqual([['lion', null, 10], [null, 'food-drink', 10]])
+  })
+
+  it('the cursor of one page starts the next, and the use case gets the decoded key', async () => {
+    const { app, asked } = searching()
+    const first = await (await app.request('/api/public/search?lang=en&q=lion')).json() as { nextCursor: string }
+
+    const second = await app.request(`/api/public/search?lang=en&q=lion&cursor=${first.nextCursor}`)
+
+    expect(second.status).toBe(200)
+    expect(asked[1]).toMatchObject({ q: 'lion', after: [...key] })
+    expect((await second.json() as { nextCursor: string | null }).nextCursor).toBeNull()
+  })
+
+  it.each([
+    ['no q and no interest', '/api/public/search?lang=en'],
+    ['an empty q', '/api/public/search?lang=en&q='],
+    ['a blank q', '/api/public/search?lang=en&q=%20%20'],
+    ['a q of 101 characters', `/api/public/search?lang=en&q=${'a'.repeat(101)}`],
+    ['limit 21', '/api/public/search?lang=en&q=a&limit=21'],
+    ['limit 0', '/api/public/search?lang=en&q=a&limit=0'],
+    ['an unknown kind', '/api/public/search?lang=en&q=a&kind=blog'],
+    ['an unknown interest', '/api/public/search?lang=en&interest=cats'],
+    ['no lang', '/api/public/search?q=a'],
+  ])('%s is a 400 validation-failed', async (_name, url) => {
+    const { app, asked } = searching()
+
+    const response = await app.request(url)
+
+    expect(response.status).toBe(400)
+    expect(await response.json()).toMatchObject({ type: 'validation-failed' })
+    expect(asked).toEqual([])
+  })
+
+  it('a q of 100 characters is accepted', async () => {
+    const { app } = searching()
+
+    expect((await app.request(`/api/public/search?lang=en&q=${'a'.repeat(100)}`)).status).toBe(200)
+  })
+
+  it('a cursor that is garbage, or made for another text, language, kind or interest, is 400 on cursor', async () => {
+    const { app, asked } = searching()
+    const first = await (await app.request('/api/public/search?lang=en&q=lion')).json() as { nextCursor: string }
+    const wrongType = encodeCursor(['x', 'y'], { route: 'public-search', lang: 'en', q: 'lion', interest: null, kind: null })
+
+    for (const url of [
+      '/api/public/search?lang=en&q=lion&cursor=garbage',
+      `/api/public/search?lang=en&q=other&cursor=${first.nextCursor}`,
+      `/api/public/search?lang=de&q=lion&cursor=${first.nextCursor}`,
+      `/api/public/search?lang=en&q=lion&kind=tour&cursor=${first.nextCursor}`,
+      `/api/public/search?lang=en&q=lion&interest=food-drink&cursor=${first.nextCursor}`,
+      `/api/public/search?lang=en&q=lion&cursor=${wrongType}`,
+    ]) {
+      const response = await app.request(url)
+      expect(response.status, url).toBe(400)
+      expect(await response.json(), url).toMatchObject({ type: 'validation-failed', errors: [{ in: 'query', path: 'cursor' }] })
+    }
+    expect(asked).toHaveLength(1)
+  })
+
+  it('the contract names lang, limit, cursor, q, interest and kind', () => {
+    const operation = (openApiDocument(contractApp()).paths as Record<string, { get: { parameters: { name: string }[] } }>)['/api/public/search']!.get
+
+    expect(operation.parameters.map(p => p.name).sort()).toEqual(['cursor', 'interest', 'kind', 'lang', 'limit', 'q'])
   })
 })

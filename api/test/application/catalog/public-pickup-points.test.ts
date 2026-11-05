@@ -42,6 +42,7 @@ function place(n: number, over: Partial<PickupPlace> = {}): PickupPlace {
 function setup(rows: PublicKeepsakeRow[], places: PickupPlace[]) {
   const reads: PublicKeepsakeReads<null> = {
     pagePublished: async () => ({ rows, next: null, total: rows.length }),
+    searchPublished: async () => ({ hits: [], count: 0 }),
     listPublishedByIds: async (_tx, ids) => rows.filter(r => ids.includes(r.id)),
     findPublishedBySlug: async (_tx, slug) => rows.find(r => r.slug.en === slug || r.slug.de === slug),
   }

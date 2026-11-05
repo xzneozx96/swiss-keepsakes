@@ -79,6 +79,10 @@ function setup(state: { pins: PublicPinDetailRow[], tours?: PublicTourRow[], nex
   const tourAsks: TourPageQuery[] = []
   const tours = () => state.tours ?? []
   const reads: PublicReadRepository<null> = {
+    searchPublished: async () => ({ hits: [], counts: { story: 0, place: 0, tour: 0 } }),
+    listPublishedStoriesByIds: async () => [],
+    listVisiblePinsByIds: async () => [],
+    listPublishedToursByIds: async () => [],
     pagePublishedStories: async () => ({ rows: [], next: null, total: 0 }),
     findPublishedStoryBySlug: async () => undefined,
     listCategories: async () => [],

@@ -160,5 +160,6 @@ export function createFakeContentUseCases(): ContentUseCases {
     getTour: async () => ({ ok: false, reason: 'not-found' }),
     listCategories: async () => ({ items: [] }),
     getMap: async () => ({ items: [] }),
+    searchPublic: async () => ({ items: [], total: 0, counts: { story: 0, place: 0, tour: 0, keepsake: 0 }, next: null }),
   }
 }

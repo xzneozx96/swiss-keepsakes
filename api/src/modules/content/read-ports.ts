@@ -153,7 +153,36 @@ export interface TourPageQuery {
   after?: TourPageKey | undefined
 }
 
+// A search hit: what a kind's row is called, its id and its rank as text at full precision (a double as text round-trips exactly).
+export type SearchHitKind = 'story' | 'place' | 'tour' | 'keepsake'
+
+export interface SearchHit {
+  kind: SearchHitKind
+  id: string
+  score: string
+}
+
+// Where a page of search hits starts: the rank, the id and the kind of the last hit seen. Ranked best first, the id then the kind breaking a tie.
+export type SearchKey = readonly [score: string, id: string, kind: string]
+
+export interface ContentSearchQuery {
+  // The typed text, or null when only an interest is asked for (every hit then ranks 0, so the newest id comes first).
+  q: string | null
+  interest: string | null
+  // The kinds whose hits are read; none reads only the counts. `limit` hits come back, plus one that says another page follows.
+  kinds: ('story' | 'place' | 'tour')[]
+  limit: number
+  after?: SearchKey | undefined
+}
+
 export interface PublicReadRepository<T> {
+  // Published stories, visible pins and published tours whose title matches, best first. `counts` always covers all three kinds
+  // (a filter shows them), whatever `kinds` asks for.
+  searchPublished: (tx: T, query: ContentSearchQuery) => Promise<{ hits: SearchHit[], counts: Record<'story' | 'place' | 'tour', number> }>
+  // The rows behind the hits of a page, in no set order; an id that is no longer public has no row.
+  listPublishedStoriesByIds: (tx: T, ids: string[]) => Promise<PublicStoryRow[]>
+  listVisiblePinsByIds: (tx: T, ids: string[]) => Promise<PublicPinRow[]>
+  listPublishedToursByIds: (tx: T, ids: string[]) => Promise<PublicTourRow[]>
   // One row per story group that has a published version, newest first by the date of the version carried in `language`
   // (the other language when it has none), the group id breaking a tie. `total` counts the whole filtered set. `next`
   // is the key of the last row when more follow, else null.

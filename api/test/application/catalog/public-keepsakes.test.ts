@@ -1,8 +1,8 @@
-import type { KeepsakePageKey, KeepsakePageQuery, PublicKeepsakeDeps, PublicKeepsakeReads, PublicKeepsakeRow } from '../../../src/modules/catalog/application/public-keepsakes.ts'
+import type { KeepsakePageKey, KeepsakePageQuery, KeepsakeSearchQuery, PublicKeepsakeDeps, PublicKeepsakeReads, PublicKeepsakeRow } from '../../../src/modules/catalog/application/public-keepsakes.ts'
 import type { MediaInfo, StockLevel } from '../../../src/modules/catalog/ports.ts'
 import { publicKeepsakeListSchema } from '@sk/api-contract'
 import { describe, expect, it, vi } from 'vitest'
-import { makeGetAvailability, makeGetKeepsake, makeListKeepsakes, makeListKeepsakesByIds } from '../../../src/modules/catalog/application/public-keepsakes.ts'
+import { makeGetAvailability, makeGetKeepsake, makeListKeepsakes, makeListKeepsakesByIds, makeSearchKeepsakeHits } from '../../../src/modules/catalog/application/public-keepsakes.ts'
 
 const store = '0190f0c2-0000-7000-8000-00000000000a'
 const otherStore = '0190f0c2-0000-7000-8000-00000000000b'
@@ -46,6 +46,7 @@ function setup(rows: PublicKeepsakeRow[], levels: Record<string, [number, number
       pageAsks.push(query)
       return { rows, next: nextKey, total: rows.length }
     },
+    searchPublished: async () => ({ hits: [], count: 0 }),
     listPublishedByIds: async (_tx, ids) => rows.filter(r => ids.includes(r.id)),
     findPublishedBySlug: async (_tx, slug, language) => {
       const found = rows.filter(r => r.slug.en === slug || r.slug.de === slug)
@@ -284,5 +285,37 @@ describe('[ADR-033] the keepsake list pages', () => {
     const page = await makeListKeepsakes(deps)({ language: 'en', limit: 1 })
 
     expect(publicKeepsakeListSchema.parse({ items: page.items, total: page.total, nextCursor: page.next && 'x' }).items).toHaveLength(1)
+  })
+})
+
+describe('[ADR-033][slice 6] the keepsake hits of the search', () => {
+  const hits = [{ id: skuA, score: '0.5' }]
+
+  function searching() {
+    const asked: KeepsakeSearchQuery[] = []
+    const { deps } = setup([row()])
+    deps.reads = { ...deps.reads, searchPublished: async (_tx, query) => {
+      asked.push(query)
+      return { hits, count: 3 }
+    } }
+    return { hits: makeSearchKeepsakeHits(deps), asked }
+  }
+
+  it('asks the repository and tags every hit as a keepsake', async () => {
+    const s = searching()
+    const after = ['0.9', skuB, 'story'] as const
+
+    const found = await s.hits({ q: 'knife', interest: null, limit: 10, after })
+
+    expect(s.asked).toEqual([{ q: 'knife', limit: 10, after }])
+    expect(found).toEqual({ hits: [{ kind: 'keepsake', id: skuA, score: '0.5' }], count: 3 })
+  })
+
+  it('a keepsake has no interests: only the shopping tile lists it, any other tile asks the repository nothing', async () => {
+    const s = searching()
+
+    expect(await s.hits({ q: null, interest: 'food-drink', limit: 10 })).toEqual({ hits: [], count: 0 })
+    expect(s.asked).toEqual([])
+    expect((await s.hits({ q: null, interest: 'shopping-keepsakes', limit: 10 })).count).toBe(3)
   })
 })

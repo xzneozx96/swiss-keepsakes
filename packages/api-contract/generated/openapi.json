@@ -9369,6 +9369,140 @@
         ],
         "type": "object"
       },
+      "PublicSearchItem": {
+        "description": "One hit: its kind and the card the kind's own list shows (a place is the map item)",
+        "oneOf": [
+          {
+            "properties": {
+              "card": {
+                "$ref": "#/components/schemas/PublicStoryCard"
+              },
+              "kind": {
+                "enum": [
+                  "story"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "card"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "card": {
+                "$ref": "#/components/schemas/PublicMapItem"
+              },
+              "kind": {
+                "enum": [
+                  "place"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "card"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "card": {
+                "$ref": "#/components/schemas/PublicTourCard"
+              },
+              "kind": {
+                "enum": [
+                  "tour"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "card"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "card": {
+                "$ref": "#/components/schemas/PublicKeepsakeCard"
+              },
+              "kind": {
+                "enum": [
+                  "keepsake"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "card"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "PublicSearchList": {
+        "properties": {
+          "counts": {
+            "description": "How many match in each kind, whatever `kind` asks for, so a filter can show its counts",
+            "properties": {
+              "keepsake": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "place": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "story": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "tour": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "story",
+              "place",
+              "tour",
+              "keepsake"
+            ],
+            "type": "object"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PublicSearchItem"
+            },
+            "type": "array"
+          },
+          "nextCursor": {
+            "description": "Pass it as `cursor` for the next page. Null on the last page, and only there",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "How many published titles match, for the kind asked for (all kinds when none), on every page",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor",
+          "total",
+          "counts"
+        ],
+        "type": "object"
+      },
       "PublicStory": {
         "properties": {
           "authorName": {
@@ -19687,6 +19821,160 @@
             },
             "description": "No such published item",
             "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/search": {
+      "get": {
+        "parameters": [
+          {
+            "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+            "in": "query",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "How many items to return, 1 to 20",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "description": "How many items to return, 1 to 20",
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "description": "The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page",
+              "maxLength": 512,
+              "pattern": "^[\\w-]+$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The typed text, 1 to 100 characters. Accents and Swiss spellings are folded (Loewendenkmal finds Löwendenkmal), and a typo or a part of a word still matches",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "description": "The typed text, 1 to 100 characters. Accents and Swiss spellings are folded (Loewendenkmal finds Löwendenkmal), and a typo or a part of a word still matches",
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "An interest tile the guest tapped on the search screen. Without `q`, the newest titles with that interest come first. It is never the saved onboarding answers (ADR-006): the app sends it only for a tapped tile",
+            "in": "query",
+            "name": "interest",
+            "required": false,
+            "schema": {
+              "description": "An interest tile the guest tapped on the search screen. Without `q`, the newest titles with that interest come first. It is never the saved onboarding answers (ADR-006): the app sends it only for a tapped tile",
+              "enum": [
+                "history-culture",
+                "food-drink",
+                "lake-mountains",
+                "shopping-keepsakes",
+                "local-activities"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only this kind of hit. The counts still cover every kind",
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "description": "Only this kind of hit. The counts still cover every kind",
+              "enum": [
+                "story",
+                "place",
+                "tour",
+                "keepsake"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicSearchList"
+                }
+              }
+            },
+            "description": "A page of published titles that match, best first, each as the card its own list shows",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "304": {
+            "description": "The If-None-Match tag still matches. No body",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }

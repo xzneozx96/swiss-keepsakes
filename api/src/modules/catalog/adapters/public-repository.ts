@@ -3,6 +3,7 @@ import type { KeepsakePageKey, PublicKeepsakeReads, PublicKeepsakeRow, PublicKee
 import type { Localized, LocalizedDoc } from '../ports.ts'
 import { sql } from 'drizzle-orm'
 import { after as keysAfter, page } from '../../../platform/db/keyset.ts'
+import { searchKey, searchOrder, searchTerm } from '../../../platform/db/search.ts'
 
 interface SummaryRow {
   id: string
@@ -36,6 +37,24 @@ function asSummary(row: SummaryRow): PublicKeepsakeSummary {
 
 export function createPublicKeepsakeReads(): PublicKeepsakeReads<Tx> {
   return {
+    async searchPublished(tx, { q, limit, after }) {
+      const term = q === null ? null : searchTerm(q)
+      const text = sql`p.search_text`
+      const tsv = sql`p.search_tsv`
+      const where = sql`${published}${term ? sql` and ${term.matches(text, tsv)}` : sql``}`
+      const counted = await tx.execute<{ n: number } & Record<string, unknown>>(sql`select count(*)::int as n from catalog.products p where ${where}`)
+      const count = counted.rows[0]?.n ?? 0
+      if (limit < 1 || count === 0)
+        return { hits: [], count }
+      // `score_key` is the text of the rank; ordering by `score` keeps the number.
+      const found = await tx.execute<{ id: string, score_key: string } & Record<string, unknown>>(sql`
+        with hits as (select p.id, 'keepsake'::text as kind, ${term ? term.score(text, tsv) : sql`0::float8`} as score from catalog.products p where ${where})
+        select id, score::text as score_key from hits
+         ${after ? sql`where ${keysAfter(searchKey, after)}` : sql``}
+         order by ${searchOrder} limit ${limit + 1}`)
+      return { hits: found.rows.map(row => ({ id: row.id, score: row.score_key })), count }
+    },
+
     async pagePublished(tx, { category, limit, after }) {
       // A parent category includes its direct sub-categories, as the stories filter does. Both the page and the count run over this set.
       const filter = category === null

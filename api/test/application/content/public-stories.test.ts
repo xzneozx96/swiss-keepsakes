@@ -29,6 +29,10 @@ function setup(stories: StoryFixture[], categories: PublicCategoryListRow[] = []
       const found = stories.find(s => s.versions.some(v => v.slug === slug))
       return found && { places: [], related: [], keepsakeProductIds: [], ...found }
     },
+    searchPublished: async () => ({ hits: [], counts: { story: 0, place: 0, tour: 0 } }),
+    listPublishedStoriesByIds: async () => [],
+    listVisiblePinsByIds: async () => [],
+    listPublishedToursByIds: async () => [],
     listCategories: async () => categories,
     listVisiblePins: async () => [],
     findVisiblePin: async () => undefined,

@@ -872,6 +872,81 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page */
+                    cursor?: string;
+                    /** @description An interest tile the guest tapped on the search screen. Without `q`, the newest titles with that interest come first. It is never the saved onboarding answers (ADR-006): the app sends it only for a tapped tile */
+                    interest?: "history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes" | "local-activities";
+                    /** @description Only this kind of hit. The counts still cover every kind */
+                    kind?: "story" | "place" | "tour" | "keepsake";
+                    /** @description The language asked for. An item that has no version in it comes back in the other language, marked `fallback` */
+                    lang: "en" | "de";
+                    /** @description How many items to return, 1 to 20 */
+                    limit?: number;
+                    /** @description The typed text, 1 to 100 characters. Accents and Swiss spellings are folded (Loewendenkmal finds Löwendenkmal), and a typo or a part of a word still matches */
+                    q?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A page of published titles that match, best first, each as the card its own list shows */
+                200: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicSearchList"];
+                    };
+                };
+                /** @description The If-None-Match tag still matches. No body */
+                304: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/stories": {
         parameters: {
             query?: never;
@@ -6937,6 +7012,38 @@ export interface components {
             readMinutes: number;
             slug: string;
             title: string;
+        };
+        /** @description One hit: its kind and the card the kind's own list shows (a place is the map item) */
+        PublicSearchItem: {
+            card: components["schemas"]["PublicStoryCard"];
+            /** @enum {string} */
+            kind: "story";
+        } | {
+            card: components["schemas"]["PublicMapItem"];
+            /** @enum {string} */
+            kind: "place";
+        } | {
+            card: components["schemas"]["PublicTourCard"];
+            /** @enum {string} */
+            kind: "tour";
+        } | {
+            card: components["schemas"]["PublicKeepsakeCard"];
+            /** @enum {string} */
+            kind: "keepsake";
+        };
+        PublicSearchList: {
+            /** @description How many match in each kind, whatever `kind` asks for, so a filter can show its counts */
+            counts: {
+                keepsake: number;
+                place: number;
+                story: number;
+                tour: number;
+            };
+            items: components["schemas"]["PublicSearchItem"][];
+            /** @description Pass it as `cursor` for the next page. Null on the last page, and only there */
+            nextCursor: string | null;
+            /** @description How many published titles match, for the kind asked for (all kinds when none), on every page */
+            total: number;
         };
         PublicStory: {
             authorName: string;

@@ -123,6 +123,7 @@ describe('[ADR-033] every list route pages or is named as a whole list', () => {
     expect(routes.get('GET /api/public/stories')).toBe('cursor')
     expect(routes.get('GET /api/public/keepsakes')).toBe('cursor')
     expect(routes.get('GET /api/public/tours')).toBe('cursor')
+    expect(routes.get('GET /api/public/search')).toBe('cursor')
     expect(routes.get('GET /api/store/{storeId}/media')).toBe('numbered')
   })
 

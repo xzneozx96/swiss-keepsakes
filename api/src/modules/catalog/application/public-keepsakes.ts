@@ -38,7 +38,20 @@ export interface KeepsakePageQuery {
   after?: KeepsakePageKey | undefined
 }
 
+// Where a page of search hits starts: the rank (a double as text), the id and the kind of the last hit seen, best first.
+export type KeepsakeSearchKey = readonly [score: string, id: string, kind: string]
+
+export interface KeepsakeSearchQuery {
+  // The typed text, or null when the search is by interest only (every hit then ranks 0).
+  q: string | null
+  limit: number
+  after?: KeepsakeSearchKey | undefined
+}
+
 export interface PublicKeepsakeReads<T> {
+  // Published keepsakes whose name matches, best first: `limit + 1` hits after `after` (the extra one says another page
+  // follows; none are read when `limit` is 0), and how many match in all. A hit is the id and its rank as text.
+  searchPublished: (tx: T, query: KeepsakeSearchQuery) => Promise<{ hits: { id: string, score: string }[], count: number }>
   // Published keepsakes of every store, newest first (`created_at`, then the id). `total` counts the whole filtered set.
   // `next` is the key of the last row when more follow, else null.
   pagePublished: (tx: T, query: KeepsakePageQuery) => Promise<{ rows: PublicKeepsakeSummary[], next: KeepsakePageKey | null, total: number }>
@@ -190,6 +203,17 @@ export function makeListKeepsakes<T>(deps: PublicKeepsakeDeps<T>) {
     const found = await deps.reads.pagePublished(tx, { category: category ?? null, limit, after })
     return { items: await cardsOf(deps, tx, found.rows, language), total: found.total, next: found.next }
   })
+}
+
+// The ranked hits of a search among the published keepsakes (the content module's search asks for them through a port, ADR-013).
+// A keepsake has no interests: it matches the interest tile "shopping-keepsakes" and no other tile, as the screen always did.
+export function makeSearchKeepsakeHits<T>(deps: PublicKeepsakeDeps<T>) {
+  return async ({ q, interest, limit, after }: { q: string | null, interest: string | null, limit: number, after?: KeepsakeSearchKey | undefined }) => {
+    if (interest !== null && interest !== 'shopping-keepsakes')
+      return { hits: [], count: 0 }
+    const found = await deps.uow.run(tx => deps.reads.searchPublished(tx, { q, limit, after }))
+    return { hits: found.hits.map(hit => ({ kind: 'keepsake' as const, ...hit })), count: found.count }
+  }
 }
 
 // The same cards for the published keepsakes among `ids`, in the order of `ids` (the story's order). An id that is no

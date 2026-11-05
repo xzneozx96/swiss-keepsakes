@@ -235,6 +235,15 @@ export {
   publicTourSchema,
 } from './public.ts'
 export {
+  MAX_SEARCH_QUERY_LENGTH,
+  type PublicSearchItem,
+  publicSearchItemSchema,
+  type PublicSearchList,
+  publicSearchListSchema,
+  type SearchKind,
+  searchKindSchema,
+} from './public-search.ts'
+export {
   type PublicKeepsake,
   type PublicKeepsakeAvailability,
   publicKeepsakeAvailabilitySchema,

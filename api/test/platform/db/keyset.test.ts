@@ -14,6 +14,14 @@ describe('[ADR-033] keyset after', () => {
     expect(query.params).toEqual(['2026-11-05T10:00:00.123456Z', 'id-1'])
   })
 
+  it('casts a search rank to float8, and keeps it as text so the cursor holds every digit', () => {
+    const rank = [{ column: sql`score`, cast: 'float8' as const }, { column: sql`id`, cast: 'uuid' as const }]
+    const query = dialect.sqlToQuery(after(rank, ['0.30000000000000004', 'id-1']))
+
+    expect(query.sql).toBe('(score, id) < ($1::float8, $2::uuid)')
+    expect(query.params).toEqual(['0.30000000000000004', 'id-1'])
+  })
+
   it('writes an ascending order the other way', () => {
     expect(dialect.sqlToQuery(after(columns.slice(1), ['id-1'], 'asc')).sql).toBe('(id) > ($1::uuid)')
   })

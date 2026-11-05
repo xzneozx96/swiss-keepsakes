@@ -1,8 +1,10 @@
 import type { CategoryIcon, ContentLanguage, Localized, PinDate, StayTag, TourGuideDoc } from '@sk/domain/content'
+import type { SQL } from 'drizzle-orm'
 import type { Tx } from '../../../platform/db/client.ts'
-import type { PublicCategoryRow, PublicPinDetailRow, PublicPinRow, PublicReadRepository, PublicStoryDetailRow, PublicStoryRow, PublicTourRow, StoredStoryDoc, StoryPageKey, TourPageKey, TourPageQuery } from '../read-ports.ts'
+import type { PublicCategoryRow, PublicPinDetailRow, PublicPinRow, PublicReadRepository, PublicStoryDetailRow, PublicStoryRow, PublicTourRow, SearchHit, StoredStoryDoc, StoryPageKey, TourPageKey, TourPageQuery } from '../read-ports.ts'
 import { sql } from 'drizzle-orm'
 import { after as keysAfter, page } from '../../../platform/db/keyset.ts'
+import { searchKey, searchOrder, searchTerm } from '../../../platform/db/search.ts'
 import { publishedStoryMediaIds } from './story-media-ids.ts'
 
 // The order of the story list: the date of the version carried, then the group id, both newest first.
@@ -263,12 +265,12 @@ interface StopJoinRow {
 
 // Published guides, newest first. Stops are only read for a detail (`withStops`); keepsake links and the ready media
 // keys come in one query each for all guides.
-async function loadTours(tx: Tx, tourId: string | null, withStops: boolean, { limit, after }: TourPageQuery = {}): Promise<{ rows: PublicTourRow[], next: TourPageKey | null, total: number }> {
+async function loadTours(tx: Tx, tourIds: string[] | null, withStops: boolean, { limit, after }: TourPageQuery = {}): Promise<{ rows: PublicTourRow[], next: TourPageKey | null, total: number }> {
   const found = await tx.execute<TourJoinRow & Record<string, unknown>>(sql`
     select id, slug, stay_tag, interests, duration_minutes, published, cover_media_id, pdf_media_id,
            (select count(*)::int from content.tour_stops s where s.tour_id = content.tours.id) as stop_count
       from content.tours
-     where status = 'published' and published is not null${tourId ? sql` and id = ${tourId}` : sql``}${after ? sql` and ${keysAfter(tourKey, after)}` : sql``}
+     where status = 'published' and published is not null${tourIds ? sql` and id = any(${sql.param(tourIds)}::uuid[])` : sql``}${after ? sql` and ${keysAfter(tourKey, after)}` : sql``}
      order by id desc${limit === undefined ? sql`` : sql` limit ${limit + 1}`}`)
   // The extra row only says there is a next page.
   const { items: shown, next } = page(found.rows, limit, (row): TourPageKey => [row.id])
@@ -326,11 +328,58 @@ async function loadTours(tx: Tx, tourId: string | null, withStops: boolean, { li
     })),
   }))
 
-  return { rows, next, total: tourId ? rows.length : (await tx.execute<{ total: number } & Record<string, unknown>>(sql`select count(*)::int as total from content.tours where status = 'published' and published is not null`)).rows[0]?.total ?? 0 }
+  return { rows, next, total: tourIds ? rows.length : (await tx.execute<{ total: number } & Record<string, unknown>>(sql`select count(*)::int as total from content.tours where status = 'published' and published is not null`)).rows[0]?.total ?? 0 }
 }
 
 export function createPublicReadRepository(): PublicReadRepository<Tx> {
   return {
+    async searchPublished(tx, { q, interest, kinds, limit, after }) {
+      const term = q === null ? null : searchTerm(q)
+      const matches = (text: SQL, tsv: SQL) => (term ? sql` and ${term.matches(text, tsv)}` : sql``)
+      const score = (text: SQL, tsv: SQL) => (term ? term.score(text, tsv) : sql`0::float8`)
+      const tagged = (column: SQL) => (interest === null ? sql`` : sql` and ${interest}::text = any(${column})`)
+      // One row per hit: a story has a version per language, so its best version counts. A place goes through the public view.
+      const hits = sql`hits as (
+        select id, kind, max(score) as score from (
+          select g.id, 'story'::text as kind, ${score(sql`v.search_text`, sql`v.search_tsv`)} as score
+            from content.story_versions v
+            join content.story_groups g on g.store_id = v.store_id and g.id = v.group_id
+           where v.status = 'published' and v.published is not null${tagged(sql`g.interests`)}${matches(sql`v.search_text`, sql`v.search_tsv`)}
+          union all
+          select p.id, 'place'::text, ${score(sql`p.search_text`, sql`p.search_tsv`)}
+            from content.public_pins pp
+            join content.places p on p.id = pp.id
+           where p.status = 'published' and p.slug is not null${tagged(sql`p.interests`)}${matches(sql`p.search_text`, sql`p.search_tsv`)}
+          union all
+          select t.id, 'tour'::text, ${score(sql`t.search_text`, sql`t.search_tsv`)}
+            from content.tours t
+           where t.status = 'published' and t.published is not null${tagged(sql`t.interests`)}${matches(sql`t.search_text`, sql`t.search_tsv`)}
+        ) s group by id, kind)`
+      const counted = await tx.execute<{ kind: SearchHit['kind'], n: number } & Record<string, unknown>>(sql`with ${hits} select kind, count(*)::int as n from hits group by kind`)
+      const counts = { story: 0, place: 0, tour: 0 }
+      for (const row of counted.rows) {
+        if (row.kind === 'story' || row.kind === 'place' || row.kind === 'tour')
+          counts[row.kind] = row.n
+      }
+      if (kinds.length === 0 || limit < 1)
+        return { hits: [], counts }
+      // `score_key` is the text of the rank; ordering by `score` keeps the number.
+      const found = await tx.execute<{ id: string, kind: SearchHit['kind'], score_key: string } & Record<string, unknown>>(sql`
+        with ${hits}
+        select id, kind, score::text as score_key from hits
+         where kind = any(${sql.param(kinds)}::text[])${after ? sql` and ${keysAfter(searchKey, after)}` : sql``}
+         order by ${searchOrder} limit ${limit + 1}`)
+      return { hits: found.rows.map(row => ({ kind: row.kind, id: row.id, score: row.score_key })), counts }
+    },
+
+    listPublishedStoriesByIds: (tx, ids) => loadStories(tx, ids),
+
+    listVisiblePinsByIds: (tx, ids) => loadPins(tx, ids),
+
+    async listPublishedToursByIds(tx, ids) {
+      return ids.length === 0 ? [] : (await loadTours(tx, ids, false)).rows
+    },
+
     async pagePublishedStories(tx, { language, category, limit, after }) {
       // The version a card shows: the asked language, else the other. Both the page and the count run over this set.
       const picked = sql`picked as (
@@ -403,7 +452,7 @@ export function createPublicReadRepository(): PublicReadRepository<Tx> {
          where status = 'published' and published is not null and (slug->>'en' = ${slug} or slug->>'de' = ${slug})
          order by coalesce(slug->>${language} = ${slug}, false) desc limit 1`)
       const id = found.rows[0]?.id
-      return id ? (await loadTours(tx, id, true)).rows[0] : undefined
+      return id ? (await loadTours(tx, [id], true)).rows[0] : undefined
     },
   }
 }
