@@ -134,7 +134,7 @@ export function VictorinoxShowcase({
             ? [0, 1, 2].map(i => (
                 <li
                   key={i}
-                  className="h-[15rem] w-52 shrink-0 animate-pulse rounded-2xl bg-white/10"
+                  className="h-[11rem] w-52 shrink-0 animate-pulse rounded-2xl bg-white/10"
                 />
               ))
             : items.map(item => (
@@ -144,22 +144,22 @@ export function VictorinoxShowcase({
                     params={{ lang: item.lang ?? language, slug: item.slug }}
                     to="/$lang/gifts/$slug"
                   >
-                    <span className="flex h-36 items-center justify-center rounded-xl">
+                    <span className="flex aspect-[3/2] w-full items-center justify-center overflow-hidden rounded-xl">
                       {knifeArt[artKey(item.slug)] || !item.photo
                         ? (
                             <img
                               alt=""
-                              className="h-32 -rotate-6 drop-shadow-[0_8px_10px_rgba(0,0,0,0.25)]"
+                              className="h-[85%] -rotate-6 drop-shadow-[0_8px_10px_rgba(0,0,0,0.25)]"
                               decoding="async"
                               loading="lazy"
                               src={knifeArt[artKey(item.slug)]}
                             />
                           )
                         // No knife art for this keepsake: its cover photo takes the slot.
-                        : <img alt={item.name} className="h-32 w-full rounded-xl object-contain" decoding="async" loading="lazy" src={item.photo} />}
+                        : <img alt={item.name} className="size-full rounded-xl object-contain" decoding="async" loading="lazy" src={item.photo} />}
                     </span>
                     <span className="flex flex-1 flex-col gap-0.5 px-1">
-                      <span className="line-clamp-2 min-h-[2.5em] text-sm leading-tight font-semibold">
+                      <span className="line-clamp-2 text-sm leading-tight font-semibold">
                         {item.name.replace(VICTORINOX_NAME_PREFIX, '')}
                       </span>
                       {!hidePrice && (
