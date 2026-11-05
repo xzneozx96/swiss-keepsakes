@@ -22,6 +22,8 @@ export function storyPage(items: unknown[], over: Record<string, unknown> = {}) 
   return storyListSchema.parse({ items, total: items.length, page: 1, pageSize: 10, tabs: { all: items.length, published: 0, drafts: items.length }, ...over })
 }
 
+const WWW = /^www\./
+
 interface PinLike { status: string, title: { en?: string, de?: string }, categoryIds: string[], hasDates: boolean, stayTag: string }
 
 const list = (url: URL, name: string) => (url.searchParams.get(name) ?? '').split(',').filter(Boolean)
@@ -90,4 +92,29 @@ export function serverStoryOptions(options: OptionLike[], url: URL) {
   const extra = options.filter(option => option.groupId === chosen && !matches.includes(option))
 
   return [...matches, ...extra]
+}
+
+/** The body the pins routes answer for `path` (with its query) under `base` (`/api/store/<id>`): the paged list and the lookup by id and host. Undefined for any other path. */
+export function pinsAnswer(items: PinLike[], path: string, base: string) {
+  const url = new URL(path, 'http://x')
+  if (url.pathname === `${base}/pins`)
+    return serverPinPage(items, url)
+  if (url.pathname !== `${base}/pins/lookup`)
+    return undefined
+  const ids = (url.searchParams.get('ids') ?? '').split(',').filter(Boolean)
+  const host = url.searchParams.get('host')
+
+  return { items: items.filter(item => ids.includes((item as unknown as { id: string }).id) || (host && (item as unknown as { status: string, outboundUrl: string | null }).status === 'published' && new URL((item as unknown as { outboundUrl: string }).outboundUrl ?? 'http://none.invalid').hostname.replace(WWW, '') === host)) }
+}
+
+/** The body the stories routes answer for `path` under `base`: the paged list and the lookup by id. Undefined for any other path. */
+export function storiesAnswer(items: StoryLike[], path: string, base: string) {
+  const url = new URL(path, 'http://x')
+  if (url.pathname === `${base}/story-groups`)
+    return serverStoryPage(items, url)
+  if (url.pathname !== `${base}/story-groups/lookup`)
+    return undefined
+  const ids = (url.searchParams.get('ids') ?? '').split(',').filter(Boolean)
+
+  return { items: items.filter(item => ids.includes((item as unknown as { groupId: string }).groupId)) }
 }

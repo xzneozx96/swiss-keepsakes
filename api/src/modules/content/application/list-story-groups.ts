@@ -24,7 +24,11 @@ export interface StoryListResult {
   tabs: Record<StoryTab, number>
 }
 
-type Deps<T> = { uow: UnitOfWork<T>, stories: Pick<StoryRepository<T>, 'listGroups' | 'listGroupsByIds'>, media: Pick<MediaRepository<T>, 'findMany'> }
+interface Deps<T> {
+  uow: UnitOfWork<T>
+  stories: Pick<StoryRepository<T>, 'listGroups' | 'listGroupsByIds'>
+  media: Pick<MediaRepository<T>, 'findMany'>
+}
 
 // The title is the non-empty one of each language; the cover is the first ready file of English, then German (a processing or
 // retired file reads as none). One read for every cover of the rows.

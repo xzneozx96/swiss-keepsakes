@@ -4,7 +4,7 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DataClientProvider, useCommand } from '@/features/data-client'
 import { commandAffects } from '@/features/data-client/commands'
-import { useAllStories, useStories, useStoryGroup, useStoryLinks } from '@/features/stories/api/queries'
+import { useStories, useStoryGroup, useStoryLinks, useStoryLookup } from '@/features/stories/api/queries'
 import { problem, setUpHarness, state, storeId } from './keepsakes-harness'
 import { storyPage } from './support/pages'
 
@@ -166,19 +166,19 @@ describe('[E4.3][AC30] the stories queries and commands', () => {
   })
 })
 
-describe('[ADR-033] the whole-list read of the story lookups', () => {
-  it('reads the pages of 20 one after the other until it holds the total', async () => {
-    const all = Array.from({ length: 45 }, (_, index) => ({ groupId: `0198a000-0000-7000-8000-${String(index + 1).padStart(12, '0')}`, kind: 'story', title: { en: `Story ${index + 1}` }, cover: null, languages: { en: null, de: null }, updatedAt: '2026-11-03T08:00:00.000Z' }))
-    state.answer = (call) => {
-      if (call.method !== 'GET' || call.path.split('?')[0] !== base)
-        return undefined
-      const page = Number(new URL(call.path, 'http://x').searchParams.get('page'))
+describe('[ADR-033] the story lookup by ids', () => {
+  const ids = Array.from({ length: 60 }, (_, index) => `0198a000-0000-7000-8000-${String(index + 1).padStart(12, '0')}`)
 
-      return Response.json(storyPage(all.slice((page - 1) * 20, page * 20), { total: 45, page, pageSize: 20 }))
-    }
-    const list = renderHook(() => useAllStories(storeId), { wrapper })
+  it('reads only the ids it is given, the first 50 once each, and reads nothing for none', async () => {
+    state.answer = call => (call.method === 'GET' && call.path.startsWith(`${base}/lookup`) ? Response.json({ items: [] }) : undefined)
+    const none = renderHook(() => useStoryLookup(storeId, []), { wrapper })
+    const many = renderHook(() => useStoryLookup(storeId, [...ids, ids[0]!]), { wrapper })
 
-    await waitFor(() => expect(list.result.current.data?.items).toHaveLength(45))
-    expect(state.calls.filter(call => call.path.startsWith(base)).map(call => call.path)).toEqual([`${base}?page=1&pageSize=20`, `${base}?page=2&pageSize=20`, `${base}?page=3&pageSize=20`])
+    await waitFor(() => expect(many.result.current.data).toEqual({ items: [] }))
+    expect(none.result.current.fetchStatus).toBe('idle')
+    const reads = state.calls.filter(call => call.path.startsWith(`${base}/lookup`))
+
+    expect(reads).toHaveLength(1)
+    expect(decodeURIComponent(reads[0]!.path.split('ids=')[1]!).split(',')).toEqual(ids.slice(0, 50))
   })
 })

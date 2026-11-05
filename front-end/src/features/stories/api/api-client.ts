@@ -15,6 +15,8 @@ export function createStoriesClient(): StoriesClient {
   return {
     list: async ({ storeId, query }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/story-groups', { ...timeout(), params: { path: { storeId }, query } })),
+    lookup: async ({ storeId, ids }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/story-groups/lookup', { ...timeout(), params: { path: { storeId }, query: { ids: ids.join(',') } } })),
     group: async ({ storeId, groupId }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/story-groups/{groupId}', { ...timeout(), params: { path: { storeId, groupId } } })) as Promise<StoryGroupDetail>,
     links: async ({ storeId, groupId }) =>

@@ -41,6 +41,7 @@ export const storiesListsEn = {
   'storyLists.related.state.draft': 'draft',
   'storyLists.related.state.none': 'missing',
   'storyLists.related.none': 'No other stories yet.',
+  'storyLists.related.search': 'Search stories',
   'storyLists.related.hiddenChosen.one': '{count} chosen story is no longer in the list. It stays here; remove it on the card.',
   'storyLists.related.hiddenChosen.other': '{count} chosen stories are no longer in the list. They stay here; remove them on the card.',
   'storyLists.related.unknown': 'Unknown story',

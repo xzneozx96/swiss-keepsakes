@@ -11,9 +11,9 @@ import { useDataClient } from '@/features/data-client'
 import { useKeepsakes } from '@/features/keepsakes/api/queries'
 import { mediaQueries } from '@/features/media/api/queries'
 import { thumbOf } from '@/features/media/lib/rules'
-import { useAllPlaces } from '@/features/places/api/queries'
+import { usePinLookup } from '@/features/places/api/queries'
 import { sessionUserQuery } from '@/features/stores/api/queries'
-import { useAllStories } from '../api/queries'
+import { useStoryLookup } from '../api/queries'
 import { accountNameOf } from '../lib/draft'
 import { keepsakesOf, pinHrefFor, placesOf, previewPin, relatedOf } from '../lib/preview-rules'
 
@@ -39,9 +39,9 @@ export function useStoryPreview({ group, language, fields }: { group: StoryGroup
     queries: fileIds.map(id => mediaQueries.file(client, storeId, id)),
     combine: results => results.flatMap(result => (result.data?.status === 'ready' ? [result.data] : NO_FILES)),
   })
-  const pins = useAllPlaces(pinIds.length > 0 || group.placeIds.length > 0 ? storeId : undefined)
+  const pins = usePinLookup(storeId, [...pinIds, ...group.placeIds])
   const keepsakes = useKeepsakes(group.keepsakeProductIds.length > 0 ? storeId : undefined)
-  const stories = useAllStories(group.relatedGroupIds.length > 0 ? storeId : undefined)
+  const stories = useStoryLookup(storeId, group.relatedGroupIds)
   const session = useQuery(sessionUserQuery)
   const [today] = useState(() => new Date().toISOString().slice(0, 10))
   const version = group.versions[language]

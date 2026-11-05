@@ -1,11 +1,12 @@
 import type { Editor } from '@tiptap/react'
-import type { PinOption } from '../lib/pins'
+import type { StoryLanguage } from '../lib/search-params'
 
 import { Button } from '@heroui/react'
 import { getMarkRange } from '@tiptap/react'
 
 import { StatusWarningIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
+import { usePinOptions } from '../hooks/use-pin-options'
 import { hostOf, pinForHost } from '../lib/pins'
 import { convertLinksToPin, removePinLink } from './pin-commands'
 
@@ -26,19 +27,22 @@ const keepSelection = (event: React.MouseEvent) => event.preventDefault()
  * website of one of the store's published pins: the yellow note with "Link the pin instead" and "Keep" (ADR-011). The note
  * never blocks saving. Nothing shows for any other cursor position.
  */
-export function LinkContext({ editor, link, pinId, pins, dismissed, onKeep, onChangePin }: {
+export function LinkContext({ editor, link, pinId, storeId, language, dismissed, onKeep, onChangePin }: {
   editor: Editor
   /** The address of the plain link at the cursor, or ''. */
   link: string
   /** The pin id of the pin link at the cursor, or ''. */
   pinId: string
-  pins: PinOption[]
+  storeId: string
+  language: StoryLanguage
   /** The hosts the writer chose to Keep. */
   dismissed: string[]
   onKeep: (host: string) => void
   onChangePin: () => void
 }) {
   const { t } = useLocale()
+  // The pin at the cursor by id, or the published pin whose website is the plain link's host: two small reads, never the whole list.
+  const { pins } = usePinOptions(storeId, language, { ids: pinId === '' ? [] : [pinId], host: pinId === '' && link !== '' ? hostOf(link) : undefined })
 
   if (pinId !== '') {
     const pin = pins.find(candidate => candidate.id === pinId)

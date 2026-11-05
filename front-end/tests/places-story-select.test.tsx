@@ -164,10 +164,10 @@ describe('[ADR-033] the story picker searches on the server as you type', () => 
   })
 
   it('names the linked story even when it is not among the matches, because the server always sends it', async () => {
-    api.stories = [...Array.from({ length: 24 }, (_, index) => story(40 + index, `Story ${index + 1}`, 'published', 'none')), story(60, 'Chosen one', 'draft', 'none')]
-    await openStoryStep(uuid(60))
+    api.stories = [...Array.from({ length: 24 }, (_, index) => story(40 + index, `Story ${index + 1}`, 'published', 'none')), story(80, 'Chosen one', 'draft', 'none')]
+    await openStoryStep(uuid(80))
 
     await waitFor(() => expect(shown()).toHaveTextContent('Chosen one (not published)'))
-    expect(Object.fromEntries(optionReads().at(-1)!)).toEqual({ groupId: uuid(60), limit: '20' })
+    expect(Object.fromEntries(optionReads().at(-1)!)).toEqual({ groupId: uuid(80), limit: '20' })
   })
 })

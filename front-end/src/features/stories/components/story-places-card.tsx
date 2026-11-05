@@ -30,8 +30,8 @@ export function PlacesCard({ storeId, group, language, body, onChange }: {
 }) {
   const { t } = useLocale()
   const linked = storyBodyPinIds(body as Parameters<typeof storyBodyPinIds>[0])
-  // The pin list is read when the story names a pin (tagged or linked in the text); otherwise the picker reads it.
-  const { pins, isLoading, isError } = usePinOptions(storeId, language, group.placeIds.length > 0 || linked.length > 0)
+  // The pins the story names (tagged or linked in the text) are read by id; the picker searches on the server.
+  const { pins, isLoading, isError } = usePinOptions(storeId, language, { ids: [...group.placeIds, ...linked] })
   const [sheetOpen, setSheetOpen] = useState(false)
   const byId = new Map(pins.map(pin => [pin.id, pin]))
   const nameOf = (id: string) => byId.get(id)?.name ?? t('storyMedia.pin.unknown')

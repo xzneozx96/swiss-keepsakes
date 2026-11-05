@@ -6,7 +6,7 @@ import { RelatedCard } from '@/features/stories/components/story-related-card'
 import { groupPatches } from './stories-details-harness'
 import { groupId, listVersion, publishedVersion, storyGroupDetail, listItem as storyItem, uuid } from './stories-harness'
 import { dragGrip, renderLinkedCard, serveLists, stubRowLayout } from './stories-lists-harness'
-import { setUpStoryMedia } from './stories-media-harness'
+import { setUpStoryMedia, state } from './stories-media-harness'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -191,5 +191,23 @@ describe('[E4.3][AC33] the More to discover card, picker and ordered list', () =
     await openCard()
     await grip('Story 3')
     expect(titles()).toEqual(['Story 3', 'Story 1', 'Story 2'])
+  }, 30000)
+
+  it('[ADR-033] the card reads its stories by id, never the whole list, and the picker searches on the server, keeping the chosen ones', async () => {
+    serve({ relatedGroupIds: [uuid(1)] }, [storyItem(100), storyItem(1, { title: { en: 'Chosen story' } }), storyItem(2, { title: { en: 'Lion Wall' } })])
+    await openCard()
+    await grip('Chosen story')
+    await openSheet()
+    await userEvent.type(await screen.findByRole('searchbox', { name: 'Search stories' }), 'lion')
+
+    await waitFor(() => expect(state.calls.some(call => call.path.includes('story-groups?') && call.path.includes('q=lion'))).toBe(true))
+    expect(await screen.findByRole('button', { name: /^Lion Wall/ })).toBeInTheDocument()
+    // The chosen story is read by id, so it stays on the list although "lion" does not match it.
+    expect(screen.getByRole('button', { name: /^Chosen story/ })).toBeInTheDocument()
+    const reads = state.calls.filter(call => call.method === 'GET' && call.path.includes('/story-groups'))
+
+    expect(reads.some(call => call.path.includes('/story-groups/lookup?ids='))).toBe(true)
+    expect(reads.filter(call => call.path.includes('q=')).every(call => call.path.includes('pageSize=20'))).toBe(true)
+    expect(reads.some(call => call.path.split('?')[0].endsWith('/story-groups') && !call.path.includes('pageSize=20'))).toBe(false)
   }, 30000)
 })

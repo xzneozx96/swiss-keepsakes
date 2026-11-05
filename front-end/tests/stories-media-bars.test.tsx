@@ -42,11 +42,7 @@ beforeEach(async () => {
 function setUp(body: never) {
   const onChange = vi.fn()
   const registered: (BodyHandover | null)[] = []
-  const pins = [
-    { id: PIN, name: 'Zyt tower', status: 'published' as const, website: 'https://zyt.example/tower', photo: null },
-    { id: uuid(2), name: 'Draft cellar', status: 'draft' as const, website: null, photo: null },
-  ]
-  const rendered = renderWithStore(<StoryBodyEditor body={body} language="en" pins={pins} registerHandover={handover => void registered.push(handover)} storeId={storeId} onChange={onChange} onDirty={() => {}} />)
+  const rendered = renderWithStore(<StoryBodyEditor body={body} language="en" registerHandover={handover => void registered.push(handover)} storeId={storeId} onChange={onChange} onDirty={() => {}} />)
 
   return { ...rendered, onChange, handover: () => registered.filter(Boolean).at(-1)! }
 }

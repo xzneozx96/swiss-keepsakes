@@ -29,7 +29,7 @@ export function RelatedCard({ storeId, group, language, onChange }: {
   onChange: (patch: Partial<GroupFields>) => void
 }) {
   const { t } = useLocale()
-  const { stories, isLoading, isError, refetch } = useStoryOptions(storeId, language, group.relatedGroupIds.length > 0)
+  const { stories, isLoading, isError, refetch } = useStoryOptions(storeId, language, group.relatedGroupIds)
   const [sheetOpen, setSheetOpen] = useState(false)
   const byId = new Map(stories.map(option => [option.id, option]))
   const ids = group.relatedGroupIds

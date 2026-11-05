@@ -1,36 +1,7 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-import { MAX_PAGES, readAllNumberedPages } from '@/features/data-client'
 import { parsePlacesSearch } from '@/features/places/lib/search-params'
 import { parseStoriesSearch } from '@/features/stories/lib/list-search'
-
-describe('[ADR-033] readAllNumberedPages', () => {
-  const rows = Array.from({ length: 45 }, (_, index) => index)
-  const read = vi.fn(async (page: number) => ({ items: rows.slice((page - 1) * 20, page * 20), total: rows.length }))
-
-  it('reads page after page until it holds the total, and no page more', async () => {
-    read.mockClear()
-
-    expect(await readAllNumberedPages(read, 'things')).toEqual(rows)
-    expect(read.mock.calls.map(([page]) => page)).toEqual([1, 2, 3])
-  })
-
-  it('stops on an empty page, even when the total says there is more', async () => {
-    const short = vi.fn(async (page: number) => ({ items: page === 1 ? [1, 2] : [], total: 99 }))
-
-    expect(await readAllNumberedPages(short, 'things')).toEqual([1, 2])
-    expect(short).toHaveBeenCalledTimes(2)
-  })
-
-  it('stops after MAX_PAGES and logs an error', async () => {
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
-    const endless = vi.fn(async () => ({ items: [1], total: 1_000_000 }))
-
-    expect(await readAllNumberedPages(endless, 'things')).toHaveLength(MAX_PAGES)
-    expect(error).toHaveBeenCalledWith(expect.stringContaining('things'))
-    error.mockRestore()
-  })
-})
 
 describe('[ADR-033] the table search params', () => {
   it('stories: the tab, the search and the page; anything else is dropped', () => {

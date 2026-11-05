@@ -2,8 +2,11 @@ import type { PinListQuery, StoryOptionsQuery } from './client'
 import type { DataClient } from '@/features/data-client'
 
 import { keepPreviousData, queryOptions, useQuery } from '@tanstack/react-query'
-import { queryKeys, readAllNumberedPages, useDataClient, WHOLE_LIST_PAGE_SIZE } from '@/features/data-client'
+import { queryKeys, useDataClient } from '@/features/data-client'
 import { fromApi } from '@/features/data-client/api-transport'
+
+/** The most ids one lookup takes (the API's `MAX_LOOKUP_IDS`; the contract's runtime stays out of the main bundle). */
+const MAX_LOOKUP_IDS = 50
 
 export const placesQueries = {
   // One page of the table, its filters in the key so a new filter is its own read.
@@ -13,12 +16,12 @@ export const placesQueries = {
       queryKey: [...queryKeys.places.list, storeId, query],
       queryFn: () => client.places.list({ storeId, query }),
     }),
-  // Every pin, page after page, for the screens that look pins up by id (debt: ADR-033 slice 4).
-  all: (client: DataClient, storeId: string) =>
+  // The pins a story references, by id (and by link host): at most 50 ids, never the whole list.
+  lookup: (client: DataClient, storeId: string, ids: string[], host?: string) =>
     queryOptions({
       ...fromApi,
-      queryKey: [...queryKeys.places.list, storeId, 'all'],
-      queryFn: async () => ({ items: await readAllNumberedPages(page => client.places.list({ storeId, query: { page, pageSize: WHOLE_LIST_PAGE_SIZE } }), 'pins') }),
+      queryKey: [...queryKeys.places.list, storeId, 'lookup', ids, host ?? null],
+      queryFn: () => client.places.lookup({ storeId, ids, host }),
     }),
   pin: (client: DataClient, storeId: string, id: string) =>
     queryOptions({
@@ -49,11 +52,13 @@ export function usePlaces(storeId: string | undefined, query: PinListQuery) {
   return useQuery({ ...placesQueries.list(client, storeId ?? '', query), enabled: storeId !== undefined, placeholderData: keepPreviousData })
 }
 
-/** Every pin of the store, for a screen that looks pins up by id. Waits while the store id is unknown. */
-export function useAllPlaces(storeId: string | undefined) {
+/** The pins named by `ids` (the first 50) and, with `host`, the published pins linking to that host. Reads nothing when `enabled` is false or there is nothing to look up. */
+export function usePinLookup(storeId: string | undefined, ids: string[], host?: string, enabled = true) {
   const client = useDataClient()
+  // Sorted, so a reorder of the same ids is the same read; the last answer stays while a changed list loads.
+  const wanted = [...new Set(ids)].slice(0, MAX_LOOKUP_IDS).sort()
 
-  return useQuery({ ...placesQueries.all(client, storeId ?? ''), enabled: storeId !== undefined })
+  return useQuery({ ...placesQueries.lookup(client, storeId ?? '', wanted, host), enabled: enabled && storeId !== undefined && (wanted.length > 0 || !!host), placeholderData: keepPreviousData })
 }
 
 /** One pin for the editor; `enabled` is false for a new pin. */

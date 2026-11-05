@@ -2,8 +2,11 @@ import type { StoryListQuery } from './client'
 import type { DataClient } from '@/features/data-client'
 
 import { keepPreviousData, queryOptions, useQuery } from '@tanstack/react-query'
-import { queryKeys, readAllNumberedPages, useDataClient, WHOLE_LIST_PAGE_SIZE } from '@/features/data-client'
+import { queryKeys, useDataClient } from '@/features/data-client'
 import { fromApi } from '@/features/data-client/api-transport'
+
+/** The most ids one lookup takes (the API's `MAX_LOOKUP_IDS`; the contract's runtime stays out of the main bundle). */
+const MAX_LOOKUP_IDS = 50
 
 export const storiesQueries = {
   // One page of the table, its filters in the key so a new filter is its own read.
@@ -13,12 +16,12 @@ export const storiesQueries = {
       queryKey: [...queryKeys.stories.list, storeId, query],
       queryFn: () => client.stories.list({ storeId, query }),
     }),
-  // Every story, page after page, for the screens that look stories up by id (debt: ADR-033 slice 4).
-  all: (client: DataClient, storeId: string) =>
+  // The stories a story references, by id: at most 50 ids, never the whole list.
+  lookup: (client: DataClient, storeId: string, ids: string[]) =>
     queryOptions({
       ...fromApi,
-      queryKey: [...queryKeys.stories.list, storeId, 'all'],
-      queryFn: async () => ({ items: await readAllNumberedPages(page => client.stories.list({ storeId, query: { page, pageSize: WHOLE_LIST_PAGE_SIZE } }), 'stories') }),
+      queryKey: [...queryKeys.stories.list, storeId, 'lookup', ids],
+      queryFn: () => client.stories.lookup({ storeId, ids }),
     }),
   // A form starts from the read and keeps its own copy, so a refocus must not refetch it.
   group: (client: DataClient, storeId: string, groupId: string) =>
@@ -44,11 +47,13 @@ export function useStories(storeId: string | undefined, query: StoryListQuery) {
   return useQuery({ ...storiesQueries.list(client, storeId ?? '', query), enabled: storeId !== undefined, placeholderData: keepPreviousData })
 }
 
-/** Every story group of the store, for a screen that looks stories up by id. Waits while the store id is unknown. */
-export function useAllStories(storeId: string | undefined) {
+/** The story groups named by `ids` (the first 50). Reads nothing when `enabled` is false or `ids` is empty. */
+export function useStoryLookup(storeId: string | undefined, ids: string[], enabled = true) {
   const client = useDataClient()
+  // Sorted, so a reorder of the same ids is the same read; the last answer stays while a changed list loads.
+  const wanted = [...new Set(ids)].slice(0, MAX_LOOKUP_IDS).sort()
 
-  return useQuery({ ...storiesQueries.all(client, storeId ?? ''), enabled: storeId !== undefined })
+  return useQuery({ ...storiesQueries.lookup(client, storeId ?? '', wanted), enabled: enabled && storeId !== undefined && wanted.length > 0, placeholderData: keepPreviousData })
 }
 
 /** What links to a story (the Delete story confirm). Waits while the store id is unknown. */

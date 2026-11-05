@@ -1,11 +1,12 @@
-import { MAX_OFFSET } from '@sk/api-contract'
-
 /** The status tabs of the stories table, besides All. */
 export const STORY_STATUS_TABS = ['published', 'drafts'] as const
 
 export type StoryStatus = (typeof STORY_STATUS_TABS)[number]
 
 export const STORIES_PAGE_SIZE = 10
+
+/** The most rows the API skips (its `MAX_OFFSET`). */
+const MAX_OFFSET = 10_000
 
 /** The last page the API serves at this page size: it refuses a skip over 10,000 rows. A link past it opens here, and the screen moves to the last real page. */
 const MAX_PAGE = Math.floor(MAX_OFFSET / STORIES_PAGE_SIZE) + 1

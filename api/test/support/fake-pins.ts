@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { pinListStatus } from '@sk/domain/content'
 
 // An in-memory pin repository. It copies what the SQL one does with a draft, but none of the database guards.
+const WWW = /^www\./
 const emptyText: PinDraft = { title: {}, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} }
 
 // The text a save writes, like the SQL repository: what the changes name, the rest from the stored text.
@@ -103,7 +104,7 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
     // Mirrors the SQL: the ids of this store, plus the published pins whose outbound link is on `host` (without www.), at most 50.
     async lookup(tx, storeId, query) {
       const page = await this.list(tx, storeId, { status: [], category: [], stay: [], type: [], sort: 'edited', page: 1, pageSize: 1000 }, new Date(0))
-      const hostOf = (url: string | null) => (url ? new URL(url).hostname.toLowerCase().replace(/^www\./, '') : null)
+      const hostOf = (url: string | null) => (url ? new URL(url).hostname.toLowerCase().replace(WWW, '') : null)
       return page.rows.filter(row => query.ids.includes(row.id) || (query.host !== undefined && row.status === 'published' && hostOf(row.outboundUrl) === query.host)).slice(0, 50)
     },
     async storyOptions(_tx, _storeId, query) {

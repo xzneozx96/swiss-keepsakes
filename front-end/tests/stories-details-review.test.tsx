@@ -29,7 +29,7 @@ const version = (language: 'en' | 'de', checkedOn?: string | null) => storyVersi
 const group = (over: Record<string, unknown> = {}, checkedOn?: string | null) => storyGroupDetail({ en: version('en', checkedOn), de: version('de', checkedOn) }, { categoryIds: [uuid(900)], ...over })
 
 /** `serveDetails` plus the pin list the picker and the card read. */
-const serve = (initial: ReturnType<typeof group>) => serveDetails(initial, call => (call.method === 'GET' && call.path.split('?')[0].endsWith('/pins') ? Response.json(pinPage([pinItem(1), pinItem(2, { status: 'draft' })])) : undefined))
+const serve = (initial: ReturnType<typeof group>) => serveDetails(initial, call => (call.method === 'GET' && (call.path.split('?')[0].endsWith('/pins') || call.path.split('?')[0].endsWith('/pins/lookup')) ? Response.json(pinPage([pinItem(1), pinItem(2, { status: 'draft' })])) : undefined))
 
 async function openReview(search = '') {
   renderStoryEditor(`${path}?screen=review${search}`)

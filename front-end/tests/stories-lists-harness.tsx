@@ -10,9 +10,9 @@ import { DetailsPanel, useDetailsPanel } from '@/features/stories/components/sto
 import { useStoryGroupEditor } from '@/features/stories/hooks/use-story-group-editor'
 import { list as keepsakeList } from './keepsakes-harness'
 import { serveDetails } from './stories-details-harness'
-import { groupId, storeId, storyList } from './stories-harness'
+import { groupId, storeId } from './stories-harness'
 import { renderWithStore } from './stories-media-harness'
-import { pinPage } from './support/pages'
+import { pinsAnswer, storiesAnswer } from './support/pages'
 
 type Detail = Parameters<typeof serveDetails>[0]
 type Rows = Record<string, unknown>[]
@@ -38,12 +38,16 @@ export function serveLists(initial: Detail, rows: { pins?: Rows, keepsakes?: Row
   const server = Object.assign(serveDetails(initial, (call) => {
     if (call.method !== 'GET')
       return undefined
-    if (call.path.split('?')[0] === `${base}/pins`)
-      return answer('pins', () => pinPage(lists.pins))
+    const pins = pinsAnswer(lists.pins as never, call.path, base)
+
+    if (pins)
+      return answer('pins', () => pins)
     if (call.path === `${base}/products`)
       return answer('products', () => keepsakeList(lists.keepsakes))
-    if (call.path.split('?')[0] === `${base}/story-groups`)
-      return answer('story-groups', () => storyList(lists.stories))
+    const stories = storiesAnswer(lists.stories as never, call.path, base)
+
+    if (stories)
+      return answer('story-groups', () => stories)
 
     return undefined
   }), { lists })

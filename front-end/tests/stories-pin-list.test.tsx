@@ -1,11 +1,11 @@
 import type { PinOption } from '@/features/stories/lib/pins'
 
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { PinChoiceSheet } from '@/features/stories/components/pin-choice-sheet'
-import { pinItem, renderWithStore, servePins, setUpStoryMedia, storeId, uuid } from './stories-media-harness'
+import { pinItem, renderWithStore, servePins, setUpStoryMedia, state, storeId, uuid } from './stories-media-harness'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -61,11 +61,11 @@ describe('[E4.3][AC45] the pin list and the single-choice sheet', () => {
     renderSheet()
     await screen.findByRole('button', { name: /Zyt tower/ })
     await userEvent.type(screen.getByRole('searchbox', { name: 'Search your pins' }), 'lio')
-    expect(screen.queryByRole('button', { name: /Zyt tower/ })).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('button', { name: /Zyt tower/ })).not.toBeInTheDocument())
     expect(screen.getByRole('button', { name: /Lion/ })).toBeInTheDocument()
     await userEvent.clear(screen.getByRole('searchbox', { name: 'Search your pins' }))
     await userEvent.type(screen.getByRole('searchbox', { name: 'Search your pins' }), 'xyz')
-    expect(screen.getByText('No pin matches “xyz”.')).toBeInTheDocument()
+    expect(await screen.findByText('No pin matches “xyz”.')).toBeInTheDocument()
   })
 
   it('[E4.3][AC45] the sheet says a pin link does not tag the place, choosing a second pin replaces the first, and Cancel returns nothing', async () => {
@@ -85,5 +85,20 @@ describe('[E4.3][AC45] the pin list and the single-choice sheet', () => {
     servePins([])
     renderSheet()
     expect(await screen.findByText('You have no pins yet.')).toBeInTheDocument()
+  })
+})
+
+describe('[ADR-033] the pin picker searches on the server', () => {
+  it('asks for the first 20 matches, and sends the search once, a moment after the last key', async () => {
+    renderSheet()
+    await screen.findByRole('button', { name: /Zyt tower/ })
+
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search your pins' }), 'lio')
+
+    await waitFor(() => expect(state.calls.some(call => call.path.includes('q=lio'))).toBe(true))
+    const reads = state.calls.filter(call => call.method === 'GET' && call.path.split('?')[0].endsWith('/pins'))
+
+    expect(reads.filter(call => call.path.includes('q='))).toHaveLength(1)
+    expect(reads.every(call => call.path.includes('pageSize=20') && call.path.includes('page=1'))).toBe(true)
   })
 })

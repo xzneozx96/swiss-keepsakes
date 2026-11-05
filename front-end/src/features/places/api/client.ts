@@ -1,4 +1,4 @@
-import type { Address, MapsLinkPosition, Pin, PinList, PinPublishBody, PinStoryOptionList, PinWriteBody, StoryVersionText } from '@sk/api-contract'
+import type { Address, MapsLinkPosition, Pin, PinList, PinLookup, PinPublishBody, PinStoryOptionList, PinWriteBody, StoryVersionText } from '@sk/api-contract'
 
 /** What one page of the pins table is asked for (ADR-033). The filter groups are comma separated lists. */
 export interface PinListQuery {
@@ -29,6 +29,8 @@ export interface PlacesClient {
   /** One page of the pins, with the total and the facet counts. */
   list: (input: { storeId: string, query: PinListQuery }) => Promise<PinList>
   get: (input: { storeId: string, id: string }) => Promise<Pin>
+  /** The pins named by `ids` (at most 50) and, with `host`, the published pins linking to that host. Not paged. */
+  lookup: (input: { storeId: string, ids: string[], host?: string | undefined }) => Promise<PinLookup>
   /** The first matches of the story picker's search, and the chosen story. Not paged. */
   storyOptions: (input: { storeId: string, query: StoryOptionsQuery }) => Promise<PinStoryOptionList>
   /** The text of one language version of a story as the editor last left it (the draft, else the published text). 404 when the story has no version in that language. */
