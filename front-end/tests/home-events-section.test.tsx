@@ -158,7 +158,8 @@ describe('[E4.13][AC54][AC95] the events section', () => {
 
     expect(cards).toHaveLength(3)
     expect(cards.every(card => card.closest('li')?.className.includes('snap-start') && !card.className.includes('w-full'))).toBe(true)
-    expect(week.querySelector('ul')?.className).toContain('snap-x')
+    // The snap sits on the scroller, not the list (326d52f9): on the list it never snapped.
+    expect(week.querySelector('ul')?.parentElement?.className).toContain('snap-x')
   })
 
   it('opens the map with that place, shows a category icon without a photo, and no price (AC-6)', async () => {

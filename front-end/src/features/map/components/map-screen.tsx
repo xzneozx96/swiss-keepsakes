@@ -81,7 +81,8 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
   const filterHandled = handledFilter.includes(addressKey)
   const isFiltered = chosen.length > 0 || datedOnly
   const openId = view === 'map' && selectedId !== undefined && litIds.has(selectedId) ? selectedId : undefined
-  const chosenCount = chosen.length
+  // The pill counts every active filter, so `?dated=1` alone still shows the map as filtered.
+  const chosenCount = chosen.length + (datedOnly ? 1 : 0)
   const openPin = openId ? ranked.find(pin => pin.id === openId) : undefined
   const detail = useQuery({ ...mapQueries.pin(openId ?? '', language), enabled: apiEnabled && openId !== undefined })
   const index = openPin ? kept.findIndex(pin => pin.id === openPin.id) : -1
@@ -165,20 +166,20 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-pin-return="${id}"]`)?.focus())
   }
 
-  function applyFilter(next: string[]) {
-    const first = keepFiltered(ranked, { chosen: next, datedOnly: false }, data.categories)[0]
+  function applyFilter(next: string[], nextDated: boolean) {
+    const first = keepFiltered(ranked, { chosen: next, datedOnly: nextDated }, data.categories)[0]
 
-    // The sheet's choice is the whole filter (its counts ignore dates, and it has no switch for them), and it moves the address
-    // off any place link, so a copied address reproduces the view.
+    // The sheet's choice is the whole filter (the categories and the dated switch), and it moves the address off any place
+    // link, so a copied address reproduces the view and the sheet opens on what the address says.
     setChosen(next)
-    setDatedOnly(false)
+    setDatedOnly(nextDated)
     setFirstOpened(true)
-    onSearchChange?.(filterAddress(next, data.categories, false))
+    onSearchChange?.(filterAddress(next, data.categories, nextDated))
     setFilterOpen(false)
     setMoreOpen(false)
     setView('map')
     // A filter that keeps nothing opens no card and drops the one that was open.
-    if (next.length > 0 && first)
+    if ((next.length > 0 || nextDated) && first)
       openCard(first.id)
     else setSelectedId(undefined)
   }
@@ -188,7 +189,7 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
   const places = t(kept.length === 1 ? 'map.places.one' : 'map.places.other', { count: kept.length })
   const announce = !isFiltered
     ? t(ranked.length === 1 ? 'map.announce.all.one' : 'map.announce.all.other', { count: ranked.length })
-    : chosenCount === 0
+    : chosen.length === 0
       ? t('map.announce.dated', { count: kept.length, total: ranked.length })
       : t('map.announce.some', {
           categories: data.categories.filter(category => chosen.includes(category.id)).map(category => categoryName(category, language)).join(', '),
@@ -271,7 +272,7 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
         <div className="pointer-events-none absolute inset-x-3 top-[70px] z-[9] flex justify-center">
           <div className="pointer-events-auto flex w-full flex-col items-center gap-2 rounded-3xl bg-surface p-5 text-center shadow-overlay" role="status">
             <p className="font-serif text-card-title text-balance">{t('map.none.title')}</p>
-            <Button className="min-h-11" variant="secondary" onPress={() => applyFilter([])}>{t('map.filter.clear')}</Button>
+            <Button className="min-h-11" variant="secondary" onPress={() => applyFilter([], false)}>{t('map.filter.clear')}</Button>
           </div>
         </div>
       )}
@@ -308,6 +309,7 @@ export function MapScreen({ place, category, dated, onSearchChange }: MapSearch 
         <CategoriesSheet
           categories={data.categories}
           chosen={chosen}
+          datedOnly={datedOnly}
           pins={ranked}
           onApply={applyFilter}
           onClose={() => setFilterOpen(false)}
