@@ -78,12 +78,14 @@ export function Rail({
     <ScrollShadow
       hideScrollBar
       aria-label={label}
-      className="-mx-4"
+      // The snap lives on the scroller (it does nothing on the list) and lands each card on the 16px gutter.
+      className="-mx-4 snap-x snap-mandatory scroll-px-4"
       orientation="horizontal"
       role="region"
       size={24}
     >
-      <ul className="flex snap-x snap-mandatory gap-3 px-4 pb-2">{children}</ul>
+      {/* w-max: the list grows to its cards, so its end padding stays inside the scroll and the last card keeps the gutter. */}
+      <ul className="flex w-max min-w-full gap-3 px-4 pb-2">{children}</ul>
     </ScrollShadow>
   )
 }

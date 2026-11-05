@@ -125,10 +125,11 @@ export function VictorinoxShowcase({
 
       <div
         aria-label={title}
-        className="mt-6 overflow-x-auto [scrollbar-width:none]"
+        className="mt-6 snap-x snap-mandatory scroll-px-4 overflow-x-auto [scrollbar-width:none]"
         role="region"
       >
-        <ul className="flex snap-x snap-mandatory scroll-px-4 gap-3 px-4 pt-1 pb-2">
+        {/* The snap sits on the scroller; w-max keeps the list's end padding inside the scroll, so the last tile keeps the gutter. */}
+        <ul className="flex w-max min-w-full gap-3 px-4 pt-1 pb-2">
           {isLoading
             ? [0, 1, 2].map(i => (
                 <li
@@ -143,7 +144,7 @@ export function VictorinoxShowcase({
                     params={{ lang: item.lang ?? language, slug: item.slug }}
                     to="/$lang/gifts/$slug"
                   >
-                    <span className="flex h-44 items-center justify-center rounded-xl bg-hero-cream">
+                    <span className="flex h-44 items-center justify-center rounded-xl">
                       {knifeArt[artKey(item.slug)] || !item.photo
                         ? (
                             <img
