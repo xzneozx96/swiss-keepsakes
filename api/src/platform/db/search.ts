@@ -26,6 +26,8 @@ export function searchTerm(q: string): { matches: (text: SQL, tsv: SQL) => SQL, 
 
   return {
     matches: (text, tsv) => sql`(${tsv} @@ ${tsq} or ${text} like ${pattern} or ${folded} <% ${text})`,
-    score: (text, tsv) => sql`(ts_rank(${tsv}, ${tsq})::float8 + word_similarity(${folded}, ${text})::float8)`,
+    // `similarity` over the whole title puts a title that is close to the query as a whole (Lion Monument) above a longer one
+    // that only contains the word (Public toilets at the Lion Monument), which the other two terms score the same.
+    score: (text, tsv) => sql`(ts_rank(${tsv}, ${tsq})::float8 + word_similarity(${folded}, ${text})::float8 + similarity(${folded}, ${text})::float8)`,
   }
 }
