@@ -275,6 +275,26 @@ export interface StoryListRow {
   versions: { language: ContentLanguage, status: StoryVersionStatus, title: string, coverMediaId: string | null, everPublished: boolean, editsNotLive: boolean, rowVersion: number, updatedAt: Date }[]
 }
 
+// The tabs of the stories table. `published`: any language version is live; `drafts`: none is.
+export type StoryTab = 'all' | 'published' | 'drafts'
+
+// One numbered page of the stories table (ADR-033 section 6). `created` is `created_at desc, id desc`; `updated` is the latest
+// version update, then `id desc`. `q` is a plain-text match on the title of either language.
+export interface StoryListQuery {
+  status: StoryTab
+  q?: string | undefined
+  sort: 'created' | 'updated'
+  page: number
+  pageSize: number
+}
+
+// `total` counts the groups of the tab, `tabs` the groups of each tab under the same search.
+export interface StoryListPage {
+  rows: StoryListRow[]
+  total: number
+  tabs: Record<StoryTab, number>
+}
+
 export interface StoryLinkCounts {
   pins: number
   stories: number
@@ -315,7 +335,8 @@ export interface StoryRepository<T> {
   // theirs too. `undefined` when the store has no such group.
   deleteGroup: (tx: T, storeId: string, groupId: string, at: Date) => Promise<StoryGroupRemoval | undefined>
   // The groups of the store that have at least one version. A group with none (left by a failed create) is left out.
-  listGroups: (tx: T, storeId: string) => Promise<StoryListRow[]>
+  // One numbered page of the groups that have a version, with the total and the tab counts. Groups are paged, never version rows.
+  listGroups: (tx: T, storeId: string, query: StoryListQuery) => Promise<StoryListPage>
   // The group with its lists, without a lock. An id of another store has no row.
   findGroup: (tx: T, storeId: string, groupId: string) => Promise<StoryGroup | undefined>
 }

@@ -3804,7 +3804,18 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description The page, from 1. A page past the end answers no items and the real total */
+                    page?: number;
+                    /** @description Rows a page, 1 to 20 */
+                    pageSize?: number;
+                    /** @description Matches the title of either language, in any case */
+                    q?: string;
+                    /** @description `created`: newest group first (`created_at desc, id desc`). `updated`: latest version update first, then `id desc` */
+                    sort?: "created" | "updated";
+                    /** @description `published`: a language version is live. `drafts`: none is */
+                    status?: "all" | "published" | "drafts";
+                };
                 header?: never;
                 path: {
                     storeId: string;
@@ -3813,7 +3824,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description The story groups of the store that have a version, with the state of each language version, most recently updated first */
+                /** @description One page of the story groups of the store that have a version, with the state of each language version, the total and the tab counts */
                 200: {
                     headers: {
                         "X-Request-Id": components["headers"]["RequestId"];
@@ -8604,9 +8615,19 @@ export interface components {
             /** @description Other stories that list the story under More to discover */
             stories: number;
         };
-        /** @description The story groups of the store that have a version, most recently updated first */
+        /** @description One page of the story groups of the store that have a version */
         StoryList: {
             items: components["schemas"]["StoryListItem"][];
+            page: number;
+            pageSize: number;
+            /** @description The groups of each tab that match the search. The status filter does not change them */
+            tabs: {
+                all: number;
+                drafts: number;
+                published: number;
+            };
+            /** @description The rows that match the filters, before paging */
+            total: number;
         };
         /** @description One story group, one row of the Stories list */
         StoryListItem: {

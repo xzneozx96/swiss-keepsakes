@@ -344,7 +344,8 @@ describe('[E4.3][AC30] story list and group read schemas', () => {
   it('[E4.3][AC30] a list row with a German version only has null for English', () => {
     const parsed = storyListItemSchema.parse(row)
     expect(parsed.languages.en).toBeNull()
-    expect(ok(storyListSchema, { items: [row] })).toBe(true)
+    expect(ok(storyListSchema, { items: [row], total: 1, page: 1, pageSize: 10, tabs: { all: 1, published: 0, drafts: 1 } })).toBe(true)
+    expect(ok(storyListSchema, { items: [row] })).toBe(false)
   })
 
   it('[E4.3][AC30] a list version with an unknown status is refused', () => {

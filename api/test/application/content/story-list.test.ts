@@ -1,6 +1,6 @@
 import type { StoryDraft } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
-import type { MediaRecord } from '../../../src/modules/content/ports.ts'
+import type { MediaRecord, StoryListQuery } from '../../../src/modules/content/ports.ts'
 import { emptyStoryBody } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
 import { makeGetStoryGroup } from '../../../src/modules/content/application/get-story-group.ts'
@@ -23,6 +23,7 @@ const coverDe = file('00000000-0000-4000-8000-0000000000c2')
 const processing = file('00000000-0000-4000-8000-0000000000c3', { status: 'processing' })
 const retired = file('00000000-0000-4000-8000-0000000000c4', { status: 'retired' })
 
+const query = (over: Partial<StoryListQuery> = {}): StoryListQuery => ({ status: 'all', sort: 'updated', page: 1, pageSize: 20, ...over })
 const doc = (over: Partial<StoryDraft> = {}): StoryDraft => ({ title: 'A title', excerpt: '', authorName: '', coverMediaId: null, body: emptyStoryBody, ...over })
 
 async function setup() {
@@ -42,10 +43,10 @@ describe('[E4.3][AC30] story list use case', () => {
     await stories.insertVersion(null, store, g.id, 'en', { draft: doc({ title: 'The wall', coverMediaId: coverEn.id }) }, t0)
     const de = await stories.insertVersion(null, store, g.id, 'de', { draft: doc({ title: 'Die Mauer', coverMediaId: coverDe.id }) }, t1)
 
-    const result = await list(owner, store)
+    const result = await list(owner, store, query())
 
     expect(result.ok).toBe(true)
-    const [entry] = result.ok ? result.value : []
+    const [entry] = result.ok ? result.value.entries : []
     expect(entry).toMatchObject({ groupId: g.id, kind: 'story', title: { en: 'The wall', de: 'Die Mauer' }, cover: coverEn, updatedAt: t1 })
     expect(entry?.languages.en).toMatchObject({ status: 'draft', everPublished: false, editsNotLive: false, rowVersion: 1, title: 'The wall' })
     expect(entry?.languages.de?.rowVersion).toBe(de?.rowVersion)
@@ -56,9 +57,9 @@ describe('[E4.3][AC30] story list use case', () => {
     const g = await group()
     await stories.insertVersion(null, store, g.id, 'de', { draft: doc({ title: 'Nur Deutsch' }) }, t0)
 
-    const result = await list(owner, store)
+    const result = await list(owner, store, query())
 
-    const [entry] = result.ok ? result.value : []
+    const [entry] = result.ok ? result.value.entries : []
     expect(entry?.languages.en).toBeNull()
     expect(entry?.languages.de).not.toBeNull()
     expect(entry?.title).toEqual({ de: 'Nur Deutsch' })
@@ -72,9 +73,9 @@ describe('[E4.3][AC30] story list use case', () => {
     const b = await group(t0)
     await stories.insertVersion(null, store, b.id, 'en', { draft: doc({ title: '' }) }, t0)
 
-    const result = await list(owner, store)
+    const result = await list(owner, store, query())
 
-    const entries = result.ok ? result.value : []
+    const entries = result.ok ? result.value.entries : []
     expect(entries.find(e => e.groupId === a.id)?.title).toEqual({ de: 'Mit Titel' })
     expect(entries.find(e => e.groupId === b.id)?.title).toEqual({})
   })
@@ -89,9 +90,9 @@ describe('[E4.3][AC30] story list use case', () => {
     const dePub = await stories.publishVersion(null, de!, t0)
     await stories.unpublishVersion(null, dePub, t1)
 
-    const result = await list(owner, store)
+    const result = await list(owner, store, query())
 
-    const [entry] = result.ok ? result.value : []
+    const [entry] = result.ok ? result.value.entries : []
     expect(entry?.languages.en).toMatchObject({ status: 'published', everPublished: true, editsNotLive: true })
     expect(entry?.title.en).toBe('Edited')
     expect(entry?.languages.de).toMatchObject({ status: 'draft', everPublished: true, editsNotLive: false })
@@ -102,7 +103,7 @@ describe('[E4.3][AC30] story list use case', () => {
     const { list, group } = await setup()
     await group()
 
-    expect(await list(owner, store)).toEqual({ ok: true, value: [] })
+    expect(await list(owner, store, query())).toMatchObject({ ok: true, value: { entries: [], total: 0, tabs: { all: 0, published: 0, drafts: 0 } } })
   })
 
   it('[E4.3][AC30] a cover that is processing or retired reads null', async () => {
@@ -115,9 +116,9 @@ describe('[E4.3][AC30] story list use case', () => {
     await stories.insertVersion(null, store, c.id, 'en', { draft: doc({ coverMediaId: processing.id }) }, t0)
     await stories.insertVersion(null, store, c.id, 'de', { draft: doc({ coverMediaId: coverDe.id }) }, t0)
 
-    const result = await list(owner, store)
+    const result = await list(owner, store, query())
 
-    const entries = result.ok ? result.value : []
+    const entries = result.ok ? result.value.entries : []
     expect(entries.find(e => e.groupId === a.id)?.cover).toBeNull()
     expect(entries.find(e => e.groupId === b.id)?.cover).toBeNull()
     expect(entries.find(e => e.groupId === c.id)?.cover).toEqual(coverDe)
@@ -132,18 +133,18 @@ describe('[E4.3][AC30] story list use case', () => {
     const other = await group(t2, 'store-2')
     await stories.insertVersion(null, 'store-2', other.id, 'en', { draft: doc() }, t2)
 
-    const result = await list(owner, store)
+    const result = await list(owner, store, query())
 
-    expect(result.ok && result.value.map(e => e.groupId)).toEqual([fresh.id, old.id])
+    expect(result.ok && result.value.entries.map(e => e.groupId)).toEqual([fresh.id, old.id])
   })
 
   it('[E4.3][AC30] an owner and a manager read the list, a manager of another store and a guest are forbidden', async () => {
     const { list } = await setup()
 
-    expect((await list(owner, store)).ok).toBe(true)
-    expect((await list(manager, store)).ok).toBe(true)
-    expect(await list(outsider, store)).toMatchObject({ ok: false, reason: 'forbidden' })
-    expect(await list(guest, store)).toMatchObject({ ok: false, reason: 'forbidden' })
+    expect((await list(owner, store, query())).ok).toBe(true)
+    expect((await list(manager, store, query())).ok).toBe(true)
+    expect(await list(outsider, store, query())).toMatchObject({ ok: false, reason: 'forbidden' })
+    expect(await list(guest, store, query())).toMatchObject({ ok: false, reason: 'forbidden' })
   })
 })
 
@@ -171,5 +172,85 @@ describe('[E4.3][AC30] story group read', () => {
     const g = await group()
 
     expect(await read(guest, store, g.id)).toMatchObject({ ok: false, reason: 'forbidden' })
+  })
+})
+
+describe('[ADR-033] story list pages', () => {
+  // Ten stories: s0 is the oldest. The odd ones are published in English; "Wall" is in the titles of s2 and s3 (s3 in German only).
+  async function ten() {
+    const { stories, list, group } = await setup()
+    const ids: string[] = []
+    for (let i = 0; i < 10; i += 1) {
+      const at = new Date(t0.getTime() + i * 60_000)
+      const g = await group(at)
+      const title = i === 2 ? 'The Wall' : i === 3 ? 'Die wall' : `Story ${i}`
+      const en = await stories.insertVersion(null, store, g.id, i === 3 ? 'de' : 'en', { draft: doc({ title }) }, at)
+      if (i % 2 === 1)
+        await stories.publishVersion(null, en!, at)
+      ids.push(g.id)
+    }
+    return { list, ids, stories, group }
+  }
+
+  it('answers one page with the total, the page and the page size, newest created first by default', async () => {
+    const { list, ids } = await ten()
+
+    const result = await list(owner, store, query({ sort: 'created', page: 2, pageSize: 4 }))
+
+    expect(result.ok && result.value).toMatchObject({ total: 10, page: 2, pageSize: 4 })
+    expect(result.ok && result.value.entries.map(e => e.groupId)).toEqual([ids[5], ids[4], ids[3], ids[2]])
+  })
+
+  it('a page past the end has no entries and the real total and counts', async () => {
+    const { list } = await ten()
+
+    const result = await list(owner, store, query({ page: 9, pageSize: 10 }))
+
+    expect(result.ok && result.value).toMatchObject({ entries: [], total: 10, tabs: { all: 10, published: 5, drafts: 5 } })
+  })
+
+  it('the status tab narrows the page and the total, while the counts keep every tab', async () => {
+    const { list, ids } = await ten()
+
+    const result = await list(owner, store, query({ status: 'published', sort: 'created' }))
+
+    expect(result.ok && result.value.entries.map(e => e.groupId)).toEqual([ids[9], ids[7], ids[5], ids[3], ids[1]])
+    expect(result.ok && result.value).toMatchObject({ total: 5, tabs: { all: 10, published: 5, drafts: 5 } })
+  })
+
+  it('the search matches a title of either language in any case and the tab counts follow it', async () => {
+    const { list, ids } = await ten()
+
+    const result = await list(owner, store, query({ q: 'WALL', sort: 'created' }))
+
+    expect(result.ok && result.value.entries.map(e => e.groupId)).toEqual([ids[3], ids[2]])
+    expect(result.ok && result.value).toMatchObject({ total: 2, tabs: { all: 2, published: 1, drafts: 1 } })
+  })
+
+  it('a % or _ in the search is a plain character', async () => {
+    const { list } = await ten()
+
+    const result = await list(owner, store, query({ q: '%' }))
+
+    expect(result.ok && result.value.total).toBe(0)
+  })
+
+  it('every sort ends in the id, so equal keys never repeat a row across pages', async () => {
+    const { stories, list, group } = await setup()
+    const made = []
+    for (let i = 0; i < 5; i += 1) {
+      const g = await group(t0)
+      await stories.insertVersion(null, store, g.id, 'en', { draft: doc() }, t0)
+      made.push(g.id)
+    }
+
+    for (const sort of ['created', 'updated'] as const) {
+      const first = await list(owner, store, query({ sort, page: 1, pageSize: 3 }))
+      const second = await list(owner, store, query({ sort, page: 2, pageSize: 3 }))
+      const seen = [...(first.ok ? first.value.entries : []), ...(second.ok ? second.value.entries : [])].map(e => e.groupId)
+
+      expect([...seen].sort()).toEqual([...made].sort())
+      expect(seen).toEqual([...seen].sort().reverse())
+    }
   })
 })

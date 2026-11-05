@@ -7,10 +7,10 @@ import type { StoryGroupDeleted } from '../application/delete-story-group.ts'
 import type { Result } from '../application/failure.ts'
 import type { StoryGroupRead } from '../application/get-story-group.ts'
 import type { StoryVersionText } from '../application/get-story-version-text.ts'
-import type { StoryListEntry } from '../application/list-story-groups.ts'
-import type { StoryGroupChanges, StoryLinkCounts, StoryVersionChanges } from '../ports.ts'
+import type { StoryListResult } from '../application/list-story-groups.ts'
+import type { StoryGroupChanges, StoryLinkCounts, StoryListQuery, StoryVersionChanges } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { storyDeletedSchema, storyGroupCreateBodySchema, storyGroupDetailSchema, storyGroupSaveBodySchema, storyGroupSchema, storyLinksSchema, storyListSchema, storyVersionCreateBodySchema, storyVersionMoveBodySchema, storyVersionSaveBodySchema, storyVersionSchema, storyVersionTextSchema } from '@sk/api-contract'
+import { storyDeletedSchema, storyGroupCreateBodySchema, storyGroupDetailSchema, storyGroupSaveBodySchema, storyGroupSchema, storyLinksSchema, storyListQuerySchema, storyListSchema, storyVersionCreateBodySchema, storyVersionMoveBodySchema, storyVersionSaveBodySchema, storyVersionSchema, storyVersionTextSchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
@@ -29,7 +29,7 @@ export interface StoryUseCases {
   publishStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, requestId: string | null) => Promise<Result<StoryVersion>>
   unpublishStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, requestId: string | null) => Promise<Result<StoryVersion>>
   moveStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, targetGroupId: string, requestId: string | null) => Promise<Result<StoryVersion>>
-  listStoryGroups: (actor: Actor, storeId: string) => Promise<Result<StoryListEntry[]>>
+  listStoryGroups: (actor: Actor, storeId: string, query: StoryListQuery) => Promise<Result<StoryListResult>>
   getStoryGroup: (actor: Actor, storeId: string, groupId: string) => Promise<Result<StoryGroupRead>>
   getStoryVersionText: (actor: Actor, storeId: string, groupId: string, language: Language) => Promise<Result<StoryVersionText>>
   getStoryLinks: (actor: Actor, storeId: string, groupId: string) => Promise<Result<StoryLinkCounts>>
@@ -76,9 +76,9 @@ const getVersionTextRoute = createRoute({
 const listGroupsRoute = createRoute({
   method: 'get',
   path: groupsPath,
-  request: { params: storeParams },
+  request: { params: storeParams, query: storyListQuerySchema },
   responses: {
-    200: { description: 'The story groups of the store that have a version, with the state of each language version, most recently updated first', headers: requestIdHeader, content: json(storyListSchema) },
+    200: { description: 'One page of the story groups of the store that have a version, with the state of each language version, the total and the tab counts', headers: requestIdHeader, content: json(storyListSchema) },
     ...problemResponses,
   },
 })
@@ -197,7 +197,7 @@ const deleteVersionRoute = createRoute({
 // verified store from `c.get('store')`, never from the path.
 export function registerStoryRoutes(app: OpenAPIHono<AppEnv>, useCases: StoryUseCases): void {
   app.openapi(listGroupsRoute, async (c) => {
-    const result = await useCases.listStoryGroups(c.get('actor'), c.get('store').storeId)
+    const result = await useCases.listStoryGroups(c.get('actor'), c.get('store').storeId, c.req.valid('query'))
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(storyListView(result.value, useCases.publicUrl), 200)

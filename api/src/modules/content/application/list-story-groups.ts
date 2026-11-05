@@ -1,6 +1,6 @@
 import type { ContentLanguage, Localized, StoryGroup } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
-import type { MediaRecord, MediaRepository, StoryListRow, StoryRepository, UnitOfWork } from '../ports.ts'
+import type { MediaRecord, MediaRepository, StoryListQuery, StoryListRow, StoryRepository, StoryTab, UnitOfWork } from '../ports.ts'
 import type { Result } from './failure.ts'
 import { mayManageContent } from './access.ts'
 import { fail, ok } from './failure.ts'
@@ -16,14 +16,22 @@ export interface StoryListEntry {
   updatedAt: Date
 }
 
-// One entry per story group that has a version, newest update first. The title is the non-empty one of each language;
+export interface StoryListResult {
+  entries: StoryListEntry[]
+  total: number
+  page: number
+  pageSize: number
+  tabs: Record<StoryTab, number>
+}
+
+// One page of entries, one per story group that has a version, in the order the query names. The title is the non-empty one of each language;
 // the cover is the first ready file of English, then German (a processing or retired file reads as none).
 export function makeListStoryGroups<T>({ uow, stories, media }: { uow: UnitOfWork<T>, stories: Pick<StoryRepository<T>, 'listGroups'>, media: Pick<MediaRepository<T>, 'findMany'> }) {
-  return async (actor: Actor, storeId: string): Promise<Result<StoryListEntry[]>> => {
+  return async (actor: Actor, storeId: string, query: StoryListQuery): Promise<Result<StoryListResult>> => {
     if (!mayManageContent(actor, storeId))
       return fail({ reason: 'forbidden' })
     return uow.run(async (tx) => {
-      const rows = await stories.listGroups(tx, storeId)
+      const { rows, total, tabs } = await stories.listGroups(tx, storeId, query)
       const ids = [...new Set(rows.flatMap(row => row.versions.flatMap(version => version.coverMediaId ? [version.coverMediaId.toLowerCase()] : [])))]
       // One read for every cover of the list.
       const files = ids.length > 0 ? await media.findMany(tx, storeId, ids) : []
@@ -47,7 +55,7 @@ export function makeListStoryGroups<T>({ uow, stories, media }: { uow: UnitOfWor
           updatedAt: new Date(Math.max(...present.map(version => version.updatedAt.getTime()))),
         }
       })
-      return ok(entries.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime() || a.groupId.localeCompare(b.groupId)))
+      return ok({ entries, total, tabs, page: query.page, pageSize: query.pageSize })
     })
   }
 }

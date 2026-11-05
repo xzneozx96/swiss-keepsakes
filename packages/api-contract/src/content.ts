@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { mediaSchema } from './media.ts'
+import { numberedPageOf, numberedPageQuery } from './page.ts'
 import { noNul } from './text.js'
 
 // Mirrors packages/domain/src/content (the contract imports only zod). Request bodies are strict, so a price, a
@@ -506,7 +507,19 @@ export const storyListItemSchema = z.object({
   updatedAt: z.iso.datetime().meta({ description: 'The latest update of any version' }),
 }).meta({ id: 'StoryListItem', description: 'One story group, one row of the Stories list' })
 
-export const storyListSchema = z.object({ items: z.array(storyListItemSchema) }).meta({ id: 'StoryList', description: 'The story groups of the store that have a version, most recently updated first' })
+export const STORY_TABS = ['all', 'published', 'drafts'] as const
+
+export const storyListQuerySchema = numberedPageQuery({
+  status: z.enum(STORY_TABS).default('all').meta({ description: '`published`: a language version is live. `drafts`: none is' }),
+  q: z.string().trim().max(200).optional().meta({ description: 'Matches the title of either language, in any case' }),
+  sort: z.enum(['created', 'updated']).default('created').meta({ description: '`created`: newest group first (`created_at desc, id desc`). `updated`: latest version update first, then `id desc`' }),
+})
+
+const storyTabCounts = z.object({ all: z.int().min(0), published: z.int().min(0), drafts: z.int().min(0) })
+
+export const storyListSchema = numberedPageOf(storyListItemSchema, 'StoryList', {
+  tabs: storyTabCounts.meta({ description: 'The groups of each tab that match the search. The status filter does not change them' }),
+}).meta({ id: 'StoryList', description: 'One page of the story groups of the store that have a version' })
 
 export const storyGroupDetailSchema = z.object({
   ...storyGroupSchema.shape,
@@ -612,6 +625,7 @@ export type StoryVersion = z.infer<typeof storyVersionSchema>
 export type StoryListVersion = z.infer<typeof storyListVersionSchema>
 export type StoryListItem = z.infer<typeof storyListItemSchema>
 export type StoryList = z.infer<typeof storyListSchema>
+export type StoryListQuery = z.input<typeof storyListQuerySchema>
 export type StoryLinks = z.infer<typeof storyLinksSchema>
 export type StoryDeleted = z.infer<typeof storyDeletedSchema>
 export type StoryGroupDetail = z.infer<typeof storyGroupDetailSchema>

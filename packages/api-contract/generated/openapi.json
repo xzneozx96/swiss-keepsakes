@@ -17104,17 +17104,57 @@
         "type": "object"
       },
       "StoryList": {
-        "description": "The story groups of the store that have a version, most recently updated first",
+        "description": "One page of the story groups of the store that have a version",
         "properties": {
           "items": {
             "items": {
               "$ref": "#/components/schemas/StoryListItem"
             },
             "type": "array"
+          },
+          "page": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "pageSize": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "tabs": {
+            "description": "The groups of each tab that match the search. The status filter does not change them",
+            "properties": {
+              "all": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "drafts": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "published": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "all",
+              "published",
+              "drafts"
+            ],
+            "type": "object"
+          },
+          "total": {
+            "description": "The rows that match the filters, before paging",
+            "minimum": 0,
+            "type": "integer"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total",
+          "page",
+          "pageSize",
+          "tabs"
         ],
         "type": "object"
       },
@@ -23566,6 +23606,73 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "description": "`published`: a language version is live. `drafts`: none is",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "description": "`published`: a language version is live. `drafts`: none is",
+              "enum": [
+                "all",
+                "published",
+                "drafts"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Matches the title of either language, in any case",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "description": "Matches the title of either language, in any case",
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "`created`: newest group first (`created_at desc, id desc`). `updated`: latest version update first, then `id desc`",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "created",
+              "description": "`created`: newest group first (`created_at desc, id desc`). `updated`: latest version update first, then `id desc`",
+              "enum": [
+                "created",
+                "updated"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page, from 1. A page past the end answers no items and the real total",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "description": "The page, from 1. A page past the end answers no items and the real total",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Rows a page, 1 to 20",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "description": "Rows a page, 1 to 20",
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -23577,7 +23684,7 @@
                 }
               }
             },
-            "description": "The story groups of the store that have a version, with the state of each language version, most recently updated first",
+            "description": "One page of the story groups of the store that have a version, with the state of each language version, the total and the tab counts",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
