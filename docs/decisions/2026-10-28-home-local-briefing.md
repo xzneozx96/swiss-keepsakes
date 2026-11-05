@@ -84,3 +84,20 @@ Content the designer wrote that nobody has checked. The merchant must confirm ea
   - Food: timeline, menu, signs, dish cards and pick-by-moment.
   - Events: the day strip, weekend first and the other highlight cards.
   - A merged Victorinox and advice ending.
+
+## Amendment 05.11.2026
+
+Source: owner, chat 05.11.2026. This replaces rule 1, "one fixed page order for every visitor", for the sections below the service tiles. The text above stays as it was.
+
+The new rule:
+
+- **Fixed head, always first:** the hero, the map invitation and the service tiles. They never depend on the answers.
+- **Movable sections**, in the default order: see these first (history-culture), stories (no interest), routes (lake-mountains), the food map (food-drink), events (local-activities), the Victorinox showcase (shopping-keepsakes).
+- **Fixed tail, always last:** the ending line with its thread and red dot, then the advice banner.
+- **With answers:** the sections whose interest the guest chose come first, in this interest order: history-culture, food-drink, lake-mountains, shopping-keepsakes, local-activities. The other sections follow in the default order. The stories match no interest, so they never move up. The stay answer does not move sections.
+- Nothing is hidden. A section with no data still draws nothing.
+- The thread of the tail starts from the Victorinox lake blue only when the showcase stands right above it. Otherwise it starts from the separator colour.
+
+The server sends the default order, and so does the first client render. The order changes once after load, when the answers are read. The sections are a keyed list, so React moves them and does not remount them (the food map holds a map instance).
+
+The order lives in `front-end/src/features/home/lib/section-order.ts`.

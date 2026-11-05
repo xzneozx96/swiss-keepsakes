@@ -10,7 +10,7 @@
 
 ## 1. The page
 
-The page follows a first-time visitor's first day in Lucerne. The order is fixed for every visitor. The onboarding answers change only the order of cards inside the sections marked "orders" below. Nothing is hidden, and nothing above the services row depends on the answers. Section titles are the same for every visitor. The page is about 6.4 phone screens long.
+The page follows a first-time visitor's first day in Lucerne. The hero, the map invitation and the service tiles come first and the ending comes last, for every visitor. Between them the sections that match the guest's onboarding interests move up (amendment 05.11.2026 in `docs/decisions/2026-10-28-home-local-briefing.md`). The answers also change the order of cards inside the sections marked "orders" below. Nothing is hidden, and nothing above the services row depends on the answers. Section titles are the same for every visitor. The page is about 6.4 phone screens long.
 
 | # | Title (EN) | Description under the title | What shows | Rules |
 | --- | --- | --- | --- | --- |
@@ -37,6 +37,8 @@ Rules that hold across the page:
 | Stay length (short stay, multi-day) | The routes: short stay or none, walks first. Multi-day, day trips first |
 | Interests (one or more of the five) | The must-visits and the food places. A card with more of the visitor's interests goes first, then a card that fits the stay length, then the curated order. The sort is stable, so with no answers the curated order stays |
 | Skipped or unanswered | The curated order everywhere. The sort pill reads "Sort for my trip" |
+
+Interests also move whole sections: the sections whose interest the guest chose come first, in the canonical interest order, then the rest in the default order (see amendment 05.11.2026 in `docs/decisions/2026-10-28-home-local-briefing.md`). The stay answer does not move sections.
 
 Nothing is hidden by an answer. The server renders the same HTML for everyone, and the client re-orders after load, so the order can change once. The first screen (hero, search, map invitation, services) never changes.
 
@@ -70,7 +72,7 @@ Nothing is hidden by an answer. The server renders the same HTML for everyone, a
 - **No price.** The Victorinox showcase hides prices. The route cards have no price field.
 - **Reduced motion.** No scale animation on tiles and cards, and no animated pill text.
 - **Tests to write.** Playwright `[E4.13][AC24][AC54][AC95]` in EN and DE at 375 px, covering:
-  - The section order is the same for an answered and an unanswered visitor.
+  - The section order below the service tiles follows the answers (amendment 05.11.2026); the head and the ending never change.
   - Nothing above the services row changes with the answers.
   - Each service tile opens a map with at least one place.
   - A multi-day answer puts the day trips first, a short stay puts the walks first.

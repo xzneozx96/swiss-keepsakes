@@ -16,6 +16,7 @@ import { HomeEnding } from '@/features/home/components/home-ending'
 import { HomeHero } from '@/features/home/components/home-hero'
 import { MapInvitation } from '@/features/home/components/map-invitation'
 import { ServiceTiles } from '@/features/home/components/service-tiles'
+import { VictorinoxBlock } from '@/features/home/components/victorinox-section'
 import { serviceTiles } from '@/features/home/lib/service-tiles'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
@@ -209,7 +210,14 @@ describe('[E4.13][AC24][AC54] the hero and the ending', () => {
   it('the ending shows the Victorinox showcase without prices, the thread line, and the advice banner opening the demo form', async () => {
     const items = [{ slug: 'victorinox-swan', name: 'Victorinox Swan', fromLabel: '', price: '', pickupLine: '' }]
 
-    renderAt('/en', <HomeEnding isLoading={false} items={items} />)
+    const ending = (
+      <>
+        <VictorinoxBlock isLoading={false} items={items} />
+        <HomeEnding afterShowcase />
+      </>
+    )
+
+    renderAt('/en', ending)
 
     expect(await screen.findByRole('heading', { name: 'Victorinox' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Swan' })).toHaveAttribute('href', '/en/gifts/victorinox-swan')

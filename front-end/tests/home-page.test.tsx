@@ -1,4 +1,4 @@
-import type { PublicCategory, PublicKeepsakeCard, PublicMapItem, PublicTourCard } from '@sk/api-contract'
+import type { PublicCategory, PublicKeepsakeCard, PublicMapItem, PublicStoryCard, PublicTourCard } from '@sk/api-contract'
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -185,30 +185,80 @@ describe('[E4.13][AC24][AC54] the server HTML of the home', () => {
   })
 })
 
-describe('[E4.13][AC95] the order is the same for every visitor', () => {
-  it('draws the same headings in the same order, and the same links above the rails, with answers saved and without (AC-3)', async () => {
-    const headings = async () => {
-      const { unmount } = render(<RouterProvider router={await buildRouter('/en')} />)
-      await screen.findByRole('link', { name: 'Drinking water' })
-      const names = screen.getAllByRole('heading', { level: 2 }).map(heading => heading.textContent)
-      // The hero, the invitation and the tiles come before the first rail; the answers reorder only the rails.
-      const links = screen.getAllByRole('link').map(link => link.getAttribute('href'))
-      const aboveRails = links.slice(0, links.indexOf('/en/map?category=drinking-water') + 1)
-      unmount()
+describe('[E4.13][AC95] the order follows the guest\'s interests below the tiles', () => {
+  const answerWith = (interests: string[]) => localStorage.setItem('sk.onboarding', JSON.stringify({ v: 1, segment: 'multi_day', interests, answeredAt: '2026-11-04T10:00:00.000Z', dismissedAt: null }))
+  const headings = async () => {
+    const { unmount } = render(<RouterProvider router={await buildRouter('/en')} />)
+    await screen.findByRole('link', { name: 'Drinking water' })
+    await screen.findByText(en['home.victorinox.title'])
+    const names = screen.getAllByRole('heading', { level: 2 }).map(heading => heading.textContent)
+    // The hero, the invitation and the tiles come before the first section; the answers never touch them.
+    const links = screen.getAllByRole('link').map(link => link.getAttribute('href'))
+    const aboveSections = links.slice(0, links.indexOf('/en/map?category=drinking-water') + 1)
+    const thread = document.querySelector('span.h-8.w-px')?.className ?? ''
+    unmount()
 
-      return { names, aboveRails }
-    }
-    const without = await headings()
-    resetAnswersStoreForTests()
-    localStorage.setItem('sk.onboarding', JSON.stringify({ v: 1, segment: 'multi_day', interests: ['food-drink'], answeredAt: '2026-11-04T10:00:00.000Z', dismissedAt: null }))
-    const withAnswers = await headings()
+    return { names, aboveSections, thread }
+  }
+  const title = (key: 'must' | 'routes' | 'food' | 'events') => en[`homePage.${key}.title`]
+  const head = [en['homePage.map.title'], en['homePage.services.title']]
+  // Every movable section needs data to draw: a food category, a dated place and a story.
+  const food: PublicCategory = { ...water, id: id(2), slug: 'food-and-drink', name: { en: 'Food and drink', de: 'Essen und Trinken' }, icon: 'food', showOnHome: false, position: 2 }
+  const eventPin: PublicMapItem = { ...pin, id: id(102), slug: 'organ-concert', title: 'Organ Concert', nextDate: { firstDay: '2090-11-07', lastDay: '2090-11-07', startTime: null, endTime: null } }
+  const story: PublicStoryCard = { id: id(400), slug: 'story-1', title: 'Story 1', excerpt: 'Excerpt', readMinutes: 4, coverKey: null, cover: null, stayTag: 'both', interests: [], categories: [], publishedAt: '2026-11-01T10:00:00.000Z', language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
 
-    expect(without.names.slice(0, 4)).toEqual([en['homePage.map.title'], en['homePage.services.title'], en['homePage.must.title'], en['homePage.routes.title']])
-    expect(withAnswers.names).toEqual(without.names)
-    expect(withAnswers.aboveRails).toEqual(without.aboveRails)
-    expect(without.aboveRails.length).toBeGreaterThan(3)
+  beforeEach(() => {
+    const pins = [pin, mustVisit, eventPin]
+    const categories = [water, food]
+    vi.mocked(loadHomeRead).mockReset().mockImplementation(async lang => ({ pins, categories, tiles: serviceTiles(categories, pins, lang), tours, stories: [story] }))
   })
 
+  it('draws the default order with no answers (AC-1)', async () => {
+    const { names, thread } = await headings()
+
+    expect(names).toEqual([...head, title('must'), en['homePage.stories.title'], title('routes'), title('food'), title('events'), en['home.victorinox.title'], en['home.advice.title']])
+    expect(thread).toContain('#173f52')
+  })
+
+  it('puts the food map first after the tiles for food-drink only (AC-2)', async () => {
+    const without = await headings()
+    resetAnswersStoreForTests()
+    answerWith(['food-drink'])
+    const { names, aboveSections } = await headings()
+
+    expect(names).toEqual([...head, title('food'), title('must'), en['homePage.stories.title'], title('routes'), title('events'), en['home.victorinox.title'], en['home.advice.title']])
+    expect(aboveSections).toEqual(without.aboveSections)
+  })
+
+  it('puts the postcards and the events first for history-culture and local-activities (AC-3)', async () => {
+    answerWith(['local-activities', 'history-culture'])
+    const { names } = await headings()
+
+    expect(names).toEqual([...head, title('must'), title('events'), en['homePage.stories.title'], title('routes'), title('food'), en['home.victorinox.title'], en['home.advice.title']])
+  })
+
+  it('puts the Victorinox showcase first for shopping-keepsakes, and the thread no longer starts from lake blue (AC-4)', async () => {
+    answerWith(['shopping-keepsakes'])
+    const { names, thread } = await headings()
+
+    expect(names).toEqual([...head, en['home.victorinox.title'], title('must'), en['homePage.stories.title'], title('routes'), title('food'), title('events'), en['home.advice.title']])
+    expect(thread).not.toContain('#173f52')
+  })
+
+  it('always sends the default order in the server HTML (AC-5)', async () => {
+    answerWith(['shopping-keepsakes', 'food-drink'])
+    const html = renderToString(<RouterProvider router={await buildRouter('/en')} />)
+    const at = (text: string) => textOf(html).indexOf(text)
+
+    expect(at(title('must'))).toBeGreaterThan(at(en['homePage.services.title']))
+    expect(at(title('must'))).toBeLessThan(at(en['homePage.stories.title']))
+    expect(at(en['homePage.stories.title'])).toBeLessThan(at(title('routes')))
+    expect(at(title('routes'))).toBeLessThan(at(title('food')))
+    expect(at(title('food'))).toBeLessThan(at(title('events')))
+  })
+})
+
+describe('[E4.13][AC95] the head stays put', () => {
   it('opens the map from the invitation and a tile, and search from the pill, without a question first', async () => {
     render(<RouterProvider router={await buildRouter('/en')} />)
 
@@ -300,10 +350,10 @@ describe('[E4.13][AC95] the demo layer is gone from the home', () => {
       expect({ file, hit: readFileSync(file, 'utf8').match(DEMO)?.[0] }).toEqual({ file, hit: undefined })
   })
 
-  it('only the postcards, the routes and the food map read the onboarding answers; the hero, the invitation and the tiles do not (AC-3)', () => {
+  it('only the page order, the postcards, the routes and the food map read the onboarding answers; the hero, the invitation and the tiles do not (AC-3)', () => {
     const readers = homeFiles(join(SRC, 'features/home/components')).filter(file => /onboarding/i.test(readFileSync(file, 'utf8'))).map(file => file.split('/').pop())
 
-    expect(readers.sort()).toEqual(['food-map-section.tsx', 'must-visits-section.tsx', 'routes-section.tsx'])
+    expect(readers.sort()).toEqual(['food-map-section.tsx', 'home-page.tsx', 'must-visits-section.tsx', 'routes-section.tsx'])
     expect(read('routes/_guest/$lang/index.tsx')).not.toMatch(/onboarding/i)
   })
 
