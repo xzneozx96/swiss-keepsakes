@@ -6,12 +6,12 @@ import { zurichDate } from '@sk/domain/dates'
 import { Link } from '@tanstack/react-router'
 import { useId, useMemo, useState } from 'react'
 import { ErrorNotice } from '@/components/error-notice'
-import { MapThumb } from '@/components/map/map-thumb'
 import { useLocale } from '@/contexts/locale-context'
 import { Rail } from '@/features/discovery/components/section'
 import { pinIcon } from '@/features/map/lib/categories'
 
 import { dayParts, eventsSplit, shownDay, whenLine } from '../lib/events'
+import { PhotoPoster, POSTER_TITLE } from './photo-poster'
 import { SectionHeading } from './section-heading'
 
 const PRESS = 'outline-none focus-visible:focus-ring motion-safe:transition-transform motion-safe:active:scale-[0.98]'
@@ -27,61 +27,47 @@ function useEventCopy(today: string) {
 }
 
 /**
- * The "This week" poster: the photo fills the card (the category icon on the lake blue when there is none), a soft dark gradient
- * carries the white type, the day is an outlined number. One event fills the width; in a carousel each card is 288 px so the next peeks.
+ * The "This week" poster: the shared photo poster with the day as an outlined number over the title and the time. One event
+ * fills the width; in a carousel each card is 288 px so the next peeks.
  */
 function Poster({ pin, categories, today, wide }: { pin: EventPin, categories: readonly PublicCategory[], today: string, wide: boolean }) {
   const { language, intlLocale, when } = useEventCopy(today)
   const parts = dayParts(shownDay(pin.nextDate, today), intlLocale)
   const time = when(pin)
   const link = (
-    <Link
-      className={`relative block overflow-hidden rounded-2xl text-start text-white shadow-surface ${wide ? 'w-full' : 'w-[288px]'} ${PRESS}`}
-      params={{ lang: language }}
-      search={placeSearch(pin)}
-      to="/$lang/map"
-    >
-      <MapThumb className={`${wide ? 'aspect-[4/3]' : 'aspect-[4/5]'} w-full`} icon={pinIcon(pin, categories)} iconSize={56} src={pin.photoUrl ?? undefined} />
-      <span aria-hidden className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_20%,rgb(0_0_0/0.55)_55%,rgb(0_0_0/0.85)_100%)]" />
-      <span className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-5">
-        <span className="flex items-end gap-3">
-          <span aria-hidden className="text-[80px] leading-[66px] font-extrabold tracking-[-0.05em] text-transparent tabular-nums [-webkit-text-stroke:1.5px_rgb(255_255_255/0.95)]">{parts.day}</span>
-          <span className="flex flex-col pb-0.5 text-[12px] leading-4 font-semibold tracking-[0.1em] uppercase">
-            <span>{parts.weekdayLong}</span>
-            <span className="text-white/75">{parts.monthShort}</span>
-          </span>
-        </span>
-        <span className="flex flex-col gap-1 border-t border-white/30 pt-3">
-          <span className="font-serif text-[23px] leading-7 font-medium text-balance" lang={pin.language === language ? undefined : pin.language}>{pin.title}</span>
-          {time && <span className="text-[13px] leading-[18px] text-white/85 tabular-nums">{time}</span>}
+    <PhotoPoster icon={pinIcon(pin, categories)} slug={pin.slug} src={pin.photoUrl ?? undefined} wide={wide}>
+      <span className="flex items-end gap-3">
+        <span aria-hidden className="text-[80px] leading-[66px] font-extrabold tracking-[-0.05em] text-transparent tabular-nums [-webkit-text-stroke:1.5px_rgb(255_255_255/0.95)]">{parts.day}</span>
+        <span className="flex flex-col pb-0.5 text-[12px] leading-4 font-semibold tracking-[0.1em] uppercase">
+          <span>{parts.weekdayLong}</span>
+          <span className="text-white/75">{parts.monthShort}</span>
         </span>
       </span>
-    </Link>
+      <span className="flex flex-col gap-1 border-t border-white/30 pt-3">
+        <span className={POSTER_TITLE} lang={pin.language === language ? undefined : pin.language}>{pin.title}</span>
+        {time && <span className="text-[13px] leading-[18px] text-white/85 tabular-nums">{time}</span>}
+      </span>
+    </PhotoPoster>
   )
 
   return wide ? link : <li className="shrink-0 snap-start">{link}</li>
 }
 
+/** "This week" has no visible heading (owner, 05.11.2026); the poster's group or the carousel keeps the name for screen readers. */
 function ThisWeek({ events, categories, today }: { events: EventPin[], categories: readonly PublicCategory[], today: string }) {
   const { t } = useLocale()
-  const headingId = useId()
 
-  return (
-    <div className="flex flex-col gap-2">
-      <h3 className="text-[15px] leading-5 font-semibold" id={headingId}>{t('homePage.events.thisWeek')}</h3>
-      {events.length === 1
-        ? (
-            <div aria-labelledby={headingId} role="group">
-              <Poster categories={categories} pin={events[0]!} today={today} wide />
-            </div>
-          )
-        : (
-            <Rail label={t('homePage.events.thisWeek')}>
-              {events.map(pin => <Poster key={pin.id} categories={categories} pin={pin} today={today} wide={false} />)}
-            </Rail>
-          )}
-    </div>
-  )
+  return events.length === 1
+    ? (
+        <div aria-label={t('homePage.events.thisWeek')} role="group">
+          <Poster categories={categories} pin={events[0]!} today={today} wide />
+        </div>
+      )
+    : (
+        <Rail label={t('homePage.events.thisWeek')}>
+          {events.map(pin => <Poster key={pin.id} categories={categories} pin={pin} today={today} wide={false} />)}
+        </Rail>
+      )
 }
 
 /** "Coming up": a timeline with an italic month marker, no photos, and "See all on the map" only when more than three events are ahead. */
@@ -137,12 +123,9 @@ function ComingUp({ events, seeAll, today }: { events: EventPin[], seeAll: boole
 function EventsSkeleton() {
   return (
     <div aria-hidden className="flex flex-col gap-4" data-skeleton="events">
-      <div className="flex flex-col gap-2">
-        <Skeleton className="h-5 w-24 rounded-md" />
-        <div className="flex aspect-[4/3] flex-col justify-end gap-3 rounded-2xl bg-surface p-5 shadow-surface">
-          <Skeleton className="h-16 w-20 rounded-lg" />
-          <Skeleton className="h-7 w-3/4 rounded-md" />
-        </div>
+      <div className="flex aspect-[4/3] flex-col justify-end gap-3 rounded-2xl bg-surface p-5 shadow-surface">
+        <Skeleton className="h-16 w-20 rounded-lg" />
+        <Skeleton className="h-7 w-3/4 rounded-md" />
       </div>
       <div className="flex flex-col gap-3 rounded-2xl bg-surface p-4 shadow-surface">
         <Skeleton className="h-5 w-24 rounded-md" />

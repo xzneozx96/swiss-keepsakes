@@ -1,40 +1,13 @@
 import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
-import { act, configure, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { LocaleProvider } from '@/contexts/locale-context'
 import { FoodMapSection } from '@/features/home/components/food-map-section'
-import { fetchMapCategories, fetchMapPin, fetchMapPins } from '@/features/map/api/map-client'
-import { resetAnswersStoreForTests } from '@/features/onboarding/lib/answers-store'
 import { en } from '@/i18n/en'
-import { FakeMap, resetFakeMaps } from './support/fake-maplibre'
-
-configure({ asyncUtilTimeout: 5000 })
-
-vi.mock('maplibre-gl', async () => (await import('./support/fake-maplibre')).fakeMaplibre)
-vi.mock('maplibre-gl/dist/maplibre-gl.css', () => ({}))
-vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.mjs' }))
-vi.mock('@/lib/api-mode', () => ({ apiEnabled: true }))
-vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: vi.fn(), fetchMapCategories: vi.fn(), fetchMapPin: vi.fn() }))
-
-/** The section is near the viewport as soon as it is watched. */
-class NearObserver {
-  constructor(private callback: IntersectionObserverCallback) {}
-
-  observe() {
-    this.callback([{ isIntersecting: true } as IntersectionObserverEntry], this as unknown as IntersectionObserver)
-  }
-
-  unobserve() {}
-  disconnect() {}
-  takeRecords() {
-    return []
-  }
-}
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 
@@ -46,8 +19,8 @@ function pin(n: number, title: string, categoryIds: string[], extra: Partial<Pub
   return {
     id: id(100 + n),
     slug: `pin-${n}`,
-    latitude: 47.05 + n * 0.01,
-    longitude: 8.3 + n * 0.01,
+    latitude: 47.05,
+    longitude: 8.3,
     title,
     language: 'en',
     categoryIds,
@@ -56,8 +29,8 @@ function pin(n: number, title: string, categoryIds: string[], extra: Partial<Pub
     nextDate: null,
     hasMainStory: false,
     mainStorySlug: null,
-    photoUrl: null,
-    photoVariants: [],
+    photoUrl: `https://img.example/${n}-320.webp`,
+    photoVariants: [{ width: 320, url: `https://img.example/${n}-320.webp` }, { width: 640, url: `https://img.example/${n}-640.webp` }],
     mustVisit: false,
     tip: '',
     ...extra,
@@ -69,140 +42,103 @@ const food = category(2, 'food-and-drink', 'Food and drink', null, 'cafe')
 const bakeries = category(3, 'bakeries', 'Bakeries', food.id)
 const categories = [walks, food, bakeries]
 
-const bridge = pin(1, 'Chapel Bridge', [walks.id], { interests: ['history-culture'] })
-const cafe = pin(2, 'Cafe Heini', [food.id])
-const bakery = pin(3, 'Baeckerei Weinmarkt', [bakeries.id, food.id], { interests: ['food-drink'], photoUrl: 'https://img.example/bakery.webp' })
-const pins = [bridge, cafe, bakery]
+const heini = pin(1, 'Café Heini', [food.id], { tip: 'Order the Luzerner Lebkuchen with a café crème by the window.' })
+const bridge = pin(2, 'Chapel Bridge', [walks.id])
+const weinmarkt = pin(3, 'Bäckerei Weinmarkt', [bakeries.id, food.id])
+const market = pin(4, 'Weekly market', [food.id], { nextDate: { firstDay: '2090-11-07', lastDay: '2090-11-07', startTime: null, endTime: null } })
+const pickwick = pin(5, 'Mr. Pickwick Pub', [food.id], { photoUrl: null, photoVariants: [] })
+const galliker = pin(6, 'Wirtshaus Galliker', [food.id])
+const rathaus = pin(7, 'Rathaus Brauerei', [food.id])
+const neubad = pin(8, 'Neubad', [food.id])
+const pins = [heini, bridge, weinmarkt, market, pickwick, galliker, rathaus, neubad]
 
 interface Read { pins?: PublicMapItem[] | null, categories?: PublicCategory[] | null }
 
 function renderSection(read: Read = { pins, categories }, onRetry = () => {}) {
-  const root = createRootRoute({
-    component: () => (
-      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-        <LocaleProvider>
-          <Outlet />
-        </LocaleProvider>
-      </QueryClientProvider>
-    ),
-  })
+  const root = createRootRoute({ component: () => (
+    <LocaleProvider>
+      <Outlet />
+    </LocaleProvider>
+  ) })
   const home = createRoute({ getParentRoute: () => root, path: '/$lang', component: () => (
     <div data-testid="page">
       <FoodMapSection categories={read.categories} pins={read.pins} onRetry={onRetry} />
     </div>
   ) })
-  const others = ['map', 'stories/$slug'].map(path => createRoute({ getParentRoute: () => root, path: `/$lang/${path}`, component: () => null }))
-  const router = createRouter({ routeTree: root.addChildren([home, ...others]), history: createMemoryHistory({ initialEntries: ['/en'] }) })
+  const map = createRoute({ getParentRoute: () => root, path: '/$lang/map', component: () => null })
+  const router = createRouter({ routeTree: root.addChildren([home, map]), history: createMemoryHistory({ initialEntries: ['/en'] }) })
 
   render(<RouterProvider router={router} />)
 }
 
-/** The map draws its style and first view: the Categories and List buttons appear. */
-async function drawn(read?: Read) {
-  renderSection(read)
-  await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
-  act(() => FakeMap.instances[0]!.emit('load'))
-  act(() => FakeMap.instances[0]!.emit('idle'))
-  await screen.findByRole('button', { name: /^Categories/ })
-}
+const section = async () => (await screen.findByRole('heading', { level: 2, name: en['homePage.food.title'] })).closest('section')!
+const rail = () => screen.getByRole('region', { name: en['homePage.food.more'] })
+const railNames = () => within(rail()).getAllByRole('heading', { level: 3 }).map(heading => heading.textContent)
 
-const answer = (segment: 'short_stay' | 'multi_day' | null, interests: string[]) => localStorage.setItem('sk.onboarding', JSON.stringify({ v: 1, segment, interests, answeredAt: '2026-11-04T10:00:00.000Z', dismissedAt: null }))
+describe('[E4.13][AC54][AC95] the food section (owner, 05.11.2026)', () => {
+  it('shows the newest place as the poster with its tip, the next four undated places in the rail, and no price', async () => {
+    renderSection()
+    const box = await section()
+    const poster = within(box).getAllByRole('link')[0]!
 
-const listRows = () => within(screen.getByRole('heading', { name: /places?$/ }).parentElement!).getAllByRole('button').map(row => row.textContent)
-
-beforeEach(() => {
-  localStorage.clear()
-  resetAnswersStoreForTests()
-  resetFakeMaps()
-  vi.stubGlobal('IntersectionObserver', NearObserver)
-  window.scrollTo = vi.fn()
-  window.HTMLElement.prototype.scrollTo = vi.fn()
-  vi.mocked(fetchMapPins).mockReset().mockResolvedValue(pins)
-  vi.mocked(fetchMapCategories).mockReset().mockResolvedValue(categories)
-  vi.mocked(fetchMapPin).mockReset().mockResolvedValue({ id: cafe.id } as never)
-})
-
-describe('[E4.13][AC54][AC95] the food map section', () => {
-  it('draws the heading and a map with cooperative gestures and no tab-bar space', async () => {
-    await drawn()
-
-    expect(screen.getByRole('heading', { level: 2, name: en['homePage.food.title'] })).toBeInTheDocument()
-    expect(FakeMap.instances[0]!.options.cooperativeGestures).toBe(true)
-    expect(document.body.textContent).not.toMatch(/CHF|Fr\./)
+    expect(poster).toHaveTextContent('Café Heini')
+    expect(poster).toHaveTextContent(heini.tip)
+    expect(poster).toHaveAttribute('href', '/en/map?place=pin-1')
+    expect(poster.querySelector('.line-clamp-2')).toHaveTextContent(heini.tip)
+    // The poster takes the sharp 640 px copy, not the small one.
+    expect(poster.querySelector('img')).toHaveAttribute('src', 'https://img.example/1-640.webp')
+    // The bridge is not food, the market has a date, and the sixth food place is beyond the five.
+    expect(railNames()).toEqual(['Bäckerei Weinmarkt', 'Mr. Pickwick Pub', 'Wirtshaus Galliker', 'Rathaus Brauerei'])
+    expect(box.textContent).not.toMatch(/Chapel Bridge|Weekly market|Neubad|CHF|Fr\./)
+    expect(within(rail()).getByRole('link', { name: /Bäckerei Weinmarkt/ })).toHaveTextContent('Bakeries')
   })
 
-  it('aC-3 holds the food and drink pins and their sub-categories only in the list, and Categories reaches the others', async () => {
-    await drawn()
-    await userEvent.click(screen.getByRole('button', { name: en['map.view.list'] }))
+  it('opens each place on the map and the button opens the map filtered to food and drink', async () => {
+    renderSection()
+    await section()
 
-    expect(screen.getByRole('heading', { name: '2 places' })).toBeInTheDocument()
-    expect(listRows().join('|')).toContain('Cafe Heini')
-    expect(listRows().join('|')).toContain('Baeckerei Weinmarkt')
-    expect(listRows().join('|')).not.toContain('Chapel Bridge')
-
-    await userEvent.click(screen.getByRole('button', { name: /^Categories/ }))
-    const dialog = await screen.findByRole('dialog')
-
-    // The sheet opens with food and drink alone chosen; ticking Walks adds the other pins.
-    expect(within(dialog).getByRole<HTMLInputElement>('checkbox', { name: /Food and drink/ }).checked).toBe(true)
-    expect(within(dialog).getByRole<HTMLInputElement>('checkbox', { name: /Walks/ }).checked).toBe(false)
-    await userEvent.click(within(dialog).getByRole('checkbox', { name: /Walks/ }))
-    await userEvent.click(within(dialog).getByRole('button', { name: /^Show 3 places/ }))
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    await userEvent.click(screen.getByRole('button', { name: en['map.view.list'] }))
-
-    expect(listRows().join('|')).toContain('Chapel Bridge')
+    expect(within(rail()).getByRole('link', { name: /Mr. Pickwick Pub/ })).toHaveAttribute('href', '/en/map?place=pin-5')
+    expect(screen.getByRole('link', { name: en['homePage.food.seeAll'] })).toHaveAttribute('href', '/en/map?category=food-and-drink')
   })
 
-  it('aC-4 puts the pins that match the answers first and keeps the count', async () => {
-    answer(null, ['food-drink'])
-    await drawn()
-    await userEvent.click(screen.getByRole('button', { name: en['map.view.list'] }))
+  it('shows the category icon for a place without a photo', async () => {
+    renderSection()
+    await section()
+    const card = within(rail()).getByRole('link', { name: /Mr. Pickwick Pub/ })
 
-    const rows = listRows()
-
-    expect(screen.getByRole('heading', { name: '2 places' })).toBeInTheDocument()
-    expect(rows[0]).toContain('Baeckerei Weinmarkt')
-    expect(rows[1]).toContain('Cafe Heini')
-  })
-
-  it('aC-4 orders by the saved interests first and the saved stay second, as the postcards do, once hydrated', async () => {
-    const shortStay = pin(7, 'Short Stay Cafe', [food.id], { stayTag: 'short_stay' })
-    const multiDay = pin(8, 'Multi Day Bistro', [food.id], { stayTag: 'multi_day', interests: ['food-drink'] })
-
-    answer('short_stay', ['food-drink'])
-    await drawn({ pins: [shortStay, multiDay], categories })
-    await userEvent.click(screen.getByRole('button', { name: en['map.view.list'] }))
-
-    expect(listRows()[0]).toContain('Multi Day Bistro')
-    expect(listRows()[1]).toContain('Short Stay Cafe')
-  })
-
-  it('aC-6 shows the category icon in the thumbnail of a card for a pin without a photo, at the same size as a photo', async () => {
-    await drawn()
-    // The first card opens with the section (the answers put no pin first here, so it is Cafe Heini: no photo, so the coffee icon).
-    const card = await screen.findByRole('article', { name: 'Cafe Heini' })
-    const thumb = card.querySelector('[data-pin-icon]')
-
-    expect(thumb).toHaveAttribute('data-pin-icon', 'cafe')
+    expect(card.querySelector('[data-pin-icon="cafe"]')).not.toBeNull()
     expect(card.querySelector('img')).toBeNull()
-    expect(thumb!.closest('.size-\\[84px\\]')).not.toBeNull()
   })
 
-  it('aC-5a is not drawn when the category is gone', async () => {
-    renderSection({ pins, categories: [walks] })
-    await waitFor(() => expect(screen.getByTestId('page')).toBeEmptyDOMElement())
+  it('shows the kind of place on the poster when the place has no tip', async () => {
+    renderSection({ pins: [weinmarkt], categories })
+    const box = await section()
 
-    expect(FakeMap.instances).toHaveLength(0)
+    expect(within(box).getAllByRole('link')[0]).toHaveTextContent('Bakeries')
   })
 
-  it('reads nothing itself: it draws from the pins and categories it is given, and shows a skeleton while there are none yet', async () => {
+  it('shows the poster alone with one place, then the button', async () => {
+    renderSection({ pins: [heini, bridge], categories })
+    const box = await section()
+
+    expect(screen.queryByRole('region', { name: en['homePage.food.more'] })).toBeNull()
+    expect(within(box).getAllByRole('link').map(link => link.getAttribute('href'))).toEqual(['/en/map?place=pin-1', '/en/map?category=food-and-drink'])
+  })
+
+  it('is not drawn without the category, without a food place, or with dated food places only', async () => {
+    for (const read of [{ pins, categories: [walks] }, { pins: [bridge], categories }, { pins: [market], categories }]) {
+      renderSection(read)
+      await waitFor(() => expect(screen.getByTestId('page')).toBeEmptyDOMElement())
+      cleanup()
+    }
+  })
+
+  it('shows a skeleton of the poster and the rail while the map list loads', async () => {
     renderSection({})
+    await section()
 
-    expect(await screen.findByRole('heading', { name: en['homePage.food.title'] })).toBeInTheDocument()
     expect(document.querySelector('[data-skeleton="food-map"]')).not.toBeNull()
-    expect(fetchMapPins).not.toHaveBeenCalled()
-    expect(fetchMapCategories).not.toHaveBeenCalled()
+    expect(screen.queryByRole('link', { name: en['homePage.food.seeAll'] })).toBeNull()
   })
 
   it('shows its own error with Try again when the read failed, and Try again asks the page to read again', async () => {
@@ -213,12 +149,5 @@ describe('[E4.13][AC54][AC95] the food map section', () => {
     await userEvent.click(screen.getByRole('button', { name: en['errorNotice.retry'] }))
 
     expect(onRetry).toHaveBeenCalledTimes(1)
-  })
-
-  it('aC-5b is drawn as before when a merchant renamed the category', async () => {
-    await drawn({ pins, categories: [walks, { ...food, name: { en: 'Restaurants', de: 'Restaurants' } }, bakeries] })
-
-    expect(screen.getByRole('heading', { level: 2, name: en['homePage.food.title'] })).toBeInTheDocument()
-    expect(FakeMap.instances).toHaveLength(1)
   })
 })

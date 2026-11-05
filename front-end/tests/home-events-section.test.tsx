@@ -100,6 +100,8 @@ describe('[E4.13][AC54][AC95] the events section', () => {
     expect(within(week).getAllByRole('link').map(link => link.textContent)).toEqual([expect.stringContaining('Running'), expect.stringContaining('Soon')])
     expect(within(coming).getAllByRole('link').map(link => link.textContent)).toEqual([expect.stringContaining('Later')])
     expect(screen.getByRole('heading', { name: title })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: en['homePage.events.thisWeek'] })).toBeNull()
+    expect(screen.getByRole('heading', { name: en['homePage.events.comingUp'] })).toBeInTheDocument()
   })
 
   it('shows three later events with no See all link (AC-2)', async () => {
@@ -147,6 +149,10 @@ describe('[E4.13][AC54][AC95] the events section', () => {
 
     expect(solo.className).toContain('w-full')
     expect(solo.closest('li')).toBeNull()
+    // No visible "This week" heading (owner, 05.11.2026); the poster's group keeps the name for screen readers.
+    expect(screen.getByRole('group', { name: en['homePage.events.thisWeek'] })).toContainElement(solo)
+    expect(screen.queryByRole('heading', { name: en['homePage.events.thisWeek'] })).toBeNull()
+    expect(screen.queryByText(en['homePage.events.thisWeek'])).toBeNull()
   })
 
   it('makes a carousel of snap cards for three events this week (AC-5)', async () => {

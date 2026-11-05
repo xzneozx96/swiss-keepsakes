@@ -1,231 +1,127 @@
 import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
 
-import { Skeleton } from '@heroui/react'
-import { useQuery } from '@tanstack/react-query'
-import { useHydrated } from '@tanstack/react-router'
-import { useId, useMemo, useState } from 'react'
+import { buttonVariants, Skeleton } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
+import { useId } from 'react'
 
 import { ErrorNotice } from '@/components/error-notice'
-import { LazyMapView } from '@/components/map/lazy-map-view'
-import { MapControls } from '@/components/map/map-controls'
-import { PhotoCluster, PhotoPin } from '@/components/map/pin-faces'
-import { PinLayer } from '@/components/map/pin-layer'
+import { MapThumb } from '@/components/map/map-thumb'
 import { useLocale } from '@/contexts/locale-context'
-import { mapQueries } from '@/features/map/api/queries'
-import { CategoriesSheet } from '@/features/map/components/categories-sheet'
-import { MapPills } from '@/features/map/components/map-pills'
-import { PinList } from '@/features/map/components/pin-list'
-import { PlaceCardRow } from '@/features/map/components/place-card'
-import { PlaceSheet } from '@/features/map/components/place-sheet'
-import { isLit, keepFiltered, pinCategoryNames, pinIcon } from '@/features/map/lib/categories'
-import { CARD_ROW_HEIGHT, CONTROLS } from '@/features/map/lib/layout'
-import { useOnboardingAnswers } from '@/features/onboarding/hooks/use-onboarding-answers'
-import { track } from '@/lib/analytics/track'
-import { apiEnabled } from '@/lib/api-mode'
-import { foodMapSelection } from '../lib/food-map'
+import { Rail } from '@/features/discovery/components/section'
+import { pinCategoryNames, pinIcon } from '@/features/map/lib/categories'
+import { pickVariant, widestVariant } from '@/lib/pick-variant'
+import { newestFoodPlaces } from '../lib/food-map'
+import { PhotoPoster, POSTER_TITLE } from './photo-poster'
 import { SectionHeading } from './section-heading'
 
-type View = 'map' | 'list'
+const PRESS = 'outline-none focus-visible:focus-ring motion-safe:transition-transform motion-safe:active:scale-[0.98]'
 
-const NO_ANSWERS = { stay: null, interests: [] }
-const LUCERNE: [number, number] = [8.3068, 47.0535]
-const MAP_VIEW = { center: LUCERNE, zoom: 15.2, minZoom: 12, maxZoom: 18.5 }
-/** The frame's height (px), the same before the map loads, so the page does not jump (home-design.md section 4: 548 px on the phone). */
-const FRAME = 'h-[548px]'
-/** The embedded map ends where the page goes on: no tab bar under it, so the card row sits 8 px above its foot. */
-const CARD_ROW_BOTTOM = 8
+/** A card's photo: the 640 px copy (sharp at full width on a phone), else the widest, else the small `photoUrl`; undefined shows the category icon. */
+const cardPhoto = (pin: PublicMapItem) => (pickVariant(pin.photoVariants, 640) ?? widestVariant(pin.photoVariants))?.url ?? pin.photoUrl ?? undefined
+
+/** The place's search on the map: its slug, or the map as it is when it has none. */
+const placeSearch = (pin: PublicMapItem) => pin.slug ? { place: pin.slug } : {}
+
+/** The newest place as the shared photo poster: the name and, under it, the local tip in at most two lines (the kind of place when there is no tip). */
+function Highlight({ pin, categories }: { pin: PublicMapItem, categories: readonly PublicCategory[] }) {
+  const { language } = useLocale()
+  const other = pin.language === language ? undefined : pin.language
+  const kind = pinCategoryNames(pin, categories, language).join(', ')
+
+  return (
+    <PhotoPoster wide icon={pinIcon(pin, categories)} slug={pin.slug} src={cardPhoto(pin)}>
+      <span className="flex flex-col gap-1">
+        <span className={POSTER_TITLE} lang={other}>{pin.title}</span>
+        {pin.tip
+          ? <span className="line-clamp-2 text-sm leading-5 text-white/85" lang={other}>{pin.tip}</span>
+          : kind && <span className="text-sm leading-5 text-white/85">{kind}</span>}
+      </span>
+    </PhotoPoster>
+  )
+}
+
+/** A rail card in the guide's caption style: the 4:5 photo on top, the serif name and the kind of place under it. */
+function PlaceCard({ pin, categories }: { pin: PublicMapItem, categories: readonly PublicCategory[] }) {
+  const { language } = useLocale()
+  const other = pin.language === language ? undefined : pin.language
+  const kind = pinCategoryNames(pin, categories, language).join(', ')
+
+  return (
+    <li className="flex shrink-0 snap-start">
+      <Link className={`flex w-[200px] flex-col gap-2.5 rounded-2xl text-start ${PRESS}`} params={{ lang: language }} search={placeSearch(pin)} to="/$lang/map">
+        <MapThumb className="aspect-[4/5] w-full rounded-2xl" icon={pinIcon(pin, categories)} iconSize={40} src={cardPhoto(pin)} />
+        <span className="flex flex-col gap-0.5 px-0.5">
+          <h3 className="font-serif text-card-title text-balance hyphens-auto" lang={other}>{pin.title}</h3>
+          {kind && <span className="text-label text-muted">{kind}</span>}
+        </span>
+      </Link>
+    </li>
+  )
+}
+
+/** The poster box with a title and two tip lines, then two rail cards with a photo box and two caption lines. */
+function FoodSkeleton() {
+  return (
+    <div aria-hidden className="flex flex-col gap-4" data-skeleton="food-map">
+      <div className="flex aspect-[4/3] flex-col justify-end gap-2 rounded-2xl bg-surface p-5 shadow-surface">
+        <Skeleton className="h-7 w-3/4 rounded-md" />
+        <Skeleton className="h-4 w-full rounded-md" />
+        <Skeleton className="h-4 w-1/2 rounded-md" />
+      </div>
+      <div className="-mx-4 flex gap-3 overflow-hidden px-4">
+        {Array.from({ length: 2 }, (_, index) => (
+          <div key={index} className="flex w-[200px] shrink-0 flex-col gap-2.5">
+            <Skeleton className="aspect-[4/5] w-full rounded-2xl" />
+            <Skeleton className="h-6 w-3/4 rounded-md" />
+            <Skeleton className="h-4 w-1/2 rounded-md" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 /**
- * "Eat and drink like a local": the shared guest map inside the home, filtered to the food and drink category and its
- * sub-categories on load. Its pins, Categories sheet, List, card row and place sheet are the guest map's own components
- * (docs/ux/home-design.md section 4); the other categories are one tap away in the sheet and the guest map is not linked.
- * The map draws only near the viewport (`LazyMapView`) and with cooperative gestures, so one finger scrolls the page.
- * The guest's saved answers order the pins and the cards (interests first, then the stay, as the postcards are) and hide none;
- * the server draws the server order and the answers apply once the page is hydrated. Not drawn when the category is not there. No price anywhere.
- * The pins and categories are the home loader's read of the map list (undefined while it loads, null when it failed).
+ * "Eat and drink like a local" (owner, 05.11.2026; docs/ux/home-design.md section 4): the five food and drink places added to the
+ * map most recently, newest first in the server's order and not sorted by the guest's answers. The newest is a photo poster with
+ * its tip, the next four a rail of cards, then a button to the guest map filtered to food and drink. One place shows the poster
+ * alone. Not drawn when the category is not there or holds no undated place. The pins and categories are the home loader's read
+ * of the map list (undefined while it loads, null when it failed). A card opens the map with that place; no price anywhere.
  */
-export function FoodMapSection({ pins, categories, onRetry }: { pins: readonly PublicMapItem[] | null | undefined, categories: PublicCategory[] | null | undefined, onRetry: () => void }) {
-  const { t } = useLocale()
+export function FoodMapSection({ pins, categories, onRetry }: { pins: readonly PublicMapItem[] | null | undefined, categories: readonly PublicCategory[] | null | undefined, onRetry: () => void }) {
+  const { t, language } = useLocale()
   const headingId = useId()
-  const hydrated = useHydrated()
-  const stored = useOnboardingAnswers()
-  const prefs = hydrated ? stored : NO_ANSWERS
   const isFailed = pins === null || categories === null
-  const isPending = pins === undefined || categories === undefined
-  const selection = useMemo(() => pins && categories ? foodMapSelection(pins, categories, prefs) : undefined, [pins, categories, prefs])
+  const selection = pins && categories ? newestFoodPlaces(pins, categories) : undefined
 
-  if (!isPending && !isFailed && !selection)
+  if (pins && categories && !selection)
     return null
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-3 pt-4">
+    <section aria-labelledby={headingId} className="flex flex-col gap-3">
       <SectionHeading body={t('homePage.food.body')} id={headingId} title={t('homePage.food.title')} />
       {isFailed
         ? <ErrorNotice compact message={t('homePage.food.failed')} onRetry={onRetry} />
         : !selection || !categories
-            ? <Skeleton className={`${FRAME} w-full rounded-2xl`} data-skeleton="food-map" />
-            : <FoodMap categories={categories} defaultChosen={selection.category.id} ranked={selection.ranked} />}
+            ? <FoodSkeleton />
+            : (
+                <div className="flex flex-col gap-4">
+                  <Highlight categories={categories} pin={selection.highlight} />
+                  {selection.more.length > 0 && (
+                    <Rail label={t('homePage.food.more')}>
+                      {selection.more.map(pin => <PlaceCard key={pin.id} categories={categories} pin={pin} />)}
+                    </Rail>
+                  )}
+                  <Link
+                    className={`${buttonVariants({ variant: 'secondary', size: 'lg', fullWidth: true })} transition-transform active:scale-[0.98]`}
+                    params={{ lang: language }}
+                    search={{ category: selection.category.slug }}
+                    to="/$lang/map"
+                  >
+                    {t('homePage.food.seeAll')}
+                  </Link>
+                </div>
+              )}
     </section>
-  )
-}
-
-/** The map, the list over it, the card row and the sheets: the guest map screen's parts in a frame of the home's own size. */
-function FoodMap({ categories, ranked, defaultChosen }: { categories: PublicCategory[], ranked: PublicMapItem[], defaultChosen: string }) {
-  const { t, language } = useLocale()
-  // Undefined means the section's own filter (food and drink); the sheet's choice replaces it, and an empty choice means All.
-  const [picked, setPicked] = useState<string[]>()
-  const [view, setView] = useState<View>('map')
-  const [selectedId, setSelectedId] = useState<string>()
-  // The first card opens with the section, as on the guest map; closing it keeps it closed until a filter or a pin opens one again.
-  const [closed, setClosed] = useState(false)
-  const [filterOpen, setFilterOpen] = useState(false)
-  const [moreOpen, setMoreOpen] = useState(false)
-  const chosen = picked ?? [defaultChosen]
-  const filter = { chosen, datedOnly: false }
-  const kept = keepFiltered(ranked, filter, categories)
-  const dimmedIds = new Set(ranked.filter(pin => !isLit(pin, filter, categories)).map(pin => pin.id))
-  const located = ranked.map(pin => ({ ...pin, coordinates: [pin.longitude, pin.latitude] as [number, number] }))
-  const litIds = new Set(kept.map(pin => pin.id))
-  const openId = view === 'map' && !closed ? (selectedId !== undefined && litIds.has(selectedId) ? selectedId : kept[0]?.id) : undefined
-  const openPin = openId ? ranked.find(pin => pin.id === openId) : undefined
-  const detail = useQuery({ ...mapQueries.pin(openId ?? '', language), enabled: apiEnabled && openId !== undefined })
-  const index = openPin ? kept.findIndex(pin => pin.id === openPin.id) : -1
-  const insets = { top: CONTROLS, bottom: openId ? CARD_ROW_BOTTOM + CARD_ROW_HEIGHT + 8 : 0 }
-  const places = t(kept.length === 1 ? 'map.places.one' : 'map.places.other', { count: kept.length })
-
-  // Every way a guest opens a pin counts for analytics once (ADR-032), unless it is the card already open.
-  function select(id: string) {
-    if (id !== openId)
-      track('pin_open', { pageType: 'place', contentId: id, language })
-    setClosed(false)
-    setSelectedId(id)
-  }
-
-  // A pin tap or a list row moves focus to the card's title; a swipe leaves focus alone.
-  function openCard(id: string) {
-    select(id)
-    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-card="${id}"] h2`)?.focus({ preventScroll: true }))
-  }
-
-  function closeCard() {
-    const id = openId
-
-    setClosed(true)
-    setMoreOpen(false)
-    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-pin-return="${id}"]`)?.focus())
-  }
-
-  function applyFilter(next: string[]) {
-    setPicked(next)
-    setClosed(false)
-    setSelectedId(keepFiltered(ranked, { chosen: next, datedOnly: false }, categories)[0]?.id)
-    setFilterOpen(false)
-    setMoreOpen(false)
-    setView('map')
-  }
-
-  return (
-    <div className="relative overflow-hidden rounded-2xl">
-      <LazyMapView
-        cooperativeGestures
-        className={FRAME}
-        credits={view === 'map'}
-        inert={view === 'list'}
-        insets={insets}
-        label={t('homePage.food.title')}
-        overlay={(
-          <>
-            <MapPills
-              chosenCount={chosen.length}
-              dataPending={false}
-              hasPins={ranked.length > 0}
-              view={view}
-              onFilter={() => setFilterOpen(true)}
-              onView={() => setView(view === 'map' ? 'list' : 'map')}
-            />
-            {view === 'map' && <MapControls />}
-          </>
-        )}
-        tabBarSpace={false}
-        view={MAP_VIEW}
-      >
-        <PinLayer
-          followSelected
-          dimmedIds={dimmedIds}
-          pins={located}
-          renderCluster={(members, zoomIn) => <PhotoCluster count={members.length} icons={members.slice(0, 2).map(member => pinIcon(member, categories))} dimmed={members.every(member => dimmedIds.has(member.id))} onPress={zoomIn} />}
-          renderPin={(pin, state) => (
-            <PhotoPin
-              dimmed={state.dimmed}
-              emphasized={!state.dimmed}
-              icon={pinIcon(pin, categories)}
-              id={pin.id}
-              label={[pin.title, state.dimmed && t('map.pin.dimmed')].filter(Boolean).join(', ')}
-              photoSrc={pin.photoUrl ?? undefined}
-              selected={state.selected}
-              title={pin.title}
-              onPress={state.select}
-            />
-          )}
-          selectedId={openId}
-          onSelect={id => litIds.has(id) && openCard(id)}
-        />
-        {openId && (
-          <PlaceCardRow
-            bottom={CARD_ROW_BOTTOM}
-            extrasOf={pin => ({
-              categories: pinCategoryNames(pin, categories, language),
-              ...(pin.id === openId && detail.data ? { mapsLink: detail.data.mapsLink } : {}),
-            })}
-            iconOf={pin => pinIcon(pin, categories)}
-            photoOf={pin => pin.photoUrl ?? undefined}
-            pins={kept}
-            selectedId={openId}
-            onClose={closeCard}
-            onMore={() => setMoreOpen(true)}
-            onSelect={select}
-          />
-        )}
-      </LazyMapView>
-
-      {view === 'list' && (
-        <div className="absolute inset-0 z-[8] overflow-y-auto bg-background px-4 pt-[76px] pb-4">
-          <h3 className="pb-2 text-card-title font-semibold">{places}</h3>
-          <PinList
-            categories={categories}
-            pins={kept}
-            onOpen={(id) => {
-              setView('map')
-              openCard(id)
-            }}
-          />
-        </div>
-      )}
-
-      {moreOpen && openPin && (
-        <PlaceSheet
-          detail={detail.data}
-          failed={detail.isError}
-          isOpen
-          item={openPin}
-          position={{ index, count: kept.length }}
-          onClose={() => setMoreOpen(false)}
-          onRetry={() => void detail.refetch()}
-          onStep={delta => kept[index + delta] && select(kept[index + delta]!.id)}
-          onStoryClick={() => track('pin_to_story_click', { pageType: 'place', contentId: openPin.id, language })}
-          onOutboundClick={() => track('outbound_click', { pageType: 'place', contentId: openPin.id, language })}
-        />
-      )}
-
-      {filterOpen && (
-        <CategoriesSheet
-          categories={categories}
-          chosen={chosen}
-          pins={ranked}
-          onApply={applyFilter}
-          onClose={() => setFilterOpen(false)}
-        />
-      )}
-    </div>
   )
 }

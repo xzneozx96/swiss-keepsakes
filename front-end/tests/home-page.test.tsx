@@ -202,13 +202,14 @@ describe('[E4.13][AC95] the order follows the guest\'s interests below the tiles
   }
   const title = (key: 'must' | 'routes' | 'food' | 'events') => en[`homePage.${key}.title`]
   const head = [en['homePage.map.title'], en['homePage.services.title']]
-  // Every movable section needs data to draw: a food category, a dated place and a story.
-  const food: PublicCategory = { ...water, id: id(2), slug: 'food-and-drink', name: { en: 'Food and drink', de: 'Essen und Trinken' }, icon: 'food', showOnHome: false, position: 2 }
+  // Every movable section needs data to draw: a food category with a place, a dated place and a story.
+  const food: PublicCategory = { ...water, id: id(2), slug: 'food-and-drink', name: { en: 'Food and drink', de: 'Essen und Trinken' }, icon: 'restaurant', showOnHome: false, position: 2 }
   const eventPin: PublicMapItem = { ...pin, id: id(102), slug: 'organ-concert', title: 'Organ Concert', nextDate: { firstDay: '2090-11-07', lastDay: '2090-11-07', startTime: null, endTime: null } }
+  const foodPin: PublicMapItem = { ...pin, id: id(103), slug: 'cafe-heini', title: 'Café Heini', categoryIds: [food.id] }
   const story: PublicStoryCard = { id: id(400), slug: 'story-1', title: 'Story 1', excerpt: 'Excerpt', readMinutes: 4, coverKey: null, cover: null, stayTag: 'both', interests: [], categories: [], publishedAt: '2026-11-01T10:00:00.000Z', language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
 
   beforeEach(() => {
-    const pins = [pin, mustVisit, eventPin]
+    const pins = [pin, mustVisit, eventPin, foodPin]
     const categories = [water, food]
     vi.mocked(loadHomeRead).mockReset().mockImplementation(async lang => ({ pins, categories, tiles: serviceTiles(categories, pins, lang), tours, stories: [story] }))
   })
@@ -350,10 +351,10 @@ describe('[E4.13][AC95] the demo layer is gone from the home', () => {
       expect({ file, hit: readFileSync(file, 'utf8').match(DEMO)?.[0] }).toEqual({ file, hit: undefined })
   })
 
-  it('only the page order, the postcards, the routes and the food map read the onboarding answers; the hero, the invitation and the tiles do not (AC-3)', () => {
+  it('only the page order, the postcards and the routes read the onboarding answers; the hero, the invitation, the tiles and the food section (newest first) do not (AC-3)', () => {
     const readers = homeFiles(join(SRC, 'features/home/components')).filter(file => /onboarding/i.test(readFileSync(file, 'utf8'))).map(file => file.split('/').pop())
 
-    expect(readers.sort()).toEqual(['food-map-section.tsx', 'home-page.tsx', 'must-visits-section.tsx', 'routes-section.tsx'])
+    expect(readers.sort()).toEqual(['home-page.tsx', 'must-visits-section.tsx', 'routes-section.tsx'])
     expect(read('routes/_guest/$lang/index.tsx')).not.toMatch(/onboarding/i)
   })
 

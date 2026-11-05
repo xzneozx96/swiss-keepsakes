@@ -2,7 +2,7 @@ import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
 
 import { describe, expect, it } from 'vitest'
 
-import { FOOD_CATEGORY_SLUG, foodMapSelection } from '@/features/home/lib/food-map'
+import { FOOD_CATEGORY_SLUG, FOOD_PLACE_COUNT, newestFoodPlaces } from '@/features/home/lib/food-map'
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 
@@ -35,67 +35,59 @@ function pin(n: number, categoryIds: string[], extra: Partial<PublicMapItem> = {
 const food = category(1, FOOD_CATEGORY_SLUG, 'Food and drink')
 const bakeries = category(2, 'bakeries', 'Bakeries', food.id)
 const walks = category(3, 'walks', 'Walks')
-const categories = [walks, food, bakeries]
+// A sub-category of another parent that happens to carry a food-like slug: it is not the section's category.
+const lakeFood = category(4, FOOD_CATEGORY_SLUG, 'Food on the lake', walks.id)
+const categories = [walks, food, bakeries, lakeFood]
+const festival = { firstDay: '2090-11-07', lastDay: '2090-11-08', startTime: null, endTime: null }
+const ids = (places: readonly PublicMapItem[]) => places.map(place => place.id)
 
-const walk = pin(1, [walks.id], { interests: ['history-culture'] })
-const cafe = pin(2, [food.id])
-const bakery = pin(3, [bakeries.id, food.id])
-const bakeryOnly = pin(4, [bakeries.id])
-const nowhere = pin(5, [])
-const pins = [walk, cafe, bakery, bakeryOnly, nowhere]
-
-describe('[E4.13][AC54][AC95] the food map selection', () => {
-  it('aC-3 keeps the pins of the food and drink category and of its sub-categories, and finds the category by its slug', () => {
-    const selection = foodMapSelection(pins, categories, {})
+describe('[E4.13][AC54][AC95] the food section selection (owner, 05.11.2026)', () => {
+  it('finds the top-level category by its slug and keeps it and its sub-categories only', () => {
+    const cafe = pin(1, [food.id])
+    const bakery = pin(2, [bakeries.id, food.id])
+    const bakeryOnly = pin(3, [bakeries.id])
+    const walk = pin(4, [walks.id])
+    const lake = pin(5, [lakeFood.id])
+    const selection = newestFoodPlaces([walk, cafe, lake, bakery, bakeryOnly], categories)
 
     expect(FOOD_CATEGORY_SLUG).toBe('food-and-drink')
     expect(selection?.category.id).toBe(food.id)
-    expect(selection?.kept.map(item => item.id)).toEqual([cafe.id, bakery.id, bakeryOnly.id])
-    // The map keeps every pin (the others are dimmed there).
-    expect(selection?.ranked).toHaveLength(pins.length)
+    expect([selection!.highlight.id, ...ids(selection!.more)]).toEqual([cafe.id, bakery.id, bakeryOnly.id])
   })
 
-  it('aC-4 puts the pins that match the answers first and hides none', () => {
-    const tagged = [
-      pin(10, [food.id]),
-      pin(11, [food.id], { interests: ['food-drink'] }),
-      pin(12, [walks.id], { interests: ['food-drink'] }),
-      pin(13, [bakeries.id], { interests: ['food-drink', 'history-culture'] }),
-    ]
-    const plain = foodMapSelection(tagged, categories, {})!
-    const answered = foodMapSelection(tagged, categories, { interests: ['food-drink'] })!
+  it('keeps the server order (newest first) and takes the first five of more, ignoring the guest’s interests', () => {
+    const places = Array.from({ length: 7 }, (_, index) => pin(index + 1, [food.id], index === 6 ? { interests: ['food-drink'], mustVisit: true } : {}))
+    const selection = newestFoodPlaces(places, categories)!
 
-    expect(plain.kept.map(item => item.id)).toEqual([id(110), id(111), id(113)])
-    expect(answered.kept.map(item => item.id)).toEqual([id(111), id(113), id(110)])
-    expect(answered.kept).toHaveLength(plain.kept.length)
-    expect(answered.ranked).toHaveLength(tagged.length)
-    expect(answered.ranked.map(item => item.id).sort()).toEqual(tagged.map(item => item.id).sort())
+    expect(FOOD_PLACE_COUNT).toBe(5)
+    expect(selection.highlight.id).toBe(places[0]!.id)
+    expect(ids(selection.more)).toEqual(ids(places.slice(1, 5)))
   })
 
-  it('aC-4 orders by the stay as the map list does, and ignores an interest code it does not know', () => {
-    const short = pin(20, [food.id], { stayTag: 'short_stay' })
-    const multi = pin(21, [food.id], { stayTag: 'multi_day' })
-    const both = pin(22, [food.id], { stayTag: 'both', interests: ['not-an-interest'] })
+  it('leaves out a place with a date (it belongs to the events section) and fills up with the next undated one', () => {
+    const places = [pin(1, [food.id], { nextDate: festival }), ...Array.from({ length: 5 }, (_, index) => pin(index + 2, [food.id]))]
+    const selection = newestFoodPlaces(places, categories)!
 
-    expect(foodMapSelection([multi, short, both], categories, { stay: 'short_stay' })!.kept.map(item => item.id)).toEqual([short.id, both.id, multi.id])
+    expect(selection.highlight.id).toBe(places[1]!.id)
+    expect(ids(selection.more)).toEqual(ids(places.slice(2, 6)))
   })
 
-  it('aC-5a gives nothing when the category is not there', () => {
-    expect(foodMapSelection(pins, [walks], {})).toBeUndefined()
-    expect(foodMapSelection([], [], {})).toBeUndefined()
+  it('has a highlight and an empty rail with one place', () => {
+    const only = pin(1, [bakeries.id])
+
+    expect(newestFoodPlaces([only], categories)).toEqual({ category: food, highlight: only, more: [] })
   })
 
-  it('aC-5b still finds the category after a merchant renamed it, because the slug stays', () => {
+  it('gives nothing without the category, without a place, or with only dated places', () => {
+    expect(newestFoodPlaces([pin(1, [food.id])], [walks, lakeFood])).toBeUndefined()
+    expect(newestFoodPlaces([pin(1, [walks.id])], categories)).toBeUndefined()
+    expect(newestFoodPlaces([pin(1, [food.id], { nextDate: festival })], categories)).toBeUndefined()
+  })
+
+  it('keeps the section after a rename: the slug, not the name, finds the category', () => {
     const renamed = { ...food, name: { en: 'Restaurants', de: 'Restaurants' } }
-    const selection = foodMapSelection(pins, [walks, renamed, bakeries], {})
+    const cafe = pin(1, [food.id])
 
-    expect(selection?.category.name.en).toBe('Restaurants')
-    expect(selection?.kept).toHaveLength(3)
-  })
-
-  it('aC-5 is not fooled by a category that only has the food name', () => {
-    const lookalike = category(9, 'restaurants', 'Food and drink')
-
-    expect(foodMapSelection(pins, [walks, lookalike], {})).toBeUndefined()
+    expect(newestFoodPlaces([cafe], [renamed])?.highlight.id).toBe(cafe.id)
   })
 })
