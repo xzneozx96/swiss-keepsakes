@@ -2,6 +2,7 @@ import type { MerchantCategory, PinListItem } from '@sk/api-contract'
 import type { Lang } from '../lib/form'
 import type { DataTableColumn } from '@/components/data-table'
 import type { EmptyStateProps } from '@/components/empty-state'
+import type { PagerState } from '@/components/list-pagination'
 import type { RowAction } from '@/components/row-actions'
 import type { MessageKey } from '@/i18n/en'
 import { Skeleton } from '@heroui/react'
@@ -27,7 +28,8 @@ export interface PlaceRowsProps {
   categories: MerchantCategory[]
   isLoading: boolean
   label: string
-  resetKey: string
+  /** The pager of the page the server sent; `items` is that page. */
+  paging: PagerState
   empty: EmptyStateProps
   busy: boolean
   onAction: (item: PinListItem, action: RowActionId) => void
@@ -205,7 +207,7 @@ function CardSkeleton() {
 
 /** N16: the table from 1024 px and the cards below it. */
 export function PlaceRows(props: PlaceRowsProps) {
-  const { items, categories, isLoading, label, resetKey, empty, busy, onAction } = props
+  const { items, categories, isLoading, label, paging, empty, busy, onAction } = props
   const { t, nameOfItem, edited } = useNames()
   const columns: DataTableColumn<PinListItem>[] = [
     {
@@ -239,7 +241,7 @@ export function PlaceRows(props: PlaceRowsProps) {
       getRowId={item => item.id}
       isLoading={isLoading}
       label={label}
-      resetKey={resetKey}
+      paging={paging}
       rows={items}
       rowActions={{
         render: item => <RowActions actions={actionsOf(item, t).map(action => ({ ...action, isDisabled: busy && action.id !== 'edit' }))} label={t('places.row.actions', { name: nameOfItem(item) })} onAction={id => onAction(item, id)} />,

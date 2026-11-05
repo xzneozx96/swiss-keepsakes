@@ -534,7 +534,7 @@ describe('[E4.3][AC30] the story reads', () => {
     const seen: unknown[] = []
     const app = setup({ listStoryGroups: async (actor, storeId) => {
       seen.push({ kind: actor.kind, storeId })
-      return { ok: true, value: [{ groupId, kind: 'story', title: { de: 'Die Mauer' }, cover: readyCover, languages: { en: null, de: rowOf('de') }, updatedAt: at }] }
+      return { ok: true, value: { entries: [{ groupId, kind: 'story', title: { de: 'Die Mauer' }, cover: readyCover, languages: { en: null, de: rowOf('de') }, updatedAt: at }], total: 1, page: 1, pageSize: 10, tabs: { all: 1, published: 1, drafts: 0 } } }
     } })
 
     const response = await send(app, 'GET', groups)
@@ -543,7 +543,46 @@ describe('[E4.3][AC30] the story reads', () => {
     const body = await response.json() as { items: { languages: { de: object } }[] }
     expect(body).toMatchObject({ items: [{ groupId, kind: 'story', title: { de: 'Die Mauer' }, cover: { id: fakeMedia.id, publicUrl: `https://storage.test/media/${fakeMedia.storageKey}` }, languages: { en: null, de: { status: 'published', everPublished: true, editsNotLive: false, rowVersion: 3, updatedAt: '2026-10-27T10:00:00.000Z' } }, updatedAt: '2026-10-27T10:00:00.000Z' }] })
     expect(Object.keys(body.items[0]!.languages.de)).not.toContain('title')
+    expect(body).toMatchObject({ total: 1, page: 1, pageSize: 10, tabs: { all: 1, published: 1, drafts: 0 } })
     expect(seen).toEqual([{ kind: 'staff', storeId: lucerne }])
+  })
+
+  describe('[ADR-033] GET story-groups pages', () => {
+    const seen: object[] = []
+    const app = () => setup({ listStoryGroups: async (_actor, _storeId, query) => {
+      seen.push(query)
+      return { ok: true, value: { entries: [], total: 0, page: query.page, pageSize: query.pageSize, tabs: { all: 0, published: 0, drafts: 0 } } }
+    } })
+
+    it('defaults to page 1 of 10, every tab, last updated first', async () => {
+      seen.length = 0
+      const response = await send(app(), 'GET', groups)
+
+      expect(response.status).toBe(200)
+      expect(seen).toEqual([{ status: 'all', sort: 'updated', page: 1, pageSize: 10 }])
+    })
+
+    it('passes the page, the page size, the status tab, the trimmed search and the sort to the use case', async () => {
+      seen.length = 0
+      await send(app(), 'GET', `${groups}?page=3&pageSize=20&status=drafts&q=%20wall%20&sort=updated`)
+
+      expect(seen).toEqual([{ status: 'drafts', q: 'wall', sort: 'updated', page: 3, pageSize: 20 }])
+    })
+
+    it.each(['pageSize=21', 'pageSize=0', 'page=0', 'status=other', 'sort=title'])('%s is a 400 validation-failed', async (query) => {
+      const response = await send(app(), 'GET', `${groups}?${query}`)
+
+      expect(response.status).toBe(400)
+      expect(await response.json()).toMatchObject({ type: 'validation-failed' })
+    })
+
+    it('a skip over 10,000 rows is a 400 on page', async () => {
+      const response = await send(app(), 'GET', `${groups}?page=1002&pageSize=10`)
+
+      expect(response.status).toBe(400)
+      expect(await response.json()).toMatchObject({ type: 'validation-failed', errors: [{ in: 'query', path: 'page' }] })
+      expect((await send(app(), 'GET', `${groups}?page=1001&pageSize=10`)).status).toBe(200)
+    })
   })
 
   it('[E4.3][AC30] GET story-groups is 403 for a guest and for the owner of another store', async () => {
@@ -696,5 +735,25 @@ describe('[E4.3][AC30] Delete story and its link counts', () => {
     expect(response.status).toBe(400)
     expect(await response.json()).toMatchObject({ type: 'idempotency-key-required' })
     expect(calls).toBe(0)
+  })
+})
+
+describe('[ADR-033] GET story-groups/lookup reads by id', () => {
+  it('passes the ids, allows 50, refuses 51 and a bad id, and is not read as a group id', async () => {
+    const seen: string[][] = []
+    const app = setup({ listStoryGroupsByIds: async (_actor, _storeId, ids) => {
+      seen.push(ids)
+      return { ok: true, value: [] }
+    } })
+    const ids = (count: number) => Array.from({ length: count }, (_, index) => `0190f0c2-0000-7000-8000-${String(index + 1).padStart(12, '0')}`)
+
+    const response = await send(app, 'GET', `${groups}/lookup?ids=${groupId}`)
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ items: [] })
+    expect((await send(app, 'GET', `${groups}/lookup?ids=${ids(50).join(',')}`)).status).toBe(200)
+    expect((await send(app, 'GET', `${groups}/lookup?ids=${ids(51).join(',')}`)).status).toBe(400)
+    expect((await send(app, 'GET', `${groups}/lookup?ids=x`)).status).toBe(400)
+    expect(seen[0]).toEqual([groupId])
   })
 })

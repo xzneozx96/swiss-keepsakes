@@ -14,7 +14,7 @@ import {
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 
 function category(n: number, parentId: string | null, position: number, en: string | null, de: string | null = null): PublicCategory {
-  return { id: id(n), slug: `c${n}`, name: { en, de }, parentId, icon: null, showOnHome: false, position }
+  return { id: id(n), slug: `c${n}`, name: { en, de }, parentId, icon: null, showOnHome: false, storyCount: 0, position }
 }
 
 function pin(n: number, categoryIds: string[]): PublicMapItem {
@@ -23,6 +23,8 @@ function pin(n: number, categoryIds: string[]): PublicMapItem {
     slug: `pin-${n}`,
     latitude: 47.05,
     longitude: 8.3,
+    address: null,
+    weeklyHours: [],
     title: `Pin ${n}`,
     language: 'en',
     categoryIds,

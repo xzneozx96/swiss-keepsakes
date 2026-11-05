@@ -1,5 +1,5 @@
 import type { StoryGroup, StoryVersion } from '@sk/domain/content'
-import type { StoryRepository } from '../../src/modules/content/ports.ts'
+import type { StoryListRow, StoryRepository } from '../../src/modules/content/ports.ts'
 import { randomUUID } from 'node:crypto'
 
 const key = (groupId: string, language: string) => `${groupId}/${language}`
@@ -120,20 +120,36 @@ export function createFakeStories(): StoryRepository<null> & { groups: Map<strin
       groups.delete(groupId)
       return { pinsUnlinked: named.length, storiesUnlinked: listing.length, versions: gone }
     },
-    async listGroups(_tx, storeId) {
-      return [...groups.values()].filter(group => group.storeId === storeId).flatMap((group) => {
+    // Mirrors the SQL: groups with a version, the search on either title, the tab, then the sort ending in id desc, then the page.
+    async listGroups(_tx, storeId, query) {
+      const needle = query.q?.toLowerCase()
+      const rows = [...groups.values()].filter(group => group.storeId === storeId).flatMap((group) => {
         const own = [...versions.values()].filter(version => version.storeId === storeId && version.groupId === group.id)
         if (own.length === 0)
           return []
         return [{
-          groupId: group.id,
-          kind: group.kind,
-          versions: own.map((version) => {
-            const doc = version.draft ?? version.published
-            return { language: version.language, status: version.status, title: doc?.title ?? '', coverMediaId: doc?.coverMediaId ?? null, everPublished: version.published !== null, editsNotLive: version.status === 'published' && version.draft !== null, rowVersion: version.rowVersion, updatedAt: version.updatedAt }
-          }),
+          group,
+          updatedAt: Math.max(...own.map(version => version.updatedAt.getTime())),
+          row: {
+            groupId: group.id,
+            kind: group.kind,
+            versions: own.map((version) => {
+              const doc = version.draft ?? version.published
+              return { language: version.language, status: version.status, title: doc?.title ?? '', coverMediaId: doc?.coverMediaId ?? null, everPublished: version.published !== null, editsNotLive: version.status === 'published' && version.draft !== null, rowVersion: version.rowVersion, updatedAt: version.updatedAt }
+            }),
+          } satisfies StoryListRow,
         }]
-      })
+      }).filter(({ row }) => needle === undefined || needle === '' || row.versions.some(version => version.title.toLowerCase().includes(needle)))
+      const live = (entry: (typeof rows)[number]) => entry.row.versions.some(version => version.status === 'published')
+      const tabs = { all: rows.length, published: rows.filter(live).length, drafts: rows.filter(entry => !live(entry)).length }
+      const shown = rows.filter(entry => query.status === 'all' || live(entry) === (query.status === 'published'))
+      const key = (entry: (typeof rows)[number]) => (query.sort === 'created' ? entry.group.createdAt.getTime() : entry.updatedAt)
+      shown.sort((a, b) => key(b) - key(a) || b.group.id.localeCompare(a.group.id))
+      return { rows: shown.slice((query.page - 1) * query.pageSize, query.page * query.pageSize).map(entry => entry.row), total: shown.length, tabs }
+    },
+    async listGroupsByIds(_tx, storeId, ids) {
+      const page = await this.listGroups(_tx, storeId, { status: 'all', sort: 'updated', page: 1, pageSize: 1000 })
+      return page.rows.filter(row => ids.includes(row.groupId))
     },
     async findGroup(_tx, storeId, groupId) {
       const group = groups.get(groupId)

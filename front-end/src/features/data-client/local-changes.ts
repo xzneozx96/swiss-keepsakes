@@ -107,7 +107,7 @@ export const commandChanges: Changes = {
       key: [...queryKeys.places.list, input.storeId],
       apply: patching('items', input.id, { status: hidden.status, rowVersion: hidden.rowVersion, updatedAt: hidden.updatedAt }),
     }],
-    remove: input => [{ key: [...queryKeys.places.list, input.storeId], apply: without('items', input.id) }],
+    remove: input => [{ key: [...queryKeys.places.list, input.storeId], apply: withoutCounted('items', input.id) }],
   },
   stories: {
     // The list items are keyed by `groupId`, not `id`: the story's row is gone when the dialog closes.

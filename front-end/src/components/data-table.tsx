@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { SkeletonShape } from '@/components/data-table-skeleton'
 import type { EmptyStateProps } from '@/components/empty-state'
+import type { PagerState } from '@/components/list-pagination'
 
 import { Checkbox, Table } from '@heroui/react'
 import { useEffect, useRef } from 'react'
@@ -55,8 +56,13 @@ interface DataTableProps<T> {
   /** Accessible name of the table: the selected tab or filter. */
   label: string
   columns: DataTableColumn<T>[]
-  /** Every row; the table cuts them into pages of 10 unless `hidePager` is set. */
+  /** Every row; the table cuts them into pages of 10 unless `hidePager` is set. With `paging`, only the rows of the page the server sent. */
   rows: T[]
+  /**
+   * Server mode (ADR-033): the server pages the list, so `rows` is one page and nothing is sliced here. Build it with `serverPager`.
+   * `resetKey` is then unused: the caller sets the page to 1 when a filter changes.
+   */
+  paging?: PagerState
   getRowId: (row: T) => string
   /** Makes the whole row a link. */
   getRowHref?: (row: T) => string
@@ -113,6 +119,7 @@ export function DataTable<T>({
   label,
   columns,
   rows,
+  paging,
   getRowId,
   getRowHref,
   resetKey,
@@ -129,8 +136,10 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   const { t } = useLocale()
   const gridRef = useRef<HTMLTableElement>(null)
-  const { pageItems: pagedItems, pager } = usePaged(rows, resetKey)
-  const pageItems = hidePager ? rows : pagedItems
+  // Always called, so the hook order never changes; in server mode its answer is ignored.
+  const sliced = usePaged(rows, resetKey)
+  const pager = paging ?? sliced.pager
+  const pageItems = hidePager || paging ? rows : sliced.pageItems
   const isOnPage = variant !== 'card'
   const selectable = selection ? pageItems.filter(row => selection.isSelectable?.(row) ?? true).map(getRowId) : []
   const disabledKeys = selection ? pageItems.map(getRowId).filter(id => !selectable.includes(id)) : []

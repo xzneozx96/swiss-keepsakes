@@ -40,18 +40,18 @@ describe('[E4.2][AC68] the places queries and commands', () => {
     api.items = [listItem()]
     api.pin = pinOf()
     api.stories = [{ groupId: uuid(30), kind: 'story', title: { en: 'The bridge' }, languages: { en: 'published', de: 'none' }, publishedLanguages: ['en'] }]
-    const list = renderHook(() => usePlaces(storeId), { wrapper })
+    const list = renderHook(() => usePlaces(storeId, { page: 1, pageSize: 10 }), { wrapper })
     const one = renderHook(() => usePlace(storeId, uuid(10), true), { wrapper })
-    const stories = renderHook(() => useStoryOptions(storeId), { wrapper })
+    const stories = renderHook(() => useStoryOptions(storeId, { limit: 10 }), { wrapper })
 
     await waitFor(() => expect(list.result.current.data?.items).toHaveLength(1))
     await waitFor(() => expect(one.result.current.data).toMatchObject({ id: uuid(10), rowVersion: 1 }))
     await waitFor(() => expect(stories.result.current.data?.items[0]?.groupId).toBe(uuid(30)))
-    expect(api.calls.map(call => call.path)).toEqual(expect.arrayContaining([`/api/store/${storeId}/pins`, `/api/store/${storeId}/pins/${uuid(10)}`, `/api/store/${storeId}/pins/story-options`]))
+    expect(api.calls.map(call => call.path.split('?')[0])).toEqual(expect.arrayContaining([`/api/store/${storeId}/pins`, `/api/store/${storeId}/pins/${uuid(10)}`, `/api/store/${storeId}/pins/story-options`]))
   })
 
   it('[E4.2][AC68] waits for a store id before it reads, and never reads a new pin', () => {
-    renderHook(() => usePlaces(undefined), { wrapper })
+    renderHook(() => usePlaces(undefined, { page: 1, pageSize: 10 }), { wrapper })
     renderHook(() => usePlace(storeId, 'new', false), { wrapper })
 
     expect(api.calls).toHaveLength(0)

@@ -713,7 +713,7 @@ describe('[E2.6] the story routes over the real app and the database', () => {
 })
 
 describe('[E4.3][AC30] the story list reads', () => {
-  const list = (s: Setup, store = s.store) => s.uow.run(tx => s.stories.listGroups(tx, store))
+  const list = (s: Setup, store = s.store) => s.uow.run(tx => s.stories.listGroups(tx, store, { status: 'all', sort: 'updated', page: 1, pageSize: 20 })).then(page => page.rows)
 
   it('[E4.3][AC30] AC-1 reads title, cover id and the state of both languages of one store only', async () => {
     const s = setup()

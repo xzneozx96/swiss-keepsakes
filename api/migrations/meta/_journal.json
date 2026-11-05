@@ -190,6 +190,20 @@
       "when": 1794460153729,
       "tag": "0026_map_category_icon",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1794546553729,
+      "tag": "0027_merchant_table_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794632953729,
+      "tag": "0028_public_search",
+      "breakpoints": true
     }
   ]
 }

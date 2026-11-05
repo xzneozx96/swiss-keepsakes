@@ -1,6 +1,8 @@
 import type { PinStoryOption } from '@sk/api-contract'
 import type { StepProps } from './step-props'
 
+import { useState } from 'react'
+
 import { Block } from '@/components/form-block'
 import { SearchableSelect } from '@/components/searchable-select'
 import { useLocale } from '@/contexts/locale-context'
@@ -9,17 +11,18 @@ import { Field } from './fields'
 
 const LANGUAGES = ['en', 'de'] as const
 
-/** A story shows in the picker once a language is live. The linked one stays, so the field never loses its value. */
+/** The server offers stories with a live language, and the linked one whatever its state, so the field never loses its value. */
 const isLive = (option: PinStoryOption) => option.publishedLanguages.length > 0
 
 /** Step 5: the optional main story and the one optional outbound link. */
 export function StepLinks({ form, patch, errors, storeId }: StepProps) {
   const { t, language } = useLocale()
-  const stories = useStoryOptions(storeId)
+  const [search, setSearch] = useState('')
+  // Search as you type: the server answers the first matches of the search, and always the chosen story (ADR-033).
+  const stories = useStoryOptions(storeId, { q: search.trim() || undefined, groupId: form.mainStoryGroupId ?? undefined, limit: 20 })
   const chosen = stories.data?.items.find(option => option.groupId === form.mainStoryGroupId)
   const titleOf = (title: { en?: string, de?: string }) => title[language] ?? title[language === 'en' ? 'de' : 'en'] ?? t('places.row.untitled')
   const options = (stories.data?.items ?? [])
-    .filter(option => isLive(option) || option.groupId === form.mainStoryGroupId)
     .map(option => ({ id: option.groupId, label: isLive(option) ? titleOf(option.title) : `${titleOf(option.title)} (${t('places.story.notPublished')})` }))
   // A language without a live version leaves the pin card without a story link in that language.
   const gaps = chosen ? LANGUAGES.filter(lang => chosen.languages[lang] !== 'published') : []
@@ -35,6 +38,7 @@ export function StepLinks({ form, patch, errors, storeId }: StepProps) {
                 label={t('places.story.select')}
                 noneLabel={t('places.story.noneOption')}
                 options={options}
+                serverSearch={{ value: search, onChange: setSearch }}
                 value={form.mainStoryGroupId}
                 onChange={mainStoryGroupId => patch({ mainStoryGroupId })}
               />

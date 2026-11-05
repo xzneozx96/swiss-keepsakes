@@ -31,7 +31,7 @@ vi.mock('@/features/catalog/api/keepsakes', async importOriginal => ({ ...await 
 vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: vi.fn(), fetchMapCategories: vi.fn(), fetchMapPin: vi.fn() }))
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
-const water: PublicCategory = { id: id(1), slug: 'drinking-water', name: { en: 'Drinking water', de: 'Trinkwasser' }, parentId: null, icon: 'water', showOnHome: true, position: 1 }
+const water: PublicCategory = { id: id(1), slug: 'drinking-water', name: { en: 'Drinking water', de: 'Trinkwasser' }, parentId: null, icon: 'water', showOnHome: true, storyCount: 0, position: 1 }
 const pin: PublicMapItem = {
   id: id(100),
   slug: 'fountain',
@@ -158,7 +158,8 @@ describe('[E4.13][AC24][AC54] the server HTML of the home', () => {
     expect(at.every(index => index >= 0)).toBe(true)
     expect(at).toEqual([...at].sort((a, b) => a - b))
     expect(html).not.toContain('CHF')
-    expect(text).not.toMatch(/\b[0-4]\b/)
+    // The route deck's own numbers ("1 of 3", "4 stops", "6.5 hours") are not social-proof counts.
+    expect(text.replace(/\b\d+ of \d+\b/g, '').replace(/[\d.]+ (stops|hours)/g, '')).not.toMatch(/\b[0-4]\b/)
     expect(text).not.toMatch(/review|comment/i)
   })
 

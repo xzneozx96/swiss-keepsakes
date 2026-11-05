@@ -6797,17 +6797,104 @@
         "type": "object"
       },
       "PinList": {
-        "description": "Every pin of the store, most recently edited first",
+        "description": "One page of the pins of the store",
         "properties": {
+          "categories": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "The pins of each category (its children count too) that match the search and the other filters, not the category filter. `none` counts the pins with no category",
+            "type": "object"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/PinListItem"
             },
             "type": "array"
+          },
+          "page": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "pageSize": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "statuses": {
+            "description": "The pins of each status that match the search and the other filters, not the status filter",
+            "properties": {
+              "draft": {
+                "type": "integer"
+              },
+              "ended": {
+                "type": "integer"
+              },
+              "hidden": {
+                "type": "integer"
+              },
+              "published": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "draft",
+              "published",
+              "hidden",
+              "ended"
+            ],
+            "type": "object"
+          },
+          "stays": {
+            "description": "The pins of each stay that match the search and the other filters, not the stay filter",
+            "properties": {
+              "both": {
+                "type": "integer"
+              },
+              "multi_day": {
+                "type": "integer"
+              },
+              "short_stay": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "object"
+          },
+          "total": {
+            "description": "The rows that match the filters, before paging",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "types": {
+            "description": "The pins of each type that match the search and the other filters, not the type filter",
+            "properties": {
+              "event": {
+                "type": "integer"
+              },
+              "place": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "place",
+              "event"
+            ],
+            "type": "object"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total",
+          "page",
+          "pageSize",
+          "statuses",
+          "stays",
+          "types",
+          "categories"
         ],
         "type": "object"
       },
@@ -7063,6 +7150,21 @@
         ],
         "type": "object"
       },
+      "PinLookup": {
+        "description": "The pins named by `ids` and, with `host`, the published pins linking to that host. Not paged: at most 50 ids, and at most 50 rows",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PinListItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
       "PinPublishBody": {
         "additionalProperties": false,
         "description": "Optional and empty in practice. The server makes the slug of each language from its title at the first publish and keeps it afterwards (ADR-014), so a publish never fails for a missing slug when a title exists",
@@ -7161,7 +7263,7 @@
         "type": "object"
       },
       "PinStoryOptionList": {
-        "description": "Story groups of the store, most recently created first",
+        "description": "The first `limit` matches of the search, and the chosen story when it is not among them: story groups with a live language, most recently created first. Not paged",
         "properties": {
           "items": {
             "items": {
@@ -17277,17 +17379,57 @@
         "type": "object"
       },
       "StoryList": {
-        "description": "The story groups of the store that have a version, most recently updated first",
+        "description": "One page of the story groups of the store that have a version",
         "properties": {
           "items": {
             "items": {
               "$ref": "#/components/schemas/StoryListItem"
             },
             "type": "array"
+          },
+          "page": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "pageSize": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "tabs": {
+            "description": "The groups of each tab that match the search. The status filter does not change them",
+            "properties": {
+              "all": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "drafts": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "published": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "all",
+              "published",
+              "drafts"
+            ],
+            "type": "object"
+          },
+          "total": {
+            "description": "The rows that match the filters, before paging",
+            "minimum": 0,
+            "type": "integer"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total",
+          "page",
+          "pageSize",
+          "tabs"
         ],
         "type": "object"
       },
@@ -17475,6 +17617,21 @@
           "object",
           "null"
         ]
+      },
+      "StoryLookup": {
+        "description": "The story groups named by `ids`, at most 50. Not paged",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StoryListItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
       },
       "StoryVersion": {
         "description": "One language version of a story, with its draft and its published text",
@@ -22682,6 +22839,101 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "description": "Comma separated: draft, published, hidden, ended. A pin matches any of them. `ended` is a published pin whose dates are all over",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "description": "Comma separated: draft, published, hidden, ended. A pin matches any of them. `ended` is a published pin whose dates are all over",
+              "maxLength": 1500,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated category ids, or `none` for a pin with no category. A pin matches any of them",
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "description": "Comma separated category ids, or `none` for a pin with no category. A pin matches any of them",
+              "maxLength": 1500,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated: short_stay, multi_day, both",
+            "in": "query",
+            "name": "stay",
+            "required": false,
+            "schema": {
+              "description": "Comma separated: short_stay, multi_day, both",
+              "maxLength": 1500,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated: place (no dates), event (with dates)",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "description": "Comma separated: place (no dates), event (with dates)",
+              "maxLength": 1500,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Matches the title of either language, in any case",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "description": "Matches the title of either language, in any case",
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "`edited`: last edit first (`updated_at desc, id desc`). `created`: newest first (`created_at desc, id desc`)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "edited",
+              "description": "`edited`: last edit first (`updated_at desc, id desc`). `created`: newest first (`created_at desc, id desc`)",
+              "enum": [
+                "edited",
+                "created"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page, from 1. A page past the end answers no items and the real total",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "description": "The page, from 1. A page past the end answers no items and the real total",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Rows a page, 1 to 20",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "description": "Rows a page, 1 to 20",
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -22693,7 +22945,7 @@
                 }
               }
             },
-            "description": "Every pin of the store, most recently edited first. `ended` is a live pin whose dates are all over",
+            "description": "One page of the pins of the store, with the total and the facet counts. `ended` is a live pin whose dates are all over",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -22779,6 +23031,75 @@
         }
       }
     },
+    "/api/store/{storeId}/pins/lookup": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated pin ids, at most 50. An id of another store is left out",
+            "in": "query",
+            "name": "ids",
+            "required": false,
+            "schema": {
+              "description": "Comma separated pin ids, at most 50. An id of another store is left out",
+              "maxLength": 1850,
+              "type": "string"
+            }
+          },
+          {
+            "description": "A web host such as `zyt.example`. Also returns the published pins whose outbound link is on that host (without `www.`)",
+            "in": "query",
+            "name": "host",
+            "required": false,
+            "schema": {
+              "description": "A web host such as `zyt.example`. Also returns the published pins whose outbound link is on that host (without `www.`)",
+              "maxLength": 253,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PinLookup"
+                }
+              }
+            },
+            "description": "The pins named by `ids` (at most 50) and, with `host`, the published pins linking to that host. Not paged",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/store/{storeId}/pins/story-options": {
       "get": {
         "parameters": [
@@ -22789,6 +23110,41 @@
             "schema": {
               "format": "uuid",
               "type": "string"
+            }
+          },
+          {
+            "description": "Matches the title of either language, in any case",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "description": "Matches the title of either language, in any case",
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The story already chosen: it is in the answer whatever its state or title, so the picker can name it",
+            "in": "query",
+            "name": "groupId",
+            "required": false,
+            "schema": {
+              "description": "The story already chosen: it is in the answer whatever its state or title, so the picker can name it",
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "How many matches to return, 1 to 20",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "description": "How many matches to return, 1 to 20",
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
             }
           }
         ],
@@ -22801,7 +23157,7 @@
                 }
               }
             },
-            "description": "The story groups of the store, for the main-story picker",
+            "description": "The story groups of the store that match the search, for the main-story picker",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -23953,6 +24309,73 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "description": "`published`: a language version is live. `drafts`: none is",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "description": "`published`: a language version is live. `drafts`: none is",
+              "enum": [
+                "all",
+                "published",
+                "drafts"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Matches the title of either language, in any case",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "description": "Matches the title of either language, in any case",
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "`updated` (default): latest version update first, then `id desc`. `created`: newest group first (`created_at desc, id desc`)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "updated",
+              "description": "`updated` (default): latest version update first, then `id desc`. `created`: newest group first (`created_at desc, id desc`)",
+              "enum": [
+                "created",
+                "updated"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page, from 1. A page past the end answers no items and the real total",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "description": "The page, from 1. A page past the end answers no items and the real total",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Rows a page, 1 to 20",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "description": "Rows a page, 1 to 20",
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -23964,7 +24387,7 @@
                 }
               }
             },
-            "description": "The story groups of the store that have a version, with the state of each language version, most recently updated first",
+            "description": "One page of the story groups of the store that have a version, with the state of each language version, the total and the tab counts",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -24027,6 +24450,64 @@
                   "type": "string"
                 }
               },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/story-groups/lookup": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated story group ids, at most 50. An id of another store, or of a group with no version, is left out",
+            "in": "query",
+            "name": "ids",
+            "required": false,
+            "schema": {
+              "description": "Comma separated story group ids, at most 50. An id of another store, or of a group with no version, is left out",
+              "maxLength": 1850,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryLookup"
+                }
+              }
+            },
+            "description": "The story groups named by `ids` (at most 50), for what the editor already references. Not paged",
+            "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }

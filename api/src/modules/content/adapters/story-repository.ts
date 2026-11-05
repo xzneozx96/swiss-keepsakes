@@ -3,6 +3,7 @@ import type { Tx } from '../../../platform/db/client.ts'
 import type { StoryGroupChanges, StoryListRow, StoryRepository } from '../ports.ts'
 import { storyMediaIds } from '@sk/domain/content'
 import { sql } from 'drizzle-orm'
+import { offsetOf } from '../../../platform/db/offset.ts'
 
 interface GroupRow {
   id: string
@@ -153,6 +154,32 @@ interface ListRow {
   updated_at: Date
 }
 
+// The groups with these ids, in the order of `ids`, each with its versions; a group with no version is left out. One query, and not
+// the documents: a body can be 200 KB. The title and cover come from the draft when there is one, else from the published text.
+// A `case`, not `coalesce`, so a draft that cleared its cover does not show the live one.
+async function groupRows(tx: Tx, storeId: string, ids: string[]): Promise<StoryListRow[]> {
+  if (ids.length === 0)
+    return []
+  const found = await tx.execute<ListRow & Record<string, unknown>>(sql`
+    select g.id as group_id, g.kind, v.language, v.status,
+           case when v.draft is not null then v.draft->>'title' else v.published->>'title' end as title,
+           case when v.draft is not null then v.draft->>'coverMediaId' else v.published->>'coverMediaId' end as cover_media_id,
+           v.published is not null as ever_published,
+           (v.status = 'published' and v.draft is not null) as edits_not_live,
+           v.row_version, v.updated_at
+      from content.story_groups g
+      join content.story_versions v on v.group_id = g.id and v.store_id = g.store_id
+     where g.store_id = ${storeId} and g.id = any(${sql.param(ids)}::uuid[])
+     order by g.id, v.language`)
+  const rows = new Map<string, StoryListRow>()
+  for (const row of found.rows) {
+    const entry = rows.get(row.group_id) ?? { groupId: row.group_id, kind: row.kind, versions: [] }
+    entry.versions.push({ language: row.language, status: row.status, title: row.title ?? '', coverMediaId: row.cover_media_id, everPublished: row.ever_published, editsNotLive: row.edits_not_live, rowVersion: row.row_version, updatedAt: new Date(row.updated_at) })
+    rows.set(row.group_id, entry)
+  }
+  return ids.flatMap(id => rows.get(id) ?? [])
+}
+
 export function createStoryRepository(): StoryRepository<Tx> {
   return {
     async insertGroup(tx, storeId, input, at) {
@@ -211,29 +238,33 @@ export function createStoryRepository(): StoryRepository<Tx> {
       }
     },
 
-    // One query, and not the documents: a body can be 200 KB. The title and cover come from the draft when there is one,
-    // else from the published text. A `case`, not `coalesce`, so a draft that cleared its cover does not show the live one.
-    // The inner join leaves out a group with no version.
-    async listGroups(tx, storeId) {
-      const found = await tx.execute<ListRow & Record<string, unknown>>(sql`
-        select g.id as group_id, g.kind, v.language, v.status,
-               case when v.draft is not null then v.draft->>'title' else v.published->>'title' end as title,
-               case when v.draft is not null then v.draft->>'coverMediaId' else v.published->>'coverMediaId' end as cover_media_id,
-               v.published is not null as ever_published,
-               (v.status = 'published' and v.draft is not null) as edits_not_live,
-               v.row_version, v.updated_at
+    // One page of groups (ADR-033 section 6): the groups are filtered, counted and paged first, then their versions are read.
+    async listGroups(tx, storeId, query) {
+      // The groups that have a version (the inner join), one row each, with what the tabs, the search and the sort need. The
+      // search is position(), not ILIKE, so a % or _ in it is a plain character (as the media library does).
+      const title = sql`(case when v.draft is not null then v.draft->>'title' else v.published->>'title' end)`
+      const hit = query.q ? sql`position(lower(${query.q}) in lower(coalesce(${title}, ''))) > 0` : sql`true`
+      const groups = sql`
+        select g.id, g.created_at, max(v.updated_at) as updated_at, bool_or(v.status = 'published') as live, bool_or(${hit}) as hit
           from content.story_groups g
           join content.story_versions v on v.group_id = g.id and v.store_id = g.store_id
          where g.store_id = ${storeId}
-         order by g.id, v.language`)
-      const rows = new Map<string, StoryListRow>()
-      for (const row of found.rows) {
-        const entry = rows.get(row.group_id) ?? { groupId: row.group_id, kind: row.kind, versions: [] }
-        entry.versions.push({ language: row.language, status: row.status, title: row.title ?? '', coverMediaId: row.cover_media_id, everPublished: row.ever_published, editsNotLive: row.edits_not_live, rowVersion: row.row_version, updatedAt: new Date(row.updated_at) })
-        rows.set(row.group_id, entry)
-      }
-      return [...rows.values()]
+         group by g.id, g.created_at`
+      const counted = await tx.execute<{ all: number, published: number, drafts: number }>(sql`
+        select (count(*) filter (where hit))::int as "all",
+               (count(*) filter (where hit and live))::int as published,
+               (count(*) filter (where hit and not live))::int as drafts
+          from (${groups}) s`)
+      const tabs = counted.rows[0]!
+      const total = tabs[query.status === 'all' ? 'all' : query.status]
+      const tab = query.status === 'all' ? sql`true` : query.status === 'published' ? sql`live` : sql`not live`
+      const order = query.sort === 'created' ? sql`created_at desc, id desc` : sql`updated_at desc, id desc`
+      const ids = await tx.execute<{ id: string }>(sql`
+        select id from (${groups}) s where hit and ${tab} order by ${order} limit ${query.pageSize} offset ${offsetOf(query.page, query.pageSize)}`)
+      return { rows: await groupRows(tx, storeId, ids.rows.map(row => row.id)), total, tabs }
     },
+
+    listGroupsByIds: (tx, storeId, ids) => groupRows(tx, storeId, ids),
 
     async saveGroup(tx, group, changes, at) {
       await tx.execute(sql`

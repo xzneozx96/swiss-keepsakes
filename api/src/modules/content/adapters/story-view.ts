@@ -2,7 +2,7 @@ import type { StoryGroupDetail as StoryGroupDetailView, StoryGroup as StoryGroup
 import type { StoryDraft, StoryGroup, StoryVersion } from '@sk/domain/content'
 import type { StoryGroupRead } from '../application/get-story-group.ts'
 import type { StoryVersionText } from '../application/get-story-version-text.ts'
-import type { StoryListEntry } from '../application/list-story-groups.ts'
+import type { StoryListEntry, StoryListResult } from '../application/list-story-groups.ts'
 import { mediaView } from './media-view.ts'
 
 // The response shape of a story group: the dates as ISO strings.
@@ -61,18 +61,20 @@ export function storyVersionTextView(text: StoryVersionText, publicUrl: (key: st
 }
 
 // The list names each version's state only; the title and cover id the repository read for it are not part of the row.
-export function storyListView(entries: StoryListEntry[], publicUrl: (key: string) => string): StoryListView {
+export function storyItemsView(entries: StoryListEntry[], publicUrl: (key: string) => string): StoryListView['items'] {
   const version = (row: StoryListEntry['languages']['en']) => row && { status: row.status, everPublished: row.everPublished, editsNotLive: row.editsNotLive, rowVersion: row.rowVersion, updatedAt: row.updatedAt.toISOString() }
-  return {
-    items: entries.map(entry => ({
-      groupId: entry.groupId,
-      kind: entry.kind,
-      title: entry.title,
-      cover: entry.cover && mediaView(entry.cover, publicUrl),
-      languages: { en: version(entry.languages.en) ?? null, de: version(entry.languages.de) ?? null },
-      updatedAt: entry.updatedAt.toISOString(),
-    })),
-  }
+  return entries.map(entry => ({
+    groupId: entry.groupId,
+    kind: entry.kind,
+    title: entry.title,
+    cover: entry.cover && mediaView(entry.cover, publicUrl),
+    languages: { en: version(entry.languages.en) ?? null, de: version(entry.languages.de) ?? null },
+    updatedAt: entry.updatedAt.toISOString(),
+  }))
+}
+
+export function storyListView({ entries, total, page, pageSize, tabs }: StoryListResult, publicUrl: (key: string) => string): StoryListView {
+  return { items: storyItemsView(entries, publicUrl), total, page, pageSize, tabs }
 }
 
 export function storyGroupDetailView({ group, versions }: StoryGroupRead): StoryGroupDetailView {

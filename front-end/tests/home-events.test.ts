@@ -10,6 +10,8 @@ function event(slug: string, next: Partial<NextDate> & { firstDay: string }): Pu
     slug,
     latitude: 47.05,
     longitude: 8.3,
+    address: null,
+    weeklyHours: [],
     title: slug,
     language: 'en',
     categoryIds: [],

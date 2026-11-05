@@ -9,8 +9,7 @@ import { systemClock } from '../../src/platform/clock.ts'
 import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import { openTestDatabase } from './support.ts'
 
-// ADR-033 slice 6. WRITTEN, NOT RUN: it needs the scratch database with docs/proposed-migrations/0028_public_search.sql applied
-// (move it to api/migrations first, as the owner approves it). Until then every test here fails on the missing search columns.
+// ADR-033 slice 6: the search over the database (needs migration 0028).
 vi.setConfig({ testTimeout: 60_000, hookTimeout: 120_000 })
 
 const { pool, db } = openTestDatabase()

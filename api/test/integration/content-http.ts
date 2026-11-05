@@ -17,7 +17,7 @@ import { createPublicReadRepository } from '../../src/modules/content/adapters/p
 import { registerContentRoutes } from '../../src/modules/content/adapters/routes.ts'
 import { createStoryRepository } from '../../src/modules/content/adapters/story-repository.ts'
 import { createTourRepository } from '../../src/modules/content/adapters/tour-repository.ts'
-import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryGroup, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeFindAddressAt, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetStoryGroup, makeGetStoryLinks, makeGetStoryVersionText, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListStoryGroups, makeListTours, makeLookupMediaByHash, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeResolveMapsLink, makeRetireLibraryMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSearchPublic, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
+import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryGroup, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeFindAddressAt, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetStoryGroup, makeGetStoryLinks, makeGetStoryVersionText, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinsByIds, makeListPinStoryOptions, makeListStories, makeListStoryGroups, makeListStoryGroupsByIds, makeListTours, makeLookupMediaByHash, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeResolveMapsLink, makeRetireLibraryMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSearchPublic, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
@@ -73,6 +73,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
   const libraryDeps = { uow, library: createMediaLibrary(), keepsakes: media.keepsakes ?? createMediaUses() }
   const writeUseCases = guardUseCases({
     listMerchantPins: makeListMerchantPins(pinDeps),
+    listPinsByIds: makeListPinsByIds(pinDeps),
     getMerchantPin: makeGetMerchantPin(pinDeps),
     listPinStoryOptions: makeListPinStoryOptions(pinDeps),
     createPin: makeCreatePin(pinDeps),
@@ -81,6 +82,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     hidePin: makeHidePin(pinDeps),
     deletePin: makeDeletePin(pinDeps),
     listStoryGroups: makeListStoryGroups(storyDeps),
+    listStoryGroupsByIds: makeListStoryGroupsByIds(storyDeps),
     getStoryGroup: makeGetStoryGroup(storyDeps),
     getStoryVersionText: makeGetStoryVersionText(storyDeps),
     createStoryGroup: makeCreateStoryGroup(storyDeps),

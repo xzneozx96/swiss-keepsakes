@@ -1,6 +1,5 @@
 SET lock_timeout = '3s';--> statement-breakpoint
--- PROPOSED, NOT APPLIED. ADR-033 slice 6 (owner decision 05.11.2026: Postgres full-text search plus pg_trgm). No journal entry yet;
--- after approval it moves to api/migrations/ as 0028_public_search.sql (0027 is the slice 4 proposal).
+-- ADR-033 slice 6 (owner decision 05.11.2026: Postgres full-text search plus pg_trgm), approved by the owner.
 -- Additive: no existing column, row or index changes. Every step is IF NOT EXISTS / OR REPLACE, so a second run does nothing.
 -- Swiss spellings without `unaccent` (it is STABLE, so a generated column cannot call it, and it has no oe -> ö rule): a title with
 -- an umlaut is stored twice in one string, "lowendenkmal loewendenkmal", so "lowen" and "loewen" both find "Löwendenkmal".

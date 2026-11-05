@@ -1,7 +1,7 @@
 import type { StoryListItem, StoryListVersion } from '@sk/api-contract'
 
 import { describe, expect, it } from 'vitest'
-import { filterStories, languageState, storyTitle, tabCounts } from '@/features/stories/lib/list'
+import { languageState, storyTitle } from '@/features/stories/lib/list'
 
 const version = (over: Partial<StoryListVersion> = {}): StoryListVersion => ({ status: 'draft', everPublished: false, editsNotLive: false, rowVersion: 1, updatedAt: '2026-11-03T08:00:00.000Z', ...over })
 const published = (over: Partial<StoryListVersion> = {}) => version({ status: 'published', everPublished: true, ...over })
@@ -14,17 +14,6 @@ function story(over: Partial<StoryListItem> & { en?: StoryListVersion | null, de
   counter += 1
 
   return { groupId: `0198a000-0000-7000-8000-${String(counter).padStart(12, '0')}`, kind: 'story', title: { en: `Story ${counter}` }, cover: null, languages: { en, de }, updatedAt: '2026-11-03T08:00:00.000Z', ...rest }
-}
-
-/** The ticket's outline: 2 published stories and 3 that only have drafts. */
-function five() {
-  return [
-    story({ title: { en: 'Bridge' }, en: published() }),
-    story({ title: { de: 'Brücke' }, en: null, de: published() }),
-    story({ title: { en: 'Lake' } }),
-    story({ title: { en: 'Mountain' }, de: version() }),
-    story({ title: { en: 'Old town' }, en: version({ everPublished: true }) }),
-  ]
 }
 
 describe('[E4.3][AC30] story list rules', () => {
@@ -41,32 +30,5 @@ describe('[E4.3][AC30] story list rules', () => {
     expect(storyTitle(story({ title: { de: 'Brücke' } }))).toBe('Brücke')
     expect(storyTitle(story({ title: { en: '   ', de: 'Brücke' } }))).toBe('Brücke')
     expect(storyTitle(story({ title: {} }))).toBe('')
-  })
-
-  it.each([
-    ['all', 5],
-    ['published', 2],
-    ['drafts', 3],
-  ] as const)('[E4.3][AC30] AC-2 two published and three draft-only stories count All 5, Published 2, Drafts 3 and the %s tab shows %i rows', (tab, rows) => {
-    const items = five()
-
-    expect(tabCounts(items, '')).toEqual({ all: 5, published: 2, drafts: 3 })
-    expect(filterStories(items, tab, '')).toHaveLength(rows)
-  })
-
-  it('[E4.3][AC30] AC-2 a story that was published and then unpublished is a draft', () => {
-    const items = [story({ en: version({ everPublished: true }) })]
-
-    expect(tabCounts(items, '')).toEqual({ all: 1, published: 0, drafts: 1 })
-  })
-
-  it('[E4.3][AC30] AC-2 the search matches either title, ignores case and spaces, and the counts follow it', () => {
-    const items = five()
-
-    expect(filterStories(items, 'all', '  BRÜCKE ').map(storyTitle)).toEqual(['Brücke'])
-    expect(filterStories(items, 'all', 'bridge').map(storyTitle)).toEqual(['Bridge'])
-    expect(tabCounts(items, 'o')).toEqual({ all: 2, published: 0, drafts: 2 })
-    expect(filterStories(items, 'published', 'zzz')).toEqual([])
-    expect(filterStories([story({ title: { en: 'Bridge', de: 'Brücke' } })], 'all', 'brü')).toHaveLength(1)
   })
 })

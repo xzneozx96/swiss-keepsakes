@@ -9,16 +9,6 @@ export const TYPE_FILTERS = ['place', 'event'] as const
 /** The status chip's colour, the same in the list and in the editor's header. */
 export const STATUS_TONE: Record<PinListItem['status'], StatusTone> = { draft: 'neutral', published: 'success', hidden: 'warning', ended: 'warning' }
 
-export interface ListFilters {
-  status: string[]
-  category: string[]
-  stay: string[]
-  type: string[]
-  query: string
-}
-
-export const noFilters: ListFilters = { status: [], category: [], stay: [], type: [], query: '' }
-
 /** The title in the dashboard's language, else the other one. `undefined` for a pin with no title yet. */
 export function titleOf(item: Pick<PinListItem, 'title'>, language: Lang): string | undefined {
   return item.title[language] ?? item.title[language === 'en' ? 'de' : 'en']
@@ -35,24 +25,4 @@ export function kindOf(item: Pick<PinListItem, 'hasDates' | 'nextDate'>): 'place
     return 'place'
 
   return item.nextDate ? 'event' : 'ended'
-}
-
-const matches = (selected: string[], test: (id: string) => boolean) => selected.length === 0 || selected.some(test)
-
-/** Each filter group is an OR among its options; the groups and the search narrow together. */
-export function filterItems(items: PinListItem[], filters: ListFilters): PinListItem[] {
-  const query = filters.query.trim().toLowerCase()
-
-  return items.filter(item =>
-    matches(filters.status, id => item.status === id)
-    && matches(filters.category, id => (id === NO_CATEGORY ? item.categoryIds.length === 0 : item.categoryIds.includes(id)))
-    && matches(filters.stay, id => item.stayTag === id)
-    && matches(filters.type, id => (id === 'event') === item.hasDates)
-    && (query === ''
-      || [item.title.en, item.title.de, item.slug?.en, item.slug?.de].some(text => text?.toLowerCase().includes(query))),
-  )
-}
-
-export function isFiltered(filters: ListFilters) {
-  return filters.query.trim() !== '' || filters.status.length + filters.category.length + filters.stay.length + filters.type.length > 0
 }

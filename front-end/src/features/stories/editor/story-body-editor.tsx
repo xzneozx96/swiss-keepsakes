@@ -1,6 +1,5 @@
 import type { StoryDraft } from '@sk/api-contract'
 import type { BodyHandover } from '../hooks/use-story-version-editor'
-import type { PinOption } from '../lib/pins'
 import type { StoryLanguage } from '../lib/search-params'
 import type { BodySheet } from './body-sheets'
 
@@ -43,9 +42,8 @@ const proseClass = [
  * key, and `onDirty` at once on every change so the header says "Unsaved" and the leave guard asks. A body still waiting
  * is handed over by `handoff`, which the version editor calls before a save, a switch or Review, and on unmount.
  */
-export default function StoryBodyEditor({ storeId, pins, body, language, onChange, onDirty, registerHandover }: {
+export default function StoryBodyEditor({ storeId, body, language, onChange, onDirty, registerHandover }: {
   storeId: string
-  pins: PinOption[]
   body: StoryDraft['body']
   language: StoryLanguage
   onChange: (body: StoryDraft['body']) => void
@@ -120,7 +118,7 @@ export default function StoryBodyEditor({ storeId, pins, body, language, onChang
   const openInsert = (tab: 'image' | 'video' | 'audio' = 'image') => setSheet({ kind: 'insert', tab })
   const openPin = () => setSheet({ kind: 'pin', current: state.pinId })
   // The line under the bar: the link form while it is open, else the pin link or the pin website warning for the cursor's link.
-  const line = linkForm || <LinkContext dismissed={dismissed} editor={editor} link={state.link} pinId={state.pinId} pins={pins} onChangePin={openPin} onKeep={host => setDismissed(current => [...current, host])} />
+  const line = linkForm || <LinkContext dismissed={dismissed} editor={editor} link={state.link} pinId={state.pinId} language={language} storeId={storeId} onChangePin={openPin} onKeep={host => setDismissed(current => [...current, host])} />
 
   return (
     <div className="relative flex flex-col gap-3">

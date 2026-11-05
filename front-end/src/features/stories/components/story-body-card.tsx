@@ -8,7 +8,6 @@ import { lazy, Suspense } from 'react'
 
 import { EditIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { usePinOptions } from '../hooks/use-pin-options'
 import { bodyFactsLine } from '../lib/facts-line'
 import { StoryBodySkeleton } from './story-body-skeleton'
 import { WriteCard } from './story-write-card'
@@ -30,12 +29,11 @@ export function StoryBodyCard({ storeId, language, body, onChange, onDirty, regi
   registerHandover: (handover: BodyHandover | null) => void
 }) {
   const { t, intlLocale } = useLocale()
-  const { pins } = usePinOptions(storeId, language)
 
   return (
     <WriteCard icon={EditIcon} title={t('storyEditor.card.story')}>
       <Suspense fallback={<StoryBodySkeleton />}>
-        <StoryBodyEditor body={body} language={language} pins={pins} storeId={storeId} registerHandover={registerHandover} onChange={next => onChange({ body: next })} onDirty={onDirty} />
+        <StoryBodyEditor body={body} language={language} storeId={storeId} registerHandover={registerHandover} onChange={next => onChange({ body: next })} onDirty={onDirty} />
       </Suspense>
       <p className="text-xs text-muted tabular-nums">{bodyFactsLine(t, intlLocale, storyBodyFacts(body as StoryBody))}</p>
     </WriteCard>

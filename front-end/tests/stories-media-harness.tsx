@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 
-import { mediaSchema, pinListSchema } from '@sk/api-contract'
+import { mediaSchema } from '@sk/api-contract'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { render } from '@testing-library/react'
 
@@ -9,6 +9,7 @@ import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { item as mediaFile, page as mediaPage } from './media-harness'
 import { media, problem, setUpHarness, state, storeId, uuid } from './stories-harness'
+import { pinsAnswer } from './support/pages'
 
 export { media, problem, state, storeId, uuid }
 export { item as libraryItem, photoId, other as secondPhotoId } from './media-harness'
@@ -27,8 +28,10 @@ function answer(call: (typeof state.calls)[number]): Response | undefined {
 
   if (custom)
     return custom
-  if (call.method === 'GET' && call.path === `/api/store/${storeId}/pins`)
-    return Response.json(pinListSchema.parse({ items: served.pins }))
+  const pins = call.method === 'GET' ? pinsAnswer(served.pins as never, call.path, `/api/store/${storeId}`) : undefined
+
+  if (pins)
+    return Response.json(pins)
   if (call.method === 'GET' && call.path.startsWith(`/api/store/${storeId}/media?`)) {
     const query = new URLSearchParams(call.path.split('?')[1])
     const kind = query.get('kind')

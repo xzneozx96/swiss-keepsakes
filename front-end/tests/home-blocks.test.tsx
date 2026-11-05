@@ -26,7 +26,7 @@ vi.mock('@/lib/api-mode', () => ({ apiEnabled: true }))
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 
 function category(n: number, slug: string, enName: string | null, deName: string | null, extra: Partial<PublicCategory> = {}): PublicCategory {
-  return { id: id(n), slug, name: { en: enName, de: deName }, parentId: null, icon: 'water', showOnHome: true, position: n, ...extra }
+  return { id: id(n), slug, name: { en: enName, de: deName }, parentId: null, icon: 'water', showOnHome: true, storyCount: 0, position: n, ...extra }
 }
 
 function pin(n: number, categoryIds: string[]): PublicMapItem {
@@ -35,6 +35,8 @@ function pin(n: number, categoryIds: string[]): PublicMapItem {
     slug: `pin-${n}`,
     latitude: 47.05,
     longitude: 8.3,
+    address: null,
+    weeklyHours: [],
     title: `Pin ${n}`,
     language: 'en',
     categoryIds,

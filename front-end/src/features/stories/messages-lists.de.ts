@@ -42,6 +42,7 @@ export const storiesListsDe: Record<keyof typeof storiesListsEn, string> = {
   'storyLists.related.state.draft': 'Entwurf',
   'storyLists.related.state.none': 'fehlt',
   'storyLists.related.none': 'Noch keine anderen Geschichten.',
+  'storyLists.related.search': 'Geschichten suchen',
   'storyLists.related.hiddenChosen.one': '{count} gewählte Geschichte ist nicht mehr in der Liste. Sie bleibt hier; entfernen Sie sie auf der Karte.',
   'storyLists.related.hiddenChosen.other': '{count} gewählte Geschichten sind nicht mehr in der Liste. Sie bleiben hier; entfernen Sie sie auf der Karte.',
   'storyLists.related.unknown': 'Unbekannte Geschichte',

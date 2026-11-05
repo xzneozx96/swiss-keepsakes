@@ -2,7 +2,7 @@ import type { SQL } from 'drizzle-orm'
 import type { KeyColumn } from './keyset.ts'
 import { sql } from 'drizzle-orm'
 
-// The SQL half of the guest search (ADR-033 slice 6; the columns, functions and indexes are in docs/proposed-migrations/0028_public_search.sql).
+// The SQL half of the guest search (ADR-033 slice 6; the columns, functions and indexes are in api/migrations/0028_public_search.sql).
 // A table keeps `search_text` (the folded title, with the oe/ae/ue form beside it) and `search_tsv` (English and German
 // vectors). A typed query is folded the same way, then matches by full text, by substring or by trigram word similarity.
 

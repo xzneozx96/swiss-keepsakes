@@ -166,7 +166,7 @@ describe('[E4.3][AC30][AC45] the publish checks on Review', () => {
       release = resolve
     })
 
-    servePublish(storyGroupDetail({ en: ready(), de: storyVersion('de') }, { ...category, relatedGroupIds: [related] }), call => (call.method === 'GET' && call.path === `${storeBase}/story-groups`
+    servePublish(storyGroupDetail({ en: ready(), de: storyVersion('de') }, { ...category, relatedGroupIds: [related] }), call => (call.method === 'GET' && call.path.split('?')[0] === `${storeBase}/story-groups/lookup`
       ? held.then(() => Response.json({ items: [{ groupId: related, kind: 'story', title: { de: 'Kapellbrücke' }, cover: null, languages: { en: null, de: { status: 'published', everPublished: true, editsNotLive: false, rowVersion: 1, updatedAt: '2026-11-03T08:00:00.000Z' } }, updatedAt: '2026-11-03T08:00:00.000Z' }] })) as never
       : undefined))
     await openReview()
@@ -193,7 +193,7 @@ describe('[E4.3][AC30][AC45] the publish checks on Review', () => {
     const pin = uuid(701)
     const linked = body({ type: 'paragraph', content: [{ type: 'text', text: 'wall', marks: [{ type: 'pinLink', attrs: { pinId: pin } }] }] })
 
-    servePublish(storyGroupDetail({ en: ready({ draft: storyDoc({ coverMediaId: coverId, body: linked }) }), de: storyVersion('de') }, category), call => (call.method === 'GET' && call.path === `${storeBase}/pins`
+    servePublish(storyGroupDetail({ en: ready({ draft: storyDoc({ coverMediaId: coverId, body: linked }) }), de: storyVersion('de') }, category), call => (call.method === 'GET' && call.path.split('?')[0] === `${storeBase}/pins/lookup`
       ? Response.json({ items: [{ id: pin, status: 'draft', title: { en: 'Museggmauer' }, slug: null, located: true, categoryIds: [], hasDates: false, nextDate: null, stayTag: 'both', interests: [], coverMediaId: null, cover: null, mainStory: null, rowVersion: 1 }] })
       : undefined))
     await openReview()
@@ -206,7 +206,7 @@ describe('[E4.3][AC30][AC45] the publish checks on Review', () => {
     await openReview()
     await screen.findByText('Ready to publish', undefined, SLOW)
 
-    expect(state.calls.filter(call => call.method === 'GET' && (call.path === `${storeBase}/story-groups` || call.path === `${storeBase}/products` || call.path === `${storeBase}/pins`))).toEqual([])
+    expect(state.calls.filter(call => call.method === 'GET' && (call.path.split('?')[0] === `${storeBase}/story-groups/lookup` || call.path === `${storeBase}/products` || call.path.split('?')[0] === `${storeBase}/pins/lookup`))).toEqual([])
   }, 20000)
 })
 

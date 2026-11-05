@@ -21,7 +21,7 @@ function KeepsakeProbe({ language = 'en' }: { language?: 'en' | 'de' }) {
 }
 
 function StoryProbe() {
-  const out = useStoryOptions(storeId, 'en')
+  const out = useStoryOptions(storeId, 'en', [uuid(1)])
 
   return <p data-testid="out">{JSON.stringify({ stories: out.stories, isLoading: out.isLoading, isError: out.isError })}</p>
 }

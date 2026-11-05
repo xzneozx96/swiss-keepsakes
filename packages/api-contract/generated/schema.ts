@@ -2985,7 +2985,24 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description Comma separated category ids, or `none` for a pin with no category. A pin matches any of them */
+                    category?: string;
+                    /** @description The page, from 1. A page past the end answers no items and the real total */
+                    page?: number;
+                    /** @description Rows a page, 1 to 20 */
+                    pageSize?: number;
+                    /** @description Matches the title of either language, in any case */
+                    q?: string;
+                    /** @description `edited`: last edit first (`updated_at desc, id desc`). `created`: newest first (`created_at desc, id desc`) */
+                    sort?: "edited" | "created";
+                    /** @description Comma separated: draft, published, hidden, ended. A pin matches any of them. `ended` is a published pin whose dates are all over */
+                    status?: string;
+                    /** @description Comma separated: short_stay, multi_day, both */
+                    stay?: string;
+                    /** @description Comma separated: place (no dates), event (with dates) */
+                    type?: string;
+                };
                 header?: never;
                 path: {
                     storeId: string;
@@ -2994,7 +3011,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Every pin of the store, most recently edited first. `ended` is a live pin whose dates are all over */
+                /** @description One page of the pins of the store, with the total and the facet counts. `ended` is a live pin whose dates are all over */
                 200: {
                     headers: {
                         "X-Request-Id": components["headers"]["RequestId"];
@@ -3301,6 +3318,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/store/{storeId}/pins/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    /** @description A web host such as `zyt.example`. Also returns the published pins whose outbound link is on that host (without `www.`) */
+                    host?: string;
+                    /** @description Comma separated pin ids, at most 50. An id of another store is left out */
+                    ids?: string;
+                };
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The pins named by `ids` (at most 50) and, with `host`, the published pins linking to that host. Not paged */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PinLookup"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/store/{storeId}/pins/story-options": {
         parameters: {
             query?: never;
@@ -3310,7 +3380,14 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description The story already chosen: it is in the answer whatever its state or title, so the picker can name it */
+                    groupId?: string;
+                    /** @description How many matches to return, 1 to 20 */
+                    limit?: number;
+                    /** @description Matches the title of either language, in any case */
+                    q?: string;
+                };
                 header?: never;
                 path: {
                     storeId: string;
@@ -3319,7 +3396,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description The story groups of the store, for the main-story picker */
+                /** @description The story groups of the store that match the search, for the main-story picker */
                 200: {
                     headers: {
                         "X-Request-Id": components["headers"]["RequestId"];
@@ -3889,7 +3966,18 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description The page, from 1. A page past the end answers no items and the real total */
+                    page?: number;
+                    /** @description Rows a page, 1 to 20 */
+                    pageSize?: number;
+                    /** @description Matches the title of either language, in any case */
+                    q?: string;
+                    /** @description `updated` (default): latest version update first, then `id desc`. `created`: newest group first (`created_at desc, id desc`) */
+                    sort?: "created" | "updated";
+                    /** @description `published`: a language version is live. `drafts`: none is */
+                    status?: "all" | "published" | "drafts";
+                };
                 header?: never;
                 path: {
                     storeId: string;
@@ -3898,7 +3986,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description The story groups of the store that have a version, with the state of each language version, most recently updated first */
+                /** @description One page of the story groups of the store that have a version, with the state of each language version, the total and the tab counts */
                 200: {
                     headers: {
                         "X-Request-Id": components["headers"]["RequestId"];
@@ -4487,6 +4575,57 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/story-groups/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Comma separated story group ids, at most 50. An id of another store, or of a group with no version, is left out */
+                    ids?: string;
+                };
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The story groups named by `ids` (at most 50), for what the editor already references. Not paged */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryLookup"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6309,9 +6448,35 @@ export interface components {
                 opens: string;
             }[];
         };
-        /** @description Every pin of the store, most recently edited first */
+        /** @description One page of the pins of the store */
         PinList: {
+            /** @description The pins of each category (its children count too) that match the search and the other filters, not the category filter. `none` counts the pins with no category */
+            categories: {
+                [key: string]: number;
+            };
             items: components["schemas"]["PinListItem"][];
+            page: number;
+            pageSize: number;
+            /** @description The pins of each status that match the search and the other filters, not the status filter */
+            statuses: {
+                draft: number;
+                ended: number;
+                hidden: number;
+                published: number;
+            };
+            /** @description The pins of each stay that match the search and the other filters, not the stay filter */
+            stays: {
+                both: number;
+                multi_day: number;
+                short_stay: number;
+            };
+            /** @description The rows that match the filters, before paging */
+            total: number;
+            /** @description The pins of each type that match the search and the other filters, not the type filter */
+            types: {
+                event: number;
+                place: number;
+            };
         };
         /** @description A pin as one row of the merchant list */
         PinListItem: {
@@ -6376,6 +6541,10 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        /** @description The pins named by `ids` and, with `host`, the published pins linking to that host. Not paged: at most 50 ids, and at most 50 rows */
+        PinLookup: {
+            items: components["schemas"]["PinListItem"][];
+        };
         /** @description Optional and empty in practice. The server makes the slug of each language from its title at the first publish and keeps it afterwards (ADR-014), so a publish never fails for a missing slug when a title exists */
         PinPublishBody: {
             /**
@@ -6407,7 +6576,7 @@ export interface components {
                 en?: string;
             };
         };
-        /** @description Story groups of the store, most recently created first */
+        /** @description The first `limit` matches of the search, and the chosen story when it is not among them: story groups with a live language, most recently created first. Not paged */
         PinStoryOptionList: {
             items: components["schemas"]["PinStoryOption"][];
         };
@@ -8732,9 +8901,19 @@ export interface components {
             /** @description Other stories that list the story under More to discover */
             stories: number;
         };
-        /** @description The story groups of the store that have a version, most recently updated first */
+        /** @description One page of the story groups of the store that have a version */
         StoryList: {
             items: components["schemas"]["StoryListItem"][];
+            page: number;
+            pageSize: number;
+            /** @description The groups of each tab that match the search. The status filter does not change them */
+            tabs: {
+                all: number;
+                drafts: number;
+                published: number;
+            };
+            /** @description The rows that match the filters, before paging */
+            total: number;
         };
         /** @description One story group, one row of the Stories list */
         StoryListItem: {
@@ -8792,6 +8971,10 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         } | null;
+        /** @description The story groups named by `ids`, at most 50. Not paged */
+        StoryLookup: {
+            items: components["schemas"]["StoryListItem"][];
+        };
         /** @description One language version of a story, with its draft and its published text */
         StoryVersion: {
             /** Format: date-time */

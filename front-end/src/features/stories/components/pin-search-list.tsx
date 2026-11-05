@@ -6,10 +6,10 @@ import { useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 import { PickupIcon, SearchIcon } from '@/components/icons'
-import { Pager, usePaged } from '@/components/list-pagination'
 import { Media } from '@/components/media'
 import { useLocale } from '@/contexts/locale-context'
-import { usePinOptions } from '../hooks/use-pin-options'
+import { useSearchBox } from '@/hooks/use-search-box'
+import { usePinSearch } from '../hooks/use-pin-options'
 import { pinRowLine } from '../lib/pins'
 import { CHOICE_ROW } from './choice-row'
 import { ChosenMark } from './chosen-mark'
@@ -51,7 +51,7 @@ function PinRow({ pin, selected, onPress }: { pin: PinOption, selected: boolean,
 }
 
 /**
- * The store's pins as searchable rows, read once and filtered here. It is controlled: the parent holds `selected` and
+ * The store's pins as searchable rows: the first 20 matches of the search, asked of the server as you type. It is controlled: the parent holds `selected` and
  * decides whether a press chooses one pin or toggles several. Any pin can be chosen, published or not; an unpublished
  * one shows as plain text to guests (ADR-011).
  */
@@ -62,15 +62,14 @@ export function PinSearchList({ storeId, language, selected, onToggle }: {
   onToggle: (pin: PinOption) => void
 }) {
   const { t } = useLocale()
-  const { pins, isLoading, isError } = usePinOptions(storeId, language)
   const [query, setQuery] = useState('')
-  const needle = query.trim().toLowerCase()
-  const shown = pins.filter(pin => pin.name.toLowerCase().includes(needle))
-  const { pageItems, pager } = usePaged(shown, needle)
+  const [text, setText] = useSearchBox(query, setQuery)
+  const { pins, isLoading, isError } = usePinSearch(storeId, language, query)
+  const needle = query.trim()
 
   return (
     <div className="flex flex-col gap-4">
-      <SearchField aria-label={t('storyMedia.pin.search')} className="w-full" value={query} onChange={setQuery}>
+      <SearchField aria-label={t('storyMedia.pin.search')} className="w-full" value={text} onChange={setText}>
         <SearchField.Group>
           <SearchField.SearchIcon />
           <SearchField.Input className="w-full" placeholder={t('storyMedia.pin.search')} />
@@ -79,17 +78,16 @@ export function PinSearchList({ storeId, language, selected, onToggle }: {
       </SearchField>
       {isLoading && <RowsSkeleton />}
       {isError && <EmptyState compact icon={SearchIcon} message={t('storyMedia.pin.loadFailed')} />}
-      {!isLoading && !isError && shown.length === 0 && <EmptyState compact icon={SearchIcon} message={needle ? t('storyMedia.pin.empty', { query: query.trim() }) : t('storyMedia.pin.none')} />}
-      {shown.length > 0 && (
+      {!isLoading && !isError && pins.length === 0 && <EmptyState compact icon={SearchIcon} message={needle ? t('storyMedia.pin.empty', { query: needle }) : t('storyMedia.pin.none')} />}
+      {pins.length > 0 && (
         <ul className="flex flex-col gap-2 p-1">
-          {pageItems.map(pin => (
+          {pins.map(pin => (
             <li key={pin.id}>
               <PinRow pin={pin} selected={selected.includes(pin.id)} onPress={() => onToggle(pin)} />
             </li>
           ))}
         </ul>
       )}
-      {!isLoading && <Pager compact pager={pager} />}
     </div>
   )
 }

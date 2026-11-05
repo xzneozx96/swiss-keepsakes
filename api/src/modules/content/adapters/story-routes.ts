@@ -7,16 +7,16 @@ import type { StoryGroupDeleted } from '../application/delete-story-group.ts'
 import type { Result } from '../application/failure.ts'
 import type { StoryGroupRead } from '../application/get-story-group.ts'
 import type { StoryVersionText } from '../application/get-story-version-text.ts'
-import type { StoryListEntry } from '../application/list-story-groups.ts'
-import type { StoryGroupChanges, StoryLinkCounts, StoryVersionChanges } from '../ports.ts'
+import type { StoryListEntry, StoryListResult } from '../application/list-story-groups.ts'
+import type { StoryGroupChanges, StoryLinkCounts, StoryListQuery, StoryVersionChanges } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { storyDeletedSchema, storyGroupCreateBodySchema, storyGroupDetailSchema, storyGroupSaveBodySchema, storyGroupSchema, storyLinksSchema, storyListSchema, storyVersionCreateBodySchema, storyVersionMoveBodySchema, storyVersionSaveBodySchema, storyVersionSchema, storyVersionTextSchema } from '@sk/api-contract'
+import { storyDeletedSchema, storyGroupCreateBodySchema, storyGroupDetailSchema, storyGroupSaveBodySchema, storyGroupSchema, storyLinksSchema, storyListQuerySchema, storyListSchema, storyLookupQuerySchema, storyLookupSchema, storyVersionCreateBodySchema, storyVersionMoveBodySchema, storyVersionSaveBodySchema, storyVersionSchema, storyVersionTextSchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
 import { failureProblem } from './problems.ts'
 import { etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
-import { storyGroupDetailView, storyGroupView, storyListView, storyVersionTextView, storyVersionView } from './story-view.ts'
+import { storyGroupDetailView, storyGroupView, storyItemsView, storyListView, storyVersionTextView, storyVersionView } from './story-view.ts'
 
 type Language = StoryVersion['language']
 
@@ -29,7 +29,8 @@ export interface StoryUseCases {
   publishStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, requestId: string | null) => Promise<Result<StoryVersion>>
   unpublishStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, requestId: string | null) => Promise<Result<StoryVersion>>
   moveStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, targetGroupId: string, requestId: string | null) => Promise<Result<StoryVersion>>
-  listStoryGroups: (actor: Actor, storeId: string) => Promise<Result<StoryListEntry[]>>
+  listStoryGroupsByIds: (actor: Actor, storeId: string, ids: string[]) => Promise<Result<StoryListEntry[]>>
+  listStoryGroups: (actor: Actor, storeId: string, query: StoryListQuery) => Promise<Result<StoryListResult>>
   getStoryGroup: (actor: Actor, storeId: string, groupId: string) => Promise<Result<StoryGroupRead>>
   getStoryVersionText: (actor: Actor, storeId: string, groupId: string, language: Language) => Promise<Result<StoryVersionText>>
   getStoryLinks: (actor: Actor, storeId: string, groupId: string) => Promise<Result<StoryLinkCounts>>
@@ -63,6 +64,17 @@ function bodyRefused<I>(...[result, c]: Parameters<Hook<I, AppEnv, string, never
 const groupsPath = '/api/store/{storeId}/story-groups'
 const versionPath = `${groupsPath}/{groupId}/versions/{language}`
 
+// Registered before the {groupId} routes, so `lookup` is never read as a group id.
+const lookupGroupsRoute = createRoute({
+  method: 'get',
+  path: `${groupsPath}/lookup`,
+  request: { params: storeParams, query: storyLookupQuerySchema },
+  responses: {
+    200: { description: 'The story groups named by `ids` (at most 50), for what the editor already references. Not paged', headers: requestIdHeader, content: json(storyLookupSchema) },
+    ...problemResponses,
+  },
+})
+
 const getVersionTextRoute = createRoute({
   method: 'get',
   path: versionPath,
@@ -76,9 +88,9 @@ const getVersionTextRoute = createRoute({
 const listGroupsRoute = createRoute({
   method: 'get',
   path: groupsPath,
-  request: { params: storeParams },
+  request: { params: storeParams, query: storyListQuerySchema },
   responses: {
-    200: { description: 'The story groups of the store that have a version, with the state of each language version, most recently updated first', headers: requestIdHeader, content: json(storyListSchema) },
+    200: { description: 'One page of the story groups of the store that have a version, with the state of each language version, the total and the tab counts', headers: requestIdHeader, content: json(storyListSchema) },
     ...problemResponses,
   },
 })
@@ -196,8 +208,15 @@ const deleteVersionRoute = createRoute({
 // The Idempotency-Key middleware and the store guard sit before these (createApp), so the handlers read the
 // verified store from `c.get('store')`, never from the path.
 export function registerStoryRoutes(app: OpenAPIHono<AppEnv>, useCases: StoryUseCases): void {
+  app.openapi(lookupGroupsRoute, async (c) => {
+    const result = await useCases.listStoryGroupsByIds(c.get('actor'), c.get('store').storeId, c.req.valid('query').ids)
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json({ items: storyItemsView(result.value, useCases.publicUrl) }, 200)
+  })
+
   app.openapi(listGroupsRoute, async (c) => {
-    const result = await useCases.listStoryGroups(c.get('actor'), c.get('store').storeId)
+    const result = await useCases.listStoryGroups(c.get('actor'), c.get('store').storeId, c.req.valid('query'))
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(storyListView(result.value, useCases.publicUrl), 200)

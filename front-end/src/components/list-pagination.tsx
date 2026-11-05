@@ -55,6 +55,16 @@ export function usePaged<T>(items: T[], resetKey = '', size = PAGE_SIZE) {
 }
 
 /**
+ * The pager of a list the server pages (ADR-033, numbered mode): the page, `total` and `pageSize` come from the answer, the rows
+ * are already the page's. `go` moves the page, usually by setting it in the URL.
+ */
+export function serverPager({ page, pageSize, total, go }: { page: number, pageSize: number, total: number, go: (page: number) => void }): PagerState {
+  const start = (page - 1) * pageSize
+
+  return { page, pages: Math.max(1, Math.ceil(total / pageSize)), total, from: start + 1, to: Math.min(start + pageSize, total), go }
+}
+
+/**
  * The HeroUI pagination, only when there is more than one page. In a table footer it is the
  * docs' pager (summary, Prev and Next with text); `compact` is the icon-only bar under a list.
  */

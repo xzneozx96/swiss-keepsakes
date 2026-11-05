@@ -34,7 +34,7 @@ export function ReviewCard({ storeId, group, language, fields, onGroupChange, on
   const { t, intlLocale } = useLocale()
   const isReview = group.kind === 'editorial_review'
   const placeId = group.subjectPlaceId
-  const { pins, isLoading } = usePinOptions(storeId, language, placeId !== null)
+  const { pins, isLoading } = usePinOptions(storeId, language, { ids: placeId ? [placeId] : [] })
   const [today] = useState(() => zurichDate(new Date()))
   // A day after today is shown with its error and never reaches the draft.
   const [refused, setRefused] = useState<string>()

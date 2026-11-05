@@ -1,5 +1,6 @@
 import type { StoryLanguage } from '../lib/search-params'
 
+import { SearchField } from '@heroui/react'
 import { useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
@@ -7,7 +8,8 @@ import { ErrorNotice } from '@/components/error-notice'
 import { ContentIcon } from '@/components/icons'
 import { Media } from '@/components/media'
 import { useLocale } from '@/contexts/locale-context'
-import { useStoryOptions } from '../hooks/use-story-options'
+import { useSearchBox } from '@/hooks/use-search-box'
+import { useStoryOptions, useStorySearch } from '../hooks/use-story-options'
 import { MAX_RELATED, offeredStories, toggleLinked } from '../lib/linked-lists'
 import { CHOICE_ROW } from './choice-row'
 import { ChosenMark } from './chosen-mark'
@@ -28,10 +30,16 @@ export function RelatedSheet({ storeId, language, ownGroupId, value, onSave, onC
   onClose: () => void
 }) {
   const { t } = useLocale()
-  const { stories, isLoading, isError, refetch } = useStoryOptions(storeId, language)
+  const [query, setQuery] = useState('')
+  const [text, setText] = useSearchBox(query, setQuery)
+  const found = useStorySearch(storeId, language, query)
+  // The stories already chosen are read by id, so they stay on the list whatever the search says.
+  const chosen = useStoryOptions(storeId, language, value)
   const [draft, setDraft] = useState(value)
+  const { isLoading, isError, refetch } = found
+  const stories = [...found.stories, ...chosen.stories.filter(option => !found.stories.some(other => other.id === option.id))]
   const offered = offeredStories(stories, ownGroupId)
-  const missing = isLoading || isError ? 0 : draft.filter(id => !stories.some(option => option.id === id)).length
+  const missing = chosen.isLoading || chosen.isError ? 0 : draft.filter(id => !stories.some(option => option.id === id)).length
   const full = draft.length >= MAX_RELATED
 
   return (
@@ -41,6 +49,13 @@ export function RelatedSheet({ storeId, language, ownGroupId, value, onSave, onC
       onClose={onClose}
       onDone={() => onSave(draft)}
     >
+      <SearchField aria-label={t('storyLists.related.search')} className="w-full" value={text} onChange={setText}>
+        <SearchField.Group>
+          <SearchField.SearchIcon />
+          <SearchField.Input className="w-full" placeholder={t('storyLists.related.search')} />
+          <SearchField.ClearButton />
+        </SearchField.Group>
+      </SearchField>
       {full && <p className="text-sm text-muted">{t('storyLists.related.full')}</p>}
       {missing > 0 && <p className="text-sm text-muted">{t(missing === 1 ? 'storyLists.related.hiddenChosen.one' : 'storyLists.related.hiddenChosen.other', { count: missing })}</p>}
       {isLoading && <RowsSkeleton />}

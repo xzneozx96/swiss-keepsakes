@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { mediaSchema } from './media.ts'
+import { MAX_PAGE_LIMIT, numberedPageOf, numberedPageQuery } from './page.ts'
 import { noNul } from './text.js'
 
 // Mirrors packages/domain/src/content (the contract imports only zod). Request bodies are strict, so a price, a
@@ -184,7 +185,37 @@ export const pinListItemSchema = z.object({
   updatedAt: z.iso.datetime(),
 }).meta({ id: 'PinListItem', description: 'A pin as one row of the merchant list' })
 
-export const pinListSchema = z.object({ items: z.array(pinListItemSchema) }).meta({ id: 'PinList', description: 'Every pin of the store, most recently edited first' })
+const PIN_STATUSES = ['draft', 'published', 'hidden', 'ended'] as const
+const PIN_TYPES = ['place', 'event'] as const
+const splitList = (value: string | undefined) => (value === undefined || value === '' ? [] : value.split(','))
+const listOf = <T extends string>(item: z.ZodType<T, T>) => z.string().max(1500).optional().transform(splitList).pipe(z.array(item).max(40))
+
+/** The most ids one lookup takes. */
+export const MAX_LOOKUP_IDS = 50
+const lookupIds = z.string().max(MAX_LOOKUP_IDS * 37).optional().transform(splitList).pipe(z.array(z.uuid()).max(MAX_LOOKUP_IDS))
+
+export const pinLookupQuerySchema = z.object({
+  ids: lookupIds.meta({ description: `Comma separated pin ids, at most ${MAX_LOOKUP_IDS}. An id of another store is left out` }),
+  host: z.string().trim().toLowerCase().max(253).optional().meta({ description: 'A web host such as `zyt.example`. Also returns the published pins whose outbound link is on that host (without `www.`)' }),
+})
+
+export const pinLookupSchema = z.object({ items: z.array(pinListItemSchema) }).meta({ id: 'PinLookup', description: 'The pins named by `ids` and, with `host`, the published pins linking to that host. Not paged: at most 50 ids, and at most 50 rows' })
+
+export const pinListQuerySchema = numberedPageQuery({
+  status: listOf(z.enum(PIN_STATUSES)).meta({ description: 'Comma separated: draft, published, hidden, ended. A pin matches any of them. `ended` is a published pin whose dates are all over' }),
+  category: listOf(z.union([z.uuid(), z.literal('none')])).meta({ description: 'Comma separated category ids, or `none` for a pin with no category. A pin matches any of them' }),
+  stay: listOf(stayTag).meta({ description: 'Comma separated: short_stay, multi_day, both' }),
+  type: listOf(z.enum(PIN_TYPES)).meta({ description: 'Comma separated: place (no dates), event (with dates)' }),
+  q: z.string().trim().max(200).optional().meta({ description: 'Matches the title of either language, in any case' }),
+  sort: z.enum(['edited', 'created']).default('edited').meta({ description: '`edited`: last edit first (`updated_at desc, id desc`). `created`: newest first (`created_at desc, id desc`)' }),
+})
+
+export const pinListSchema = numberedPageOf(pinListItemSchema, 'PinList', {
+  statuses: z.object({ draft: z.int(), published: z.int(), hidden: z.int(), ended: z.int() }).meta({ description: 'The pins of each status that match the search and the other filters, not the status filter' }),
+  stays: z.object({ short_stay: z.int(), multi_day: z.int(), both: z.int() }).meta({ description: 'The pins of each stay that match the search and the other filters, not the stay filter' }),
+  types: z.object({ place: z.int(), event: z.int() }).meta({ description: 'The pins of each type that match the search and the other filters, not the type filter' }),
+  categories: z.record(z.string(), z.int()).meta({ description: 'The pins of each category (its children count too) that match the search and the other filters, not the category filter. `none` counts the pins with no category' }),
+}).meta({ id: 'PinList', description: 'One page of the pins of the store' })
 
 // What the main-story picker offers: the story groups of the store.
 const storyLanguageState = z.enum(['none', 'draft', 'published'])
@@ -220,7 +251,13 @@ export const addressSchema = z.object({
   formatted: z.string().describe('For example "Kapellbrücke 1, 6004 Luzern"'),
 }).meta({ id: 'Address', description: 'The address of the nearest building in the Swiss federal building register' })
 
-export const pinStoryOptionListSchema = z.object({ items: z.array(pinStoryOptionSchema) }).meta({ id: 'PinStoryOptionList', description: 'Story groups of the store, most recently created first' })
+export const pinStoryOptionsQuerySchema = z.object({
+  q: z.string().trim().max(200).optional().meta({ description: 'Matches the title of either language, in any case' }),
+  groupId: z.uuid().optional().meta({ description: 'The story already chosen: it is in the answer whatever its state or title, so the picker can name it' }),
+  limit: z.coerce.number().int().min(1).max(MAX_PAGE_LIMIT).default(10).meta({ description: `How many matches to return, 1 to ${MAX_PAGE_LIMIT}` }),
+})
+
+export const pinStoryOptionListSchema = z.object({ items: z.array(pinStoryOptionSchema) }).meta({ id: 'PinStoryOptionList', description: 'The first `limit` matches of the search, and the chosen story when it is not among them: story groups with a live language, most recently created first. Not paged' })
 
 // The story body: one Tiptap document. Only the nodes and marks of the story-editor decision are accepted, each with
 // strict attributes. The contract imports only zod, so these constants repeat packages/domain/src/content/body.ts;
@@ -506,7 +543,23 @@ export const storyListItemSchema = z.object({
   updatedAt: z.iso.datetime().meta({ description: 'The latest update of any version' }),
 }).meta({ id: 'StoryListItem', description: 'One story group, one row of the Stories list' })
 
-export const storyListSchema = z.object({ items: z.array(storyListItemSchema) }).meta({ id: 'StoryList', description: 'The story groups of the store that have a version, most recently updated first' })
+export const STORY_TABS = ['all', 'published', 'drafts'] as const
+
+export const storyListQuerySchema = numberedPageQuery({
+  status: z.enum(STORY_TABS).default('all').meta({ description: '`published`: a language version is live. `drafts`: none is' }),
+  q: z.string().trim().max(200).optional().meta({ description: 'Matches the title of either language, in any case' }),
+  sort: z.enum(['created', 'updated']).default('updated').meta({ description: '`updated` (default): latest version update first, then `id desc`. `created`: newest group first (`created_at desc, id desc`)' }),
+})
+
+const storyTabCounts = z.object({ all: z.int().min(0), published: z.int().min(0), drafts: z.int().min(0) })
+
+export const storyLookupQuerySchema = z.object({ ids: lookupIds.meta({ description: `Comma separated story group ids, at most ${MAX_LOOKUP_IDS}. An id of another store, or of a group with no version, is left out` }) })
+
+export const storyListSchema = numberedPageOf(storyListItemSchema, 'StoryList', {
+  tabs: storyTabCounts.meta({ description: 'The groups of each tab that match the search. The status filter does not change them' }),
+}).meta({ id: 'StoryList', description: 'One page of the story groups of the store that have a version' })
+
+export const storyLookupSchema = z.object({ items: z.array(storyListItemSchema) }).meta({ id: 'StoryLookup', description: 'The story groups named by `ids`, at most 50. Not paged' })
 
 export const storyGroupDetailSchema = z.object({
   ...storyGroupSchema.shape,
@@ -597,6 +650,9 @@ export type PinWriteBody = z.infer<typeof pinWriteBodySchema>
 export type Pin = z.infer<typeof pinSchema>
 export type PinListItem = z.infer<typeof pinListItemSchema>
 export type PinList = z.infer<typeof pinListSchema>
+export type PinLookup = z.infer<typeof pinLookupSchema>
+export type PinListQuery = z.input<typeof pinListQuerySchema>
+export type PinStoryOptionsQuery = z.input<typeof pinStoryOptionsQuerySchema>
 export type PinStoryOption = z.infer<typeof pinStoryOptionSchema>
 export type MapsLinkPosition = z.infer<typeof mapsLinkPositionSchema>
 export type Address = z.infer<typeof addressSchema>
@@ -612,6 +668,8 @@ export type StoryVersion = z.infer<typeof storyVersionSchema>
 export type StoryListVersion = z.infer<typeof storyListVersionSchema>
 export type StoryListItem = z.infer<typeof storyListItemSchema>
 export type StoryList = z.infer<typeof storyListSchema>
+export type StoryLookup = z.infer<typeof storyLookupSchema>
+export type StoryListQuery = z.input<typeof storyListQuerySchema>
 export type StoryLinks = z.infer<typeof storyLinksSchema>
 export type StoryDeleted = z.infer<typeof storyDeletedSchema>
 export type StoryGroupDetail = z.infer<typeof storyGroupDetailSchema>

@@ -54,6 +54,8 @@ function pin(n: number, title: string, extra: Partial<PublicMapItem> = {}): Publ
     slug: `pin-${n}`,
     latitude: 47.05 + n * 0.01,
     longitude: 8.3 + n * 0.01,
+    address: null,
+    weeklyHours: [],
     title,
     language: 'en',
     categoryIds: [],

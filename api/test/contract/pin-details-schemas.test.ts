@@ -167,20 +167,22 @@ describe('[E4.2][AC68] the response shapes', () => {
   })
 
   it('[E4.2][AC86] a list item may have the status ended and a warning for a story with no published version', () => {
+    const page = { total: 1, page: 1, pageSize: 10, statuses: { draft: 0, published: 0, hidden: 0, ended: 1 }, stays: { short_stay: 0, multi_day: 0, both: 1 }, types: { place: 0, event: 1 }, categories: { none: 1 } }
     const item = { id: uuid, status: 'ended', title: { en: 'Blues' }, slug: { en: 'blues' }, located: true, categoryIds: [], hasDates: true, nextDate: null, stayTag: 'both', interests: [], coverMediaId: null, outboundUrl: null, cover: null, mainStory: { groupId: uuid2, published: false }, rowVersion: 3, updatedAt: '2026-10-30T10:00:00.000Z' }
 
-    expect(ok(pinListSchema, { items: [item] })).toBe(true)
-    expect(ok(pinListSchema, { items: [{ ...item, status: 'archived' }] })).toBe(false)
+    expect(ok(pinListSchema, { ...page, items: [item] })).toBe(true)
+    expect(ok(pinListSchema, { ...page, items: [{ ...item, status: 'archived' }] })).toBe(false)
   })
 
   it('[T-011] a list item has a cover that is null or a media file, and the field is required', () => {
+    const page = { total: 1, page: 1, pageSize: 10, statuses: { draft: 1, published: 0, hidden: 0, ended: 0 }, stays: { short_stay: 0, multi_day: 0, both: 1 }, types: { place: 1, event: 0 }, categories: { none: 1 } }
     const item = { id: uuid, status: 'draft', title: { en: 'Bridge' }, slug: null, located: true, categoryIds: [], hasDates: false, nextDate: null, stayTag: 'both', interests: [], coverMediaId: uuid2, outboundUrl: null, cover: null, mainStory: null, rowVersion: 1, updatedAt: '2026-10-30T10:00:00.000Z' }
     const file = { id: uuid2, kind: 'image', status: 'ready', name: 'bridge.jpg', contentType: 'image/jpeg', byteSize: 10, width: 640, height: 480, publicUrl: 'https://media.test/a.jpg', variants: [{ width: 320, url: 'https://media.test/a-320.jpg' }] }
 
-    expect(ok(pinListSchema, { items: [item] })).toBe(true)
-    expect(ok(pinListSchema, { items: [{ ...item, cover: file }] })).toBe(true)
-    expect(ok(pinListSchema, { items: [{ ...item, cover: { ...file, kind: 'video' } }] })).toBe(false)
-    expect(ok(pinListSchema, { items: [{ ...item, cover: undefined }] })).toBe(false)
+    expect(ok(pinListSchema, { ...page, items: [item] })).toBe(true)
+    expect(ok(pinListSchema, { ...page, items: [{ ...item, cover: file }] })).toBe(true)
+    expect(ok(pinListSchema, { ...page, items: [{ ...item, cover: { ...file, kind: 'video' } }] })).toBe(false)
+    expect(ok(pinListSchema, { ...page, items: [{ ...item, cover: undefined }] })).toBe(false)
   })
 
   it('[E4.2][AC68] a story option carries its live languages and the state of each language', () => {

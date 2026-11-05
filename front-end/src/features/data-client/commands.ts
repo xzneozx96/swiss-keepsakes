@@ -23,8 +23,8 @@ interface ReadsWithInput {
   keepsakes: 'list' | 'get'
   media: 'list' | 'uses' | 'get' | 'lookup'
   pickup: 'list'
-  places: 'list' | 'get' | 'storyOptions' | 'storyVersion'
-  stories: 'list' | 'group' | 'links'
+  places: 'list' | 'lookup' | 'get' | 'storyOptions' | 'storyVersion'
+  stories: 'list' | 'lookup' | 'group' | 'links'
 }
 
 /**

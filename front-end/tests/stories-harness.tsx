@@ -1,7 +1,8 @@
+/* eslint-disable react-refresh/only-export-components -- a test helper, not a hot-reloaded module */
 import type { RouteComponent } from '@tanstack/react-router'
-import { mediaSchema, storyListSchema } from '@sk/api-contract'
+import { mediaSchema } from '@sk/api-contract'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider, useParams } from '@tanstack/react-router'
+import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { render } from '@testing-library/react'
 
 import { LocaleProvider } from '@/contexts/locale-context'
@@ -9,9 +10,11 @@ import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { StoriesScreen } from '@/features/stories/components/stories-screen'
 import { StoryEditorScreen } from '@/features/stories/components/story-editor-screen'
+import { parseStoriesSearch } from '@/features/stories/lib/list-search'
 import { storySearch } from '@/features/stories/lib/search-params'
 import { media, state, storeId } from './keepsakes-harness'
 import { item as mediaFile, page as mediaPage, other, photoId } from './media-harness'
+import { serverStoryPage, storyPage } from './support/pages'
 
 export { media, problem, setUpHarness, state, storeId } from './keepsakes-harness'
 
@@ -30,7 +33,7 @@ export function listItem(n: number, over: Record<string, unknown> = {}) {
   return { groupId: uuid(n), kind: 'story', title: { en: `Story ${n}` }, cover: mediaSchema.parse(media), languages: { en: listVersion(), de: null }, updatedAt: '2026-11-03T08:00:00.000Z', ...over }
 }
 
-export const storyList = (items: Record<string, unknown>[]) => storyListSchema.parse({ items })
+export const storyList = (items: Record<string, unknown>[], over: Record<string, unknown> = {}) => storyPage(items, over)
 
 /**
  * Answers the list read and the session (the account name New story signs the draft with); `other` answers anything
@@ -44,17 +47,25 @@ export function answerStories(items: Record<string, unknown>[], other: (call: (t
       return custom
     if (call.path === '/api/auth/get-session')
       return Response.json({ session: { id: 's-1', userId: 'u-1', expiresAt: new Date(Date.now() + 1e7).toISOString() }, user: { id: 'u-1', name: 'Anna Keller', email: 'anna@example.ch' } })
-    if (call.method === 'GET' && call.path === base)
-      return Response.json(storyList(items))
+    if (call.method === 'GET' && call.path.split('?')[0] === base)
+      return Response.json(serverStoryPage(items as never, new URL(call.path, 'http://x')))
 
     return undefined
   }
 }
 
+/** The Stories screen the way the route mounts it: its tab, search and page are in the URL (`status`, `q`, `page`). */
+function StoriesAtRoute() {
+  const search = parseStoriesSearch(useSearch({ strict: false }))
+  const navigate = useNavigate()
+
+  return <StoriesScreen search={search} onSearch={patch => void navigate({ to: '/store/content', search: (previous: Record<string, unknown>) => ({ ...previous, ...patch }), replace: true } as never)} />
+}
+
 /** The Stories screen at `/store/content`, and the editor route as a stub that shows the story id it opened. */
-export function renderStories(initial = '/store/content', screen: RouteComponent = StoriesScreen) {
+export function renderStories(initial = '/store/content', screen: RouteComponent = StoriesAtRoute) {
   const root = createRootRoute({ component: Outlet })
-  const index = createRoute({ getParentRoute: () => root, path: '/store/content', component: screen })
+  const index = createRoute({ getParentRoute: () => root, path: '/store/content', validateSearch: parseStoriesSearch, component: screen })
   const editor = createRoute({ getParentRoute: () => root, path: '/store/content/articles/$articleId', component: function Editor() {
     const { articleId } = useParams({ strict: false }) as { articleId?: string }
 
