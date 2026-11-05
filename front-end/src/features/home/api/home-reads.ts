@@ -1,6 +1,7 @@
-import type { PublicCategory, PublicLanguage, PublicMapItem, PublicTourCard } from '@sk/api-contract'
+import type { PublicCategory, PublicLanguage, PublicMapItem, PublicStoryCard, PublicTourCard } from '@sk/api-contract'
 import type { ServiceTile } from '../lib/service-tiles'
 
+import { loadPublicStories } from '@/features/content/api/public-stories'
 import { answer, timeout } from '@/features/data-client/api-transport'
 import { apiEnabled } from '@/lib/api-mode'
 import { apiOrigin } from '@/lib/api-origin'
@@ -15,6 +16,8 @@ export interface HomeRead {
   /** The service tiles, made from the map categories and the pins; null when either read failed. */
   tiles: ServiceTile[] | null
   tours: PublicTourCard[] | null
+  /** The published stories, newest first (the stories block shows the first three). */
+  stories: PublicStoryCard[] | null
 }
 
 /** A failed read is null, so its block shows its own error. */
@@ -29,16 +32,17 @@ function read<T>(call: Promise<{ data?: T, error?: unknown, response: Response }
 export async function loadHomeRead(lang: PublicLanguage): Promise<HomeRead> {
   // The demo build has no API: it sends no request and every block is empty, as the guest map is.
   if (!apiEnabled)
-    return { pins: [], categories: [], tiles: [], tours: [] }
+    return { pins: [], categories: [], tiles: [], tours: [], stories: [] }
 
   // The contract package carries Zod, so it loads with the first read and not with the first paint.
   const { createApiClient, publicCategoryListSchema, publicMapSchema, publicTourListSchema } = await import('@sk/api-contract')
   const client = createApiClient(apiOrigin())
   const options = () => ({ params: { query: { lang } }, ...timeout() })
-  const [map, categories, tours] = await Promise.all([
+  const [map, categories, tours, stories] = await Promise.all([
     read(client.GET('/api/public/map', options())),
     read(client.GET('/api/public/map-categories', options())),
     read(client.GET('/api/public/tours', options())),
+    loadPublicStories(lang).catch(() => null),
   ])
   const pins = publicMapSchema.safeParse(map)
   const mapCategories = publicCategoryListSchema.safeParse(categories)
@@ -49,5 +53,6 @@ export async function loadHomeRead(lang: PublicLanguage): Promise<HomeRead> {
     categories: mapCategories.success ? mapCategories.data.items : null,
     tiles: pins.success && mapCategories.success ? serviceTiles(mapCategories.data.items, pins.data.items, lang) : null,
     tours: cards.success ? cards.data.items : null,
+    stories,
   }
 }

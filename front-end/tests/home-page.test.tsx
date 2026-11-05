@@ -111,7 +111,7 @@ beforeEach(() => {
   localStorage.clear()
   resetAnswersStoreForTests()
   vi.mocked(fetchKeepsakeList).mockReset().mockResolvedValue({ items: [swan, bridge, lion, champ] })
-  vi.mocked(loadHomeRead).mockReset().mockImplementation(async lang => ({ pins: [pin, mustVisit], categories: [water], tiles: serviceTiles([water], [pin, mustVisit], lang), tours }))
+  vi.mocked(loadHomeRead).mockReset().mockImplementation(async lang => ({ pins: [pin, mustVisit], categories: [water], tiles: serviceTiles([water], [pin, mustVisit], lang), tours, stories: [] }))
   vi.mocked(fetchMapPins).mockReset().mockResolvedValue([pin])
   vi.mocked(fetchMapCategories).mockReset().mockResolvedValue([water])
 })
@@ -170,7 +170,7 @@ describe('[E4.13][AC24][AC54] the server HTML of the home', () => {
   })
 
   it('is whole when the loader read nothing: each block holds its error, never a blank page', async () => {
-    vi.mocked(loadHomeRead).mockResolvedValue({ pins: null, categories: null, tiles: null, tours: null })
+    vi.mocked(loadHomeRead).mockResolvedValue({ pins: null, categories: null, tiles: null, tours: null, stories: null })
     const html = renderToString(<RouterProvider router={await buildRouter('/en')} />)
 
     expect(textOf(html)).toContain(en['homePage.services.failed'])
@@ -231,7 +231,7 @@ describe('[E4.13][AC95] one read of the map list', () => {
 
 describe('[E4.13][AC95] a failed read takes down its own block only', () => {
   it('shows an error with retry in the tiles block while the hero, the invitation and the ending render, and retry runs the loader again (AC-6)', async () => {
-    vi.mocked(loadHomeRead).mockResolvedValueOnce({ pins: [pin], categories: [water], tiles: null, tours: [] })
+    vi.mocked(loadHomeRead).mockResolvedValueOnce({ pins: [pin], categories: [water], tiles: null, tours: [], stories: [] })
     render(<RouterProvider router={await buildRouter('/en')} />)
 
     const alert = (await screen.findByText(en['homePage.services.failed'])).closest('[role="alert"]') as HTMLElement

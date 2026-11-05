@@ -16,10 +16,11 @@ import { MapInvitation } from './map-invitation'
 import { MustVisitsSection } from './must-visits-section'
 import { RoutesSection } from './routes-section'
 import { ServiceTiles } from './service-tiles'
+import { StoriesSection } from './stories-section'
 
 /**
  * The guest home C01 in its one fixed order, the same for every visitor: the hero with the search pill, "First time in Lucerne?",
- * "Sorted before you unpack", the ending. The postcards, the routes, the food map and the events go between the tiles and the ending. `read` is what the route
+ * "Sorted before you unpack", the ending. The postcards, the newest stories, the routes, the food map and the events go between the tiles and the ending. `read` is what the route
  * loader read (undefined while it loads). Each block reads for itself, so one failed read shows one error and the rest of the page stays.
  */
 export function HomePage({ read }: { read?: HomeRead }) {
@@ -52,6 +53,7 @@ export function HomePage({ read }: { read?: HomeRead }) {
         <MapInvitation />
         <ServiceTiles tiles={read?.tiles} onRetry={retry} />
         <MustVisitsSection pins={read?.pins} onRetry={retry} />
+        <StoriesSection stories={read?.stories} onRetry={retry} />
         <RoutesSection tours={read?.tours} onRetry={retry} />
         <FoodMapSection categories={read?.categories} pins={read?.pins} onRetry={retry} />
         <EventsSection categories={read?.categories} pins={read?.pins} onRetry={retry} />
