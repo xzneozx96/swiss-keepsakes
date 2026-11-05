@@ -8,7 +8,7 @@ import { filterAddress, resolveMapFilter, validateMapSearch } from '@/features/m
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 
 function category(n: number, slug: string, parentId: string | null): PublicCategory {
-  return { id: id(n), slug, name: { en: slug, de: slug }, parentId, icon: null, showOnHome: false, position: n }
+  return { id: id(n), slug, name: { en: slug, de: slug }, parentId, icon: null, showOnHome: false, storyCount: 0, position: n }
 }
 
 function pin(n: number, categoryIds: string[], dated = false): PublicMapItem {
@@ -17,6 +17,8 @@ function pin(n: number, categoryIds: string[], dated = false): PublicMapItem {
     slug: `pin-${n}`,
     latitude: 47.05,
     longitude: 8.3,
+    address: null,
+    weeklyHours: [],
     title: `Pin ${n}`,
     language: 'en',
     categoryIds,

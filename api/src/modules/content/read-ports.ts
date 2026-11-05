@@ -113,6 +113,8 @@ export interface PublicTourStopRow {
 
 export interface PublicTourRow {
   id: string
+  // How many stops the guide has, read in the list query (a list row carries no stops).
+  stopCount: number
   slug: Localized
   stayTag: StayTag
   interests: string[]
@@ -142,6 +144,15 @@ export interface StoryPageQuery {
   after?: StoryPageKey | undefined
 }
 
+// Where a page of tours starts: the tour id (a `uuidv7`, so newest first; a tour has no publish timestamp).
+export type TourPageKey = readonly [id: string]
+
+export interface TourPageQuery {
+  // Without a limit the page is the whole list (ADR-033 section 12, one release).
+  limit?: number | undefined
+  after?: TourPageKey | undefined
+}
+
 export interface PublicReadRepository<T> {
   // One row per story group that has a published version, newest first by the date of the version carried in `language`
   // (the other language when it has none), the group id breaking a tie. `total` counts the whole filtered set. `next`
@@ -155,7 +166,8 @@ export interface PublicReadRepository<T> {
   listVisiblePins: (tx: T) => Promise<PublicPinRow[]>
   findVisiblePin: (tx: T, id: string) => Promise<PublicPinDetailRow | undefined>
   // Tour guides with status `published`, in creation order newest first (id desc; a tour has no publish timestamp), without stops.
-  listPublishedTours: (tx: T) => Promise<PublicTourRow[]>
+  // `next` is the key of the last row when more follow, else null. `total` counts every published guide.
+  pagePublishedTours: (tx: T, query: TourPageQuery) => Promise<{ rows: PublicTourRow[], next: TourPageKey | null, total: number }>
   // The tour whose published slug is this one in `language`, else in the other language, with its stops.
   findPublishedTourBySlug: (tx: T, slug: string, language: ContentLanguage) => Promise<PublicTourRow | undefined>
 }

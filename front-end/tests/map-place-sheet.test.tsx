@@ -16,6 +16,8 @@ const item: PublicMapItem = {
   slug: 'chapel-bridge',
   latitude: 47.0516,
   longitude: 8.3074,
+  address: null,
+  weeklyHours: [],
   title: 'Chapel Bridge',
   language: 'en',
   categoryIds: [],

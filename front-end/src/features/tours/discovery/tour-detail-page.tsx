@@ -20,20 +20,15 @@ import {
 import { Media } from '@/components/media'
 import { PhotoGallery } from '@/components/photo-gallery'
 import { useLocale } from '@/contexts/locale-context'
-import { usePickupPlaces } from '@/features/catalog/api/queries'
 import { ListingReviews } from '@/features/catalog/components/listing-reviews'
-import { SellerRow } from '@/features/catalog/components/seller-row'
 import { StorySheet } from '@/features/catalog/components/story-sheet'
 import { useFavourite } from '@/features/catalog/hooks/use-favourites'
 import { useProductReviews } from '@/features/catalog/hooks/use-product-reviews'
-import { shop } from '@/features/catalog/seed'
 import { TourKeepsakes } from '@/features/tours/discovery/tour-keepsakes'
 import { TourSections } from '@/features/tours/discovery/tour-sections'
 import { useTours } from '@/features/tours/hooks/use-tours'
 import { useBack } from '@/hooks/use-back'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
-
-const WHITESPACE = /\s/g
 
 // The map needs the browser (WebGL) and a large library: its chunk loads on the client only (AGENTS rule 9).
 const TourItineraryMap = lazy(() =>
@@ -73,8 +68,6 @@ export function TourDetail({
   preview?: boolean
 }) {
   const { t, language, intlLocale } = useLocale()
-  // The first pickup place is the shop itself, as on C03's seller row.
-  const shopPlace = usePickupPlaces(places => places[0])
   const navigate = useNavigate()
   const reviews = useProductReviews(`tour:${tour.id}`, { kind: 'tour' })
   const { saved, toggle } = useFavourite(`tour:${tour.id}`)
@@ -120,11 +113,6 @@ export function TourDetail({
       title: t('tourDiscovery.conditions'),
       body: text(tour.conditions),
     },
-    {
-      id: 'cancellation',
-      title: t('tourDiscovery.cancellation'),
-      body: text(tour.cancellationPolicy),
-    },
   ]
   const fallback = [
     tour.name,
@@ -136,7 +124,6 @@ export function TourDetail({
     tour.meetingPoint,
     tour.conditions,
     tour.excluded,
-    tour.cancellationPolicy,
     ...tour.included,
     ...tour.itinerary.flatMap(stop => [stop.name, stop.description]),
     ...(tour.sections ?? []).flatMap(section => [
@@ -209,27 +196,6 @@ export function TourDetail({
           }}
           subtitle={text(tour.summary)}
         />
-        <section className="py-5">
-          <SellerRow
-            address={shopPlace.address}
-            contacts={[
-              {
-                kind: 'call',
-                label: t('detail.seller.call'),
-                href: `tel:${shop.phone.replace(WHITESPACE, '')}`,
-              },
-              {
-                kind: 'email',
-                label: t('detail.seller.email'),
-                href: `mailto:${shop.email}?subject=${encodeURIComponent(t('detail.seller.emailSubject', { name: name.text }))}`,
-              },
-            ]}
-            hours={text(shopPlace.openingHours)}
-            name={shop.name}
-            sub={t('tourDetail.operatorSub')}
-            title={t('tourDetail.operatorTitle', { shop: shop.name })}
-          />
-        </section>
         <ul className="flex flex-col gap-5 border-t border-separator py-7">
           {[
             {
@@ -237,7 +203,7 @@ export function TourDetail({
               title: t('tourDiscovery.duration', {
                 hours: tour.durationMinutes / 60,
               }),
-              body: t('tourDiscovery.smallGroup'),
+              body: t('tourDiscovery.ownPace'),
             },
             {
               icon: PickupIcon,

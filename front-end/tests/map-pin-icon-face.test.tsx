@@ -28,6 +28,8 @@ function pin(categoryIds: string[]) {
     slug: 'p',
     latitude: 47.05,
     longitude: 8.3,
+    address: null,
+    weeklyHours: [],
     title: 'Seeblick',
     language: 'en',
     categoryIds,

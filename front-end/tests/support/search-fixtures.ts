@@ -43,6 +43,7 @@ export function tourCard(over: Partial<PublicTourCard> & { title: string }): Pub
     stayTag: 'both',
     interests: [],
     durationMinutes: 90,
+    stopCount: 4,
     coverKey: null,
     cover: null,
     ...notice,

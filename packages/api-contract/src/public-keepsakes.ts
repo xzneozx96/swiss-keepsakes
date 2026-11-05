@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { pageOf } from './page.ts'
 import { languageNoticeSchema } from './public.ts'
 
 // What the public keepsake reads return (E6.4). The list and the detail carry text, photos and options and never a
@@ -19,9 +20,9 @@ export const publicKeepsakeCardSchema = z.object({
   ...languageNoticeSchema.shape,
 }).meta({ id: 'PublicKeepsakeCard' })
 
-export const publicKeepsakeListSchema = z.object({
-  items: z.array(publicKeepsakeCardSchema),
-}).meta({ id: 'PublicKeepsakeList', description: 'The published keepsakes of all stores, newest first' })
+export const publicKeepsakeListSchema = pageOf(publicKeepsakeCardSchema, 'PublicKeepsakeList', {
+  total: z.int().min(0).meta({ description: 'How many published keepsakes match the filters, on every page' }),
+})
 
 // Stored data is not checked again on a read, so a description here is only known to be a document of nodes.
 const descriptionSchema = z.object({

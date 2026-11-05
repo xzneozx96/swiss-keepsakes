@@ -1,5 +1,6 @@
 import { createMemoryHistory, RouterProvider } from '@tanstack/react-router'
-import { render, screen } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { renderToString } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -19,6 +20,9 @@ function card(over: Record<string, unknown> = {}) {
     ...over,
   }
 }
+
+/** A page as the API sends it (ADR-033). */
+const page = (items: ReturnType<typeof card>[]) => ({ items, total: items.length, nextCursor: null })
 
 let respond: (url: URL) => Response
 
@@ -41,7 +45,7 @@ afterEach(() => vi.unstubAllGlobals())
 
 describe('[E6.4] the keepsake list', { timeout: 60_000 }, () => {
   it('[AC54] AC-1 shows a card per keepsake with the name and no price', async () => {
-    respond = () => Response.json({ items: [card(), card({ slug: 'cow-bell', name: 'Cow bell', cover: null })] })
+    respond = () => Response.json(page([card(), card({ slug: 'cow-bell', name: 'Cow bell', cover: null })]))
     const router = await routerAt('/en/gifts')
 
     render(<RouterProvider router={router} />)
@@ -53,7 +57,7 @@ describe('[E6.4] the keepsake list', { timeout: 60_000 }, () => {
   })
 
   it('[AC53] AC-2 a sold-out card says so and still opens its page', async () => {
-    respond = () => Response.json({ items: [card({ soldOut: true })] })
+    respond = () => Response.json(page([card({ soldOut: true })]))
     const router = await routerAt('/en/gifts')
 
     render(<RouterProvider router={router} />)
@@ -64,7 +68,7 @@ describe('[E6.4] the keepsake list', { timeout: 60_000 }, () => {
   })
 
   it('[AC54] AC-4 an empty shop shows the shared empty state and no skeleton', async () => {
-    respond = () => Response.json({ items: [] })
+    respond = () => Response.json(page([]))
     const router = await routerAt('/en/gifts')
 
     render(<RouterProvider router={router} />)
@@ -77,7 +81,7 @@ describe('[E6.4] the keepsake list', { timeout: 60_000 }, () => {
     let calls = 0
     respond = () => {
       calls += 1
-      return calls === 1 ? Response.json({ title: 'down' }, { status: 503 }) : Response.json({ items: [card()] })
+      return calls === 1 ? Response.json({ title: 'down' }, { status: 503 }) : Response.json(page([card()]))
     }
     const router = await routerAt('/en/gifts')
 
@@ -93,7 +97,7 @@ describe('[E6.4] the keepsake list', { timeout: 60_000 }, () => {
   it('[AC61] AC-3 the server HTML has the names, title, description, canonical and hreflang, and no price', async () => {
     respond = (url) => {
       expect(url.searchParams.get('lang')).toBe('de')
-      return Response.json({ items: [card({ name: 'Kapellbrücke-Tasse', slug: 'kapellbruecke-tasse', language: 'de', requestedLanguage: 'de' })] })
+      return Response.json(page([card({ name: 'Kapellbrücke-Tasse', slug: 'kapellbruecke-tasse', language: 'de', requestedLanguage: 'de' })]))
     }
     const router = await routerAt('/de/gifts')
 
@@ -105,5 +109,124 @@ describe('[E6.4] the keepsake list', { timeout: 60_000 }, () => {
     expect(html).toMatch(/<link[^>]*rel="canonical"[^>]*href="[^"]*\/de\/gifts"/)
     expect(html).toMatch(/<link[^>]*hrefLang="en"[^>]*href="[^"]*\/en\/gifts"|<link[^>]*href="[^"]*\/en\/gifts"[^>]*hreflang="en"/i)
     expect(html.replace(/<(svg|script|style)[\s\S]*?<\/\1>/g, '').replace(/<[^>]*>/g, ' ')).not.toMatch(MONEY)
+  })
+})
+
+describe('[ADR-033] the keepsake list pages with infinite scroll', { timeout: 60_000 }, () => {
+  let serial = 0
+  const many = (count: number, prefix = 'item') => Array.from({ length: count }, (_, i) => card({ id: `00000000-0000-4000-8000-${String(++serial).padStart(12, '0')}`, slug: `${prefix}-${String(i + 1).padStart(2, '0')}`, name: `${prefix} ${String(i + 1).padStart(2, '0')}` }))
+  const names = () => screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)
+  const loadMore = () => screen.getByRole('button', { name: 'Load more' })
+  const asked: URL[] = []
+
+  /** The stubbed API pages like the real one: `limit`, a cursor that is the offset, and a `category` that keeps the keepsakes whose slug starts with it. */
+  function api(all: ReturnType<typeof card>[], over: { failPageFrom?: number } = {}) {
+    asked.length = 0
+    respond = (url) => {
+      asked.push(url)
+      const category = url.searchParams.get('category')
+      const matching = category === null ? all : all.filter(item => (item.slug as string).startsWith(category))
+      const start = Number(url.searchParams.get('cursor') ?? 0)
+      if (over.failPageFrom !== undefined && start >= over.failPageFrom)
+        return Response.json({ title: 'down' }, { status: 503 })
+      const limit = Number(url.searchParams.get('limit') ?? matching.length)
+      return Response.json({ items: matching.slice(start, start + limit), total: matching.length, nextCursor: start + limit < matching.length ? String(start + limit) : null })
+    }
+  }
+
+  it('the server HTML holds the first ten cards in the order the API sends, and no eleventh, with the total from the server', async () => {
+    api(many(25))
+    const router = await routerAt('/en/gifts')
+
+    const html = renderToString(<RouterProvider router={router} />)
+
+    expect(html).toContain('item 01')
+    expect(html).toContain('item 10')
+    expect(html).not.toContain('item 11')
+    expect(html.indexOf('item 01')).toBeLessThan(html.indexOf('item 02'))
+    expect(html).toContain('25 keepsakes')
+    expect(asked.map(u => u.searchParams.get('limit'))).toEqual(['10'])
+  })
+
+  it('load more adds the next ten, says so in a polite live region, and the end line shows when the list is complete', async () => {
+    api(many(25))
+    render(<RouterProvider router={await routerAt('/en/gifts')} />)
+    await screen.findByText('item 01')
+    expect(names()).toHaveLength(10)
+
+    await userEvent.click(loadMore())
+    await waitFor(() => expect(names()).toHaveLength(20))
+    expect(screen.getByText('10 more keepsakes')).toHaveAttribute('role', 'status')
+
+    await userEvent.click(loadMore())
+    await waitFor(() => expect(names()).toHaveLength(25))
+    expect(screen.getByText('5 more keepsakes')).toHaveAttribute('role', 'status')
+    expect(screen.getByText('That’s all 25 keepsakes')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Load more' })).toBeNull()
+    expect(asked.map(u => u.searchParams.get('cursor'))).toEqual([null, '10', '20'])
+  })
+
+  it('a keepsake that shows on two pages draws once', async () => {
+    const base = many(11)
+    api([...base, base[0]!])
+    render(<RouterProvider router={await routerAt('/en/gifts')} />)
+    await screen.findByText('item 01')
+
+    await userEvent.click(loadMore())
+
+    await waitFor(() => expect(names()).toHaveLength(11))
+    expect(names().filter(name => name === 'item 01')).toHaveLength(1)
+  })
+
+  it('a failed page shows Try again in place of the button, no toast, and does not retry by itself', async () => {
+    api(many(25), { failPageFrom: 10 })
+    render(<RouterProvider router={await routerAt('/en/gifts')} />)
+    await screen.findByText('item 01')
+    const before = asked.length
+
+    await userEvent.click(loadMore())
+
+    expect(await screen.findByRole('button', { name: 'Try again' })).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('The next page did not load.')
+    expect(document.querySelector('.toast')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Load more' })).toBeNull()
+    expect(names()).toHaveLength(10)
+    expect(asked.length).toBe(before + 1)
+  })
+
+  it('a category in the address is a server filter, and a change of it starts again at page 1', async () => {
+    api([...many(12, 'knife'), ...many(12, 'mug')])
+    const router = await routerAt('/en/gifts')
+    render(<RouterProvider router={router} />)
+    await screen.findByText('knife 01')
+    await userEvent.click(loadMore())
+    await waitFor(() => expect(names()).toHaveLength(20))
+
+    await act(() => router.navigate({ to: '/$lang/gifts', params: { lang: 'en' }, search: { category: 'mug' } }))
+
+    await waitFor(() => expect(names()).toHaveLength(10))
+    expect(names()[0]).toBe('mug 01')
+    const last = asked.at(-1)!
+    expect(last.searchParams.get('category')).toBe('mug')
+    expect(last.searchParams.get('cursor')).toBeNull()
+    expect(screen.getByText('12 keepsakes')).toBeInTheDocument()
+  })
+
+  it('the server HTML of a category link carries only that category\'s first page', async () => {
+    api([...many(3, 'knife'), ...many(3, 'mug')])
+    const router = await routerAt('/en/gifts?category=mug')
+
+    const html = renderToString(<RouterProvider router={router} />)
+
+    expect(html).toContain('mug 01')
+    expect(html).not.toContain('knife 01')
+    expect(asked.map(u => u.searchParams.get('category'))).toEqual(['mug'])
+  })
+
+  it('an old ?subcategory= or ?q= link still opens the whole list and sends no filter', async () => {
+    api(many(3))
+    await routerAt('/en/gifts?subcategory=knives&q=mug')
+
+    expect(asked.map(u => u.searchParams.get('category'))).toEqual([null])
   })
 })

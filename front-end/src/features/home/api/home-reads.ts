@@ -6,6 +6,7 @@ import { answer, timeout } from '@/features/data-client/api-transport'
 import { apiEnabled } from '@/lib/api-mode'
 import { apiOrigin } from '@/lib/api-origin'
 import { HOME_STORY_COUNT } from '../lib/newest-stories'
+import { HOME_TOUR_COUNT } from '../lib/routes'
 import { serviceTiles } from '../lib/service-tiles'
 
 /** What the home's loader read. A read that failed is `null`, so its block shows its own error and the rest of the page stays. */
@@ -42,7 +43,8 @@ export async function loadHomeRead(lang: PublicLanguage): Promise<HomeRead> {
   const [map, categories, tours, stories] = await Promise.all([
     read(client.GET('/api/public/map', options())),
     read(client.GET('/api/public/map-categories', options())),
-    read(client.GET('/api/public/tours', options())),
+    // The rail shows the first page of tours only (ADR-033); the stay ranking applies inside it.
+    read(client.GET('/api/public/tours', { params: { query: { lang, limit: HOME_TOUR_COUNT } }, ...timeout() })),
     // The block shows three, so it asks for three (ADR-033).
     loadPublicStoriesPage(lang, { limit: HOME_STORY_COUNT }).then(page => page.items).catch(() => null),
   ])

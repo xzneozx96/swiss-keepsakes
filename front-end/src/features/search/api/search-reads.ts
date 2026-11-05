@@ -2,27 +2,27 @@ import type { PublicLanguage, PublicTourCard } from '@sk/api-contract'
 import type { SearchKind, SearchSources } from '@/features/search/lib/search'
 
 import { queryOptions, useQuery } from '@tanstack/react-query'
-import { guestKeepsakeList } from '@/features/catalog/api/keepsake-list-query'
+import { allKeepsakes } from '@/features/catalog/api/keepsake-list-query'
 import { loadPublicStories } from '@/features/content/api/public-stories'
 import { answer, fromApi, timeout } from '@/features/data-client/api-transport'
+import { readAllPages } from '@/features/data-client/paged-query'
 import { queryKeys } from '@/features/data-client/query-keys'
 import { mapQueries } from '@/features/map/api/queries'
 import { apiEnabled } from '@/lib/api-mode'
 import { apiOrigin } from '@/lib/api-origin'
 
-/** The published tours in one language, as `GET /api/public/tours` sends them. A failed read throws. */
+/** Every published tour in one language, read page by page (ADR-033: search keeps its loop until slice 6). A failed read throws. */
 async function fetchTourCards(lang: PublicLanguage): Promise<PublicTourCard[]> {
-  const { createApiClient } = await import('@sk/api-contract')
+  const { createApiClient, MAX_PAGE_LIMIT } = await import('@sk/api-contract')
   const client = createApiClient(apiOrigin())
-  const { items } = await answer(client.GET('/api/public/tours', { ...timeout(), params: { query: { lang } } }))
 
-  return items
+  return readAllPages(cursor => answer(client.GET('/api/public/tours', { ...timeout(), params: { query: { lang, limit: MAX_PAGE_LIMIT, ...(cursor ? { cursor } : {}) } } })), `Tours in ${lang}`)
 }
 
 const searchQueries = {
   stories: (lang: PublicLanguage) => queryOptions({ ...fromApi, queryKey: [...queryKeys.search.stories, lang], queryFn: () => loadPublicStories(lang), enabled: apiEnabled }),
   tours: (lang: PublicLanguage) => queryOptions({ ...fromApi, queryKey: [...queryKeys.search.tours, lang], queryFn: () => fetchTourCards(lang), enabled: apiEnabled }),
-  keepsakes: (lang: PublicLanguage) => queryOptions({ ...guestKeepsakeList(lang), select: ({ items }) => items, enabled: apiEnabled }),
+  keepsakes: (lang: PublicLanguage) => queryOptions({ ...allKeepsakes(lang), enabled: apiEnabled }),
 }
 
 /**

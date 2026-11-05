@@ -11,7 +11,7 @@ import { renderToString } from 'react-dom/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
-import { fetchKeepsakeList } from '@/features/catalog/api/keepsakes'
+import { loadKeepsakesPage } from '@/features/catalog/api/keepsakes'
 import { DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startSeedDemo } from '@/features/demo/data-client'
@@ -27,11 +27,11 @@ import { Route as HomeRoute } from '@/routes/_guest/$lang/index'
 
 vi.mock('@/lib/api-mode', () => ({ apiEnabled: true }))
 vi.mock('@/features/home/api/home-reads', () => ({ loadHomeRead: vi.fn() }))
-vi.mock('@/features/catalog/api/keepsakes', () => ({ fetchKeepsakeList: vi.fn() }))
+vi.mock('@/features/catalog/api/keepsakes', async importOriginal => ({ ...await importOriginal<typeof import('@/features/catalog/api/keepsakes')>(), loadKeepsakesPage: vi.fn(), loadAllKeepsakes: vi.fn() }))
 vi.mock('@/features/map/api/map-client', () => ({ fetchMapPins: vi.fn(), fetchMapCategories: vi.fn(), fetchMapPin: vi.fn() }))
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
-const water: PublicCategory = { id: id(1), slug: 'drinking-water', name: { en: 'Drinking water', de: 'Trinkwasser' }, parentId: null, icon: 'water', showOnHome: true, position: 1 }
+const water: PublicCategory = { id: id(1), slug: 'drinking-water', name: { en: 'Drinking water', de: 'Trinkwasser' }, parentId: null, icon: 'water', showOnHome: true, storyCount: 0, position: 1 }
 const pin: PublicMapItem = {
   id: id(100),
   slug: 'fountain',
@@ -54,7 +54,7 @@ const pin: PublicMapItem = {
 }
 
 const mustVisit: PublicMapItem = { ...pin, id: id(101), slug: 'chapel-bridge', title: 'Chapel Bridge', mustVisit: true, tip: 'Go at dawn.' }
-const tour = (n: number, title: string, stayTag: PublicTourCard['stayTag']): PublicTourCard => ({ id: id(300 + n), slug: `tour-${n}`, title, stayTag, interests: [], durationMinutes: 390, coverKey: null, cover: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] })
+const tour = (n: number, title: string, stayTag: PublicTourCard['stayTag']): PublicTourCard => ({ id: id(300 + n), slug: `tour-${n}`, title, stayTag, interests: [], durationMinutes: 390, stopCount: 4, coverKey: null, cover: null, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] })
 const tours = [tour(1, 'Pilatus above the city', 'multi_day'), tour(2, 'Old town in an hour', 'short_stay')]
 
 const photo = { url: 'https://cdn.test/swan.jpg', variants: [{ width: 320, url: 'https://cdn.test/swan-320.webp' }, { width: 800, url: 'https://cdn.test/swan-800.webp' }] }
@@ -112,7 +112,7 @@ function textOf(html: string) {
 beforeEach(() => {
   localStorage.clear()
   resetAnswersStoreForTests()
-  vi.mocked(fetchKeepsakeList).mockReset().mockResolvedValue({ items: [swan, bridge, lion, champ] })
+  vi.mocked(loadKeepsakesPage).mockReset().mockResolvedValue({ items: [swan, bridge, lion, champ], total: 4, nextCursor: null })
   vi.mocked(loadHomeRead).mockReset().mockImplementation(async lang => ({ pins: [pin, mustVisit], categories: [water], tiles: serviceTiles([water], [pin, mustVisit], lang), tours, stories: [] }))
   vi.mocked(fetchMapPins).mockReset().mockResolvedValue([pin])
   vi.mocked(fetchMapCategories).mockReset().mockResolvedValue([water])
@@ -158,7 +158,8 @@ describe('[E4.13][AC24][AC54] the server HTML of the home', () => {
     expect(at.every(index => index >= 0)).toBe(true)
     expect(at).toEqual([...at].sort((a, b) => a - b))
     expect(html).not.toContain('CHF')
-    expect(text).not.toMatch(/\b[0-4]\b/)
+    // The route deck's own numbers ("1 of 3", "4 stops", "6.5 hours") are not social-proof counts.
+    expect(text.replace(/\b\d+ of \d+\b/g, '').replace(/[\d.]+ (stops|hours)/g, '')).not.toMatch(/\b[0-4]\b/)
     expect(text).not.toMatch(/review|comment/i)
   })
 
@@ -301,7 +302,7 @@ describe('[E4.13][AC95] a failed read takes down its own block only', () => {
   })
 
   it('shows an error with retry in the showcase block when the keepsake read fails, and the thread and the banner still render (AC-6)', async () => {
-    vi.mocked(fetchKeepsakeList).mockRejectedValueOnce(new Error('down'))
+    vi.mocked(loadKeepsakesPage).mockRejectedValueOnce(new Error('down'))
     render(<RouterProvider router={await buildRouter('/en')} />)
 
     const alert = await screen.findByText(en['homePage.ending.failed'])
@@ -323,7 +324,7 @@ describe('[E4.13][AC54] the Victorinox showcase reads the public keepsake list',
 
     const swanLink = await screen.findByRole('link', { name: /Swan/ })
 
-    expect(fetchKeepsakeList).toHaveBeenCalledWith('en')
+    expect(loadKeepsakesPage).toHaveBeenCalledWith('en', { limit: 20 })
     expect(swanLink).toHaveAttribute('href', '/en/gifts/victorinox-swan')
     // The tile draws the shipped cut-out art, not the cover photo.
     expect(swanLink.querySelector('img')?.getAttribute('src')).not.toContain('cdn.test')
@@ -367,7 +368,7 @@ describe('[E4.13][AC95] the demo layer is gone from the home', () => {
 
   it('the home hooks take their query keys from the shared key file, never inline', () => {
     expect(read('features/home/hooks/use-victorinox-items.ts')).not.toMatch(/queryKey: \[\s*'/)
-    expect(read('features/home/hooks/use-victorinox-items.ts')).toContain('guestKeepsakeList')
+    expect(read('features/home/hooks/use-victorinox-items.ts')).toContain('firstKeepsakes')
   })
 
   it('the components that only the old home drew are deleted', () => {

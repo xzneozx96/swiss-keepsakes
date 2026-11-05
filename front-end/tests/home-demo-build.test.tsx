@@ -4,12 +4,12 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { LocaleProvider } from '@/contexts/locale-context'
-import { fetchKeepsakeList } from '@/features/catalog/api/keepsakes'
+import { loadKeepsakesPage } from '@/features/catalog/api/keepsakes'
 import { VictorinoxSection } from '@/features/home/components/victorinox-section'
 import { en } from '@/i18n/en'
 
 vi.mock('@/lib/api-mode', () => ({ apiEnabled: false }))
-vi.mock('@/features/catalog/api/keepsakes', () => ({ fetchKeepsakeList: vi.fn() }))
+vi.mock('@/features/catalog/api/keepsakes', async importOriginal => ({ ...await importOriginal<typeof import('@/features/catalog/api/keepsakes')>(), loadKeepsakesPage: vi.fn(), loadAllKeepsakes: vi.fn() }))
 
 describe('[E4.13][AC95] the demo build of the home', () => {
   it('sends no keepsake request and shows no error block in the showcase (no API in the demo)', async () => {
@@ -27,7 +27,7 @@ describe('[E4.13][AC95] the demo build of the home', () => {
     render(<RouterProvider router={router} />)
     await screen.findByRole('heading', { name: en['home.victorinox.title'] })
 
-    expect(fetchKeepsakeList).not.toHaveBeenCalled()
+    expect(loadKeepsakesPage).not.toHaveBeenCalled()
     expect(screen.queryByText(en['homePage.ending.failed'])).toBeNull()
   })
 })

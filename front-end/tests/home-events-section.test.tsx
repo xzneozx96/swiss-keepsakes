@@ -27,6 +27,8 @@ function event(title: string, next: Partial<NextDate> & { firstDay: string }, ex
     slug: `ev-${n}`,
     latitude: 47.05,
     longitude: 8.3,
+    address: null,
+    weeklyHours: [],
     title,
     language: 'en',
     categoryIds: [],

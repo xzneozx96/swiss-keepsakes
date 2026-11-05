@@ -370,8 +370,14 @@ export interface paths {
         get: {
             parameters: {
                 query: {
+                    /** @description A product category slug. A parent includes its direct sub-categories. An unknown slug gives an empty list */
+                    category?: string;
+                    /** @description The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page */
+                    cursor?: string;
                     /** @description The language asked for. A keepsake that has no version in it comes back in the other language, marked `fallback` */
                     lang: "en" | "de";
+                    /** @description How many items to return, 1 to 20 */
+                    limit?: number;
                 };
                 header?: never;
                 path?: never;
@@ -379,7 +385,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description The published keepsakes, newest first. No price and no stock figure */
+                /** @description A page of the published keepsakes, newest first. No price and no stock figure */
                 200: {
                     headers: {
                         /** @description `max-age=30` */
@@ -1024,8 +1030,12 @@ export interface paths {
         get: {
             parameters: {
                 query: {
+                    /** @description The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page */
+                    cursor?: string;
                     /** @description The language asked for. An item that has no version in it comes back in the other language, marked `fallback` */
                     lang: "en" | "de";
+                    /** @description How many items to return, 1 to 20 */
+                    limit?: number;
                 };
                 header?: never;
                 path?: never;
@@ -1033,7 +1043,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description The published tour guides */
+                /** @description A page of the published tour guides, newest first */
                 200: {
                     headers: {
                         /** @description `max-age=30` */
@@ -6940,9 +6950,12 @@ export interface components {
             /** @enum {string} */
             type: "doc";
         };
-        /** @description The published keepsakes of all stores, newest first */
         PublicKeepsakeList: {
             items: components["schemas"]["PublicKeepsakeCard"][];
+            /** @description Pass it as `cursor` for the next page. Null on the last page, and only there */
+            nextCursor: string | null;
+            /** @description How many published keepsakes match the filters, on every page */
+            total: number;
         };
         PublicKeepsakeOption: {
             /** Format: uuid */
@@ -7835,6 +7848,8 @@ export interface components {
             slug: string;
             /** @enum {string} */
             stayTag: "short_stay" | "multi_day" | "both";
+            /** @description How many stops the published guide has: the length of `stops` on the detail */
+            stopCount: number;
             stops: {
                 key: string | null;
                 latitude: number;
@@ -7873,10 +7888,16 @@ export interface components {
             slug: string;
             /** @enum {string} */
             stayTag: "short_stay" | "multi_day" | "both";
+            /** @description How many stops the published guide has: the length of `stops` on the detail */
+            stopCount: number;
             title: string;
         };
         PublicTourList: {
             items: components["schemas"]["PublicTourCard"][];
+            /** @description Pass it as `cursor` for the next page. Null on the last page, and only there */
+            nextCursor: string | null;
+            /** @description How many published guides there are, on every page */
+            total: number;
         };
         /** @description One thing the publish card reports */
         PublishCheck: {

@@ -1,12 +1,15 @@
 import type { CategoryIcon, ContentLanguage, Localized, PinDate, StayTag, TourGuideDoc } from '@sk/domain/content'
 import type { Tx } from '../../../platform/db/client.ts'
-import type { PublicCategoryRow, PublicPinDetailRow, PublicPinRow, PublicReadRepository, PublicStoryDetailRow, PublicStoryRow, PublicTourRow, StoredStoryDoc, StoryPageKey } from '../read-ports.ts'
+import type { PublicCategoryRow, PublicPinDetailRow, PublicPinRow, PublicReadRepository, PublicStoryDetailRow, PublicStoryRow, PublicTourRow, StoredStoryDoc, StoryPageKey, TourPageKey, TourPageQuery } from '../read-ports.ts'
 import { sql } from 'drizzle-orm'
 import { after as keysAfter, page } from '../../../platform/db/keyset.ts'
 import { publishedStoryMediaIds } from './story-media-ids.ts'
 
 // The order of the story list: the date of the version carried, then the group id, both newest first.
 const storyKey = [{ column: sql`published_at`, cast: 'timestamptz' as const }, { column: sql`id`, cast: 'uuid' as const }]
+
+// The order of the tour list: the tour id, newest first.
+const tourKey = [{ column: sql`id`, cast: 'uuid' as const }]
 
 interface VersionJoinRow {
   id: string
@@ -244,6 +247,7 @@ interface TourJoinRow {
   published: TourGuideDoc
   cover_media_id: string | null
   pdf_media_id: string | null
+  stop_count: number
 }
 
 interface StopJoinRow {
@@ -259,14 +263,18 @@ interface StopJoinRow {
 
 // Published guides, newest first. Stops are only read for a detail (`withStops`); keepsake links and the ready media
 // keys come in one query each for all guides.
-async function loadTours(tx: Tx, tourId: string | null, withStops: boolean): Promise<PublicTourRow[]> {
-  const tours = await tx.execute<TourJoinRow & Record<string, unknown>>(sql`
-    select id, slug, stay_tag, interests, duration_minutes, published, cover_media_id, pdf_media_id
+async function loadTours(tx: Tx, tourId: string | null, withStops: boolean, { limit, after }: TourPageQuery = {}): Promise<{ rows: PublicTourRow[], next: TourPageKey | null, total: number }> {
+  const found = await tx.execute<TourJoinRow & Record<string, unknown>>(sql`
+    select id, slug, stay_tag, interests, duration_minutes, published, cover_media_id, pdf_media_id,
+           (select count(*)::int from content.tour_stops s where s.tour_id = content.tours.id) as stop_count
       from content.tours
-     where status = 'published' and published is not null${tourId ? sql` and id = ${tourId}` : sql``}
-     order by id desc`)
+     where status = 'published' and published is not null${tourId ? sql` and id = ${tourId}` : sql``}${after ? sql` and ${keysAfter(tourKey, after)}` : sql``}
+     order by id desc${limit === undefined ? sql`` : sql` limit ${limit + 1}`}`)
+  // The extra row only says there is a next page.
+  const { items: shown, next } = page(found.rows, limit, (row): TourPageKey => [row.id])
+  const tours = { rows: shown }
   if (tours.rows.length === 0)
-    return []
+    return { rows: [], next, total: 0 }
 
   const ids = tours.rows.map(t => t.id)
   const stops = withStops
@@ -291,8 +299,9 @@ async function loadTours(tx: Tx, tourId: string | null, withStops: boolean): Pro
   const widths = new Map(media.map(m => [m.id, m.width]))
   const keyOf = (id: string | null) => (id ? keys.get(id) ?? null : null)
 
-  return tours.rows.map(row => ({
+  const rows = tours.rows.map(row => ({
     id: row.id,
+    stopCount: row.stop_count,
     slug: row.slug,
     stayTag: row.stay_tag,
     interests: row.interests,
@@ -316,6 +325,8 @@ async function loadTours(tx: Tx, tourId: string | null, withStops: boolean): Pro
       placeId: s.visible_place_id,
     })),
   }))
+
+  return { rows, next, total: tourId ? rows.length : (await tx.execute<{ total: number } & Record<string, unknown>>(sql`select count(*)::int as total from content.tours where status = 'published' and published is not null`)).rows[0]?.total ?? 0 }
 }
 
 export function createPublicReadRepository(): PublicReadRepository<Tx> {
@@ -384,7 +395,7 @@ export function createPublicReadRepository(): PublicReadRepository<Tx> {
       return row && { ...row, ...(await loadPinExtras(tx, id)) }
     },
 
-    listPublishedTours: tx => loadTours(tx, null, false),
+    pagePublishedTours: (tx, query) => loadTours(tx, null, false, query),
 
     async findPublishedTourBySlug(tx, slug, language) {
       const found = await tx.execute<{ id: string }>(sql`
@@ -392,7 +403,7 @@ export function createPublicReadRepository(): PublicReadRepository<Tx> {
          where status = 'published' and published is not null and (slug->>'en' = ${slug} or slug->>'de' = ${slug})
          order by coalesce(slug->>${language} = ${slug}, false) desc limit 1`)
       const id = found.rows[0]?.id
-      return id ? (await loadTours(tx, id, true))[0] : undefined
+      return id ? (await loadTours(tx, id, true)).rows[0] : undefined
     },
   }
 }

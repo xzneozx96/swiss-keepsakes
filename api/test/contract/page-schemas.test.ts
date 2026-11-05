@@ -116,13 +116,11 @@ const WHOLE_LISTS: Record<string, WholeList> = {
   'GET /api/store/{storeId}/pickup-places': { reason: 'A drag-ordered list must be whole (cap 50)', expectedSize: 'under 20' },
   'GET /api/store/{storeId}/story-groups/lookup': { reason: 'The stories the editor already references, read by id (at most 50 ids)', expectedSize: 'under 50' },
   'GET /api/store/{storeId}/pins/lookup': { reason: 'The pins the editor already references, read by id or by link host (at most 50 ids, 50 rows)', expectedSize: 'under 50' },
-  'GET /api/store/{storeId}/pins/story-options': { reason: 'Search-as-you-type: q and the first 10 matches (at most 20), no paging', expectedSize: '10' },
+  'GET /api/store/{storeId}/pins/story-options': { reason: 'Search-as-you-type: q and the first 20 matches, no paging', expectedSize: '20' },
 }
 
 /** Lists the ADR makes paged in a later slice. An entry leaves this map when its slice lands (the test below fails when a paged route is still listed). */
 const PENDING_SLICES: Record<string, { slice: number, expectedSize: string }> = {
-  'GET /api/public/keepsakes': { slice: 3, expectedSize: 'tens to low hundreds' },
-  'GET /api/public/tours': { slice: 3, expectedSize: '11 now, more later' },
   'GET /api/store/{storeId}/products': { slice: 5, expectedSize: 'tens to low hundreds' },
   'GET /api/store/{storeId}/inventory': { slice: 5, expectedSize: 'hundreds of SKUs' },
 }
@@ -159,6 +157,8 @@ describe('[ADR-033] every list route pages or is named as a whole list', () => {
 
   it('finds the list routes', () => {
     expect(routes.get('GET /api/public/stories')).toBe('cursor')
+    expect(routes.get('GET /api/public/keepsakes')).toBe('cursor')
+    expect(routes.get('GET /api/public/tours')).toBe('cursor')
     expect(routes.get('GET /api/store/{storeId}/media')).toBe('numbered')
     expect(routes.get('GET /api/store/{storeId}/story-groups')).toBe('numbered')
     expect(routes.get('GET /api/store/{storeId}/pins')).toBe('numbered')

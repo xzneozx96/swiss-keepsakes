@@ -1,7 +1,8 @@
 import type { Tx } from '../../../platform/db/client.ts'
-import type { PublicKeepsakeReads, PublicKeepsakeRow, PublicKeepsakeSummary } from '../application/public-keepsakes.ts'
+import type { KeepsakePageKey, PublicKeepsakeReads, PublicKeepsakeRow, PublicKeepsakeSummary } from '../application/public-keepsakes.ts'
 import type { Localized, LocalizedDoc } from '../ports.ts'
 import { sql } from 'drizzle-orm'
+import { after as keysAfter, page } from '../../../platform/db/keyset.ts'
 
 interface SummaryRow {
   id: string
@@ -11,14 +12,20 @@ interface SummaryRow {
   text: LocalizedDoc | null
   media_ids: string[]
   sku_ids: string[]
+  // `created_at` as text at full precision (UTC): the sort key of the page cursor.
+  created_key: string
 }
+
+// The order of the keepsake list: `created_at`, then the product id, both newest first.
+const keepsakeKey = [{ column: sql`p.created_at`, cast: 'timestamptz' as const }, { column: sql`p.id`, cast: 'uuid' as const }]
 
 // Only `published` products: a draft, an unpublished and an archived keepsake have no row here, so none can leak. The
 // variants for sale are the SKUs with status `published` (ADR-017).
 const summary = sql`
   select p.id, p.store_id, p.slug, p.published->'name' as name, p.published->'text' as text,
          (select coalesce(array_agg(m.media_id::text order by m.position), '{}') from catalog.product_media m where m.product_id = p.id) as media_ids,
-         (select coalesce(array_agg(s.id::text order by s.created_at, s.id), '{}') from catalog.skus s where s.product_id = p.id and s.status = 'published') as sku_ids
+         (select coalesce(array_agg(s.id::text order by s.created_at, s.id), '{}') from catalog.skus s where s.product_id = p.id and s.status = 'published') as sku_ids,
+         to_char(p.created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as created_key
     from catalog.products p`
 
 const published = sql`p.status = 'published' and p.published is not null and p.slug is not null`
@@ -29,9 +36,21 @@ function asSummary(row: SummaryRow): PublicKeepsakeSummary {
 
 export function createPublicKeepsakeReads(): PublicKeepsakeReads<Tx> {
   return {
-    async listPublished(tx) {
-      const result = await tx.execute<SummaryRow & Record<string, unknown>>(sql`${summary} where ${published} order by p.created_at desc, p.id desc`)
-      return result.rows.map(asSummary)
+    async pagePublished(tx, { category, limit, after }) {
+      // A parent category includes its direct sub-categories, as the stories filter does. Both the page and the count run over this set.
+      const filter = category === null
+        ? sql``
+        : sql` and exists (
+            select 1 from catalog.product_category_links l
+              join catalog.product_categories c on c.store_id = l.store_id and c.id = l.category_id
+              left join catalog.product_categories parent on parent.store_id = c.store_id and parent.id = c.parent_id
+             where l.product_id = p.id and (c.slug = ${category} or parent.slug = ${category}))`
+      const result = await tx.execute<SummaryRow & Record<string, unknown>>(sql`
+        ${summary} where ${published}${filter}${after ? sql` and ${keysAfter(keepsakeKey, after)}` : sql``}
+        order by p.created_at desc, p.id desc${limit === undefined ? sql`` : sql` limit ${limit + 1}`}`)
+      const counted = await tx.execute<{ total: number } & Record<string, unknown>>(sql`select count(*)::int as total from catalog.products p where ${published}${filter}`)
+      const { items, next } = page(result.rows, limit, (row): KeepsakePageKey => [row.created_key, row.id])
+      return { rows: items.map(asSummary), next, total: counted.rows[0]?.total ?? 0 }
     },
 
     async listPublishedByIds(tx, ids) {

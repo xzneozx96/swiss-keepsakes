@@ -3,10 +3,11 @@ import type { PublicKeepsakeAvailability as ContractAvailability, PublicKeepsake
 import type { ContentLanguage } from '@sk/domain/content'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
-import type { PublicKeepsake, PublicKeepsakeAvailability, PublicKeepsakeList, PublicPickupPoints } from '../application/public-keepsakes.ts'
+import type { ListKeepsakesQuery, PublicKeepsake, PublicKeepsakeAvailability, PublicKeepsakePage, PublicPickupPoints } from '../application/public-keepsakes.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { publicKeepsakeAvailabilitySchema, publicKeepsakeListSchema, publicKeepsakeSchema, publicLanguageSchema, publicPickupPointsSchema } from '@sk/api-contract'
+import { pageQuery, publicKeepsakeAvailabilitySchema, publicKeepsakeListSchema, publicKeepsakeSchema, publicLanguageSchema, publicPickupPointsSchema } from '@sk/api-contract'
 import { conditionalJson } from '../../../platform/http/conditional-json.ts'
+import { cursorProblem, decodeCursor, encodeCursor } from '../../../platform/http/cursor.ts'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { failureProblem } from './problems.ts'
@@ -19,7 +20,7 @@ const availabilityCacheControl = 'max-age=5'
 // What the public keepsake routes call. They take no actor and no store: published keepsakes are public and one list
 // covers all stores.
 export interface PublicKeepsakeUseCases {
-  listKeepsakes: (language: ContentLanguage) => Promise<PublicKeepsakeList>
+  listKeepsakes: (query: ListKeepsakesQuery) => Promise<PublicKeepsakePage>
   getKeepsake: (slug: string, language: ContentLanguage) => Promise<Result<PublicKeepsake>>
   getAvailability: (slug: string, language: ContentLanguage) => Promise<Result<PublicKeepsakeAvailability>>
   getPickupPoints: (slug: string, language: ContentLanguage) => Promise<Result<PublicPickupPoints>>
@@ -30,7 +31,7 @@ export interface PublicKeepsakeUseCases {
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false
 type Assert<_T extends true> = never
 export type PublicKeepsakeTypesMatchContract = [
-  Assert<Same<PublicKeepsakeList, ContractList>>,
+  Assert<Same<Omit<PublicKeepsakePage, 'next'>, Omit<ContractList, 'nextCursor'>>>,
   Assert<Same<PublicKeepsake, ContractKeepsake>>,
   Assert<Same<PublicKeepsakeAvailability, ContractAvailability>>,
   Assert<Same<PublicPickupPoints, ContractPickupPoints>>,
@@ -61,14 +62,39 @@ function publicGet<S extends z.ZodType, P extends z.ZodObject | undefined = unde
   })
 }
 
-const listRoute = publicGet('/api/public/keepsakes', 'The published keepsakes, newest first. No price and no stock figure', publicKeepsakeListSchema, textCacheControl)
+// The keepsake list pages with a cursor (ADR-033). While the route moves to paging, a request without `limit` still gets the whole list.
+const listQuery = query.extend({
+  ...pageQuery().shape,
+  category: z.string().min(1).max(120).optional().meta({ description: 'A product category slug. A parent includes its direct sub-categories. An unknown slug gives an empty list' }),
+})
+const listRoute = createRoute({
+  method: 'get',
+  path: '/api/public/keepsakes',
+  request: { query: listQuery },
+  responses: {
+    200: { description: 'A page of the published keepsakes, newest first. No price and no stock figure', headers: cacheHeaders(textCacheControl), content: json(publicKeepsakeListSchema) },
+    304: { description: 'The If-None-Match tag still matches. No body', headers: cacheHeaders(textCacheControl) },
+    ...problemResponses,
+  },
+})
+// The key of a keepsake cursor: `created_at` at microsecond precision (UTC), then the product id.
+const listKey = z.tuple([z.iso.datetime({ precision: 6 }), z.uuid()])
 const detailRoute = publicGet('/api/public/keepsakes/{slug}', 'One published keepsake: text, photos, options and the combinations for sale. No price and no stock figure', publicKeepsakeSchema, textCacheControl, slugParams)
 const availabilityRoute = publicGet('/api/public/keepsakes/{slug}/availability', 'The price and the units of each combination for sale. The only public keepsake read with a price', publicKeepsakeAvailabilitySchema, availabilityCacheControl, slugParams)
 const pickupPointsRoute = publicGet('/api/public/keepsakes/{slug}/pickup-points', 'The active pickup points of the store that owns the keepsake, by the merchant\'s order. No store id, pin, position, archived flag or row version', publicPickupPointsSchema, textCacheControl, slugParams)
 
 // Anonymous: no guard sits on /api/public. An unpublished or archived keepsake is a 404.
 export function registerPublicKeepsakeRoutes(app: OpenAPIHono<AppEnv>, useCases: PublicKeepsakeUseCases): void {
-  app.openapi(listRoute, async c => conditionalJson(c, await useCases.listKeepsakes(c.req.valid('query').lang), textCacheControl))
+  app.openapi(listRoute, async (c) => {
+    const { lang, limit, cursor, category } = c.req.valid('query')
+    // The cursor belongs to this route, language and filter, and to nothing else.
+    const scope = { route: 'public-keepsakes', lang, category: category ?? null }
+    const decoded = cursor === undefined ? undefined : decodeCursor(cursor, scope, listKey)
+    if (decoded && !decoded.ok)
+      return cursorProblem(c)
+    const found = await useCases.listKeepsakes({ language: lang, category, limit, after: decoded?.key })
+    return conditionalJson(c, { items: found.items, total: found.total, nextCursor: found.next ? encodeCursor(found.next, scope) : null }, textCacheControl)
+  })
 
   app.openapi(detailRoute, async (c) => {
     const result = await useCases.getKeepsake(c.req.valid('param').slug, c.req.valid('query').lang)

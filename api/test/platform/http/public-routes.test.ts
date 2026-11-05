@@ -250,3 +250,64 @@ describe('[E2.12] a renewed session cookie never rides on a public read', () => 
     expect(calls.readSession).toBe(before + 1)
   })
 })
+
+describe('[ADR-033] the public tours list pages with an opaque cursor', () => {
+  const lastId = '0190f0c2-0000-7000-8000-0000000000e1'
+
+  function paged() {
+    const asked: unknown[] = []
+    const app = setup({ listTours: async (query) => {
+      asked.push(query)
+      return { items: [], total: 11, next: query.limit === undefined ? null : [lastId] }
+    } })
+    return { app, asked }
+  }
+
+  it('without limit the use case gets no limit, so the whole list comes for one release', async () => {
+    const { app, asked } = paged()
+
+    const response = await app.request('/api/public/tours?lang=en')
+
+    expect(await response.json()).toEqual({ items: [], total: 11, nextCursor: null })
+    expect(asked).toEqual([{ language: 'en', limit: undefined, after: undefined }])
+  })
+
+  it('answers a nextCursor that holds the key but is not it, and the next page gets the decoded key', async () => {
+    const { app, asked } = paged()
+    const first = await (await app.request('/api/public/tours?lang=de&limit=10')).json() as { nextCursor: string }
+
+    const second = await app.request(`/api/public/tours?lang=de&limit=10&cursor=${first.nextCursor}`)
+
+    expect(first.nextCursor).toMatch(/^[\w-]+$/)
+    expect(first.nextCursor).not.toContain(lastId)
+    expect(second.status).toBe(200)
+    expect(asked[1]).toEqual({ language: 'de', limit: 10, after: [lastId] })
+  })
+
+  it('limit 21 and limit 0 are 400, not lowered', async () => {
+    const { app } = paged()
+
+    for (const limit of ['21', '0'])
+      expect((await app.request(`/api/public/tours?lang=en&limit=${limit}`)).status).toBe(400)
+  })
+
+  it('a cursor that is garbage, made for another language or another list, or of the wrong type is 400 on cursor', async () => {
+    const { app, asked } = paged()
+    const first = await (await app.request('/api/public/tours?lang=en&limit=10')).json() as { nextCursor: string }
+    const other = encodeCursor([lastId], { route: 'public-stories', lang: 'en', category: null })
+    const wrongType = encodeCursor(['not a uuid'], { route: 'public-tours', lang: 'en' })
+
+    for (const url of [
+      '/api/public/tours?lang=en&limit=10&cursor=garbage',
+      `/api/public/tours?lang=de&limit=10&cursor=${first.nextCursor}`,
+      `/api/public/tours?lang=en&limit=10&cursor=${other}`,
+      `/api/public/tours?lang=en&limit=10&cursor=${wrongType}`,
+    ]) {
+      const response = await app.request(url)
+
+      expect(response.status, url).toBe(400)
+      expect(await response.json(), url).toMatchObject({ type: 'validation-failed', errors: [{ in: 'query', path: 'cursor' }] })
+    }
+    expect(asked).toHaveLength(1)
+  })
+})

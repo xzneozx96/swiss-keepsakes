@@ -8865,17 +8865,30 @@
         "type": "object"
       },
       "PublicKeepsakeList": {
-        "description": "The published keepsakes of all stores, newest first",
         "properties": {
           "items": {
             "items": {
               "$ref": "#/components/schemas/PublicKeepsakeCard"
             },
             "type": "array"
+          },
+          "nextCursor": {
+            "description": "Pass it as `cursor` for the next page. Null on the last page, and only there",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "How many published keepsakes match the filters, on every page",
+            "minimum": 0,
+            "type": "integer"
           }
         },
         "required": [
-          "items"
+          "items",
+          "nextCursor",
+          "total"
         ],
         "type": "object"
       },
@@ -12957,6 +12970,11 @@
             ],
             "type": "string"
           },
+          "stopCount": {
+            "description": "How many stops the published guide has: the length of `stops` on the detail",
+            "minimum": 0,
+            "type": "integer"
+          },
           "stops": {
             "items": {
               "properties": {
@@ -13023,6 +13041,7 @@
           "stayTag",
           "interests",
           "durationMinutes",
+          "stopCount",
           "coverKey",
           "cover",
           "language",
@@ -13125,6 +13144,11 @@
             ],
             "type": "string"
           },
+          "stopCount": {
+            "description": "How many stops the published guide has: the length of `stops` on the detail",
+            "minimum": 0,
+            "type": "integer"
+          },
           "title": {
             "type": "string"
           }
@@ -13136,6 +13160,7 @@
           "stayTag",
           "interests",
           "durationMinutes",
+          "stopCount",
           "coverKey",
           "cover",
           "language",
@@ -13152,10 +13177,24 @@
               "$ref": "#/components/schemas/PublicTourCard"
             },
             "type": "array"
+          },
+          "nextCursor": {
+            "description": "Pass it as `cursor` for the next page. Null on the last page, and only there",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "How many published guides there are, on every page",
+            "minimum": 0,
+            "type": "integer"
           }
         },
         "required": [
-          "items"
+          "items",
+          "nextCursor",
+          "total"
         ],
         "type": "object"
       },
@@ -19118,6 +19157,42 @@
               ],
               "type": "string"
             }
+          },
+          {
+            "description": "How many items to return, 1 to 20",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "description": "How many items to return, 1 to 20",
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "description": "The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page",
+              "maxLength": 512,
+              "pattern": "^[\\w-]+$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A product category slug. A parent includes its direct sub-categories. An unknown slug gives an empty list",
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "description": "A product category slug. A parent includes its direct sub-categories. An unknown slug gives an empty list",
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -19129,7 +19204,7 @@
                 }
               }
             },
-            "description": "The published keepsakes, newest first. No price and no stock figure",
+            "description": "A page of the published keepsakes, newest first. No price and no stock figure",
             "headers": {
               "Cache-Control": {
                 "description": "`max-age=30`",
@@ -20036,6 +20111,30 @@
               ],
               "type": "string"
             }
+          },
+          {
+            "description": "How many items to return, 1 to 20",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "description": "How many items to return, 1 to 20",
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "description": "The `nextCursor` of the previous page. Opaque: pass it back unchanged and never build one. Absent on the first page",
+              "maxLength": 512,
+              "pattern": "^[\\w-]+$",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -20047,7 +20146,7 @@
                 }
               }
             },
-            "description": "The published tour guides",
+            "description": "A page of the published tour guides, newest first",
             "headers": {
               "Cache-Control": {
                 "description": "`max-age=30`",

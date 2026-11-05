@@ -23,9 +23,7 @@ function installFetch() {
     const kind = url.pathname.endsWith('/stories') ? 'stories' : 'tours'
     const lang = url.searchParams.get('lang') as Lang
     const items = data[kind][lang]
-    if (kind === 'tours')
-      return Response.json({ items })
-    // The stories list is paged: the cursor is the offset, two cards a page.
+    // The lists are paged: the cursor is the offset, two cards a page.
     const start = Number(url.searchParams.get('cursor') ?? 0)
     const limit = Number(url.searchParams.get('limit'))
     return Response.json({ items: items.slice(start, start + 2), total: items.length, nextCursor: start + 2 < items.length ? String(start + 2) : null, limit })
@@ -78,14 +76,18 @@ describe('[E3.6][AC61] published pages reader', () => {
     expect(urls).toHaveLength(8)
   })
 
-  it('reads every page of the stories at 20 a page, and the tours once', async () => {
+  it('reads every page of the stories and the tours at 20 a page', async () => {
     data.stories.en = [card('a', 'en'), card('b', 'en'), card('c', 'en')]
+    data.tours.en = [card('t1', 'en'), card('t2', 'en'), card('t3', 'en')]
     const pages = await loadPublishedPages()
 
     expect(pages.stories.en.map(c => c.slug)).toEqual(['a', 'b', 'c'])
     const enStories = urls.map(u => new URL(u)).filter(u => u.pathname.endsWith('/stories') && u.searchParams.get('lang') === 'en')
     expect(enStories.map(u => [u.searchParams.get('limit'), u.searchParams.get('cursor')])).toEqual([['20', null], ['20', '2']])
-    expect(urls.filter(u => new URL(u).pathname.endsWith('/tours'))).toHaveLength(2)
+    expect(pages.tours.en.map(c => c.slug)).toEqual(['t1', 't2', 't3'])
+    const enTours = urls.map(u => new URL(u)).filter(u => u.pathname.endsWith('/tours') && u.searchParams.get('lang') === 'en')
+    expect(enTours.map(u => [u.searchParams.get('limit'), u.searchParams.get('cursor')])).toEqual([['20', null], ['20', '2']])
+    expect(urls.filter(u => new URL(u).pathname.endsWith('/tours') && new URL(u).searchParams.get('lang') === 'de')).toHaveLength(1)
   })
 
   it('stops a list that never ends after 100 pages and logs an error', async () => {

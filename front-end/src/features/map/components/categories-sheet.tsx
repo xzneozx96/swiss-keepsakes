@@ -1,13 +1,15 @@
 import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
 
-import { Button, Checkbox, CheckboxGroup } from '@heroui/react'
+import { Button, Checkbox, CheckboxGroup, Disclosure } from '@heroui/react'
 import { useState } from 'react'
 
-import { ChevronDownIcon } from '@/components/icons'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { categoryName, countHighlighted, keepHighlighted, subCategories, topLevelCategories } from '@/features/map/lib/categories'
 import { setChildren, tickedChildren, toggleParent } from '@/features/map/lib/category-selection'
+
+/** The width of a row's sub-category arrow (44 px), kept on every row so the counts form one column. */
+const ARROW_SLOT = <span aria-hidden className="size-11 shrink-0" />
 
 /**
  * The category filter in the app's sheet: the top-level categories as checkbox rows (a parent
@@ -64,57 +66,76 @@ export function CategoriesSheet({
         {draft.length === 0 && <p className="text-sm text-muted">{t('map.filter.pickOne')}</p>}
         <div className="flex flex-col">
           {/* The header row ticks or clears every category, as a table's select-all does. */}
-          <Checkbox
-            className="min-h-12 border-b border-separator py-2"
-            isIndeterminate={draft.length > 0 && !allPicked}
-            isSelected={allPicked}
-            onChange={() => setDraft(allPicked ? [] : topIds)}
-          >
-            <Checkbox.Content className="w-full flex-row items-center gap-3">
-              <Checkbox.Control className="size-5 shrink-0 rounded-md">
-                <Checkbox.Indicator />
-              </Checkbox.Control>
-              <span className="flex-1 font-semibold">{t('map.filter.all')}</span>
-              <span className="text-sm text-muted tabular-nums">{pins.length}</span>
-            </Checkbox.Content>
-          </Checkbox>
+          <div className="flex items-center gap-1 border-b border-separator">
+            <Checkbox
+              className="min-h-12 flex-1 justify-center py-2"
+              isIndeterminate={draft.length > 0 && !allPicked}
+              isSelected={allPicked}
+              onChange={() => setDraft(allPicked ? [] : topIds)}
+            >
+              <Checkbox.Content className="w-full flex-row items-center gap-3">
+                <Checkbox.Control className="size-5 shrink-0 rounded-md">
+                  <Checkbox.Indicator />
+                </Checkbox.Control>
+                <span className="flex-1 font-semibold">{t('map.filter.all')}</span>
+                <span className="text-sm text-muted tabular-nums">{pins.length}</span>
+              </Checkbox.Content>
+            </Checkbox>
+            {ARROW_SLOT}
+          </div>
           {top.map((category) => {
             const children = subCategories(categories, category.id)
             const ticked = tickedChildren(draft, category.id, categories)
             const isOpen = open.has(category.id)
             const name = categoryName(category, language)
 
-            return (
-              <div key={category.id} className="border-b border-separator last:border-b-0">
-                <div className="flex items-center gap-1">
-                  <Checkbox
-                    className="min-h-12 flex-1 py-2"
-                    isIndeterminate={!draft.includes(category.id) && ticked.length > 0}
-                    isSelected={draft.includes(category.id)}
-                    onChange={() => setDraft(toggleParent(draft, category.id, categories))}
-                  >
-                    <Checkbox.Content className="w-full flex-row items-center gap-3">
-                      <Checkbox.Control className="size-5 shrink-0 rounded-md">
-                        <Checkbox.Indicator />
-                      </Checkbox.Control>
-                      <span className="flex-1">{name}</span>
-                      <span className="text-sm text-muted tabular-nums">{countHighlighted(pins, category.id, categories)}</span>
-                    </Checkbox.Content>
-                  </Checkbox>
-                  {children.length > 0 && (
-                    <button
-                      aria-expanded={isOpen}
-                      aria-label={t('map.filter.subcategories', { name })}
-                      className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted outline-none focus-visible:focus-ring"
-                      type="button"
-                      onClick={() => setOpen(current => isOpen ? new Set([...current].filter(id => id !== category.id)) : new Set(current).add(category.id))}
-                    >
-                      <ChevronDownIcon aria-hidden className={`transition-transform duration-200 ease-out ${isOpen ? 'rotate-180' : ''}`} size={16} />
-                    </button>
-                  )}
+            const parent = (
+              <Checkbox
+                className="min-h-12 flex-1 justify-center py-2"
+                isIndeterminate={!draft.includes(category.id) && ticked.length > 0}
+                isSelected={draft.includes(category.id)}
+                onChange={() => setDraft(toggleParent(draft, category.id, categories))}
+              >
+                <Checkbox.Content className="w-full flex-row items-center gap-3">
+                  <Checkbox.Control className="size-5 shrink-0 rounded-md">
+                    <Checkbox.Indicator />
+                  </Checkbox.Control>
+                  <span className="flex-1">{name}</span>
+                  <span className="text-sm text-muted tabular-nums">{countHighlighted(pins, category.id, categories)}</span>
+                </Checkbox.Content>
+              </Checkbox>
+            )
+
+            if (children.length === 0) {
+              return (
+                <div key={category.id} className="flex items-center gap-1 border-b border-separator last:border-b-0">
+                  {parent}
+                  {ARROW_SLOT}
                 </div>
-                {/* Each sub-category row has mt-0: the HeroUI group puts 16 px between its checkboxes, and the rows have their own height. */}
-                {children.length > 0 && isOpen && (
+              )
+            }
+
+            return (
+              // HeroUI's Disclosure animates the sub-category rows open and shut (height and fade, off with reduced motion).
+              <Disclosure
+                key={category.id}
+                className="border-b border-separator last:border-b-0"
+                isExpanded={isOpen}
+                onExpandedChange={expanded => setOpen(current => expanded ? new Set(current).add(category.id) : new Set([...current].filter(id => id !== category.id)))}
+              >
+                <div className="flex items-center gap-1">
+                  {parent}
+                  <Disclosure.Heading>
+                    <Disclosure.Trigger
+                      aria-label={t('map.filter.subcategories', { name })}
+                      className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted"
+                    >
+                      <Disclosure.Indicator />
+                    </Disclosure.Trigger>
+                  </Disclosure.Heading>
+                </div>
+                {/* Each sub-category row has mt-0: the HeroUI group puts 16 px between its checkboxes. The rows are 40 px, tighter than the 48 px categories (owner, 05.11.2026). */}
+                <Disclosure.Content>
                   <CheckboxGroup
                     aria-label={name}
                     className="flex flex-col gap-0 ps-8"
@@ -122,19 +143,22 @@ export function CategoriesSheet({
                     onChange={value => setDraft(setChildren(draft, category.id, value, categories))}
                   >
                     {children.map(child => (
-                      <Checkbox key={child.id} className="mt-0 min-h-12 py-2" value={child.id}>
-                        <Checkbox.Content className="w-full flex-row items-center gap-3">
-                          <Checkbox.Control className="size-5 shrink-0 rounded-md">
-                            <Checkbox.Indicator />
-                          </Checkbox.Control>
-                          <span className="flex-1">{categoryName(child, language)}</span>
-                          <span className="text-sm text-muted tabular-nums">{countHighlighted(pins, child.id, categories)}</span>
-                        </Checkbox.Content>
-                      </Checkbox>
+                      <div key={child.id} className="mt-0 flex items-center gap-1">
+                        <Checkbox className="mt-0 min-h-10 flex-1 justify-center py-1" value={child.id}>
+                          <Checkbox.Content className="w-full flex-row items-center gap-3">
+                            <Checkbox.Control className="size-5 shrink-0 rounded-md">
+                              <Checkbox.Indicator />
+                            </Checkbox.Control>
+                            <span className="flex-1">{categoryName(child, language)}</span>
+                            <span className="text-sm text-muted tabular-nums">{countHighlighted(pins, child.id, categories)}</span>
+                          </Checkbox.Content>
+                        </Checkbox>
+                        {ARROW_SLOT}
+                      </div>
                     ))}
                   </CheckboxGroup>
-                )}
-              </div>
+                </Disclosure.Content>
+              </Disclosure>
             )
           })}
         </div>

@@ -69,7 +69,7 @@ describe('public tour guide reads over the database', () => {
     )
 
     const detail = await getTour(t.slugs.en!, 'de')
-    const listed = (await listTours('de')).items.find(i => i.id === t.id)
+    const listed = (await listTours({ language: 'de' })).items.find(i => i.id === t.id)
 
     expect(listed).toMatchObject({ title: 'English walk', slug: t.slugs.en, language: 'en', fallback: true, availableLanguages: ['en'], durationMinutes: 90, coverKey: cover.key })
     expect(detail.ok && detail.value).toMatchObject({
@@ -92,7 +92,7 @@ describe('public tour guide reads over the database', () => {
     const without = await tour(store)
     const withRetired = await tour(store, { cover: retired.id })
 
-    const items = (await listTours('en')).items
+    const items = (await listTours({ language: 'en' })).items
     const detail = await getTour(withCover.slugs.en!, 'en')
 
     const expected = { url: `https://media.test/${cover.key}`, variants: expect.arrayContaining([{ width: 320, url: expect.stringMatching(/^https:\/\/media\.test\/.*w320\.webp$/) }]) }
@@ -107,7 +107,7 @@ describe('public tour guide reads over the database', () => {
     const draft = await tour(store, { status: 'draft' })
     const published = await tour(store)
 
-    const ids = (await listTours('en')).items.map(i => i.id)
+    const ids = (await listTours({ language: 'en' })).items.map(i => i.id)
 
     expect(ids).toContain(published.id)
     expect(ids).not.toContain(draft.id)
@@ -147,7 +147,7 @@ describe('public tour guide reads over the database', () => {
     const first = await tour(store)
     const second = await tour(store)
 
-    const ids = (await listTours('en')).items.map(i => i.id).filter(id => id === first.id || id === second.id)
+    const ids = (await listTours({ language: 'en' })).items.map(i => i.id).filter(id => id === first.id || id === second.id)
 
     expect(ids).toEqual([second.id, first.id])
   })

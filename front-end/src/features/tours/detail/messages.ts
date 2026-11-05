@@ -1,7 +1,5 @@
 export const tourDetailEn = {
-  'tourDetail.operatorSub': 'Tour operator · Luzerne old town',
-  'tourDetail.operatorTitle': 'Hosted by {shop}',
-  'tourDetail.reviewsRule': 'Reviews from guests who completed this tour.',
+  'tourDetail.reviewsRule': 'Reviews from guests who followed this route.',
   'tourDetail.favouriteBody':
-    'Rated {rating} out of 5 by guests who completed this tour.',
+    'Rated {rating} out of 5 by guests who followed this route.',
 }
