@@ -10,6 +10,7 @@ import { createRoute, z } from '@hono/zod-openapi'
 import { confirmUploadSchema, mediaItemSchema, mediaListQuerySchema, mediaListSchema, mediaLookupBodySchema, mediaLookupSchema, mediaPatchBodySchema, mediaSchema, mediaUsesSchema, replaceMediaBodySchema, uploadGrantSchema, uploadRequestSchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
+import { limitWholeList } from '../../../platform/http/whole-list-limits.ts'
 import { StorageUnavailableError } from '../ports.ts'
 import { mediaItemView, mediaListView, mediaLookupView, mediaUsesView, mediaView } from './media-view.ts'
 import { failureProblem } from './problems.ts'
@@ -180,7 +181,7 @@ export function registerMediaRoutes(app: OpenAPIHono<AppEnv>, useCases: MediaUse
     const result = await useCases.getMediaUses(c.get('actor'), c.get('store').storeId, c.req.valid('param').mediaId)
     if (!result.ok)
       return problem(c, failureProblem(result))
-    return c.json(mediaUsesView(result.value, useCases.publicUrl), 200)
+    return c.json(limitWholeList(c, 'GET /api/store/{storeId}/media/{mediaId}/uses', mediaUsesView(result.value, useCases.publicUrl)), 200)
   }))
   app.openapi(describeMediaRoute, c => withStorage(c, async () => {
     const result = await useCases.describeMedia(c.get('actor'), c.get('store').storeId, c.req.valid('param').mediaId, c.req.valid('json'), c.get('requestId'))

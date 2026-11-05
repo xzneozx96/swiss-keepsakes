@@ -9,6 +9,7 @@ import { createRoute, z } from '@hono/zod-openapi'
 import { pickupPlaceListQuerySchema, pickupPlaceListSchema, pickupPlaceOrderBodySchema, pickupPlacePatchBodySchema, pickupPlaceRemovalSchema, pickupPlaceSchema, pickupPlaceWriteBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
+import { limitWholeList } from '../../../platform/http/whole-list-limits.ts'
 import { readIfMatch } from './if-match.ts'
 import { failureProblem } from './problems.ts'
 import { etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
@@ -117,7 +118,7 @@ export function registerPickupRoutes(app: OpenAPIHono<AppEnv>, useCases: PickupU
     const result = await useCases.listPickupPlaces(c.get('actor'), c.get('store').storeId, c.req.valid('query').archived === 'true')
     if (!result.ok)
       return problem(c, failureProblem(result))
-    return c.json({ items: result.value.map(view) }, 200)
+    return c.json(limitWholeList(c, 'GET /api/store/{storeId}/pickup-places', { items: result.value.map(view) }), 200)
   })
 
   app.openapi(createPlaceRoute, async (c) => {

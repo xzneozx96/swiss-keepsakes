@@ -14,6 +14,7 @@ import { storyDeletedSchema, storyGroupCreateBodySchema, storyGroupDetailSchema,
 import { problem } from '../../../platform/http/problem.ts'
 import { wholeIfNoPage } from '../../../platform/http/whole-list.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
+import { limitWholeList } from '../../../platform/http/whole-list-limits.ts'
 import { readIfMatch } from './if-match.ts'
 import { failureProblem } from './problems.ts'
 import { etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
@@ -213,7 +214,7 @@ export function registerStoryRoutes(app: OpenAPIHono<AppEnv>, useCases: StoryUse
     const result = await useCases.listStoryGroupsByIds(c.get('actor'), c.get('store').storeId, c.req.valid('query').ids)
     if (!result.ok)
       return problem(c, failureProblem(result))
-    return c.json({ items: storyItemsView(result.value, useCases.publicUrl) }, 200)
+    return c.json(limitWholeList(c, 'GET /api/store/{storeId}/story-groups/lookup', { items: storyItemsView(result.value, useCases.publicUrl) }), 200)
   })
 
   app.openapi(listGroupsRoute, async (c) => {

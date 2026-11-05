@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { MAX_OFFSET, MAX_PAGE_LIMIT, numberedPageOf, numberedPageQuery, pageOf, pageQuery, publicCategorySchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
+import { WHOLE_LIST_LIMITS } from '../../src/platform/http/whole-list-limits.ts'
 
 describe('[ADR-033] pageQuery', () => {
   it('a route default fills a missing limit, and the query string is coerced', () => {
@@ -118,16 +119,24 @@ const WHOLE_LISTS: Record<string, WholeList> = {
   'GET /api/store/{storeId}/pins/lookup': { reason: 'The pins the editor already references, read by id or by link host (at most 50 ids, 50 rows)', expectedSize: 'under 50' },
   'GET /api/store/{storeId}/products/lookup': { reason: 'The keepsakes a story already references, read by id (at most 50 ids)', expectedSize: 'under 50' },
   'GET /api/store/{storeId}/products/option-names': { reason: 'The option names the shop already uses, for the name field\'s suggestions (cap 50)', expectedSize: 'tens' },
+  'GET /api/store/{storeId}/media/{mediaId}/uses': { reason: 'Every page that uses one file, in two arrays (published, drafts), shown together in the media sheet (cap 200 in all)', expectedSize: 'tens' },
+  'GET /api/store/{storeId}/members': { reason: 'The members tab shows members and open invitations together, in two arrays (cap 50 in all)', expectedSize: 'under 10' },
   'GET /api/store/{storeId}/pins/story-options': { reason: 'Search-as-you-type: q and the first 20 matches, no paging', expectedSize: '20' },
 }
 
 /** Lists the ADR makes paged in a later slice. An entry leaves this map when its slice lands (the test below fails when a paged route is still listed). */
 const PENDING_SLICES: Record<string, { slice: number, expectedSize: string }> = {}
 
+/** Single-record reads whose body holds an array property, so the walk does not take them for lists. */
+const SINGLE_RECORDS: Record<string, string> = {
+  '/api/me': 'The signed-in user with their memberships',
+  '/api/store/{storeId}/onboarding': 'The store\'s onboarding checklist, one record',
+}
+
 type Json = Record<string, unknown>
 type ListKind = 'cursor' | 'numbered' | 'unpaged'
 
-/** The `METHOD path` of every GET route whose 200 JSON body has an `items` array, with how it pages. */
+/** The `METHOD path` of every GET route whose 200 JSON body has a top-level array property, with how it pages. */
 function listRoutes(spec: Json): Map<string, ListKind> {
   const resolve = (node: unknown): Json | undefined => {
     let current = node as Json | undefined
@@ -137,11 +146,15 @@ function listRoutes(spec: Json): Map<string, ListKind> {
   }
   const routes = new Map<string, ListKind>()
   for (const [path, methods] of Object.entries(spec.paths as Record<string, Json>)) {
+    // A detail read (`/{slug}`, `/{id}`) is one record, not a list (ADR-033, per-route table); so is a named single-record read.
+    // `{kind}` is a collection (the categories of one kind), not a record.
+    if (/\/\{(?!kind\})[^/]+\}$/.test(path) || path in SINGLE_RECORDS)
+      continue
     const get = methods.get as Json | undefined
     const body = resolve(((((get?.responses as Json | undefined)?.['200'] as Json | undefined)?.content as Json | undefined)?.['application/json'] as Json | undefined)?.schema)
     const props = body?.properties as Json | undefined
-    const items = resolve(props?.items)
-    if (!props || items?.type !== 'array')
+    // A list is a body with a top-level array property: `items`, or another name (`members`, `published`).
+    if (!props || !Object.values(props).some(prop => resolve(prop)?.type === 'array'))
       continue
     routes.set(`GET ${path}`, 'nextCursor' in props ? 'cursor' : 'page' in props && 'total' in props ? 'numbered' : 'unpaged')
   }
@@ -181,6 +194,14 @@ describe('[ADR-033] every list route pages or is named as a whole list', () => {
   it('names a reason and a size for every whole list', () => {
     for (const entry of Object.values(WHOLE_LISTS))
       expect(entry.reason.length > 0 && entry.expectedSize.length > 0).toBe(true)
+  })
+
+  it('every whole list has its limits (warning threshold and cap), and no limit stands for a route that is not whole', () => {
+    expect(Object.keys(WHOLE_LIST_LIMITS).sort()).toEqual(Object.keys(WHOLE_LISTS).sort())
+  })
+
+  it('the map warns from 800 pins and is never cut', () => {
+    expect(WHOLE_LIST_LIMITS['GET /api/public/map']).toEqual({ warnAt: 800, cap: null })
   })
 
   it('the walk bites: a fake route without paging is reported', () => {

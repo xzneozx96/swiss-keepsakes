@@ -20,6 +20,7 @@ import { acceptedInvitationSchema, acceptInvitationBodySchema, adminStoreListQue
 import { cursorProblem, decodeCursor, encodeCursor } from '../../../platform/http/cursor.ts'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
+import { limitWholeList } from '../../../platform/http/whole-list-limits.ts'
 
 // What the routes call. main.ts builds each from the module's use cases.
 export interface IdentityUseCases {
@@ -322,7 +323,7 @@ export function registerIdentityRoutes(app: OpenAPIHono<AppEnv>, useCases: Ident
 
   app.openapi(membersRoute, async (c) => {
     const result = await useCases.listMembers(c.get('actor'), c.get('store').storeId)
-    return result.ok ? c.json({ members: result.members, invitations: result.invitations }, 200) : problem(c, membersForbidden)
+    return result.ok ? c.json(limitWholeList(c, 'GET /api/store/{storeId}/members', { members: result.members, invitations: result.invitations }), 200) : problem(c, membersForbidden)
   })
 
   app.openapi(inviteManagerRoute, async (c) => {

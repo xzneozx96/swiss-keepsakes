@@ -354,6 +354,7 @@ The owner did not answer the remaining three questions. The coordinator's defaul
 - 2026-11-05 (slice 5, owner rule: paging must not change what merchants see): the inventory table's default order is keepsake name, variant title, code, then variant id descending (today's order), not `sku_id` as § 4 lists. `sort=newest` gives the id order.
 - 2026-11-05 (slice 5, § 12 grace, one release): a request WITHOUT `page` to the merchant products, inventory, pins and story-groups lists answers the whole list (up to 500), as before paging; with `page` it is paged. The media library accepts `pageSize` up to 24 (deprecated; the most is 20). Both fallbacks are removed in the next release, when `page` defaults to 1 again and the media maximum is 20. The front end always sends `page` and a page size of 20 or less.
 - 2026-11-05: Merchant stories table default order is last updated first (`updated_at desc, id desc`), not created; owner decision, to keep the order merchants saw before and match the Updated column.
+- 2026-11-05: Slice 7 built the § 10 caps in `api/src/platform/http/whole-list-limits.ts` (warn near the cap, cut at the cap, the map never cut and warned at 800). The § 10 row for story-group `links` is void: that route returns two counts (`pins`, `stories`), not a list, so it has no cap.
 
 ## History
 - 2026-11-05 proposed (owner question on pagination; research and audit of every list route)
@@ -362,3 +363,4 @@ The owner did not answer the remaining three questions. The coordinator's defaul
 - 2026-11-05 amended (owner): inventory default order stays by name (see Amendments)
 - 2026-11-05 amended: § 12 fallback for numbered lists, removed next release (see Amendments)
 - 2026-11-05 amended (owner): merchant stories table opens with the last updated story first (see Amendments)
+- 2026-11-05 amended: slice 7 caps built; the story-group `links` row is void (see Amendments)

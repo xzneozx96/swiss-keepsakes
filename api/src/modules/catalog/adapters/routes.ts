@@ -12,6 +12,7 @@ import { optionsSaveBodySchema, productCreateBodySchema, productListQuerySchema,
 import { problem } from '../../../platform/http/problem.ts'
 import { wholeIfNoPage } from '../../../platform/http/whole-list.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
+import { limitWholeList } from '../../../platform/http/whole-list-limits.ts'
 import { readIfMatch } from './if-match.ts'
 import { failureProblem } from './problems.ts'
 import { productListItemView, productView } from './product-view.ts'
@@ -195,14 +196,14 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
     const result = await useCases.lookupProducts(c.get('actor'), c.get('store').storeId, c.req.valid('query').ids)
     if (!result.ok)
       return problem(c, failureProblem(result))
-    return c.json({ items: result.value.map(productListItemView) }, 200)
+    return c.json(limitWholeList(c, 'GET /api/store/{storeId}/products/lookup', { items: result.value.map(productListItemView) }), 200)
   })
 
   app.openapi(optionNamesRoute, async (c) => {
     const result = await useCases.listOptionNames(c.get('actor'), c.get('store').storeId, c.req.valid('query').except)
     if (!result.ok)
       return problem(c, failureProblem(result))
-    return c.json({ items: result.value }, 200)
+    return c.json(limitWholeList(c, 'GET /api/store/{storeId}/products/option-names', { items: result.value }), 200)
   })
 
   app.openapi(createRoutePart, async (c) => {

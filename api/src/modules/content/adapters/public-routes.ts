@@ -16,6 +16,7 @@ import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { failureProblem } from './problems.ts'
 import { json } from './route-parts.ts'
+import { limitWholeList } from '../../../platform/http/whole-list-limits.ts'
 
 // Cached by the browser for 30 s, then revalidated with the ETag (ADR-006).
 const publicCacheControl = 'max-age=30'
@@ -178,7 +179,7 @@ export function registerPublicRoutes(app: OpenAPIHono<AppEnv>, useCases: PublicU
     return conditionalJson(c, { items: found.items, total: found.total, counts: found.counts, nextCursor: found.next ? encodeCursor(found.next, scope) : null }, publicCacheControl)
   })
 
-  app.openapi(mapCategoriesRoute, async c => conditionalJson(c, await useCases.listCategories('map'), publicCacheControl))
-  app.openapi(blogCategoriesRoute, async c => conditionalJson(c, await useCases.listCategories('blog'), publicCacheControl))
-  app.openapi(mapRoute, async c => conditionalJson(c, await useCases.getMap(c.req.valid('query').lang), publicCacheControl))
+  app.openapi(mapCategoriesRoute, async c => conditionalJson(c, limitWholeList(c, 'GET /api/public/map-categories', await useCases.listCategories('map')), publicCacheControl))
+  app.openapi(blogCategoriesRoute, async c => conditionalJson(c, limitWholeList(c, 'GET /api/public/blog-categories', await useCases.listCategories('blog')), publicCacheControl))
+  app.openapi(mapRoute, async c => conditionalJson(c, limitWholeList(c, 'GET /api/public/map', await useCases.getMap(c.req.valid('query').lang)), publicCacheControl))
 }

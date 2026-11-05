@@ -10,6 +10,7 @@ import { pinListQuerySchema, pinListSchema, pinLookupQuerySchema, pinLookupSchem
 import { problem } from '../../../platform/http/problem.ts'
 import { wholeIfNoPage } from '../../../platform/http/whole-list.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
+import { limitWholeList } from '../../../platform/http/whole-list-limits.ts'
 import { readIfMatch } from './if-match.ts'
 import { pinChanges, pinListItemView, pinView } from './pin-view.ts'
 import { failureProblem } from './problems.ts'
@@ -127,14 +128,14 @@ export function registerPinRoutes(app: OpenAPIHono<AppEnv>, useCases: PinUseCase
     const result = await useCases.listPinsByIds(c.get('actor'), c.get('store').storeId, c.req.valid('query'))
     if (!result.ok)
       return problem(c, failureProblem(result))
-    return c.json({ items: result.value.map(entry => pinListItemView(entry, useCases.publicUrl)) }, 200)
+    return c.json(limitWholeList(c, 'GET /api/store/{storeId}/pins/lookup', { items: result.value.map(entry => pinListItemView(entry, useCases.publicUrl)) }), 200)
   })
 
   app.openapi(storyOptionsRoute, async (c) => {
     const result = await useCases.listPinStoryOptions(c.get('actor'), c.get('store').storeId, c.req.valid('query'))
     if (!result.ok)
       return problem(c, failureProblem(result))
-    return c.json({ items: result.value }, 200)
+    return c.json(limitWholeList(c, 'GET /api/store/{storeId}/pins/story-options', { items: result.value }), 200)
   })
 
   app.openapi(getPinRoute, async (c) => {

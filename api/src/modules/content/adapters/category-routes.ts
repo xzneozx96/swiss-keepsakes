@@ -8,6 +8,7 @@ import { createRoute, z } from '@hono/zod-openapi'
 import { categoryKindSchema, categoryOrderBodySchema, categoryPatchBodySchema, categoryWriteBodySchema, merchantCategoryListSchema, merchantCategorySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
+import { limitWholeList } from '../../../platform/http/whole-list-limits.ts'
 import { categoryView } from './category-view.ts'
 import { failureProblem } from './problems.ts'
 import { json } from './route-parts.ts'
@@ -69,7 +70,7 @@ export function registerCategoryRoutes(app: OpenAPIHono<AppEnv>, useCases: Categ
     const result = await useCases.listMerchantCategories(c.get('actor'), c.get('store').storeId, c.req.valid('param').kind)
     if (!result.ok)
       return problem(c, failureProblem(result))
-    return c.json({ items: result.value.map(categoryView) }, 200)
+    return c.json(limitWholeList(c, 'GET /api/store/{storeId}/categories/{kind}', { items: result.value.map(categoryView) }), 200)
   })
 
   app.openapi(createCategoryRoute, async (c) => {

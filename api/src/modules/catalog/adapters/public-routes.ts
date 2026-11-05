@@ -12,6 +12,7 @@ import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { failureProblem } from './problems.ts'
 import { json } from './route-parts.ts'
+import { limitWholeList } from '../../../platform/http/whole-list-limits.ts'
 
 // The text reads are cached for 30 s; the availability read for 5 s only, so a sell-out shows soon (ADR-006).
 const textCacheControl = 'max-age=30'
@@ -103,11 +104,11 @@ export function registerPublicKeepsakeRoutes(app: OpenAPIHono<AppEnv>, useCases:
 
   app.openapi(availabilityRoute, async (c) => {
     const result = await useCases.getAvailability(c.req.valid('param').slug, c.req.valid('query').lang)
-    return result.ok ? conditionalJson(c, result.value, availabilityCacheControl) : problem(c, failureProblem(result))
+    return result.ok ? conditionalJson(c, limitWholeList(c, 'GET /api/public/keepsakes/{slug}/availability', result.value), availabilityCacheControl) : problem(c, failureProblem(result))
   })
 
   app.openapi(pickupPointsRoute, async (c) => {
     const result = await useCases.getPickupPoints(c.req.valid('param').slug, c.req.valid('query').lang)
-    return result.ok ? conditionalJson(c, result.value, textCacheControl) : problem(c, failureProblem(result))
+    return result.ok ? conditionalJson(c, limitWholeList(c, 'GET /api/public/keepsakes/{slug}/pickup-points', result.value), textCacheControl) : problem(c, failureProblem(result))
   })
 }
