@@ -1,4 +1,4 @@
-import type { HomeRoute } from '../lib/demo-routes'
+import type { PublicTourCard } from '@sk/api-contract'
 
 import { Skeleton } from '@heroui/react'
 import { Link, useHydrated } from '@tanstack/react-router'
@@ -14,7 +14,7 @@ import { routeOrder } from '../lib/routes'
 import { SectionHeading } from './section-heading'
 
 /** A route card in the look of the shipped tour rail: a 240 px card, the 4:3 photo, the serif title, the duration. No price, no booking, no departure. */
-function RouteCard({ tour }: { tour: HomeRoute }) {
+function RouteCard({ tour }: { tour: PublicTourCard }) {
   const { t, language, intlLocale } = useLocale()
   const other = tour.language === language ? undefined : tour.language
 
@@ -26,7 +26,7 @@ function RouteCard({ tour }: { tour: HomeRoute }) {
         params={{ lang: tour.language, slug: tour.slug }}
         to="/$lang/tours/$slug"
       >
-        <Media alt="" className="aspect-[4/3] w-full rounded-3xl" photo={tour.photo} />
+        <Media alt="" className="aspect-[4/3] w-full rounded-3xl" />
         <span className="flex flex-col gap-0.5 px-0.5">
           <h3 className="font-serif text-card-title text-balance" lang={other}>{tour.title}</h3>
           {other && <span className="w-fit rounded-full bg-surface-secondary px-2 py-0.5 text-[11px] leading-4 font-medium text-muted">{t(`map.card.onlyIn.${other}`)}</span>}
@@ -62,7 +62,7 @@ function RoutesSkeleton() {
  * server order; once the page is hydrated the guest's stay length orders them. `tours` is undefined while the read loads and
  * null when it failed. With no tour the section is not drawn.
  */
-export function RoutesSection({ tours, onRetry }: { tours: readonly HomeRoute[] | null | undefined, onRetry: () => void }) {
+export function RoutesSection({ tours, onRetry }: { tours: readonly PublicTourCard[] | null | undefined, onRetry: () => void }) {
   const { t } = useLocale()
   const headingId = useId()
   const hydrated = useHydrated()

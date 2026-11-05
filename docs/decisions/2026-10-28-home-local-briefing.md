@@ -102,4 +102,4 @@ The server sends the default order, and so does the first client render. The ord
 
 The order lives in `front-end/src/features/home/lib/section-order.ts`.
 
-Later the same day the owner moved the routes right after "See these first" and kept the demo tours in them: while the API has no published tour, the route cards are the demo tours the tour page draws, with their photos (G-S9-TOURS-DEMO, until release 2b).
+Later the same day the owner moved the routes right after "See these first". The route cards stay on the published tours from the API; the three seeded tours were published on dev for that.
