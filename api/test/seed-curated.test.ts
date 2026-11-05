@@ -1,14 +1,15 @@
 import { categoryIcons, descriptionLength, interestCodes } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
-import { buildPlan, categorySpecs, eventsPlan, iconPlan, loadData, parseFlags, placeChanges, productInput } from '../scripts/seed-curated.ts'
+import { buildPlan, categorySpecs, groupPlan, iconPlan, loadData, parseFlags, placeChanges, productInput } from '../scripts/seed-curated.ts'
 
 const data = loadData()
 const empty = { categories: [], placeTitles: new Set<string>(), keepsakeNames: new Set<string>(), hashes: new Set<string>() }
 
 describe('[seed-curated] the curated data maps to writes', () => {
-  it('has the 33 places of the review, the 11 events of 05.11.2026 and 5 keepsakes', () => {
-    expect(data.places).toHaveLength(44)
+  it('has the 33 places of the review, the 11 events and 6 food places of 05.11.2026 and 5 keepsakes', () => {
+    expect(data.places).toHaveLength(50)
     expect(data.places.filter(place => place.group === 'events')).toHaveLength(11)
+    expect(data.places.filter(place => place.group === 'food')).toHaveLength(6)
     expect(data.keepsakes).toHaveLength(5)
   })
 
@@ -64,7 +65,7 @@ describe('[seed-curated] the curated data maps to writes', () => {
 
   it('plans everything on an empty store and nothing again once it exists', () => {
     const first = buildPlan(data, empty)
-    expect(first.placesToCreate).toHaveLength(44)
+    expect(first.placesToCreate).toHaveLength(50)
     expect(first.keepsakesToCreate).toHaveLength(5)
     const again = buildPlan(data, {
       categories: categorySpecs.map((c, i) => ({ id: String(i), slug: c.slug, nameEn: c.name.en })),
@@ -110,13 +111,13 @@ describe('[E4.13][AC7] the seed icon step plans additions only', () => {
 
 describe('[seed-curated] the flags pick the steps', () => {
   it('runs every step by default and with --dry-run alone', () => {
-    expect(parseFlags([])).toEqual({ dry: false, stockOnly: false, storiesOnly: false, eventsOnly: false, unknown: [] })
-    expect(parseFlags(['--dry-run'])).toEqual({ dry: true, stockOnly: false, storiesOnly: false, eventsOnly: false, unknown: [] })
+    expect(parseFlags([])).toEqual({ dry: false, stockOnly: false, storiesOnly: false, group: null, unknown: [] })
+    expect(parseFlags(['--dry-run'])).toEqual({ dry: true, stockOnly: false, storiesOnly: false, group: null, unknown: [] })
   })
 
   it('--stock-only keeps only the opening stock step, with or without --dry-run', () => {
-    expect(parseFlags(['--stock-only'])).toEqual({ dry: false, stockOnly: true, storiesOnly: false, eventsOnly: false, unknown: [] })
-    expect(parseFlags(['--stock-only', '--dry-run'])).toEqual({ dry: true, stockOnly: true, storiesOnly: false, eventsOnly: false, unknown: [] })
+    expect(parseFlags(['--stock-only'])).toEqual({ dry: false, stockOnly: true, storiesOnly: false, group: null, unknown: [] })
+    expect(parseFlags(['--stock-only', '--dry-run'])).toEqual({ dry: true, stockOnly: true, storiesOnly: false, group: null, unknown: [] })
   })
 
   it('reports a flag it does not know, so a typo cannot start the full seed', () => {
@@ -124,9 +125,9 @@ describe('[seed-curated] the flags pick the steps', () => {
   })
 })
 
-describe('[seed-curated] --events-only', () => {
+describe('[seed-curated] --group', () => {
   it('plans only the events and the events category, whatever else the store lacks', () => {
-    const { data: events, plan } = eventsPlan(data, empty)
+    const { data: events, plan } = groupPlan(data, empty, 'events')
     expect(events.keepsakes).toEqual([])
     expect(plan.placesToCreate.map(p => p.group)).toEqual(Array.from({ length: 11 }).fill('events'))
     expect(plan.categoriesToCreate.map(spec => spec.slug)).toEqual(['events'])
@@ -139,6 +140,16 @@ describe('[seed-curated] --events-only', () => {
   })
 
   it('is a known flag', () => {
-    expect(parseFlags(['--events-only', '--dry-run'])).toMatchObject({ eventsOnly: true, dry: true, unknown: [] })
+    expect(parseFlags(['--events-only', '--dry-run'])).toMatchObject({ group: 'events', dry: true, unknown: [] })
+    expect(parseFlags(['--group=food'])).toMatchObject({ group: 'food', unknown: [] })
+  })
+})
+
+describe('[seed-curated] --group=food', () => {
+  it('plans the 6 food places and only the food categories they need', () => {
+    const { plan } = groupPlan(data, empty, 'food')
+    expect(plan.placesToCreate).toHaveLength(6)
+    expect(plan.categoriesToCreate.map(spec => spec.slug).sort()).toEqual(['bars', 'food-and-drink', 'restaurants'])
+    expect(data.places.filter(p => p.group === 'food').every(p => p.record.photos.length > 0)).toBe(true)
   })
 })

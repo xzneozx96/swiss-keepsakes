@@ -102,6 +102,8 @@ export const categorySpecs: CategorySpec[] = [
   { slug: 'chocolate', name: { en: 'Chocolate', de: 'Schokolade' }, parent: 'food-and-drink', icon: null, showOnHome: false },
   { slug: 'cafes', name: { en: 'Cafés and bakeries', de: 'Cafés und Bäckereien' }, parent: 'food-and-drink', icon: 'cafe', showOnHome: false },
   { slug: 'supermarkets', name: { en: 'Supermarkets', de: 'Supermärkte' }, parent: 'food-and-drink', icon: 'supermarket', showOnHome: false },
+  { slug: 'restaurants', name: { en: 'Restaurants', de: 'Restaurants' }, parent: 'food-and-drink', icon: 'restaurant', showOnHome: false },
+  { slug: 'bars', name: { en: 'Bars', de: 'Bars' }, parent: 'food-and-drink', icon: 'bar', showOnHome: false },
   { slug: 'shopping', name: { en: 'Shopping', de: 'Einkaufen' }, parent: null, icon: 'shop', showOnHome: false },
   { slug: 'department-stores', name: { en: 'Department stores', de: 'Warenhäuser' }, parent: 'shopping', icon: 'shop', showOnHome: false },
   { slug: 'free-essentials', name: { en: 'Free essentials', de: 'Gratis und praktisch' }, parent: null, icon: null, showOnHome: false },
@@ -198,7 +200,7 @@ function readJson<T>(file: string): T {
 }
 
 export function loadData(): Data {
-  const groups = [['places-sights.json', 'sights'], ['places-shops-toilets.json', 'shops-toilets'], ['places-useful-info.json', 'useful-info'], ['places-events.json', 'events']] as const
+  const groups = [['places-sights.json', 'sights'], ['places-shops-toilets.json', 'shops-toilets'], ['places-useful-info.json', 'useful-info'], ['places-events.json', 'events'], ['places-food.json', 'food']] as const
   return {
     places: groups.flatMap(([file, group]) => readJson<PlaceRecord[]>(file).map(record => ({ group, record }))),
     keepsakes: readJson<KeepsakeRecord[]>('keepsakes.json'),
@@ -297,17 +299,18 @@ function printPlan(plan: Plan, snapshot: Snapshot, photos: Map<string, Uint8Arra
 
 // `--stock-only` runs the opening-stock step alone: no category, place or keepsake is planned or created (owner, 2026-11-03).
 // `--stories-only` does the same for the stories step.
-// `--events-only` adds only the events of `places-events.json` and their category: no other category, place or keepsake,
-// and no icon, stock or story step (owner, 2026-11-05).
+// `--group=<name>` adds only the places of one data group (`events`, `food`, ...) and the categories they use: no other
+// category, place or keepsake, and no icon, stock or story step (owner, 2026-11-05). `--events-only` is `--group=events`.
 // A flag that is not known stops the run, so a typo cannot start the full seed.
 const knownFlags = ['--dry-run', '--stock-only', '--stories-only', '--events-only']
+const GROUP_FLAG = /^--group=([a-z-]+)$/
 export function parseFlags(argv: readonly string[]) {
   return {
     dry: argv.includes('--dry-run'),
     stockOnly: argv.includes('--stock-only'),
     storiesOnly: argv.includes('--stories-only'),
-    eventsOnly: argv.includes('--events-only'),
-    unknown: argv.filter(arg => !knownFlags.includes(arg)),
+    group: argv.includes('--events-only') ? 'events' : (argv.map(arg => GROUP_FLAG.exec(arg)?.[1]).find(Boolean) ?? null),
+    unknown: argv.filter(arg => !knownFlags.includes(arg) && !GROUP_FLAG.test(arg)),
   }
 }
 
@@ -338,7 +341,7 @@ export async function stockOnly(pool: Pool, storeId: string, dry: boolean): Prom
 }
 
 async function main(): Promise<number> {
-  const { dry, stockOnly: onlyStock, storiesOnly, eventsOnly, unknown } = parseFlags(process.argv.slice(2))
+  const { dry, stockOnly: onlyStock, storiesOnly, group, unknown } = parseFlags(process.argv.slice(2))
   if (unknown.length > 0) {
     process.stderr.write(`Unknown flag: ${unknown.join(' ')}. Known: ${knownFlags.join(', ')}. Nothing was written.\n`)
     return 2
@@ -361,18 +364,12 @@ async function main(): Promise<number> {
       return await stockOnly(pool, storeId, dry)
     if (storiesOnly)
       return await placeStoriesStep(pool, storeId, { dry })
-    if (eventsOnly)
-      return await eventsStep(pool, storeId, dry)
+    if (group)
+      return await groupStep(pool, storeId, group, dry)
     const data = loadData()
     const snapshot = await readSnapshot(pool, storeId)
     const plan = buildPlan(data, snapshot)
-    const files = new Map<string, Uint8Array>()
-    const wanted: Photo[] = [...plan.placesToCreate.flatMap(p => photosOf(p.group, p.record.photos)), ...plan.keepsakesToCreate.flatMap(k => photosOf('keepsakes', k.photos))]
-    for (const photo of wanted) {
-      const key = `${photo.dir}/${photo.file}`
-      if (!files.has(key))
-        files.set(key, readFileSync(join(mediaDir, photo.dir, photo.file)))
-    }
+    const files = photoFiles(plan)
     const iconColumns = await hasIconColumns(pool)
     printPlan(plan, snapshot, files, dry)
     process.stdout.write(`Icon and home columns (migrations 0016 and 0026): ${iconColumns ? 'present' : 'missing'}\n`)
@@ -415,18 +412,39 @@ async function main(): Promise<number> {
   }
 }
 
-// The events plan: the events group and the categories its records use, nothing else.
-export function eventsPlan(data: Data, snapshot: Snapshot): { data: Data, plan: Plan } {
-  const events: Data = { places: data.places.filter(entry => entry.group === 'events'), keepsakes: [] }
-  const used = new Set(events.places.flatMap(entry => entry.record.categories))
-  const plan = buildPlan(events, snapshot)
-  return { data: events, plan: { ...plan, categoriesToCreate: plan.categoriesToCreate.filter(spec => used.has(spec.slug)) } }
+// The plan of one group: its places and the categories its records use (with their parents), nothing else.
+export function groupPlan(data: Data, snapshot: Snapshot, group: string): { data: Data, plan: Plan } {
+  const only: Data = { places: data.places.filter(entry => entry.group === group), keepsakes: [] }
+  const used = new Set(only.places.flatMap(entry => entry.record.categories))
+  for (const spec of categorySpecs) {
+    if (used.has(spec.slug) && spec.parent)
+      used.add(spec.parent)
+  }
+  const plan = buildPlan(only, snapshot)
+  return { data: only, plan: { ...plan, categoriesToCreate: plan.categoriesToCreate.filter(spec => used.has(spec.slug)) } }
 }
 
-async function eventsStep(pool: Pool, storeId: string, dry: boolean): Promise<number> {
+// The bytes of every photo the plan's places and keepsakes name, read once per file.
+function photoFiles(plan: Plan): Map<string, Uint8Array> {
+  const files = new Map<string, Uint8Array>()
+  const wanted: Photo[] = [...plan.placesToCreate.flatMap(p => photosOf(p.group, p.record.photos)), ...plan.keepsakesToCreate.flatMap(k => photosOf('keepsakes', k.photos))]
+  for (const photo of wanted) {
+    const key = `${photo.dir}/${photo.file}`
+    if (!files.has(key))
+      files.set(key, readFileSync(join(mediaDir, photo.dir, photo.file)))
+  }
+  return files
+}
+
+async function groupStep(pool: Pool, storeId: string, group: string, dry: boolean): Promise<number> {
   const snapshot = await readSnapshot(pool, storeId)
-  const { data, plan } = eventsPlan(loadData(), snapshot)
-  printPlan(plan, snapshot, new Map(), dry)
+  const { data, plan } = groupPlan(loadData(), snapshot, group)
+  if (data.places.length === 0) {
+    process.stderr.write(`No places in group ${group}. Nothing was written.\n`)
+    return 2
+  }
+  const files = photoFiles(plan)
+  printPlan(plan, snapshot, files, dry)
   if (dry)
     return 0
   if (!await hasIconColumns(pool)) {
@@ -437,7 +455,7 @@ async function eventsStep(pool: Pool, storeId: string, dry: boolean): Promise<nu
     process.stdout.write('Nothing to create.\n')
     return 0
   }
-  return await run(pool, storeId, data, plan, snapshot, new Map())
+  return await run(pool, storeId, data, plan, snapshot, files)
 }
 
 // Runs after the keepsakes exist, also on a second run. The plan is read again from the database, so a row that a person
@@ -491,7 +509,7 @@ async function run(pool: Pool, storeId: string, data: Data, plan: Plan, snapshot
 
   // Categories: each create takes the list lock and numbers itself after its siblings, so they go one at a time,
   // parents first (the spec table is in that order). The ids of the categories that exist are read once. Only the
-  // plan's categories are created: a narrowed plan (--events-only) must not add the others (bug found 05.11.2026).
+  // plan's categories are created: a narrowed plan (--group) must not add the others (bug found 05.11.2026).
   const ids = new Map(snapshot.categories.map(row => [row.slug, row.id]))
   const toCreate = new Set(plan.categoriesToCreate.map(spec => spec.slug))
   for (const spec of categorySpecs) {

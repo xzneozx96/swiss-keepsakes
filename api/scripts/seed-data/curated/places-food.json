@@ -1,0 +1,549 @@
+[
+  {
+    "key": "wirtshaus-galliker",
+    "title": {
+      "en": "Wirtshaus Galliker",
+      "de": "Wirtshaus Galliker"
+    },
+    "tip": {
+      "en": "A family-run inn in the Neustadt that has served old Lucerne dishes for generations. Order the Chügelipastete, a puff-pastry case with creamy veal ragout, or the Bratwurst with rösti. The dining room is plain and traditional, and prices are mid-priced.",
+      "de": "Ein Familienwirtshaus in der Neustadt, das seit Generationen alte Luzerner Gerichte kocht. Probieren Sie die Chügelipastete, eine Blätterteigpastete mit sämigem Kalbsragout, oder die Bratwurst mit Rösti. Die Stube ist schlicht und währschaft, die Preise sind mittel."
+    },
+    "localTip": {
+      "en": "Book a table even on a weekday, and note that it is closed on Sundays and Mondays.",
+      "de": "Auch unter der Woche reservieren, und beachten, dass sonntags und montags Ruhetag ist."
+    },
+    "latitude": 47.050956,
+    "longitude": 8.300799,
+    "address": "Schützenstrasse 1, 6003 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.050956,8.300799",
+    "weeklyHours": [
+      {
+        "day": 2,
+        "opens": "11:15",
+        "closes": "14:30"
+      },
+      {
+        "day": 2,
+        "opens": "18:00",
+        "closes": "00:30"
+      },
+      {
+        "day": 3,
+        "opens": "11:15",
+        "closes": "14:30"
+      },
+      {
+        "day": 3,
+        "opens": "18:00",
+        "closes": "00:30"
+      },
+      {
+        "day": 4,
+        "opens": "11:15",
+        "closes": "14:30"
+      },
+      {
+        "day": 4,
+        "opens": "18:00",
+        "closes": "00:30"
+      },
+      {
+        "day": 5,
+        "opens": "11:15",
+        "closes": "14:30"
+      },
+      {
+        "day": 5,
+        "opens": "18:00",
+        "closes": "00:30"
+      },
+      {
+        "day": 6,
+        "opens": "11:15",
+        "closes": "14:30"
+      },
+      {
+        "day": 6,
+        "opens": "18:00",
+        "closes": "00:30"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [
+      "food-drink",
+      "history-culture"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.wirtshaus-galliker.ch",
+    "categories": [
+      "restaurants"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "wirtshaus-galliker.jpg",
+        "alt": {
+          "en": "The cream-coloured front of the Wirtshaus Galliker inn on Schützenstrasse",
+          "de": "Die helle Fassade des Wirtshauses Galliker an der Schützenstrasse"
+        },
+        "author": "Nienetwiler",
+        "licence": "CC BY 2.5 CH",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:20110111_Restaurant_Galliker_Luzern.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.wirtshaus-galliker.ch",
+      "https://www.myswitzerland.com/en-gb/experiences/food-wine/restaurant/wirtshaus-galliker/",
+      "https://www.luzern.com/en/the-city/food-drinks/restaurants"
+    ]
+  },
+  {
+    "key": "old-swiss-house",
+    "title": {
+      "en": "Old Swiss House",
+      "de": "Old Swiss House"
+    },
+    "tip": {
+      "en": "A timber-framed restaurant at the Löwenplatz, near the Lion Monument, with a long history. The classic order is the veal escalope, and the dining rooms are full of antiques. Expect upmarket prices.",
+      "de": "Ein Fachwerkhaus am Löwenplatz, nahe beim Löwendenkmal, mit langer Geschichte. Klassiker ist das Kalbsschnitzel, und die Stuben sind voller Antiquitäten. Die Preise sind gehoben."
+    },
+    "localTip": {
+      "en": "Come for lunch if dinner feels too formal, as the menu is the same.",
+      "de": "Wer das Abendessen zu festlich findet, kommt zum Mittagessen."
+    },
+    "latitude": 47.057329,
+    "longitude": 8.311176,
+    "address": "Löwenplatz 4, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.057329,8.311176",
+    "weeklyHours": [
+      {
+        "day": 2,
+        "opens": "11:30",
+        "closes": "14:30"
+      },
+      {
+        "day": 2,
+        "opens": "18:00",
+        "closes": "23:30"
+      },
+      {
+        "day": 3,
+        "opens": "11:30",
+        "closes": "14:30"
+      },
+      {
+        "day": 3,
+        "opens": "18:00",
+        "closes": "23:30"
+      },
+      {
+        "day": 4,
+        "opens": "11:30",
+        "closes": "14:30"
+      },
+      {
+        "day": 4,
+        "opens": "18:00",
+        "closes": "23:30"
+      },
+      {
+        "day": 5,
+        "opens": "11:30",
+        "closes": "14:30"
+      },
+      {
+        "day": 5,
+        "opens": "18:00",
+        "closes": "23:30"
+      },
+      {
+        "day": 6,
+        "opens": "11:30",
+        "closes": "14:30"
+      },
+      {
+        "day": 6,
+        "opens": "18:00",
+        "closes": "23:30"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [
+      "food-drink",
+      "history-culture"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.oldswisshouse.ch",
+    "categories": [
+      "restaurants"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "old-swiss-house.jpg",
+        "alt": {
+          "en": "The red-and-white timber-framed Old Swiss House with its terrace on the Löwenplatz",
+          "de": "Das rot-weisse Fachwerkhaus Old Swiss House mit Terrasse am Löwenplatz"
+        },
+        "author": "Dennis G. Jarvis",
+        "licence": "CC BY-SA 2.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Switzerland-03276_-_Old_Swiss_House_(23733914622).jpg"
+      }
+    ],
+    "sources": [
+      "https://www.oldswisshouse.ch/kontakt",
+      "https://www.luzern.com/en/the-city/food-drinks/restaurants",
+      "https://www.openstreetmap.org/search?query=Old%20Swiss%20House%20Luzern"
+    ]
+  },
+  {
+    "key": "rathaus-brauerei",
+    "title": {
+      "en": "Rathaus Brauerei",
+      "de": "Rathaus Brauerei"
+    },
+    "tip": {
+      "en": "A restaurant and brewhouse in the old town, right on the river below the town hall tower. The beer is brewed in copper kettles on the premises, and the menu has Swiss pub dishes. Prices are mid-priced.",
+      "de": "Ein Restaurant mit Brauerei in der Altstadt, direkt am Fluss unter dem Rathausturm. Das Bier wird vor Ort in Kupferkesseln gebraut, auf der Karte stehen Schweizer Wirtshausgerichte. Die Preise sind mittel."
+    },
+    "localTip": {
+      "en": "The riverside tables fill up first on dry days, so go early.",
+      "de": "Die Tische am Fluss sind bei trockenem Wetter zuerst besetzt, also früh kommen."
+    },
+    "latitude": 47.051905,
+    "longitude": 8.306424,
+    "address": "Unter der Egg 2, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.051905,8.306424",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "10:00",
+        "closes": "00:00"
+      },
+      {
+        "day": 3,
+        "opens": "10:00",
+        "closes": "00:00"
+      },
+      {
+        "day": 4,
+        "opens": "10:00",
+        "closes": "00:00"
+      },
+      {
+        "day": 5,
+        "opens": "10:00",
+        "closes": "00:00"
+      },
+      {
+        "day": 2,
+        "opens": "08:00",
+        "closes": "00:00"
+      },
+      {
+        "day": 6,
+        "opens": "08:00",
+        "closes": "00:00"
+      },
+      {
+        "day": 7,
+        "opens": "10:00",
+        "closes": "23:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [
+      "food-drink"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://rathausbrauerei.ch/de/",
+    "categories": [
+      "restaurants",
+      "bars"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "rathaus-brauerei.jpg",
+        "alt": {
+          "en": "The Rathaus Brauerei restaurant with its arches and river terrace below the town hall tower",
+          "de": "Das Restaurant Rathaus Brauerei mit Arkaden und Flussterrasse unter dem Rathausturm"
+        },
+        "author": "Paebi",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_Rathaus_Brauerei_(2).jpg"
+      }
+    ],
+    "sources": [
+      "https://rathausbrauerei.ch/de/adresse/",
+      "https://www.myswitzerland.com/en-ch/experiences/food-wine/restaurant/restaurant-rathaus-brauerei",
+      "https://www.openstreetmap.org/search?query=Rathaus%20Brauerei%20Luzern"
+    ]
+  },
+  {
+    "key": "restaurant-des-alpes",
+    "title": {
+      "en": "Restaurant des Alpes",
+      "de": "Restaurant des Alpes"
+    },
+    "tip": {
+      "en": "The ground-floor restaurant of the Hotel des Alpes, with a terrace on the Reuss promenade. The kitchen serves Swiss dishes such as Oeuf Bénédict on rösti, and breakfast is available all day. Prices are mid-priced.",
+      "de": "Das Restaurant im Erdgeschoss des Hotels des Alpes, mit Terrasse an der Reusspromenade. Die Küche serviert Schweizer Gerichte wie Oeuf Bénédict auf Rösti, und Frühstück gibt es den ganzen Tag. Die Preise sind mittel."
+    },
+    "localTip": {
+      "en": "The breakfast menu runs until the evening, which suits a late start.",
+      "de": "Das Frühstück gibt es bis am Abend, das passt für einen späten Start."
+    },
+    "latitude": 47.052167,
+    "longitude": 8.307558,
+    "address": "Rathausquai 5, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.052167,8.307558",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "07:30",
+        "closes": "22:00"
+      },
+      {
+        "day": 2,
+        "opens": "07:30",
+        "closes": "22:00"
+      },
+      {
+        "day": 3,
+        "opens": "07:30",
+        "closes": "22:00"
+      },
+      {
+        "day": 4,
+        "opens": "07:30",
+        "closes": "22:00"
+      },
+      {
+        "day": 5,
+        "opens": "07:30",
+        "closes": "22:00"
+      },
+      {
+        "day": 6,
+        "opens": "07:30",
+        "closes": "22:00"
+      },
+      {
+        "day": 7,
+        "opens": "07:30",
+        "closes": "22:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [
+      "food-drink"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.desalpes-luzern.ch",
+    "categories": [
+      "restaurants"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "restaurant-des-alpes.jpg",
+        "alt": {
+          "en": "The white front of the Hotel des Alpes on the Reuss with the restaurant terrace below",
+          "de": "Die weisse Fassade des Hotels des Alpes an der Reuss mit der Restaurantterrasse darunter"
+        },
+        "author": "Paebi",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Luzern_Hotel_des_Alpes_Rathausquai_5.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.desalpes-luzern.ch/kontakt/",
+      "https://www.luzern.com/en/the-city/food-drinks/brunch-cafes",
+      "https://www.openstreetmap.org/search?query=Hotel%20Des%20Alpes%20Luzern"
+    ]
+  },
+  {
+    "key": "restaurant-reussbad",
+    "title": {
+      "en": "Restaurant Reussbad",
+      "de": "Restaurant Reussbad"
+    },
+    "tip": {
+      "en": "A yellow villa below the Museggmauer, run as a modern restaurant with regional, seasonal cooking. It sits in a quieter spot on the edge of the old town. Prices are upmarket.",
+      "de": "Eine gelbe Villa unterhalb der Museggmauer, die als modernes Restaurant mit regionaler, saisonaler Küche geführt wird. Es liegt ruhig am Rand der Altstadt. Die Preise sind gehoben."
+    },
+    "localTip": {
+      "en": "The restaurant is closed on Sundays and Mondays, and for several weeks of holidays in 2027.",
+      "de": "Sonntag und Montag sind Ruhetage, und 2027 gibt es mehrere Wochen Betriebsferien."
+    },
+    "latitude": 47.053568,
+    "longitude": 8.299382,
+    "address": "Brüggligasse 19, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.053568,8.299382",
+    "weeklyHours": [
+      {
+        "day": 2,
+        "opens": "11:30",
+        "closes": "14:00"
+      },
+      {
+        "day": 2,
+        "opens": "18:00",
+        "closes": "23:00"
+      },
+      {
+        "day": 3,
+        "opens": "11:30",
+        "closes": "14:00"
+      },
+      {
+        "day": 3,
+        "opens": "18:00",
+        "closes": "23:00"
+      },
+      {
+        "day": 4,
+        "opens": "11:30",
+        "closes": "14:00"
+      },
+      {
+        "day": 4,
+        "opens": "18:00",
+        "closes": "23:00"
+      },
+      {
+        "day": 5,
+        "opens": "11:30",
+        "closes": "14:00"
+      },
+      {
+        "day": 5,
+        "opens": "18:00",
+        "closes": "23:00"
+      },
+      {
+        "day": 6,
+        "opens": "11:30",
+        "closes": "14:00"
+      },
+      {
+        "day": 6,
+        "opens": "18:00",
+        "closes": "23:00"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [
+      "food-drink"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://reussbad-luzern.ch",
+    "categories": [
+      "restaurants"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "restaurant-reussbad.jpg",
+        "alt": {
+          "en": "The yellow Restaurant Reussbad building with the Museggmauer tower behind",
+          "de": "Das gelbe Gebäude des Restaurants Reussbad mit dem Museggturm im Hintergrund"
+        },
+        "author": "trolvag",
+        "licence": "CC BY-SA 3.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Restaurant_Reussbad,_Lucerne,_Switzerland_-_panoramio.jpg"
+      }
+    ],
+    "sources": [
+      "https://reussbad-luzern.ch/",
+      "https://www.myswitzerland.com/de-ch/erlebnisse/essen-trinken/restaurant/restaurant-reussbad-luzern/",
+      "https://www.openstreetmap.org/search?query=Reussbad%20Luzern"
+    ]
+  },
+  {
+    "key": "bar-lounge-des-balances",
+    "title": {
+      "en": "Bar & Lounge, Hotel des Balances",
+      "de": "Bar & Lounge, Hotel des Balances"
+    },
+    "tip": {
+      "en": "A hotel bar on the Weinmarkt in a house with painted facades, open from breakfast until after midnight. It is a calm place for a glass of wine or a coffee in the middle of the old town. Prices are upmarket.",
+      "de": "Eine Hotelbar am Weinmarkt in einem Haus mit bemalter Fassade, vom Frühstück bis nach Mitternacht geöffnet. Hier trinkt man mitten in der Altstadt ruhig ein Glas Wein oder einen Kaffee. Die Preise sind gehoben."
+    },
+    "localTip": {
+      "en": "The bar is open from 07:00, so it also works for an early coffee.",
+      "de": "Die Bar öffnet schon um 07:00 und eignet sich auch für einen frühen Kaffee."
+    },
+    "latitude": 47.051508,
+    "longitude": 8.304475,
+    "address": "Weinmarkt, 6004 Luzern",
+    "mapsLink": "https://www.google.com/maps/search/?api=1&query=47.051508,8.304475",
+    "weeklyHours": [
+      {
+        "day": 1,
+        "opens": "07:00",
+        "closes": "00:30"
+      },
+      {
+        "day": 2,
+        "opens": "07:00",
+        "closes": "00:30"
+      },
+      {
+        "day": 3,
+        "opens": "07:00",
+        "closes": "00:30"
+      },
+      {
+        "day": 4,
+        "opens": "07:00",
+        "closes": "00:30"
+      },
+      {
+        "day": 5,
+        "opens": "07:00",
+        "closes": "00:30"
+      },
+      {
+        "day": 6,
+        "opens": "07:00",
+        "closes": "00:30"
+      },
+      {
+        "day": 7,
+        "opens": "07:00",
+        "closes": "00:30"
+      }
+    ],
+    "stayTag": "both",
+    "interests": [
+      "food-drink",
+      "history-culture"
+    ],
+    "mustVisit": false,
+    "outboundUrl": "https://www.balances.ch/restaurants-bar/bar-lounge",
+    "categories": [
+      "bars"
+    ],
+    "dates": [],
+    "photos": [
+      {
+        "file": "bar-lounge-des-balances.jpg",
+        "alt": {
+          "en": "The painted facade of the Hotel des Balances on the Weinmarkt",
+          "de": "Die bemalte Fassade des Hotels des Balances am Weinmarkt"
+        },
+        "author": "JoachimKohler-HB",
+        "licence": "CC BY-SA 4.0",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Hotel_des_Balances_in_Luzern.jpg"
+      }
+    ],
+    "sources": [
+      "https://www.balances.ch/restaurants-bar/bar-lounge",
+      "https://www.luzern.com/de/gastro/bar-lounge-hotel-des-balances",
+      "https://www.openstreetmap.org/search?query=Hotel%20des%20Balances%20Luzern"
+    ]
+  }
+]
