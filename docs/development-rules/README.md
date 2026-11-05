@@ -16,6 +16,7 @@ These files tell people and AI coding agents how to build in this repo. `AGENTS.
 | :-- | :-- |
 | `shared/code-style.md` | write TypeScript. It also lists the owner rules this repo does not follow yet |
 | `shared/domain-and-contract.md` | a rule, a type or an API shape is used on both sides |
+| `shared/lists-and-search.md` | add or change a list endpoint or a screen that shows a list, a filter, a tab count, a sort or a search |
 | `shared/testing.md` | write a test or decide what to verify |
 | `shared/manual-test-cases.md` | write test cases for the owner to run by hand (one file per sprint, ISO/IEC/IEEE 29119-3 fields) |
 | `frontend/code-structure.md` | add files, imports or routes |

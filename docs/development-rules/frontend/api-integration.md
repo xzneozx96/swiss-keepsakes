@@ -43,6 +43,17 @@ These follow `tanstack-start.md`.
 - **`Cache-Control` is `public` only when the response is identical for everyone.** Public content uses ADR-001's `public, s-maxage=60, stale-while-revalidate=240`. Anything that reads the session or a cookie is `private, no-store`, because a shared cache would serve one guest's answer to the next.
 - **The `QueryClient` is made per request**, never at module scope (`tanstack-start.md`, rule 12). `AppProviders` already holds it in `useState(startSeedDemo)`.
 
+## Lists, filters and search
+
+The rule is in `../shared/lists-and-search.md`: the API answers the filter, the count, the sort and the search; the browser shows the page it got.
+
+- **A paged read is an infinite query or a server-paged table.** A list a visitor scrolls uses `useInfiniteQuery` through the shared paged-query helper, and `getNextPageParam` returns the response's `nextCursor` (null ends the list). A numbered table passes `page` and `pageSize` to the read and keeps the previous page on screen while the next one loads (`placeholderData: keepPreviousData`), so the table never flashes empty.
+- **Filters live in the address.** The route's search parameters hold the filter, sort and search text; they go into the query key and the request, so a change is a new request and Back restores the view. Never keep them only in component state.
+- **Search input is debounced** (about 250 ms) before it becomes `q` in the address and the request. An empty search is no `q`.
+- **Infinite scroll has a fallback and announces new items.** The shared infinite list renders a real "Load more" button as the scroll sentinel (keyboard users and browsers without `IntersectionObserver` can still load more), a polite live region that says how many items were added, an end line, and an inline "Try again" when a page fails. Back navigation keeps the loaded pages and the scroll position.
+- **Counts on tabs and headings come from the response** (`total`, facet counts), never from `items.length` of a loaded page.
+- **Don't** filter, count, sort or search a fetched list in a component to answer the user's choice. The only work on a loaded page is display and, where the project's decision allows it, a re-order by data that must stay on the device.
+
 ## Rules that apply today
 
 - Keep calls in a feature's hook or `api` module, never inside a presentational component.

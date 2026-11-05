@@ -4,6 +4,7 @@ Read this before you touch first load, lists, typing, scrolling, streaming, depe
 
 ## First load
 
+0. **Never read a whole collection to show part of it.** The first render asks for the first page only; see `../shared/lists-and-search.md`.
 1. **Keep route-file imports light** (`bundle-dynamic-imports`). Constants for `validateSearch` go in `front-end/src/features/<feature>/lib/search-params.ts`. One heavy import there cost 63 KB.
 2. **A barrel contains plain re-exports only** (`bundle-barrel-imports`). `front-end/src/components/icons.ts` is `export { X as YIcon } from "reicon-react"`. A wrapper call per icon pulled all 86 icons into first load (54 KB).
 3. **Load heavy libraries on demand** (`bundle-conditional`, `bundle-defer-third-party`). Maps, charts, calendar, rich text editor, the QR code and the Better Auth client (E2.1) use `import()`. Load their CSS with them. Examples: `front-end/src/features/tours/map/tour-itinerary-map.tsx`, `front-end/src/features/demo/components/prototype-bar.tsx` (`lazy`).

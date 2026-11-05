@@ -46,6 +46,7 @@ Always read `docs/development-rules/shared/code-style.md`. Then read by task.
   - Lint config: `docs/development-rules/frontend/linting.md`
 - **Back-end work** (`api/`, `packages/`; design only for now): `docs/development-rules/backend/architecture.md`, `docs/development-rules/backend/api-contract.md`, `docs/development-rules/backend/data-jobs-security.md`
 - **Both sides** (a rule, type or API shape used by the UI and the server, or any test): `docs/development-rules/shared/domain-and-contract.md`, `docs/development-rules/shared/testing.md`
+- **Any list, filter, tab count, sort or search** (API or screen): `docs/development-rules/shared/lists-and-search.md`. The API pages, filters, counts and searches; never fetch everything and filter in the browser.
 
 ## Rules that have bitten us (front-end)
 

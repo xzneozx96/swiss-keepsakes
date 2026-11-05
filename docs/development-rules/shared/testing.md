@@ -34,6 +34,18 @@ Gaps:
 - A rule in the shared domain package has a unit test for each transition and each boundary value. A rule that moves money or status is not finished until a test shows its result.
 - A bug fix starts with a test or script that fails for the reason reported.
 
+## Lists
+
+Every paged list route tests, at the API level:
+
+- the first page, the next page from its cursor (or page 2), and the last page (`nextCursor` null, or a page past the end with the real `total`);
+- the order: ties broken by the id, nothing repeated or skipped across pages;
+- each filter and sort applied by the server, and the counts it returns;
+- a bad or mismatched cursor and a page size above the maximum answer 400;
+- for numbered pages, the bound on how far a page may skip.
+
+On the front-end: loading the next page (scroll sentinel and the "Load more" fallback), the end line, a failed page with "Try again", and that a filter change sends a new request instead of filtering the loaded items.
+
 ## Levels (from `docs/architecture/backend.md` section 12)
 
 The front-end has unit tests and an end-to-end smoke test today. Use-case tests start with E2.8 in `api/test/application/`. The rows about the API and load wait for the backend modules.
