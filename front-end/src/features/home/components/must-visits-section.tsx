@@ -48,7 +48,7 @@ function useHoursFact() {
 }
 
 /**
- * A postcard, "Immersive" (owner, 05.11.2026, lab option G): a 300 px card with a 10 px white frame and a 32 px radius around a
+ * A postcard, "Immersive" (owner, 05.11.2026, lab option G; the white frame and shadow were removed the same day): a 300 px card, a
  * full-bleed photo with a dark gradient under the text (owner, 05.11.2026: the frosted blur was tried and dropped). On it: the name in a bold white sans (it wraps and hyphenates, never cut), the language notice when the place is
  * described in the other language, a meta row (pin + street; clock + today's hours where the place has them, drawn after
  * hydration so the server never disagrees with the browser's clock), then the actions: a white pill "Read the story" with the
@@ -66,12 +66,12 @@ function Postcard({ pin, hours }: { pin: PublicMapItem, hours: string | undefine
 
   return (
     <li className="flex shrink-0 snap-start">
-      <article className="relative w-[300px] rounded-[32px] bg-white p-2.5 shadow-overlay motion-safe:transition-transform motion-safe:active:scale-[0.98]">
-        <div className="relative flex h-full min-h-[420px] flex-col justify-end overflow-hidden rounded-[22px]">
+      <article className="relative w-[300px] motion-safe:transition-transform motion-safe:active:scale-[0.98]">
+        <div className="relative flex h-full min-h-[420px] flex-col justify-end overflow-hidden rounded-3xl">
           <span className="absolute inset-0">
             <MapThumb className="size-full" iconSize={56} src={photo} />
           </span>
-          <Link aria-label={pin.title} className="absolute inset-0 rounded-[22px] outline-none focus-visible:focus-ring focus-visible:ring-inset" params={{ lang: language }} search={pin.slug ? { place: pin.slug } : {}} to="/$lang/map" />
+          <Link aria-label={pin.title} className="absolute inset-0 rounded-3xl outline-none focus-visible:focus-ring focus-visible:ring-inset" params={{ lang: language }} search={pin.slug ? { place: pin.slug } : {}} to="/$lang/map" />
           <div className="pointer-events-none relative flex flex-col gap-1 p-4 pt-6 text-white">
             {/* The gradient follows the text block: it starts 96 px above it, so a long name never leaves it. */}
             <span aria-hidden className="absolute inset-x-0 -top-24 bottom-0 bg-[linear-gradient(to_bottom,transparent,rgb(0_0_0/0.5)_40%,rgb(0_0_0/0.82)_100%)]" />
@@ -124,8 +124,8 @@ function MustSkeleton() {
   return (
     <div aria-hidden className="-mx-4 flex gap-3 overflow-hidden px-4" data-skeleton="must-visits">
       {Array.from({ length: 3 }, (_, index) => (
-        <div key={index} className="w-[300px] shrink-0 rounded-[32px] bg-white p-2.5 shadow-overlay">
-          <div className="flex min-h-[420px] flex-col justify-end gap-2 rounded-[22px] bg-surface-secondary p-4">
+        <div key={index} className="w-[300px] shrink-0">
+          <div className="flex min-h-[420px] flex-col justify-end gap-2 rounded-3xl bg-surface-secondary p-4">
             <Skeleton className="h-8 w-3/4 rounded-md" />
             <Skeleton className="h-4 w-1/2 rounded-md" />
             <div className="mt-2 flex items-center gap-2">
