@@ -1,7 +1,7 @@
 import type { PublicKeepsakeUseCases } from '../../../src/modules/catalog/adapters/public-routes.ts'
 import type { PublicKeepsakeCard } from '../../../src/modules/catalog/application/public-keepsakes.ts'
 import { describe, expect, it } from 'vitest'
-import { openApiDocument, contractApp } from '../../../scripts/contract.ts'
+import { contractApp, openApiDocument } from '../../../scripts/contract.ts'
 import { registerPublicKeepsakeRoutes } from '../../../src/modules/catalog/adapters/public-routes.ts'
 import { encodeCursor } from '../../../src/platform/http/cursor.ts'
 import { createGuardedApp, guardedCommands, signedInAs } from '../../support/guarded-app.ts'

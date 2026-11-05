@@ -14,9 +14,9 @@ import { conditionalJson } from '../../../platform/http/conditional-json.ts'
 import { cursorProblem, decodeCursor, encodeCursor } from '../../../platform/http/cursor.ts'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
+import { limitWholeList } from '../../../platform/http/whole-list-limits.ts'
 import { failureProblem } from './problems.ts'
 import { json } from './route-parts.ts'
-import { limitWholeList } from '../../../platform/http/whole-list-limits.ts'
 
 // Cached by the browser for 30 s, then revalidated with the ETag (ADR-006).
 const publicCacheControl = 'max-age=30'

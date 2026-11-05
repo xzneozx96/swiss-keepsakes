@@ -305,7 +305,7 @@ describe('[E6.3][AC05][AC53] the stock list', () => {
 
   it('[ADR-033] the list pages by number: 12 variants, 5 a page, the total and the counts on every page, a page past the end empty, a skip over 10,000 refused', async () => {
     const s = await setup({ fresh: true })
-    const skus = await Promise.all(Array.from({ length: 12 }, () => s.plain()))
+    const skus = await Promise.all(Array.from(Array.from({ length: 12 }).keys(), () => s.plain()))
     await Promise.all(skus.slice(0, 7).map(skuId => s.stock(skuId, 3)))
 
     const pages = [await s.list('?pageSize=5&page=1'), await s.list('?pageSize=5&page=2'), await s.list('?pageSize=5&page=3'), await s.list('?pageSize=5&page=4')]

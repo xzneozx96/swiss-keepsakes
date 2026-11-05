@@ -3,7 +3,7 @@ import type { WholeListRoute } from '../../../src/platform/http/whole-list-limit
 import { Hono } from 'hono'
 import { describe, expect, it } from 'vitest'
 import { registerContentRoutes } from '../../../src/modules/content/adapters/routes.ts'
-import { WHOLE_LIST_LIMITS, limitWholeList } from '../../../src/platform/http/whole-list-limits.ts'
+import { limitWholeList, WHOLE_LIST_LIMITS } from '../../../src/platform/http/whole-list-limits.ts'
 import { createLogger } from '../../../src/platform/logger.ts'
 import { createFakeContentUseCases } from '../../support/fake-content-use-cases.ts'
 import { createGuardedApp, guardedCommands } from '../../support/guarded-app.ts'

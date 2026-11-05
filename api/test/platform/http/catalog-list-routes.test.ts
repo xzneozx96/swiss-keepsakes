@@ -1,7 +1,7 @@
 import type { Access } from '@sk/domain/identity'
 import type { CatalogUseCases } from '../../../src/modules/catalog/adapters/routes.ts'
-import type { InventoryUseCases } from '../../../src/modules/inventory/adapters/routes.ts'
 import type { ProductListQuery } from '../../../src/modules/catalog/ports.ts'
+import type { InventoryUseCases } from '../../../src/modules/inventory/adapters/routes.ts'
 import { describe, expect, it } from 'vitest'
 import { registerCatalogRoutes } from '../../../src/modules/catalog/adapters/routes.ts'
 import { registerInventoryRoutes } from '../../../src/modules/inventory/adapters/routes.ts'
@@ -71,8 +71,18 @@ describe('[ADR-033 section 12] a request without page answers the whole list for
     const products: unknown[] = []
     const stock: unknown[] = []
     const app = setup(
-      { listProducts: async (actor, store, query) => { products.push(query); return createFakeCatalogUseCases().listProducts(actor, store, query) } },
-      { listStock: async (actor, store, query) => { stock.push(query); return createFakeInventoryUseCases().listStock(actor, store, query) } },
+      {
+        listProducts: async (actor, store, query) => {
+          products.push(query)
+          return createFakeCatalogUseCases().listProducts(actor, store, query)
+        },
+      },
+      {
+        listStock: async (actor, store, query) => {
+          stock.push(query)
+          return createFakeInventoryUseCases().listStock(actor, store, query)
+        },
+      },
     )
     await get(app, `${products_}?status=draft`)
     await get(app, `${inventory}?filter=sold-out`)
