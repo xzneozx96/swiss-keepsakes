@@ -54,6 +54,12 @@ export function eventsSplit(pins: readonly PublicMapItem[], now: Date): EventsSp
 /** The day a card puts first: the first day, or today for an event already running. */
 export const shownDay = (next: NextDate, today: string) => next.firstDay < today ? today : next.firstDay
 
+/** Whole days from `today` to the event's shown day (0 when it runs today, a multi-day event already under way included). Both are Zurich calendar dates (YYYY-MM-DD). */
+export function daysUntil(next: NextDate, today: string): number {
+  const at = (day: string) => Date.UTC(Number(day.slice(0, 4)), Number(day.slice(5, 7)) - 1, Number(day.slice(8, 10)))
+  return Math.round((at(shownDay(next, today)) - at(today)) / 86_400_000)
+}
+
 /** The day number, weekday and month of an ISO day, for the poster, the timeline and its month markers. */
 export function dayParts(isoDay: string, locale: IntlLocale) {
   const date = new Date(`${isoDay}T00:00:00Z`)

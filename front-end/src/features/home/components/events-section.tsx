@@ -10,7 +10,8 @@ import { useLocale } from '@/contexts/locale-context'
 import { Rail } from '@/features/discovery/components/section'
 import { pinIcon } from '@/features/map/lib/categories'
 
-import { dayParts, EVENTS_CATEGORY_SLUG, eventsSplit, shownDay, whenLine } from '../lib/events'
+import { dayParts, daysUntil, EVENTS_CATEGORY_SLUG, eventsSplit, shownDay, whenLine } from '../lib/events'
+import { CornerNotch } from './corner-notch'
 import { PhotoPoster, POSTER_TITLE } from './photo-poster'
 import { SectionHeading } from './section-heading'
 
@@ -30,12 +31,30 @@ function useEventCopy(today: string) {
  * The "This week" poster: the shared photo poster with the day as an outlined number over the title and the time. One event
  * fills the width; in a carousel each card is 288 px so the next peeks.
  */
+/**
+ * The poster's corner notch, the food cards' notch (owner, 06.11.2026): "Today" with the live dot on the day, "Tomorrow" the day
+ * before, "In N days" up to a week ahead; nothing further out. The time stays at the poster's foot, so the notch does not repeat it.
+ */
+function Countdown({ pin, today }: { pin: EventPin, today: string }) {
+  const { t } = useLocale()
+  const days = daysUntil(pin.nextDate, today)
+
+  if (days < 0 || days > 7)
+    return null
+  if (days === 0)
+    return <CornerNotch dot="live" kind="today" say={t('homePage.events.notch.sayToday')} state={t('homePage.events.notch.today')} />
+
+  const state = days === 1 ? t('homePage.events.notch.tomorrow') : t('homePage.events.notch.inDays', { count: days })
+
+  return <CornerNotch kind="countdown" say={state} state={state} />
+}
+
 function Poster({ pin, categories, today, wide }: { pin: EventPin, categories: readonly PublicCategory[], today: string, wide: boolean }) {
   const { language, intlLocale, when } = useEventCopy(today)
   const parts = dayParts(shownDay(pin.nextDate, today), intlLocale)
   const time = when(pin)
   const link = (
-    <PhotoPoster icon={pinIcon(pin, categories)} slug={pin.slug} src={pin.photoUrl ?? undefined} wide={wide}>
+    <PhotoPoster corner={<Countdown pin={pin} today={today} />} icon={pinIcon(pin, categories)} slug={pin.slug} src={pin.photoUrl ?? undefined} wide={wide}>
       <span className="flex items-end gap-3">
         <span aria-hidden className="text-[80px] leading-[66px] font-extrabold tracking-[-0.05em] text-transparent tabular-nums [-webkit-text-stroke:1.5px_rgb(255_255_255/0.95)]">{parts.day}</span>
         <span className="flex flex-col pb-0.5 text-[12px] leading-4 font-semibold tracking-[0.1em] uppercase">

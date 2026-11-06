@@ -235,3 +235,37 @@ describe('[E4.13][AC54][AC95] the events section', () => {
     expect(document.body.innerHTML).not.toContain('CHF')
   })
 })
+
+describe('the This week posters carry the countdown notch (owner, 06.11.2026)', () => {
+  it('says Today for an event on today or under way, Tomorrow the day before, and In N days up to a week ahead', async () => {
+    read = {
+      pins: [
+        event('Running', { firstDay: '2026-11-01', lastDay: '2026-11-06' }),
+        event('Market', { firstDay: '2026-11-04', startTime: '07:00:00', endTime: '12:00:00' }),
+        event('Concert', { firstDay: '2026-11-05' }),
+        event('Fair', { firstDay: '2026-11-07' }),
+      ],
+      categories: [],
+    }
+    renderAt('/en')
+
+    const week = await screen.findByRole('region', { name: en['homePage.events.thisWeek'] })
+    const notchOf = (name: string) => within(week).getAllByRole('link').find(link => link.textContent?.includes(name))!.querySelector('[data-status]')
+
+    expect(notchOf('Running')).toHaveAttribute('data-status', 'today')
+    expect(notchOf('Market')).toHaveTextContent('Today')
+    expect(notchOf('Market')).not.toHaveTextContent('07:00')
+    expect(notchOf('Concert')).toHaveTextContent('Tomorrow')
+    expect(notchOf('Fair')).toHaveTextContent('In 3 days')
+    expect(within(week).getAllByText(en['homePage.events.notch.sayToday'])).toHaveLength(2)
+  })
+
+  it('draws no notch on a Coming up row', async () => {
+    read = { pins: [event('Later', { firstDay: '2026-11-20' })], categories: [] }
+    renderAt('/en')
+
+    const coming = await screen.findByRole('region', { name: en['homePage.events.comingUp'] })
+
+    expect(coming.querySelector('[data-status]')).toBeNull()
+  })
+})
