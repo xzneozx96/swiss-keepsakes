@@ -144,7 +144,7 @@ describe('[ADR-033] the keepsake list pages with infinite scroll', { timeout: 60
     expect(html).toContain('item 10')
     expect(html).not.toContain('item 11')
     expect(html.indexOf('item 01')).toBeLessThan(html.indexOf('item 02'))
-    expect(html).toContain('25 keepsakes')
+    expect(html).toContain('25 items')
     expect(asked.map(u => u.searchParams.get('limit'))).toEqual(['10'])
   })
 
@@ -209,7 +209,7 @@ describe('[ADR-033] the keepsake list pages with infinite scroll', { timeout: 60
     const last = asked.at(-1)!
     expect(last.searchParams.get('category')).toBe('mug')
     expect(last.searchParams.get('cursor')).toBeNull()
-    expect(screen.getByText('12 keepsakes')).toBeInTheDocument()
+    expect(screen.getByText('12 items')).toBeInTheDocument()
   })
 
   it('the server HTML of a category link carries only that category\'s first page', async () => {

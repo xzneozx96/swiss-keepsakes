@@ -35,7 +35,7 @@ export const Route = createFileRoute('/_guest/$lang/gifts/')({
   loader: async ({ params, deps }) => {
     const lang = isLanguage(params.lang) ? params.lang : 'en'
     const dictionary = await loadDictionary(lang)
-    const text = { title: dictionary['gifts.title'], description: dictionary['gifts.tagline'] }
+    const text = { title: dictionary['gifts.title'], description: dictionary['home.victorinox.subtitle'] }
 
     try {
       return { ...text, lang, state: 'ready' as const, first: await loadKeepsakesPage(lang, { category: deps.category, limit: KEEPSAKES_PAGE_SIZE }) }
@@ -55,7 +55,7 @@ export const Route = createFileRoute('/_guest/$lang/gifts/')({
 function GiftsPending() {
   const { t } = useLocale()
 
-  return <GiftList banner={{ title: t('gifts.title'), tagline: t('gifts.tagline'), photo: BANNER_PHOTO }} cards={[]} state="loading" onRetry={() => {}} />
+  return <GiftList banner={{ title: t('gifts.title'), tagline: t('home.victorinox.subtitle'), photo: BANNER_PHOTO }} cards={[]} state="loading" onRetry={() => {}} />
 }
 
 function GiftsPage() {
@@ -80,7 +80,7 @@ function GiftsPage() {
     <GiftList
       banner={{
         title: t('gifts.title'),
-        tagline: t('gifts.tagline'),
+        tagline: t('home.victorinox.subtitle'),
         countLabel: state === 'ready' && total > 0 ? t(isOne(total) ? 'gifts.count.one' : 'gifts.count.other', { count: total }) : undefined,
         photo: BANNER_PHOTO,
       }}

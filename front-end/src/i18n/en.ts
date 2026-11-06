@@ -192,15 +192,14 @@ export const en = {
   'search.noResults': 'Nothing found for «{query}». Try a shorter word.',
   'search.inCategory': 'Search in {category}',
   'search.inGifts': 'Search keepsakes',
-  'gifts.tagline': 'Keepsakes from Lucerne makers, to pick up in town',
   'card.save': 'Save {name}',
   'card.unsave': 'Remove {name} from saved',
   'card.ratingLabel.one':
     'Rated {rating} out of 5 from {count} verified review',
   'card.ratingLabel.other':
     'Rated {rating} out of 5 from {count} verified reviews',
-  'gifts.count.one': '{count} keepsake',
-  'gifts.count.other': '{count} keepsakes',
+  'gifts.count.one': '{count} item',
+  'gifts.count.other': '{count} items',
   'gifts.more.one': '1 more keepsake',
   'gifts.more.other': '{count} more keepsakes',
   'gifts.filterLabel': 'Category',

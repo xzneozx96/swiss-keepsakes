@@ -199,16 +199,14 @@ export const de: Record<MessageKey, string> = {
     'Nichts gefunden für «{query}». Versuchen Sie ein kürzeres Wort.',
   'search.inCategory': 'In {category} suchen',
   'search.inGifts': 'Andenken suchen',
-  'gifts.tagline':
-    'Andenken von Luzerner Herstellern, zum Abholen in der Stadt',
   'card.save': '{name} merken',
   'card.unsave': '{name} nicht mehr merken',
   'card.ratingLabel.one':
     'Bewertet mit {rating} von 5, aus {count} verifizierten Bewertung',
   'card.ratingLabel.other':
     'Bewertet mit {rating} von 5, aus {count} verifizierten Bewertungen',
-  'gifts.count.one': '{count} Andenken',
-  'gifts.count.other': '{count} Andenken',
+  'gifts.count.one': '{count} Artikel',
+  'gifts.count.other': '{count} Artikel',
   'gifts.more.one': '1 weiteres Andenken',
   'gifts.more.other': '{count} weitere Andenken',
   'gifts.filterLabel': 'Kategorie',
