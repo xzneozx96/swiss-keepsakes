@@ -203,8 +203,6 @@ export const en = {
   'gifts.count.other': '{count} keepsakes',
   'gifts.more.one': '1 more keepsake',
   'gifts.more.other': '{count} more keepsakes',
-  'gifts.end.one': 'That’s the only keepsake',
-  'gifts.end.other': 'That’s all {count} keepsakes',
   'gifts.filterLabel': 'Category',
   'gifts.all': 'All',
   'gifts.soldOut': 'Sold out',

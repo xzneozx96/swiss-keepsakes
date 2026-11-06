@@ -11,8 +11,6 @@ export const contentDe: Record<keyof typeof contentEn, string> = {
   'stories.count.other': '{count} Geschichten',
   'stories.more.one': '1 weitere Geschichte',
   'stories.more.other': '{count} weitere Geschichten',
-  'stories.end.one': 'Das ist die einzige Geschichte',
-  'stories.end.other': 'Das sind alle {count} Geschichten',
   'stories.empty': 'Es gibt noch keine Geschichten auf Deutsch.',
   'stories.filter': 'Kategorien der Geschichten',
   'stories.all': 'Alle Geschichten',

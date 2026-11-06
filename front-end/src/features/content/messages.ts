@@ -8,8 +8,6 @@ export const contentEn = {
   'stories.count.other': '{count} stories',
   'stories.more.one': '1 more story',
   'stories.more.other': '{count} more stories',
-  'stories.end.one': 'That’s the only story',
-  'stories.end.other': 'That’s all {count} stories',
   'stories.empty': 'There are no stories in English yet.',
   'stories.filter': 'Story categories',
   'stories.all': 'All stories',

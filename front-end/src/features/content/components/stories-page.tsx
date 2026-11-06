@@ -152,7 +152,6 @@ export function StoriesPage({
                       <InfiniteList
                         announce={added => t(isOne(added) ? 'stories.more.one' : 'stories.more.other', { count: added })}
                         count={ordered.length}
-                        endText={t(isOne(total) ? 'stories.end.one' : 'stories.end.other', { count: total })}
                         hasMore={stories.hasNextPage}
                         isFailed={stories.isFetchNextPageError}
                         isLoading={stories.isFetchingNextPage}

@@ -16,8 +16,6 @@ export const tourDiscoveryDe: Record<keyof typeof tourDiscoveryEn, string> = {
   'tourDiscovery.count.other': '{count} Touren',
   'tourDiscovery.more.one': '1 weitere Tour',
   'tourDiscovery.more.other': '{count} weitere Touren',
-  'tourDiscovery.end.one': 'Das ist die einzige Tour',
-  'tourDiscovery.end.other': 'Das sind alle {count} Touren',
   'tourDiscovery.stops': '{count} Stationen',
   'tourDiscovery.error': 'Die Touren konnten nicht geladen werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.',
   'tourDiscovery.empty':

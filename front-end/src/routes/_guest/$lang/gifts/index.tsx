@@ -87,7 +87,6 @@ function GiftsPage() {
       cards={items.map(item => toKeepsakeCard(item, t))}
       paging={{
         announce: added => t(isOne(added) ? 'gifts.more.one' : 'gifts.more.other', { count: added }),
-        endText: t(isOne(total) ? 'gifts.end.one' : 'gifts.end.other', { count: total }),
         hasMore: keepsakes.hasNextPage,
         isFailed: keepsakes.isFetchNextPageError,
         isLoading: keepsakes.isFetchingNextPage,

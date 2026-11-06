@@ -21,9 +21,6 @@ export interface InfiniteListProps {
   onLoadMore: () => void
   /** What the live region says when `added` items arrived, such as "10 more stories". */
   announce: (added: number) => string
-  /** The line at the end of the list, such as "That's all 143 stories". */
-  /** The line under a complete list; a list may leave it out (search, owner 06.11.2026). */
-  endText?: string | undefined
 }
 
 /**
@@ -31,9 +28,9 @@ export interface InfiniteListProps {
  * list and loads the next page when it nears the viewport. The sentinel is a real "Load more" button, so a keyboard or switch
  * user, a browser without IntersectionObserver and a sentinel that cannot scroll into view all reach the next page. A
  * polite live region announces new items and focus stays where it is. A failed page shows "Try again" in place of the
- * button, and the end shows `endText`. Nothing may sit under the list as the only path to something.
+ * button. A complete list ends with no line under it (owner, 06.11.2026). Nothing may sit under the list as the only path to something.
  */
-export function InfiniteList({ children, count, hasMore, isLoading, isFailed, onLoadMore, announce, endText }: InfiniteListProps) {
+export function InfiniteList({ children, count, hasMore, isLoading, isFailed, onLoadMore, announce }: InfiniteListProps) {
   const { t } = useLocale()
   const sentinelRef = useRef<HTMLDivElement>(null)
   // The text for the live region, worked out while rendering from the change in `count`.
@@ -63,16 +60,14 @@ export function InfiniteList({ children, count, hasMore, isLoading, isFailed, on
     <>
       {children}
       <p aria-live="polite" className="sr-only" role="status">{seen.text}</p>
-      {hasMore
-        ? (
-            <div ref={sentinelRef} className="flex flex-col items-center gap-2">
-              {isFailed && <p className="text-label text-danger" role="alert">{t('infiniteList.error')}</p>}
-              <Button className="max-lg:min-h-11" isPending={isLoading} size="sm" variant="secondary" onPress={onLoadMore}>
-                {isFailed ? t('infiniteList.retry') : isLoading ? t('infiniteList.loading') : t('infiniteList.loadMore')}
-              </Button>
-            </div>
-          )
-        : count > 0 && endText && <p className="text-center text-label text-muted tabular-nums">{endText}</p>}
+      {hasMore && (
+        <div ref={sentinelRef} className="flex flex-col items-center gap-2">
+          {isFailed && <p className="text-label text-danger" role="alert">{t('infiniteList.error')}</p>}
+          <Button className="max-lg:min-h-11" isPending={isLoading} size="sm" variant="secondary" onPress={onLoadMore}>
+            {isFailed ? t('infiniteList.retry') : isLoading ? t('infiniteList.loading') : t('infiniteList.loadMore')}
+          </Button>
+        </div>
+      )}
     </>
   )
 }

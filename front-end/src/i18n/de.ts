@@ -211,8 +211,6 @@ export const de: Record<MessageKey, string> = {
   'gifts.count.other': '{count} Andenken',
   'gifts.more.one': '1 weiteres Andenken',
   'gifts.more.other': '{count} weitere Andenken',
-  'gifts.end.one': 'Das ist das einzige Andenken',
-  'gifts.end.other': 'Das sind alle {count} Andenken',
   'gifts.filterLabel': 'Kategorie',
   'gifts.all': 'Alle',
   'gifts.soldOut': 'Ausverkauft',

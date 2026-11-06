@@ -14,8 +14,6 @@ export const tourDiscoveryEn = {
   'tourDiscovery.count.other': '{count} tours',
   'tourDiscovery.more.one': '1 more tour',
   'tourDiscovery.more.other': '{count} more tours',
-  'tourDiscovery.end.one': 'That’s the only tour',
-  'tourDiscovery.end.other': 'That’s all {count} tours',
   'tourDiscovery.stops': '{count} stops',
   'tourDiscovery.error': 'The tours did not load. Check your connection and try again.',
   'tourDiscovery.empty':

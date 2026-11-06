@@ -10,7 +10,7 @@ type Props = Partial<Parameters<typeof InfiniteList>[0]>
 function list(props: Props = {}) {
   return (
     <LocaleProvider>
-      <InfiniteList announce={n => `${n} more things`} count={10} endText="That’s all 25 things" hasMore isFailed={false} isLoading={false} onLoadMore={() => {}} {...props}>
+      <InfiniteList announce={n => `${n} more things`} count={10} hasMore isFailed={false} isLoading={false} onLoadMore={() => {}} {...props}>
         <ul>
           <li>row</li>
         </ul>
@@ -104,10 +104,11 @@ describe('[ADR-033] InfiniteList', () => {
     expect(button).toHaveFocus()
   })
 
-  it('shows the end line and no button when there is no next page', () => {
+  it('shows no button and no end line when there is no next page', () => {
     render(list({ hasMore: false }))
 
-    expect(screen.getByText('That’s all 25 things')).toBeInTheDocument()
+    // No "That's all N" line under a complete list (owner, 06.11.2026).
+    expect(screen.queryByText(/That’s all/)).toBeNull()
     expect(screen.queryByRole('button')).toBeNull()
   })
 

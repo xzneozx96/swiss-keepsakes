@@ -97,7 +97,7 @@ describe('[ADR-033] the guest tours list reads the API and pages with infinite s
     expect(document.body.textContent).not.toMatch(/CHF|Fr\./)
   })
 
-  it('load more adds the next ten, says so in a polite live region, and the end line shows when the list is complete', async () => {
+  it('load more adds the next ten, says so in a polite live region, and no end line shows when the list is complete', async () => {
     api(many(25))
     render(<RouterProvider router={await routerAt('/en/tours')} />)
     await screen.findByText('Walk 01')
@@ -108,7 +108,7 @@ describe('[ADR-033] the guest tours list reads the API and pages with infinite s
 
     await userEvent.click(loadMore())
     await waitFor(() => expect(names()).toHaveLength(25))
-    expect(screen.getByText('That’s all 25 tours')).toBeInTheDocument()
+    expect(screen.queryByText(/That’s all/)).toBeNull()
     expect(screen.queryByRole('button', { name: 'Load more' })).toBeNull()
     expect(asked.map(u => u.searchParams.get('cursor'))).toEqual([null, '10', '20'])
   })

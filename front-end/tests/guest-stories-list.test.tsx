@@ -352,7 +352,7 @@ describe('[E4.4][AC30] blog category filter', { timeout: 60_000 }, () => {
       expect(html).toContain('25 stories')
     })
 
-    it('load more adds the next ten, says so in a polite live region, and the end line shows when the list is complete', async () => {
+    it('load more adds the next ten, says so in a polite live region, and no end line shows when the list is complete', async () => {
       await renderFiltered('/en/stories', { stories: many(25) })
       expect(titles()).toHaveLength(10)
 
@@ -365,7 +365,7 @@ describe('[E4.4][AC30] blog category filter', { timeout: 60_000 }, () => {
       await userEvent.click(loadMore())
       await waitFor(() => expect(titles()).toHaveLength(25))
       expect(screen.getByText('5 more stories')).toHaveAttribute('role', 'status')
-      expect(screen.getByText('That’s all 25 stories')).toBeInTheDocument()
+      expect(screen.queryByText(/That’s all/)).toBeNull()
       expect(screen.queryByRole('button', { name: 'Load more' })).toBeNull()
     })
 

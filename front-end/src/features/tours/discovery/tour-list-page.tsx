@@ -69,7 +69,6 @@ export function TourListPage({ first, lang, onRetry }: { first: PublicTourList |
                 <InfiniteList
                   announce={added => t(isOne(added) ? 'tourDiscovery.more.one' : 'tourDiscovery.more.other', { count: added })}
                   count={items.length}
-                  endText={t(isOne(total) ? 'tourDiscovery.end.one' : 'tourDiscovery.end.other', { count: total })}
                   hasMore={tours.hasNextPage}
                   isFailed={tours.isFetchNextPageError}
                   isLoading={tours.isFetchingNextPage}
