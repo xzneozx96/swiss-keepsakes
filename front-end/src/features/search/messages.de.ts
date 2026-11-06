@@ -12,6 +12,7 @@ export const searchScreenDe: Record<keyof typeof searchScreenEn, string> = {
   'searchScreen.interest.shopping-keepsakes': 'Shopping und Andenken',
   'searchScreen.interest.local-activities': 'Lokale Aktivitäten',
   'searchScreen.clearInterest': '{interest} entfernen',
+  'searchScreen.clear': 'Suche löschen',
   'searchScreen.interestCount.one': '{count} Treffer in {interest}',
   'searchScreen.interestCount.other': '{count} Treffer in {interest}',
   'searchScreen.resultCount.one': '{count} Treffer für «{query}»',
@@ -33,6 +34,4 @@ export const searchScreenDe: Record<keyof typeof searchScreenEn, string> = {
   'searchScreen.error': 'Die Suche ist gerade nicht erreichbar.',
   'searchScreen.more.one': '{count} weiterer Treffer',
   'searchScreen.more.other': '{count} weitere Treffer',
-  'searchScreen.end.one': 'Das ist der einzige Treffer',
-  'searchScreen.end.other': 'Das sind alle {count} Treffer',
 }

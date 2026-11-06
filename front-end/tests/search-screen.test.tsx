@@ -188,7 +188,7 @@ describe('[ADR-033][slice 6] a kind filter is a new search from page 1, kept in 
 describe('[ADR-033][slice 6] ten a page with infinite scroll', () => {
   const many = Array.from({ length: 25 }, (_, i) => story(`Lake walk ${String(i + 1).padStart(2, '0')}`))
 
-  it('the first page holds ten, "Load more" adds the next ten with the cursor, and the end says how many there are', async () => {
+  it('the first page holds ten, "Load more" adds the next ten with the cursor, and the end has no closing line', async () => {
     api(many)
     const { user } = await renderAt('/en/search?q=lake')
     await screen.findByText('Lake walk 01')
@@ -201,7 +201,8 @@ describe('[ADR-033][slice 6] ten a page with infinite scroll', () => {
     await waitFor(() => expect(rows()).toHaveLength(25))
 
     expect(screen.queryByRole('button', { name: 'Load more' })).not.toBeInTheDocument()
-    expect(screen.getByText('That’s all 25 results')).toBeInTheDocument()
+    // No "That's all N results" line under the search list (owner, 06.11.2026).
+    expect(screen.queryByText(/That’s all/)).toBeNull()
     expect(new Set(rows().map(r => r.getAttribute('href'))).size).toBe(25)
   })
 

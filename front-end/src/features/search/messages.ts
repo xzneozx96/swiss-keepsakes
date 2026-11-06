@@ -10,6 +10,7 @@ export const searchScreenEn = {
   'searchScreen.interest.shopping-keepsakes': 'Shopping and keepsakes',
   'searchScreen.interest.local-activities': 'Local activities',
   'searchScreen.clearInterest': 'Clear {interest}',
+  'searchScreen.clear': 'Clear search',
   'searchScreen.interestCount.one': '{count} result in {interest}',
   'searchScreen.interestCount.other': '{count} results in {interest}',
   'searchScreen.resultCount.one': '{count} result for “{query}”',
@@ -31,6 +32,4 @@ export const searchScreenEn = {
   'searchScreen.error': 'Search is not available right now.',
   'searchScreen.more.one': '{count} more result',
   'searchScreen.more.other': '{count} more results',
-  'searchScreen.end.one': 'That’s the only result',
-  'searchScreen.end.other': 'That’s all {count} results',
 } as const

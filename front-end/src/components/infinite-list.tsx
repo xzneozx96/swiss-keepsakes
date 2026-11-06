@@ -22,7 +22,8 @@ export interface InfiniteListProps {
   /** What the live region says when `added` items arrived, such as "10 more stories". */
   announce: (added: number) => string
   /** The line at the end of the list, such as "That's all 143 stories". */
-  endText: string
+  /** The line under a complete list; a list may leave it out (search, owner 06.11.2026). */
+  endText?: string | undefined
 }
 
 /**
@@ -71,7 +72,7 @@ export function InfiniteList({ children, count, hasMore, isLoading, isFailed, on
               </Button>
             </div>
           )
-        : count > 0 && <p className="text-center text-label text-muted tabular-nums">{endText}</p>}
+        : count > 0 && endText && <p className="text-center text-label text-muted tabular-nums">{endText}</p>}
     </>
   )
 }

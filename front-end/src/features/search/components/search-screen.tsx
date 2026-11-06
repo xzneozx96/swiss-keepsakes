@@ -6,7 +6,8 @@ import { Button, SearchField } from '@heroui/react'
 import { useRouter } from '@tanstack/react-router'
 
 import { ChipRow } from '@/components/chip-row'
-import { CloseIcon } from '@/components/icons'
+import { EmptyState } from '@/components/empty-state'
+import { CloseIcon, SearchIcon } from '@/components/icons'
 import { InfiniteList } from '@/components/infinite-list'
 import { BackButton } from '@/components/layout/cart-button'
 import { useLocale } from '@/contexts/locale-context'
@@ -137,8 +138,9 @@ export function SearchScreen({ lang, urlQuery, urlKind, urlInterest, onQueryComm
           </div>
         )}
         {/* One live region, always mounted, so a screen reader announces its text change (the count, or the no-match line). */}
-        <div className={noMatch ? 'flex flex-col gap-1 pt-2' : undefined} role="status">
-          {noMatch && <p className="font-serif text-card-title">{t('searchScreen.noResults', { query })}</p>}
+        <div role="status">
+          {/* The shared empty state (owner, 06.11.2026), its one action clears the field so the interest tiles come back. */}
+          {noMatch && <EmptyState action={{ label: t('searchScreen.clear'), onPress: () => setValue('') }} icon={SearchIcon} message={t('searchScreen.noResults', { query })} />}
           {countLine && <p className="text-label text-muted">{countLine}</p>}
         </div>
         {noMatch && (
@@ -157,7 +159,6 @@ export function SearchScreen({ lang, urlQuery, urlKind, urlInterest, onQueryComm
           <InfiniteList
             announce={added => t(isOne(added) ? 'searchScreen.more.one' : 'searchScreen.more.other', { count: added })}
             count={results.length}
-            endText={t(isOne(total) ? 'searchScreen.end.one' : 'searchScreen.end.other', { count: total })}
             hasMore={search.hasNextPage}
             isFailed={search.isFetchNextPageError}
             isLoading={search.isFetchingNextPage}
