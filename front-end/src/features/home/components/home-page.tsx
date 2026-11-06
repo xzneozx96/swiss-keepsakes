@@ -6,6 +6,7 @@ import { Link, useHydrated, useRouter } from '@tanstack/react-router'
 import { Fragment } from 'react'
 
 import brandLogo from '@/assets/brand/swiss-keepsakes-logo.png'
+import { Snowfall } from '@/components/effects/snowfall'
 import { CartButton, CompactBar, SearchButton } from '@/components/layout/cart-button'
 import { LanguageButton } from '@/components/layout/language-button'
 import { useLocale } from '@/contexts/locale-context'
@@ -65,6 +66,11 @@ export function HomePage({ read }: { read?: HomeRead }) {
         <LanguageButton tone="bar" />
         <CartButton tone="bar" />
       </CompactBar>
+      {/* Snow floats over the whole home (owner, 06.11.2026): one screen-high layer that stays in view as the page scrolls and
+          takes no room (its height is cancelled by the negative margin) and no taps. */}
+      <div aria-hidden className="pointer-events-none sticky top-0 z-20 -mb-[100dvh] h-dvh">
+        <Snowfall count={50} />
+      </div>
       <div className="flex flex-col gap-10 px-4 pb-4">
         <div className="relative -mx-4 px-4">
           <HomeHero ref={heroEnd} />

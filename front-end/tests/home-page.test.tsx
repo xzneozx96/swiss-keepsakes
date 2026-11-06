@@ -346,7 +346,8 @@ describe('[E4.13][AC95] the demo layer is gone from the home', () => {
   const read = (path: string) => readFileSync(join(SRC, path), 'utf8')
   const homeFiles = (dir: string): string[] => readdirSync(dir, { withFileTypes: true })
     .flatMap(entry => entry.isDirectory() ? homeFiles(join(dir, entry.name)) : /\.tsx?$/.test(entry.name) ? [join(dir, entry.name)] : [])
-  const DEMO = /seed|simulated-loading|useSimulatedLoading|use-discovery-view|useDiscoveryView|discovery-home|DiscoveryHome|snowfall|season/i
+  // The snowfall is back on the home by the owner's wish (06.11.2026), so it is no longer a demo marker here.
+  const DEMO = /seed|simulated-loading|useSimulatedLoading|use-discovery-view|useDiscoveryView|discovery-home|DiscoveryHome|season/i
 
   it('the home route and the home feature name no demo seed, no simulated loading and no season preview (AC-6)', () => {
     const files = [join(SRC, 'routes/_guest/$lang/index.tsx'), ...homeFiles(join(SRC, 'features/home'))]
