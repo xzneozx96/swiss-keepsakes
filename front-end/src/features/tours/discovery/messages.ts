@@ -110,9 +110,9 @@ export const tourDiscoveryEn = {
   'tourDiscovery.maintenance.link': 'More information',
   'tourDiscovery.maintenance.existing':
     'Bookings you already made are not affected.',
-  'tourDiscovery.keepsakes.title': 'Take the story home',
+  'tourDiscovery.keepsakes.title': 'Beyond the journey',
   'tourDiscovery.keepsakes.intro':
-    'Keepsakes are ordered separately.',
+    'If this journey has found a special spot in your memory, why not take a little reminder home? Discover our Swiss Army Knife design inspired by its story.',
   'tourDiscovery.keepsakes.confirmedTitle': 'A keepsake from this tour',
   'tourDiscovery.keepsakes.confirmedIntro':
     'Optional. Order it separately, any time before your tour.',

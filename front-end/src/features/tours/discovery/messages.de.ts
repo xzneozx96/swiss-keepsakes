@@ -116,9 +116,9 @@ export const tourDiscoveryDe: Record<keyof typeof tourDiscoveryEn, string> = {
   'tourDiscovery.maintenance.link': 'Weitere Informationen',
   'tourDiscovery.maintenance.existing':
     'Bereits gemachte Buchungen sind nicht betroffen.',
-  'tourDiscovery.keepsakes.title': 'Die Geschichte mitnehmen',
+  'tourDiscovery.keepsakes.title': 'Über die Reise hinaus',
   'tourDiscovery.keepsakes.intro':
-    'Andenken werden separat bestellt.',
+    'Hat diese Reise einen besonderen Platz in Ihrer Erinnerung gefunden? Dann nehmen Sie doch ein kleines Andenken mit nach Hause. Entdecken Sie unser Schweizer Taschenmesser, dessen Design von ihrer Geschichte inspiriert ist.',
   'tourDiscovery.keepsakes.confirmedTitle': 'Ein Andenken zu dieser Tour',
   'tourDiscovery.keepsakes.confirmedIntro':
     'Optional. Separat bestellbar, jederzeit vor Ihrer Tour.',
