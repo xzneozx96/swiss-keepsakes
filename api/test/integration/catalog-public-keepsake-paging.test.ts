@@ -16,7 +16,7 @@ afterAll(async () => {
 
 // ADR-033: the keepsake list pages by keyset over `created_at desc, id desc`. Test files share one database and the list is
 // global, so every test makes a store and a category of its own and filters by that category.
-const list = makeListKeepsakes({ uow: createUnitOfWork(db), reads: createPublicKeepsakeReads(), media: { find: async () => [] } })
+const list = makeListKeepsakes({ uow: createUnitOfWork(db), reads: createPublicKeepsakeReads(), media: { find: async () => [] }, storeNames: { find: async () => new Map() } })
 
 const unique = () => randomUUID().slice(0, 8)
 const rich = (text: string) => ({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] })

@@ -18,4 +18,5 @@ export { makeResendManagerInvitation } from './application/resend-manager-invita
 export { makeResendOwnerInvitation } from './application/resend-owner-invitation.ts'
 export { makeRevokeInvitation } from './application/revoke-invitation.ts'
 export { makeStoreMaySell } from './application/store-may-sell.ts'
+export { makeStoreNames } from './application/store-names.ts'
 export { makeUpdateStoreInformation } from './application/update-store-information.ts'

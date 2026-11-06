@@ -28,7 +28,8 @@ const contentMedia = createMediaRepository()
 const publicDeps = {
   uow: createUnitOfWork(db),
   reads: createPublicKeepsakeReads(),
-  media: createMediaDirectory({ findById: (tx: Parameters<typeof contentMedia.findById>[0], storeId: string, id: string) => contentMedia.findById(tx, storeId, id), view: row => mediaView(row, storage.publicUrl) }),
+  media: createMediaDirectory({ findMany: (tx: Parameters<typeof contentMedia.findById>[0], storeId: string, ids: string[]) => contentMedia.findMany(tx, storeId, ids), view: row => mediaView(row, storage.publicUrl) }),
+  storeNames: { find: async () => new Map<string, string>() },
   pickups: createPickupRepository(),
 }
 const publicUseCases = { listKeepsakes: makeListKeepsakes(publicDeps), getKeepsake: makeGetKeepsake(publicDeps), getAvailability: makeGetAvailability(publicDeps), getPickupPoints: makeGetPickupPoints(publicDeps) }

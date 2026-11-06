@@ -19,6 +19,9 @@ function card(n: number, over: Record<string, unknown> = {}) {
     slug: `keepsake-${n}`,
     name: `Keepsake ${n}`,
     cover: null,
+    photos: [],
+    subtitle: null,
+    storeName: 'Swiss Native',
     soldOut: false,
     language: 'en',
     requestedLanguage: 'en',
@@ -77,6 +80,18 @@ describe('[E6.4] the tour keepsake block', () => {
     expect(sold).toHaveTextContent('Sold out')
     expect(sold).toHaveAttribute('href', '/en/gifts/keepsake-2')
     expect(document.body.textContent).not.toMatch(MONEY)
+  })
+
+  it('[E6.4] AC-6 each keepsake is a compact row: the name and subtitle, a sold-out label, no store text and no photo strip dots', async () => {
+    read.fn.mockResolvedValue({ items: [card(1, { subtitle: 'Hand-painted ceramic', soldOut: true, photos: [{ url: 'https://m.test/a.jpg', variants: [] }, { url: 'https://m.test/b.jpg', variants: [] }] })] })
+    await renderBlock()
+
+    const row = await screen.findByRole('link', { name: /Keepsake 1/ })
+    expect(row).toHaveTextContent('Hand-painted ceramic')
+    expect(row).toHaveTextContent('Sold out')
+    expect(row).not.toHaveTextContent('Swiss Native')
+    expect(row.querySelector('[data-dots]')).toBeNull()
+    expect(row.querySelectorAll('img')).toHaveLength(1)
   })
 
   it('[AC31] AC-3 an empty list draws nothing, heading included', async () => {

@@ -47,7 +47,7 @@ function setup(rows: PublicKeepsakeRow[], places: PickupPlace[]) {
     findPublishedBySlug: async (_tx, slug) => rows.find(r => r.slug.en === slug || r.slug.de === slug),
   }
   const list = vi.fn(async (_tx: null, storeId: string, archived: boolean) => places.filter(p => p.storeId === storeId && p.archived === archived))
-  const getPickupPoints = makeGetPickupPoints({ uow: { run: work => work(null) }, reads, media: { find: async () => [] }, pickups: { list } })
+  const getPickupPoints = makeGetPickupPoints({ uow: { run: work => work(null) }, reads, media: { find: async () => [] }, storeNames: { find: async () => new Map() }, pickups: { list } })
   return { getPickupPoints, list }
 }
 

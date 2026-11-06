@@ -14,6 +14,8 @@ const detail = {
   fallback: false,
   description: { type: 'doc', content: [] },
   photos: [],
+  subtitle: null,
+  storeName: 'Swiss Native',
   options: [],
   variants: [{ id: '5a1f3c1e-0a53-4d5e-8f0d-2f0f4d3b8a22', values: {}, photo: null }],
   otherSlug: null,

@@ -12,6 +12,9 @@ export interface SearchKeepsakeCard extends LanguageNotice {
   slug: string
   name: string
   cover: { url: string, variants: { width: number, url: string }[] } | null
+  photos: { url: string, variants: { width: number, url: string }[] }[]
+  subtitle: string | null
+  storeName: string
   soldOut: boolean
 }
 

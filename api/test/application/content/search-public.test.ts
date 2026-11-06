@@ -62,7 +62,7 @@ function tour(n: number): PublicTourRow {
   }
 }
 
-const keepsakeCard = (n: number) => ({ id: uuid(400 + n), slug: `keepsake-${n}`, name: `Keepsake ${n}`, cover: null, soldOut: false, language: 'en' as const, requestedLanguage: 'en' as const, fallback: false, availableLanguages: ['en' as const] })
+const keepsakeCard = (n: number) => ({ id: uuid(400 + n), slug: `keepsake-${n}`, name: `Keepsake ${n}`, cover: null, photos: [], subtitle: null, storeName: 'Store', soldOut: false, language: 'en' as const, requestedLanguage: 'en' as const, fallback: false, availableLanguages: ['en' as const] })
 
 function hit(kind: SearchHit['kind'], n: number, score: string): SearchHit {
   return { kind, id: uuid({ story: 100, place: 200, tour: 300, keepsake: 400 }[kind] + n), score }

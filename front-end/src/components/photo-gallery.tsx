@@ -7,6 +7,7 @@ import {
   CloseIcon,
 } from '@/components/icons'
 import { photoUrl } from '@/lib/photos'
+import { slideIndex, snapTrackClass } from '@/lib/snap-track'
 
 export interface PhotoGalleryLabels {
   /** Carousel name, e.g. "Photos of Kapellbrücke pocket knife". */
@@ -28,13 +29,7 @@ interface PhotoGalleryProps {
   noViewer?: boolean
 }
 
-const trackClass
-  = 'flex size-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
-
-/** Index of the slide that fills the scroller, from its scroll position. */
-function slideIndex(el: HTMLElement) {
-  return Math.round(el.scrollLeft / Math.max(1, el.clientWidth))
-}
+const trackClass = `size-full ${snapTrackClass}`
 
 /**
  * Detail-page photo gallery for every kind of listing (gifts, tours, stays): swipe

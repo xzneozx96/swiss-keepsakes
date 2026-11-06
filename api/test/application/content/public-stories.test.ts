@@ -372,7 +372,7 @@ function pinRow(n: number, over: Partial<PublicPinRow> = {}): PublicPinRow {
   }
 }
 
-const keepsakeCard = (n: number, soldOut = false): PublicStoryKeepsakeCard => ({ id: `0190a000-0000-7000-8000-0000000002${String(n).padStart(2, '0')}`, slug: `keepsake-${n}`, name: `Keepsake ${n}`, cover: null, soldOut })
+const keepsakeCard = (n: number, soldOut = false): PublicStoryKeepsakeCard => ({ id: `0190a000-0000-7000-8000-0000000002${String(n).padStart(2, '0')}`, slug: `keepsake-${n}`, name: `Keepsake ${n}`, cover: null, subtitle: null, soldOut })
 
 describe('public story detail extras', () => {
   it('[E4.4][AC61] AC-1: a story with both languages lists both slugs, a story in English only lists one', async () => {

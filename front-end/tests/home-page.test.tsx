@@ -58,10 +58,10 @@ const tour = (n: number, title: string, stayTag: PublicTourCard['stayTag']): Pub
 const tours = [tour(1, 'Pilatus above the city', 'multi_day'), tour(2, 'Old town in an hour', 'short_stay')]
 
 const photo = { url: 'https://cdn.test/swan.jpg', variants: [{ width: 320, url: 'https://cdn.test/swan-320.webp' }, { width: 800, url: 'https://cdn.test/swan-800.webp' }] }
-const swan: PublicKeepsakeCard = { id: id(200), slug: 'victorinox-swan', name: 'Victorinox Swan', cover: photo, soldOut: false, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en', 'de'] }
-const bridge: PublicKeepsakeCard = { id: id(201), slug: 'victorinox-kapellbruecke', name: 'Victorinox Kapellbrücke', cover: null, soldOut: true, language: 'de', requestedLanguage: 'en', fallback: true, availableLanguages: ['de'] }
-const champ: PublicKeepsakeCard = { id: id(203), slug: 'swisschamp', name: 'Swisschamp', cover: photo, soldOut: false, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
-const lion: PublicKeepsakeCard = { id: id(202), slug: 'victorinox-lion', name: 'Victorinox Löwe', cover: null, soldOut: false, language: 'de', requestedLanguage: 'en', fallback: true, availableLanguages: ['de'] }
+const swan: PublicKeepsakeCard = { id: id(200), slug: 'victorinox-swan', name: 'Victorinox Swan', cover: photo, photos: [], subtitle: null, storeName: 'Swiss Native', soldOut: false, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en', 'de'] }
+const bridge: PublicKeepsakeCard = { id: id(201), slug: 'victorinox-kapellbruecke', name: 'Victorinox Kapellbrücke', cover: null, photos: [], subtitle: null, storeName: 'Swiss Native', soldOut: true, language: 'de', requestedLanguage: 'en', fallback: true, availableLanguages: ['de'] }
+const champ: PublicKeepsakeCard = { id: id(203), slug: 'swisschamp', name: 'Swisschamp', cover: photo, photos: [], subtitle: null, storeName: 'Swiss Native', soldOut: false, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
+const lion: PublicKeepsakeCard = { id: id(202), slug: 'victorinox-lion', name: 'Victorinox Löwe', cover: null, photos: [], subtitle: null, storeName: 'Swiss Native', soldOut: false, language: 'de', requestedLanguage: 'en', fallback: true, availableLanguages: ['de'] }
 
 type DataClient = ReturnType<typeof startSeedDemo>['dataClient']
 

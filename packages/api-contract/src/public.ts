@@ -108,6 +108,8 @@ export const publicStoryKeepsakeSchema = z.object({
   slug: z.string(),
   name: z.string(),
   cover: publicCoverSchema.nullable(),
+  // ADR-033 § 12, one-release grace: the default is removed in the next release.
+  subtitle: z.string().nullable().default(null).meta({ description: 'The plain text of the first paragraph of the keepsake description, null when it has none' }),
   soldOut: z.boolean(),
 }).meta({ id: 'PublicStoryKeepsake', description: 'A keepsake card on a story: no price. A sold-out keepsake stays in the list; an unpublished or archived one is absent' })
 

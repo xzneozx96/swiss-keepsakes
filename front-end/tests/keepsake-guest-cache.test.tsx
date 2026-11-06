@@ -17,7 +17,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   return { ...actual, Link: ({ children }: { children: React.ReactNode }) => <a href="/x">{children}</a> }
 })
 
-const item = { id: crypto.randomUUID(), slug: 'a', name: 'Keepsake A', cover: null, soldOut: false, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
+const item = { id: crypto.randomUUID(), slug: 'a', name: 'Keepsake A', cover: null, photos: [], subtitle: null, storeName: 'Swiss Native', soldOut: false, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
 
 function setup() {
   const client = new QueryClient()

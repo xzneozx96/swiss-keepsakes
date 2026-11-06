@@ -12,6 +12,9 @@ function card(over: Record<string, unknown> = {}) {
     slug: 'kapellbruecke-mug',
     name: 'Kapellbrücke mug',
     cover: { url: 'https://media.example/mug.jpg', variants: [{ width: 640, url: 'https://media.example/mug-640.webp' }] },
+    photos: [{ url: 'https://media.example/mug.jpg', variants: [{ width: 640, url: 'https://media.example/mug-640.webp' }] }],
+    subtitle: 'Hand-painted ceramic',
+    storeName: 'Swiss Native',
     soldOut: false,
     language: 'en',
     requestedLanguage: 'en',
@@ -64,6 +67,48 @@ describe('[E6.4] the keepsake list', { timeout: 60_000 }, () => {
 
     const link = await screen.findByRole('link', { name: /Kapellbrücke mug/ })
     expect(link).toHaveTextContent('Sold out')
+    expect(link).toHaveAttribute('href', '/en/gifts/kapellbruecke-mug')
+  })
+
+  it('[E6.4] AC-5 each card is a showcase card: the partner block, the name, the subtitle and one link with the photo strip out of the tab order', async () => {
+    respond = () => Response.json(page([card()]))
+    const router = await routerAt('/en/gifts')
+
+    render(<RouterProvider router={router} />)
+
+    const link = await screen.findByRole('link', { name: /Kapellbrücke mug/ })
+    expect(link).toHaveTextContent('Swiss Native')
+    expect(link).toHaveTextContent('Victorinox')
+    expect(link).toHaveTextContent('Hand-painted ceramic')
+    expect(link.querySelector('h3')).toHaveTextContent('Kapellbrücke mug')
+    expect(link.querySelector('[data-strip]')).toHaveAttribute('tabindex', '-1')
+    expect(link.closest('li')?.querySelectorAll('a, button')).toHaveLength(1)
+  })
+
+  it('[E6.4] AC-6 a one-photo keepsake has no dots; two photos show aria-hidden dots', async () => {
+    const photo = (n: number) => ({ url: `https://media.example/${n}.jpg`, variants: [{ width: 800, url: `https://media.example/${n}-800.webp` }] })
+    respond = () => Response.json(page([card({ slug: 'one', name: 'One photo', photos: [photo(1)] }), card({ slug: 'two', name: 'Two photos', photos: [photo(2), photo(3)] })]))
+    const router = await routerAt('/en/gifts')
+
+    render(<RouterProvider router={router} />)
+
+    const one = await screen.findByRole('link', { name: /One photo/ })
+    const two = screen.getByRole('link', { name: /Two photos/ })
+    expect(one.querySelector('[data-dots]')).toBeNull()
+    expect(two.querySelector('[data-dots]')).toHaveAttribute('aria-hidden', 'true')
+    expect(two.querySelectorAll('[data-strip] img')).toHaveLength(2)
+    expect(two.querySelectorAll('[data-dots] > span')).toHaveLength(2)
+  })
+
+  it('[AC53] AC-7 a sold-out card greys its photo and keeps the label as text inside the one link', async () => {
+    respond = () => Response.json(page([card({ soldOut: true })]))
+    const router = await routerAt('/en/gifts')
+
+    render(<RouterProvider router={router} />)
+
+    const link = await screen.findByRole('link', { name: /Sold out/ })
+    expect(link).toHaveTextContent('Sold out')
+    expect(link.querySelector('[data-strip]')?.parentElement?.className).toContain('grayscale')
     expect(link).toHaveAttribute('href', '/en/gifts/kapellbruecke-mug')
   })
 

@@ -20,6 +20,10 @@
   --color-charcoal: var(--charcoal);
   --color-hero-sky: var(--hero-sky);
   --color-hero-cream: var(--hero-cream);
+  --color-card-tile: var(--card-tile);
+
+  --shadow-accent-lift: var(--accent-lift-shadow);
+  --shadow-mark: var(--mark-shadow);
 }
 
 /*

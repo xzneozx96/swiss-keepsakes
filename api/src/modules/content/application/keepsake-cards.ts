@@ -12,7 +12,7 @@ export function makeKeepsakeCards(
   return async (ids: string[], language: ContentLanguage): Promise<PublicStoryKeepsakeCard[]> => {
     try {
       const { items } = await listKeepsakes(ids, language)
-      return items.map(item => ({ id: item.id, slug: item.slug, name: item.name, cover: item.cover, soldOut: item.soldOut }))
+      return items.map(item => ({ id: item.id, slug: item.slug, name: item.name, cover: item.cover, subtitle: item.subtitle, soldOut: item.soldOut }))
     }
     catch (error) {
       onError(error)

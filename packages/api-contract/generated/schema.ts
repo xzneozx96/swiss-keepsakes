@@ -7066,7 +7066,7 @@ export interface components {
         } | null;
         PublicKeepsake: {
             availableLanguages: components["schemas"]["PublicLanguage"][];
-            /** @description The first photo, null when it is not ready */
+            /** @description The first ready photo, the same as photos[0]; null when no photo is ready */
             cover: {
                 /** @description The original file */
                 url: string;
@@ -7086,13 +7086,26 @@ export interface components {
             options: components["schemas"]["PublicKeepsakeOption"][];
             /** @description The slug of the other language, for the language switcher. Null when that language has no version */
             otherSlug: string | null;
-            /** @description The ready photos in the merchant's order */
+            /**
+             * @description All the ready photos in the merchant's order, the first of them the cover
+             * @default []
+             */
             photos: components["schemas"]["PublicKeepsakePhoto"][];
             requestedLanguage: components["schemas"]["PublicLanguage"];
             /** @description The slug of the language carried */
             slug: string;
             /** @description True when every combination for sale has no unit available */
             soldOut: boolean;
+            /**
+             * @description The name of the store that sells the keepsake. Empty when it is not known
+             * @default
+             */
+            storeName: string;
+            /**
+             * @description The plain text of the first paragraph of the description, in the language carried. Null when the description has none
+             * @default null
+             */
+            subtitle: string | null;
             variants: components["schemas"]["PublicKeepsakeCombination"][];
         };
         /** @description The price and the units of each combination for sale. The only public keepsake read with a price. Cached for 5 seconds */
@@ -7110,7 +7123,7 @@ export interface components {
         };
         PublicKeepsakeCard: {
             availableLanguages: components["schemas"]["PublicLanguage"][];
-            /** @description The first photo, null when it is not ready */
+            /** @description The first ready photo, the same as photos[0]; null when no photo is ready */
             cover: {
                 /** @description The original file */
                 url: string;
@@ -7126,11 +7139,26 @@ export interface components {
             id: string;
             language: components["schemas"]["PublicLanguage"];
             name: string;
+            /**
+             * @description The ready photos in the merchant's order, the first of them the cover; at most 8 on a list card, the detail carries all of them
+             * @default []
+             */
+            photos: components["schemas"]["PublicKeepsakePhoto"][];
             requestedLanguage: components["schemas"]["PublicLanguage"];
             /** @description The slug of the language carried */
             slug: string;
             /** @description True when every combination for sale has no unit available */
             soldOut: boolean;
+            /**
+             * @description The name of the store that sells the keepsake. Empty when it is not known
+             * @default
+             */
+            storeName: string;
+            /**
+             * @description The plain text of the first paragraph of the description, in the language carried. Null when the description has none
+             * @default null
+             */
+            subtitle: string | null;
         };
         /** @description A combination that is for sale. A combination that is not listed is not sold (ADR-017) */
         PublicKeepsakeCombination: {
@@ -8058,6 +8086,11 @@ export interface components {
             name: string;
             slug: string;
             soldOut: boolean;
+            /**
+             * @description The plain text of the first paragraph of the keepsake description, null when it has none
+             * @default null
+             */
+            subtitle: string | null;
         };
         PublicStoryList: {
             items: components["schemas"]["PublicStoryCard"][];

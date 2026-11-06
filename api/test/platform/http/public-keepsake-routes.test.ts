@@ -9,7 +9,7 @@ import { createGuardedApp, guardedCommands, signedInAs } from '../../support/gua
 const id = '0190f0c2-0000-7000-8000-0000000000e1'
 const variantId = '0190f0c2-0000-7000-8000-0000000000c1'
 
-const card: PublicKeepsakeCard = { id, slug: 'swiss-knife', name: 'Swiss knife', cover: null, soldOut: false, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
+const card: PublicKeepsakeCard = { id, slug: 'swiss-knife', name: 'Swiss knife', cover: null, photos: [], subtitle: null, storeName: 'Swiss Native', soldOut: false, language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
 
 const lastKey = ['2026-11-05T10:00:00.123456Z', id] as const
 const asked: unknown[] = []

@@ -62,10 +62,17 @@ export interface PublicKeepsakeReads<T> {
   findPublishedBySlug: (tx: T, slug: string, language: ContentLanguage) => Promise<PublicKeepsakeRow | undefined>
 }
 
+// The names of stores, by store id. The catalog holds only the id (ADR-013); main.ts fills this from the identity module.
+// A store that is not found has no entry.
+export interface StoreNames<T> {
+  find: (tx: T, storeIds: string[]) => Promise<Map<string, string>>
+}
+
 export interface PublicKeepsakeDeps<T> {
   uow: UnitOfWork<T>
   reads: PublicKeepsakeReads<T>
   media: MediaDirectory<T>
+  storeNames: StoreNames<T>
   // Left out in a test, every figure reads 0 and every keepsake reads sold out.
   stockLevels?: StockLevels<T>
 }
@@ -82,6 +89,11 @@ export interface PublicKeepsakeCard extends LanguageNotice {
   slug: string
   name: string
   cover: PublicKeepsakePhoto | null
+  // The ready photos in the merchant's order; a card carries at most MAX_CARD_PHOTOS, the detail all of them.
+  photos: PublicKeepsakePhoto[]
+  // The first paragraph of the description as plain text, in the language carried; null when there is none.
+  subtitle: string | null
+  storeName: string
   soldOut: boolean
 }
 
@@ -160,39 +172,81 @@ async function photosOf<T>(media: MediaDirectory<T>, tx: T, storeId: string, ids
   return new Map(files.filter(ready).map(file => [file.id.toLowerCase(), { url: file.publicUrl!, variants: file.variants }]))
 }
 
+// A list card swipes through at most this many photos. Only these are looked up, so a keepsake with many photos costs no more.
+const MAX_CARD_PHOTOS = 8
+
+// The media ids of a keepsake without a repeat, the first occurrence kept: a photo listed twice is one photo, so a client keys its
+// slides by address. Ids are compared in lower case, as the photo lookup is.
+function distinctIds(ids: string[]): string[] {
+  const seen = new Set<string>()
+  return ids.filter((id) => {
+    const key = id.toLowerCase()
+    return seen.has(key) ? false : (seen.add(key), true)
+  })
+}
+
+const WHITESPACE = /\s+/g
+
+function plainText(node: { type?: string, text?: string, content?: unknown[] }): string {
+  if (node.type === 'text')
+    return node.text ?? ''
+  if (node.type === 'hardBreak')
+    return ' '
+  return (node.content ?? []).map(child => plainText(child as typeof node)).join('')
+}
+
+// The first paragraph that has text, as one line of plain text: a hard break is a space, marks are dropped. Null when the
+// description has no such paragraph.
+function subtitleOf(description: { content?: { type?: string, text?: string, content?: unknown[] }[] } | undefined): string | null {
+  for (const node of description?.content ?? []) {
+    if (node.type !== 'paragraph')
+      continue
+    const text = plainText(node).replace(WHITESPACE, ' ').trim()
+    if (text)
+      return text
+  }
+  return null
+}
+
 const soldOutOf = (skuIds: string[], stock: Map<string, StockLevel>) => skuIds.every(id => unitsOf(stock.get(id)) === 0)
 
-function card(row: PublicKeepsakeSummary, language: LanguageNotice, cover: PublicKeepsakePhoto | null, stock: Map<string, StockLevel>): PublicKeepsakeCard {
+// The cover is the first ready photo, so it is photos[0] whenever there is one: the classic card and the swipe strip agree.
+function card(row: PublicKeepsakeSummary, language: LanguageNotice, photos: PublicKeepsakePhoto[], storeName: string, stock: Map<string, StockLevel>): PublicKeepsakeCard {
   return {
     id: row.id,
     slug: row.slug[language.language]!,
     name: row.name[language.language]!,
-    cover,
+    cover: photos[0] ?? null,
+    photos,
+    subtitle: subtitleOf(row.text[language.language]),
+    storeName,
     soldOut: soldOutOf(row.skuIds, stock),
     ...language,
   }
 }
 
 // The cards of these rows in the language asked for, or the other one with the fallback notice; a row with no readable
-// language is left out. Stock is read once per store and covers once per store.
+// language is left out. Stock, photos and store names are read once per store, never once per keepsake. The reads wait
+// for each other because one transaction holds one connection.
 async function cardsOf<T>(deps: PublicKeepsakeDeps<T>, tx: T, rows: PublicKeepsakeSummary[], requested: ContentLanguage): Promise<PublicKeepsakeCard[]> {
   const shown = rows.flatMap((row) => {
     const language = notice(row, requested)
     return language ? [{ row, language }] : []
   })
   const stock = await stockOf(deps, tx, shown.map(item => item.row))
-  const coversByStore = new Map<string, string[]>()
-  for (const { row } of shown) {
-    const first = row.mediaIds[0]
-    if (first)
-      coversByStore.set(row.storeId, [...(coversByStore.get(row.storeId) ?? []), first])
-  }
-  const covers = new Map<string, PublicKeepsakePhoto>()
-  for (const [storeId, ids] of coversByStore) {
+  const idsByStore = new Map<string, string[]>()
+  for (const { row } of shown)
+    idsByStore.set(row.storeId, [...(idsByStore.get(row.storeId) ?? []), ...distinctIds(row.mediaIds).slice(0, MAX_CARD_PHOTOS)])
+  const photos = new Map<string, PublicKeepsakePhoto>()
+  for (const [storeId, ids] of idsByStore) {
     for (const [id, photo] of await photosOf(deps.media, tx, storeId, ids))
-      covers.set(id, photo)
+      photos.set(id, photo)
   }
-  return shown.map(({ row, language }) => card(row, language, covers.get(row.mediaIds[0]?.toLowerCase() ?? '') ?? null, stock))
+  const storeNames = shown.length > 0 ? await deps.storeNames.find(tx, [...idsByStore.keys()]) : new Map<string, string>()
+  return shown.map(({ row, language }) => {
+    const ready = distinctIds(row.mediaIds).slice(0, MAX_CARD_PHOTOS).flatMap(id => photos.get(id.toLowerCase()) ?? [])
+    return card(row, language, ready, storeNames.get(row.storeId) ?? '', stock)
+  })
 }
 
 // A page of the published keepsakes in the language asked for, or the other one with the fallback notice, newest first. Each
@@ -239,12 +293,12 @@ export function makeGetKeepsake<T>(deps: PublicKeepsakeDeps<T>) {
       return fail({ reason: 'not-found' })
     const photos = await photosOf(deps.media, tx, row.storeId, [...row.mediaIds, ...row.variants.flatMap(variant => variant.mediaId ?? [])])
     const stock = await stockOf(deps, tx, [row])
-    const shown = row.mediaIds.flatMap(id => photos.get(id.toLowerCase()) ?? [])
+    const storeName = (await deps.storeNames.find(tx, [row.storeId])).get(row.storeId) ?? ''
+    const shown = distinctIds(row.mediaIds).flatMap(id => photos.get(id.toLowerCase()) ?? [])
     const otherLanguage = other(language.language)
     return ok({
-      ...card(row, language, shown[0] ?? null, stock),
+      ...card(row, language, shown, storeName, stock),
       description: row.text[language.language] as PublicKeepsake['description'],
-      photos: shown,
       options: row.options.map(option => ({ id: option.id, name: label(option.name, language.language), values: option.values.map(value => ({ id: value.id, label: label(value.label, language.language) })) })),
       variants: row.variants.map(variant => ({ id: variant.id, values: variant.values, photo: variant.mediaId ? photos.get(variant.mediaId.toLowerCase()) ?? null : null })),
       otherSlug: language.availableLanguages.includes(otherLanguage) ? row.slug[otherLanguage] ?? null : null,

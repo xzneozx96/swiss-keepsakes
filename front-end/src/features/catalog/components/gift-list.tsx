@@ -38,10 +38,10 @@ export function GiftList({ banner, cards, state, onRetry, paging }: GiftListProp
   const { t } = useLocale()
   const [bannerEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
   const list = (
-    <ul className="flex flex-col gap-7">
+    <ul className="flex flex-col gap-4">
       {cards.map(card => (
         <li key={card.slug}>
-          <ProductCard {...card} layout="grid" />
+          <ProductCard {...card} variant="showcase" />
         </li>
       ))}
     </ul>
@@ -77,11 +77,18 @@ export function GiftList({ banner, cards, state, onRetry, paging }: GiftListProp
 
       <div className="relative -mt-6 flex flex-col gap-5 rounded-t-3xl bg-background px-4 pt-5 pb-4">
         {state === 'loading' && (
-          <ul aria-busy className="flex flex-col gap-7" data-skeleton="gifts">
+          <ul aria-busy className="flex flex-col gap-4" data-skeleton="gifts">
+            {/* The showcase card: a white card, the photo inset, then the name and line with the round arrow. */}
             {Array.from({ length: 3 }, (_, i) => (
-              <li key={i} className="flex flex-col gap-2.5">
-                <Skeleton className="aspect-[4/3] rounded-3xl" />
-                <Skeleton className="h-5 w-4/5 rounded-lg" />
+              <li key={i} className="rounded-[28px] bg-surface shadow-surface">
+                <Skeleton className="m-2 aspect-[4/3] rounded-[22px]" />
+                <div className="flex items-center justify-between gap-3 px-5 pt-1 pb-5">
+                  <div className="flex min-w-0 flex-1 flex-col gap-2">
+                    <Skeleton className="h-6 w-3/5 rounded-lg" />
+                    <Skeleton className="h-4 w-4/5 rounded-lg" />
+                  </div>
+                  <Skeleton className="size-11 shrink-0 rounded-full" />
+                </div>
               </li>
             ))}
           </ul>

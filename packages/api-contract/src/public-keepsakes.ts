@@ -15,7 +15,12 @@ export const publicKeepsakeCardSchema = z.object({
   id: z.uuid(),
   slug: z.string().meta({ description: 'The slug of the language carried' }),
   name: z.string(),
-  cover: publicKeepsakePhotoSchema.nullable().meta({ description: 'The first photo, null when it is not ready' }),
+  cover: publicKeepsakePhotoSchema.nullable().meta({ description: 'The first ready photo, the same as photos[0]; null when no photo is ready' }),
+  // ADR-033 § 12, one-release grace: these three have defaults so an SPA that ships before the API still parses an old
+  // answer. The defaults are removed in the next release, when no old API answers any more.
+  photos: z.array(publicKeepsakePhotoSchema).max(8).default([]).meta({ description: 'The ready photos in the merchant\'s order, the first of them the cover; at most 8 on a list card, the detail carries all of them' }),
+  subtitle: z.string().nullable().default(null).meta({ description: 'The plain text of the first paragraph of the description, in the language carried. Null when the description has none' }),
+  storeName: z.string().default('').meta({ description: 'The name of the store that sells the keepsake. Empty when it is not known' }),
   soldOut: z.boolean().meta({ description: 'True when every combination for sale has no unit available' }),
   ...languageNoticeSchema.shape,
 }).meta({ id: 'PublicKeepsakeCard' })
@@ -50,7 +55,7 @@ const combinationSchema = z.object({
 
 export const publicKeepsakeSchema = publicKeepsakeCardSchema.extend({
   description: descriptionSchema,
-  photos: z.array(publicKeepsakePhotoSchema).meta({ description: 'The ready photos in the merchant\'s order' }),
+  photos: z.array(publicKeepsakePhotoSchema).default([]).meta({ description: 'All the ready photos in the merchant\'s order, the first of them the cover' }),
   options: z.array(optionSchema),
   variants: z.array(combinationSchema),
   otherSlug: z.string().nullable().meta({ description: 'The slug of the other language, for the language switcher. Null when that language has no version' }),

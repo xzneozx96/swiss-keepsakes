@@ -22,7 +22,7 @@ const list = makeListStories(deps)
 const keepsakeAsks: string[][] = []
 const get = makeGetStory({ ...deps, keepsakeCards: async (ids) => {
   keepsakeAsks.push(ids)
-  return ids.map(id => ({ id, slug: `k-${id.slice(0, 4)}`, name: 'Keepsake', cover: null, soldOut: false }))
+  return ids.map(id => ({ id, slug: `k-${id.slice(0, 4)}`, name: 'Keepsake', cover: null, subtitle: null, soldOut: false }))
 } })
 const categories = makeListCategories(deps)
 

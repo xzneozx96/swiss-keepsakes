@@ -58,6 +58,7 @@ function setup(rows: PublicKeepsakeRow[], levels: Record<string, [number, number
     uow: { run: work => work(null) },
     reads,
     media: { find: async (_tx, _store, ids) => files.filter(f => ids.includes(f.id)) },
+    storeNames: { find: async (_tx, ids) => new Map(ids.map(id => [id, id === store ? 'Swiss Native' : 'Other store'])) },
     stockLevels: { levels: stockLevels },
   }
   return { deps, stockLevels, pageAsks }
@@ -161,6 +162,105 @@ describe('[E6.4][AC53] the public list: sold out is a flag, never a figure', () 
     const { deps } = setup([row()], { [skuA]: [1, 0] }, [photo(photoId, 'retired')])
 
     expect((await makeListKeepsakes(deps)({ language: 'en' })).items[0]!.cover).toBeNull()
+  })
+})
+
+describe('[E6.4] the list card carries what the keepsake cards draw: subtitle, photos and store name', () => {
+  const id = (n: number) => `0190f0c2-0000-7000-8000-0000000001${String(n).padStart(2, '0')}`
+
+  it('[E6.4] AC-1: the subtitle is the plain text of the first paragraph in the language carried, and the store name is the store\'s', async () => {
+    const text = {
+      en: { type: 'doc' as const, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Medium ', marks: [{ type: 'bold' }] }, { type: 'hardBreak' }, { type: 'text', text: 'Pocket Knife' }] }, { type: 'paragraph', content: [{ type: 'text', text: 'Second paragraph' }] }] },
+      de: doc('Ein rotes Messer'),
+    }
+    const { deps } = setup([row({ text })], { [skuA]: [1, 0] })
+
+    const en = (await makeListKeepsakes(deps)({ language: 'en' })).items[0]!
+    const de = (await makeListKeepsakes(deps)({ language: 'de' })).items[0]!
+
+    expect(en).toMatchObject({ subtitle: 'Medium Pocket Knife', storeName: 'Swiss Native' })
+    expect(de.subtitle).toBe('Ein rotes Messer')
+  })
+
+  it('[E6.4] AC-2: the subtitle is null when the description has no paragraph, and an empty first paragraph is skipped', async () => {
+    const heading = { type: 'doc' as const, content: [{ type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Only a heading' }] }] }
+    const empty = { type: 'doc' as const, content: [{ type: 'paragraph' }, { type: 'paragraph', content: [{ type: 'text', text: 'Second line' }] }] }
+    const { deps } = setup([row({ id: 'k1', text: { en: heading, de: heading } }), row({ id: 'k2', slug: { en: 'two' }, text: { en: empty, de: empty } })], { [skuA]: [1, 0] })
+
+    const { items } = await makeListKeepsakes(deps)({ language: 'en' })
+
+    expect(items.map(i => i.subtitle)).toEqual([null, 'Second line'])
+  })
+
+  it('[E6.4] AC-3: the photos come in the merchant\'s order, skip one that is not ready, and a keepsake with none has an empty list', async () => {
+    const [a, b, c] = [id(1), id(2), id(3)]
+    const { deps } = setup([row({ id: 'k1', mediaIds: [c, a, b] }), row({ id: 'k2', slug: { en: 'two' }, mediaIds: [] })], { [skuA]: [1, 0] }, [photo(a), photo(b, 'retired'), photo(c)])
+
+    const { items } = await makeListKeepsakes(deps)({ language: 'en' })
+
+    expect(items[0]!.photos.map(p => p.url)).toEqual([`https://cdn.test/${c}.jpg`, `https://cdn.test/${a}.jpg`])
+    expect(items[0]!.cover?.url).toBe(`https://cdn.test/${c}.jpg`)
+    expect(items[1]).toMatchObject({ photos: [], cover: null })
+  })
+
+  it('[E6.4] AC-4: a card carries at most 8 photos, only those are looked up, and all of a store\'s keepsakes share one lookup', async () => {
+    const ids = Array.from({ length: 11 }, (_, n) => id(n + 1))
+    const { deps } = setup([row({ id: 'k1', mediaIds: ids }), row({ id: 'k2', slug: { en: 'two' }, mediaIds: [id(50)] })], { [skuA]: [1, 0] }, [...ids, id(50)].map(i => photo(i)))
+    const find = vi.fn(deps.media.find)
+    const names = vi.fn(deps.storeNames.find)
+
+    const { items } = await makeListKeepsakes({ ...deps, media: { find }, storeNames: { find: names } })({ language: 'en' })
+
+    expect(items[0]!.photos.map(p => p.url)).toEqual(ids.slice(0, 8).map(i => `https://cdn.test/${i}.jpg`))
+    expect(find).toHaveBeenCalledTimes(1)
+    expect(find).toHaveBeenCalledWith(null, store, [...ids.slice(0, 8), id(50)])
+    expect(names).toHaveBeenCalledTimes(1)
+    expect(names).toHaveBeenCalledWith(null, [store])
+  })
+
+  it('[E6.4] AC-5: the detail still carries every photo, 11 of them, and the same subtitle and store name', async () => {
+    const ids = Array.from({ length: 11 }, (_, n) => id(n + 1))
+    const { deps } = setup([row({ mediaIds: ids })], { [skuA]: [1, 0] }, ids.map(i => photo(i)))
+
+    const result = await makeGetKeepsake(deps)('swiss-knife', 'en')
+
+    expect(result.ok && result.value.photos).toHaveLength(11)
+    expect(result.ok && result.value).toMatchObject({ subtitle: 'A red knife', storeName: 'Swiss Native' })
+  })
+
+  it('[E6.4] AC-6: the cards of a story\'s by-id read carry them too', async () => {
+    const { deps } = setup([row()], { [skuA]: [1, 0] })
+
+    const { items } = await makeListKeepsakesByIds(deps)([row().id], 'en')
+
+    expect(items[0]).toMatchObject({ subtitle: 'A red knife', storeName: 'Swiss Native', photos: [{ url: `https://cdn.test/${photoId}.jpg` }] })
+  })
+
+  it('[E6.4] AC-7: the first photo still processing makes the second the cover, on the list, the detail and the by-id read, and photos[0] is the cover', async () => {
+    const [a, b] = [id(1), id(2)]
+    const { deps } = setup([row({ mediaIds: [a, b] })], { [skuA]: [1, 0] }, [photo(a, 'processing'), photo(b)])
+
+    const list = (await makeListKeepsakes(deps)({ language: 'en' })).items[0]!
+    const byIds = (await makeListKeepsakesByIds(deps)([row().id], 'en')).items[0]!
+    const detail = await makeGetKeepsake(deps)('swiss-knife', 'en')
+
+    for (const shown of [list, byIds, detail.ok ? detail.value : undefined]) {
+      expect(shown?.cover?.url).toBe(`https://cdn.test/${b}.jpg`)
+      expect(shown?.photos[0]).toEqual(shown?.cover)
+    }
+  })
+
+  it('[E6.4] AC-8: a media id listed twice is one photo, the first occurrence kept, on the list and the detail', async () => {
+    const [a, b] = [id(1), id(2)]
+    const { deps } = setup([row({ mediaIds: [a, b, a.toUpperCase(), b, a] })], { [skuA]: [1, 0] }, [photo(a), photo(b)])
+    const find = vi.fn(deps.media.find)
+
+    const list = (await makeListKeepsakes({ ...deps, media: { find } })({ language: 'en' })).items[0]!
+    const detail = await makeGetKeepsake(deps)('swiss-knife', 'en')
+
+    expect(list.photos.map(p => p.url)).toEqual([`https://cdn.test/${a}.jpg`, `https://cdn.test/${b}.jpg`])
+    expect(find).toHaveBeenCalledWith(null, store, [a, b])
+    expect(detail.ok && detail.value.photos.map(p => p.url)).toEqual([`https://cdn.test/${a}.jpg`, `https://cdn.test/${b}.jpg`])
   })
 })
 

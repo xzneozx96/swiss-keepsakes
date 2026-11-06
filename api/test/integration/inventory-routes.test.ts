@@ -34,7 +34,7 @@ const inventoryDeps = {
   uow,
   stock: createStockRepository(),
   skus: createSkuDirectory(),
-  media: createMediaDirectory({ findById: (tx: Tx, storeId: string, id: string) => contentMedia.findById(tx, storeId, id), view: row => mediaView(row, createFakeStorage(systemClock).publicUrl) }),
+  media: createMediaDirectory({ findMany: (tx: Tx, storeId: string, ids: string[]) => contentMedia.findMany(tx, storeId, ids), view: row => mediaView(row, createFakeStorage(systemClock).publicUrl) }),
   audit: createAuditLog(systemClock),
   clock: systemClock,
 }

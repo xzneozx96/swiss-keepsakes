@@ -39,7 +39,7 @@ import { createPlatformAdminRepository } from './modules/identity/adapters/platf
 import { invitationPreviewPath, registerIdentityRoutes } from './modules/identity/adapters/routes.ts'
 import { createStoreRepository } from './modules/identity/adapters/store-repository.ts'
 import { createUserDirectory } from './modules/identity/adapters/user-directory.ts'
-import { invitationScreens, makeAcceptInvitation, makeCreateStore, makeGetOnboarding, makeInvitationLink, makeInviteManager, makeListMembers, makeListMyStores, makeListStores, makeLoadIdentity, makeOpenStoreForSale, makePreviewInvitation, makeRemoveMember, makeResendManagerInvitation, makeResendOwnerInvitation, makeRevokeInvitation, makeUpdateStoreInformation, newInvitationToken } from './modules/identity/index.ts'
+import { invitationScreens, makeAcceptInvitation, makeCreateStore, makeGetOnboarding, makeInvitationLink, makeInviteManager, makeListMembers, makeListMyStores, makeListStores, makeLoadIdentity, makeOpenStoreForSale, makePreviewInvitation, makeRemoveMember, makeResendManagerInvitation, makeResendOwnerInvitation, makeRevokeInvitation, makeStoreNames, makeUpdateStoreInformation, newInvitationToken } from './modules/identity/index.ts'
 import { guardUseCases as guardInventoryUseCases } from './modules/inventory/adapters/database-errors.ts'
 import { registerInventoryRoutes } from './modules/inventory/adapters/routes.ts'
 import { createStockRepository } from './modules/inventory/adapters/stock-repository.ts'
@@ -251,7 +251,7 @@ async function main() {
     const catalogDeps = {
       uow,
       products: createProductRepository(),
-      media: createMediaDirectory({ findById: (tx: Tx, storeId: string, id: string) => contentMedia.findById(tx, storeId, id), view: row => mediaView(row, storage.publicUrl) }),
+      media: createMediaDirectory({ findMany: (tx: Tx, storeId: string, ids: string[]) => contentMedia.findMany(tx, storeId, ids), view: row => mediaView(row, storage.publicUrl) }),
       audit,
       clock: systemClock,
       // A deleted keepsake leaves no link behind in a story or a tour (ADR-013: content owns those rows).
@@ -304,7 +304,9 @@ async function main() {
       deletePickupPlace: makeDeletePickupPlace(pickupDeps),
     })
     // The public keepsake reads fail with an exception, not a Result, like the content reads: a database error is a 500.
-    const publicKeepsakeDeps = { uow, reads: createPublicKeepsakeReads(), media: catalogDeps.media, stockLevels: catalogDeps.stockLevels, pickups: pickupDeps.pickups }
+    // The store name on a card comes through the identity module's store repository, not a read of its table (ADR-013).
+    const storeNames = { find: makeStoreNames({ stores }) }
+    const publicKeepsakeDeps = { uow, reads: createPublicKeepsakeReads(), media: catalogDeps.media, storeNames, stockLevels: catalogDeps.stockLevels, pickups: pickupDeps.pickups }
     const publicKeepsakeUseCases = {
       listKeepsakes: makeListKeepsakes(publicKeepsakeDeps),
       listKeepsakesByIds: makeListKeepsakesByIds(publicKeepsakeDeps),

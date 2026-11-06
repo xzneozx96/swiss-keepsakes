@@ -4,10 +4,13 @@ import {
   nextDateSchema,
   publicCategoryListSchema,
   publicCategorySchema,
+  publicKeepsakeListSchema,
+  publicKeepsakeSchema,
   publicLanguageSchema,
   publicMapItemSchema,
   publicMapSchema,
   publicPinSchema,
+  publicSearchListSchema,
   publicStoryBodySchema,
   publicStoryCardSchema,
   publicStoryKeepsakeSchema,
@@ -91,7 +94,7 @@ describe('[E2.12] public read schemas', () => {
   it('[E4.4][AC54][AC61] the story detail adds versions, places, related cards and keepsake cards, and a keepsake card has no price', () => {
     expect(Object.keys(publicStorySchema.shape)).toEqual(expect.arrayContaining(['versions', 'places', 'related', 'keepsakes']))
     expect(Object.keys(publicStoryCardSchema.shape)).not.toEqual(expect.arrayContaining(['versions', 'keepsakes']))
-    expect(Object.keys(publicStoryKeepsakeSchema.shape).sort()).toEqual(['cover', 'id', 'name', 'slug', 'soldOut'])
+    expect(Object.keys(publicStoryKeepsakeSchema.shape).sort()).toEqual(['cover', 'id', 'name', 'slug', 'soldOut', 'subtitle'])
     const names = propertyNames(z.toJSONSchema(publicStoryKeepsakeSchema, { unrepresentable: 'any' }))
     expect(names.filter(n => /price|amount|cost|fee|currency|money|rappen/i.test(n))).toEqual([])
   })
@@ -106,5 +109,35 @@ describe('[E2.12] public read schemas', () => {
     expect(listNodes(publicStoryBodySchema)).toBe(listNodes(storyBodySchema))
     // The top bulletList plus one nested list type per level in each of the two top lists
     expect(listNodes(storyBodySchema)).toBe(1 + 2 * BODY_LIST_LEVELS)
+  })
+})
+
+// ADR-033 section 12: an SPA that ships before the API still gets the old answer, with none of the new card fields.
+describe('the keepsake card fields added with the swipeable cards have defaults', () => {
+  const id = '0190f0c2-0000-7000-8000-000000000001'
+  const notice = { language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'] }
+  const oldCard = { id, slug: 'pocket-knife', name: 'Pocket knife', cover: null, soldOut: false, ...notice }
+  const expected = { photos: [], subtitle: null, storeName: '' }
+
+  it('the list parses an old-shape card', () => {
+    const list = publicKeepsakeListSchema.parse({ items: [oldCard], nextCursor: null, total: 1 })
+    expect(list.items[0]).toMatchObject(expected)
+  })
+
+  it('the detail parses an old-shape keepsake', () => {
+    const detail = publicKeepsakeSchema.parse({ ...oldCard, description: { type: 'doc', content: [] }, options: [], variants: [], otherSlug: null })
+    expect(detail).toMatchObject(expected)
+  })
+
+  it('the search parses an old-shape keepsake hit', () => {
+    const counts = { story: 0, place: 0, tour: 0, keepsake: 1 }
+    const list = publicSearchListSchema.parse({ items: [{ kind: 'keepsake', card: oldCard }], nextCursor: null, total: 1, counts })
+    expect(list.items[0]).toMatchObject({ card: expected })
+  })
+
+  it('a story keepsake parses without a subtitle', () => {
+    const keepsake = { id, slug: 'pocket-knife', name: 'Pocket knife', cover: null, soldOut: false }
+    expect(publicStoryKeepsakeSchema.parse(keepsake).subtitle).toBeNull()
+    expect(publicStorySchema.shape.keepsakes.parse([keepsake])[0]?.subtitle).toBeNull()
   })
 })

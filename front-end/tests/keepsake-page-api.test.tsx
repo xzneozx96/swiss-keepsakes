@@ -46,6 +46,8 @@ function keepsake(over: Record<string, unknown> = {}) {
     availableLanguages: ['en', 'de'],
     description: doc('A mug with the old bridge.'),
     photos: [photo('a'), photo('b')],
+    subtitle: null,
+    storeName: 'Swiss Native',
     options: [{ id: ids.size, name: 'Size', values: [{ id: ids.s, label: 'S' }, { id: ids.l, label: 'L' }] }],
     variants: [
       { id: ids.v1, values: { [ids.size]: ids.s }, photo: null },

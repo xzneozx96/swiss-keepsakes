@@ -27,9 +27,9 @@ const search = makeSearchPublic({
   clock: systemClock,
   publicUrl: key => `https://media.test/${key}`,
   keepsakes: {
-    hits: makeSearchKeepsakeHits({ uow, reads: keepsakeReads, media: { find: async () => [] } }),
+    hits: makeSearchKeepsakeHits({ uow, reads: keepsakeReads, media: { find: async () => [] }, storeNames: { find: async () => new Map() } }),
     // The cards need a media port and stock; these tests read ids, so a bare card is enough.
-    cards: async (ids, language) => ids.map(id => ({ id, slug: `k-${id.slice(0, 8)}`, name: 'Keepsake', cover: null, soldOut: false, language, requestedLanguage: language, fallback: false, availableLanguages: [language] })),
+    cards: async (ids, language) => ids.map(id => ({ id, slug: `k-${id.slice(0, 8)}`, name: 'Keepsake', cover: null, photos: [], subtitle: null, storeName: '', soldOut: false, language, requestedLanguage: language, fallback: false, availableLanguages: [language] })),
   },
 })
 

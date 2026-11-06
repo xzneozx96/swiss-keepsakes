@@ -33,6 +33,7 @@ function keepsake(over: Partial<Keepsake> & { name: string, slug: string }): Kee
   return {
     id: `0190a000-0000-7000-8000-${String(over.slug.length).padStart(4, '0')}${over.slug.charCodeAt(0).toString().padStart(8, '0')}`,
     cover: null,
+    subtitle: null,
     soldOut: false,
     ...over,
   }
@@ -75,6 +76,17 @@ describe('[E4.4][AC31][AC54] keepsake cards', () => {
     expect(out).toContain('src="https://media.test/k/w800.webp"')
     expect(out.match(/Sold out/g)).toHaveLength(1)
     expect(out).not.toContain('CHF')
+  })
+
+  it('[AC-1] draws each keepsake as a compact row with its subtitle, and a sold-out label inside the link', async () => {
+    const out = await html('/en/stories/lake-day', publicStory({
+      keepsakes: [keepsake({ slug: 'cowbell', name: 'Cowbell', subtitle: 'Brass, hand-forged' }), keepsake({ slug: 'fondue-set', name: 'Fondue set', soldOut: true })],
+    }))
+
+    expect(out).toContain('Brass, hand-forged')
+    expect(out).toMatch(/<a[^>]*href="\/en\/gifts\/fondue-set"[^>]*>[\s\S]*?Sold out[\s\S]*?<\/a>/)
+    expect(out).not.toContain('data-dots')
+    expect(out).not.toContain('Swiss Native')
   })
 
   it('[AC-1] links the keepsake in the story\'s language', async () => {

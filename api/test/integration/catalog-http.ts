@@ -61,7 +61,7 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
   const deps = {
     uow,
     products: options.slugsTaken ? { ...createProductRepository(), slugsTaken: async () => options.slugsTaken!() } : createProductRepository(),
-    media: createMediaDirectory({ findById: (tx: Tx, storeId: string, id: string) => contentMedia.findById(tx, storeId, id), view: row => mediaView(row, storage.publicUrl) }),
+    media: createMediaDirectory({ findMany: (tx: Tx, storeId: string, ids: string[]) => contentMedia.findMany(tx, storeId, ids), view: row => mediaView(row, storage.publicUrl) }),
     audit: createAuditLog(systemClock),
     clock: systemClock,
     keepsakeLinks: createKeepsakeLinks(),

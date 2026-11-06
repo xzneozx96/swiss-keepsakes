@@ -4,13 +4,12 @@ import { useLocale } from '@/contexts/locale-context'
 import { firstKeepsakes } from '@/features/catalog/api/keepsake-list-query'
 import { ProductCard } from '@/features/catalog/components/product-card'
 import { toKeepsakeCard } from '@/features/catalog/lib/keepsake-card'
-import { Rail } from '@/features/discovery/components/section'
 
 /** Guests see at most this many linked keepsakes. */
 export const MAX_TOUR_KEEPSAKES = 3
 
 /**
- * A few real published keepsakes, as the ordinary cards of the keepsake list that open the keepsake page
+ * A few real published keepsakes, as compact rows that open the keepsake page
  * (AC31, no price, AC54). Until the tour editor can pick them (E6.9) the block shows the first
  * MAX_TOUR_KEEPSAKES of the public list's first page, newest first. They are ordered separately, so there is no cart
  * button and nothing joins the booking. The list is read in the browser, so the server HTML never carries a
@@ -58,25 +57,32 @@ export function TourKeepsakes({
       </p>
       {items
         ? (
-            <Rail label={t('tourDiscovery.keepsakes.title')}>
+            <ul aria-label={t('tourDiscovery.keepsakes.title')} className="flex flex-col gap-3">
               {items.map(item => (
-                <li key={item.id} className="flex">
-                  <ProductCard {...toKeepsakeCard(item, t)} layout="carousel" />
+                <li key={item.id}>
+                  <ProductCard {...toKeepsakeCard(item, t)} variant="row" />
                 </li>
               ))}
-            </Rail>
+            </ul>
           )
         : (
-            <div aria-busy data-skeleton="tour-keepsakes">
-              <Rail label={t('tourDiscovery.keepsakes.title')}>
-                {Array.from({ length: MAX_TOUR_KEEPSAKES }, (_, i) => (
-                  <li key={i} className="flex w-60 shrink-0 snap-start flex-col gap-2.5">
-                    <Skeleton className="aspect-[4/3] rounded-3xl" />
-                    <Skeleton className="h-5 w-4/5 rounded-lg" />
-                  </li>
-                ))}
-              </Rail>
-            </div>
+            <ul aria-busy className="flex flex-col gap-3" data-skeleton="tour-keepsakes">
+              {/* The row: a white card with the square tile, two lines and the round arrow. */}
+              {Array.from({ length: MAX_TOUR_KEEPSAKES }, (_, i) => (
+                <li key={i} className="flex items-stretch gap-3.5 rounded-[22px] bg-surface p-2 shadow-surface">
+                  <Skeleton className="size-[112px] shrink-0 rounded-2xl" />
+                  <div className="flex min-w-0 flex-1 flex-col justify-between py-1.5 pe-1">
+                    <div className="flex flex-col gap-2">
+                      <Skeleton className="h-5 w-3/5 rounded-lg" />
+                      <Skeleton className="h-4 w-4/5 rounded-lg" />
+                    </div>
+                    <div className="flex justify-end">
+                      <Skeleton className="size-9 rounded-full" />
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
     </section>
   )

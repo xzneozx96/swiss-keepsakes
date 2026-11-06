@@ -9,6 +9,9 @@ const card: PublicKeepsakeCard = {
   slug: 'kapellbruecke-mug',
   name: 'Kapellbrücke mug',
   cover: { url: 'https://m.test/o.jpg', variants: [{ width: 400, url: 'https://m.test/400.webp' }, { width: 640, url: 'https://m.test/640.webp' }] },
+  photos: [{ url: 'https://m.test/o.jpg', variants: [{ width: 640, url: 'https://m.test/640.webp' }] }],
+  subtitle: 'Hand-painted ceramic',
+  storeName: 'Swiss Native',
   soldOut: false,
   language: 'en',
   requestedLanguage: 'de',
@@ -23,5 +26,13 @@ describe('[E6.4][AC64] a keepsake card', () => {
 
   it('shows the widest copy when none is as wide as the card', () => {
     expect(toKeepsakeCard(card, t).photo).toBe('https://m.test/640.webp')
+  })
+})
+
+describe('a card from an API that sends no photos', () => {
+  it('does not throw, and has an empty photos list', () => {
+    const old = { ...card, photos: undefined } as unknown as PublicKeepsakeCard
+
+    expect(toKeepsakeCard(old, t).photos).toEqual([])
   })
 })

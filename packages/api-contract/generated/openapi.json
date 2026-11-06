@@ -8609,7 +8609,7 @@
             "type": "array"
           },
           "cover": {
-            "description": "The first photo, null when it is not ready",
+            "description": "The first ready photo, the same as photos[0]; null when no photo is ready",
             "properties": {
               "url": {
                 "description": "The original file",
@@ -8675,7 +8675,8 @@
             ]
           },
           "photos": {
-            "description": "The ready photos in the merchant's order",
+            "default": [],
+            "description": "All the ready photos in the merchant's order, the first of them the cover",
             "items": {
               "$ref": "#/components/schemas/PublicKeepsakePhoto"
             },
@@ -8691,6 +8692,19 @@
           "soldOut": {
             "description": "True when every combination for sale has no unit available",
             "type": "boolean"
+          },
+          "storeName": {
+            "default": "",
+            "description": "The name of the store that sells the keepsake. Empty when it is not known",
+            "type": "string"
+          },
+          "subtitle": {
+            "default": null,
+            "description": "The plain text of the first paragraph of the description, in the language carried. Null when the description has none",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "variants": {
             "items": {
@@ -8710,7 +8724,6 @@
           "fallback",
           "availableLanguages",
           "description",
-          "photos",
           "options",
           "variants",
           "otherSlug"
@@ -8767,7 +8780,7 @@
             "type": "array"
           },
           "cover": {
-            "description": "The first photo, null when it is not ready",
+            "description": "The first ready photo, the same as photos[0]; null when no photo is ready",
             "properties": {
               "url": {
                 "description": "The original file",
@@ -8816,6 +8829,15 @@
           "name": {
             "type": "string"
           },
+          "photos": {
+            "default": [],
+            "description": "The ready photos in the merchant's order, the first of them the cover; at most 8 on a list card, the detail carries all of them",
+            "items": {
+              "$ref": "#/components/schemas/PublicKeepsakePhoto"
+            },
+            "maxItems": 8,
+            "type": "array"
+          },
           "requestedLanguage": {
             "$ref": "#/components/schemas/PublicLanguage"
           },
@@ -8826,6 +8848,19 @@
           "soldOut": {
             "description": "True when every combination for sale has no unit available",
             "type": "boolean"
+          },
+          "storeName": {
+            "default": "",
+            "description": "The name of the store that sells the keepsake. Empty when it is not known",
+            "type": "string"
+          },
+          "subtitle": {
+            "default": null,
+            "description": "The plain text of the first paragraph of the description, in the language carried. Null when the description has none",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -13022,6 +13057,14 @@
           },
           "soldOut": {
             "type": "boolean"
+          },
+          "subtitle": {
+            "default": null,
+            "description": "The plain text of the first paragraph of the keepsake description, null when it has none",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [

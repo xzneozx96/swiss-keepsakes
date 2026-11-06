@@ -500,7 +500,7 @@ async function run(pool: Pool, storeId: string, data: Data, plan: Plan, snapshot
   const catalogDeps = {
     uow,
     products: createProductRepository(),
-    media: createMediaDirectory({ findById: (tx: Tx, id: string, mediaId: string) => media.findById(tx, id, mediaId), view: row => mediaView(row, storage.publicUrl) }),
+    media: createMediaDirectory({ findMany: (tx: Tx, storeId: string, ids: string[]) => media.findMany(tx, storeId, ids), view: row => mediaView(row, storage.publicUrl) }),
     audit,
     clock: systemClock,
     keepsakeLinks: createKeepsakeLinks(),

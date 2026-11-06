@@ -216,6 +216,8 @@ export interface PublicStoryKeepsakeCard {
   slug: string
   name: string
   cover: { url: string, variants: { width: number, url: string }[] } | null
+  // The first paragraph of the description as plain text, null when there is none.
+  subtitle: string | null
   soldOut: boolean
 }
 

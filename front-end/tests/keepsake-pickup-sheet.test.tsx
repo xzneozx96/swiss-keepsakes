@@ -40,6 +40,8 @@ function keepsake() {
     availableLanguages: ['en', 'de'],
     description: doc('A mug with the old bridge.'),
     photos: [photo('a')],
+    subtitle: null,
+    storeName: 'Swiss Native',
     options: [],
     variants: [{ id: ids.variant, values: {}, photo: null }],
     otherSlug: null,
