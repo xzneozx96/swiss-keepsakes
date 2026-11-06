@@ -28,20 +28,21 @@ The migration check exists because a reused branch keeps what earlier pushes app
 - CI touches one branch per pull request, named exactly `preview/pr-<number>`, with `development` as its parent. It never creates, changes or deletes `production`, `staging` or `development`, and never uses `production` or `staging` as a parent.
 - Only `scripts/neon-preview-branch.mjs` calls the Neon API. `create` makes the branch from `development`, or reuses it and moves its expiry. `connect` resets the password, then reads the URLs. `delete` deletes the branch. The script builds the name from the pull request number and refuses anything else. It matches names exactly, because Neon's branch search also returns `preview/pr-12` for `preview/pr-1` and `development-old` for `development`. It refuses to create a branch when `development` is missing, and never deletes a branch marked default or protected. The `[E1.13]` tests in `scripts/neon-preview-branch.test.mjs` cover these rules.
 - Each branch expires 3 days after its last run, in case a close never deletes it. GitHub can drop a pending run when a newer one arrives in the same group, so a close that races a reopen may leave a branch until it expires. A push after expiry creates the branch again.
-- The Free plan allows 10 branches per project, and `production`, `staging` and `development` take 3, so at most 7 pull requests can have a branch at once. At the cap, `create` fails with a message that says so, and the integration job is red. Delete the branches of closed pull requests with `neon branches delete preview/pr-<number> --project-id plain-resonance-94662542`, or wait for them to expire.
+- The Free plan allows 10 branches per project, and `production`, `staging` and `development` take 3, so at most 7 pull requests can have a branch at once. At the cap, `create` fails with a message that says so, and the integration job is red. Delete the branches of closed pull requests with `neon branches delete preview/pr-<number> --project-id snowy-credit-32019626`, or wait for them to expire.
 - The repository is public, so its logs are public. A new branch starts with `development`'s `neondb_owner` password, and `development` was branched from `production`, so that password is `production`'s unless someone reset it. `connect` therefore resets the preview branch's password on every run and waits for the reset to finish before it reads the URLs, so every later step, dependencies included, holds a password that works on that branch only. Never put a password or a URL in a step output: `neondatabase/create-branch-action` does that without masking, and a debug re-run prints every step output. `connect` masks the password and both URLs before it exports them to the environment.
 - The API key in `NEON_API_KEY` is limited to this project, not to preview branches. It can read the credentials of every branch, reset their passwords and delete them, `production` included. Only the script's checks keep CI on `preview/pr-<number>`.
 - Pull requests from forks and Dependabot get no secrets. Their Neon jobs pass with a notice saying so, and the other jobs run. A pull request from this repository fails if the secret is missing.
 
 ## Secrets
 
-- `NEON_API_KEY` (repository secret): a Neon organization API key named `sk-ci-github-actions`, limited to the project `plain-resonance-94662542`.
-- `NEON_PROJECT_ID` (repository variable): `plain-resonance-94662542`.
+- `NEON_API_KEY` (repository secret): a Neon organization API key named `sk-ci-github-actions`, limited to the project `snowy-credit-32019626`.
+- `NEON_PROJECT_ID` (repository variable): `snowy-credit-32019626`.
+- Since 06.11.2026 CI runs on the Neon project `swiss-keepsake-dev` (`snowy-credit-32019626`, Singapore), whose only long-lived branch is `development` (the local dev database, renamed from Neon's default `production`). The Frankfurt project `swiss-keepsakes` (`plain-resonance-94662542`) is kept for production; CI does not touch it (owner, 06.11.2026).
 
 ## Rotate the Neon key
 
 1. Create the new key. Neon shows it once.
-   `neon api-keys create --name sk-ci-github-actions-<date> --project-id plain-resonance-94662542`
+   `neon api-keys create --name sk-ci-github-actions-<date> --project-id snowy-credit-32019626`
 2. Store it. `gh secret set` asks for the value, so it does not end up in shell history.
    `gh secret set NEON_API_KEY --repo xzneozx96/swiss-keepsakes`
 3. Start the `integration (Neon)` job by hand for an open pull request and check that it passes.
@@ -49,4 +50,4 @@ The migration check exists because a reused branch keeps what earlier pushes app
    `neon api-keys list --org-id org-nameless-rice-77984840`
    `neon api-keys revoke <id> --org-id org-nameless-rice-77984840`
 
-Rotate at once if the key may have leaked, for example if it appears in a log. Then check `neon branches list --project-id plain-resonance-94662542` for branches you do not expect.
+Rotate at once if the key may have leaked, for example if it appears in a log. Then check `neon branches list --project-id snowy-credit-32019626` for branches you do not expect.
