@@ -148,7 +148,6 @@ export function TourDetail({
   const panels: Record<TourTab, ReactNode> = {
     overview: (
       <>
-        <TourFactsCard tour={tour} />
         <section
           className="flex flex-col gap-3 pb-7"
         >
@@ -237,9 +236,10 @@ export function TourDetail({
       </PhotoGallery>
       <div ref={photoEnd} aria-hidden className="h-px" />
       <div className="relative -mt-6 flex flex-1 flex-col rounded-t-3xl bg-background px-6 pt-7 pb-5">
-        {/* Title and subtitle start-aligned, with no stats row: the duration and stops moved into the Overview tab's card,
-            the comment count into the Comments tab (owner, 06.11.2026). */}
-        <ListingDetailHeader align="start" name={name.text} subtitle={text(tour.summary)} />
+        {/* The centred title and subtitle, then the duration and stops above the tabs, so every tab has them (owner's sketch,
+            06.11.2026); the comment count is in the Comments tab. */}
+        <ListingDetailHeader name={name.text} subtitle={text(tour.summary)} />
+        <TourFactsCard tour={tour} />
         {fallback && (
           <p className="mt-6 flex items-start gap-2 border-t border-separator pt-7 text-sm">
             <InfoIcon aria-hidden className="mt-0.5 shrink-0" size={16} />

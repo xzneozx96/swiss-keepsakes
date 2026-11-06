@@ -8,8 +8,6 @@ export const tourMapDe: Record<keyof typeof tourMapEn, string> = {
   'tourMap.view3d': '3D-Ansicht',
   'tourMap.view2d': '2D-Ansicht',
   'tourMap.mapLabel': 'Interaktive Karte der Route',
-  'tourMap.sample':
-    'Vorgeschlagene Route · die Linie verbindet Stationen, keine Wegbeschreibung.',
   'tourMap.heading': 'Unterwegs zu',
   'tourMap.empty': 'Der Verlauf ist noch nicht verfügbar.',
   'tourMap.stop': 'Station {number}',

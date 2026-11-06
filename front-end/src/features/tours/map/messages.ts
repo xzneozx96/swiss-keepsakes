@@ -5,8 +5,6 @@ export const tourMapEn = {
   'tourMap.view3d': '3D view',
   'tourMap.view2d': '2D view',
   'tourMap.mapLabel': 'Interactive itinerary map',
-  'tourMap.sample':
-    'Suggested itinerary · the line connects the stops, not walking directions.',
   'tourMap.heading': 'Heading to',
   'tourMap.empty': 'The itinerary is not available yet.',
   'tourMap.stop': 'Stop {number}',

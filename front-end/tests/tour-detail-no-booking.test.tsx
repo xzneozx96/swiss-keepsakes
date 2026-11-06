@@ -133,18 +133,15 @@ describe('tour detail page', () => {
   })
 
   it.each([
-    ['en', 'The route at a glance', ['3 hours', '6 stops'], ['Duration', /^From .+ to .+$/]],
-    ['de', 'Die Route auf einen Blick', ['3 Stunden', '6 Stationen'], ['Dauer', /^Von .+ bis .+$/]],
-  ] as const)('[E3.1] Overview opens on the highlights list: the duration and the stops from first to last (%s)', async (language, label, titles, bodies) => {
+    ['en', 'The route at a glance', ['3 hours', '6 stops']],
+    ['de', 'Die Route auf einen Blick', ['3 Stunden', '6 Stationen']],
+  ] as const)('[E3.1] the duration and the stops sit under the title, above the tabs (%s)', async (language, label, facts) => {
     await renderTour(language)
-    const list = screen.getByRole('region', { name: label })
-    const rows = within(list).getAllByRole('listitem')
+    const list = screen.getByRole('list', { name: label })
 
-    expect(rows).toHaveLength(2)
-    expect(rows.map(row => row.querySelector('.font-semibold')?.textContent)).toEqual([...titles])
-    bodies.forEach((body, i) => expect(within(rows[i]!).getByText(body)).toBeInTheDocument())
-    // No figures list anywhere: the header lost its stats row (owner, 06.11.2026).
-    expect(document.querySelectorAll('dl')).toHaveLength(0)
+    expect(within(list).getAllByRole('listitem').map(item => item.textContent?.trim())).toEqual([...facts])
+    // Above the tab bar, so every tab has them (owner's sketch, 06.11.2026).
+    expect(list.compareDocumentPosition(screen.getByRole('tablist')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('[E3.1] comments show the first three, and "Show all" opens all of them in a sheet with the replies', async () => {
@@ -220,12 +217,12 @@ describe('itinerary stepper', () => {
 })
 
 describe('tour page without comments or stops', () => {
-  const rows = () => within(screen.getByRole('region', { name: 'The route at a glance' })).getAllByRole('listitem').map(row => row.querySelector('.text-muted')?.textContent)
+  const rows = () => within(screen.getByRole('list', { name: 'The route at a glance' })).getAllByRole('listitem').map(row => row.textContent?.trim())
 
-  it('[E3.1] a tour with no stops has no stepper, and its highlights skip the stops row', async () => {
+  it('[E3.1] a tour with no stops has no stepper, and the header shows the duration alone', async () => {
     await renderTour('en', () => <TourDetail preview tour={{ ...thingsThatRemain, itinerary: [] }} />)
 
-    expect(rows()).toEqual(['Duration'])
+    expect(rows()).toEqual(['3 hours'])
     expect(screen.queryByText(/^From .+ to .+$/)).toBeNull()
     await userEvent.click(screen.getByRole('tab', { name: 'Itinerary' }))
     expect(screen.queryByRole('heading', { name: 'Suggested itinerary' })).toBeNull()

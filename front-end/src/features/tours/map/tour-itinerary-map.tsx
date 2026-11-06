@@ -286,13 +286,7 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
               <p aria-live="polite" className="sr-only">
                 {position && t('tourMap.live', position)}
               </p>
-              <div className="-mt-2 flex flex-col gap-1.5 text-xs text-muted">
-                <p>{t('tourMap.gestures')}</p>
-                <p className="flex items-start gap-2 leading-relaxed">
-                  <InfoIcon className="shrink-0" size={15} />
-                  {t('tourMap.sample')}
-                </p>
-              </div>
+              <p className="-mt-2 text-xs text-muted">{t('tourMap.gestures')}</p>
               {active && position && (
                 <SheetFrame
                   footer={<div ref={sheetNavRef} className="flex w-full gap-2">{sheetSteps}</div>}

@@ -6,15 +6,12 @@ import { FavouriteIcon } from '@/components/icons'
 export function ListingDetailHeader({
   name,
   subtitle,
-  align = 'center',
 }: {
   name: string
   subtitle?: string
-  /** The keepsake page centres the title; the tour page starts it at the left edge (owner, 06.11.2026). */
-  align?: 'center' | 'start'
 }) {
   return (
-    <header className={`flex flex-col gap-2 ${align === 'center' ? 'items-center pb-6 text-center' : 'items-start text-start'}`}>
+    <header className="flex flex-col items-center gap-2 pb-6 text-center">
       <h1 className="font-serif text-title text-balance">{name}</h1>
       {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
     </header>
