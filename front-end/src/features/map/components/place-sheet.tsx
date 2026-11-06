@@ -132,7 +132,10 @@ function Facts({ detail, directions, onReadStory, onStoryClick, onOutboundClick 
               <span className="text-xs text-muted">{t('map.sheet.website')}</span>
               <span className="text-link underline underline-offset-4">{host}</span>
             </span>
-            <ArrowUpRightIcon className="shrink-0 text-muted" size={18} />
+            {/* The same 44px slot as the Address row's directions button, so both rows are as tall and the two icons line up. */}
+            <span aria-hidden className="flex size-11 shrink-0 items-center justify-center text-muted">
+              <ArrowUpRightIcon size={20} />
+            </span>
           </a>
         )}
       </div>
