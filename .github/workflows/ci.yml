@@ -96,7 +96,7 @@ jobs:
     name: integration (Neon)
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 60
     env:
       PR_NUMBER: ${{ inputs.pr_number }}
     steps:
