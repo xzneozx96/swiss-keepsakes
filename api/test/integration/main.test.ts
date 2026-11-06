@@ -16,9 +16,11 @@ afterEach(() => {
 const smtp = { SMTP_HOST: '127.0.0.1', SMTP_PORT: '2525', SMTP_SECURE: 'false', SMTP_USER: 'sender@example.com', SMTP_PASSWORD: 'unused', SMTP_FROM: 'sender@example.com' }
 
 // A worker with no AWS_* warns once at start, and may log a media job it could not clean up while it stops (the
-// database is shared, so jobs from other tests can be waiting). Neither is part of the lifecycle these tests pin.
+// database is shared, so jobs from other tests can be waiting). The same holds for mail: the worker takes a mail job another
+// test file queued and the SMTP server above refuses it, so it logs a retry or a failure. None of this is part of the lifecycle these tests pin.
 const mediaNoise = new Set(['AWS_* is not set: every upload and media job fails until it is', 'media source not deleted'])
-const lifecycle = (messages: string[]) => messages.filter(message => !mediaNoise.has(message))
+const mailNoise = new Set(['mail attempt failed and will be retried', 'mail failed and will not be retried'])
+const lifecycle = (messages: string[]) => messages.filter(message => !mediaNoise.has(message) && !mailNoise.has(message))
 
 const env = (role: string) => ({ ROLE: role, PORT: '0', DATABASE_URL: inject('databaseUrl'), DATABASE_URL_UNPOOLED: inject('databaseUrlUnpooled'), ...smtp })
 
@@ -93,7 +95,7 @@ describe('[E1.8] main: the ROLE switch and process lifecycle', () => {
 
     run.child.kill('SIGTERM')
     expect(await run.exited).toBe(1)
-    expect(run.messages().slice(-4)).toEqual(['shutting down', 'stop failed', 'jobs stopped', 'stopped'])
+    expect(lifecycle(run.messages()).slice(-4)).toEqual(['shutting down', 'stop failed', 'jobs stopped', 'stopped'])
   })
 })
 

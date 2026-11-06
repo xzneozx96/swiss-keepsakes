@@ -31,7 +31,7 @@ import { idempotency, idempotencyActor } from '../../src/platform/http/idempoten
 import { createLogger } from '../../src/platform/logger.ts'
 import { createFakeStorage } from '../support/fake-storage.ts'
 import { insertStore } from '../support/identity-wiring.ts'
-import { silentLogger } from './support.ts'
+import { silentLogger, uniqueIp } from './support.ts'
 
 // The HTTP app of main.ts over a real database, for the content route tests: Better Auth is the real one, the
 // sign-in code goes to a map instead of a mail job, and the Idempotency-Key middleware is the real one.
@@ -39,8 +39,6 @@ const baseUrl = 'http://localhost:5173'
 const origin = ownOrigin(baseUrl)
 // A placeholder of the right length, not a secret.
 const secret = 'test-only-secret-0123456789-abcdefghij'
-
-const randomIp = () => `198.51.${Math.floor(Math.random() * 250) + 1}.${Math.floor(Math.random() * 250) + 1}`
 
 // The wiring of main.ts over a real database. Better Auth is the real one; the sign-in code goes to a map
 // instead of a mail job, so no queue is needed.
@@ -132,7 +130,8 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     getMap: makeGetMap(readDeps),
     searchPublic: makeSearchPublic({ ...readDeps, keepsakes: { hits: async () => ({ hits: [], count: 0 }), cards: async () => [] } }),
   }
-  const app = createApp(createLogger('silent'), async () => ({ database: true, jobs: true }), {
+  // Errors go to the test output (a 500 body says nothing; the log carries the cause).
+  const app = createApp(createLogger('error'), async () => ({ database: true, jobs: true }), {
     authHandler: auth.handler,
     origin,
     readSession: createSessionReader(auth),
@@ -146,7 +145,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
 
   async function call(path: string, init: { method?: string, headers?: Record<string, string>, body?: object, key?: string | null } = {}) {
     const method = init.method ?? 'GET'
-    const headers: Record<string, string> = { 'fly-client-ip': randomIp(), ...(method === 'GET' ? {} : { Origin: origin }), ...init.headers }
+    const headers: Record<string, string> = { 'fly-client-ip': uniqueIp(), ...(method === 'GET' ? {} : { Origin: origin }), ...init.headers }
     if (method !== 'GET' && init.key !== null)
       headers['Idempotency-Key'] = init.key ?? randomUUID()
     if (init.body)
@@ -159,7 +158,10 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     const email = `person-${randomUUID().slice(0, 8)}@example.ch`
     await call('/api/auth/email-otp/send-verification-otp', { method: 'POST', body: { email, type: 'sign-in' }, key: null })
     const response = await call('/api/auth/sign-in/email-otp', { method: 'POST', body: { email, otp: codes.get(email) }, key: null })
-    const { user } = await response.json() as { user: { id: string } }
+    const answer = await response.json() as { user?: { id: string } }
+    if (!answer.user)
+      throw new Error(`sign-in failed: ${response.status} ${JSON.stringify(answer)}`)
+    const { user } = answer
     return { userId: user.id, headers: { Cookie: response.headers.getSetCookie().map(line => line.split(';')[0]).join('; ') } }
   }
 

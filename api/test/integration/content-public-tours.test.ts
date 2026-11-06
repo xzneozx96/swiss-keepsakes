@@ -54,12 +54,12 @@ describe('public tour guide reads over the database', () => {
     const pdf = await media(store, 'pdf')
     const t = await tour(store, { title: { en: 'English walk' }, cover: cover.id, pdf: pdf.id })
     const visible = (await pool.query<{ id: string }>(
-      `insert into content.places (store_id, status, slug, latitude, longitude, published, first_published_at) values ($1, 'published', '{"en":"x"}', 47, 8, '{"name":{"en":"X"}}', now()) returning id`,
-      [store],
+      `insert into content.places (store_id, status, slug, latitude, longitude, published, first_published_at) values ($1, 'published', $2::jsonb, 47, 8, '{"name":{"en":"X"}}', now()) returning id`,
+      [store, JSON.stringify({ en: slug() })],
     )).rows[0]!.id
     const hidden = (await pool.query<{ id: string }>(
-      `insert into content.places (store_id, status, slug, latitude, longitude, published, first_published_at) values ($1, 'hidden', '{"en":"y"}', 47, 8, '{"name":{"en":"Y"}}', now()) returning id`,
-      [store],
+      `insert into content.places (store_id, status, slug, latitude, longitude, published, first_published_at) values ($1, 'hidden', $2::jsonb, 47, 8, '{"name":{"en":"Y"}}', now()) returning id`,
+      [store, JSON.stringify({ en: slug() })],
     )).rows[0]!.id
     await pool.query(
       `insert into content.tour_stops (tour_id, store_id, position, latitude, longitude, content, minutes_from_start, place_id) values
@@ -86,7 +86,7 @@ describe('public tour guide reads over the database', () => {
   it('[E2.12][AC64] a guide carries its ready cover as addresses with width variants, and null without one or when it is retired', async () => {
     const store = randomUUID()
     const cover = await media(store, 'image')
-    await pool.query(`update content.media set width = 1000 where id = $1`, [cover.id])
+    await pool.query(`update content.media set width = 1000, height = 600 where id = $1`, [cover.id])
     const retired = await media(store, 'image', 'retired')
     const withCover = await tour(store, { cover: cover.id })
     const without = await tour(store)

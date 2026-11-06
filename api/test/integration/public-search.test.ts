@@ -104,13 +104,17 @@ describe('the public search over the database', () => {
 
   it('[ADR-033] English and German words are stemmed: "bridges" finds "bridge", "Brücken" finds "Brücke", and not the other language\'s title', async () => {
     const store = randomUUID()
-    const en = await story(store, `${word()} old bridge`)
-    const de = await story(store, `${word()} alte Brücke`, { language: 'de' })
+    // The tag is glued to the word, so the stem is this test's own: the other tests' rows share the database, and since the ranking
+    // adds the similarity of the whole title (d3df4b7c) twenty shorter titles with a plain "bridge" outrank "<tag> old bridge" out of the page.
+    // Two tags, so the German query is not trigram-close to the English title.
+    const [tagEn, tagDe] = [word(), word()]
+    const en = await story(store, `${tagEn}bridge old`)
+    const de = await story(store, `${tagDe}Brücke alt`, { language: 'de' })
     const hits = async (q: string, language: 'en' | 'de') => await idsOf({ language, q, interest: null, limit: 20 })
 
-    expect(await hits('bridges', 'en')).toContain(en)
-    expect(await hits('Brücken', 'de')).toContain(de)
-    expect(await hits('Brücken', 'de')).not.toContain(en)
+    expect(await hits(`${tagEn}bridges`, 'en')).toContain(en)
+    expect(await hits(`${tagDe}Brücken`, 'de')).toContain(de)
+    expect(await hits(`${tagDe}Brücken`, 'de')).not.toContain(en)
   })
 
   it('[ADR-033] a draft story and an unpublished tour or keepsake are never found, and a count does not include them', async () => {

@@ -1,14 +1,50 @@
-import { randomUUID } from 'node:crypto'
-import { afterAll, describe, expect, it, vi } from 'vitest'
-import { count, openTestDatabase } from './support.ts'
+import { randomBytes, randomUUID } from 'node:crypto'
+import { Client, Pool } from 'pg'
+import { afterAll, describe, expect, inject, it, vi } from 'vitest'
+import { migrateDatabase } from '../../src/platform/db/migrate.ts'
+import { count, openTestDatabase, silentLogger } from './support.ts'
 
 vi.setConfig({ testTimeout: 60_000, hookTimeout: 120_000 })
 
 const { pool } = openTestDatabase()
 
+let scratch: { database: string, pool: Pool } | undefined
+
 afterAll(async () => {
   await pool.end()
+  if (scratch) {
+    await scratch.pool.end()
+    const client = new Client({ connectionString: inject('databaseUrlUnpooled') })
+    await client.connect()
+    try {
+      await client.query(`drop database if exists ${scratch.database} with (force)`)
+    }
+    finally {
+      await client.end()
+    }
+  }
 })
+
+// A database of its own, migrated like a release. TRUNCATE takes an exclusive lock on every table its cascade reaches before the
+// trigger refuses it, and in the shared run database that lock deadlocks with the other files that read the content tables.
+async function scratchDatabase(): Promise<Pool> {
+  if (scratch)
+    return scratch.pool
+  const database = `sk_test_${randomBytes(6).toString('hex')}`
+  const admin = new Client({ connectionString: inject('databaseUrlUnpooled') })
+  await admin.connect()
+  try {
+    await admin.query(`create database ${database}`)
+  }
+  finally {
+    await admin.end()
+  }
+  const url = new URL(inject('databaseUrlUnpooled'))
+  url.pathname = `/${database}`
+  await migrateDatabase(url.toString(), silentLogger)
+  scratch = { database, pool: new Pool({ connectionString: url.toString(), max: 1 }) }
+  return scratch.pool
+}
 
 function slugOf(prefix: string): string {
   return `${prefix}-${randomUUID().slice(0, 8)}`
@@ -443,11 +479,11 @@ describe('[E2.5] content rules', () => {
   // CASCADE, because Postgres refuses a plain TRUNCATE of a referenced table before any trigger runs.
   // A cascade from places also reaches story_versions, so the message may name either table.
   it.each(['places', 'story_versions', 'media_refs'])('[E2.5][AC79] [E2.11][AC79] TRUNCATE ... CASCADE on content.%s is refused by the trigger', async (table) => {
-    const refused = await failure(pool.query(`truncate content.${table} cascade`))
+    const refused = await failure((await scratchDatabase()).query(`truncate content.${table} cascade`))
 
     expect(refused).toMatchObject({ code: '23000' })
     expect(refused.message).toMatch(/TRUNCATE on content\.\w+ is refused/)
-  })
+  }, 180_000)
 
   it('[E2.5] a group with versions cannot be deleted', async () => {
     const store = randomUUID()

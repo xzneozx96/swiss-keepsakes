@@ -154,8 +154,11 @@ describe('[E6.1] removing a keepsake that has orders', () => {
     expect(await links(product.id)).toEqual({ story: 1, tour: 1 })
     const after = await (await env.call(`${products}/${product.id}`, { headers: owner.headers })).json() as View
     expect(after).toMatchObject({ status: 'archived', rowVersion: product.rowVersion + 1 })
+    // ADR-033 slice 5: the default list leaves archived keepsakes out; the archived status filter shows them, as archived.
     const relisted = await (await env.call(products, { headers: owner.headers })).json() as { items: { id: string, status: string }[] }
-    expect(relisted.items.find(item => item.id === product.id)?.status).toBe('archived')
+    expect(relisted.items.find(item => item.id === product.id)).toBeUndefined()
+    const archivedList = await (await env.call(`${products}?status=archived`, { headers: owner.headers })).json() as { items: { id: string, status: string }[] }
+    expect(archivedList.items.find(item => item.id === product.id)?.status).toBe('archived')
     const audit = await pool.query(`select action from platform.audit_log where entity = 'product' and entity_id = $1 and action in ('deleted', 'archived')`, [product.id])
     expect(audit.rows).toEqual([{ action: 'archived' }])
   })

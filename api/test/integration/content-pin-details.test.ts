@@ -428,7 +428,8 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     expect((await env.call(`${staff.pins}/${pin.id}`, { headers: other.owner.headers })).status).toBe(403)
     expect((await env.call(`${staff.pins}/story-options`, { headers: other.owner.headers })).status).toBe(403)
     expect((await env.call(`${other.pins}/${pin.id}`, { headers: other.owner.headers })).status).toBe(404)
-    expect(await (await env.call(other.pins, { headers: other.owner.headers })).json()).toEqual({ items: [] })
+    // No `page` is the ADR-033 section 12 whole-list fallback: the paged shape with every row (up to 500), here none, and only other's own.
+    expect(await (await env.call(other.pins, { headers: other.owner.headers })).json()).toMatchObject({ items: [], total: 0, page: 1 })
     expect((await env.call(`${staff.pins}/not-a-uuid`, { headers: staff.owner.headers })).status).toBe(400)
     expect((await env.call(staff.pins, {})).status).toBe(401)
   })
@@ -442,7 +443,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     await pool.query(`insert into content.story_versions (group_id, language, store_id, status, draft) values ($1, 'de', $2, 'draft', '{"title":"Die Brücke"}')`, [group, staff.storeId])
 
     const options = await env.call(`${staff.pins}/story-options`, { headers: staff.owner.headers })
-    expect(options.status).toBe(200)
+    expect(options.status, await options.clone().text()).toBe(200)
     expect(await options.json()).toEqual({ items: [{ groupId: group, kind: 'story', title: { en: 'The bridge', de: 'Die Brücke' }, languages: { en: 'published', de: 'draft' }, publishedLanguages: ['en'] }] })
 
     const pin = await create(staff, { title: { en: 'Chapel Bridge' }, mainStoryGroupId: group })
@@ -454,7 +455,12 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     const warned = await create(staff, { title: { en: 'Lion Monument' }, mainStoryGroupId: unpublished })
     const list = await (await env.call(staff.pins, { headers: staff.owner.headers })).json() as { items: { id: string, mainStory: object | null }[] }
     expect(list.items.find(item => item.id === warned.id)?.mainStory).toEqual({ groupId: unpublished, published: false })
-    const after = await (await env.call(`${staff.pins}/story-options`, { headers: staff.owner.headers })).json() as { items: { groupId: string, languages: object, publishedLanguages: string[] }[] }
-    expect(after.items.find(item => item.groupId === unpublished)).toMatchObject({ languages: { en: 'draft', de: 'none' }, publishedLanguages: [] })
+    // The picker offers live stories only, plus the pin's chosen story whatever its state (ADR-033 slice 4; the editor always hid
+    // drafts that were not chosen, the server now does it): a draft-only group is absent until it is the chosen one.
+    interface Options { items: { groupId: string, languages: object, publishedLanguages: string[] }[] }
+    const plain = await (await env.call(`${staff.pins}/story-options`, { headers: staff.owner.headers })).json() as Options
+    expect(plain.items.find(item => item.groupId === unpublished)).toBeUndefined()
+    const chosen = await (await env.call(`${staff.pins}/story-options?groupId=${unpublished}`, { headers: staff.owner.headers })).json() as Options
+    expect(chosen.items.find(item => item.groupId === unpublished)).toMatchObject({ languages: { en: 'draft', de: 'none' }, publishedLanguages: [] })
   })
 })

@@ -58,6 +58,8 @@ describe('[ADR-033] the keepsake table on the real database', () => {
     await s.rename(edited.id, 2, { en: 'Edited knife v2' })
     const archived = await s.create({ en: 'Archived knife' })
     // Archiving happens when a keepsake with orders is removed; the orders module is not built, so the status is set by hand.
+    // Only a published keepsake is archived (products_published_fields_check needs its slug and published name), so it is published first.
+    await s.act(archived.id, 'publish', 1)
     await pool.query(`update catalog.products set status = 'archived' where id = $1`, [archived.id])
 
     const all = await s.list('?page=1')

@@ -107,7 +107,8 @@ describe('[ADR-033] the pins table on the real database', () => {
 
   it('the status filter works on the derived status: ended follows the injected clock in Europe/Zurich, to the minute', async () => {
     const s = setup()
-    const date = (lastDay: string, endTime: string | null) => [{ firstDay: lastDay, lastDay, startTime: null, endTime }]
+    // An end time needs a start time (place_dates_end_needs_start_check).
+    const date = (lastDay: string, endTime: string | null) => [{ firstDay: lastDay, lastDay, startTime: endTime === null ? null : '09:00', endTime }]
     const running = await live(s, { dates: date('2026-10-27', '11:01') })
     const justEnded = await live(s, { dates: date('2026-10-27', '11:00') })
     const yesterday = await live(s, { dates: date('2026-10-26', null) })
@@ -205,7 +206,7 @@ describe('[ADR-033] the story picker on the real database', () => {
       if (status === 'draft')
         await pool.query(`insert into content.story_versions (group_id, store_id, language, status, draft) values ($1, $2, $3, 'draft', $4::jsonb)`, [rows[0]!.id, store, language, JSON.stringify(doc(title))])
       else
-        await pool.query(`insert into content.story_versions (group_id, store_id, language, status, slug, published, published_at) values ($1, $2, $3, 'published', $4::jsonb, $5::jsonb, now())`, [rows[0]!.id, store, language, JSON.stringify({ [language]: `s-${randomUUID().slice(0, 8)}` }), JSON.stringify(doc(title))])
+        await pool.query(`insert into content.story_versions (group_id, store_id, language, status, slug, published, published_at) values ($1, $2, $3, 'published', $4, $5::jsonb, now())`, [rows[0]!.id, store, language, `s-${randomUUID().slice(0, 8)}`, JSON.stringify(doc(title))])
     }
     return rows[0]!.id
   }

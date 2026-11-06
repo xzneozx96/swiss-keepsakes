@@ -29,7 +29,7 @@ import { createJobQueue } from '../../src/platform/jobs/queue.ts'
 import { createLogger } from '../../src/platform/logger.ts'
 import { createIdentityWiring } from '../support/identity-wiring.ts'
 import { createMemoryMailer } from '../support/memory-mailer.ts'
-import { openTestDatabase, silentLogger } from './support.ts'
+import { openTestDatabase, silentLogger, uniqueIp } from './support.ts'
 
 // Every sign-in is two round trips and several statements, which is slow against a Neon branch.
 vi.setConfig({ testTimeout: 120_000, hookTimeout: 120_000 })
@@ -57,11 +57,6 @@ afterAll(async () => {
   await jobs.stop()
   await pool.end()
 })
-
-function randomIp() {
-  const octet = () => Math.floor(Math.random() * 250) + 1
-  return `198.51.${octet()}.${octet()}`
-}
 
 const slugFor = () => `store-${randomUUID().slice(0, 8)}`
 const laterMet = { 'payment-account': 'met', 'catalogue': 'met', 'policies': 'met' } as const
@@ -112,7 +107,7 @@ async function setup(options: SetupOptions = {}) {
 
   async function call(path: string, init: { method?: string, headers?: Record<string, string>, body?: object, key?: string | null } = {}) {
     const method = init.method ?? 'GET'
-    const headers: Record<string, string> = { 'fly-client-ip': randomIp(), ...(method === 'GET' ? {} : { Origin: origin }), ...init.headers }
+    const headers: Record<string, string> = { 'fly-client-ip': uniqueIp(), ...(method === 'GET' ? {} : { Origin: origin }), ...init.headers }
     if (method !== 'GET' && init.key !== null)
       headers['Idempotency-Key'] = init.key ?? randomUUID()
     if (init.body)
@@ -125,7 +120,10 @@ async function setup(options: SetupOptions = {}) {
     await call('/api/auth/email-otp/send-verification-otp', { method: 'POST', body: { email: address, type: 'sign-in' }, key: null })
     const { rows } = await pool.query<{ data: { params: { code: string } } }>(`select data from pgboss.job where name = $1 and lower(data->>'to') = lower($2)`, [queues.send, address])
     const response = await call('/api/auth/sign-in/email-otp', { method: 'POST', body: { email: address, otp: rows[0]?.data.params.code }, key: null })
-    const { user } = await response.json() as { user: { id: string } }
+    const answer = await response.json() as { user?: { id: string } }
+    if (!answer.user)
+      throw new Error(`sign-in failed: ${response.status} ${JSON.stringify(answer)} (code found: ${rows.length > 0})`)
+    const { user } = answer
     const cookie = response.headers.getSetCookie().map(line => line.split(';')[0]).join('; ')
     return { userId: user.id, email: address.toLowerCase(), headers: { Cookie: cookie } }
   }
@@ -163,6 +161,20 @@ async function invitationRow(storeId: string) {
 }
 
 const storeStatus = async (storeId: string) => (await pool.query<{ status: string }>('select status from identity.stores where id = $1', [storeId])).rows[0]?.status
+
+// A01's list is a cursor list, newest id first (ADR-033 slice 1), and the other test files put their stores in the same database with random
+// ids, which sort before a new uuidv7. So the store is not on the first page: walk the pages until it shows.
+async function listedStore<T extends { id: string }>(call: (path: string, init?: { headers?: Record<string, string> }) => Promise<Response>, headers: Record<string, string>, id: string): Promise<T | undefined> {
+  let cursor: string | null = null
+  do {
+    const page = await (await call(`/api/admin/stores?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`, { headers })).json() as { items: T[], nextCursor: string | null }
+    const found = page.items.find(item => item.id === id)
+    if (found)
+      return found
+    cursor = page.nextCursor
+  } while (cursor)
+  return undefined
+}
 
 async function memberships(storeId: string) {
   return (await pool.query<{ user_id: string, role: string, accepted_at: Date }>('select user_id, role, accepted_at from identity.store_memberships where store_id = $1', [storeId])).rows
@@ -429,9 +441,9 @@ describe('[E2.3][S8] the Super Admin invites the Owner, the Owner accepts, and t
     const { body } = await env.createStore(admin, `owner-${randomUUID().slice(0, 8)}@example.ch`)
     await pool.query(`update identity.store_invitations set revoked_at = now() where store_id = $1`, [body.id])
 
-    const page = await (await env.call('/api/admin/stores?limit=20', { headers: admin.headers })).json() as { items: { id: string, invitation: { state: string } }[] }
+    const listed = await listedStore<{ id: string, invitation: { state: string } }>(env.call, admin.headers, body.id)
 
-    expect(page.items.find(item => item.id === body.id)?.invitation.state).toBe('revoked')
+    expect(listed?.invitation.state).toBe('revoked')
   })
 
   it('[E2.3][S8] a Super Admin is refused at accept, even with the invited address, and the invitation stays open', async () => {
@@ -697,12 +709,10 @@ describe('[E2.3][AC03] the Owner\'s onboarding routes on a real store', () => {
 
   it('[E2.15] A01\'s list returns the same conditions the Owner\'s checklist and open-for-sale read', async () => {
     const { env, admin, owner, storeId } = await onboardingStore({ conditions: { laterConditions: async () => ({ ...laterMet, catalogue: 'unmet' }) } })
-    interface Page { items: { id: string, conditions: Record<string, string> }[], nextCursor: string | null }
-
-    const page = await (await env.call('/api/admin/stores?limit=20', { headers: admin.headers })).json() as Page
+    const item = await listedStore<{ id: string, conditions: Record<string, string> }>(env.call, admin.headers, storeId)
     const checklist = await (await env.call(`/api/store/${storeId}/onboarding`, { headers: owner.headers })).json() as { conditions: { key: string, state: string }[] }
 
-    const listed = page.items.find(item => item.id === storeId)!.conditions
+    const listed = item!.conditions
     expect(listed).toEqual({ 'store-information': 'met', 'payment-account': 'met', 'catalogue': 'unmet', 'policies': 'met' })
     expect(listed).toEqual(Object.fromEntries(checklist.conditions.map(({ key, state }) => [key, state])))
   })

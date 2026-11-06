@@ -31,7 +31,7 @@ import { idempotency, idempotencyActor } from '../../src/platform/http/idempoten
 import { createLogger } from '../../src/platform/logger.ts'
 import { createFakeStorage } from '../support/fake-storage.ts'
 import { insertStore } from '../support/identity-wiring.ts'
-import { silentLogger } from './support.ts'
+import { silentLogger, uniqueIp } from './support.ts'
 
 // The catalog routes of main.ts over a real database, with the real Better Auth and Idempotency-Key middleware.
 // The sign-in code goes to a map instead of a mail job.
@@ -39,8 +39,6 @@ const baseUrl = 'http://localhost:5173'
 const origin = ownOrigin(baseUrl)
 // A placeholder of the right length, not a secret.
 const secret = 'test-only-secret-0123456789-abcdefghij'
-
-const randomIp = () => `198.51.${Math.floor(Math.random() * 250) + 1}.${Math.floor(Math.random() * 250) + 1}`
 
 // `slugsTaken` replaces the slug read, so a test can make two publishes read the same slug as free (the race).
 export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDatabase>, options: { slugsTaken?: () => Set<string>, sales?: SalesDirectory<Tx>, extraRoutes?: ((app: OpenAPIHono<AppEnv>) => void)[], wrapSeed?: (seed: StockSeeding<Tx>['seed']) => StockSeeding<Tx>['seed'], mapsFetch?: typeof fetch } = {}) {
@@ -114,7 +112,7 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
 
   async function call(path: string, init: { method?: string, headers?: Record<string, string>, body?: object, key?: string | null } = {}) {
     const method = init.method ?? 'GET'
-    const headers: Record<string, string> = { 'fly-client-ip': randomIp(), ...(method === 'GET' ? {} : { Origin: origin }), ...init.headers }
+    const headers: Record<string, string> = { 'fly-client-ip': uniqueIp(), ...(method === 'GET' ? {} : { Origin: origin }), ...init.headers }
     if (method !== 'GET' && init.key !== null)
       headers['Idempotency-Key'] = init.key ?? randomUUID()
     if (init.body)
@@ -126,7 +124,11 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
     const email = `person-${randomUUID().slice(0, 8)}@example.ch`
     await call('/api/auth/email-otp/send-verification-otp', { method: 'POST', body: { email, type: 'sign-in' }, key: null })
     const response = await call('/api/auth/sign-in/email-otp', { method: 'POST', body: { email, otp: codes.get(email) }, key: null })
-    const { user } = await response.json() as { user: { id: string } }
+    const answer = await response.json() as { user?: { id: string } }
+    // Say what the server answered, not "undefined.id": a sign-in that fails under load (a database error, a rate limit) then names itself.
+    if (!answer.user)
+      throw new Error(`sign-in failed: ${response.status} ${JSON.stringify(answer)}`)
+    const { user } = answer
     return { userId: user.id, headers: { Cookie: response.headers.getSetCookie().map(line => line.split(';')[0]).join('; ') } }
   }
 
