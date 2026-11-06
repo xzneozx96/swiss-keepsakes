@@ -9,15 +9,18 @@ export function ListingDetailHeader({
   name,
   subtitle,
   stats,
+  align = 'center',
 }: {
   name: string
   subtitle?: string
   /** The stats row (tours), equal columns; the keepsake page has none. */
   stats?: ListingDetailStat[]
+  /** The keepsake page centres the title; the tour page starts it at the left edge (owner, 06.11.2026). */
+  align?: 'center' | 'start'
 }) {
   return (
     <>
-      <header className="flex flex-col items-center gap-2 pb-6 text-center">
+      <header className={`flex flex-col gap-2 ${align === 'center' ? 'items-center pb-6 text-center' : 'items-start text-start'}`}>
         <h1 className="font-serif text-title text-balance">{name}</h1>
         {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
       </header>

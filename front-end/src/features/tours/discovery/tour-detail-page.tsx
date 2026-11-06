@@ -1,9 +1,13 @@
 import type { Tour } from '@sk/domain/bookings'
+import type { ReactNode } from 'react'
+
+import type { TourTab } from '@/features/tours/discovery/tour-tabs'
 
 import { Button } from '@heroui/react'
 import { firstPhoto, openingText, pickDoc, pickText } from '@sk/domain/shared'
 import { useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { DetailTabs } from '@/components/detail-tabs'
 import { EmptyState } from '@/components/empty-state'
 import {
   InfoIcon,
@@ -21,14 +25,22 @@ import { useLocale } from '@/contexts/locale-context'
 import { StorySheet } from '@/features/catalog/components/story-sheet'
 import { useFavourite } from '@/features/catalog/hooks/use-favourites'
 import { TourComments } from '@/features/tours/discovery/tour-comments'
-import { TourItinerarySheet } from '@/features/tours/discovery/tour-itinerary-sheet'
+import { TourFactsCard } from '@/features/tours/discovery/tour-facts-card'
+import { TourItineraryTab } from '@/features/tours/discovery/tour-itinerary-tab'
 import { TourKeepsakes } from '@/features/tours/discovery/tour-keepsakes'
+import { tourTabs } from '@/features/tours/discovery/tour-tabs'
 import { useTourComments } from '@/features/tours/hooks/use-tour-comments'
 import { useTours } from '@/features/tours/hooks/use-tours'
 import { useBack } from '@/hooks/use-back'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
 
-export function TourDetailPage({ slug }: { slug: string }) {
+/** The selected tab and how to change it: the route keeps it in `?tab=`; without them the page keeps it itself (M13's preview). */
+interface TabControl {
+  tab?: TourTab
+  onTabChange?: (tab: TourTab) => void
+}
+
+export function TourDetailPage({ slug, tab, onTabChange }: { slug: string } & TabControl) {
   const { tours } = useTours()
   const { language, t } = useLocale()
   const tour = tours.find(item => item.slug === slug)
@@ -43,7 +55,7 @@ export function TourDetailPage({ slug }: { slug: string }) {
     )
   }
 
-  return <TourDetail tour={tour} />
+  return <TourDetail tab={tab} tour={tour} onTabChange={onTabChange} />
 }
 
 /**
@@ -53,11 +65,13 @@ export function TourDetailPage({ slug }: { slug: string }) {
 export function TourDetail({
   tour,
   preview = false,
+  tab: routeTab,
+  onTabChange,
 }: {
   tour: Tour
   preview?: boolean
-}) {
-  const { t, language, intlLocale } = useLocale()
+} & TabControl) {
+  const { t, language } = useLocale()
   const navigate = useNavigate()
   const { comments, lang: commentsLang } = useTourComments(tour.id)
   const { saved, toggle } = useFavourite(`tour:${tour.id}`)
@@ -71,13 +85,23 @@ export function TourDetail({
       name: pickText(tour.name, language).text,
     }),
   }
-  const plural = (count: number) =>
-    new Intl.PluralRules(intlLocale).select(count) === 'one' ? 'one' : 'other'
-  const hoursText = new Intl.NumberFormat(intlLocale).format(tour.durationMinutes / 60)
   const [photoEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
   const name = pickText(tour.name, language)
   const text = (value: Tour['name']) => pickText(value, language).text
   const [storyOpen, setStoryOpen] = useState(false)
+  const [localTab, setLocalTab] = useState<TourTab>('overview')
+  const tab = onTabChange ? (routeTab ?? 'overview') : localTab
+  const tabsTopRef = useRef<HTMLDivElement>(null)
+  const changeTab = (next: TourTab) => {
+    // Scrolled past the tab bar, the new tab starts at the bar instead of wherever the old one left the page (the bar docks 56px down, 24px below its wrapper).
+    const delta = (tabsTopRef.current?.getBoundingClientRect().top ?? 0) + 24 - 56
+    if (delta < 0)
+      window.scrollBy({ top: delta })
+    if (onTabChange)
+      onTabChange(next)
+    else
+      setLocalTab(next)
+  }
   // The page's one language notice (below) covers the story too.
   const storyBody = tour.longStory && pickDoc(tour.longStory.body, language)
   const longStory = tour.longStory
@@ -113,74 +137,12 @@ export function TourDetail({
     .map(value => pickText(value, language))
     .find(value => value.isFallback)
 
-  return (
-    <div className="flex flex-1 flex-col">
-      <CompactBar
-        leading={<BackButton label={t('tourDiscovery.back')} onPress={back} />}
-        title={name.text}
-        visible={scrolledPast}
-      >
-        <ListingFavouriteButton favourite={favourite} tone="bar" />
-        <LanguageButton tone="bar" />
-      </CompactBar>
-      <PhotoGallery
-        className="aspect-[4/3.4]"
-        labels={{
-          gallery: t('tourDiscovery.gallery', { name: name.text }),
-          photo: (n, count) => t('tourDiscovery.photo', { n, count }),
-          previous: t('tourDiscovery.previous'),
-          next: t('tourDiscovery.nextPhoto'),
-          close: t('tourDiscovery.close'),
-        }}
-        photos={tour.photos}
-      >
-        <div className="pointer-events-none absolute inset-x-4 top-[calc(env(safe-area-inset-top,0px)+12px)] z-10 flex items-center gap-2 [&>*]:pointer-events-auto">
-          <BackButton
-            label={t('tourDiscovery.back')}
-            tone="pill"
-            onPress={back}
-          />
-          <span className="flex-1" />
-          <ListingFavouriteButton favourite={favourite} tone="pill" />
-          <LanguageButton tone="pill" />
-        </div>
-      </PhotoGallery>
-      <div ref={photoEnd} aria-hidden className="h-px" />
-      <div className="relative -mt-6 flex flex-1 flex-col rounded-t-3xl bg-background px-6 pt-7 pb-5">
-        <ListingDetailHeader
-          name={name.text}
-          stats={[
-            ...(tour.itinerary.length > 0
-              ? [{
-                  value: String(tour.itinerary.length),
-                  label: t(`tourDetail.stops.${plural(tour.itinerary.length)}`),
-                }]
-              : []),
-            {
-              value: t('tourDiscovery.duration', { hours: hoursText }),
-              label: t('tourDiscovery.durationLabel'),
-            },
-            ...(comments.length > 0
-              ? [{
-                  value: String(comments.length),
-                  label: t(`tourDetail.commentsLabel.${plural(comments.length)}`),
-                }]
-              : []),
-          ]}
-          subtitle={text(tour.summary)}
-        />
-        {fallback && (
-          <p className="flex items-start gap-2 border-t border-separator pt-7 text-sm">
-            <InfoIcon aria-hidden className="mt-0.5 shrink-0" size={16} />
-            {t(
-              fallback.language === 'en'
-                ? 'tourDiscovery.onlyInEnglish'
-                : 'tourDiscovery.onlyInGerman',
-            )}
-          </p>
-        )}
+  const panels: Record<TourTab, ReactNode> = {
+    overview: (
+      <>
+        <TourFactsCard tour={tour} />
         <section
-          className={`flex flex-col gap-3 py-7 ${fallback ? '' : 'border-t border-separator'}`}
+          className="flex flex-col gap-3 pb-7"
         >
           <h2 className="font-serif text-title">{t('tourDiscovery.about')}</h2>
           <p className="text-body">{text(tour.description)}</p>
@@ -224,10 +186,79 @@ export function TourDetail({
             </>
           )}
         </section>
-        {/* A tour added in M13 has no stops yet (no map positions): no itinerary section. */}
-        {tour.itinerary.length > 0 && <TourItinerarySheet tour={tour} />}
-        <TourComments comments={comments} lang={commentsLang} tourName={name.text} />
         <TourKeepsakes />
+      </>
+    ),
+    itinerary: <TourItineraryTab tour={tour} />,
+    comments: comments.length > 0
+      ? <TourComments comments={comments} lang={commentsLang} tourName={name.text} />
+      : <p className="text-body text-muted">{t('tourDetail.comments.empty')}</p>,
+  }
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <CompactBar
+        leading={<BackButton label={t('tourDiscovery.back')} onPress={back} />}
+        title={name.text}
+        visible={scrolledPast}
+      >
+        <ListingFavouriteButton favourite={favourite} tone="bar" />
+        <LanguageButton tone="bar" />
+      </CompactBar>
+      <PhotoGallery
+        className="aspect-[4/3.4]"
+        labels={{
+          gallery: t('tourDiscovery.gallery', { name: name.text }),
+          photo: (n, count) => t('tourDiscovery.photo', { n, count }),
+          previous: t('tourDiscovery.previous'),
+          next: t('tourDiscovery.nextPhoto'),
+          close: t('tourDiscovery.close'),
+        }}
+        photos={tour.photos}
+      >
+        <div className="pointer-events-none absolute inset-x-4 top-[calc(env(safe-area-inset-top,0px)+12px)] z-10 flex items-center gap-2 [&>*]:pointer-events-auto">
+          <BackButton
+            label={t('tourDiscovery.back')}
+            tone="pill"
+            onPress={back}
+          />
+          <span className="flex-1" />
+          <ListingFavouriteButton favourite={favourite} tone="pill" />
+          <LanguageButton tone="pill" />
+        </div>
+      </PhotoGallery>
+      <div ref={photoEnd} aria-hidden className="h-px" />
+      <div className="relative -mt-6 flex flex-1 flex-col rounded-t-3xl bg-background px-6 pt-7 pb-5">
+        {/* Title and subtitle start-aligned, with no stats row: the duration and stops moved into the Overview tab's card,
+            the comment count into the Comments tab (owner, 06.11.2026). */}
+        <ListingDetailHeader align="start" name={name.text} subtitle={text(tour.summary)} />
+        {fallback && (
+          <p className="flex items-start gap-2 border-t border-separator pt-7 text-sm">
+            <InfoIcon aria-hidden className="mt-0.5 shrink-0" size={16} />
+            {t(
+              fallback.language === 'en'
+                ? 'tourDiscovery.onlyInEnglish'
+                : 'tourDiscovery.onlyInGerman',
+            )}
+          </p>
+        )}
+        {/* The tabs share the page's one header; the sticky bar docks under the 56px CompactBar. */}
+        <div ref={tabsTopRef} className="-mx-6 flow-root">
+          <DetailTabs<TourTab>
+            line
+            gutter="px-6"
+            label={t('tourDetail.tabs.label')}
+            selected={tab}
+            tabs={tourTabs.map(id => ({
+              id,
+              label: id === 'comments' && comments.length > 0
+                ? t('tourDetail.tab.commentsCount', { count: comments.length })
+                : t(`tourDetail.tab.${id}`),
+              panel: panels[id],
+            }))}
+            onChange={changeTab}
+          />
+        </div>
       </div>
     </div>
   )

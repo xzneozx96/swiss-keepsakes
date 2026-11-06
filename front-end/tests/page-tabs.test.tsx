@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { DetailTabs } from '@/components/detail-tabs'
 import { PageTabs, TabPanel } from '@/components/page-tabs'
 
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => vi.fn() }))
+vi.mock('@tanstack/react-router', () => ({ useNavigate: () => vi.fn(), useHydrated: () => true }))
 
 const tabs = [
   { id: 'a', label: 'Alpha', count: 3 },

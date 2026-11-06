@@ -53,7 +53,7 @@ export function TourComments({ comments, lang, tourName }: { comments: TourComme
   const plural = new Intl.PluralRules(intlLocale).select(comments.length) === 'one' ? 'one' : 'other'
 
   return (
-    <section className="flex flex-col gap-6 border-t border-separator py-7" id="tour-comments">
+    <section className="flex flex-col gap-6 pb-7" id="tour-comments">
       <h2 className="font-serif text-title">{t('tourDetail.comments.title')}</h2>
       {lang !== language && (
         <p className="flex items-start gap-2 text-sm">

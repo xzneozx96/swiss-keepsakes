@@ -66,8 +66,8 @@ async function renderTour() {
     </QueryClientProvider>,
   )
   await screen.findByRole('heading', { level: 1 })
-  // The itinerary map loads only when its sheet opens; the page is whole when the stepper is there.
-  await screen.findByRole('button', { name: 'Open the itinerary map' })
+  // The page is whole when its tabs are there (Overview, with the keepsake block, is the one selected).
+  await screen.findByRole('tab', { name: 'Overview' })
 
   return container
 }

@@ -17,7 +17,8 @@ export interface TabItem<Id extends string = string> {
  * The one tab row of the app: the thin pill the orders screen set. It must sit inside a
  * HeroUI `Tabs`; RouteTabs, PageTabs and DetailTabs each wrap it. `fill` is full width on
  * phones and fit-content from 1024px; `equal` shares the bar between the tabs (`dense` for
- * four or more); `split` is full width on phones and 20rem from 640px.
+ * four or more); `split` is full width on phones and 20rem from 640px. `className` goes on the list container (the
+ * underlined DetailTabs pins it there, since HeroUI's line style only reaches a container that is the Tabs' own child).
  */
 export function TabRow({
   label,
@@ -26,6 +27,7 @@ export function TabRow({
   equal = false,
   dense = false,
   split = false,
+  className,
 }: {
   label: string
   tabs: readonly TabItem[]
@@ -33,6 +35,7 @@ export function TabRow({
   equal?: boolean
   dense?: boolean
   split?: boolean
+  className?: string
 }) {
   const container = equal
     ? 'w-full'
@@ -44,7 +47,7 @@ export function TabRow({
     : ''
 
   return (
-    <Tabs.ListContainer className={container}>
+    <Tabs.ListContainer className={className ? `${container} ${className}` : container}>
       <Tabs.List aria-label={label} className={equal ? 'w-full' : undefined}>
         {tabs.map((tab, index) => (
           <Tabs.Tab key={tab.id} className={`${tabWidth} whitespace-nowrap`.trim()} id={tab.id}>
