@@ -18,6 +18,7 @@ export function DetailTabs<Tab extends string>({
   onChange,
   gutter = 'px-4',
   line = false,
+  stick = 'bar',
 }: {
   label: string
   tabs: readonly { id: Tab, label: string, panel: ReactNode }[]
@@ -25,10 +26,12 @@ export function DetailTabs<Tab extends string>({
   onChange: (tab: Tab) => void
   gutter?: 'px-4' | 'px-6'
   line?: boolean
+  /** Where the bar docks: under the 56px top bar (`bar`), or under it plus the notch (`bar-safe`, a page whose CompactBar adds `env(safe-area-inset-top)`). */
+  stick?: 'bar' | 'bar-safe'
 }) {
   // The bar sits above the panels' own layers (the itinerary map's buttons are z-20) and below the 56px top bar (z-30) it
   // docks under; the map's CSS fullscreen (z-9999) still covers it. One-line tabs are 44px tall, an easy target (owner, 06.11.2026).
-  const pinned = `sticky top-14 z-[25] bg-background ${gutter}`
+  const pinned = `sticky ${stick === 'bar' ? 'top-14' : 'top-[calc(env(safe-area-inset-top,0px)+56px)]'} z-[25] bg-background ${gutter}`
   // A page opened on a tab other than the first (?tab=comments) left the indicator under the first tab: during hydration
   // the indicator moves from the first tab to the selected one and its slide is cut off half-way. The row mounts again
   // once hydrated, so the indicator starts fresh under the selected tab.

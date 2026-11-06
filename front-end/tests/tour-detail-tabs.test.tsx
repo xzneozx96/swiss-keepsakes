@@ -9,7 +9,7 @@ import { DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
 import { TourDetailPage } from '@/features/tours/discovery'
-import { parseTourSearch } from '@/features/tours/discovery/tour-tabs'
+import { parseTourSearch } from '@/features/tours/discovery/lib/search-params'
 import { thingsThatRemain } from '@/features/tours/lucerne/things-that-remain'
 import { FakeMap, resetFakeMaps } from './support/fake-maplibre'
 

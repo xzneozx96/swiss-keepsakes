@@ -9,10 +9,10 @@ import { DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
 import { TourDetailPage } from '@/features/tours/discovery'
+import { parseTourSearch } from '@/features/tours/discovery/lib/search-params'
 import { tourDiscoveryEn as discovery } from '@/features/tours/discovery/messages'
 import { tourDiscoveryDe } from '@/features/tours/discovery/messages.de'
 import { TourDetail } from '@/features/tours/discovery/tour-detail-page'
-import { parseTourSearch } from '@/features/tours/discovery/tour-tabs'
 import { tourCommentSeed } from '@/features/tours/lucerne/comments'
 import { thingsThatRemain } from '@/features/tours/lucerne/things-that-remain'
 import { en } from '@/i18n/en'
@@ -138,12 +138,23 @@ describe('tour detail page', () => {
   ] as const)('[E3.1] the Overview card shows the duration and the stops, then where the route starts and ends; the header has no stats (%s)', async (language, label, facts, route) => {
     await renderTour(language)
     const card = screen.getByRole('region', { name: label })
-    const shown = Array.from((card.querySelector('dl') as HTMLElement).children, item => [item.querySelector('dd')?.textContent, item.querySelector('dt')?.textContent])
+    const shown = Array.from((card.querySelector('dl') as HTMLElement).children, item => [item.querySelector('dd')?.textContent, item.querySelector('dt')?.textContent?.trim()])
 
     expect(shown).toEqual(facts.map(fact => [...fact]))
     expect(within(card).getByText(route)).toBeInTheDocument()
     // The card is the page's only figures list: the header lost its stats row (owner, 06.11.2026).
     expect(document.querySelectorAll('dl')).toHaveLength(1)
+  })
+
+  it('[E3.1] the facts card is a valid dl: each group holds only a dt and a dd', async () => {
+    await renderTour()
+    const groups = Array.from((screen.getByRole('region', { name: 'The route at a glance' }).querySelector('dl') as HTMLElement).children)
+
+    expect(groups).toHaveLength(2)
+    for (const group of groups) {
+      expect(group.tagName).toBe('DIV')
+      expect(Array.from(group.children, child => child.tagName).sort()).toEqual(['DD', 'DT'])
+    }
   })
 
   it('[E3.1] comments show the first three, and "Show all" opens all of them in a sheet with the replies', async () => {
@@ -170,6 +181,39 @@ describe('tour detail page', () => {
   })
 })
 
+describe('tab change scroll', () => {
+  /** The page is scrolled past its tab bar: the Tabs root sits 200px above the viewport. */
+  const scrolledPast = () => vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({ top: -200, bottom: -100, left: 0, right: 0, width: 0, height: 100, x: 0, y: -200, toJSON: () => ({}) })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('[E3.1] the routed page scrolls back to the bar when the tab changes after the bar was passed', async () => {
+    await renderTour()
+    scrolledPast()
+    await userEvent.click(screen.getByRole('tab', { name: 'Comments (5)' }))
+
+    expect(window.scrollBy).toHaveBeenCalledWith({ top: -200 })
+  })
+
+  it('[E3.1] the routed page does not scroll when the bar is still in view', async () => {
+    await renderTour()
+    await userEvent.click(screen.getByRole('tab', { name: 'Comments (5)' }))
+
+    expect(window.scrollBy).not.toHaveBeenCalled()
+  })
+
+  it('[E3.1] the M13 preview changes tab without scrolling the merchant window', async () => {
+    await renderTour('en', () => <TourDetail preview tour={thingsThatRemain} />)
+    scrolledPast()
+    await userEvent.click(screen.getByRole('tab', { name: 'Itinerary' }))
+
+    expect(screen.getByRole('tab', { name: 'Itinerary' })).toHaveAttribute('aria-selected', 'true')
+    expect(window.scrollBy).not.toHaveBeenCalled()
+  })
+})
+
 describe('itinerary stepper', () => {
   it.each([
     ['en', ['Start', '+20 min', '+1 h', '+1 h 25 min']],
@@ -186,7 +230,7 @@ describe('itinerary stepper', () => {
 })
 
 describe('tour page without comments or stops', () => {
-  const stats = () => Array.from((screen.getByRole('region', { name: 'The route at a glance' }).querySelector('dl') as HTMLElement).children, item => item.querySelector('dt')?.textContent)
+  const stats = () => Array.from((screen.getByRole('region', { name: 'The route at a glance' }).querySelector('dl') as HTMLElement).children, item => item.querySelector('dt')?.textContent?.trim())
 
   it('[E3.1] a tour with no stops has no stepper, and its card shows the duration alone', async () => {
     await renderTour('en', () => <TourDetail preview tour={{ ...thingsThatRemain, itinerary: [] }} />)

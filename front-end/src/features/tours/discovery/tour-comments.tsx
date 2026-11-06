@@ -47,9 +47,6 @@ export function TourComments({ comments, lang, tourName }: { comments: TourComme
   const { t, intlLocale, language } = useLocale()
   const [open, setOpen] = useState(false)
 
-  if (comments.length === 0)
-    return null
-
   const plural = new Intl.PluralRules(intlLocale).select(comments.length) === 'one' ? 'one' : 'other'
 
   return (

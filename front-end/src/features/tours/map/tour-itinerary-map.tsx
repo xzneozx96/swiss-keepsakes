@@ -153,14 +153,12 @@ function TourPills({ stops, threeD, card, onThreeD }: { stops: Stop[], threeD: b
  * previous/next steps (a walking route has a start and a finish). The map, its pins, the route line,
  * the controls and the credits are the shared map kit (components/map); the route stays 3D until E4.12.
  */
-export function TourItineraryMap({ tour, showHeading = true }: { tour: Tour, /** False inside a sheet that already carries the title. */ showHeading?: boolean }) {
+export function TourItineraryMap({ tour }: { tour: Tour }) {
   const { t, language } = useLocale()
   const stops = tour.itinerary
   const cardRef = useRef<HTMLDivElement>(null)
   const sheetNavRef = useRef<HTMLDivElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
-  // Where focus lands when the stop card closes and no pin takes it: the heading, or the subtitle when a sheet already carries the title.
-  const subtitleRef = useRef<HTMLParagraphElement>(null)
   const [selectedId, setSelectedId] = useState<string | null>(stops[0]?.id ?? null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [threeD, setThreeD] = useState(true)
@@ -211,7 +209,7 @@ export function TourItineraryMap({ tour, showHeading = true }: { tour: Tour, /**
 
       if (pin)
         pin.focus()
-      else (headingRef.current ?? subtitleRef.current)?.focus()
+      else headingRef.current?.focus()
     })
   }
 
@@ -233,19 +231,17 @@ export function TourItineraryMap({ tour, showHeading = true }: { tour: Tour, /**
   )
 
   return (
-    <section aria-label={showHeading ? undefined : t('tourMap.title')} aria-labelledby={showHeading ? `itinerary-${tour.id}` : undefined} className="tour-itinerary flex flex-col gap-5">
+    <section aria-labelledby={`itinerary-${tour.id}`} className="tour-itinerary flex flex-col gap-5">
       <div>
-        {showHeading && (
-          <h2
-            ref={headingRef}
-            className="font-serif text-2xl text-balance outline-none"
-            id={`itinerary-${tour.id}`}
-            tabIndex={-1}
-          >
-            {t('tourMap.title')}
-          </h2>
-        )}
-        <p ref={subtitleRef} className={`${showHeading ? 'mt-2 ' : ''}text-muted outline-none`} tabIndex={-1}>{t('tourMap.subtitle')}</p>
+        <h2
+          ref={headingRef}
+          className="font-serif text-2xl text-balance outline-none"
+          id={`itinerary-${tour.id}`}
+          tabIndex={-1}
+        >
+          {t('tourMap.title')}
+        </h2>
+        <p className="mt-2 text-muted">{t('tourMap.subtitle')}</p>
       </div>
       {stops.length === 0
         ? <p className="text-muted">{t('tourMap.empty')}</p>

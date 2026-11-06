@@ -117,4 +117,35 @@ describe('detailTabs', () => {
       expect(tab).toHaveClass('flex-1', 'whitespace-nowrap')
     expect(screen.getAllByRole('tab')[0]).not.toHaveClass('h-11')
   })
+
+  it('order detail style: the pill, with no line variant and the default dock', () => {
+    const { container } = render(
+      <DetailTabs
+        label="Order"
+        selected="a"
+        tabs={[{ id: 'a', label: 'A', panel: 'PA' }, { id: 'b', label: 'B', panel: 'PB' }]}
+        onChange={vi.fn()}
+      />,
+    )
+
+    expect(container.querySelector('[class*="tabs--secondary"]')).toBeNull()
+    expect(container.querySelector('.tabs')).not.toHaveClass('tabs--secondary')
+    expect(screen.getByRole('tablist').closest('.sticky')).toHaveClass('top-14')
+  })
+
+  it('line style with stick="bar-safe" docks under the bar plus the notch', () => {
+    const { container } = render(
+      <DetailTabs
+        line
+        label="Tour"
+        selected="a"
+        stick="bar-safe"
+        tabs={[{ id: 'a', label: 'A', panel: 'PA' }, { id: 'b', label: 'B', panel: 'PB' }]}
+        onChange={vi.fn()}
+      />,
+    )
+
+    expect(container.querySelector('[class*="tabs--secondary"]')).not.toBeNull()
+    expect(screen.getByRole('tablist').closest('.sticky')).toHaveClass('top-[calc(env(safe-area-inset-top,0px)+56px)]')
+  })
 })

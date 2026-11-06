@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { TourDetailPage } from '@/features/tours/discovery'
-import { parseTourSearch } from '@/features/tours/discovery/tour-tabs'
+import { parseTourSearch } from '@/features/tours/discovery/lib/search-params'
 
 export const Route = createFileRoute('/_guest/$lang/tours/$slug')({
   ssr: true,

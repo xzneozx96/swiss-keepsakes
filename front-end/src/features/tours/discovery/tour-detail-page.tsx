@@ -1,7 +1,7 @@
 import type { Tour } from '@sk/domain/bookings'
 import type { ReactNode } from 'react'
 
-import type { TourTab } from '@/features/tours/discovery/tour-tabs'
+import type { TourTab } from '@/features/tours/discovery/lib/search-params'
 
 import { Button } from '@heroui/react'
 import { firstPhoto, openingText, pickDoc, pickText } from '@sk/domain/shared'
@@ -11,6 +11,7 @@ import { DetailTabs } from '@/components/detail-tabs'
 import { EmptyState } from '@/components/empty-state'
 import {
   InfoIcon,
+  MessageIcon,
   TourIcon,
 } from '@/components/icons'
 import { BackButton, CompactBar } from '@/components/layout/cart-button'
@@ -24,11 +25,11 @@ import { PhotoGallery } from '@/components/photo-gallery'
 import { useLocale } from '@/contexts/locale-context'
 import { StorySheet } from '@/features/catalog/components/story-sheet'
 import { useFavourite } from '@/features/catalog/hooks/use-favourites'
+import { tourTabs } from '@/features/tours/discovery/lib/search-params'
 import { TourComments } from '@/features/tours/discovery/tour-comments'
 import { TourFactsCard } from '@/features/tours/discovery/tour-facts-card'
 import { TourItineraryTab } from '@/features/tours/discovery/tour-itinerary-tab'
 import { TourKeepsakes } from '@/features/tours/discovery/tour-keepsakes'
-import { tourTabs } from '@/features/tours/discovery/tour-tabs'
 import { useTourComments } from '@/features/tours/hooks/use-tour-comments'
 import { useTours } from '@/features/tours/hooks/use-tours'
 import { useBack } from '@/hooks/use-back'
@@ -93,14 +94,21 @@ export function TourDetail({
   const tab = onTabChange ? (routeTab ?? 'overview') : localTab
   const tabsTopRef = useRef<HTMLDivElement>(null)
   const changeTab = (next: TourTab) => {
-    // Scrolled past the tab bar, the new tab starts at the bar instead of wherever the old one left the page (the bar docks 56px down, 24px below its wrapper).
-    const delta = (tabsTopRef.current?.getBoundingClientRect().top ?? 0) + 24 - 56
-    if (delta < 0)
-      window.scrollBy({ top: delta })
-    if (onTabChange)
+    // Scrolled past the tab bar, the new tab starts at the bar instead of wherever the old one left the page. The bar is
+    // the first child of the Tabs root and sticks inside it, so the root's top is where the bar would sit unpinned and
+    // the bar's computed `top` is where it docks. Only the routed page scrolls the window: M13's preview lives in a frame.
+    if (onTabChange) {
+      const root = tabsTopRef.current?.firstElementChild
+      const bar = root?.querySelector('[role=tablist]')?.closest('.sticky')
+      const docked = bar ? Number.parseFloat(getComputedStyle(bar).top) || 0 : 0
+      const delta = (root?.getBoundingClientRect().top ?? 0) - docked
+      if (delta < 0)
+        window.scrollBy({ top: delta })
       onTabChange(next)
-    else
+    }
+    else {
       setLocalTab(next)
+    }
   }
   // The page's one language notice (below) covers the story too.
   const storyBody = tour.longStory && pickDoc(tour.longStory.body, language)
@@ -192,7 +200,7 @@ export function TourDetail({
     itinerary: <TourItineraryTab tour={tour} />,
     comments: comments.length > 0
       ? <TourComments comments={comments} lang={commentsLang} tourName={name.text} />
-      : <p className="text-body text-muted">{t('tourDetail.comments.empty')}</p>,
+      : <EmptyState compact icon={MessageIcon} message={t('tourDetail.comments.empty')} />,
   }
 
   return (
@@ -233,7 +241,7 @@ export function TourDetail({
             the comment count into the Comments tab (owner, 06.11.2026). */}
         <ListingDetailHeader align="start" name={name.text} subtitle={text(tour.summary)} />
         {fallback && (
-          <p className="flex items-start gap-2 border-t border-separator pt-7 text-sm">
+          <p className="mt-6 flex items-start gap-2 border-t border-separator pt-7 text-sm">
             <InfoIcon aria-hidden className="mt-0.5 shrink-0" size={16} />
             {t(
               fallback.language === 'en'
@@ -242,13 +250,14 @@ export function TourDetail({
             )}
           </p>
         )}
-        {/* The tabs share the page's one header; the sticky bar docks under the 56px CompactBar. */}
+        {/* The tabs share the page's one header; the sticky bar docks under the CompactBar (56px plus the notch). */}
         <div ref={tabsTopRef} className="-mx-6 flow-root">
           <DetailTabs<TourTab>
             line
             gutter="px-6"
             label={t('tourDetail.tabs.label')}
             selected={tab}
+            stick="bar-safe"
             tabs={tourTabs.map(id => ({
               id,
               label: id === 'comments' && comments.length > 0
