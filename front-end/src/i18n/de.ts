@@ -129,27 +129,27 @@ export const de: Record<MessageKey, string> = {
 
   'home.hello': 'Grüezi und herzlich willkommen!',
   'home.heroTitle':
-    'Fühlen Sie sich wie zu Hause. Ich zeige Ihnen das Luzern, das ich liebe.',
+    'Fühlen Sie sich wie zu Hause. Lassen Sie mich Ihnen das Luzern zeigen, das ich liebe.',
   'home.searchPrompt': 'Geschichten, Touren, Andenken',
-  'home.title': 'Luzern, ein Ort, an den man immer zurückkehren möchte',
+  'home.title': 'Luzern, ein Ort, an den Sie gern zurückkehren',
   'home.intro':
-    'Andenken von Luzerner Herstellern zum Abholen in der Stadt, bald auch Touren. Datum wählen, der Laden bestätigt, dann bezahlen Sie.',
+    'Andenken von Luzerner Herstellern, bereit zur Abholung in der Stadt. Routen zu den Orten aus meinen Geschichten, kostenlos, in Ihrem Tempo, jede mit einem PDF-Guide.',
   'home.photoAlt':
     'Die Kapellbrücke und der Wasserturm in Luzern, dahinter der Pilatus',
   'home.seeAll': 'Alle ansehen',
   'home.from': 'ab',
   'home.earliestPickup': 'Abholung frühestens {date}',
   'home.engravingBadge': 'Gravur',
-  'home.tours.title': 'Erleben Sie es selbst',
+  'home.tours.title': 'Die Stadt zu Fuss, in Ihrem Tempo',
   'home.tours.subtitle':
-    'Unsere Guides führen Sie zu den Orten aus meinen Geschichten.',
+    'Kostenlose Routen zu den Orten aus meinen Geschichten, jede mit einem PDF-Guide.',
   'home.victorinox.title': 'Victorinox',
   'home.victorinox.eyebrow': 'Unser Partner',
   'home.victorinox.seeAll': 'Alle {count} Designs anzeigen',
   'home.victorinox.subtitle':
-    'Ein Stück Luzern für zu Hause',
+    'Nehmen Sie ein Stück Luzern mit nach Hause',
   'home.victorinox.intro':
-    'Nehmen Sie Luzern in der Hosentasche mit nach Hause: ein Schweizer Taschenmesser mit Luzerner oder alpinem Design, seit 1884 von Victorinox in der Schweiz hergestellt. Sie brauchen es jeden Tag, und jedes Mal erinnert es Sie an die Reise.',
+    'Nehmen Sie ein kleines Stück Schweiz mit, wohin Sie auch gehen. Seit Generationen fertigt Victorinox Schweizer Taschenmesser in der Schweiz und führt damit eine Tradition fort, die 1884 begann. Dieses besondere Design bringt ein Stück Luzern in einen zeitlosen Schweizer Klassiker. Mehr als ein Souvenir ist es ein kleines Stück Ihrer Reise: etwas zum Benutzen, zum Aufbewahren und um sich an Ihre Zeit hier zu erinnern.',
   'home.victorinox.fact1': 'Seit 1884',
   'home.keepsakes.title': 'Weitere Andenken',
   'home.keepsakes.subtitle': 'Kleine Dinge von Luzerner Herstellern',
@@ -160,9 +160,9 @@ export const de: Record<MessageKey, string> = {
   'home.advice.caption1': 'der See',
   'home.advice.caption2': 'Pilatus',
   'home.advice.caption3': 'Altstadt',
-  'home.advice.title': 'Wissen Sie nicht, wo anfangen? Fragen Sie mich.',
+  'home.advice.title': 'Sie wissen nicht, wo Sie anfangen sollen? Fragen Sie mich.',
   'home.advice.body':
-    'Erzählen Sie mir, wie viele Tage Sie in Luzern haben und was Ihnen gefällt, und ich schreibe Ihnen zurück mit Orten, die zu Ihnen passen.',
+    'Erzählen Sie mir, wie viele Tage Sie in Luzern haben und was Ihnen gefällt. Ich schreibe Ihnen zurück und empfehle Ihnen Orte, die zu Ihnen passen.',
   'home.advice.action': 'Fragen Sie mich, wohin es geht',
   'home.storyRow': 'Geschichte · {minutes} Min. Lesezeit',
   'home.journey.title': 'So zeige ich Ihnen Luzern',
@@ -171,7 +171,7 @@ export const de: Record<MessageKey, string> = {
   'home.journey.read.line':
     'Wo man isst, was man sieht und welche Aussicht sich lohnt.',
   'home.journey.walk.title': 'Die Orte erleben',
-  'home.journey.walk.line': 'Kleine Touren zu den Orten aus den Geschichten.',
+  'home.journey.walk.line': 'Eine kostenlose Route und ein PDF-Guide, in Ihrem eigenen Tempo.',
   'home.journey.keep.title': 'Ein Stück mitnehmen',
   'home.journey.keep.line':
     'Ein Schweizer Messer oder ein Andenken für zu Hause.',

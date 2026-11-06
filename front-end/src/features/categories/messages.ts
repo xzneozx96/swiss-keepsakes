@@ -88,7 +88,7 @@ export const categoriesEn = {
   'categories.phone.noneUse.map': 'No pins use it',
   'categories.phone.noneUse.blog': 'No stories use it',
   'categories.home.label': 'Show on the home',
-  'categories.home.hint': 'Lists this category on the home under “Sorted before you unpack”.',
+  'categories.home.hint': 'Lists this category on the home under “Little things nobody tells you”.',
   'categories.home.badge': 'On the home',
   'categories.home.off': 'Not on the home',
   'categories.col.home': 'Home',

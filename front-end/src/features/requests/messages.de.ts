@@ -35,7 +35,7 @@ export const requestsDe: Record<keyof typeof requestsEn, string> = {
   'advice.summary.email': 'Antwort an',
   'advice.summary.send': 'An das Team senden',
   'advice.sent.thanks':
-    'Vielen Dank! Unser Team hat Ihre Angaben erhalten und meldet sich unter {email}, um das Gespräch weiterzuführen.',
+    'Vielen Dank. Unser Team hat Ihre Angaben erhalten und meldet sich unter {email}, um das Gespräch weiterzuführen.',
   'advice.sent.answers': 'Was Sie gesendet haben',
   'advice.sent.missing':
     'Diese Anfrage ist auf diesem Gerät nicht mehr vorhanden.',

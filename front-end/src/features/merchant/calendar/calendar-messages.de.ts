@@ -4,7 +4,7 @@ export const calendarDe: Record<keyof typeof calendarEn, string> = {
   'nav.calendar': 'Kalender',
   'calendar.title': 'Kalender',
   'calendar.pickDate': 'Datum wählen',
-  'calendar.close': 'Schließen',
+  'calendar.close': 'Schliessen',
   'calendar.today': 'Heute',
   'calendar.prevPeriod': 'Vorheriger Zeitraum',
   'calendar.nextPeriod': 'Nächster Zeitraum',

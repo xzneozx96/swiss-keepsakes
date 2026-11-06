@@ -60,7 +60,7 @@ export function CalendarOverlays({
             <Drawer.Heading>
               {item ? item.title : de ? 'Datum wählen' : 'Choose a date'}
             </Drawer.Heading>
-            <Drawer.CloseTrigger aria-label={de ? 'Schließen' : 'Close'} />
+            <Drawer.CloseTrigger aria-label={de ? 'Schliessen' : 'Close'} />
           </Drawer.Header>
           <Drawer.Body className="mc-sheet-body">
             {overlay?.kind === 'date' && (

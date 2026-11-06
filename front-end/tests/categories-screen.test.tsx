@@ -768,7 +768,7 @@ describe('[E4.18][AC87] the category editor on a phone in German', () => {
 
     await userEvent.clear(search)
     await userEvent.type(search, 'zzz')
-    expect(screen.getByText('Keine Kategorie heißt „zzz“.')).toBeInTheDocument()
+    expect(screen.getByText('Keine Kategorie heisst „zzz“.')).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/\bcategories\.[a-z]/i)
   })
 

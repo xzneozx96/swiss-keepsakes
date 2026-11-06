@@ -226,7 +226,7 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.problem.notPublished': 'Dieser Ort ist nicht veröffentlicht und kann daher nicht ausgeblendet werden.',
   'places.problem.generic': 'Etwas ist schiefgelaufen. Versuchen Sie es gleich noch einmal.',
   'places.mustVisit.label': 'Muss man gesehen haben',
-  'places.mustVisit.help': 'Zeigt den Punkt auf der Startseite unter „Das zuerst“.',
+  'places.mustVisit.help': 'Zeigt den Punkt auf der Startseite unter „Die Orte, die Luzern besonders machen“.',
   'places.photos.card': 'Fotos',
   'places.photos.help': 'Das erste Foto ist das Hauptfoto. Die anderen erscheinen als Karussell in den Details des Punkts. Ziehen Sie ein Foto, um die Reihenfolge zu ändern.',
   'places.story.select': 'Die Geschichte dahinter',

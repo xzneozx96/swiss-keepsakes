@@ -23,10 +23,10 @@ export const articleSeed: Article[] = [
     language: 'en',
     title: 'A morning on the Musegg wall',
     excerpt:
-      'Climb the old town wall before the city wakes up, and see Luzerne laid out between the lake and the hills.',
+      'Climb the old town wall before the city wakes. From the top, Luzerne lies between the lake and the hills.',
     author: { name: 'Sonja', role: 'Owner, Swiss Keepsakes Luzern' },
     intro:
-      'The Musegg wall runs along the hill above the old town. It was built in the late 14th century to guard Luzerne from the north, and long stretches of it still stand.',
+      'The Musegg wall runs along the hill above the old town. It was built in the late 14th century to guard Luzerne from the north. Long stretches of it still stand.',
     sections: [
       {
         id: 'on-the-wall',
@@ -34,11 +34,11 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Go early, before the city wakes up. In the first hour you may have the wall almost to yourself.',
+            text: 'Go early, before the city wakes. In the first hour you may have the wall almost to yourself.',
           },
           {
             type: 'paragraph',
-            text: 'From the walkway the roofs of the old town fall away towards the river, and on a clear day the lake and the mountains fill the horizon.',
+            text: 'From the walkway the roofs of the old town drop towards the river. On a clear day the lake and the mountains fill the horizon.',
           },
           {
             type: 'image',
@@ -54,7 +54,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Nine towers are spaced along the wall, each with its own name. In the warmer months four of them are open to visitors, and you can climb up inside.',
+            text: 'Nine towers stand along the wall, each with its own name. In the warmer months four of them are open to visitors, and you can climb up inside.',
           },
           {
             type: 'video',
@@ -71,7 +71,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Listen for the Zyt tower. Its clock is the oldest in town, and by tradition it may strike one minute before every other clock in Luzerne.',
+            text: 'Listen for the Zyt tower. Its clock is the oldest in town. By tradition it may strike one minute before every other clock in Luzerne.',
           },
           {
             type: 'audio',
@@ -88,7 +88,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'On the way down, the lanes behind the wall lead straight back into the old town. If you would like to take the view home, our postcard set starts at the Musegg towers, and the old-town walk stops at the wall.',
+            text: 'On the way down the lanes behind the wall lead straight back into the old town. Our postcard set starts at the Musegg towers. The old-town walk stops at the wall.',
           },
           {
             type: 'image',
@@ -116,10 +116,10 @@ export const articleSeed: Article[] = [
     language: 'de',
     title: 'Ein Morgen auf der Museggmauer',
     excerpt:
-      'Steigen Sie auf die alte Stadtmauer, bevor die Stadt erwacht, und sehen Sie Luzern zwischen See und Hügeln.',
+      'Steigen Sie auf die alte Stadtmauer, bevor die Stadt erwacht. Von oben liegt Luzern zwischen dem See und den Hügeln.',
     author: { name: 'Sonja', role: 'Inhaberin, Swiss Keepsakes Luzern' },
     intro:
-      'Die Museggmauer zieht sich über den Hügel oberhalb der Altstadt. Sie wurde im späten 14. Jahrhundert gebaut, um Luzern gegen Norden zu schützen, und lange Abschnitte stehen bis heute.',
+      'Die Museggmauer zieht sich über den Hügel oberhalb der Altstadt. Sie wurde im späten 14. Jahrhundert gebaut, um Luzern gegen Norden zu schützen. Lange Abschnitte stehen bis heute.',
     sections: [
       {
         id: 'on-the-wall',
@@ -127,11 +127,11 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Gehen Sie früh, bevor die Stadt erwacht. In der ersten Stunde haben Sie die Mauer oft fast für sich allein.',
+            text: 'Gehen Sie früh, bevor die Stadt erwacht. In der ersten Stunde haben Sie die Mauer oft fast für sich.',
           },
           {
             type: 'paragraph',
-            text: 'Vom Wehrgang fallen die Dächer der Altstadt zum Fluss hin ab, und an klaren Tagen füllen See und Berge den Horizont.',
+            text: 'Vom Wehrgang fallen die Dächer der Altstadt zum Fluss hin ab. An klaren Tagen füllen der See und die Berge den Horizont.',
           },
           {
             type: 'image',
@@ -147,7 +147,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Neun Türme stehen entlang der Mauer, jeder mit seinem eigenen Namen. In der warmen Jahreszeit sind vier von ihnen für Besucher geöffnet, und Sie können im Inneren hinaufsteigen.',
+            text: 'Neun Türme stehen entlang der Mauer, jeder mit seinem eigenen Namen. In der warmen Jahreszeit sind vier davon für Besucher geöffnet, und Sie können im Inneren hinaufsteigen.',
           },
           {
             type: 'video',
@@ -164,7 +164,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Achten Sie auf den Zytturm. Seine Uhr ist die älteste der Stadt, und nach alter Tradition darf sie eine Minute vor allen anderen Uhren Luzerns schlagen.',
+            text: 'Achten Sie auf den Zytturm. Seine Uhr ist die älteste der Stadt. Nach alter Tradition darf sie eine Minute vor allen anderen Uhren Luzerns schlagen.',
           },
           {
             type: 'audio',
@@ -181,7 +181,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Auf dem Rückweg führen die Gassen hinter der Mauer direkt zurück in die Altstadt. Wer die Aussicht mit nach Hause nehmen möchte: Unser Postkartenset beginnt bei den Musegg-Türmen, und der Altstadtspaziergang macht Halt an der Mauer.',
+            text: 'Auf dem Rückweg führen die Gassen hinter der Mauer direkt zurück in die Altstadt. Unser Postkartenset beginnt bei den Musegg-Türmen. Der Altstadtspaziergang hält an der Mauer.',
           },
           {
             type: 'image',
@@ -209,10 +209,10 @@ export const articleSeed: Article[] = [
     language: 'en',
     title: 'The story behind the Lion Monument',
     excerpt:
-      'A dying lion carved into the rock, and the Swiss guards he remembers.',
+      'A dying lion carved into the rock, and the Swiss Guards he remembers.',
     author: { name: 'Sonja', role: 'Owner, Swiss Keepsakes Luzern' },
     intro:
-      'A short walk from the old town, a lion lies carved into a sandstone cliff above a small, still pond. He is wounded, a broken spear in his side, one paw resting on a shield. Most people fall quiet when they first see him.',
+      'A short walk from the old town, a lion lies carved into a sandstone cliff above a small pond. He is wounded, a broken spear in his side, one paw resting on a shield. Most people fall quiet when they first see him.',
     sections: [
       {
         id: 'who-he-remembers',
@@ -220,7 +220,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'The monument remembers the Swiss Guards who died in Paris in 1792, defending the Tuileries Palace during the French Revolution. Many of them came from central Switzerland. The Latin words above the lion honour their loyalty and courage.',
+            text: 'The monument remembers the Swiss Guards who died in Paris in 1792. They fell defending the Tuileries Palace during the French Revolution. Many of them came from central Switzerland. The Latin words above the lion honour their loyalty and courage.',
           },
         ],
       },
@@ -230,7 +230,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'It was designed by the Danish sculptor Bertel Thorvaldsen and carved into the rock in 1820 and 1821. The writer Mark Twain later described it as the saddest and most moving piece of stone in the world.',
+            text: 'It was designed by the Danish sculptor Bertel Thorvaldsen and carved into the rock in 1820 and 1821. Mark Twain later called it the saddest and most moving piece of stone in the world.',
           },
         ],
       },
@@ -240,7 +240,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Come early in the morning or towards evening, when the tour groups have moved on, and sit by the water for a few minutes: the lion is best seen slowly. If you understand German, our lantern walk through the old town by night starts at the Water Tower and ends here.',
+            text: 'Come early in the morning or towards evening, when the tour groups have moved on. Sit by the water for a few minutes. The lion is best seen slowly. If you understand German, our lantern walk through the old town by night starts at the Water Tower and ends here.',
           },
           {
             type: 'image',
@@ -268,10 +268,10 @@ export const articleSeed: Article[] = [
     language: 'de',
     title: 'Die Geschichte hinter dem Löwendenkmal',
     excerpt:
-      'Ein sterbender Löwe im Fels und die Schweizer Gardisten, an die er erinnert.',
+      'Ein sterbender Löwe im Fels und die Schweizergardisten, an die er erinnert.',
     author: { name: 'Sonja', role: 'Inhaberin, Swiss Keepsakes Luzern' },
     intro:
-      'Ein paar Gehminuten von der Altstadt entfernt liegt ein Löwe, in eine Sandsteinwand gehauen, über einem kleinen, stillen Teich. Er ist verwundet, ein abgebrochener Speer steckt in seiner Seite, eine Pranke ruht auf einem Schild. Die meisten werden still, wenn sie ihn zum ersten Mal sehen.',
+      'Ein paar Gehminuten von der Altstadt entfernt liegt ein Löwe über einem kleinen Teich, in eine Sandsteinwand gehauen. Er ist verwundet, ein abgebrochener Speer steckt in seiner Seite, eine Pranke ruht auf einem Schild. Die meisten werden still, wenn sie ihn zum ersten Mal sehen.',
     sections: [
       {
         id: 'who-he-remembers',
@@ -279,7 +279,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Das Denkmal erinnert an die Schweizergardisten, die 1792 in Paris bei der Verteidigung des Tuilerienpalasts während der Französischen Revolution starben. Viele von ihnen stammten aus der Innerschweiz. Die lateinische Inschrift über dem Löwen ehrt ihre Treue und Tapferkeit.',
+            text: 'Das Denkmal erinnert an die Schweizergardisten, die 1792 in Paris starben. Sie fielen bei der Verteidigung des Tuilerienpalasts während der Französischen Revolution. Viele von ihnen stammten aus der Innerschweiz. Die lateinische Inschrift über dem Löwen ehrt ihre Treue und Tapferkeit.',
           },
         ],
       },
@@ -289,7 +289,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Entworfen hat es der dänische Bildhauer Bertel Thorvaldsen, in den Fels gehauen wurde es 1820 und 1821. Der Schriftsteller Mark Twain beschrieb es später als das traurigste und bewegendste Stück Stein der Welt.',
+            text: 'Der dänische Bildhauer Bertel Thorvaldsen hat es entworfen. In den Fels gehauen wurde es 1820 und 1821. Mark Twain nannte es später das traurigste und bewegendste Stück Stein der Welt.',
           },
         ],
       },
@@ -299,7 +299,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Kommen Sie am frühen Morgen oder gegen Abend, wenn die Reisegruppen weitergezogen sind, und setzen Sie sich ein paar Minuten ans Wasser: Den Löwen sieht man am besten in Ruhe. Unser Laternenspaziergang «Luzern bei Nacht» beginnt beim Wasserturm und endet hier.',
+            text: 'Kommen Sie am frühen Morgen oder gegen Abend, wenn die Reisegruppen weitergezogen sind. Setzen Sie sich ein paar Minuten ans Wasser. Den Löwen sieht man am besten in Ruhe. Unser Laternenspaziergang «Luzern bei Nacht» beginnt beim Wasserturm und endet hier.',
           },
           {
             type: 'image',
@@ -331,7 +331,7 @@ export const articleSeed: Article[] = [
       'Paddle wheels, polished brass and a slow way to watch the mountains rise out of the water.',
     author: { name: 'Sonja', role: 'Owner, Swiss Keepsakes Luzern' },
     intro:
-      'Lake Luzerne still has a fleet of paddle steamers, the oldest of them more than a hundred years old. They carry you from the middle of town to the villages along the shore.',
+      'Lake Luzerne still has a fleet of paddle steamers. The oldest of them is more than a hundred years old. They carry you from the middle of town to the villages along the shore.',
     sections: [
       {
         id: 'from-the-station',
@@ -355,7 +355,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Find the spot where you can look down into the engine room. The pistons turn slowly and steadily, the brass shines, and children often stay there for most of the crossing.',
+            text: 'Find the spot where you can look down into the engine room. The pistons turn slowly and steadily, and the brass shines. Children often stay there for most of the crossing.',
           },
         ],
       },
@@ -365,7 +365,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Out on the water the lake opens up, one arm after another. Mountains rise straight from the shore, villages sit at the water’s edge, and the light changes every few minutes. Bring a jacket even on a warm day; the wind on deck is cool.',
+            text: 'Out on the water the lake opens up, one arm after another. Mountains rise straight from the shore, and villages sit at the water’s edge. The light changes every few minutes. Bring a jacket even on a warm day, as the wind on deck is cool.',
           },
         ],
       },
@@ -375,7 +375,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'There is no need to plan every stop. Sail for an hour, step off in a village that looks inviting and take a later boat back. Check the timetable first, as fewer boats run in winter. Our lakeside candle box comes with two postcards of the lake, and our lake tour adds stories from the shore.',
+            text: 'You do not need to plan every stop. Sail for an hour, step off in a village that looks inviting, and take a later boat back. Check the timetable first, as fewer boats run in winter. Our lakeside candle box comes with two postcards of the lake, and our lake tour adds stories from the shore.',
           },
         ],
       },
@@ -401,7 +401,7 @@ export const articleSeed: Article[] = [
       'Schaufelräder, glänzendes Messing und eine langsame Art, die Berge aus dem Wasser steigen zu sehen.',
     author: { name: 'Sonja', role: 'Inhaberin, Swiss Keepsakes Luzern' },
     intro:
-      'Auf dem Vierwaldstättersee fahren noch immer Raddampfer, der älteste von ihnen ist mehr als hundert Jahre alt. Sie bringen Sie von der Stadtmitte zu den Dörfern am Ufer.',
+      'Auf dem Vierwaldstättersee fahren noch immer Raddampfer. Der älteste von ihnen ist mehr als hundert Jahre alt. Sie bringen Sie von der Stadtmitte zu den Dörfern am Ufer.',
     sections: [
       {
         id: 'from-the-station',
@@ -425,7 +425,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Suchen Sie die Stelle, von der Sie in den Maschinenraum hinunterschauen können. Die Kolben bewegen sich langsam und gleichmässig, das Messing glänzt, und Kinder bleiben dort oft fast die ganze Fahrt.',
+            text: 'Suchen Sie die Stelle, von der Sie in den Maschinenraum hinunterschauen können. Die Kolben bewegen sich langsam und gleichmässig, und das Messing glänzt. Kinder bleiben dort oft fast die ganze Fahrt.',
           },
         ],
       },
@@ -435,7 +435,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Draussen auf dem Wasser öffnet sich der See, ein Arm nach dem anderen. Die Berge steigen direkt vom Ufer auf, Dörfer liegen am Wasser, und das Licht ändert sich alle paar Minuten. Nehmen Sie auch an warmen Tagen eine Jacke mit, der Wind an Deck ist kühl.',
+            text: 'Draussen auf dem Wasser öffnet sich der See, ein Arm nach dem anderen. Die Berge steigen direkt vom Ufer auf, und Dörfer liegen am Wasser. Das Licht ändert sich alle paar Minuten. Nehmen Sie auch an warmen Tagen eine Jacke mit, denn der Wind an Deck ist kühl.',
           },
         ],
       },
@@ -445,7 +445,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: 'Sie müssen nicht jeden Halt planen. Fahren Sie eine Stunde hinaus, steigen Sie in einem Dorf aus, das Ihnen gefällt, und nehmen Sie ein späteres Schiff zurück. Werfen Sie vorher einen Blick auf den Fahrplan, denn im Winter fahren weniger Schiffe. Unsere Kerzenbox Seeufer enthält zwei Postkarten vom See, und unsere Seetour ergänzt die Aussicht mit Geschichten vom Ufer.',
+            text: 'Sie müssen nicht jeden Halt planen. Fahren Sie eine Stunde hinaus, steigen Sie in einem Dorf aus, das Ihnen gefällt, und nehmen Sie ein späteres Schiff zurück. Werfen Sie vorher einen Blick auf den Fahrplan, denn im Winter fahren weniger Schiffe. Unsere Kerzenbox Seeufer enthält zwei Postkarten vom See, und unsere Seetour erzählt Geschichten vom Ufer.',
           },
         ],
       },

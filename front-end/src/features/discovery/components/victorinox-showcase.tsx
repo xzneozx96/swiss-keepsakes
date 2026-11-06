@@ -120,7 +120,7 @@ export function VictorinoxShowcase({
 
       <div className="mt-6 flex flex-col gap-2 px-4">
         <p className="font-serif text-title text-balance">{subtitle}</p>
-        <p className="text-body text-pretty text-white/85">{intro}</p>
+        <p className="text-body text-pretty text-white/85 text-justify">{intro}</p>
       </div>
 
       <div

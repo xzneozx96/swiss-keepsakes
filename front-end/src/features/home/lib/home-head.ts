@@ -6,12 +6,12 @@ import { alternateHead } from '@/features/seo/lib/page-head'
 // so the two lines are here; tests/home-page.test.tsx keeps them equal to the dictionaries.
 const WORDS: Record<PublicLanguage, { title: string, description: string }> = {
   en: {
-    title: 'Luzerne, a place you always want to return to',
-    description: 'Your first day in Lucerne, sorted: the places we’d show a friend on the map, the practical things to find, and Victorinox keepsakes from the shop.',
+    title: 'Lucerne, a place you will want to return to',
+    description: 'Your first day in Lucerne, sorted: the places we’d show a friend, pinned on the map, the practical things to find, and Victorinox keepsakes from the shop.',
   },
   de: {
-    title: 'Luzern, ein Ort, an den man immer zurückkehren möchte',
-    description: 'Ihr erster Tag in Luzern, erledigt: die Orte, die wir Freunden zeigen, auf der Karte, das Praktische zum Finden und Victorinox-Andenken aus dem Laden.',
+    title: 'Luzern, ein Ort, an den Sie gern zurückkehren',
+    description: 'Ihr erster Tag in Luzern, erledigt: die Orte, die wir Freunden zeigen würden, auf der Karte, das Praktische zum Finden und Victorinox-Andenken aus dem Laden.',
   },
 }
 

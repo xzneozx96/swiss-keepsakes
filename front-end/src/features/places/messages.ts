@@ -224,7 +224,7 @@ export const placesEn = {
   'places.problem.notPublished': 'This place is not published, so it cannot be hidden.',
   'places.problem.generic': 'Something went wrong. Try again in a moment.',
   'places.mustVisit.label': 'Must-visit',
-  'places.mustVisit.help': 'Shows the pin under “See these first” on the home.',
+  'places.mustVisit.help': 'Shows the pin under “Places that make Lucerne special” on the home.',
   'places.photos.card': 'Photos',
   'places.photos.help': 'The first photo is the main one. The others show as a carousel in the pin’s details. Drag a photo to change the order.',
   'places.story.select': 'Story behind this place',

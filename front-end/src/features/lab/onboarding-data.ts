@@ -69,7 +69,7 @@ export const copy = {
     storyMore: 'More stories',
     readTime: 'min read',
     hello: 'Grüezi!',
-    homeTitle: 'Stories from Lucerne',
+    homeTitle: 'Beyond the postcards',
     accountTitle: 'Account',
     signIn: 'Sign in',
     signInHint: 'To buy a keepsake or comment',
