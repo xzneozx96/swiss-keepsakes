@@ -198,7 +198,7 @@ describe('[E4.13][AC95] the order follows the guest\'s interests below the tiles
     // The hero, the invitation and the tiles come before the first section; the answers never touch them.
     const links = screen.getAllByRole('link').map(link => link.getAttribute('href'))
     const aboveSections = links.slice(0, links.indexOf('/en/map?category=drinking-water') + 1)
-    const thread = document.querySelector('span.h-8.w-px')?.className ?? ''
+    const thread = document.querySelector('[data-thread]')?.className ?? ''
     unmount()
 
     return { names, aboveSections, thread }
@@ -241,13 +241,14 @@ describe('[E4.13][AC95] the order follows the guest\'s interests below the tiles
     expect(names).toEqual([...head, title('must'), title('routes'), title('events'), en['homePage.stories.title'], title('food'), en['home.victorinox.title'], en['home.advice.title']])
   })
 
-  it('puts the Victorinox showcase first for shopping-keepsakes, and the ending draws no thread above its line (AC-4)', async () => {
+  it('puts the Victorinox showcase first for shopping-keepsakes, and the thread hangs from the section above in the separator colour (AC-4)', async () => {
     answerWith(['shopping-keepsakes'])
     const { names, thread } = await headings()
 
     expect(names).toEqual([...head, en['home.victorinox.title'], title('must'), title('routes'), en['homePage.stories.title'], title('food'), title('events'), en['home.advice.title']])
-    // The thread hangs from the showcase only; under the events it would hang from nothing (owner, 06.11.2026).
-    expect(thread).toBe('')
+    // The thread always hangs from the section above (owner, 06.11.2026), in lake blue only under the showcase.
+    expect(thread).toContain('bg-separator')
+    expect(thread).not.toContain('#173f52')
   })
 
   it('always sends the default order in the server HTML (AC-5)', async () => {
