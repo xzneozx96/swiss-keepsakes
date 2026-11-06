@@ -241,12 +241,13 @@ describe('[E4.13][AC95] the order follows the guest\'s interests below the tiles
     expect(names).toEqual([...head, title('must'), title('routes'), title('events'), en['homePage.stories.title'], title('food'), en['home.victorinox.title'], en['home.advice.title']])
   })
 
-  it('puts the Victorinox showcase first for shopping-keepsakes, and the thread no longer starts from lake blue (AC-4)', async () => {
+  it('puts the Victorinox showcase first for shopping-keepsakes, and the ending draws no thread above its line (AC-4)', async () => {
     answerWith(['shopping-keepsakes'])
     const { names, thread } = await headings()
 
     expect(names).toEqual([...head, en['home.victorinox.title'], title('must'), title('routes'), en['homePage.stories.title'], title('food'), title('events'), en['home.advice.title']])
-    expect(thread).not.toContain('#173f52')
+    // The thread hangs from the showcase only; under the events it would hang from nothing (owner, 06.11.2026).
+    expect(thread).toBe('')
   })
 
   it('always sends the default order in the server HTML (AC-5)', async () => {
