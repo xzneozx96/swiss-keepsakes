@@ -2,58 +2,53 @@ import type { Tour } from '@sk/domain/bookings'
 
 import { numberFormat, pickText, pluralCategory } from '@sk/domain/shared'
 
-import { CategoryRouteIcon, ClockIcon } from '@/components/icons'
+import { CategoryRouteIcon, ClockIcon, PinLinkIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 
 /**
- * The route at a glance, the first thing in the Overview tab (owner, 06.11.2026: the stats row left the header). Two
- * figures side by side, each with its icon (how long, how many stops), and under them where the route starts and ends.
- * A tour with no stops yet (M13) shows the duration alone.
+ * The route at a glance, the first thing in the Overview tab: a highlights list with no box, as GetYourGuide's "About this
+ * activity" and Airbnb's experience page show it (owner, 06.11.2026, lab /lab/tour-facts option 1). Each row is a line icon,
+ * a bold line and a muted line under it: the duration, the stops from the first to the last, and where it starts. A tour
+ * with no stops yet (M13) leaves the stops row out; a one-stop tour has no "From … to …".
  */
 export function TourFactsCard({ tour }: { tour: Tour }) {
   const { t, language, intlLocale } = useLocale()
+  const text = (value: Tour['name']) => pickText(value, language).text
   const stops = tour.itinerary
   const first = stops[0]
   const last = stops.at(-1)
   const plural = pluralCategory(intlLocale, stops.length) === 'one' ? 'one' : 'other'
-  const facts = [
+  const rows = [
     {
       id: 'duration',
       icon: ClockIcon,
-      value: t('tourDiscovery.duration', { hours: numberFormat(intlLocale).format(tour.durationMinutes / 60) }),
-      label: t('tourDiscovery.durationLabel'),
+      title: t('tourDiscovery.duration', { hours: numberFormat(intlLocale).format(tour.durationMinutes / 60) }),
+      body: t('tourDiscovery.durationLabel'),
     },
-    ...(stops.length > 0 ? [{ id: 'stops', icon: CategoryRouteIcon, value: String(stops.length), label: t(`tourDetail.stops.${plural}`) }] : []),
+    ...(stops.length > 0
+      ? [{
+          id: 'stops',
+          icon: CategoryRouteIcon,
+          title: t(`tourDetail.stops.${plural}`, { count: stops.length }),
+          body: first && last && first !== last ? t('tourDetail.facts.route', { start: text(first.name), end: text(last.name) }) : null,
+        }]
+      : []),
+    { id: 'start', icon: PinLinkIcon, title: text(tour.meetingPoint), body: t('tourDiscovery.meeting') },
   ]
 
   return (
-    <section aria-label={t('tourDetail.facts.label')} className="mb-7 flex flex-col rounded-3xl bg-surface shadow-surface">
-      <dl className="grid divide-x divide-separator rtl:divide-x-reverse" style={{ gridTemplateColumns: `repeat(${facts.length}, minmax(0, 1fr))` }}>
-        {facts.map(fact => (
-          // A dl group holds only dt and dd: the icon sits in the dt, out of flow at the start edge, and the value (dd) shows over the label (dt).
-          <div key={fact.id} className="relative flex min-h-18 min-w-0 flex-col-reverse justify-center py-4 ps-17 pe-4">
-            <dt className="text-xs text-muted">
-              <span aria-hidden className="absolute start-4 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-accent-soft text-accent">
-                <fact.icon size={20} />
-              </span>
-              {fact.label}
-            </dt>
-            <dd className="text-lg leading-6 font-semibold tabular-nums">{fact.value}</dd>
-          </div>
+    <section aria-label={t('tourDetail.facts.label')} className="pb-7">
+      <ul className="flex flex-col gap-4">
+        {rows.map(row => (
+          <li key={row.id} className="flex gap-3.5">
+            <row.icon aria-hidden className="mt-0.5 shrink-0" size={22} />
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-[15px] leading-[22px] font-semibold">{row.title}</span>
+              {row.body && <span className="text-sm text-muted">{row.body}</span>}
+            </span>
+          </li>
         ))}
-      </dl>
-      {first && last && first !== last && (
-        <p className="flex items-center gap-2.5 border-t border-separator px-4 py-3.5 text-sm">
-          <span aria-hidden className="flex shrink-0 items-center gap-1">
-            <span className="size-2.5 rounded-full bg-accent" />
-            <span className="h-px w-4 bg-separator" />
-            <span className="size-2.5 rounded-full bg-foreground" />
-          </span>
-          <span className="min-w-0">
-            {t('tourDetail.facts.route', { start: pickText(first.name, language).text, end: pickText(last.name, language).text })}
-          </span>
-        </p>
-      )}
+      </ul>
     </section>
   )
 }
