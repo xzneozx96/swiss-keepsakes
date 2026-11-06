@@ -9,18 +9,16 @@ import { openOnboarding } from '@/features/onboarding/lib/opener'
 /**
  * The sort notice, a full-width HeroUI Alert in the "First time in Lucerne?" block (owner, 05.11.2026; it sat under "See these
  * first" before): what the home is sorted for, or the offer to sort it, with a button that opens the onboarding flow in change
- * mode. It is the page's only personalisation signal. The server and the first client render show the offer, as the lists do;
+ * mode. It is the page's only personalisation signal. Once answered it says "Sorted for your trip" and does not list the answers:
+ * a list read badly ("Sorted for Just today") and wrapped on a phone (owner, 06.11.2026). The server and the first client render show the offer, as the lists do;
  * the answers apply once the page is hydrated. The title rises in when it changes, only with motion allowed.
  */
 export function SortNotice() {
   const { t } = useLocale()
   const hydrated = useHydrated()
   const stored = useOnboardingAnswers()
-  const stay = hydrated ? stored.stay : null
-  const interests = hydrated ? stored.interests ?? [] : []
-  const named = [...(stay ? [t(`stories.sort.stay.${stay as 'short_stay' | 'multi_day'}`)] : []), ...interests.map(code => t(`places.interest.${code}` as 'places.interest.food-drink'))]
-  const answered = named.length > 0
-  const text = answered ? t('homePage.sort.for', { answers: named.join(', ') }) : t('homePage.sort.personalise')
+  const answered = hydrated && (Boolean(stored.stay) || (stored.interests ?? []).length > 0)
+  const text = answered ? t('homePage.sort.for') : t('homePage.sort.personalise')
 
   return (
     <Alert className="w-full items-center" status="accent">

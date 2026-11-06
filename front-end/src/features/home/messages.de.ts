@@ -14,7 +14,7 @@ export const homeDe: Record<keyof typeof homeEn, string> = {
   'homePage.must.directions': 'Route',
   'homePage.must.failed': 'Die Orte für den Anfang konnten nicht geladen werden.',
   'homePage.sort.personalise': 'Für meine Reise sortieren',
-  'homePage.sort.for': 'Sortiert für {answers}',
+  'homePage.sort.for': 'Für Ihre Reise sortiert',
   'homePage.sort.change': 'Ändern',
   'homePage.sort.start': 'Los geht’s',
   'homePage.sort.hint': 'Zwei kurze Fragen, und was zu Ihnen passt, kommt zuerst.',

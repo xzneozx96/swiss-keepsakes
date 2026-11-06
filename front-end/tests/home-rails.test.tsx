@@ -255,20 +255,22 @@ describe('[E4.13][AC36] the sort notice (in "First time in Lucerne?" since 05.11
     expect(await screen.findByRole('button', { name: en['homePage.sort.personalise'] })).toBeInTheDocument()
   })
 
-  it('opens the onboarding flow in change mode, and reads the answers once they are saved (AC-4)', async () => {
+  it('opens the onboarding flow in change mode, and reads "Sorted for your trip" once answers are saved (AC-4)', async () => {
     answer('short_stay', ['food-drink'])
     render(<RouterProvider router={await routerOf(<SortNotice />)} />)
 
     const pill = await screen.findByRole('button', { name: /Sorted for/ })
 
-    expect(pill).toHaveAccessibleName(`Sorted for ${en['stories.sort.stay.short_stay']}, ${en['places.interest.food-drink']}, ${en['homePage.sort.change']}`)
+    // The notice no longer lists the answers (owner, 06.11.2026).
+    expect(pill).toHaveAccessibleName(`${en['homePage.sort.for']}, ${en['homePage.sort.change']}`)
     expect(pill).toHaveTextContent(en['homePage.sort.change'])
     await userEvent.click(pill)
     expect(screen.getByTestId('request')).toHaveTextContent('change')
 
     act(() => saveAnswers({ stay: 'multi_day', interests: [] }))
 
-    expect(screen.getByRole('button', { name: /Sorted for/ })).toHaveAccessibleName(`Sorted for ${en['stories.sort.stay.multi_day']}, ${en['homePage.sort.change']}`)
+    expect(screen.getByRole('button', { name: /Sorted for/ })).toHaveAccessibleName(`${en['homePage.sort.for']}, ${en['homePage.sort.change']}`)
+    expect(screen.queryByText(new RegExp(en['stories.sort.stay.multi_day']))).toBeNull()
   })
 })
 

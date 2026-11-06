@@ -13,7 +13,7 @@ export const homeEn = {
   'homePage.must.directions': 'Directions',
   'homePage.must.failed': 'The places to see first could not load.',
   'homePage.sort.personalise': 'Sort for my trip',
-  'homePage.sort.for': 'Sorted for {answers}',
+  'homePage.sort.for': 'Sorted for your trip',
   'homePage.sort.change': 'Change',
   'homePage.sort.start': 'Start',
   'homePage.sort.hint': 'Two quick questions, and the places that suit you come first.',
