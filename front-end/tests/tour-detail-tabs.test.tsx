@@ -53,7 +53,7 @@ async function renderTour(search = '') {
   const root = createRootRoute({ component: Outlet })
   const page = createRoute({
     getParentRoute: () => root,
-    path: '/tours/$slug',
+    path: '/$lang/tours/$slug',
     validateSearch: parseTourSearch,
     component: function Page() {
       const { tab } = page.useSearch()
@@ -63,14 +63,14 @@ async function renderTour(search = '') {
         <TourDetailPage
           slug={slug}
           tab={tab}
-          onTabChange={next => void navigate({ search: next === 'overview' ? {} : { tab: next }, replace: true, resetScroll: false })}
+          onTabChange={next => void navigate({ search: { tab: next === 'overview' ? undefined : next }, replace: true, resetScroll: false })}
         />
       )
     },
   })
   const router = createRouter({
     routeTree: root.addChildren([page]),
-    history: createMemoryHistory({ initialEntries: [`/tours/${slug}${search}`] }),
+    history: createMemoryHistory({ initialEntries: [`/en/tours/${slug}${search}`] }),
     disableGlobalCatchBoundary: true,
   })
   render(
