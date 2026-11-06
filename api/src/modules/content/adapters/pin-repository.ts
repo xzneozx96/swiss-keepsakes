@@ -326,8 +326,12 @@ async function storyOptionRows(tx: Tx, storeId: string, { q, groupId, limit }: P
        where g.store_id = ${storeId}
        group by g.id, g.kind, g.created_at
     )
-    (select group_id, kind, title, statuses, created_at from options where live and hit order by created_at desc, group_id desc limit ${limit})
-    ${groupId ? sql`union select group_id, kind, title, statuses, created_at from options where group_id = ${groupId}` : sql``}
+    -- The matches and the chosen group are read as one subquery and ordered outside it: a bare "(select ... limit) order by" without
+    -- the union is a syntax error in Postgres ("multiple ORDER BY clauses not allowed"), found by the integration run of 06.11.2026.
+    select group_id, kind, title, statuses, created_at from (
+      (select group_id, kind, title, statuses, created_at from options where live and hit order by created_at desc, group_id desc limit ${limit})
+      ${groupId ? sql`union select group_id, kind, title, statuses, created_at from options where group_id = ${groupId}` : sql``}
+    ) picked
     order by created_at desc, group_id desc`)
   return found.rows.map((row) => {
     const languages = { en: row.statuses.en ?? 'none', de: row.statuses.de ?? 'none' } as const

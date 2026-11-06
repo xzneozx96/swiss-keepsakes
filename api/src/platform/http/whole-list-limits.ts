@@ -16,11 +16,13 @@ export const WHOLE_LIST_LIMITS = {
   'GET /api/public/map-categories': { warnAt: 160, cap: 200 },
   // The map never cuts a pin (owner, 05.11.2026): only the warning, which starts the viewport-query decision (ADR-006).
   'GET /api/public/map': { warnAt: 800, cap: null },
-  'GET /api/public/keepsakes/{slug}/pickup-points': { warnAt: 40, cap: 50 },
+  // A store holds at most 100 active pickup points (gate G-S8-PICKUP-LIMIT), and this route lists the active ones, so its cap is that limit.
+  'GET /api/public/keepsakes/{slug}/pickup-points': { warnAt: 80, cap: 100 },
   // Not in the ADR table (judged whole, "tens"): a warning at 50 variants, never cut.
   'GET /api/public/keepsakes/{slug}/availability': { warnAt: 50, cap: null },
   'GET /api/store/{storeId}/categories/{kind}': { warnAt: 160, cap: 200 },
-  'GET /api/store/{storeId}/pickup-places': { warnAt: 40, cap: 50 },
+  // 100 active points at most; the archived view has no limit of its own, so the cap leaves room for it.
+  'GET /api/store/{storeId}/pickup-places': { warnAt: 160, cap: 200 },
   // The next two answer two arrays each (published and drafts; members and invitations). The cap counts both together.
   'GET /api/store/{storeId}/media/{mediaId}/uses': { warnAt: 160, cap: 200 },
   'GET /api/store/{storeId}/members': { warnAt: 40, cap: 50 },
