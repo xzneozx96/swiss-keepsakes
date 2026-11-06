@@ -133,15 +133,15 @@ describe('tour detail page', () => {
   })
 
   it.each([
-    ['en', 'The route at a glance', ['3 hours', '6 stops'], ['Duration', /^From .+ to .+$/, 'Where it starts']],
-    ['de', 'Die Route auf einen Blick', ['3 Stunden', '6 Stationen'], ['Dauer', /^Von .+ bis .+$/, 'Hier beginnt die Route']],
-  ] as const)('[E3.1] Overview opens on the highlights list: the duration, the stops from first to last, and where it starts (%s)', async (language, label, titles, bodies) => {
+    ['en', 'The route at a glance', ['3 hours', '6 stops'], ['Duration', /^From .+ to .+$/]],
+    ['de', 'Die Route auf einen Blick', ['3 Stunden', '6 Stationen'], ['Dauer', /^Von .+ bis .+$/]],
+  ] as const)('[E3.1] Overview opens on the highlights list: the duration and the stops from first to last (%s)', async (language, label, titles, bodies) => {
     await renderTour(language)
     const list = screen.getByRole('region', { name: label })
     const rows = within(list).getAllByRole('listitem')
 
-    expect(rows).toHaveLength(3)
-    expect(rows.slice(0, 2).map(row => row.querySelector('.font-semibold')?.textContent)).toEqual([...titles])
+    expect(rows).toHaveLength(2)
+    expect(rows.map(row => row.querySelector('.font-semibold')?.textContent)).toEqual([...titles])
     bodies.forEach((body, i) => expect(within(rows[i]!).getByText(body)).toBeInTheDocument())
     // No figures list anywhere: the header lost its stats row (owner, 06.11.2026).
     expect(document.querySelectorAll('dl')).toHaveLength(0)
@@ -225,7 +225,7 @@ describe('tour page without comments or stops', () => {
   it('[E3.1] a tour with no stops has no stepper, and its highlights skip the stops row', async () => {
     await renderTour('en', () => <TourDetail preview tour={{ ...thingsThatRemain, itinerary: [] }} />)
 
-    expect(rows()).toEqual(['Duration', 'Where it starts'])
+    expect(rows()).toEqual(['Duration'])
     expect(screen.queryByText(/^From .+ to .+$/)).toBeNull()
     await userEvent.click(screen.getByRole('tab', { name: 'Itinerary' }))
     expect(screen.queryByRole('heading', { name: 'Suggested itinerary' })).toBeNull()
@@ -236,7 +236,7 @@ describe('tour page without comments or stops', () => {
   it('[E3.1] a tour with no comments has no Comments section, and its tab has no count', async () => {
     await renderTour('en', () => <TourDetail preview tour={{ ...thingsThatRemain, id: 'new-tour' }} />)
 
-    expect(rows()).toHaveLength(3)
+    expect(rows()).toHaveLength(2)
     expect(screen.getByRole('tab', { name: 'Comments' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('tab', { name: 'Comments' }))
     expect(screen.queryByRole('heading', { name: 'Comments', level: 2 })).toBeNull()
