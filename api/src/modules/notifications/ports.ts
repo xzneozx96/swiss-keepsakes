@@ -30,6 +30,15 @@ export interface Clock {
   now: () => Date
 }
 
+// An image the HTML shows from inside the message (`<img src="cid:...">`), such as the logo. The bytes travel
+// as a part of the message, so the reader's client fetches nothing.
+export interface MailImage {
+  cid: string
+  filename: string
+  contentType: string
+  base64: string
+}
+
 // A rendered message. `id` is the mail id, which goes into the Message-ID header.
 export interface OutgoingMail {
   id: string
@@ -37,6 +46,7 @@ export interface OutgoingMail {
   subject: string
   text: string
   html: string
+  images: MailImage[]
 }
 
 export interface Mailer {

@@ -28,24 +28,27 @@ function decodeQuotedPrintable(value: string): string {
   return Buffer.from(bytes).toString('utf8')
 }
 
-// The leaf parts of a multipart message, with each part's content type and decoded body.
-function mimeParts(message: string): Array<{ type: string, body: string }> {
-  const boundary = /^Content-Type: multipart\/alternative;\s+boundary="?([^"\n]+)"?/m.exec(message)?.[1]
-  if (!boundary)
-    return [{ type: /^Content-Type: ([^;\n]+)/m.exec(message)?.[1] ?? '', body: message.slice(message.indexOf('\n\n') + 2) }]
-  return message.split(`--${boundary}`).slice(1, -1).map((part) => {
-    const [head = '', ...rest] = part.replace(/^\n/, '').split('\n\n')
-    const raw = rest.join('\n\n').replace(/\n$/, '')
-    const encoding = /^Content-Transfer-Encoding: (.+)$/m.exec(head)?.[1]?.trim()
-    const body = encoding === 'quoted-printable'
-      ? decodeQuotedPrintable(raw)
-      : encoding === 'base64' ? Buffer.from(raw, 'base64').toString('utf8') : raw
-    return { type: /^Content-Type: ([^;\n]+)/m.exec(head)?.[1] ?? '', body }
-  })
+// The leaf parts of a message, depth first, with each part's content type, Content-ID and body. A text part's
+// body is decoded. Any other part's body stays base64, without line breaks.
+function mimeParts(message: string): Array<{ type: string, cid?: string, body: string }> {
+  const [head = '', ...rest] = message.replace(/^\n/, '').split('\n\n')
+  const raw = rest.join('\n\n').replace(/\n$/, '')
+  const type = /^Content-Type: ([^;\n]+)/m.exec(head)?.[1] ?? ''
+  const boundary = type.startsWith('multipart/') ? /boundary="?([^"\n]+)"?/.exec(head)?.[1] : undefined
+  if (boundary)
+    return raw.split(`--${boundary}`).slice(1, -1).flatMap(mimeParts)
+  const cid = /^Content-ID: <(.+)>$/m.exec(head)?.[1]
+  const encoding = /^Content-Transfer-Encoding: (.+)$/m.exec(head)?.[1]?.trim()
+  if (!type.startsWith('text/'))
+    return [{ type, cid, body: raw.replaceAll('\n', '') }]
+  const body = encoding === 'quoted-printable'
+    ? decodeQuotedPrintable(raw)
+    : encoding === 'base64' ? Buffer.from(raw, 'base64').toString('utf8') : raw
+  return [{ type, cid, body }]
 }
 
 describe('[E2.8] SMTP adapter', () => {
-  it('[E2.4] a display name with markup and a line break stays inert in both parts: escaped in the HTML, typed in the text, no extra header and no third part', async () => {
+  it('[E2.4] a display name with markup and a line break stays inert in both parts: escaped in the HTML, typed in the text, no extra header and no part besides the logo', async () => {
     const { transport, messages } = capturingTransport()
     const mailer = createSmtpMailer(transport, 'keepsakes.test@gmail.com', 'Swiss Keepsakes')
     const rendered = renderMail({ template: 'N18', to: 'lena.meier@example.ch', language: 'en', storeId: null, params: { inviter: '<b>Ngoc</b> <img src=x onerror=alert(1)>\r\nBcc: evil@example.ch', store: 'Lucerne Gifts', invitationId: mailId } }, 'https://swiss-keepsakes.example/i/7f3c')
@@ -57,11 +60,12 @@ describe('[E2.8] SMTP adapter', () => {
     expect(headers).not.toMatch(/^Bcc:/im)
     expect(headers).toMatch(/^Content-Type: multipart\/alternative;/m)
     const parts = mimeParts(message)
-    expect(parts.map(part => part.type)).toEqual(['text/plain', 'text/html'])
+    expect(parts.map(part => part.type)).toEqual(['text/plain', 'text/html', 'image/png'])
     expect(parts[0]?.body).toContain('<b>Ngoc</b> <img src=x onerror=alert(1)>')
     const html = parts[1]?.body ?? ''
     expect(html).toContain('&lt;b&gt;Ngoc&lt;/b&gt; &lt;img src=x onerror=alert(1)&gt;')
-    expect(html).not.toMatch(/<b>|<img/i)
+    expect(html).not.toMatch(/<b>/i)
+    expect(html.match(/<img\b/gi)).toEqual(['<img'])
   })
 
   it('[E2.8] sends the text and the HTML of one mail as multipart/alternative, plain text first', async () => {
@@ -72,9 +76,25 @@ describe('[E2.8] SMTP adapter', () => {
     await mailer.send({ id: mailId, ...rendered })
 
     const parts = mimeParts(messages[0] ?? '')
-    expect(parts.map(part => part.type)).toEqual(['text/plain', 'text/html'])
+    expect(parts.map(part => part.type)).toEqual(['text/plain', 'text/html', 'image/png'])
     expect(parts[0]?.body).toBe(rendered.text)
     expect(parts[1]?.body).toBe(rendered.html)
+  })
+
+  it('[mail-style] the logo travels inside the message, next to the HTML, under the Content-ID the HTML names', async () => {
+    const { transport, messages } = capturingTransport()
+    const mailer = createSmtpMailer(transport, 'keepsakes.test@gmail.com', 'Swiss Keepsakes')
+    const rendered = renderMail({ template: 'N01', to: 'anna.keller@example.ch', language: 'en', storeId: null, params: { shop: 'Swiss Keepsakes', code: '482913' } }, undefined)
+
+    await mailer.send({ id: mailId, ...rendered })
+
+    const [message = ''] = messages
+    expect(message).toMatch(/^Content-Type: multipart\/related; type="text\/html";/m)
+    expect(message).toMatch(/^Content-Disposition: inline; filename=swiss-keepsakes\.png$/m)
+    const logo = mimeParts(message).find(part => part.type === 'image/png')
+    expect(logo?.cid).toBe('logo@swiss-keepsakes')
+    expect(rendered.html).toContain('src="cid:logo@swiss-keepsakes"')
+    expect(Buffer.from(logo?.body ?? '', 'base64').subarray(1, 4).toString()).toBe('PNG')
   })
 
   it('[E2.8] a repeat of the same mail carries the same text and HTML', async () => {
@@ -93,7 +113,7 @@ describe('[E2.8] SMTP adapter', () => {
     const { transport, messages } = capturingTransport()
     const mailer = createSmtpMailer(transport, 'keepsakes.test@gmail.com', 'Swiss Keepsakes')
 
-    const result = await mailer.send({ id: mailId, to: 'lena.meier@example.ch', subject: 'Ngoc Tran invited you to Lucerne Gifts', text: 'Hello,\n\nOpen it: https://swiss-keepsakes.example/i/7f3c', html: '<p>Hello</p>' })
+    const result = await mailer.send({ id: mailId, to: 'lena.meier@example.ch', subject: 'Ngoc Tran invited you to Lucerne Gifts', text: 'Hello,\n\nOpen it: https://swiss-keepsakes.example/i/7f3c', html: '<p>Hello</p>', images: [] })
 
     expect(result).toEqual({ response: '250 2.0.0 OK' })
     const [message = ''] = messages
@@ -109,7 +129,7 @@ describe('[E2.8] SMTP adapter', () => {
   it('[E2.8] a repeat of the same mail carries the same Message-ID', async () => {
     const { transport, messages } = capturingTransport()
     const mailer = createSmtpMailer(transport, 'keepsakes.test@gmail.com', 'Swiss Keepsakes')
-    const mail = { id: mailId, to: 'lena.meier@example.ch', subject: 'Hello', text: 'Hello', html: '<p>Hello</p>' }
+    const mail = { id: mailId, to: 'lena.meier@example.ch', subject: 'Hello', text: 'Hello', html: '<p>Hello</p>', images: [] }
 
     await mailer.send(mail)
     await mailer.send(mail)
@@ -122,7 +142,7 @@ describe('[E2.8] SMTP adapter', () => {
     const lines: string[] = []
     const mailer = createUnconfiguredMailer(createLogger('info', { write: line => lines.push(line) }))
 
-    await expect(mailer.send({ id: mailId, to: 'lena.meier@example.ch', subject: 'Hello', text: 'Hello', html: '<p>Hello</p>' })).rejects.toMatchObject({ code: 'ESMTPUNSET' })
+    await expect(mailer.send({ id: mailId, to: 'lena.meier@example.ch', subject: 'Hello', text: 'Hello', html: '<p>Hello</p>', images: [] })).rejects.toMatchObject({ code: 'ESMTPUNSET' })
 
     expect(lines.map(line => JSON.parse(line))).toEqual([expect.objectContaining({ level: 40, event: 'mail.smtp-unset', mailId })])
     expect(lines.join('')).not.toContain('example.ch')

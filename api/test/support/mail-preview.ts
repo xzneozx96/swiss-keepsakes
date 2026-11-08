@@ -24,12 +24,14 @@ for (const language of ['en', 'de'] as const) {
   previews[`N20-long-${language}`] = { request: { template: 'N20', to: 'ngoc.tran@example.ch', language, storeId: null, params: { store: longStore, invitationId, expiresOn: '2026-11-05T09:00:00.000Z' } }, link: ownerLink }
 }
 
-// Writes each preview's HTML to `<dir>/<name>.html`, for opening in a browser or a screenshot.
+// Writes each preview's HTML to `<dir>/<name>.html`, for opening in a browser or a screenshot. A browser cannot
+// resolve `cid:`, so each inline image goes in as a data URL, which only the preview does.
 export function writeMailPreviews(dir: string): string[] {
   mkdirSync(dir, { recursive: true })
   return Object.entries(previews).map(([name, { request, link }]) => {
     const file = join(dir, `${name}.html`)
-    writeFileSync(file, renderMail(request, link).html)
+    const { html, images } = renderMail(request, link)
+    writeFileSync(file, images.reduce((page, { cid, contentType, base64 }) => page.replaceAll(`cid:${cid}`, `data:${contentType};base64,${base64}`), html))
     return file
   })
 }

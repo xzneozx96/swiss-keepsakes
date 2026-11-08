@@ -10,10 +10,10 @@ export const mailDe: Record<MailKey, string> = {
   'mail.N19.ignore':
     'Wenn Sie den Berichtslink nicht geöffnet haben, können Sie diese E-Mail ignorieren. Ohne diesen Code kann niemand Ihren Bericht öffnen.',
   'mail.N01.subject': 'Ihr Anmeldecode für {shop}: {code}',
-  'mail.N01.label': 'Ihr Anmeldecode',
+  'mail.N01.title': 'Ihr Anmeldecode',
   'mail.N01.code': 'Ihr Anmeldecode lautet {code}.',
   'mail.N01.expiry':
-    'Geben Sie ihn im Anmeldefenster ein. Er ist 5 Minuten gültig.',
+    'Geben Sie diesen Code im Anmeldefenster ein. Er ist 5 Minuten gültig.',
   'mail.N01.reason':
     'Sie erhalten diese E-Mail, weil bei {shop} ein Anmeldecode angefordert wurde.',
   'mail.N01.ignore':
@@ -83,12 +83,13 @@ export const mailDe: Record<MailKey, string> = {
   'mail.invitation.ignore':
     'Wenn Sie diese Einladung nicht erwartet haben, können Sie diese E-Mail ignorieren.',
   'mail.N18.subject': '{inviter} hat Sie zu {store} eingeladen',
+  'mail.N18.title': 'Willkommen im Team von {store}',
   'mail.N18.invited':
-    '{inviter} hat Sie eingeladen, bei {store} als Store Manager mitzuarbeiten.',
-  'mail.N18.accept':
-    'Öffnen Sie die Einladung, melden Sie sich an und nehmen Sie sie an',
+    '{inviter} hat Sie eingeladen, bei {store} als Store Manager mitzuarbeiten. Melden Sie sich an, um die Einladung anzunehmen.',
+  'mail.N18.box': 'Einladung als Store Manager',
   'mail.N18.button': 'Einladung annehmen',
   'mail.N20.subject': 'Einladung: Eröffnen Sie {store}',
+  'mail.N20.title': 'Eröffnen Sie Ihren Laden',
   'mail.N20.invited': 'Sie sind eingeladen, {store} als Inhaber:in zu führen.',
   'mail.N20.box': 'Einladung zur Eröffnung',
   'mail.N20.validUntil': 'Gültig bis {date}',

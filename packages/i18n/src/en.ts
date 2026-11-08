@@ -7,9 +7,9 @@ export const mailEn = {
   'mail.N19.ignore':
     'If you didn\'t open the report link, you can ignore this email. Nobody can open your report without this code.',
   'mail.N01.subject': 'Your {shop} sign-in code: {code}',
-  'mail.N01.label': 'Your sign-in code',
+  'mail.N01.title': 'Your sign-in code',
   'mail.N01.code': 'Your sign-in code is {code}.',
-  'mail.N01.expiry': 'Enter it in the sign-in window. It works for 5 minutes.',
+  'mail.N01.expiry': 'Enter this code in the sign-in window. It works for 5 minutes.',
   'mail.N01.reason': 'You get this because a sign-in code was asked for at {shop}.',
   'mail.N01.ignore': 'If you didn’t try to sign in, you can ignore this email.',
   'mail.pickup': 'Pickup: {pickupDate} at {place}.',
@@ -71,10 +71,13 @@ export const mailEn = {
   'mail.invitation.ignore':
     'If you didn’t expect this invitation, you can ignore this email.',
   'mail.N18.subject': '{inviter} invited you to {store}',
-  'mail.N18.invited': '{inviter} invited you to join {store} as Store Manager.',
-  'mail.N18.accept': 'Open the invitation, sign in and accept it',
+  'mail.N18.title': 'Join the team at {store}',
+  'mail.N18.invited':
+    '{inviter} invited you to join {store} as Store Manager. Sign in to accept the invitation.',
+  'mail.N18.box': 'Store Manager invitation',
   'mail.N18.button': 'Accept invitation',
   'mail.N20.subject': 'You’re invited to open {store}',
+  'mail.N20.title': 'Open your store',
   'mail.N20.invited': 'You’re invited to run {store} as its Owner.',
   'mail.N20.box': 'Invitation to open',
   'mail.N20.validUntil': 'Valid until {date}',

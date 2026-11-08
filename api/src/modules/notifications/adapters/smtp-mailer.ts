@@ -8,13 +8,15 @@ export interface SmtpSender {
 }
 
 // The Mailer over SMTP (D12). Nodemailer sends `text` and `html` as multipart/alternative, plain text first, so
-// a client that shows no HTML still reads the mail. The Message-ID is the mail id at the sender's domain, as
-// section 8 asks, so a repeat after a lost reply carries the same Message-ID.
+// a client that shows no HTML still reads the mail. The images go with the HTML as inline parts
+// (multipart/related), which the HTML names by Content-ID. The Message-ID is the mail id at the sender's domain,
+// as section 8 asks, so a repeat after a lost reply carries the same Message-ID.
 export function createSmtpMailer(transport: SmtpSender, from: string, fromName: string): Mailer {
   const domain = from.slice(from.lastIndexOf('@') + 1)
   return {
-    async send({ id, to, subject, text, html }) {
-      const { response } = await transport.sendMail({ from: { name: fromName, address: from }, to, subject, text, html, messageId: `<${id}@${domain}>` })
+    async send({ id, to, subject, text, html, images }) {
+      const attachments = images.map(({ cid, filename, contentType, base64 }) => ({ cid, filename, contentType, content: base64, encoding: 'base64', contentDisposition: 'inline' as const }))
+      const { response } = await transport.sendMail({ from: { name: fromName, address: from }, to, subject, text, html, attachments, messageId: `<${id}@${domain}>` })
       return { response }
     },
   }

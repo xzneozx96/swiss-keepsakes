@@ -21,10 +21,10 @@ describe('[E2.8] N18 and N20 render in the stored language, with their data and 
       to: 'lena.meier@example.ch',
       subject: 'Ngoc Tran invited you to Zürich Andenken',
       text: [
-        'Hello,',
-        'Ngoc Tran invited you to join Zürich Andenken as Store Manager.',
-        `Open the invitation, sign in and accept it: ${link}`,
-        'The link works for 7 days.',
+        'Join the team at Zürich Andenken',
+        'Ngoc Tran invited you to join Zürich Andenken as Store Manager. Sign in to accept the invitation.',
+        ['Store Manager invitation', 'Zürich Andenken', 'The link works for 7 days.'].join('\n'),
+        `Accept invitation: ${link}`,
         'If you didn’t expect this invitation, you can ignore this email.',
       ].join('\n\n'),
     })
@@ -35,10 +35,10 @@ describe('[E2.8] N18 and N20 render in the stored language, with their data and 
       to: 'lena.meier@example.ch',
       subject: 'Ngoc Tran hat Sie zu Zürich Andenken eingeladen',
       text: [
-        'Grüezi,',
-        'Ngoc Tran hat Sie eingeladen, bei Zürich Andenken als Store Manager mitzuarbeiten.',
-        `Öffnen Sie die Einladung, melden Sie sich an und nehmen Sie sie an: ${link}`,
-        'Der Link ist 7 Tage gültig.',
+        'Willkommen im Team von Zürich Andenken',
+        'Ngoc Tran hat Sie eingeladen, bei Zürich Andenken als Store Manager mitzuarbeiten. Melden Sie sich an, um die Einladung anzunehmen.',
+        ['Einladung als Store Manager', 'Zürich Andenken', 'Der Link ist 7 Tage gültig.'].join('\n'),
+        `Einladung annehmen: ${link}`,
         'Wenn Sie diese Einladung nicht erwartet haben, können Sie diese E-Mail ignorieren.',
       ].join('\n\n'),
     })
@@ -49,7 +49,7 @@ describe('[E2.8] N18 and N20 render in the stored language, with their data and 
       to: 'ngoc.tran@example.ch',
       subject: 'You’re invited to open Zürich Andenken',
       text: [
-        'Hello,',
+        'Open your store',
         'You’re invited to run Zürich Andenken as its Owner.',
         ['Invitation to open', 'Zürich Andenken', 'Valid until 5 November 2026'].join('\n'),
         `Set up your store: ${link}`,
@@ -63,7 +63,7 @@ describe('[E2.8] N18 and N20 render in the stored language, with their data and 
       to: 'ngoc.tran@example.ch',
       subject: 'Einladung: Eröffnen Sie Zürich Andenken',
       text: [
-        'Grüezi,',
+        'Eröffnen Sie Ihren Laden',
         'Sie sind eingeladen, Zürich Andenken als Inhaber:in zu führen.',
         ['Einladung zur Eröffnung', 'Zürich Andenken', 'Gültig bis 5. November 2026'].join('\n'),
         `Laden einrichten: ${link}`,
@@ -108,8 +108,9 @@ describe('[E2.2] N01 renders the sign-in code in the language the SPA sent', () 
       to: 'anna.keller@example.ch',
       subject: 'Your Swiss Keepsakes sign-in code: 482913',
       text: [
-        'Your sign-in code is 482913.',
-        'Enter it in the sign-in window. It works for 5 minutes.',
+        'Your sign-in code',
+        'Enter this code in the sign-in window. It works for 5 minutes.',
+        '482913',
         'If you didn’t try to sign in, you can ignore this email.',
       ].join('\n\n'),
     })
@@ -120,8 +121,9 @@ describe('[E2.2] N01 renders the sign-in code in the language the SPA sent', () 
       to: 'anna.keller@example.ch',
       subject: 'Ihr Anmeldecode für Swiss Keepsakes: 482913',
       text: [
-        'Ihr Anmeldecode lautet 482913.',
-        'Geben Sie ihn im Anmeldefenster ein. Er ist 5 Minuten gültig.',
+        'Ihr Anmeldecode',
+        'Geben Sie diesen Code im Anmeldefenster ein. Er ist 5 Minuten gültig.',
+        '482913',
         'Wenn Sie sich nicht anmelden wollten, können Sie diese E-Mail ignorieren.',
       ].join('\n\n'),
     })
@@ -146,8 +148,9 @@ describe('[E2.8] every mail has an HTML part built from the same copy as the tex
     expect(html).toMatch(/^<!doctype html>\n<html lang="(en|de)">/)
     expect(html).toContain(contains)
     expect(text).toContain(contains)
-    expect(html).toContain('<meta name="color-scheme" content="light dark">')
-    expect(html).not.toMatch(/<script|<img|<link|<iframe|<object|\bsrc=|url\(|@import|javascript:/i)
+    expect(html).toContain('<meta name="color-scheme" content="light">')
+    expect(html).not.toMatch(/<script|<link|<iframe|<object|url\(|@import|javascript:/i)
+    expect(html.match(/\bsrc=\S+/g)).toEqual(['src="cid:logo@swiss-keepsakes"'])
     expect((html.match(/https?:\/\/[^"'\s<)]+/g) ?? []).every(url => url === link)).toBe(true)
     expect(html).not.toMatch(/\{\w+\}/)
   })
@@ -156,8 +159,7 @@ describe('[E2.8] every mail has an HTML part built from the same copy as the tex
     const { html, text } = renderMail(request, link)
 
     // A box's three lines are three elements, and its date sits in a <strong> after the words.
-    for (const paragraph of text.split(/\n\n|\n/).map(part => part.replace(/: https?:\/\/\S+$/, ''))) {
-      const sentence = paragraph.replace(/^Your sign-in code is |^Ihr Anmeldecode lautet |\.$/g, '')
+    for (const sentence of text.split(/\n\n|\n/).map(part => part.replace(/: https?:\/\/\S+$/, ''))) {
       const [, words, date] = /^((?:Valid until|Gültig bis) )(.+)$/.exec(sentence) ?? []
       if (words)
         expect(html).toMatch(new RegExp(`${words}<strong[^>]*>${date}</strong>`))
@@ -188,11 +190,12 @@ describe('[E2.8] every mail has an HTML part built from the same copy as the tex
     expect(html).toContain(`>${link}</a>`)
   })
 
-  it('[E2.8] N01 shows the code in its own large, letter-spaced box', () => {
+  it('[E2.8] N01 shows the code in its own large, letter-spaced grey box, and has no button', () => {
     const { html } = renderMail(n01('en'), undefined)
 
-    expect(html).toMatch(/<span class="sk-ink" style="[^"]*font-size:36px[^"]*font-weight:700[^"]*font-variant-numeric:tabular-nums[^"]*letter-spacing:8px[^"]*">482913<\/span>/)
+    expect(html).toMatch(/<td class="sk-box" align="center" bgcolor="#f2f2ef"[^>]*><span style="[^"]*font-size:36px[^"]*font-variant-numeric:tabular-nums[^"]*letter-spacing:8px[^"]*">482913<\/span><\/td>/)
     expect(html).not.toMatch(/monospace|Menlo|Consolas/)
+    expect(html).not.toContain('sk-button')
   })
 
   it.each([['en', 'You get this because a sign-in code was asked for at Swiss Keepsakes.'], ['de', 'Sie erhalten diese E-Mail, weil bei Swiss Keepsakes ein Anmeldecode angefordert wurde.']] as const)('[E2.8] N01 in %s says in the footer why the mail arrived', (language, reason) => {
@@ -202,21 +205,36 @@ describe('[E2.8] every mail has an HTML part built from the same copy as the tex
     expect(text).not.toContain(reason)
   })
 
-  it('[E2.8] the wordmark is navy, the links are not red, and the red is on the button only', () => {
-    const { html } = renderMail(n18('en'), link)
+  it('[mail-style] the logo is the inline image at the top, 200 pixels wide, with the brand as its alt text', () => {
+    const { html, images } = renderMail(n18('en'), link)
 
-    expect(html).toMatch(/class="sk-brand"[^>]*color:#01283e/)
-    expect(html).toMatch(/class="sk-link"[^>]*color:#33312e/)
-    expect(html.match(/#d52b1e/g)).toHaveLength(3)
-    expect(html).toContain('.sk-brand { color: #ece9e4 !important; }')
+    expect(html).toMatch(/<img src="cid:logo@swiss-keepsakes" width="200" height="47" alt="Swiss Keepsakes" style="display:block;/)
+    expect(images).toEqual([{ cid: 'logo@swiss-keepsakes', filename: 'swiss-keepsakes.png', contentType: 'image/png', base64: expect.stringMatching(/^iVBORw0KGgo/) }])
   })
 
-  it('[E2.8] the button is a centred, narrow bar that is the link from edge to edge, full width on a phone', () => {
+  it.each(cases)('[mail-style] $name runs logo, title, description, main box, button, footnote, in that order, on a white page', ({ request, link }) => {
+    const { html } = renderMail(request, link)
+    const at = (pattern: RegExp) => html.search(pattern)
+
+    const order = [at(/<img src="cid:/), at(/<h1 class="sk-title"/), at(/<\/h1>\n<p style="margin:0 0 28px/), at(/<td class="sk-box"/), at(/class="sk-button-cell"/), at(/<div style="margin-top:40px">/)].filter(index => index !== -1)
+    expect(order).toEqual([...order].sort((a, b) => a - b))
+    expect(order.length).toBe(request.template === 'N01' ? 5 : 6)
+    expect(html).toContain('<body style="margin:0;padding:0;background-color:#ffffff;')
+    expect(html).not.toMatch(/prefers-color-scheme|border-radius:16px/)
+  })
+
+  it('[E2.8] the links are not red, and the red is on the button only', () => {
     const { html } = renderMail(n18('en'), link)
 
-    expect(html).toMatch(/<table role="presentation" class="sk-button-table" align="center"[^>]*margin:0 auto 24px/)
-    expect(html).toMatch(/<a class="sk-button"[^>]*display:block;min-width:184px;padding:14px 28px[^>]*line-height:20px/)
-    expect(html).toContain('.sk-button-table { width: 100% !important; }')
+    expect(html).toMatch(/class="sk-link"[^>]*color:#33312e/)
+    expect(html.match(/#d52b1e/g)).toHaveLength(3)
+  })
+
+  it('[mail-style] the button is a full-width bar that is the link from edge to edge', () => {
+    const { html } = renderMail(n18('en'), link)
+
+    expect(html).toMatch(/<table role="presentation" width="100%"[^>]*><tr><td class="sk-button-cell"/)
+    expect(html).toMatch(/<a class="sk-button"[^>]*display:block;padding:16px 24px[^>]*text-transform:uppercase/)
   })
 
   it('[E2.8] Outlook gets a fixed-width wrapper, and Apple and phone clients do not reformat the mail', () => {
@@ -229,7 +247,7 @@ describe('[E2.8] every mail has an HTML part built from the same copy as the tex
   })
 
   it('[E2.8] the same request and link render the same bytes every time', () => {
-    expect(renderMail(n18('de'), link)).toEqual({ to: 'lena.meier@example.ch', subject: expect.any(String), text: expect.any(String), html: expect.any(String) })
+    expect(renderMail(n18('de'), link)).toEqual({ to: 'lena.meier@example.ch', subject: expect.any(String), text: expect.any(String), html: expect.any(String), images: [expect.objectContaining({ cid: 'logo@swiss-keepsakes' })] })
     expect(renderMail(n18('de'), link)).toEqual(renderMail(n18('de'), link))
   })
 

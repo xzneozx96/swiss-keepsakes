@@ -66,16 +66,25 @@ Each attempt locks the mail's `sent_mail` row from before the send until it reco
 
 ## The HTML part
 
-N01, N18 and N20 carry a branded HTML body besides the plain text. The words come from `packages/i18n` once, and both parts are built from them. `api/src/modules/notifications/application/mail-layout.ts` adds the layout: one column, a rounded white card on the paper-coloured page, the wordmark in the serif face with a Georgia fallback, in the navy of the logo (ivory in dark mode), the code in large bold, letter-spaced digits in the sans face (N01), and a centred button with the plain link under it (N18, N20). The button is red, the only red in the mail, and a bar of its own width, full width on a phone. The one mail-wide brand name is `brandName` in `render-mail.ts`. N01 also says in its footer why the mail arrived.
+N01, N18 and N20 carry an HTML body besides the plain text. The words come from `packages/i18n` once, and both parts are built from them. `api/src/modules/notifications/application/mail-layout.ts` adds the layout, after the minimal style of Slack's own mail: white page, no card, left aligned, at most 600 pixels wide. Every mail has the same six slots, top to bottom:
 
-- **Inline styles and tables.** Gmail drops what is not inline and Outlook ignores most modern CSS, so Outlook gets a fixed 600 pixel wrapper in a conditional comment. The one `<style>` block only adds dark mode and narrow-screen padding. Without it the mail still reads, in the light colours.
-- **No remote content.** No image, no web font, no tracking pixel, no script. Nothing is fetched when the mail opens.
+1. **Logo.** The brand logo, 200 pixels wide (`mail-logo.ts`, a 400 pixel PNG of about 5 KB, cut from `front-end/src/assets/brand/swiss-keepsakes-logo.png`).
+2. **Title.** Large and bold (`mail.N01.title`, `mail.N18.title`, `mail.N20.title`).
+3. **Description.** One short paragraph.
+4. **Main information.** A soft grey box: the code, large and letter-spaced, in N01, and the store in N18 and N20, with a small label above and one line below (N20's date in bold).
+5. **Button.** A full-width red bar, the only red in the mail, with the plain link under it (N18, N20). N01 has none.
+6. **Footnotes.** What to do if the mail was not expected, then the small print: why the mail arrived (N01) and `mail.footer`.
+
+The text part prints the same slots in the same order. The rest of the layout works like this:
+
+- **Inline styles and tables.** Gmail drops what is not inline and Outlook ignores most modern CSS, so Outlook gets a fixed 600 pixel wrapper in a conditional comment. The one `<style>` block only tightens the padding and the title on a phone. Without it the mail still reads.
+- **The logo travels inside the message.** It is an inline part with the Content-ID `logo@swiss-keepsakes`, and the HTML shows it with `<img src="cid:logo@swiss-keepsakes">`. The message is `multipart/alternative` (text, then `multipart/related` with the HTML and the PNG). Nothing is fetched when the mail opens: no remote image, no web font, no tracking pixel, no script. The build (`tsc`) copies no PNG, so `mail-logo.ts` holds the bytes as base64, with the command that made them.
+- **Light only.** The logo is navy, so the mail declares `color-scheme: light` and has no dark-mode styles. The PNG is flattened on white, so a client that darkens the page anyway shows the logo on a white strip instead of hiding it.
 - **Escaping.** Every value and every word of copy is escaped for HTML text and attributes. The text part carries values as typed. A link goes into an `href` only when it is an http(s) URL without spaces, quotes or angle brackets. Anything else raises `MailRenderError` and the mail fails at once.
 - **Hidden characters.** Control, bidi and zero-width characters are stripped from every value before both parts are built, so a name cannot reorder or hide text. The length of an inviter or store name is not capped on the server.
-- **Retries.** The text and the HTML of one mail are the same bytes on every attempt. Only an invitation's token, and so its link, changes (see Duplicates).
-- **Dark mode.** A `color-scheme` meta and a `prefers-color-scheme` block with warm dark colours, not inverted ones. Clients that ignore it show the light version.
+- **Retries.** The text, the HTML and the logo of one mail are the same bytes on every attempt. Only an invitation's token, and so its link, changes (see Duplicates).
 
-To preview, run `MAIL_PREVIEW_DIR=/tmp/opencode/mail-preview pnpm exec vitest run api/test/application/notifications/mail-preview.test.ts` from the repository root. It writes each template in EN and DE, with a long-name variant of the invitations, as an `.html` file in that folder. Open them in a browser, or screenshot them at 600 and 375 pixels wide.
+To preview, run `MAIL_PREVIEW_DIR=/tmp/opencode/mail-preview pnpm exec vitest run api/test/application/notifications/mail-preview.test.ts` from the repository root. It writes each template in EN and DE, with a long-name variant of the invitations, as an `.html` file in that folder. The preview puts the logo in as a data URL, because a browser cannot resolve `cid:`. Open them in a browser, or screenshot them at 600 and 375 pixels wide.
 
 ## The live check
 

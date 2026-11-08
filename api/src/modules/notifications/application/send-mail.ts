@@ -62,8 +62,7 @@ export function makeSendMail<T>({ uow, sentMail, mailer, invitationLink, clock, 
           await sentMail.recordCancelled(tx, job.mailId, clock.now())
           return
         }
-        const { to, subject, text, html } = renderMail(job, link)
-        const { response } = await mailer.send({ id: job.mailId, to, subject, text, html })
+        const { response } = await mailer.send({ id: job.mailId, ...renderMail(job, link) })
         const attempt = await sentMail.recordSent(tx, job.mailId, { at: clock.now(), response })
         log.sent({ mailId: job.mailId, template: job.template, attempt, response })
       })
